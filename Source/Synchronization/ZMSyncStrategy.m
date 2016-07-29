@@ -99,6 +99,8 @@
 @property (nonatomic) PingBackRequestStrategy *pingBackRequestStrategy;
 @property (nonatomic) PushNoticeRequestStrategy *pushNoticeFetchStrategy;
 @property (nonatomic) LinkPreviewAssetUploadRequestStrategy *linkPreviewAssetUploadRequestStrategy;
+@property (nonatomic) ImageUploadRequestStrategy *imageUploadRequestStrategy;
+@property (nonatomic) ImageDownloadRequestStrategy *imageDownloadRequestStrategy;
 
 @property (nonatomic) ZMSyncStateMachine *stateMachine;
 @property (nonatomic) ZMUpdateEventsBuffer *eventsBuffer;
@@ -185,7 +187,9 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.pushNoticeFetchStrategy,
                                    self.fileUploadRequestStrategy,
                                    self.linkPreviewAssetDownloadRequestStrategy,
-                                   self.linkPreviewAssetUploadRequestStrategy
+                                   self.linkPreviewAssetUploadRequestStrategy,
+                                   self.imageDownloadRequestStrategy,
+                                   self.imageUploadRequestStrategy
                                    ];
         
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
@@ -243,6 +247,8 @@ ZM_EMPTY_ASSERTING_INIT()
     self.fileUploadRequestStrategy = [[FileUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus clientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC taskCancellationProvider:taskCancellationProvider];
     self.linkPreviewAssetDownloadRequestStrategy = [[LinkPreviewAssetDownloadRequestStrategy alloc] initWithAuthStatus:authenticationStatus managedObjectContext:self.syncMOC];
     self.linkPreviewAssetUploadRequestStrategy = [[LinkPreviewAssetUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus managedObjectContext:self.syncMOC];
+    self.imageDownloadRequestStrategy = [[ImageDownloadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus  managedObjectContext:self.syncMOC];
+    self.imageUploadRequestStrategy = [[ImageUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus clientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
 }
 
 - (void)appDidEnterBackground:(NSNotification *)note

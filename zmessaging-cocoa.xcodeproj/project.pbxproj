@@ -70,6 +70,8 @@
 		16313D6B1D256409001B2AB3 /* LinkPreviewPreprocessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16313D6A1D256409001B2AB3 /* LinkPreviewPreprocessor.swift */; };
 		1635C6B71BA9CB4A006857A8 /* ZMSuggestionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 1635C6B51BA9CB4A006857A8 /* ZMSuggestionResult.h */; };
 		1635C6B81BA9CB4A006857A8 /* ZMSuggestionResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 1635C6B61BA9CB4A006857A8 /* ZMSuggestionResult.m */; };
+		163CD3861D4B4F1A0024992F /* ImageDownloadRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163CD3841D4B4F1A0024992F /* ImageDownloadRequestStrategy.swift */; };
+		163CD3871D4B4F1A0024992F /* ImageUploadRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163CD3851D4B4F1A0024992F /* ImageUploadRequestStrategy.swift */; };
 		165B77171BF38E65006EACB1 /* ZMObjectSyncStrategy.h in Headers */ = {isa = PBXBuildFile; fileRef = 54F8D6E619AB535700146664 /* ZMObjectSyncStrategy.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		169AED7E1C8F1C2000E5F17E /* libavsobjcstub.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 169AED721C8F09A700E5F17E /* libavsobjcstub.a */; };
 		16BBF73D1D2A95400062A664 /* LinkPreviewAssetUploadRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BBF73C1D2A95400062A664 /* LinkPreviewAssetUploadRequestStrategy.swift */; };
@@ -619,6 +621,8 @@
 		16313D6A1D256409001B2AB3 /* LinkPreviewPreprocessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkPreviewPreprocessor.swift; sourceTree = "<group>"; };
 		1635C6B51BA9CB4A006857A8 /* ZMSuggestionResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMSuggestionResult.h; sourceTree = "<group>"; };
 		1635C6B61BA9CB4A006857A8 /* ZMSuggestionResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMSuggestionResult.m; sourceTree = "<group>"; };
+		163CD3841D4B4F1A0024992F /* ImageDownloadRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageDownloadRequestStrategy.swift; sourceTree = "<group>"; };
+		163CD3851D4B4F1A0024992F /* ImageUploadRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageUploadRequestStrategy.swift; sourceTree = "<group>"; };
 		169AED721C8F09A700E5F17E /* libavsobjcstub.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavsobjcstub.a; sourceTree = "<group>"; };
 		169AED731C8F09A700E5F17E /* version.buildinfo */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = version.buildinfo; sourceTree = "<group>"; };
 		16BBF73C1D2A95400062A664 /* LinkPreviewAssetUploadRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkPreviewAssetUploadRequestStrategy.swift; sourceTree = "<group>"; };
@@ -1658,6 +1662,8 @@
 				F9C5F8731C90323500BF0219 /* PushNoticeRequestStrategy.swift */,
 				544546F61CBFDE3C00027A18 /* FileUploadRequestStrategy.swift */,
 				8780D2221CC0F625000B0775 /* AssetDownloadRequestStrategy.swift */,
+				163CD3841D4B4F1A0024992F /* ImageDownloadRequestStrategy.swift */,
+				163CD3851D4B4F1A0024992F /* ImageUploadRequestStrategy.swift */,
 				AF8D1AC01D2C190D00653612 /* LinkPreviewAssetDownloadRequestStrategy.swift */,
 				16BBF73C1D2A95400062A664 /* LinkPreviewAssetUploadRequestStrategy.swift */,
 			);
@@ -2917,6 +2923,7 @@
 				5498162D1A432BC800A7CE2E /* ZMMissingUpdateEventsTranscoder.m in Sources */,
 				09BCDB571BC5575C0020DCC7 /* ClientMessageRequestFactory.swift in Sources */,
 				549816261A432BC800A7CE2E /* ZMObjectSyncStrategy.m in Sources */,
+				163CD3871D4B4F1A0024992F /* ImageUploadRequestStrategy.swift in Sources */,
 				F92550161C7B4FEF0086FEC9 /* ZMLocalNotificationForMemberEvent.swift in Sources */,
 				549816461A432BC800A7CE2E /* ZMOperationLoop+Background.m in Sources */,
 				549816451A432BC800A7CE2E /* ZMOperationLoop.m in Sources */,
@@ -2938,6 +2945,7 @@
 				549815D31A432BC700A7CE2E /* ZMSearchDirectory.m in Sources */,
 				549815D01A432BC700A7CE2E /* ZMSearchRequestCodec.m in Sources */,
 				549815CF1A432BC700A7CE2E /* ZMSearchResult.m in Sources */,
+				163CD3861D4B4F1A0024992F /* ImageDownloadRequestStrategy.swift in Sources */,
 				549815D61A432BC700A7CE2E /* ZMSearchTopConversations.m in Sources */,
 				F92550121C7B1D3A0086FEC9 /* ZMLocalNotificationForEvent.swift in Sources */,
 				549815D41A432BC700A7CE2E /* ZMSearchUser+UserSession.m in Sources */,
