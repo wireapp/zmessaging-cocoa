@@ -83,6 +83,7 @@
 #endif
     
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
+                                          userInterfaceContext:self.uiMOC
                                       syncManagedObjectContext:self.syncMOC
                                                   mediaManager:self.mediaManager
                                                apnsEnvironment:self.apnsEnvironment

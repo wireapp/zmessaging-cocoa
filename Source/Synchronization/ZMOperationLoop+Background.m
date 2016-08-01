@@ -45,7 +45,7 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 - (void)saveEventsAndSendNotificationForPayload:(NSDictionary *)payload fetchCompletionHandler:(ZMPushResultHandler)completionHandler source:(ZMPushNotficationType)source;
 {
     ZMLogDebug(@"----> Received push notification payload: %@, source: %lu", payload, (unsigned long)source);
-    ZMBackgroundActivity *activity = [ZMBackgroundActivity beginBackgroundActivityWithName:@"send notification for payload"];
+    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"send notification for payload"];
     [self.syncMOC performGroupedBlock:^{
         
         EventsWithIdentifier *eventsWithID = [self eventsFromPushChannelData:payload];

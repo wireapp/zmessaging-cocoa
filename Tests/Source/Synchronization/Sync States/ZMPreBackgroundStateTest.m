@@ -156,9 +156,13 @@
     [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturnValue:@YES] hasPendingMessages];
     
     // expect
+    
     id mockActivity = [OCMockObject mockForClass:ZMBackgroundActivity.class];
-    [[[[mockActivity expect] andReturn:mockActivity] classMethod] beginBackgroundActivityWithName:OCMOCK_ANY];
-    [[[[mockActivity reject] andReturn:mockActivity] classMethod] beginBackgroundActivityWithName:OCMOCK_ANY];
+    
+    id factory = [OCMockObject mockForClass:BackgroundActivityFactory.class];
+    [[[[factory stub] andReturn:factory] classMethod] sharedInstance];
+    [[[factory expect] andReturn:mockActivity] backgroundActivityWithName:OCMOCK_ANY];
+    [[[factory reject] andReturn:mockActivity] backgroundActivityWithName:OCMOCK_ANY];
     
     // when (1)
     [self.sut didEnterState];
@@ -178,6 +182,7 @@
     
     // after
     [mockActivity stopMocking];
+    [factory stopMocking];
     
     
 }

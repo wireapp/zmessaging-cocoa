@@ -44,7 +44,7 @@
         [strongDelegate goToState:strongDelegate.backgroundState];
         return;
     }
-    self.activity = [ZMBackgroundActivity beginBackgroundActivityWithName:@"ZMPreBackgroundState"];
+    self.activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"ZMPreBackgroundState"];
 }
 
 - (void)tearDown

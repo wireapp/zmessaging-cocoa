@@ -98,13 +98,14 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
     
     public func pushRegistry(registry: PKPushRegistry!, didReceiveIncomingPushWithPayload payload: PKPushPayload!, forType type: String!) {
         ZMLogPushKit_swift("Registry \(self.registry.description) did receive '\(payload.type)' payload: \(payload.dictionaryPayload)")
-        let a = ZMBackgroundActivity.beginBackgroundActivityWithName("Process PushKit payload")
-        APNSPerformanceTracker.trackReceivedNotification(analytics)
-
-        didReceivePayload(payload.dictionaryPayload, .VoIP) {
-            result in
-            ZMLogPushKit_swift("Registry \(self.registry.description) did finish background task")
-            a.endActivity()
+        if let a = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Process PushKit payload") {
+            APNSPerformanceTracker.trackReceivedNotification(analytics)
+            
+            didReceivePayload(payload.dictionaryPayload, .VoIP) {
+                result in
+                ZMLogPushKit_swift("Registry \(self.registry.description) did finish background task")
+                a.endActivity()
+            }
         }
     }
     public func pushRegistry(registry: PKPushRegistry!, didInvalidatePushTokenForType type: String!) {
@@ -137,12 +138,13 @@ extension ApplicationRemoteNotification : UIApplicationDelegate {
         pushToken = deviceToken
         didUpdateCredentials(deviceToken)
     }
-
+    
     public func application(application: UIApplication, didReceiveRemoteNotification userInfo: [NSObject : AnyObject], fetchCompletionHandler completionHandler: (UIBackgroundFetchResult) -> Void) {
-        let a = ZMBackgroundActivity.beginBackgroundActivityWithName("Process remote notification payload")
-        didReceivePayload(userInfo, .Alert) { result in
-            completionHandler(self.fetchResult(result))
-            a.endActivity()
+        if let a = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process remote notification payload") {
+            didReceivePayload(userInfo, .Alert) { result in
+                completionHandler(self.fetchResult(result))
+                a.endActivity()
+            }
         }
     }
     

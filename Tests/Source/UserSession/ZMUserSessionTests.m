@@ -90,7 +90,7 @@
     
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     [[[[transportSession expect] classMethod] andReturn:transportSession] alloc];
-    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY];
+    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY mainGroupQueue:OCMOCK_ANY];
     
     id cookieStorage = [OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]];
     (void) [[[transportSession stub] andReturn:cookieStorage] cookieStorage];
@@ -135,7 +135,7 @@
     id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     [[[[transportSession stub] classMethod] andReturn:transportSession] alloc];
-    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY];
+    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY mainGroupQueue:OCMOCK_ANY];
     [[[transportSession stub] andReturn:[OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]]] cookieStorage];
     
     // expect
@@ -281,6 +281,7 @@
     
     // when
     ZMUserSession *userSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
+                                                            userInterfaceContext:self.uiMOC
                                                         syncManagedObjectContext:self.syncMOC
                                                                     mediaManager:self.mediaManager
                                                                  apnsEnvironment:self.apnsEnvironment
@@ -571,6 +572,7 @@
 
     // when
     ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
+                                                            userInterfaceContext:self.uiMOC
                                                         syncManagedObjectContext:self.syncMOC
                                                                     mediaManager:self.mediaManager
                                                                  apnsEnvironment:self.apnsEnvironment

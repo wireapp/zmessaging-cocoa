@@ -61,6 +61,19 @@ class OperationLoopNewRequestObserver {
     }
 }
 
+@objc class FakeGroupQueue : NSObject, ZMSGroupQueue {
+    
+    var dispatchGroup : ZMSDispatchGroup! {
+        return nil
+    }
+    
+    func performGroupedBlock(block : dispatch_block_t)
+    {
+        block()
+    }
+    
+}
+
 
 // MARK: - Tests
 
@@ -90,6 +103,7 @@ class EventsWithIdentifierTests: ZMTBaseTest {
             "id": identifier.transportString(),
             "payload": [messageAddPayload(), messageAddPayload()]
         ]
+        
         
         events = ZMUpdateEvent.eventsArrayFromPushChannelData(pushChannelData)
         sut = EventsWithIdentifier(events: events, identifier: identifier, isNotice:true)
@@ -129,6 +143,9 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     
     override func setUp() {
         super.setUp()
+        
+        BackgroundActivityFactory.sharedInstance().mainGroupQueue = FakeGroupQueue()
+        
         authenticationProvider = MockAuthenticationProvider()
         notificationDispatcher = MockNotificationDispatcher()
         sut = BackgroundAPNSPingBackStatus(
@@ -137,6 +154,11 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
             localNotificationDispatcher: notificationDispatcher
         )
         observer = OperationLoopNewRequestObserver()
+    }
+    
+    override func tearDown() {
+        BackgroundActivityFactory.tearDownInstance()
+        super.tearDown()
     }
 
     func testThatItSetsTheNotificationID() {

@@ -248,7 +248,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)appDidEnterBackground:(NSNotification *)note
 {
     NOT_USED(note);
-    ZMBackgroundActivity *activity = [ZMBackgroundActivity beginBackgroundActivityWithName:@"enter background"];
+    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"enter background"];
     [self.syncMOC performGroupedBlock:^{
         [self.stateMachine enterBackground];
         [ZMOperationLoop notifyNewRequestsAvailable:self];
@@ -260,7 +260,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)appWillEnterForeground:(NSNotification *)note
 {
     NOT_USED(note);
-    ZMBackgroundActivity *activity = [ZMBackgroundActivity beginBackgroundActivityWithName:@"enter foreground"];
+    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"enter foreground"];
     [self.syncMOC performGroupedBlock:^{
         [self.stateMachine enterForeground];
         [ZMOperationLoop notifyNewRequestsAvailable:self];

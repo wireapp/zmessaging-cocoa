@@ -165,13 +165,16 @@ ZM_EMPTY_ASSERTING_INIT()
     
     ZMAPNSEnvironment *apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
 
+    NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContext];
+    
     NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContext];
     syncMOC.analytics = analytics;
     
-    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC];
+    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC mainGroupQueue:userInterfaceContext];
     UIApplication *application = [UIApplication sharedApplication];
     
     self = [self initWithTransportSession:session
+                     userInterfaceContext:userInterfaceContext
                  syncManagedObjectContext:syncMOC
                              mediaManager:mediaManager
                           apnsEnvironment:apnsEnvironment
@@ -186,6 +189,7 @@ ZM_EMPTY_ASSERTING_INIT()
 }
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
+                    userInterfaceContext:(NSManagedObjectContext *)userInterfaceContext
                 syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
                             mediaManager:(id<AVSMediaManager>)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
@@ -203,8 +207,8 @@ ZM_EMPTY_ASSERTING_INIT()
         self.didStartInitialSync = NO;
         self.apnsEnvironment = apnsEnvironment;
         self.networkIsOnline = YES;
+        self.managedObjectContext = userInterfaceContext;
         self.managedObjectContext.isOffline = NO;
-        self.managedObjectContext = [NSManagedObjectContext createUserInterfaceContext];
         self.syncManagedObjectContext = syncManagedObjectContext;
         
         self.syncManagedObjectContext.zm_userInterfaceContext = self.managedObjectContext;

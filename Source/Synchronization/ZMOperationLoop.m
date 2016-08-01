@@ -308,7 +308,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     // this generates the request
     ZMTransportRequestGenerator generator = [self requestGenerator];
     
-    ZMBackgroundActivity * const enqueueActivity = [ZMBackgroundActivity beginBackgroundActivityWithName:@"executeNextOperation"];
+    ZMBackgroundActivity * const enqueueActivity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"executeNextOperation"];
     ZM_WEAK(self);
     [self.syncMOC performGroupedBlock:^{
         ZM_STRONG(self);

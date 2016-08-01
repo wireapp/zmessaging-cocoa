@@ -139,7 +139,7 @@ extension EventsWithIdentifier {
         eventsWithHandlerByNotificationID[eventsWithID.identifier] = (eventsWithID.events, handler)
         
         if authenticationStatusProvider?.currentPhase == .Authenticated {
-            backgroundActivity = backgroundActivity ?? ZMBackgroundActivity.beginBackgroundActivityWithName("Ping back to BE")
+            backgroundActivity = backgroundActivity ?? BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Ping back to BE")
         }
         
         if status == .Done {

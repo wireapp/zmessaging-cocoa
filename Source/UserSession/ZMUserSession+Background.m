@@ -353,7 +353,7 @@ static const char *ZMLogTag = "Push";
 
 - (void)ignoreCallForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
 {
-    ZMBackgroundActivity *activity = [ZMBackgroundActivity beginBackgroundActivityWithName:@"IgnoreCall Action Handler"];
+    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"IgnoreCall Action Handler"];
     ZMConversation *conversation = [notification conversationInManagedObjectContext:self.managedObjectContext];
     [self.managedObjectContext performBlock:^{
         conversation.isIgnoringCall = YES;
@@ -368,7 +368,7 @@ static const char *ZMLogTag = "Push";
 
 - (void)muteConversationForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
 {
-    ZMBackgroundActivity *activity = [ZMBackgroundActivity beginBackgroundActivityWithName:@"Mute Conversation Action Handler"];
+    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"Mute Conversation Action Handler"];
     ZMConversation *conversation = [notification conversationInManagedObjectContext:self.managedObjectContext];
     [self.managedObjectContext performBlock:^{
         conversation.isSilenced = YES;
@@ -390,7 +390,7 @@ static const char *ZMLogTag = "Push";
         }
         return;
     }
-    ZMBackgroundActivity *activity = [ZMBackgroundActivity beginBackgroundActivityWithName:@"DirectReply Action Handler"];
+    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"DirectReply Action Handler"];
     ZMConversation *conversation = [notification conversationInManagedObjectContext:self.managedObjectContext];
     if (conversation != nil) {
         ZM_WEAK(self);

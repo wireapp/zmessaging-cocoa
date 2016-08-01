@@ -106,6 +106,8 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 - (void)tearDown
 {
+    [BackgroundActivityFactory tearDownInstance];
+    
     [self.uiMOC.globalManagedObjectContextObserver tearDown];
     [self.syncMOC.globalManagedObjectContextObserver tearDown];
 
@@ -327,8 +329,11 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         [self.searchMOC setPersistentStoreMetadata:@YES forKey:RegisteredOnThisDeviceKey];
     }
     
+    [[BackgroundActivityFactory sharedInstance] setMainGroupQueue:self.uiMOC];
+    
     self.userSession = [[ZMUserSession alloc]
                         initWithTransportSession:(id)self.mockTransportSession
+                        userInterfaceContext:self.uiMOC
                         syncManagedObjectContext:self.syncMOC
                         mediaManager:nil
                         apnsEnvironment:mockAPNSEnrvironment
