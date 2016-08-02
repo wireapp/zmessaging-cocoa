@@ -75,58 +75,56 @@ static NSString * const RequestUserProfileSmallAssetNotificationName = @"ZMReque
 {
     self = [super initWithManagedObjectContext:moc];
     if (self != nil) {
+        ZMUser *selfUser = [ZMUser selfUserInContext:moc];
         
-        [self.managedObjectContext performBlockAndWait:^{
-            [self recoverFromInconsistentUserImageStatus];
-            
-            self->_imageProcessingQueue = imageProcessingQueue;
-            
-            // Small profiles
-            NSPredicate *filterForSmallImage = [NSCompoundPredicate andPredicateWithSubpredicates:@[
-                                                                                                    [ZMUser predicateForSmallImageNeedingToBeUpdatedFromBackend],
-                                                                                                    [ZMUser predicateForSmallImageDownloadFilter]
-                                                                                                    ]];
-            self.smallProfileDownstreamSync = [[ZMDownstreamObjectSyncWithWhitelist alloc] initWithTranscoder:self
-                                                                                                   entityName:ZMUser.entityName
-                                                                                predicateForObjectsToDownload:filterForSmallImage
-                                                                                         managedObjectContext:self.managedObjectContext];
-            [self.smallProfileDownstreamSync whiteListObject:[ZMUser selfUserInContext:moc]];
-            
-            // Medium profile
-            NSPredicate *filterForMediumImage = [NSCompoundPredicate andPredicateWithSubpredicates:@[
-                                                                                                     [ZMUser predicateForMediumImageNeedingToBeUpdatedFromBackend],
-                                                                                                     [ZMUser predicateForMediumImageDownloadFilter]
-                                                                                                     ]];
-            self.mediumDownstreamSync = [[ZMDownstreamObjectSyncWithWhitelist alloc] initWithTranscoder:self
-                                                                                             entityName:ZMUser.entityName
-                                                                          predicateForObjectsToDownload:filterForMediumImage
-                                                                                   managedObjectContext:self.managedObjectContext];
-            [self.mediumDownstreamSync whiteListObject:[ZMUser selfUserInContext:moc]];
-            
-            // Self user upstream
-            self.upstreamSync = [[ZMUpstreamAssetSync alloc] initWithTranscoder:self entityName:ZMUser.entityName keysToSync:@[ImageSmallProfileDataKey, ImageMediumDataKey] managedObjectContext:self.managedObjectContext];
-            
-            self->_assetPreprocessingTracker = [self createAssetPreprocessingTracker];
-            
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(requestAssetForNotification:) name:RequestUserProfileAssetNotificationName object:nil];
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(requestSmallAssetForNotification:) name:RequestUserProfileSmallAssetNotificationName object:nil];
-            
-        }];
-       
+        [self recoverFromInconsistentUserImageStatusOfSelfUser:selfUser];
+        
+        _imageProcessingQueue = imageProcessingQueue;
+        
+        // Small profiles
+        NSPredicate *filterForSmallImage = [NSCompoundPredicate andPredicateWithSubpredicates:@[
+                                                                                                [ZMUser predicateForSmallImageNeedingToBeUpdatedFromBackend],
+                                                                                                [ZMUser predicateForSmallImageDownloadFilter]
+                                                                                                ]];
+        self.smallProfileDownstreamSync = [[ZMDownstreamObjectSyncWithWhitelist alloc] initWithTranscoder:self
+                                                                                               entityName:ZMUser.entityName
+                                                                            predicateForObjectsToDownload:filterForSmallImage
+                                                                                     managedObjectContext:self.managedObjectContext];
+        [self.smallProfileDownstreamSync whiteListObject:selfUser];
+        
+        // Medium profile
+        NSPredicate *filterForMediumImage = [NSCompoundPredicate andPredicateWithSubpredicates:@[
+                                                                                                 [ZMUser predicateForMediumImageNeedingToBeUpdatedFromBackend],
+                                                                                                 [ZMUser predicateForMediumImageDownloadFilter]
+                                                                                                 ]];
+        self.mediumDownstreamSync = [[ZMDownstreamObjectSyncWithWhitelist alloc] initWithTranscoder:self
+                                                                                         entityName:ZMUser.entityName
+                                                                      predicateForObjectsToDownload:filterForMediumImage
+                                                                               managedObjectContext:self.managedObjectContext];
+        [self.mediumDownstreamSync whiteListObject:selfUser];
+        
+        // Self user upstream
+        self.upstreamSync = [[ZMUpstreamAssetSync alloc] initWithTranscoder:self entityName:ZMUser.entityName keysToSync:@[ImageSmallProfileDataKey, ImageMediumDataKey] managedObjectContext:self.managedObjectContext];
+        
+        _assetPreprocessingTracker = [self createAssetPreprocessingTracker];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(requestAssetForNotification:) name:RequestUserProfileAssetNotificationName object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(requestSmallAssetForNotification:) name:RequestUserProfileSmallAssetNotificationName object:nil];
+    
         
     }
     return self;
 }
 
-- (void)recoverFromInconsistentUserImageStatus;
+- (void)recoverFromInconsistentUserImageStatusOfSelfUser:(ZMUser *)selfUser
 {
-    NSSet *imageMediumKeys = [NSSet setWithArray:@[ImageMediumDataKey,ImageSmallProfileDataKey]];
-    
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    
-    if ([selfUser hasLocalModificationsForKeys:imageMediumKeys] && (selfUser.imageMediumData == nil || selfUser.imageSmallProfileData == nil)) {
-        [selfUser resetLocallyModifiedKeys:imageMediumKeys];
-    }
+    [self.managedObjectContext performGroupedBlock:^{
+        NSSet *imageMediumKeys = [NSSet setWithArray:@[ImageMediumDataKey,ImageSmallProfileDataKey]];
+        
+        if ([selfUser hasLocalModificationsForKeys:imageMediumKeys] && (selfUser.imageMediumData == nil || selfUser.imageSmallProfileData == nil)) {
+            [selfUser resetLocallyModifiedKeys:imageMediumKeys];
+        }
+    }];
 }
 
 - (ZMImagePreprocessingTracker *)createAssetPreprocessingTracker
