@@ -393,6 +393,7 @@
 		BF0D67A41C901DEC007CE00F /* libPhoneNumber.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0D67A31C901DEC007CE00F /* libPhoneNumber.framework */; };
 		BF0D67A51C901E28007CE00F /* libPhoneNumber.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0D67A31C901DEC007CE00F /* libPhoneNumber.framework */; };
 		BF158D2F1CE087D8007C6F8A /* video.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = BF158D2E1CE087D8007C6F8A /* video.mp4 */; };
+		BF381FE51D509E1500075672 /* AddressBookTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF381FE41D509E1500075672 /* AddressBookTracker.swift */; };
 		BF38FAF31CA2A24600E2ACBB /* MissingClientsMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF38FAF21CA2A24600E2ACBB /* MissingClientsMapTests.swift */; };
 		BF3977661D2D344000F2BEA2 /* LinkPreviewAssetDownloadRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3977651D2D344000F2BEA2 /* LinkPreviewAssetDownloadRequestStrategyTests.swift */; };
 		BF40AC701D0965A100287E29 /* NSManagedObjectContext+Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF40AC6F1D0965A100287E29 /* NSManagedObjectContext+Analytics.swift */; };
@@ -1054,6 +1055,7 @@
 		BF00442A1C75DF94007A6EA4 /* PingBackRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PingBackRequestStrategy.swift; sourceTree = "<group>"; };
 		BF0D67A31C901DEC007CE00F /* libPhoneNumber.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libPhoneNumber.framework; path = Carthage/Build/iOS/libPhoneNumber.framework; sourceTree = "<group>"; };
 		BF158D2E1CE087D8007C6F8A /* video.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = video.mp4; sourceTree = "<group>"; };
+		BF381FE41D509E1500075672 /* AddressBookTracker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookTracker.swift; sourceTree = "<group>"; };
 		BF38FAF21CA2A24600E2ACBB /* MissingClientsMapTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MissingClientsMapTests.swift; sourceTree = "<group>"; };
 		BF3977651D2D344000F2BEA2 /* LinkPreviewAssetDownloadRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkPreviewAssetDownloadRequestStrategyTests.swift; sourceTree = "<group>"; };
 		BF40AC6F1D0965A100287E29 /* NSManagedObjectContext+Analytics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSManagedObjectContext+Analytics.swift"; sourceTree = "<group>"; };
@@ -2246,6 +2248,7 @@
 				BF40AC7F1D099DB500287E29 /* Clusterizer+VOIP.swift */,
 				BF40AC6F1D0965A100287E29 /* NSManagedObjectContext+Analytics.swift */,
 				BF40AC811D09AE4900287E29 /* APNSPerformanceTracker.swift */,
+				BF381FE41D509E1500075672 /* AddressBookTracker.swift */,
 			);
 			name = Analytics;
 			sourceTree = "<group>";
@@ -2853,6 +2856,7 @@
 				549816431A432BC800A7CE2E /* ZMBackgroundState.m in Sources */,
 				3EDDBBA41A5ACF0400A87E06 /* ZMUnauthenticatedBackgroundState.m in Sources */,
 				F925501C1C7B65B90086FEC9 /* ZMLocalNotificationForCallEvent.swift in Sources */,
+				BF381FE51D509E1500075672 /* AddressBookTracker.swift in Sources */,
 				549815C21A432BC700A7CE2E /* ZMBadge.m in Sources */,
 				549815CD1A432BC700A7CE2E /* ZMBlacklistDownloader.m in Sources */,
 				549815CE1A432BC700A7CE2E /* ZMBlacklistVerificator.m in Sources */,

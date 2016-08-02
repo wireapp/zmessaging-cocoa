@@ -100,6 +100,7 @@
     
     self.contacts = @[contactA, contactB, contactC];
     [(ZMAddressBook *)[[self.addressBookMock stub] andReturn:self.contacts] contacts];
+    [[self.addressBookMock expect] numberOfContacts];
 }
 
 - (void)testThatItReturnsNilRequestWhenAddressBookDoesNotNeedToBeUploaded;
@@ -215,6 +216,7 @@
     _addressBookUploadStatus = ZMSingleRequestCompleted;
     
     // (2)
+    [[self.addressBookMock expect] numberOfContacts];
     [ZMAddressBookSync markAddressBookAsNeedingToBeUploadedInContext:self.uiMOC];
     XCTAssert([self.uiMOC saveOrRollback]);
     

@@ -45,6 +45,7 @@ static dispatch_queue_t ZMAddressBookIsolationQueue;
 
 @interface ZMEncodedAddressBook ()
 
+@property (nonatomic) NSUInteger addressBookSize;
 @property (nonatomic, copy) id<ZMTransportData> localData;
 @property (nonatomic, copy) id<ZMTransportData> otherData;
 @property (nonatomic, copy) NSData *digest;
@@ -167,6 +168,7 @@ ZM_EMPTY_ASSERTING_INIT()
                     index++;
                 }
                 result.otherData = (otherHashesCards.count < 1) ? nil : otherHashesCards;
+                result.addressBookSize = addressBook.numberOfContacts;
             }
             {
                 NSMutableData *digest = [NSMutableData dataWithLength:CC_SHA512_DIGEST_LENGTH];

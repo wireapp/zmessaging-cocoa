@@ -113,4 +113,49 @@ class AnalyticsTests: XCTestCase {
         
         XCTAssertEqual(secondEventWithAttribute, secondExpected)
     }
+    
+    func testThatItTracksTheAddresBookSizeWhenThereIsNoLastUploadDate_Changed() {
+        assertThatItTracksAddresBookUpload(true, size: 42)
+    }
+    
+    func testThatItTracksTheAddresBookSizeWhenThereIsNoLastUploadDate_Unchanged() {
+        assertThatItTracksAddresBookUpload(false, size: 24)
+    }
+    
+    func testThatItTracksTheAddresBookSizeWhenThereIsALastUploadDate_Changed() {
+        assertThatItTracksAddresBookUpload(true, size: 1024, hoursSinceLastUpload: 12)
+    }
+    
+    func testThatItTracksTheAddresBookSizeWhenThereIsALastUploadDate_Unchanged() {
+        assertThatItTracksAddresBookUpload(false, size: 4200, hoursSinceLastUpload: 18)
+    }
+    
+    func testThatItDoesNotTrackTheIntervalSinceLastAddresBookUploadIfTheLastDateIsInTheFuture() {
+        assertThatItTracksAddresBookUpload(false, size: 4200, hoursSinceLastUpload: -42, shouldTrackInterval: false)
+    }
+    
+    func assertThatItTracksAddresBookUpload(changed: Bool, size: UInt, hoursSinceLastUpload: Int? = nil, shouldTrackInterval: Bool = true, line: UInt = #line) {
+        // given
+        let tracker = AddressBookTracker(analytics: analytics)
+        if let hours = hoursSinceLastUpload.map(NSTimeInterval.init) {
+            let lastDate = NSDate(timeIntervalSinceNow: -hours * 3600)
+            NSUserDefaults.standardUserDefaults().setObject(lastDate, forKey: "lastAddressBookUploadDate")
+        }
+
+        // when
+        tracker.tagAddressBookUpload(changed, size: size)
+        
+        // then
+        XCTAssertTrue(analytics.taggedEvents.isEmpty)
+        XCTAssertEqual(analytics.taggedEventsWithAttributes.count, 1, line: line)
+        let eventWithAtributes = analytics.taggedEventsWithAttributes.first!
+        XCTAssertEqual(eventWithAtributes.event, "connect.checked_for_address_book_changes", line: line)
+        
+        var attributes: [String: NSObject] = ["outcome": changed ? "changed" : "no_changes", "size": size]
+        
+        if let hours = hoursSinceLastUpload where shouldTrackInterval { attributes["interval"] = hours }
+        XCTAssertEqual(eventWithAtributes.attributes, attributes, line: line)
+        
+        NSUserDefaults.standardUserDefaults().setObject(nil, forKey: "lastAddressBookUploadDate")
+    }
 }

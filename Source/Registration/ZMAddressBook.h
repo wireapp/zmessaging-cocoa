@@ -22,6 +22,8 @@
 
 @interface ZMAddressBook : NSObject
 
+@property (nonatomic, readonly) NSUInteger numberOfContacts;
+
 + (instancetype)addressBook; // for testing purposes
 
 - (id<NSFastEnumeration>)contacts;

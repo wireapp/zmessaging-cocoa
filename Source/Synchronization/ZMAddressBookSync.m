@@ -28,6 +28,7 @@
 #import "ZMAddressBook.h"
 #import "ZMAddressBookEncoder.h"
 #import "ZMOperationLoop.h"
+#import "zmessaging/zmessaging-Swift.h"
 
 static NSString * const ZMAddressBookTranscoderNeedsToBeUploadedKey = @"ZMAddressBookTranscoderNeedsToBeUploaded";
 static NSString * const ZMOnboardingEndpoint = @"/onboarding/v2";
@@ -39,6 +40,7 @@ static NSString * const ZMOnboardingEndpoint = @"/onboarding/v2";
 @property (nonatomic) BOOL isGeneratingPayload;
 @property (nonatomic) ZMEncodedAddressBook *encodedAddressBook;
 @property (nonatomic) ZMAddressBook *addressBook;
+@property (nonatomic) AddressBookTracker *addressBookTracker;
 
 @end
 
@@ -79,6 +81,7 @@ static NSString * const ZMOnboardingEndpoint = @"/onboarding/v2";
     self = [super initWithManagedObjectContext:moc];
     if (self != nil) {
         self.addressBook = addressBook;
+        self.addressBookTracker = [[AddressBookTracker alloc] initWithAnalytics:self.managedObjectContext.zm_syncContext.analytics];
         self.addressBookUpload = addressBookUpload ?: [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self managedObjectContext:self.managedObjectContext];
     }
     return self;
@@ -114,7 +117,9 @@ static NSString * const ZMOnboardingEndpoint = @"/onboarding/v2";
     ZMAddressBookEncoder *encoder = [[ZMAddressBookEncoder alloc] initWithManagedObjectContext:self.managedObjectContext addressBook:addressBook];
     
     [encoder createPayloadWithCompletionHandler:^(ZMEncodedAddressBook *encoded) {
-        if (! [self.uploadedAddressBookDigest isEqual:encoded.digest]) {
+        BOOL addressBookChanged = ![self.uploadedAddressBookDigest isEqual:encoded.digest];
+        [self.addressBookTracker tagAddressBookUpload:addressBookChanged size:encoded.addressBookSize];
+        if (addressBookChanged) {
             self.encodedAddressBook = encoded;
             [self.addressBookUpload readyForNextRequest];
             [ZMOperationLoop notifyNewRequestsAvailable:self];
