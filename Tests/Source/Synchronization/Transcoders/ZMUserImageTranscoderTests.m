@@ -680,6 +680,36 @@
 }
 
 
+- (void)testThatItRecoverFromInconsistenUserImageState
+{
+    // given
+    NSSet *modifiedKeys = [NSSet setWithArray:@[@"imageMediumData", @"imageSmallProfileData"]];
+    ZMUser *selfUser;
+    NSUUID *selfUserAndSelfConversationID = [NSUUID createUUID];
+    [self setUpSelfUser:&selfUser
+           withRemoteID:selfUserAndSelfConversationID
+                formats:@[@(ZMImageFormatProfile), @(ZMImageFormatMedium)]
+    locallyModifiedKeys:modifiedKeys.allObjects];
+    selfUser.imageMediumData = nil;
+    selfUser.imageSmallProfileData = nil;
+    
+    XCTAssertTrue([selfUser hasLocalModificationsForKeys:modifiedKeys]);
+
+    // when
+    
+    ZMUserImageTranscoder __block *localSUT = [[ZMUserImageTranscoder alloc] initWithManagedObjectContext:self.syncMOC
+                                                                                     imageProcessingQueue:self.queue];
+    
+    // then
+    
+    [self.syncMOC performBlockAndWait:^{
+        
+        XCTAssertFalse([selfUser hasLocalModificationsForKeys:modifiedKeys]);
+        localSUT = nil;
+    }];
+    
+}
+
 - (void)testThatItDoesNotUpdateTheImageIfTheCorrelationIDFromTheBackendResponseDiffersFromTheUserImageCorrelationID
 {
     // given
