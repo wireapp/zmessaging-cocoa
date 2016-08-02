@@ -20,7 +20,7 @@
 import Foundation
 import ZMCLinkPreview
 
-public protocol LinkPreviewDetectorType {
+@objc public protocol LinkPreviewDetectorType {
     func downloadLinkPreviews(inText text: String, completion: [LinkPreview] -> Void)
 }
 
@@ -34,16 +34,9 @@ extension LinkPreviewDetector: LinkPreviewDetectorType {}
 
     let managedObjectContext : NSManagedObjectContext
     
-    public convenience init(managedObjectContext: NSManagedObjectContext) {
-        self.init(
-            managedObjectContext: managedObjectContext,
-            linkPreviewDetector: LinkPreviewDetector(resultsQueue: NSOperationQueue.currentQueue()!)
-        )
-    }
-    
-    init(managedObjectContext: NSManagedObjectContext, linkPreviewDetector: LinkPreviewDetectorType) {
-        self.managedObjectContext = managedObjectContext
+    public init(linkPreviewDetector: LinkPreviewDetectorType, managedObjectContext: NSManagedObjectContext) {
         self.linkPreviewDetector = linkPreviewDetector
+        self.managedObjectContext = managedObjectContext
         super.init()
     }
 

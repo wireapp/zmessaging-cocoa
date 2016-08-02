@@ -19,17 +19,27 @@
 
 @import Foundation;
 #import <zmessaging/ZMObjectSyncStrategy.h>
+#import "ZMRequestGenerator.h"
 
-@interface ZMMissingUpdateEventsTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
+@class BackgroundAPNSPingBackStatus;
+@class ZMQuickSyncStatus;
+
+@protocol ZMMissingUpdateEventTranscoderDelegate;
+
+@interface ZMMissingUpdateEventsTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator>
 
 @property (nonatomic, readonly) BOOL hasLastUpdateEventID;
 @property (nonatomic, readonly) BOOL isDownloadingMissingNotifications;
 @property (nonatomic, readonly) NSUUID *lastUpdateEventID;
 
-- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy;
+- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
+                  apnsPingBackStatus:(BackgroundAPNSPingBackStatus *)pingBackStatus;
 - (void)startDownloadingMissingNotifications;
 
-+ (NSUUID *)processUpdateEventsAndReturnLastNotificationIDFromPayload:(id<ZMTransportData>)payload syncStrategy:(ZMSyncStrategy *)syncStrategy;
+- (NSArray <ZMUpdateEvent*> *)processAndReturnUpdateEventsFromPayload:(id<ZMTransportData>)payload;
 
 
 @end
+
+
+

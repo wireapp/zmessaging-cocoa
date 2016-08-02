@@ -120,6 +120,10 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 
 - (void)forwardEvents:(NSArray *)events
 {
+    if (events.count == 0) {
+        return;
+    }
+    
     NSArray *nonFlowEvents = [events filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(ZMUpdateEvent *event, NSDictionary<NSString *,id> * _Nullable ZM_UNUSED bindings) {
         return !event.isFlowEvent;
     }]];

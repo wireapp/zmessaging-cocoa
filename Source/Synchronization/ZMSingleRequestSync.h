@@ -33,6 +33,7 @@
 
 typedef NS_ENUM(int, ZMSingleRequestProgress) {
     ZMSingleRequestIdle = 0,
+    ZMSingleRequestReady,
     ZMSingleRequestInProgress,
     ZMSingleRequestCompleted
 };

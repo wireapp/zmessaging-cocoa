@@ -134,7 +134,7 @@ NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
 
 - (BOOL)isSlowSyncDone;
 {
-    return (self.downstreamSelfUserSync.status != ZMSingleRequestInProgress);
+    return (self.downstreamSelfUserSync.status != ZMSingleRequestInProgress && self.downstreamSelfUserSync.status != ZMSingleRequestReady);
 }
 
 - (void)setNeedsSlowSync

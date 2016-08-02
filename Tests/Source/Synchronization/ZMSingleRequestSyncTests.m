@@ -58,6 +58,8 @@
     [self.sut readyForNextRequest];
     [[[self.transcoder stub] andReturn:expectedRequest] requestForSingleRequestSync:self.sut];
     ZMTransportRequest *request = [self.sut nextRequest];
+    XCTAssertEqual(self.sut.status, ZMSingleRequestInProgress);
+
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -80,7 +82,7 @@
     XCTAssertEqual(self.sut.moc, self.uiMOC);
 }
 
-- (void)testThatItReturnsInProgressWhenAskedToRequest
+- (void)testThatItReturnsReadyWhenAskedToRequest
 {
     // given
     XCTAssertEqual(self.sut.status, ZMSingleRequestIdle);
@@ -90,10 +92,24 @@
     [self.sut readyForNextRequest];
     
     // then
+    XCTAssertEqual(self.sut.status, ZMSingleRequestReady);
+}
+
+- (void)testThatItReturnsInProgressWhenRequestIsCreated
+{
+    // given
+    XCTAssertEqual(self.sut.status, ZMSingleRequestIdle);
+    [[[self.transcoder stub] andReturn:[ZMTransportRequest requestGetFromPath:@"/foo"]] requestForSingleRequestSync:self.sut];
+    
+    // when
+    [self.sut readyForNextRequest];
+    [self.sut nextRequest];
+    
+    // then
     XCTAssertEqual(self.sut.status, ZMSingleRequestInProgress);
 }
 
-- (void)testThatItReturnsInProgressWhenAskedToPrepareForNextRequest
+- (void)testThatItReturnsReadyWhenAskedToPrepareForNextRequest
 {
     // given
     XCTAssertEqual(self.sut.status, ZMSingleRequestIdle);
@@ -103,7 +119,7 @@
     [self.sut readyForNextRequestIfNotBusy];
     
     // then
-    XCTAssertEqual(self.sut.status, ZMSingleRequestInProgress);
+    XCTAssertEqual(self.sut.status, ZMSingleRequestReady);
 }
 
 - (void)testThatItReturnsNoRequestWhenIdle
@@ -219,7 +235,7 @@
     [[self.transcoder reject] didReceiveResponse:OCMOCK_ANY forSingleRequest:OCMOCK_ANY];
     
     // then
-    XCTAssertEqual(self.sut.status, ZMSingleRequestInProgress);
+    XCTAssertEqual(self.sut.status, ZMSingleRequestReady);
     ZMTransportRequest *secondRequest = [self.sut nextRequest];
     XCTAssertNotNil(secondRequest);
 }
@@ -235,7 +251,7 @@
     [[self.transcoder reject] didReceiveResponse:OCMOCK_ANY forSingleRequest:OCMOCK_ANY];
     
     // then
-    XCTAssertEqual(self.sut.status, ZMSingleRequestInProgress);
+    XCTAssertEqual(self.sut.status, ZMSingleRequestReady);
     ZMTransportRequest *secondRequest = [self.sut nextRequest];
     XCTAssertNotNil(secondRequest);
 }
@@ -258,7 +274,7 @@
     XCTAssertEqual(self.sut.status, ZMSingleRequestIdle);
 }
 
-- (void)testThatItReturnsInProgressWhenAskedToPrepareForNextRequest_WheItWasCompleted
+- (void)testThatItReturnsReadyWhenAskedToPrepareForNextRequest_WheItWasCompleted
 {
     // expect
     [[self.transcoder stub] didReceiveResponse:OCMOCK_ANY forSingleRequest:self.sut];
@@ -271,15 +287,15 @@
     [self.sut readyForNextRequestIfNotBusy];
     
     // then
-    XCTAssertEqual(self.sut.status, ZMSingleRequestInProgress);
+    XCTAssertEqual(self.sut.status, ZMSingleRequestReady);
 }
 
 
-- (void)testThatResetCompletionStateDoesNotDoAnythingIfTheRequestIsInProgress
+- (void)testThatResetCompletionStateDoesNotDoAnythingIfTheRequestIsReady
 {
     // given
     [self.sut readyForNextRequest];
-    XCTAssertEqual(self.sut.status, ZMSingleRequestInProgress);
+    XCTAssertEqual(self.sut.status, ZMSingleRequestReady);
     
     // when
     [self performIgnoringZMLogError:^{
@@ -287,7 +303,7 @@
     }];
     
     // then
-    XCTAssertEqual(self.sut.status, ZMSingleRequestInProgress);
+    XCTAssertEqual(self.sut.status, ZMSingleRequestReady);
 }
 
 - (void)testThatItCreatesAnotherRequestWhenNeedDonwloadIsCalledWhileInProgress

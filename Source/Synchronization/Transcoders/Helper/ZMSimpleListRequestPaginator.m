@@ -69,6 +69,11 @@ ZM_EMPTY_ASSERTING_INIT()
     return self;
 }
 
+- (ZMSingleRequestProgress)status
+{
+    return self.singleRequestSync.status;
+}
+
 - (ZMTransportRequest *)nextRequest
 {
     if(!self.hasMoreToFetch) {
@@ -94,6 +99,13 @@ ZM_EMPTY_ASSERTING_INIT()
             [queryItems addObject:[NSURLQueryItem queryItemWithName:@"client" value:selfClient.remoteIdentifier]];
         }
     }
+    id strongTranscoder = self.transcoder;
+    if ([strongTranscoder respondsToSelector:@selector(additionalQueryParameters)]) {
+        NSDictionary *parameters = [strongTranscoder additionalQueryParameters];
+        [parameters enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *value, ZM_UNUSED BOOL *stop) {
+            [queryItems addObject:[NSURLQueryItem queryItemWithName:key value:value]];
+        }];
+    }
     NSURLComponents *components = [NSURLComponents componentsWithString:self.basePath];
     components.queryItems = queryItems;
     
@@ -106,7 +118,8 @@ ZM_EMPTY_ASSERTING_INIT()
     if(response.result == ZMTransportResponseStatusSuccess) {
         [self updateStateWithResponse:response];
     }
-    else if(response.result == ZMTransportResponseStatusPermanentError) {
+    
+    if(response.result == ZMTransportResponseStatusPermanentError) {
         id strongTranscoder = self.transcoder;
         if ([strongTranscoder respondsToSelector:@selector(shouldParseErrorResponseForStatusCode:)]) {
             if ([strongTranscoder shouldParseErrorResponseForStatusCode:response.HTTPStatus]) {
@@ -116,6 +129,7 @@ ZM_EMPTY_ASSERTING_INIT()
         }
         self.hasMoreToFetch = NO;
     }
+    
     [self.singleRequestSync readyForNextRequest];
 }
 
@@ -127,8 +141,8 @@ ZM_EMPTY_ASSERTING_INIT()
     }
     id strongTranscoder = self.transcoder;
     if ([strongTranscoder respondsToSelector:@selector(nextUUIDFromResponse:forListPaginator:)]) {
-        NSUUID *lastUUID = [strongTranscoder nextUUIDFromResponse:response forListPaginator:self];
         self.hasMoreToFetch = [[[response.payload asDictionary] optionalNumberForKey:@"has_more"] boolValue];
+        NSUUID *lastUUID = [strongTranscoder nextUUIDFromResponse:response forListPaginator:self];
         self.lastUUIDOfPreviousPage = lastUUID;
     }
     else {

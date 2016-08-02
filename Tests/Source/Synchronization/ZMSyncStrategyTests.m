@@ -64,6 +64,7 @@
 #import "ZMMessageTranscoder+Internal.h"
 #import "ZMClientMessageTranscoder.h"
 #import "BadgeApplication.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 
 @interface ZMSyncStrategyTests : MessagingTest
@@ -155,9 +156,9 @@
     [[[[registrationTranscoder expect] andReturn:registrationTranscoder] classMethod] alloc];
     (void) [[[registrationTranscoder expect] andReturn:registrationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.authenticationStatus];
 
-    id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
+    id missingUpdateEventsTranscoder = [OCMockObject niceMockForClass:ZMMissingUpdateEventsTranscoder.class];
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
-    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY];
+    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY apnsPingBackStatus:OCMOCK_ANY];
 
     id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
     

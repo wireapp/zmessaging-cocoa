@@ -231,8 +231,15 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification {
               let lastEvent = lastEvent where (!senderIsSelfUser(lastEvent) || lastEvent.type == .CallState)
         else { return false }
 
-        if let conversation = conversation where conversation.isSilenced && !ignoresSilencedState {
-            return false
+        if let conversation = conversation {
+            if conversation.isSilenced && !ignoresSilencedState {
+                return false
+            }
+            if let timeStamp = lastEvent.timeStamp(),
+               let lastRead = conversation.lastReadServerTimeStamp where lastRead.compare(timeStamp) != .OrderedAscending {
+                // don't show notifications that have already been read
+                return false
+            }
         }
         return true
     }

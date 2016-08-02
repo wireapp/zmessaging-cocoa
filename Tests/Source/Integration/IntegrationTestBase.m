@@ -35,6 +35,8 @@
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "ZMCallStateTranscoder.h"
+#import "MockLinkPreviewDetector.h"
+
 
 NSString * const SelfUserEmail = @"myself@user.example.com";
 NSString * const SelfUserPassword = @"fgf0934';$@#%";
@@ -59,6 +61,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 @property (nonatomic) NSArray *allUsers;
 @property (nonatomic) NSArray *nonConnectedUsers;
 @property (nonatomic) MockFlowManager *mockFlowManager;
+@property (nonatomic) MockLinkPreviewDetector *mockLinkPreviewDetector;
 
 @end
 
@@ -82,6 +85,10 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 - (void)setUp
 {
     [super setUp];
+
+    self.mockLinkPreviewDetector = [[MockLinkPreviewDetector alloc] initWithTestImageData:[self mediumJPEGData]];
+    [LinkPreviewDetectorHelper setTest_debug_linkPreviewDetector:self.mockLinkPreviewDetector];
+    
     self.mockObjectIDToRemoteID = [NSMutableDictionary dictionary];
     self.mockFlowManager = self.mockTransportSession.mockFlowManager;
     self.mockTransportSession.cryptoboxLocation = [UserClientKeysStore otrDirectory];
