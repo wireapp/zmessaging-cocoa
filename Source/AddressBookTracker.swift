@@ -20,21 +20,6 @@
 import Foundation
 
 
-private enum Attribute: String {
-    case Outcome = "outcome"
-    case Size = "size"
-    case Interval = "interval"
-}
-
-private extension Bool {
-    var changedDescription: String {
-        return self ? "changed" : "no_changes"
-    }
-}
-
-
-private let eventName = "connect.checked_for_address_book_changes"
-
 extension NSUserDefaults {
     private var lastAddressBookUploadDateKey: String { return "lastAddressBookUploadDate" }
 
@@ -46,8 +31,15 @@ extension NSUserDefaults {
 
 
 @objc final public class AddressBookTracker: NSObject {
-
-    let analytics: AnalyticsType?
+    
+    private enum Attribute: String {
+        case Outcome = "outcome"
+        case Size = "size"
+        case Interval = "interval"
+    }
+    
+    private let eventName = "connect.checked_for_address_book_changes"
+    private let analytics: AnalyticsType?
 
     public init(analytics: AnalyticsType?) {
         self.analytics = analytics
@@ -59,7 +51,7 @@ extension NSUserDefaults {
     /// - param size the size of the addressbook (max 1000)
     public func tagAddressBookUpload(changed: Bool, size: UInt) {
         var attributes: [String: NSObject] = [
-            Attribute.Outcome.rawValue: changed.changedDescription,
+            Attribute.Outcome.rawValue: changed ? "changed" : "no_changes",
             Attribute.Size.rawValue: size
         ]
 
