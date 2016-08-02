@@ -33,6 +33,11 @@ import ZMCLinkPreview
         _test_debug_linkPreviewDetector = detectorType
     }
     
+    @objc public class func tearDown()
+    {
+        _test_debug_linkPreviewDetector = nil
+    }
+    
 }
 
 

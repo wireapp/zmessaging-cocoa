@@ -114,6 +114,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 - (void)tearDown
 {
     [BackgroundActivityFactory tearDownInstance];
+    [LinkPreviewDetectorHelper tearDown];
     
     [self.uiMOC.globalManagedObjectContextObserver tearDown];
     [self.syncMOC.globalManagedObjectContextObserver tearDown];
