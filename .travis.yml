@@ -5,20 +5,19 @@ env:
 language: objective-c
 osx_image: xcode7.3
 
-install:
-  - carthage bootstrap --platform iOS
-
 branches:
    only:
      - develop
      - master
 
 install:
-  - open -b com.apple.iphonesimulator
+  - xcrun simctl list
   - carthage bootstrap --platform iOS
 
 script:
+  - open -b com.apple.iphonesimulator
   - set -o pipefail
-  - xcodebuild clean build test -scheme zmessaging-ios -destination 'platform=iOS Simulator,name=iPhone 6s,OS=9.3' | tee >build.log >(xcpretty -s)
+  - travis_wait 30 xcodebuild build -scheme zmessaging-ios -destination 'name=iPhone 6s,OS=9.3,platform=iOS Simulator' test | tee >build.log >(xcpretty -s)
+
 after_failure:
   - tail -n 500 build.log
