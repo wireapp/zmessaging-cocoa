@@ -19,4 +19,6 @@ install:
 
 script:
   - set -o pipefail
-  - xcodebuild clean build test -scheme zmessaging-ios -destination 'platform=iOS Simulator,name=iPhone 6s,OS=9.3' | xcpretty -s
+  - xcodebuild clean build test -scheme zmessaging-ios -destination 'platform=iOS Simulator,name=iPhone 6s,OS=9.3' | tee >build.log >(xcpretty -s)
+after_failure:
+  - tail -n 500 build.log
