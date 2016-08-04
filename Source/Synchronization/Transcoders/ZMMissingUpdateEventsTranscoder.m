@@ -140,12 +140,14 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
             [event appendDebugInformation:@"From missing update events transcoder, processUpdateEventsAndReturnLastNotificationIDFromPayload"];
             
             ZMUpdateEvent *decryptedEvent = [self.managedObjectContext.zm_cryptKeyStore.box decryptUpdateEventAndAddClient:event managedObjectContext:self.managedObjectContext];
-            [decryptedEvents addObject:decryptedEvent];
-            if (decryptedEvent.type == ZMUpdateEventCallState) {
-                lastCallStateEvents[event.conversationUUID] = decryptedEvent;
-            }
-            else {
-                [parsedEvents addObject:decryptedEvent];
+            if (nil != decryptedEvent) {
+                [decryptedEvents addObject:decryptedEvent];
+                if (decryptedEvent.type == ZMUpdateEventCallState) {
+                    lastCallStateEvents[event.conversationUUID] = decryptedEvent;
+                }
+                else {
+                    [parsedEvents addObject:decryptedEvent];
+                }
             }
         }
     }
