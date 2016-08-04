@@ -19,18 +19,15 @@
 
 @import Foundation;
 @import ZMTransport;
-#import "ZMSingleRequestSync.h"
 
 @protocol ZMSimpleListRequestPaginatorSync;
+
 
 
 @interface ZMSimpleListRequestPaginator : NSObject
 
 /// YES if more requests should be made before to fetch the full list
 @property (nonatomic, readonly) BOOL hasMoreToFetch;
-
-/// Status of the underlying singleRequestTranscoder
-@property (nonatomic, readonly) ZMSingleRequestProgress status;
 
 - (instancetype)initWithBasePath:(NSString *)basePath
                         startKey:(NSString *)startKey
@@ -61,10 +58,5 @@
 /// Returns YES, if the error response for a specific statusCode should be parsed (e.g. if the payload contains content that needs to be processed)
 @optional
 - (BOOL)shouldParseErrorResponseForStatusCode:(NSInteger)statusCode;
-
-
-/// Returns additional query parameters in the from [parameter : value]
-@optional
-- (NSDictionary <NSString *, NSString*>*)additionalQueryParameters;
 
 @end

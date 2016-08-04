@@ -19,15 +19,12 @@
 
 @import ZMUtilities;
 @import ZMTransport;
-@import ZMCDataModel;
-@import Cryptobox;
 
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 #import "ZMSingleRequestSync.h"
 #import "ZMSyncStrategy.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMSimpleListRequestPaginator.h"
-#import "CBCryptoBox+UpdateEvents.h"
 
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 static NSString * const NotificationsKey = @"notifications";
@@ -36,14 +33,9 @@ static NSString * const StartKey = @"since";
 
 NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
-
-
-
 @interface ZMMissingUpdateEventsTranscoder ()
 
 @property (nonatomic, readonly, weak) ZMSyncStrategy *syncStrategy;
-@property (nonatomic, readonly, weak) BackgroundAPNSPingBackStatus *pingBackStatus;
-@property (nonatomic) EventsWithIdentifier *notificationEventsToFetch;
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response;
 
@@ -57,12 +49,10 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 @implementation ZMMissingUpdateEventsTranscoder
 
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
-                  apnsPingBackStatus:(BackgroundAPNSPingBackStatus*)pingBackStatus
 {
     self = [super initWithManagedObjectContext:strategy.syncMOC];
     if(self) {
         _syncStrategy = strategy;
-        _pingBackStatus = pingBackStatus;
         self.listPaginator = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:NotificationsPath
                                                                            startKey:StartKey
                                                                            pageSize:ZMMissingUpdateEventsTranscoderListPageSize
@@ -80,12 +70,20 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 - (NSUUID *)lastUpdateEventID
 {
-    return self.managedObjectContext.zm_lastNotificationID;
+    return [((NSString *)[self.managedObjectContext persistentStoreMetadataForKey:LastUpdateEventIDStoreKey]) UUID];
 }
 
 - (void)setLastUpdateEventID:(NSUUID *)lastUpdateEventID
 {
-    self.managedObjectContext.zm_lastNotificationID = lastUpdateEventID;
+    NSUUID *previousUUID = self.lastUpdateEventID;
+    if(
+       previousUUID.isType1UUID && lastUpdateEventID.isType1UUID && // both are type 1 (or I can't compare)
+       [previousUUID compareWithType1:lastUpdateEventID] != NSOrderedAscending // and I'm not setting to a new one
+       ) {
+        // only set if more recent
+        return;
+    }
+    [self.managedObjectContext setPersistentStoreMetadata:lastUpdateEventID.UUIDString forKey:LastUpdateEventIDStoreKey];
 }
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response
@@ -123,51 +121,40 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 {
     return [payload.asDictionary optionalArrayForKey:@"notifications"].asDictionaries;
 }
-
-- (NSArray<ZMUpdateEvent *>*)processAndReturnUpdateEventsFromPayload:(id<ZMTransportData>)payload
-{
++ (NSUUID *)processUpdateEventsAndReturnLastNotificationIDFromPayload:(id<ZMTransportData>)payload syncStrategy:(ZMSyncStrategy *)syncStrategy {
     
-    ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:10 label:NSStringFromClass([self class])];
-    NSArray *eventsDictionaries = [[self class] eventDictionariesFromPayload:payload];
+    ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:10 label:NSStringFromClass(self)];
+    NSArray *eventsDictionaries = [self eventDictionariesFromPayload:payload];
     
     NSMutableArray *parsedEvents = [NSMutableArray array];
     NSMutableDictionary *lastCallStateEvents = [NSMutableDictionary dictionary];
+    NSUUID *latestEventId = nil;
     
-    NSMutableArray *decryptedEvents = [NSMutableArray array];
     for(NSDictionary *eventDict in eventsDictionaries) {
         NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventDict];
         for (ZMUpdateEvent *event in events) {
             [event appendDebugInformation:@"From missing update events transcoder, processUpdateEventsAndReturnLastNotificationIDFromPayload"];
-            
-            ZMUpdateEvent *decryptedEvent = [self.managedObjectContext.zm_cryptKeyStore.box decryptUpdateEventAndAddClient:event managedObjectContext:self.managedObjectContext];
-            if (nil != decryptedEvent) {
-                [decryptedEvents addObject:decryptedEvent];
-                if (decryptedEvent.type == ZMUpdateEventCallState) {
-                    lastCallStateEvents[event.conversationUUID] = decryptedEvent;
-                }
-                else {
-                    [parsedEvents addObject:decryptedEvent];
-                }
+
+            if (event.type == ZMUpdateEventCallState) {
+                lastCallStateEvents[event.conversationUUID] = event;
             }
+            else {
+                [parsedEvents addObject:event];
+            }
+            latestEventId = event.uuid;
         }
     }
-    ZMSyncStrategy *strongStrategy = self.syncStrategy;
-    [strongStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
-    [strongStrategy processUpdateEvents:lastCallStateEvents.allValues ignoreBuffer:self.isFetchingStreamForAPNS];
+    
+    [syncStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
+    [syncStrategy processUpdateEvents:lastCallStateEvents.allValues ignoreBuffer:NO];
     
     [tp warnIfLongerThanInterval];
-    return decryptedEvents;
+    return latestEventId;
 }
 
 - (BOOL)hasLastUpdateEventID
 {
     return self.lastUpdateEventID != nil;
-}
-
-- (BOOL)isFetchingStreamForAPNS
-{
-    return ([[UIApplication sharedApplication] applicationState] == UIApplicationStateBackground) &&
-           (self.pingBackStatus.status == PingBackStatusFetchingNotificationStream);
 }
 
 - (void)startDownloadingMissingNotifications
@@ -183,30 +170,6 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 - (NSArray *)requestGenerators;
 {
     return @[self.listPaginator];
-}
-
-- (ZMTransportRequest *)nextRequest
-{
-    BackgroundAPNSPingBackStatus *strongStatus = self.pingBackStatus;
-    BOOL systemsReady = ((strongStatus.status == PingBackStatusFetchingNotificationStream) &&
-                         (self.listPaginator.status != ZMSingleRequestInProgress));
-    BOOL hasNewNotificationID = strongStatus.hasNoticeNotificationIDs;
-    BOOL hasNotificationInProgress = (self.notificationEventsToFetch != nil);
-    
-    ZMTransportRequest *request;
-    if (systemsReady && (hasNewNotificationID || hasNotificationInProgress)) {
-        EventsWithIdentifier *newEvents = strongStatus.nextNoticeNotificationEventsWithID;
-        if (newEvents != nil) {
-            self.notificationEventsToFetch = newEvents;
-            [self.listPaginator resetFetching];
-        }
-        
-        if (self.notificationEventsToFetch != nil) {
-            request = [self.listPaginator nextRequest];
-            [request forceToVoipSession];
-        }
-    }
-    return request;
 }
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> *)events
@@ -245,17 +208,14 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 - (NSUUID *)nextUUIDFromResponse:(ZMTransportResponse *)response forListPaginator:(ZMSimpleListRequestPaginator *)paginator
 {
-    NSArray<ZMUpdateEvent *> *decryptedEvents = [self processAndReturnUpdateEventsFromPayload:response.payload];
-    if (decryptedEvents.count > 0) {
-        self.lastUpdateEventID = [decryptedEvents.lastObject uuid];
+    NOT_USED(paginator);
+    
+    NSUUID *latestEventId = [ZMMissingUpdateEventsTranscoder processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
+    if (latestEventId != nil) {
+        self.lastUpdateEventID = latestEventId;
     }
+    
     [self appendPotentialGapSystemMessageIfNeededWithResponse:response];
-    if (self.notificationEventsToFetch != nil) {
-        [self.pingBackStatus missingUpdateEventTranscoderWithDidReceiveEvents:decryptedEvents originalEvents:self.notificationEventsToFetch hasMore:paginator.hasMoreToFetch];
-        if (!paginator.hasMoreToFetch) {
-            self.notificationEventsToFetch = nil;
-        }
-    }
     return self.lastUpdateEventID;
 }
 
@@ -271,20 +231,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
     if (statusCode == 404) {
         return YES;
     }
-    if (self.notificationEventsToFetch != nil) {
-        [self.pingBackStatus missingUpdateEventTranscoderFailedDownloadingEvents:self.notificationEventsToFetch];
-        self.notificationEventsToFetch = nil;
-    }
     return NO;
 }
 
-- (NSDictionary<NSString *,NSString *> *)additionalQueryParameters
-{
-    if (self.notificationEventsToFetch.identifier != nil) {
-        return @{@"cancel_fallback" : self.notificationEventsToFetch.identifier.transportString};
-    }
-    return nil;
-}
-
 @end
-
