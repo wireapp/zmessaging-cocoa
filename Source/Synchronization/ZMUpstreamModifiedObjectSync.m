@@ -253,14 +253,16 @@ ZM_EMPTY_ASSERTING_INIT();
     
     ZMModifiedObjectSyncToken *token = [self.updatedObjects didStartSynchronizingKeys:request.keys forObject:objectWithKeys];
     
+    NSDictionary *userInfo = request.userInfo;
+    
     ZM_WEAK(self);
-    ZM_WEAK(transcoder);
     [request.transportRequest addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.context block:^(ZMTransportResponse *response) {
         ZM_STRONG(self);
-        ZM_STRONG(transcoder);
+        
+        id <ZMUpstreamTranscoder> localTranscoder = self.transcoder;
         NSSet *keysToParse = [self.updatedObjects keysToParseAfterSyncingToken:token];
         if(response.result == ZMTransportResponseStatusSuccess) {
-            BOOL transcoderNeedsMoreRequests = [transcoder updateUpdatedObject:objectWithKeys.object requestUserInfo:request.userInfo response:response keysToParse:keysToParse];
+            BOOL transcoderNeedsMoreRequests = [transcoder updateUpdatedObject:objectWithKeys.object requestUserInfo:userInfo response:response keysToParse:keysToParse];
             BOOL needsMoreRequests = (keysToParse.count > 0) && transcoderNeedsMoreRequests;
             if (needsMoreRequests) {
                 [self.updatedObjects didNotFinishToSynchronizeToken:token];
@@ -274,14 +276,14 @@ ZM_EMPTY_ASSERTING_INIT();
         }
         else if (response.result == ZMTransportResponseStatusExpired) {
             [self.updatedObjects didFailToSynchronizeToken:token];
-            if ([transcoder respondsToSelector:@selector(requestExpiredForObject:forKeys:)]) {
-                [transcoder requestExpiredForObject:objectWithKeys.object forKeys:objectWithKeys.keysToSync];
+            if ([localTranscoder respondsToSelector:@selector(requestExpiredForObject:forKeys:)]) {
+                [localTranscoder requestExpiredForObject:objectWithKeys.object forKeys:objectWithKeys.keysToSync];
             }
         }
         else {
             BOOL shouldResyncObject = NO;
-            if ([transcoder respondsToSelector:@selector(shouldRetryToSyncAfterFailedToUpdateObject:request:response:keysToParse:)]) {
-                shouldResyncObject = [transcoder shouldRetryToSyncAfterFailedToUpdateObject:objectWithKeys.object request:request response:response keysToParse:keysToParse];
+            if ([localTranscoder respondsToSelector:@selector(shouldRetryToSyncAfterFailedToUpdateObject:request:response:keysToParse:)]) {
+                shouldResyncObject = [localTranscoder shouldRetryToSyncAfterFailedToUpdateObject:objectWithKeys.object request:request response:response keysToParse:keysToParse];
             }
 
             if (shouldResyncObject) {
@@ -292,7 +294,7 @@ ZM_EMPTY_ASSERTING_INIT();
             }
             else {
                 [self.updatedObjects didFailToSynchronizeToken:token];
-                ZMManagedObject *objectToRefetch = [self.transcoder objectToRefetchForFailedUpdateOfObject:objectWithKeys.object];
+                ZMManagedObject *objectToRefetch = [localTranscoder objectToRefetchForFailedUpdateOfObject:objectWithKeys.object];
                 objectToRefetch.needsToBeUpdatedFromBackend = YES;
             }
         }

@@ -89,7 +89,7 @@
         ZM_WEAK(self);
         [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.moc block:^(ZMTransportResponse * response) {
             ZM_STRONG(self);
-            [self processResponse:response forRequest:request counterValueAtStart:currentCounter];
+            [self processResponse:response forRequest:self.currentRequest counterValueAtStart:currentCounter];
         }]];
         return request;
     }
