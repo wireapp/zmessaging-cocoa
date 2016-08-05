@@ -224,6 +224,37 @@
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
+- (void)testThatItResetsAddressBookNeedToBeUploadedIfThereAreNoChangesInTheAddressBook
+{
+    // given
+    [[self.addressBookUpload expect] readyForNextRequest];
+    [[self.addressBookMock expect] numberOfContacts];
+    [ZMAddressBookSync markAddressBookAsNeedingToBeUploadedInContext:self.uiMOC];
+    XCTAssertTrue([self.uiMOC saveOrRollback]);
+    XCTAssertTrue([ZMAddressBookSync addressBookNeedsToBeUploadedInContext:self.uiMOC]);
+    XCTAssertNil(self.sut.nextRequest);
+    WaitForAllGroupsToBeEmpty(0.2);
+    
+    // when
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"results": @[]} HTTPstatus:200 transportSessionError:nil];
+    [self.sut didReceiveResponse:response forSingleRequest:nil];
+    WaitForAllGroupsToBeEmpty(0.2);
+    
+    // then
+    XCTAssertFalse([ZMAddressBookSync addressBookNeedsToBeUploadedInContext:self.uiMOC]);
+    
+    // when
+    [[self.addressBookMock expect] numberOfContacts];
+    [ZMAddressBookSync markAddressBookAsNeedingToBeUploadedInContext:self.uiMOC];
+    XCTAssertTrue([self.uiMOC saveOrRollback]);
+    XCTAssertTrue([ZMAddressBookSync addressBookNeedsToBeUploadedInContext:self.uiMOC]);
+    
+    // then
+    XCTAssertNil(self.sut.nextRequest);
+    WaitForAllGroupsToBeEmpty(0.2);
+    XCTAssertFalse([ZMAddressBookSync addressBookNeedsToBeUploadedInContext:self.uiMOC]);
+}
+
 @end
 
 

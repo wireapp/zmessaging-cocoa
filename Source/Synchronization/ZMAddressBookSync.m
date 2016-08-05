@@ -123,7 +123,9 @@ static NSString * const ZMOnboardingEndpoint = @"/onboarding/v2";
             self.encodedAddressBook = encoded;
             [self.addressBookUpload readyForNextRequest];
             [ZMOperationLoop notifyNewRequestsAvailable:self];
-        };
+        } else {
+            [self clearAddressBookAsNeedingToBeUploaded];
+        }
         self.isGeneratingPayload = NO;
     }];
     
