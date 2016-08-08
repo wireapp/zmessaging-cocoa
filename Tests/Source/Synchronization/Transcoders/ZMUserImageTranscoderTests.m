@@ -700,6 +700,8 @@
     ZMUserImageTranscoder __block *localSUT = [[ZMUserImageTranscoder alloc] initWithManagedObjectContext:self.syncMOC
                                                                                      imageProcessingQueue:self.queue];
     
+    XCTAssertTrue([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
+    
     // then
     
     [self.syncMOC performBlockAndWait:^{
