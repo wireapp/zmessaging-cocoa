@@ -90,7 +90,6 @@
     NSArray *transcoders = @[
                              directory.flowTranscoder,
                              directory.systemMessageTranscoder,
-                             directory.textMessageTranscoder,
                              directory.clientMessageTranscoder,
                              directory.selfTranscoder,
                              directory.assetTranscoder,

@@ -59,10 +59,6 @@ typedef NS_ENUM(int8_t, ZMAssetTag) {
 @implementation ZMMessageTranscoder
 
 
-+ (instancetype)textMessageTranscoderWithManagedObjectContext:(NSManagedObjectContext *)moc localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher
-{
-    return [[ZMTextMessageTranscoder alloc] initWithManagedObjectContext:moc upstreamInsertedObjectSync:nil localNotificationDispatcher:dispatcher messageExpirationTimer:nil];
-}
 
 + (instancetype)systemMessageTranscoderWithManagedObjectContext:(NSManagedObjectContext *)moc localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher
 {
@@ -227,62 +223,6 @@ typedef NS_ENUM(int8_t, ZMAssetTag) {
 
 
 @end
-
-
-#pragma mark - Text message transcoder
-@implementation ZMTextMessageTranscoder
-
-- (ZMTransportRequest *)requestForInsertingObject:(ZMTextMessage __unused *)message
-{
-    return nil;
-}
-
-- (NSArray<ZMMessage *> *)createMessagesFromEvents:(NSArray<ZMUpdateEvent *>*)events
-                                    prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
-{
-    NSMutableArray *createdMessages = [NSMutableArray array];
-    for(ZMUpdateEvent *event in events) {
-        if (event.type == ZMUpdateEventConversationMessageAdd) {
-            ZMMessage *msg = [self processTextMessageAddEvent:event prefetchResult:prefetchResult];
-            if(msg != nil) {
-                [createdMessages addObject:msg];
-            }
-        }
-    }
-    return createdMessages;
-}
-
-- (ZMTextMessage *)processTextMessageAddEvent:(ZMUpdateEvent *)event
-                               prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult;
-{
-    return [ZMTextMessage createOrUpdateMessageFromUpdateEvent:event
-                                        inManagedObjectContext:self.managedObjectContext
-                                                prefetchResult:prefetchResult];
-}
-
-- (NSArray<id<ZMContextChangeTracker>> *)contextChangeTrackers {
-    return @[];
-}
-
-- (NSArray<id<ZMRequestGenerator>> *)requestGenerators {
-    return @[];
-}
-
-- (NSSet<NSUUID *> *)messageNoncesToPrefetchToProcessEvents:(NSArray<ZMUpdateEvent *> *)events
-{
-    return [events mapWithBlock:^NSUUID *(ZMUpdateEvent *event) {
-        switch (event.type) {
-            case ZMUpdateEventConversationMessageAdd:
-                return event.messageNonce;
-                
-            default:
-                return nil;
-        }
-    }].set;
-}
-
-@end
-
 
 
 

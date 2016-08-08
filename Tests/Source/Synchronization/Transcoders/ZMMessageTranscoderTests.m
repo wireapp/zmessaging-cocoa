@@ -63,8 +63,8 @@ static NSString const *GetConversationURL = @"/conversations/%@/events?start=%@&
 - (ZMMessageTranscoder *)sut
 {
     if (!_sut) {
-        _sut = [ZMMessageTranscoder textMessageTranscoderWithManagedObjectContext:self.syncMOC
-                                                      localNotificationDispatcher:self.notificationDispatcher];
+        _sut = [ZMMessageTranscoder systemMessageTranscoderWithManagedObjectContext:self.syncMOC
+                                                        localNotificationDispatcher:self.notificationDispatcher];
     }
     return _sut;
 }

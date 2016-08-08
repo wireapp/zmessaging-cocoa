@@ -60,7 +60,6 @@
         self.objectDirectory.conversationTranscoder,
         self.objectDirectory.pushTokenTranscoder,
         self.objectDirectory.systemMessageTranscoder,
-        self.objectDirectory.textMessageTranscoder,
         self.objectDirectory.clientMessageTranscoder,
         self.objectDirectory.knockTranscoder,
         self.objectDirectory.userImageTranscoder,
