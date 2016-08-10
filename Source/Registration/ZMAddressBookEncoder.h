@@ -37,6 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ZMEncodedAddressBook : NSObject
 
+@property (nonatomic, readonly) NSUInteger addressBookSize; // The size of the complete address book (used for tracking)
 @property (nonatomic, readonly, copy, nullable) id<ZMTransportData> localData;
 @property (nonatomic, readonly, copy, nullable) id<ZMTransportData> otherData;
 @property (nonatomic, readonly, copy, nullable) NSData *digest; ///< A digest of the entire address book

@@ -31,9 +31,6 @@
 
 @property (nonatomic, readonly) BOOL hasPendingMessages;
 
-+ (instancetype)textMessageTranscoderWithManagedObjectContext:(NSManagedObjectContext *)moc
-                                  localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher;
-
 + (instancetype)systemMessageTranscoderWithManagedObjectContext:(NSManagedObjectContext *)moc
                                     localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher;
 

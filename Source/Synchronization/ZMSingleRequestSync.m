@@ -21,7 +21,6 @@
 @import ZMTransport;
 
 #import "ZMSingleRequestSync.h"
-#import "ZMOperationLoop.h"
 
 @interface ZMSingleRequestSync ()
 
@@ -62,7 +61,7 @@
 {
     ++self.requestUniqueCounter;
     self.currentRequest = nil;
-    self.status = ZMSingleRequestReady;
+    self.status = ZMSingleRequestInProgress;
 }
 
 - (void)readyForNextRequestIfNotBusy
@@ -75,15 +74,13 @@
 - (ZMTransportRequest *)nextRequest
 {
     id<ZMSingleRequestTranscoder> transcoder = self.transcoder;
-    if(self.currentRequest == nil && self.status == ZMSingleRequestReady) {
+    if(self.currentRequest == nil && self.status == ZMSingleRequestInProgress) {
         ZMTransportRequest *request = [transcoder requestForSingleRequestSync:self];
         [request setDebugInformationTranscoder:transcoder];
 
         self.currentRequest = request;
         if(request == nil) {
             self.status = ZMSingleRequestCompleted;
-        } else {
-            self.status = ZMSingleRequestInProgress;
         }
         const int currentCounter = self.requestUniqueCounter;
         ZM_WEAK(self);
@@ -119,7 +116,7 @@
             break;
         }
         case ZMTransportResponseStatusTemporaryError: {
-            self.status = ZMSingleRequestReady;
+            self.status = ZMSingleRequestInProgress;
             break;
         }
     }

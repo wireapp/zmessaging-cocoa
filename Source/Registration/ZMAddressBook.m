@@ -38,7 +38,7 @@ static char* const ZMLogTag ZM_UNUSED = "Addressbook";
 static NSString * const ZMSentAddressBookInvitationsKey = @"ZMSentAddressBookInvitations";
 
 @interface ZMAddressBook ()
-
+@property (nonatomic, assign) NSUInteger numberOfContacts;
 @property (nonatomic, assign) ABAddressBookRef addressBook;
 @property (nonatomic) NBPhoneNumberUtil *phoneNumberUtil;
 
@@ -102,11 +102,21 @@ static NSString * const ZMSentAddressBookInvitationsKey = @"ZMSentAddressBookInv
     return self;
 }
 
+- (NSUInteger)numberOfContacts;
+{
+    return self.peopleArray.count;
+}
+
 - (id<NSFastEnumeration>)contacts;
+{
+    return [[ZMAddressBookIterator alloc] initWithPeople:self.peopleArray phoneNumberUtil:self.phoneNumberUtil];
+}
+
+- (NSArray *)peopleArray
 {
     NSArray *peopleArray;
     peopleArray = CFBridgingRelease(ABAddressBookCopyArrayOfAllPeople(self.addressBook));
-    return [[ZMAddressBookIterator alloc] initWithPeople:peopleArray phoneNumberUtil:self.phoneNumberUtil];
+    return peopleArray;
 }
 
 - (void)dealloc

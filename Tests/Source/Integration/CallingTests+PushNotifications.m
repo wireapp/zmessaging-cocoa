@@ -58,8 +58,8 @@
     
     // (1) when we recieve a push notification
     {
-        [self simulateReceivePushNotification:@{@"data": @{@"payload": @[payload], 
-                                                           @"id": [NSUUID timeBasedUUID].transportString
+        [self simulateReceivePushNotification:@{@"data": @{@"payload": @[payload],
+                                                           @"id": [NSUUID createUUID].transportString
                                                            }
                                                 }];
         WaitForAllGroupsToBeEmpty(0.5);
@@ -117,7 +117,7 @@
     // (1) when we recieve a push notification
     {
         [self simulateReceivePushNotification:@{@"data": @{@"payload": @[payload],
-                                                           @"id": [NSUUID timeBasedUUID].transportString
+                                                           @"id": [NSUUID createUUID].transportString
                                                            }
                                                 }];
         WaitForAllGroupsToBeEmpty(0.5);
@@ -215,7 +215,7 @@
     // (1) when we recieve a push notification
     {
         [self simulateReceivePushNotification:@{@"data": @{@"payload": @[payload],
-                                                           @"id": [NSUUID timeBasedUUID].transportString
+                                                           @"id": [NSUUID createUUID].transportString
                                                            }
                                                 }];
         

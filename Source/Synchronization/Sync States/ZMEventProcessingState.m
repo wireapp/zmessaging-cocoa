@@ -71,7 +71,6 @@
                              objectStrategyDirectory.conversationTranscoder,
                              objectStrategyDirectory.pushTokenTranscoder,
                              objectStrategyDirectory.systemMessageTranscoder,
-                             objectStrategyDirectory.textMessageTranscoder,
                              objectStrategyDirectory.clientMessageTranscoder,
                              objectStrategyDirectory.knockTranscoder,
                              objectStrategyDirectory.userImageTranscoder,

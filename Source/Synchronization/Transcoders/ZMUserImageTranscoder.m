@@ -75,12 +75,8 @@ static NSString * const RequestUserProfileSmallAssetNotificationName = @"ZMReque
 {
     self = [super initWithManagedObjectContext:moc];
     if (self != nil) {
-        ZMUser *selfUser = [ZMUser selfUserInContext:moc];
-        
-        [self recoverFromInconsistentUserImageStatusOfSelfUser:selfUser];
-        
         _imageProcessingQueue = imageProcessingQueue;
-        
+
         // Small profiles
         NSPredicate *filterForSmallImage = [NSCompoundPredicate andPredicateWithSubpredicates:@[
                                                                                                 [ZMUser predicateForSmallImageNeedingToBeUpdatedFromBackend],
@@ -90,7 +86,6 @@ static NSString * const RequestUserProfileSmallAssetNotificationName = @"ZMReque
                                                                                                entityName:ZMUser.entityName
                                                                             predicateForObjectsToDownload:filterForSmallImage
                                                                                      managedObjectContext:self.managedObjectContext];
-        [self.smallProfileDownstreamSync whiteListObject:selfUser];
         
         // Medium profile
         NSPredicate *filterForMediumImage = [NSCompoundPredicate andPredicateWithSubpredicates:@[
@@ -101,7 +96,13 @@ static NSString * const RequestUserProfileSmallAssetNotificationName = @"ZMReque
                                                                                          entityName:ZMUser.entityName
                                                                       predicateForObjectsToDownload:filterForMediumImage
                                                                                managedObjectContext:self.managedObjectContext];
-        [self.mediumDownstreamSync whiteListObject:selfUser];
+        
+        [moc performGroupedBlock:^{
+            ZMUser *selfUser = [ZMUser selfUserInContext:moc];
+            [self recoverFromInconsistentUserImageStatusOfSelfUser:selfUser];
+            [self.smallProfileDownstreamSync whiteListObject:selfUser];
+            [self.mediumDownstreamSync whiteListObject:selfUser];
+        }];
         
         // Self user upstream
         self.upstreamSync = [[ZMUpstreamAssetSync alloc] initWithTranscoder:self entityName:ZMUser.entityName keysToSync:@[ImageSmallProfileDataKey, ImageMediumDataKey] managedObjectContext:self.managedObjectContext];

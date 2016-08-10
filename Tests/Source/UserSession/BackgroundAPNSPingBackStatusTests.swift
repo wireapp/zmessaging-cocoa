@@ -17,7 +17,7 @@
 // 
 
 
-@testable import zmessaging
+import zmessaging
 import ZMTesting
 import ZMCMockTransport
 
@@ -255,7 +255,6 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     func testThatItPostsNewRequestsAvailableNotificationWhenAddingANotificationID() {
         // when
         sut.didReceiveVoIPNotification(createEventsWithID())
-        XCTAssert(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
         XCTAssertEqual(observer.notifications.count, 1)
@@ -349,7 +348,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         
         // expect
         sut.didReceiveVoIPNotification(eventsWithID) { result in
-            XCTAssertEqual(result.0, (status == .Success) ? ZMPushPayloadResult.Success : ZMPushPayloadResult.Failure)
+            XCTAssertEqual(result.0, ZMPushPayloadResult.Success)
             expectation.fulfill()
         }
         
@@ -458,7 +457,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         
         // when
         sut.didReceiveVoIPNotification(createEventsWithID())
-        XCTAssertFalse(sut.hasNotificationIDs)
+        XCTAssertTrue(sut.hasNotificationIDs)
         
         // then
         XCTAssertNil(sut.backgroundActivity)
@@ -494,7 +493,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         sut.didReceiveVoIPNotification(eventsWithID)
         XCTAssertFalse(sut.hasNotificationIDs)
         XCTAssertTrue(sut.hasNoticeNotificationIDs)
-        XCTAssertEqual(sut.status, PingBackStatus.FetchingNotificationStream)
+        XCTAssertEqual(sut.status, PingBackStatus.FetchingNotice)
         
         XCTAssertNotNil(sut.backgroundActivity)
         
@@ -521,12 +520,10 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     }
     
 
-    func simulateFetchNoticeAndPingback() -> Bool {
-        if let nextNoticeEventsWithID = sut.nextNoticeNotificationEventsWithID() {
-            sut.missingUpdateEventTranscoder(didReceiveEvents: [], originalEvents: nextNoticeEventsWithID, hasMore: false)
-            return true
-        }
-        return false
+    func simulateFetchNoticeAndPingback() {
+        let nextNoticeEventsWithID = sut.nextNoticeNotificationEventsWithID()!
+        sut.didFetchNoticeNotification(nextNoticeEventsWithID, responseStatus: .Success, events:[])
+        
     }
     
     func simulatePingBack() -> NSUUID {
@@ -535,7 +532,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         return nextEventsWithID.identifier
     }
     
-    func checkThatItUpdatesStatusToFetchingStreamWhenFirstAndNextNotificationAreNotice(nextIsNotice: Bool) {
+    func checkThatItUpdatesStatusToFetchingWhenFirstAndNextNotificationAreNotice(nextIsNotice: Bool) {
        
         // given
         let eventsWithID1 = createEventsWithID(isNotice: true)
@@ -545,18 +542,17 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         sut.didReceiveVoIPNotification(eventsWithID2)
 
         XCTAssertTrue(sut.hasNoticeNotificationIDs)
-        XCTAssertEqual(sut.status, PingBackStatus.FetchingNotificationStream)
+        XCTAssertEqual(sut.status, PingBackStatus.FetchingNotice)
         
         XCTAssertNotNil(sut.backgroundActivity)
         
         // when
-        XCTAssertTrue(simulateFetchNoticeAndPingback())
+        simulateFetchNoticeAndPingback()
 
         // then
         if nextIsNotice {
-            XCTAssertTrue(sut.hasNoticeNotificationIDs)
             XCTAssertFalse(sut.hasNotificationIDs)
-            XCTAssertEqual(sut.status, PingBackStatus.FetchingNotificationStream)
+            XCTAssertEqual(sut.status, PingBackStatus.FetchingNotice)
         } else {
             XCTAssertTrue(sut.hasNotificationIDs)
             XCTAssertEqual(sut.status, PingBackStatus.Pinging)
@@ -565,7 +561,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
 
         // and when
         if nextIsNotice {
-            XCTAssertTrue(simulateFetchNoticeAndPingback())
+            simulateFetchNoticeAndPingback()
         } else {
             simulatePingBack()
         }
@@ -575,15 +571,15 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertEqual(sut.status, PingBackStatus.Done)
     }
     
-    func testThatItUpdatesStatusToFetchingStreamWhenFirstAndNextNotificationAreNoticeNextIsNotice() {
-        checkThatItUpdatesStatusToFetchingStreamWhenFirstAndNextNotificationAreNotice(true)
+    func testThatItUpdatesStatusToFetchingWhenFirstAndNextNotificationAreNoticeNextIsNotice() {
+        checkThatItUpdatesStatusToFetchingWhenFirstAndNextNotificationAreNotice(true)
     }
     
-    func testThatItUpdatesStatusToFetchingStreamWhenFirstAndNextNotificationAreNoticeNextIsNonNotice() {
-        checkThatItUpdatesStatusToFetchingStreamWhenFirstAndNextNotificationAreNotice(false)
+    func testThatItUpdatesStatusToFetchingWhenFirstAndNextNotificationAreNoticeNextIsNonNotice() {
+        checkThatItUpdatesStatusToFetchingWhenFirstAndNextNotificationAreNotice(false)
     }
     
-    func checkThatItUpdatesStatusToFetchingStreamWhenFirstIsNonNoticeAndNextNotification(nextIsNotice: Bool) {
+    func checkThatItUpdatesStatusToFetchingWhenFirstIsNonNoticeAndNextNotification(nextIsNotice: Bool) {
         
         // given
         let eventsWithID1 = createEventsWithID(isNotice: false)
@@ -603,7 +599,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         // then
         if nextIsNotice {
             XCTAssertTrue(sut.hasNoticeNotificationIDs)
-            XCTAssertEqual(sut.status, PingBackStatus.FetchingNotificationStream)
+            XCTAssertEqual(sut.status, PingBackStatus.FetchingNotice)
         } else {
             XCTAssertFalse(sut.hasNoticeNotificationIDs)
             XCTAssertEqual(sut.status, PingBackStatus.Pinging)
@@ -622,12 +618,12 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertEqual(sut.status, PingBackStatus.Done)
     }
     
-    func testThatItUpdatesStatusToFetchingStreamWhenFirstIsNonNoticeAndNextNotificationIsNotice() {
-        checkThatItUpdatesStatusToFetchingStreamWhenFirstIsNonNoticeAndNextNotification(true)
+    func testThatItUpdatesStatusToFetchingWhenFirstIsNonNoticeAndNextNotificationIsNotice() {
+        checkThatItUpdatesStatusToFetchingWhenFirstIsNonNoticeAndNextNotification(true)
     }
     
-    func testThatItUpdatesStatusToFetchingStreamWhenFirstIsNonNoticeAndNextNotificationIsNotNotice() {
-        checkThatItUpdatesStatusToFetchingStreamWhenFirstIsNonNoticeAndNextNotification(false)
+    func testThatItUpdatesStatusToFetchingWhenFirstIsNonNoticeAndNextNotificationIsNotNotice() {
+        checkThatItUpdatesStatusToFetchingWhenFirstIsNonNoticeAndNextNotification(false)
     }
 
     func testThatItTakesTheOrderFromTheNotificationIDsArray() {
@@ -640,166 +636,21 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         sut.didReceiveVoIPNotification(eventsWithID2)
         sut.didReceiveVoIPNotification(eventsWithID3)
 
-        XCTAssertEqual(sut.status, PingBackStatus.FetchingNotificationStream)
+        XCTAssertEqual(sut.status, PingBackStatus.FetchingNotice)
 
         // when
         simulateFetchNoticeAndPingback()
         XCTAssertEqual(sut.status, PingBackStatus.Pinging)
 
         simulatePingBack()
-        XCTAssertEqual(sut.status, PingBackStatus.FetchingNotificationStream)
+        XCTAssertEqual(sut.status, PingBackStatus.FetchingNotice)
 
         simulateFetchNoticeAndPingback()
         XCTAssertEqual(sut.status, PingBackStatus.Done)
     }
+
 }
 
-
-// MARK: MissingUpdateEventTranscoder
-extension BackgroundAPNSPingBackStatusTests {
-    
-    func testThatItReturnsHasNoticeNotification_TRUE_IfNoNotificationInProgress(){
-        
-        // given
-        let eventsWithID1 = createEventsWithID(isNotice: true)
-        let eventsWithID2 = createEventsWithID(isNotice: true)
-        
-        sut.didReceiveVoIPNotification(eventsWithID1)
-        sut.didReceiveVoIPNotification(eventsWithID2)
-        
-        // then
-        XCTAssertTrue(sut.hasNoticeNotificationIDs)
-        XCTAssertFalse(sut.notificationInProgress)
-    }
-    
-    func testThatItReturnsHasNoticeNotification_FALSE_IFNotificationInProgress(){
-    
-        // given
-        let eventsWithID1 = createEventsWithID(isNotice: true)
-        let eventsWithID2 = createEventsWithID(isNotice: true)
-
-        sut.didReceiveVoIPNotification(eventsWithID1)
-        sut.didReceiveVoIPNotification(eventsWithID2)
-
-        // when
-        XCTAssertNotNil(sut.nextNoticeNotificationEventsWithID())
-        
-        // then
-        XCTAssertFalse(sut.hasNoticeNotificationIDs)
-        XCTAssertTrue(sut.notificationInProgress)
-        
-        // and when
-        sut.missingUpdateEventTranscoder(didReceiveEvents: [ZMUpdateEvent()], originalEvents: eventsWithID1, hasMore: false)
-        
-        // then
-        XCTAssertTrue(sut.hasNoticeNotificationIDs)
-        XCTAssertFalse(sut.notificationInProgress)
-    }
-    
-    func testThatWhenFetchingNotificationStreamFailsItSwitchesTo_FetchNotice(){
-        // given
-        let eventsWithID1 = createEventsWithID(isNotice: true)
-        sut.didReceiveVoIPNotification(eventsWithID1)
-        XCTAssertEqual(sut.status, PingBackStatus.FetchingNotificationStream)
-        XCTAssertTrue(sut.hasNoticeNotificationIDs)
-
-        // when
-        XCTAssertNotNil(sut.nextNoticeNotificationEventsWithID())
-        XCTAssertFalse(sut.notificationIDs.contains(eventsWithID1))
-        sut.missingUpdateEventTranscoderFailedDownloadingEvents(eventsWithID1)
-
-        // then
-        XCTAssertTrue(sut.hasNoticeNotificationIDs)
-        XCTAssertTrue(sut.notificationIDs.contains(eventsWithID1))
-        XCTAssertEqual(sut.status, PingBackStatus.FetchingNotice)
-    }
-    
-    func testThatItFinishesWithFailureWhenNoEventsReturned(){
-        // given
-        let eventsWithID1 = createEventsWithID(isNotice: true)
-        
-        var  didFinish = false
-        let handler: (ZMPushPayloadResult, [ZMUpdateEvent]) -> Void = { (result, events) in
-            XCTAssertEqual(result, ZMPushPayloadResult.Failure)
-            XCTAssertEqual(events.count, 0)
-            didFinish = true
-        }
-        
-        sut.didReceiveVoIPNotification(eventsWithID1, handler: handler)
-        XCTAssertNotNil(sut.nextNoticeNotificationEventsWithID())
-
-        // when
-        sut.missingUpdateEventTranscoder(didReceiveEvents: [], originalEvents: eventsWithID1, hasMore: false)
-        
-        // then
-        XCTAssertTrue(didFinish)
-        XCTAssertFalse(sut.notificationInProgress)
-        XCTAssertEqual(sut.status, PingBackStatus.Done)
-    }
-    
-    func testThatItFinishesWithSuccessWhenEventsReturned(){
-        // given
-        let realEventWithID = self.createRealNoticeEventWithID()
-        
-        var  didFinish = false
-        let handler: (ZMPushPayloadResult, [ZMUpdateEvent]) -> Void = { (result, events) in
-            XCTAssertEqual(result, ZMPushPayloadResult.Success)
-            XCTAssertEqual(events.count, 0)
-            didFinish = true
-        }
-        
-        notificationDispatcher.didReceiveUpdateEventsBlock = { events in
-            guard let events = events, let givenEvents = realEventWithID.events else {
-                XCTFail("did not forward send events")
-                return
-            }
-            XCTAssertEqual(events, givenEvents)
-        }
-        
-        sut.didReceiveVoIPNotification(realEventWithID, handler: handler)
-        XCTAssertNotNil(sut.nextNoticeNotificationEventsWithID())
-        
-        // when
-        sut.missingUpdateEventTranscoder(didReceiveEvents: realEventWithID.events!, originalEvents: realEventWithID, hasMore: false)
-        
-        // then
-        XCTAssertTrue(didFinish)
-        XCTAssertFalse(sut.notificationInProgress)
-        XCTAssertEqual(sut.status, PingBackStatus.Done)
-        XCTAssertEqual(notificationDispatcher.callCount, 1)
-    }
-    
-    func testThatItDoesNotFinishWhenEventsNotReturnedButHasMore(){
-        // given
-        let eventsWithID1 = createEventsWithID(isNotice: true)
-        let unrelatedEvent = createEvent(NSUUID.timeBasedUUID())
-        
-        var didFinish = false
-        let handler: (ZMPushPayloadResult, [ZMUpdateEvent]) -> Void = { (result, events) in
-            didFinish = true
-        }
-        
-        notificationDispatcher.didReceiveUpdateEventsBlock = { events in
-            guard let events = events else {
-                XCTFail("did not forward send events")
-                return
-            }
-            XCTAssertEqual(events, [unrelatedEvent])
-        }
-        
-        sut.didReceiveVoIPNotification(eventsWithID1, handler: handler)
-        XCTAssertNotNil(sut.nextNoticeNotificationEventsWithID())
-
-        // when
-        sut.missingUpdateEventTranscoder(didReceiveEvents: [unrelatedEvent], originalEvents: eventsWithID1, hasMore: true)
-        
-        // then
-        XCTAssertFalse(didFinish)
-        XCTAssertTrue(sut.notificationInProgress)
-        XCTAssertEqual(sut.status, PingBackStatus.FetchingNotificationStream)
-        XCTAssertEqual(notificationDispatcher.callCount, 1)
-    }
-}
 
 
 // MARK: - Helper
@@ -813,20 +664,5 @@ extension BackgroundAPNSPingBackStatus {
 extension BackgroundAPNSPingBackStatusTests {
     func createEventsWithID(identifier: NSUUID = NSUUID.createUUID(), events: [ZMUpdateEvent] = [ZMUpdateEvent()], isNotice: Bool = false) -> EventsWithIdentifier {
         return EventsWithIdentifier(events: events, identifier: identifier, isNotice: isNotice)
-    }
-    
-    func createRealNoticeEventWithID(identifier : NSUUID = NSUUID.timeBasedUUID()) -> EventsWithIdentifier {
-        let event = createEvent(identifier)
-        let eventWithID = EventsWithIdentifier(events: [event], identifier: event.uuid, isNotice: true)
-        return eventWithID
-    }
-    
-    func createEvent(timeBasedIdentifier: NSUUID) -> ZMUpdateEvent {
-        let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
-        conversation.remoteIdentifier = NSUUID.createUUID()
-        
-        let payload = self.payloadForMessageInConversation(conversation, type: EventConversationAdd, data: [:])
-        let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: timeBasedIdentifier)
-        return event
     }
 }

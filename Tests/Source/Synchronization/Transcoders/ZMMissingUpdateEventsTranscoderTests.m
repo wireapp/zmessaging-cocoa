@@ -27,8 +27,6 @@
 #import "ZMSingleRequestSync.h"
 #import "ZMSyncStrategy.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import <zmessaging/zmessaging-Swift.h>
-
 
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 
@@ -37,7 +35,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 @property (nonatomic, readonly) ZMMissingUpdateEventsTranscoder *sut;
 @property (nonatomic, readonly) id lastUpdateEventIDTranscoder;
 @property (nonatomic, readonly) ZMSyncStrategy *syncStrategy;
-@property (nonatomic, readonly) id mockPingBackStatus;
 
 @end
 
@@ -45,12 +42,12 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 
 - (void)setUp {
     [super setUp];
-    _mockPingBackStatus = [OCMockObject niceMockForClass:[BackgroundAPNSPingBackStatus class]];
+    
     _syncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
-    [[[(id) self.syncStrategy stub] andReturn:self.syncMOC] syncMOC];
+    [[[(id) self.syncStrategy stub] andReturn:self.uiMOC] syncMOC];
     [self verifyMockLater:self.syncStrategy];
     
-    _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy apnsPingBackStatus:self.mockPingBackStatus];
+    _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy];
 }
 
 - (void)tearDown {
@@ -61,11 +58,10 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [super tearDown];
 }
 
-
 - (void)testThatItCreatesAListPaginatorSync
 {
     // when
-    ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy apnsPingBackStatus:self.mockPingBackStatus];
+    ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy];
     
     // then
     XCTAssertNotNil(sut.listPaginator);
@@ -79,7 +75,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     
     // then
     XCTAssertEqual(generators.count, 1u);
-    XCTAssertTrue([generators.lastObject isKindOfClass:ZMSimpleListRequestPaginator.class]);
+    XCTAssertTrue([generators.firstObject isKindOfClass:ZMSimpleListRequestPaginator.class]);
 }
 
 - (void)testThatItDoesNotReturnAContextChangeTracker;
@@ -474,7 +470,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy apnsPingBackStatus:self.mockPingBackStatus ];
+    ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy];
     WaitForAllGroupsToBeEmpty(0.5);
     [sut.listPaginator resetFetching];
     ZMTransportRequest *request = [sut.listPaginator nextRequest];
@@ -509,7 +505,8 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqualObjects(self.syncMOC.zm_lastNotificationID, expectedLastUpdateEventID);
+    NSUUID *lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertEqualObjects(lastUpdateEventID, expectedLastUpdateEventID);
 }
 
 - (void)testThatItStoresTheLastUpdateEventIDWhenItIsAMoreRecentType1
@@ -521,7 +518,8 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [self setLastUpdateEventID:[self newNotificationID] hasMore:NO];
     
     // then
-    XCTAssertEqualObjects(self.syncMOC.zm_lastNotificationID, [self newNotificationID]);
+    NSUUID *lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertEqualObjects(lastUpdateEventID, [self newNotificationID]);
 }
 
 - (void)testThatItDoesNotStoreTheLastUpdateEventIDWhenItIsNotAMoreRecentType1
@@ -533,7 +531,8 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [self setLastUpdateEventID:[self olderNotificationID] hasMore:NO];
     
     // then
-    XCTAssertEqualObjects(self.syncMOC.zm_lastNotificationID, [self newNotificationID]);
+    NSUUID *lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertEqualObjects(lastUpdateEventID, [self newNotificationID]);
 }
 
 - (void)testThatItStoresTheLastUpdateEventIDWhenItIsNotAType1
@@ -546,7 +545,8 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [self setLastUpdateEventID:secondUUID hasMore:NO];
     
     // then
-    XCTAssertEqualObjects(self.syncMOC.zm_lastNotificationID, secondUUID);
+    NSUUID *lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertEqualObjects(lastUpdateEventID, secondUUID);
 }
 
 - (void)testThatItStoresTheLastUpdateEventIDWhenThePreviousOneIsNotAType1
@@ -559,7 +559,8 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [self setLastUpdateEventID:[self newNotificationID] hasMore:NO];
     
     // then
-    XCTAssertEqualObjects(self.syncMOC.zm_lastNotificationID, [self newNotificationID]);
+    NSUUID *lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertEqualObjects(lastUpdateEventID, [self newNotificationID]);
 }
 
 - (void)testThatItStoresTheLastUpdateEventIDWhenReceivingNonTransientUpdateEvents
@@ -573,7 +574,8 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
     
     // then
-    XCTAssertEqualObjects(self.syncMOC.zm_lastNotificationID, expectedLastUpdateEventID);
+    NSUUID *lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertEqualObjects(lastUpdateEventID, expectedLastUpdateEventID);
 }
 
 - (void)testThatItDoesStoreTheLastUpdateEventIDWhenEventIDSourceIsWebsocketOrDownload
@@ -591,20 +593,23 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [self.sut processEvents:@[websocketEvent] liveEvents:YES prefetchResult:nil];
     
     // then
-    XCTAssertEqualObjects(self.syncMOC.zm_lastNotificationID, websocketUpdateEventID);
+    NSUUID *lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertEqualObjects(lastUpdateEventID, websocketUpdateEventID);
     
     // when
     [self.sut processEvents:@[downloadedEvent] liveEvents:YES prefetchResult:nil];
     
     // then
-    XCTAssertEqualObjects(self.syncMOC.zm_lastNotificationID, downstreamUpdateEventID);
+    lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertEqualObjects(lastUpdateEventID, downstreamUpdateEventID);
     
     // when
     [self.sut processEvents:@[pushNotificationEvent] liveEvents:YES prefetchResult:nil];
     
     // then
-    XCTAssertNotEqualObjects(self.syncMOC.zm_lastNotificationID, notificationUpdateEventID);
-    XCTAssertEqualObjects(self.syncMOC.zm_lastNotificationID, downstreamUpdateEventID);
+    lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertNotEqualObjects(lastUpdateEventID, notificationUpdateEventID);
+    XCTAssertEqualObjects(lastUpdateEventID, downstreamUpdateEventID);
 }
 
 - (void)testThatItDoesNotStoreTheLastUpdateEventIDWhenReceivingTransientUpdateEvents
@@ -622,7 +627,8 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
     
     // then
-    XCTAssertEqualObjects(self.syncMOC.zm_lastNotificationID, initialLastUpdateEventID);
+    NSUUID *lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertEqualObjects(lastUpdateEventID, initialLastUpdateEventID);
 }
 
 - (ZMUpdateEvent *)updateEventWithIdentifier:(NSUUID *)identifier source:(ZMUpdateEventSource)source
@@ -691,186 +697,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     XCTAssertNotNil(request3);
     NSURLComponents *components3 = [NSURLComponents componentsWithString:request3.path];
     XCTAssertTrue([components3.queryItems containsObject:[NSURLQueryItem queryItemWithName:@"since" value:lastUpdateEventID2.transportString]]);
-}
-
-@end
-
-
-@implementation ZMMissingUpdateEventsTranscoderTests (APNSPingBack)
-
-- (void)testThatItDoesNotReturnARequestWhenThereIsNoAPNSToFetch
-{
-    // given
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturnValue:OCMOCK_VALUE(PingBackStatusDone)] status];
-    
-    // when
-    ZMTransportRequest *request = [self.sut nextRequest];
-    
-    // then
-    XCTAssertNil(request);
-}
-
-- (void)testThatItReturnsARequestWhenThereIsAnAPNSToFetch
-{
-    // given
-    self.syncMOC.zm_lastNotificationID = [NSUUID timeBasedUUID];
-    
-    EventsWithIdentifier *event = [[EventsWithIdentifier alloc] initWithEvents:@[] identifier:[NSUUID timeBasedUUID] isNotice:YES];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturnValue:OCMOCK_VALUE(PingBackStatusFetchingNotificationStream)] status];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturnValue:OCMOCK_VALUE(YES)] hasNoticeNotificationIDs];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturn:event] nextNoticeNotificationEventsWithID];
-
-    // when
-    ZMTransportRequest *request = [self.sut nextRequest];
-    
-    // then
-    XCTAssertNotNil(request);
-    NSString *expectedPath = [NSString stringWithFormat:@"/notifications?size=500&since=%@&cancel_fallback=%@", self.syncMOC.zm_lastNotificationID.transportString, event.identifier.transportString];
-    XCTAssertEqualObjects(request.path, expectedPath);
-}
-
-- (void)testThatItCallsBackPingBackStatusWhenRequestFinishes
-{
-    // given
-    self.syncMOC.zm_lastNotificationID = [NSUUID timeBasedUUID];
-    
-    EventsWithIdentifier *event = [[EventsWithIdentifier alloc] initWithEvents:@[] identifier:[NSUUID timeBasedUUID] isNotice:YES];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus stub] andReturnValue:OCMOCK_VALUE(PingBackStatusFetchingNotificationStream)] status];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturnValue:OCMOCK_VALUE(YES)] hasNoticeNotificationIDs];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturn:event] nextNoticeNotificationEventsWithID];
-    ZMTransportRequest *request = [self.sut nextRequest];
-    XCTAssertNotNil(request);
-
-    // expect
-    // it returns the events and hasMore No
-    [[self.mockPingBackStatus expect] missingUpdateEventTranscoderWithDidReceiveEvents:@[] originalEvents:event hasMore:NO];
-    
-    // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"notifications" : @[]} HTTPstatus:200 transportSessionError:nil]];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // and expect
-    // when we call nextRequest again, it does not create a request, because the event to fetch should be cleared
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturnValue:OCMOCK_VALUE(NO)] hasNoticeNotificationIDs];
-    
-    // when
-    ZMTransportRequest *nextRequest1 = [self.sut nextRequest];
-    
-    // then
-    XCTAssertNil(nextRequest1);
-    [self.mockPingBackStatus verify];
-    
-    // and when
-    // when we do a normal quicksync it does not include the pingback parameter anymore
-    [self.sut startDownloadingMissingNotifications];
-    ZMTransportRequest *nextRequest2  = [[self.sut requestGenerators] nextRequest];
-    
-    // then
-    XCTAssertNotNil(nextRequest2);
-    NSString *expectedPath = [NSString stringWithFormat:@"/notifications?size=500&since=%@", self.syncMOC.zm_lastNotificationID.transportString];
-    XCTAssertEqualObjects(nextRequest2.path, expectedPath);
-}
-
-- (void)testThatItCallsBackPingBackStatusWhenRequestFinishes_HasMore
-{
-    // given
-    self.syncMOC.zm_lastNotificationID = [NSUUID timeBasedUUID];
-    
-    EventsWithIdentifier *event = [[EventsWithIdentifier alloc] initWithEvents:@[] identifier:[NSUUID timeBasedUUID] isNotice:YES];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus stub] andReturnValue:OCMOCK_VALUE(PingBackStatusFetchingNotificationStream)] status];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturnValue:OCMOCK_VALUE(YES)] hasNoticeNotificationIDs];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturn:event] nextNoticeNotificationEventsWithID];
-    ZMTransportRequest *request = [self.sut nextRequest];
-    XCTAssertNotNil(request);
-    
-    // expect
-    [[self.mockPingBackStatus expect] missingUpdateEventTranscoderWithDidReceiveEvents:@[] originalEvents:event hasMore:YES];
-    
-    // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"notifications" : @[], @"has_more" : @1} HTTPstatus:200 transportSessionError:nil]];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // and expect
-    // when we ask for the nextRequest it still has the event to fetch
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturnValue:OCMOCK_VALUE(NO)] hasNoticeNotificationIDs];
-
-    // and when
-    ZMTransportRequest *nextRequest  = [self.sut nextRequest];
-    
-    // then
-    XCTAssertNotNil(nextRequest);
-    NSString *expectedPath = [NSString stringWithFormat:@"/notifications?size=500&since=%@&cancel_fallback=%@", self.syncMOC.zm_lastNotificationID.transportString, event.identifier.transportString];
-    XCTAssertEqualObjects(nextRequest.path, expectedPath);
-    
-    [self.mockPingBackStatus verify];
-}
-
-- (void)testThatWeCanPingBackTwiceInARow
-{
-    // given
-    self.syncMOC.zm_lastNotificationID = [NSUUID timeBasedUUID];
-    
-    EventsWithIdentifier *event1 = [[EventsWithIdentifier alloc] initWithEvents:@[] identifier:[NSUUID timeBasedUUID] isNotice:YES];
-    EventsWithIdentifier *event2 = [[EventsWithIdentifier alloc] initWithEvents:@[] identifier:[NSUUID timeBasedUUID] isNotice:YES];
-
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus stub] andReturnValue:OCMOCK_VALUE(PingBackStatusFetchingNotificationStream)] status];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturnValue:OCMOCK_VALUE(YES)] hasNoticeNotificationIDs];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturn:event1] nextNoticeNotificationEventsWithID];
-    ZMTransportRequest *request = [self.sut nextRequest];
-    XCTAssertNotNil(request);
-    
-    // expect
-    [[self.mockPingBackStatus expect] missingUpdateEventTranscoderWithDidReceiveEvents:@[] originalEvents:event1 hasMore:NO];
-    
-    // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"notifications" : @[]} HTTPstatus:200 transportSessionError:nil]];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // expect
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturnValue:OCMOCK_VALUE(YES)] hasNoticeNotificationIDs];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturn:event2] nextNoticeNotificationEventsWithID];
-    
-    // when
-    ZMTransportRequest *nextRequest = [self.sut nextRequest];
-    
-    // then
-    XCTAssertNotNil(request);
-    NSString *expectedPath = [NSString stringWithFormat:@"/notifications?size=500&since=%@&cancel_fallback=%@", self.syncMOC.zm_lastNotificationID.transportString, event2.identifier.transportString];
-    XCTAssertEqualObjects(nextRequest.path, expectedPath);
-    
-    [self.mockPingBackStatus verify];
-}
-
-- (void)testThatItNotifiesPingBackStatusWhenRequestFailsPermanently
-{
-    // given
-    self.syncMOC.zm_lastNotificationID = [NSUUID timeBasedUUID];
-    
-    EventsWithIdentifier *event = [[EventsWithIdentifier alloc] initWithEvents:@[] identifier:[NSUUID timeBasedUUID] isNotice:YES];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus stub] andReturnValue:OCMOCK_VALUE(PingBackStatusFetchingNotificationStream)] status];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturnValue:OCMOCK_VALUE(YES)] hasNoticeNotificationIDs];
-    [(BackgroundAPNSPingBackStatus*)[[self.mockPingBackStatus expect] andReturn:event] nextNoticeNotificationEventsWithID];
-    ZMTransportRequest *request = [self.sut nextRequest];
-    XCTAssertNotNil(request);
-    
-    // expect
-    [[self.mockPingBackStatus expect] missingUpdateEventTranscoderFailedDownloadingEvents:event];
-    
-    // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil]];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    [self.mockPingBackStatus verify];
-
-    // and when
-    // when we do a normal quicksync it does not include the pingback parameter anymore
-    [self.sut startDownloadingMissingNotifications];
-    ZMTransportRequest *nextRequest2  = [[self.sut requestGenerators] nextRequest];
-    
-    // then
-    XCTAssertNotNil(nextRequest2);
-    NSString *expectedPath = [NSString stringWithFormat:@"/notifications?size=500&since=%@", self.syncMOC.zm_lastNotificationID.transportString];
-    XCTAssertEqualObjects(nextRequest2.path, expectedPath);
 }
 
 @end

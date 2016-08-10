@@ -389,6 +389,7 @@
     
     self.contacts = @[contactA];
     [(ZMAddressBook *)[[self.addressBookMock stub] andReturn:self.contacts] contacts];
+    [[self.addressBookMock expect] numberOfContacts];
 }
 
 - (void)stubAddressBookWithContacts;
@@ -406,6 +407,7 @@
 
     self.contacts = @[contactA, contactB, contactC];
     [(ZMAddressBook *)[[self.addressBookMock stub] andReturn:self.contacts] contacts];
+    [[self.addressBookMock expect] numberOfContacts];
 }
 
 - (void)stubAddressBookWithEmptyContact
@@ -416,12 +418,14 @@
     
     self.contacts = @[contactC];
     [(ZMAddressBook *)[[self.addressBookMock stub] andReturn:self.contacts] contacts];
+    [[self.addressBookMock expect] numberOfContacts];
 }
 
 - (void)stubEmptyAddressBook;
 {
     self.contacts = @[];
     [(ZMAddressBook *)[[self.addressBookMock stub] andReturn:self.contacts] contacts];
+    [[self.addressBookMock expect] numberOfContacts];
 }
 
 @end

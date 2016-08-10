@@ -64,7 +64,6 @@
 #import "ZMMessageTranscoder+Internal.h"
 #import "ZMClientMessageTranscoder.h"
 #import "BadgeApplication.h"
-#import <zmessaging/zmessaging-Swift.h>
 
 
 @interface ZMSyncStrategyTests : MessagingTest
@@ -132,10 +131,6 @@
     [[[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] classMethod] alloc];
     (void) [[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] initWithManagedObjectContext:self.syncMOC upstreamInsertedObjectSync:nil localNotificationDispatcher:OCMOCK_ANY messageExpirationTimer:nil];
 
-    id textMessageTranscoder = [OCMockObject mockForClass:ZMTextMessageTranscoder.class];
-    [[[[textMessageTranscoder expect] andReturn:textMessageTranscoder] classMethod] alloc];
-    (void) [[[textMessageTranscoder expect] andReturn:textMessageTranscoder] initWithManagedObjectContext:self.syncMOC upstreamInsertedObjectSync:nil localNotificationDispatcher:OCMOCK_ANY messageExpirationTimer:nil];
-
     id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
     (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:OCMOCK_ANY clientRegistrationStatus:OCMOCK_ANY];
@@ -156,9 +151,9 @@
     [[[[registrationTranscoder expect] andReturn:registrationTranscoder] classMethod] alloc];
     (void) [[[registrationTranscoder expect] andReturn:registrationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.authenticationStatus];
 
-    id missingUpdateEventsTranscoder = [OCMockObject niceMockForClass:ZMMissingUpdateEventsTranscoder.class];
+    id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
-    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY apnsPingBackStatus:OCMOCK_ANY];
+    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY];
 
     id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
     
@@ -229,7 +224,6 @@
                          self.conversationTranscoder,
                          selfTranscoder,
                          systemMessageTranscoder,
-                         textMessageTranscoder,
                          clientMessageTranscoder,
                          knockTranscoder,
                          assetTranscoder,
@@ -282,7 +276,6 @@
     XCTAssertEqual(self.sut.userImageTranscoder, userImageTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
     XCTAssertEqual(self.sut.systemMessageTranscoder, systemMessageTranscoder);
-    XCTAssertEqual(self.sut.textMessageTranscoder, textMessageTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
     XCTAssertEqual(self.sut.knockTranscoder, knockTranscoder);
     XCTAssertEqual(self.sut.assetTranscoder, assetTranscoder);
@@ -1152,7 +1145,6 @@
 - (NSSet <Class> *)transcodersExpectedToReturnNonces
 {
     return @[
-             ZMTextMessageTranscoder.class,
              ZMAssetTranscoder.class,
              ZMClientMessageTranscoder.class,
              ZMKnockTranscoder.class

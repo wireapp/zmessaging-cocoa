@@ -175,7 +175,8 @@
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"Hello, Test!" nonce:[NSUUID createUUID]];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Hello, Test!" nonce:NSUUID.createUUID.transportString];
+        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForEverythingToBeDone();
     
@@ -208,7 +209,8 @@
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"Hello, Test!" nonce:[NSUUID createUUID]];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Hello, Test!" nonce:NSUUID.createUUID.transportString];
+        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForEverythingToBeDone();
     
@@ -243,7 +245,8 @@
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"Hello, Test!" nonce:[NSUUID createUUID]];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Hello, Test!" nonce:NSUUID.createUUID.transportString];
+        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForEverythingToBeDone();
     

@@ -77,7 +77,6 @@
 @property (nonatomic) ZMSelfTranscoder *selfTranscoder;
 @property (nonatomic) ZMConversationTranscoder *conversationTranscoder;
 @property (nonatomic) ZMMessageTranscoder *systemMessageTranscoder;
-@property (nonatomic) ZMMessageTranscoder *textMessageTranscoder;
 @property (nonatomic) ZMMessageTranscoder *clientMessageTranscoder;
 @property (nonatomic) ZMKnockTranscoder *knockTranscoder;
 @property (nonatomic) ZMAssetTranscoder *assetTranscoder;
@@ -184,7 +183,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.pingBackRequestStrategy,
                                    self.pushNoticeFetchStrategy,
                                    self.fileUploadRequestStrategy,
-                                   self.missingUpdateEventsTranscoder,
                                    self.linkPreviewAssetDownloadRequestStrategy,
                                    self.linkPreviewAssetUploadRequestStrategy
                                    ];
@@ -219,11 +217,10 @@ ZM_EMPTY_ASSERTING_INIT()
     self.selfTranscoder = [[ZMSelfTranscoder alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
     self.conversationTranscoder = [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus accountStatus:accountStatus syncStrategy:self];
     self.systemMessageTranscoder = [ZMMessageTranscoder systemMessageTranscoderWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher];
-    self.textMessageTranscoder = [ZMMessageTranscoder textMessageTranscoderWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher];
     self.clientMessageTranscoder = [[ZMClientMessageTranscoder alloc ] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher clientRegistrationStatus:clientRegistrationStatus];
     self.knockTranscoder = [[ZMKnockTranscoder alloc] initWithManagedObjectContext:self.syncMOC];
     self.registrationTranscoder = [[ZMRegistrationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
-    self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self apnsPingBackStatus:backgroundAPNSPingBackStatus];
+    self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC objectDirectory:self];
     self.flowTranscoder = [[ZMFlowSync alloc] initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC];
     self.addressBookTranscoder = [[ZMAddressBookTranscoder alloc] initWithManagedObjectContext:self.syncMOC];
@@ -438,7 +435,6 @@ ZM_EMPTY_ASSERTING_INIT()
              self.selfTranscoder,
              self.conversationTranscoder,
              self.systemMessageTranscoder,
-             self.textMessageTranscoder,
              self.clientMessageTranscoder,
              self.knockTranscoder,
              self.assetTranscoder,
