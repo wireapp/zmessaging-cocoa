@@ -58,11 +58,10 @@ class DeleteMessagesTests: ConversationTestsBase {
         let fromClient = user1.clients.anyObject() as! MockUserClient
         let toClient = selfUser.clients.anyObject() as! MockUserClient
         let textMessage = ZMGenericMessage(text: "Hello", nonce: NSUUID.createUUID().transportString())
-        let firstData = MockUserClient.encryptedDataFromClient(fromClient, toClient: toClient, data: textMessage.data())
         
         // when
         mockTransportSession.performRemoteChanges { session in
-            self.selfToUser1Conversation.insertOTRMessageFromClient(fromClient, toClient: toClient, data: firstData)
+            self.selfToUser1Conversation.encryptAndInsertDataFromClient(fromClient, toClient: toClient, data: textMessage.data())
         }
         
         XCTAssertTrue(waitForEverythingToBeDone())
@@ -72,13 +71,11 @@ class DeleteMessagesTests: ConversationTestsBase {
         let messages = conversation.messages
         XCTAssertEqual(messages.count, 2) // system message & inserted message
         guard let message = messages.lastObject as? ZMClientMessage where message.textMessageData?.messageText == "Hello" else { return XCTFail() }
-        
         let genericMessage = ZMGenericMessage(deleteMessage: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
-        let data = MockUserClient.encryptedDataFromClient(fromClient, toClient: toClient, data: genericMessage.data())
         
         // when
         mockTransportSession.performRemoteChanges { session in
-            self.selfToUser1Conversation.insertOTRMessageFromClient(fromClient, toClient: toClient, data: data)
+            self.selfToUser1Conversation.encryptAndInsertDataFromClient(fromClient, toClient: toClient, data: genericMessage.data())
         }
         
         XCTAssertTrue(waitForEverythingToBeDone())
@@ -95,14 +92,14 @@ class DeleteMessagesTests: ConversationTestsBase {
         // given
         XCTAssertTrue(logInAndWaitForSyncToBeComplete())
         
-        let fromClient = user1.clients.anyObject() as! MockUserClient
-        let toClient = selfUser.clients.anyObject() as! MockUserClient
+        let firstClient = user1.clients.anyObject() as! MockUserClient
+        let secondClient = user2.clients.anyObject() as! MockUserClient
+        let selfClient = selfUser.clients.anyObject() as! MockUserClient
         let textMessage = ZMGenericMessage(text: "Hello", nonce: NSUUID.createUUID().transportString())
-        let firstData = MockUserClient.encryptedDataFromClient(fromClient, toClient: toClient, data: textMessage.data())
         
         // when
         mockTransportSession.performRemoteChanges { session in
-            self.selfToUser1Conversation.insertOTRMessageFromClient(fromClient, toClient: toClient, data: firstData)
+            self.selfToUser1Conversation.encryptAndInsertDataFromClient(firstClient, toClient: selfClient, data: textMessage.data())
         }
         
         XCTAssertTrue(waitForEverythingToBeDone())
@@ -114,11 +111,10 @@ class DeleteMessagesTests: ConversationTestsBase {
         guard let message = messages.lastObject as? ZMClientMessage where message.textMessageData?.messageText == "Hello" else { return XCTFail() }
         
         let genericMessage = ZMGenericMessage(deleteMessage: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
-        let data = MockUserClient.encryptedDataFromClient(fromClient, toClient: toClient, data: genericMessage.data())
         
         // when
         mockTransportSession.performRemoteChanges { session in
-            self.selfToUser1Conversation.insertOTRMessageFromClient(toClient, toClient: fromClient, data: data)
+            self.selfToUser1Conversation.encryptAndInsertDataFromClient(secondClient, toClient: selfClient, data: genericMessage.data())
         }
         
         XCTAssertTrue(waitForEverythingToBeDone())
