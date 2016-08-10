@@ -54,7 +54,6 @@
 @property (nonatomic, readonly) ZMSelfTranscoder *selfTranscoder;
 @property (nonatomic, readonly) ZMConversationTranscoder *conversationTranscoder;
 @property (nonatomic, readonly) ZMMessageTranscoder *systemMessageTranscoder;
-@property (nonatomic, readonly) ZMMessageTranscoder *textMessageTranscoder;
 @property (nonatomic, readonly) ZMMessageTranscoder *clientMessageTranscoder;
 @property (nonatomic, readonly) ZMKnockTranscoder *knockTranscoder;
 @property (nonatomic, readonly) ZMAssetTranscoder *assetTranscoder;

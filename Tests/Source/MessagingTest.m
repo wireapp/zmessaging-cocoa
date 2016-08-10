@@ -308,8 +308,6 @@ static const int32_t Mersenne3 = 8191;
     [self verifyMockLater:conversationEventsTranscoder];
     id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
     [self verifyMockLater:systemMessageTranscoder];
-    id textMessageTranscoder = [OCMockObject mockForClass:ZMTextMessageTranscoder.class];
-    [self verifyMockLater:textMessageTranscoder];
     id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
     [self verifyMockLater:clientMessageTranscoder];
     id knockTranscoder = [OCMockObject mockForClass:ZMKnockTranscoder.class];
@@ -354,7 +352,6 @@ static const int32_t Mersenne3 = 8191;
     [[[objectDirectory stub] andReturn:userImageTranscoder] userImageTranscoder];
     [[[objectDirectory stub] andReturn:conversationTranscoder] conversationTranscoder];
     [[[objectDirectory stub] andReturn:systemMessageTranscoder] systemMessageTranscoder];
-    [[[objectDirectory stub] andReturn:textMessageTranscoder] textMessageTranscoder];
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
     [[[objectDirectory stub] andReturn:knockTranscoder] knockTranscoder];
     [[[objectDirectory stub] andReturn:assetTranscoder] assetTranscoder];
@@ -381,7 +378,6 @@ static const int32_t Mersenne3 = 8191;
                                         conversationTranscoder,
                                         conversationEventsTranscoder,
                                         systemMessageTranscoder,
-                                        textMessageTranscoder,
                                         clientMessageTranscoder,
                                         knockTranscoder,
                                         assetTranscoder,

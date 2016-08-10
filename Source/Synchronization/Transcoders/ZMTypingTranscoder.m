@@ -190,7 +190,7 @@ static NSString * const StartedKey = @"started";
 
 - (void)processUpdateEvent:(ZMUpdateEvent *)event conversationsByID:(ZMConversationMapping *)conversationsByID;
 {
-    if (event.type != ZMUpdateEventConversationTyping && event.type != ZMUpdateEventConversationMessageAdd) {
+    if (event.type != ZMUpdateEventConversationTyping && event.type != ZMUpdateEventConversationOtrMessageAdd) {
         return;
     }
     
@@ -219,7 +219,7 @@ static NSString * const StartedKey = @"started";
             return;
         }
         [self processIsTypingUpdateEventForUser:user inConversation:conversation withStatus:status];
-    } else if (event.type == ZMUpdateEventConversationMessageAdd) {
+    } else if (event.type == ZMUpdateEventConversationOtrMessageAdd) {
         [self processMessageAddEventForUser:user inConversation:conversation];
     }
 

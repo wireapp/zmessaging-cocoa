@@ -38,14 +38,21 @@
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMUser *sender = [self userForMockUser:self.user1];
-    
+
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
         // send new message remotely
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:testMessage1 nonce:[NSUUID createUUID]];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:testMessage1 nonce:NSUUID.createUUID.transportString];
+        MockUserClient *fromClient = self.user1.clients.anyObject, *toClient = self.selfUser.clients.anyObject;
+        NSData *firstMessageData = [MockUserClient encryptedDataFromClient:fromClient toClient:toClient data:message.data];
+        
+        [self.groupConversation insertOTRMessageFromClient:fromClient toClient:toClient data:firstMessageData];
         [self spinMainQueueWithTimeout:0.2];
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:testMessage2 nonce:[NSUUID createUUID]];
+        
+        ZMGenericMessage *secondMessage = [ZMGenericMessage messageWithText:testMessage2 nonce:NSUUID.createUUID.transportString];
+        NSData *secondtMessageData = [MockUserClient encryptedDataFromClient:fromClient toClient:toClient data:secondMessage.data];
+        [self.groupConversation insertOTRMessageFromClient:fromClient toClient:toClient data:secondtMessageData];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -75,7 +82,8 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
             NOT_USED(session);
         // will create a notification that is not transient
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"Food" nonce:[NSUUID createUUID]];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Food" nonce:NSUUID.createUUID.transportString];
+        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -85,7 +93,7 @@
         // save previous notification ID
         MockPushEvent *messageEvent = self.mockTransportSession.updateEvents.lastObject;
         messageAddLastNotificationID = messageEvent.uuid;
-        XCTAssertEqualObjects(messageEvent.payload[@"type"], @"conversation.message-add");
+        XCTAssertEqualObjects(messageEvent.payload[@"type"], @"conversation.otr-message-add");
         
         // will create a transient notification
         [self.groupConversation addUserToCall:self.user2];

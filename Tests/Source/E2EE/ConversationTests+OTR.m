@@ -665,10 +665,7 @@
     
     NSTimeInterval defaultExpirationTime = [ZMMessage defaultExpirationTime];
     [ZMMessage setDefaultExpirationTime:0.3];
-    
-    //register other users clients
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:NO];
-    
+
     self.mockTransportSession.doNotRespondToRequests = YES;
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
@@ -692,7 +689,8 @@
     // when receiving a new message
     NSString *otherUserMessageText = @"Are you still there?";
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> __unused *session) {
-        [self.selfToUser1Conversation insertTextMessageFromUser:self.user1 text:otherUserMessageText nonce:[NSUUID createUUID]];
+        ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:otherUserMessageText nonce:NSUUID.createUUID.transportString];
+        [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:genericMessage.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

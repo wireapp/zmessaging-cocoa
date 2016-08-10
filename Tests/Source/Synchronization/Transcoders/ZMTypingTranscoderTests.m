@@ -141,17 +141,17 @@ static NSString * const IsTypingKey = @"isTyping";
     [self.typing verify];
 }
 
-- (void)testThatItForwardsMessageAddEventsAndSetsIsTypingToNo;
+- (void)testThatItForwardsOTRMessageAddEventsAndSetsIsTypingToNo;
 {
     // given
     NSDictionary *payload = @{@"conversation": self.conversationA.remoteIdentifier.transportString,
                               @"data": @{},
                               @"from": self.userA.remoteIdentifier.transportString,
                               @"time": [NSDate date].transportString,
-                              @"type": @"conversation.message-add",
+                              @"type": @"conversation.otr-message-add",
                               };
     ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-    
+
     // expect
     [[self.typing reject] setIsTyping:YES forUser:OCMOCK_ANY inConversation:OCMOCK_ANY];
     [[self.typing expect] setIsTyping:NO forUser:OCMOCK_ANY inConversation:OCMOCK_ANY];

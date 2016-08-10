@@ -26,28 +26,23 @@
 
 @interface ZMMessageTranscoder (Internal) <ZMUpstreamTranscoder>
 
-
-+ (instancetype)textMessageTranscoderWithManagedObjectContext:(NSManagedObjectContext *)moc
-                                  localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher;
-
 + (instancetype)systemMessageTranscoderWithManagedObjectContext:(NSManagedObjectContext *)moc
                                     localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher
                                          messageExpirationTimer:(ZMMessageExpirationTimer *)expirationTimer;
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc entityName:(NSString *)entityName localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                                  entityName:(NSString *)entityName
+                 localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher;
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc upstreamInsertedObjectSync:(ZMUpstreamInsertedObjectSync *)upstreamObjectSync localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher messageExpirationTimer:(ZMMessageExpirationTimer *)expirationTimer;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                  upstreamInsertedObjectSync:(ZMUpstreamInsertedObjectSync *)upstreamObjectSync
+                 localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher
+                      messageExpirationTimer:(ZMMessageExpirationTimer *)expirationTimer;
 
 /// Generate messages from the given events and return those messages. Subclasses should provide their implementation of this method
 - (NSArray<ZMMessage *> *)createMessagesFromEvents:(NSArray<ZMUpdateEvent *>*)events
                                     prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult;
 
-
-@end
-
-
-
-@interface ZMTextMessageTranscoder : ZMMessageTranscoder <ZMObjectStrategy>
 
 @end
 
