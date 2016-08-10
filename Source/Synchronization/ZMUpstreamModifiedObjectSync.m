@@ -252,12 +252,13 @@ ZM_EMPTY_ASSERTING_INIT();
     }
     
     ZMModifiedObjectSyncToken *token = [self.updatedObjects didStartSynchronizingKeys:request.keys forObject:objectWithKeys];
-    
     NSDictionary *userInfo = request.userInfo;
     
     ZM_WEAK(self);
+    ZM_WEAK(request);
     [request.transportRequest addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.context block:^(ZMTransportResponse *response) {
         ZM_STRONG(self);
+        ZM_STRONG(request);
         
         id <ZMUpstreamTranscoder> localTranscoder = self.transcoder;
         NSSet *keysToParse = [self.updatedObjects keysToParseAfterSyncingToken:token];

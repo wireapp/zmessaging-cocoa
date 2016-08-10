@@ -102,9 +102,9 @@
     ZMUserIDsForSearchDirectoryTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
     [table clear];
     
-    [self.sut tearDown];
     [self.sut removeSearchResultObserver:self];
     [self.sut removeTopConversationsObserver:self];
+    [self.sut tearDown];
     self.sut = nil;
     self.searchResults = nil;
     self.searchResultExpectation = nil;

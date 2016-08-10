@@ -270,7 +270,7 @@ private let reponseHeaderAssetIdKey = "Location"
             message.associatedTaskIdentifier = taskIdentifier
         })
         
-        request?.addCompletionHandler(ZMCompletionHandler(onGroupQueue: managedObjectContext) { response in
+        request?.addCompletionHandler(ZMCompletionHandler(onGroupQueue: managedObjectContext) { [weak request] response in
             message.associatedTaskIdentifier = nil
             
             let keys = Set(arrayLiteral: ZMAssetClientMessageUploadedStateKey)
@@ -292,7 +292,7 @@ private let reponseHeaderAssetIdKey = "Location"
             message.associatedTaskIdentifier = taskIdentifier
         })
         
-        request?.addCompletionHandler(ZMCompletionHandler(onGroupQueue: managedObjectContext) { response in
+        request?.addCompletionHandler(ZMCompletionHandler(onGroupQueue: managedObjectContext) { [weak request] response in
             message.associatedTaskIdentifier = nil
             
             if response.result == .Expired || response.result == .TemporaryError || response.result == .TryAgainLater {
@@ -312,7 +312,7 @@ private let reponseHeaderAssetIdKey = "Location"
           message.associatedTaskIdentifier = taskIdentifier
         })
         
-        request?.addCompletionHandler(ZMCompletionHandler(onGroupQueue: managedObjectContext) { response in
+        request?.addCompletionHandler(ZMCompletionHandler(onGroupQueue: managedObjectContext) { [weak request] response in
             message.associatedTaskIdentifier = nil
             
             if response.result == .Expired || response.result == .TemporaryError || response.result == .TryAgainLater {

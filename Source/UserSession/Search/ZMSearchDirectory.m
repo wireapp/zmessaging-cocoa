@@ -153,6 +153,7 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self tearDownSearchMap:self.searchMap];
+    self.searchMap = nil;
     
     self.isTornDown = YES;
     
@@ -223,11 +224,13 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
         search.updateDelay = self.updateDelay;
     }
     
+    
+    NSString *query = searchRequest.query;
     search.resultHandler = ^(ZMSearchResult *searchResult) {
         [self storeSearchResultUserIDsInCache:searchResult];
         
         if (searchRequest.includeAddressBookContacts) {
-            searchResult = [self extendSearchResultWithContactsFromAddressBook:searchResult queryString:searchRequest.query];
+            searchResult = [self extendSearchResultWithContactsFromAddressBook:searchResult queryString:query];
         }
         
         [self sendSearchResult:searchResult forToken:token];
