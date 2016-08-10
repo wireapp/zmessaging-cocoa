@@ -22,3 +22,4 @@
 #import "ZMUserSessionTestsBase.h"
 #import "IntegrationTestBase.h"
 #import "MessagingTest+EventFactory.h"
+#import "ConversationTestsBase.h"
