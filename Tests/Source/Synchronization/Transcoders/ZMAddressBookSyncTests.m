@@ -140,7 +140,7 @@
     XCTAssertNotNil(request);
     XCTAssertEqual(request.method, ZMMethodPOST);
     XCTAssertTrue(request.shouldCompress);
-    XCTAssertEqualObjects(request.path, @"/onboarding/v2");
+    XCTAssertEqualObjects(request.path, @"/onboarding/v3");
     XCTAssertNotNil(request.payload);
     XCTAssertTrue([request.payload isKindOfClass:[NSDictionary class]]);
     NSDictionary *payload = [request.payload asDictionary];
@@ -261,7 +261,7 @@
 
 @implementation ZMAddressBookSyncTests (SuggestedContacts)
 
-- (void)testThatItUpdatesTheSuggestedContacts;
+- (void)testThatItDoesNotUpdatesTheSuggestedContacts;
 {
     // given
     [ZMAddressBookSync markAddressBookAsNeedingToBeUploadedInContext:self.uiMOC];
@@ -279,7 +279,7 @@
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
     
     // then
-    XCTAssertEqualObjects(self.uiMOC.suggestedUsersForUser.array, remoteIdentifiers);
+    XCTAssertEqualObjects(self.uiMOC.suggestedUsersForUser.array, @[]);
 }
 
 @end
