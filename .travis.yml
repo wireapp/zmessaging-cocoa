@@ -23,7 +23,7 @@ install:
 script:
   - open -b com.apple.iphonesimulator
   - set -o pipefail
-  - xcodebuild build test -scheme zmessaging-ios -destination 'platform=iOS Simulator,name=iPhone 6s,OS=9.3' | tee >build.log >(xcpretty -s)
+  - travis_wait 30 "xcodebuild build test -scheme zmessaging-ios -destination 'platform=iOS Simulator,name=iPhone 6s,OS=9.3' | tee >build.log >(xcpretty -s)"
   - bundle exec danger
 
 after_failure:
