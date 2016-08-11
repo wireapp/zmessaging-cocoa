@@ -22,7 +22,7 @@ import Foundation
 public typealias Timestamp = NSDate
 
 public enum NotificationFunnelState {
-    case OperationLoop(serverTimestamp: Timestamp, notificationsEnabled: Bool, background: Bool)
+    case OperationLoop(serverTimestamp: Timestamp, notificationsEnabled: Bool, background: Bool, currentDate: NSDate)
     case PingBackStatus
     case PingBackStrategy(notice: Bool)
     case NotificationDispatcher
@@ -52,8 +52,8 @@ public enum NotificationFunnelState {
     
     private var customTrackingAttributes: [String: NSObject] {
         switch self {
-        case .OperationLoop(serverTimestamp: let timestamp, notificationsEnabled: let enabled, background: let background):
-            let difference = Int(round(NSDate().timeIntervalSinceDate(timestamp) * NSTimeInterval.millisecondsPerSecond)) // In milliseconds
+        case .OperationLoop(serverTimestamp: let timestamp, notificationsEnabled: let enabled, background: let background, currentDate: let date):
+            let difference = Int(round(date.timeIntervalSinceDate(timestamp) * NSTimeInterval.millisecondsPerSecond)) // In milliseconds
             let clusterized = IntegerClusterizer.voipTimeDifferenceClusterizer.clusterize(difference)
             return ["server_timestamp_difference": clusterized, "background": background, "allowed_notifications": enabled]
         case .PingBackStrategy(notice: let notice):
@@ -98,19 +98,21 @@ extension NSTimeInterval {
     /// Map from notification ID to the last timestamp
     var timestampsByNotificationID = [NSUUID: Timestamp]()
     
-    func trackNotification(identifier: NSUUID, state: NotificationFunnelState, analytics: AnalyticsType?, referenceDate: NSDate? = nil) {
+    /// Tracks a step in the notification funnel, `currentDate` can be injected for testing
+    func trackNotification(identifier: NSUUID, state: NotificationFunnelState, analytics: AnalyticsType?, currentDate: NSDate? = nil) {
         guard let analytics = analytics else { return }
         var attributes = state.attributes
         
         if !state.isInitialState, let lastTimestamp = timestampsByNotificationID[identifier] {
-            let date = referenceDate ?? NSDate()
+            let date = currentDate ?? NSDate()
+            print(date.timeIntervalSinceDate(lastTimestamp))
             let difference = round(date.timeIntervalSinceDate(lastTimestamp) * NSTimeInterval.millisecondsPerSecond) // In milliseconds
             let clusterized = IntegerClusterizer.apnsPerformanceClusterizer.clusterize(Int(difference))
             attributes["time_since_last"] = clusterized
         }
 
         attributes["notification_identifier"] = identifier.transportString()
-        timestampsByNotificationID[identifier] = NSDate()
+        timestampsByNotificationID[identifier] = currentDate ?? NSDate()
         analytics.tagEvent(notificationEventName, attributes: attributes)
         
         if state.isLastState {
@@ -140,7 +142,7 @@ public extension APNSPerformanceTracker {
         let background = application.applicationState == .Background
         APNSPerformanceTracker.sharedTracker.trackNotification(
             eventsWithIdentifier.identifier,
-            state: .OperationLoop(serverTimestamp: timestamp, notificationsEnabled: alertEnabled, background: background),
+            state: .OperationLoop(serverTimestamp: timestamp, notificationsEnabled: alertEnabled, background: background, currentDate: NSDate()),
             analytics: analytics
         )
     }

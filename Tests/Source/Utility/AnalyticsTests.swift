@@ -78,14 +78,16 @@ class AnalyticsTests: XCTestCase {
     func testVOIPTimeDifferenceTracking() {
         // given
         let notificationID = NSUUID.createUUID()
-        let serverTime = NSDate(timeIntervalSinceNow: -5)
-        let referenceDate = NSDate(timeIntervalSinceNow: 0.5)
+        let serverTime = NSDate(timeIntervalSince1970: 1234567890)
+        let currentTime = serverTime.dateByAddingTimeInterval(4.5) // Simulate VoIP arriving in OperationLoop after 4.5 sec
+        let referenceDate = currentTime.dateByAddingTimeInterval(0.25) // Simulate VoIP arriving in PingBackStatus after 250 ms
 
         // when
         let tracker = APNSPerformanceTracker()
 
-        tracker.trackNotification(notificationID, state: .OperationLoop(serverTimestamp: serverTime, notificationsEnabled: true, background: true), analytics: analytics)
-        tracker.trackNotification(notificationID, state: .PingBackStatus, analytics: analytics, referenceDate: referenceDate)
+        let operationLoopState = NotificationFunnelState.OperationLoop(serverTimestamp: serverTime, notificationsEnabled: true, background: true, currentDate: currentTime)
+        tracker.trackNotification(notificationID, state: operationLoopState, analytics: analytics, currentDate: currentTime)
+        tracker.trackNotification(notificationID, state: .PingBackStatus, analytics: analytics, currentDate: referenceDate)
 
         // then
         XCTAssertTrue(analytics.taggedEvents.isEmpty)
