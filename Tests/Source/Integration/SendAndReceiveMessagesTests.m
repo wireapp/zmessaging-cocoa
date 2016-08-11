@@ -1524,7 +1524,9 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     message = [ZMMessage fetchMessageWithNonce:messageNonce forConversation:groupConversation inManagedObjectContext:self.uiMOC];
-    XCTAssertNil(message);
+    XCTAssertTrue(message.hasBeenDeleted);
+    XCTAssertNil(message.visibleInConversation);
+    XCTAssertEqual(message.hiddenInConversation, groupConversation);
 }
 
 
@@ -1551,7 +1553,9 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     message = [ZMMessage fetchMessageWithNonce:messageNonce forConversation:groupConversation inManagedObjectContext:self.uiMOC];
-    XCTAssertNil(message);
+    XCTAssertTrue(message.hasBeenDeleted);
+    XCTAssertNil(message.visibleInConversation);
+    XCTAssertEqual(message.hiddenInConversation, groupConversation);
 }
 
 @end

@@ -166,5 +166,48 @@ class DeleteMessagesTests: ConversationTestsBase {
         XCTAssertEqual(request.path, "/conversations/\(selfToUser1Conversation.identifier)/otr/messages")
         XCTAssertTrue(message.hasBeenDeleted)
     }
+    
+    func testThatItNotifiesTheObserverIfAMessageGetsDeletedRemotely() {
+        // given
+        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        
+        let fromClient = user1.clients.anyObject() as! MockUserClient
+        let toClient = selfUser.clients.anyObject() as! MockUserClient
+        let textMessage = ZMGenericMessage(text: "Hello", nonce: NSUUID.createUUID().transportString())
+        
+        // when
+        mockTransportSession.performRemoteChanges { session in
+            self.selfToUser1Conversation.encryptAndInsertDataFromClient(fromClient, toClient: toClient, data: textMessage.data())
+        }
+        
+        XCTAssertTrue(waitForEverythingToBeDone())
+        let conversation = conversationForMockConversation(selfToUser1Conversation)
+        let window = conversation.conversationWindowWithSize(10)
+        let observer = MessageWindowChangeObserver(messageWindow: window)
+        
+        // then
+        let messages = conversation.messages
+        XCTAssertEqual(messages.count, 2) // system message & inserted message
+        guard let message = messages.lastObject as? ZMClientMessage where message.textMessageData?.messageText == "Hello" else { return XCTFail() }
+        let genericMessage = ZMGenericMessage(deleteMessage: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
+        
+        // when
+        mockTransportSession.performRemoteChanges { session in
+            self.selfToUser1Conversation.encryptAndInsertDataFromClient(fromClient, toClient: toClient, data: genericMessage.data())
+        }
+        
+        XCTAssertTrue(waitForEverythingToBeDone())
+        
+        // then
+        XCTAssertTrue(message.hasBeenDeleted)
+        XCTAssertEqual(conversation.messages.count, 2) // 2x system message
+        
+        XCTAssertEqual(observer.notifications.count, 1)
+        guard let note = observer.notifications.firstObject as? MessageWindowChangeInfo else { return XCTFail() }
+        XCTAssertEqual(note.deletedIndexes.count, 1) // Deleted the original message
+        XCTAssertEqual(note.insertedIndexes.count, 1) // Inserted the system message
+
+        observer.tearDown()
+    }
 
 }
