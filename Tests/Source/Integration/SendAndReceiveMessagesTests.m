@@ -212,23 +212,13 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeCompleteWithTimeout:0.6]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    ZMConversation *conversation =  [self conversationForMockConversation:self.groupConversation];
-    NSString *convIDString = conversation.remoteIdentifier.transportString;
+    [self prefetchRemoteClientByInsertingMessageInConversation:self.groupConversation];
     
-    NSDate *pastDate = [[NSDate date] dateByAddingTimeInterval:-100];
-    XCTAssertEqual(conversation.messages.count, 2u);
-    XCTAssertNil(conversation.lastReadServerTimeStamp);
-
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request){
-        if ([request.path containsString:@"assets"] && request.method == ZMMethodPOST && [request.path containsString:convIDString]) {
-            // set the date to a previous date to make sure we see if the serverTimeStamp changes
-            [self.userSession performChanges:^{
-                [conversation.messages.lastObject setServerTimestamp:pastDate];
-            }];
-            return nil;
-        }
-        return nil;
-    };
+    ZMConversation *conversation =  [self conversationForMockConversation:self.groupConversation];
+    
+    XCTAssertEqual(conversation.messages.count, 3u);
+    id<ZMConversationMessage> originalMessage = [conversation.messages lastObject];
+    XCTAssertEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [originalMessage.serverTimestamp timeIntervalSince1970], 0.1);
     
     // when
     __block ZMMessage *message;
@@ -239,7 +229,7 @@
     
     // then
     XCTAssertNotNil(conversation.lastReadServerTimeStamp);
-    XCTAssertNotEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [pastDate timeIntervalSince1970], 1.0);
+    XCTAssertNotEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [originalMessage.serverTimestamp timeIntervalSince1970], 0.1);
 }
 
 - (void)testThatItSetsTheLastReadWhenInsertingAText

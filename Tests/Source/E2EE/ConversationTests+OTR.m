@@ -223,14 +223,15 @@
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
+    [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    
+
     // when
     [self.userSession performChanges:^{
         message = [conversation appendOTRMessageWithImageData:[self verySmallJPEGData] nonce:[NSUUID createUUID]];
     }];
-    WaitForEverythingToBeDoneWithTimeout(1.0);
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
@@ -396,8 +397,10 @@
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
+    MockConversation *mockConversation = self.selfToUser1Conversation;
     
-    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+    [self prefetchRemoteClientByInsertingMessageInConversation:mockConversation];
+    ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     __block ZMAssetClientMessage *message;
 
     // when
@@ -481,6 +484,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
     
+    
     //register other users clients
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         for(int i = 0; i < 7; ++i) {
@@ -494,7 +498,9 @@
     }];
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
+    MockConversation *mockConversation = self.groupConversation;
+    [self prefetchRemoteClientByInsertingMessageInConversation:mockConversation];
+    ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     
     __block ZMMessage *imageMessage1;
     // when
@@ -527,7 +533,10 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //register other users clients
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:NO];
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session registerClientForUser:self.user1 label:@"phone" type:@"permanent"];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     

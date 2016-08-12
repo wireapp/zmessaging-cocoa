@@ -149,9 +149,11 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
     
+    [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
+    
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.messages.count, 1lu);
+    XCTAssertEqual(conversation.messages.count, 2lu);
     
     NSURL *fileURL = [self createTestFile:self.name];
     
@@ -167,7 +169,7 @@
     [self.userSession performChanges:^{
         fileMessage = [conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForAllGroupsToBeEmpty(1.0);
     
     // then
     XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateFailedToSend);
@@ -1132,6 +1134,7 @@
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
+    
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertEqual(conversation.messages.count, 1lu);
 
@@ -1146,10 +1149,11 @@
     
     // when
     // register other users client
-    __unused CBCryptoBox *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                         isSelfClient:NO
-                                                         numberOfKeys:1
-                                         establishSessionWithSelfUser:NO];
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session registerClientForUser:self.user1 label:@"desktop" type:@"permanent"];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
     __block ZMMessage *fileMessage;
     
     [self.mockTransportSession resetReceivedRequests];
