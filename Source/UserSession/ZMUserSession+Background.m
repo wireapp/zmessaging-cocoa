@@ -224,11 +224,12 @@ static const char *ZMLogTag = "Push";
 - (void)application:(UIApplication *)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 {
     NOT_USED(application);
+    ZM_WEAK(self);
     // The OS is telling us to fetch new data from the backend.
     // Wrap the handler:
     ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult const result){
-        dispatch_async(dispatch_get_main_queue(), ^{
-
+        ZM_STRONG(self);
+        [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
             switch (result) {
                 case ZMBackgroundFetchResultNewData:
                     completionHandler(UIBackgroundFetchResultNewData);
@@ -240,7 +241,7 @@ static const char *ZMLogTag = "Push";
                     completionHandler(UIBackgroundFetchResultFailed);
                     break;
             }
-        });
+        }];
     };
     
     // Transition into the ZMBackgroundFetchState which will do the fetching:
@@ -284,7 +285,7 @@ static const char *ZMLogTag = "Push";
         return;
     }
     
-    dispatch_async(dispatch_get_main_queue(), ^{
+    [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
         ZMStoredLocalNotification *note = self.pendingLocalNotification;
         
         if ([note.category isEqualToString:ZMConnectCategory]) {
@@ -297,7 +298,7 @@ static const char *ZMLogTag = "Push";
             [self openConversation:note.conversation atMessage:note.message];
         }
         self.pendingLocalNotification = nil;
-    });
+    }];
     
 }
 
@@ -396,7 +397,7 @@ static const char *ZMLogTag = "Push";
         ZM_WEAK(self);
         [self.operationLoop startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
             ZM_STRONG(self);
-            dispatch_async(dispatch_get_main_queue(), ^{
+            [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
                 if (result == ZMBackgroundTaskResultFailed) {
                     [self.localNotificationDispatcher didFailToSendMessageInConversation:conversation];
                 }
@@ -404,7 +405,7 @@ static const char *ZMLogTag = "Push";
                 if (completionHandler != nil) {
                     completionHandler();
                 }
-            });
+            }];
         }];
         [self.managedObjectContext performGroupedBlock:^{
             [conversation appendMessageWithText:reply];

@@ -42,9 +42,7 @@ static NSString *const ZMInitialSyncCompletedNotificationName = @"ZMInitialSyncC
 
 + (void)notifyInitialSyncCompleted
 {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [[NSNotificationCenter defaultCenter] postNotificationName:ZMInitialSyncCompletedNotificationName object:nil];
-    });
+    [[NSNotificationCenter defaultCenter] postNotificationName:ZMInitialSyncCompletedNotificationName object:nil];
 }
 
 @end

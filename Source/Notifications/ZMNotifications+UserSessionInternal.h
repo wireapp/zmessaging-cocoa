@@ -25,6 +25,7 @@
 
 @interface ZMUserSession (InternalNotifications)
 
+/// Notifies the UI that the initial sync is completed. This method should be called from the UI thread.
 + (void)notifyInitialSyncCompleted;
 
 @end

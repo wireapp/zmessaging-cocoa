@@ -146,9 +146,10 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
                 }
             }
             
-            dispatch_async(dispatch_get_main_queue(), ^{
+            [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
+
                 [[NSNotificationCenter defaultCenter] postNotification:[ZMConnectionLimitNotification connectionLimitNotification]];
-            });
+            }];
         }
     }];
 }

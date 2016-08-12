@@ -730,11 +730,11 @@ _Pragma("clang diagnostic pop")
             
             isVoiceChannelFull = [NSError fullVoiceChannelErrorFromResponse:response] != nil;
             
-            dispatch_async(dispatch_get_main_queue(), ^{
+            [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
                 [[NSNotificationCenter defaultCenter] postNotificationName:ZMConversationVoiceChannelJoinFailedNotification
                                                                     object:conversation.objectID
                                                                   userInfo:@{@"error": callbackError}];
-            });
+            }];
         }
         // the BE refused the request
         if (!conversation.callDeviceIsActive) {
