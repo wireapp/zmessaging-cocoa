@@ -68,15 +68,15 @@
     ZMConversation *conv = self.conversation;
     
     if ([self hasOngoingGSMCall]) {
-        dispatch_async(dispatch_get_main_queue(), ^{
+        [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
                 [CallingInitialisationNotification notifyCallingFailedWithErrorCode:ZMVoiceChannelErrorCodeOngoingGSMCall];
-            });
+            }];
         return;
     }
    
-    dispatch_async(dispatch_get_main_queue(), ^{
+    [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
         [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportSessionShouldKeepWebsocketOpenNotificationName object:self userInfo:@{ZMTransportSessionShouldKeepWebsocketOpenKey: @YES}];
-    });
+    }];
     
     if(!conv.callDeviceIsActive) {
         [ZMUserSession appendAVSLogMessageForConversation:conv withMessage:@"Self user wants to join voice channel"];

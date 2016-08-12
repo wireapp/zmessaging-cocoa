@@ -104,13 +104,16 @@
 
 - (void)didEnterState
 {
-    [self.objectStrategyDirectory processAllEventsInBuffer];
+    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
+    [directory processAllEventsInBuffer];
     [self.hotFix applyPatches];
 
     [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
     [self.stateMachineDelegate didFinishSync];
 
-    [ZMUserSession notifyInitialSyncCompleted];
+    [directory.moc.zm_userInterfaceContext performBlock:^{
+        [ZMUserSession notifyInitialSyncCompleted];
+    }];
 }
 
 - (void)tearDown

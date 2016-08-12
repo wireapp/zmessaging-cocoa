@@ -222,11 +222,13 @@ static NSString * const ExcludeVersionsKey = @"exclude";
         else {
             NSTimer *timer = [NSTimer timerWithTimeInterval:timeLeftSinceNextDownload target:self selector:@selector(timerDidFire) userInfo:nil repeats:NO];
             self.currentTimer = timer;
+            [self.workingGroup enter];
             dispatch_async(dispatch_get_main_queue(), ^{
                 ZM_STRONG(self);
                 if(self) {
                     [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
                 }
+                [self.workingGroup leave];
             });
         }
         [self.workingGroup leave];
@@ -322,10 +324,10 @@ static NSString * const ExcludeVersionsKey = @"exclude";
         
         if (self.completionHandler) {
             void(^completionHandler)(NSString *, NSArray *) = self.completionHandler;
-//            [self.workingGroup enter];
+            [self.workingGroup enter];
             dispatch_async(dispatch_get_main_queue(), ^ void () {
                 completionHandler(minVersion, exclude);
-//                [self.workingGroup leave];
+                [self.workingGroup leave];
             });
         }
     }

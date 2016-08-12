@@ -63,12 +63,9 @@ extension ProxiedRequestType {
                 request.doesNotFollowRedirects = true
             }
             request.expireAfterInterval(ProxiedRequestStrategy.RequestExpirationTime)
-            request.addCompletionHandler(ZMCompletionHandler(onGroupQueue: self.managedObjectContext, block: {
+            request.addCompletionHandler(ZMCompletionHandler(onGroupQueue: self.managedObjectContext.zm_userInterfaceContext, block: {
                 response in
-                dispatch_async(dispatch_get_main_queue(), {
                     callback?(response.rawData, response.rawResponse, response.transportSessionError)
-                    })
-                return
             }))
             return request
         }
