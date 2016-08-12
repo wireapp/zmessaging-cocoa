@@ -5,19 +5,26 @@ env:
 language: objective-c
 osx_image: xcode7.3
 
+notifications:
+  email:
+    on_success: never
+    on_failure: always
+
 branches:
-   only:
-     - develop
-     - master
+  only:
+    - develop
+    - master
 
 install:
-  - xcrun simctl list
+  - bundle install
+  - curl -O https://raw.githubusercontent.com/wireapp/wire-ios-shared-resources/master/Dangerfile
   - carthage bootstrap --platform iOS
 
 script:
   - open -b com.apple.iphonesimulator
   - set -o pipefail
-  - travis_wait 30 xcodebuild build -scheme zmessaging-ios -destination 'name=iPhone 6s,OS=9.3,platform=iOS Simulator' test | tee >build.log >(xcpretty -s)
+  - xcodebuild build test -scheme zmessaging-ios -destination 'platform=iOS Simulator,name=iPhone 6s,OS=9.3' | tee >build.log >(xcpretty -s)
+  - bundle exec danger
 
 after_failure:
   - tail -n 500 build.log

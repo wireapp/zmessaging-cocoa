@@ -750,19 +750,18 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     }];
 }
 
-- (void)remotelyAppendSelfConversationWithZMMsgDeletedForMessageID:(NSString *)messageID
-                                                    conversationID:(NSString *)conversationID;
+- (void)remotelyAppendSelfConversationWithZMMessageHideForMessageID:(NSString *)messageID
+                                                     conversationID:(NSString *)conversationID;
 {
-    ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithDeleteMessage:messageID
-                                                                   inConversation:conversationID
-                                                                            nonce:[NSUUID createUUID].transportString];
+    ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithHideMessage:messageID
+                                                                 inConversation:conversationID
+                                                                          nonce:[NSUUID createUUID].transportString];
     
     // when
     [self.mockTransportSession performRemoteChanges:^(id session) {
         NOT_USED(session);
         [self.selfConversation insertClientMessageFromUser:self.selfUser data:genericMessage.data];
     }];
-
 }
 
 @end

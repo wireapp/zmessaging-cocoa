@@ -1497,9 +1497,9 @@
     [ZMMessage resetDefaultExpirationTime];
 }
 
-#pragma mark - Deleted messages
+#pragma mark - Hiding messages
 
-- (void)testThatItDeleteMessageWhenAskedTo;
+- (void)testThatItHidesAMessageWhenAskedTo;
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
@@ -1519,16 +1519,18 @@
     
     //when
     [self.userSession performChanges:^{
-        [ZMMessage deleteMessage:message];
+        [ZMMessage hideMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
     message = [ZMMessage fetchMessageWithNonce:messageNonce forConversation:groupConversation inManagedObjectContext:self.uiMOC];
-    XCTAssertNil(message);
+    XCTAssertTrue(message.hasBeenDeleted);
+    XCTAssertNil(message.visibleInConversation);
+    XCTAssertEqual(message.hiddenInConversation, groupConversation);
 }
 
 
-- (void)testThatItSyncsWhenAMessageDeleteIsRemotelyAppended;
+- (void)testThatItSyncsWhenAMessageHideIsRemotelyAppended;
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
@@ -1547,11 +1549,13 @@
     WaitForEverythingToBeDone();
     
     //when
-    [self remotelyAppendSelfConversationWithZMMsgDeletedForMessageID:messageNonce.transportString conversationID:groupConversation.remoteIdentifier.transportString];
+    [self remotelyAppendSelfConversationWithZMMessageHideForMessageID:messageNonce.transportString conversationID:groupConversation.remoteIdentifier.transportString];
     WaitForAllGroupsToBeEmpty(0.5);
     
     message = [ZMMessage fetchMessageWithNonce:messageNonce forConversation:groupConversation inManagedObjectContext:self.uiMOC];
-    XCTAssertNil(message);
+    XCTAssertTrue(message.hasBeenDeleted);
+    XCTAssertNil(message.visibleInConversation);
+    XCTAssertEqual(message.hiddenInConversation, groupConversation);
 }
 
 @end
