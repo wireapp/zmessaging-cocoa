@@ -253,6 +253,7 @@ ZM_EMPTY_ASSERTING_INIT();
     
     ZMModifiedObjectSyncToken *token = [self.updatedObjects didStartSynchronizingKeys:request.keys forObject:objectWithKeys];
     NSDictionary *userInfo = request.userInfo;
+    NSSet *keys = request.keys;
     
     ZM_WEAK(self);
     ZM_WEAK(request);
@@ -290,7 +291,7 @@ ZM_EMPTY_ASSERTING_INIT();
             if (shouldResyncObject) {
                 //if there is no new dependencies for currently synced object than we just try again
                 [self.updatedObjects didFailToSynchronizeToken:token];
-                [objectWithKeys.object setLocallyModifiedKeys:request.keys];
+                [objectWithKeys.object setLocallyModifiedKeys:keys];
                 [self addUpdatedObject:objectWithKeys.object];
             }
             else {

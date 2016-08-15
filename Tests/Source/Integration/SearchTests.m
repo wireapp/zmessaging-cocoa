@@ -138,7 +138,7 @@
 - (void)testThatItLoadsTheCommonConnectionsFromSearchResult
 {
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-
+    WaitForAllGroupsToBeEmpty(0.5);
     // given
     NSString *userName = @"Werther";
     __block MockUser *user;
@@ -173,10 +173,7 @@
         [[session createConnectionRequestFromUser:commonFriend1 toUser:user message:@""] accept];
         [[session createConnectionRequestFromUser:commonFriend2 toUser:user message:@""] accept];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    
-//    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForAllGroupsToBeEmpty(1.0);
     
     ZMSearchDirectory *searchDirectory = [[ZMSearchDirectory alloc] initWithUserSession:self.userSession];
     [searchDirectory addSearchResultObserver:self];
@@ -185,7 +182,7 @@
     self.expectation = [self expectationWithDescription:@"wait for search results"];
     ZMSearchToken token = [searchDirectory searchForSuggestedPeople];
     
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:1.0]);
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMSearchResult *searchResult = self.searchResults[token];

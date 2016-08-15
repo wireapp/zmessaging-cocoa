@@ -2397,12 +2397,12 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-       [session registerClientForUser:self.selfUser label:@"self" type:@"permanent"];
+        [session registerClientForUser:self.selfUser label:@"self" type:@"permanent"];
     }];
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:NO];
-    WaitForEverythingToBeDoneWithTimeout(0.5);
+    [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
+    [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser2Conversation];
     
     ZMConversation *conversation1 = [self conversationForMockConversation:self.selfToUser1Conversation];
     ZMConversation *conversation2 = [self conversationForMockConversation:self.selfToUser2Conversation];
@@ -2418,12 +2418,12 @@
     [self.userSession performChanges:^{
         [selfUser.selfClient trustClient:user1.clients.anyObject];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForAllGroupsToBeEmpty(1.0);
     
     [self.userSession performChanges:^{
         [self.userSession deleteClients:@[notSelfClient] withCredentials:[ZMEmailCredentials credentialsWithEmail:SelfUserEmail password:SelfUserPassword]];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForAllGroupsToBeEmpty(1.0);
     
     // then
     XCTAssertEqual(conversation1.securityLevel, ZMConversationSecurityLevelSecure);

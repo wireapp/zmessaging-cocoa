@@ -499,8 +499,7 @@
     
     //then
     XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateDelivered);
-    XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
-    
+
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
     
     XCTAssertEqual(requests.count, 4lu); // Asset.Original, Asset.Original reuploading & Asset.Uploaded
