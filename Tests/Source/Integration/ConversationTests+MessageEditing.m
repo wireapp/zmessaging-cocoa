@@ -57,6 +57,75 @@
     XCTAssertEqual(request.method, ZMMethodPOST);
 }
 
+- (void)testThatItInsertsNewMessageAtSameIndexAsOriginalMessage
+{
+    // given
+    XCTAssert([self logInAndWaitForSyncToBeComplete]);
+    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+    
+    __block ZMMessage *message;
+    [self.userSession performChanges:^{
+        message = [conversation appendMessageWithText:@"Foo"];
+        [self spinMainQueueWithTimeout:0.1];
+        [conversation appendMessageWithText:@"Fa"];
+        [self spinMainQueueWithTimeout:0.1];
+        [conversation appendMessageWithText:@"Fa"];
+        [self spinMainQueueWithTimeout:0.1];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    id convToken = [conversation addConversationObserver:self.conversationChangeObserver];
+    [self.conversationChangeObserver clearNotifications];
+    
+    ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:10];
+    MessageWindowChangeObserver *windowObserver = [[MessageWindowChangeObserver alloc] initWithMessageWindow:window];
+    NSUInteger messageIndex = [window.messages indexOfObject:message];
+    XCTAssertEqual(messageIndex, 2u);
+    
+    // when
+    __block ZMMessage *editMessage;
+    [self.userSession performChanges:^{
+        editMessage = [ZMMessage edit:message newText:@"Bar"];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    NSUInteger editedMessageIndex = [window.messages indexOfObject:editMessage];
+    XCTAssertEqual(editedMessageIndex, messageIndex);
+    
+    XCTAssertEqual(self.conversationChangeObserver.notifications.count, 1u);
+    ConversationChangeInfo *convInfo =  self.conversationChangeObserver.notifications.firstObject;
+    XCTAssertTrue(convInfo.messagesChanged);
+    XCTAssertFalse(convInfo.participantsChanged);
+    XCTAssertFalse(convInfo.nameChanged);
+    XCTAssertFalse(convInfo.unreadCountChanged);
+    XCTAssertTrue(convInfo.lastModifiedDateChanged);
+    XCTAssertFalse(convInfo.connectionStateChanged);
+    XCTAssertFalse(convInfo.isSilencedChanged);
+    XCTAssertFalse(convInfo.conversationListIndicatorChanged);
+    XCTAssertFalse(convInfo.voiceChannelStateChanged);
+    XCTAssertFalse(convInfo.clearedChanged);
+    XCTAssertFalse(convInfo.securityLevelChanged);
+    
+    XCTAssertEqual(windowObserver.notifications.count, 2u);
+    // Replacing the edited message with a new message
+    MessageWindowChangeInfo *windowInfo1 = windowObserver.notifications.firstObject;
+    XCTAssertEqualObjects(windowInfo1.deletedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
+    XCTAssertEqualObjects(windowInfo1.insertedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
+    XCTAssertEqualObjects(windowInfo1.updatedIndexes, [NSIndexSet indexSet]);
+    XCTAssertEqualObjects(windowInfo1.movedIndexPairs, @[]);
+    
+    // Sending successfully (deliveryState changes)
+    MessageWindowChangeInfo *windowInfo2 = windowObserver.notifications.lastObject;
+    XCTAssertEqualObjects(windowInfo2.deletedIndexes, [NSIndexSet indexSet]);
+    XCTAssertEqualObjects(windowInfo2.insertedIndexes, [NSIndexSet indexSet]);
+    XCTAssertEqualObjects(windowInfo2.updatedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
+    XCTAssertEqualObjects(windowInfo2.movedIndexPairs, @[]);
+    
+    [ZMConversation removeConversationObserverForToken:convToken];
+    [windowObserver tearDown];
+}
+
 - (void)testThatItCanEditAnEditedMessage
 {
     // given
