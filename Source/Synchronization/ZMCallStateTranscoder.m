@@ -761,7 +761,7 @@ _Pragma("clang diagnostic pop")
     BOOL isInterruptedCall = [self.gsmCallHandler isInterruptedCallConversation:conversation];
     
     NSMutableDictionary *selfStateDict = [NSMutableDictionary dictionary];
-    selfStateDict[StateKey] = newState;
+    selfStateDict[StateKey] = [newState copy];
     if (conversation.callDeviceIsActive ) {
         BOOL isInitiatingCall = conversation.callParticipants.count == 0;
         BOOL isVideoCall = (conversation.isVideoCall && isInitiatingCall) || conversation.isSendingVideo;

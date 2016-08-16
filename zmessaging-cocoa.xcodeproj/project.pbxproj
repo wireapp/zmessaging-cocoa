@@ -80,7 +80,6 @@
 		16F1D5A31D2BF52900916BD5 /* LinkPreviewAssetUploadRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F1D5A11D2BF46300916BD5 /* LinkPreviewAssetUploadRequestStrategyTests.swift */; };
 		16F9EB381BCD62390021EF39 /* ZMAddressBookMatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 16F9EB361BCD62390021EF39 /* ZMAddressBookMatcher.h */; };
 		16F9EB391BCD62390021EF39 /* ZMAddressBookMatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 16F9EB371BCD62390021EF39 /* ZMAddressBookMatcher.m */; };
-		1E16CE7A1BF4979600336616 /* ZMCMockTransport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E16CE781BF4979600336616 /* ZMCMockTransport.framework */; };
 		1E16CE841BF4BC1800336616 /* ZMProtos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E16CE831BF4BC1800336616 /* ZMProtos.framework */; };
 		1E16CE851BF4BC1800336616 /* ZMProtos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E16CE831BF4BC1800336616 /* ZMProtos.framework */; };
 		1E16CE871BF4BC5F00336616 /* ProtocolBuffers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E16CE861BF4BC5F00336616 /* ProtocolBuffers.framework */; };
@@ -1217,7 +1216,6 @@
 				098CFBB91B7B9B61000B02B1 /* ZMTesting.framework in Frameworks */,
 				1E16CE851BF4BC1800336616 /* ZMProtos.framework in Frameworks */,
 				1E16CE881BF4BC5F00336616 /* ProtocolBuffers.framework in Frameworks */,
-				1E16CE7A1BF4979600336616 /* ZMCMockTransport.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

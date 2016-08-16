@@ -707,6 +707,7 @@
     [self.syncMOC performBlockAndWait:^{
         
         XCTAssertFalse([selfUser hasLocalModificationsForKeys:modifiedKeys]);
+        [localSUT tearDown];
         localSUT = nil;
     }];
     

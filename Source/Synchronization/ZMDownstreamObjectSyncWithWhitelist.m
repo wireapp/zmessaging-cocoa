@@ -26,7 +26,7 @@
 
 @property (nonatomic) NSMutableSet *whitelist;
 @property (nonatomic) ZMDownstreamObjectSync *innerDownstreamSync;
-@property (nonatomic) id<ZMDownstreamTranscoder> transcoder;
+@property (nonatomic, weak) id<ZMDownstreamTranscoder> transcoder;
 
 @end
 
