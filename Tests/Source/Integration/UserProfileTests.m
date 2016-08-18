@@ -148,7 +148,7 @@
     __block ZMTransportRequest *onboardingRequest;
     XCTAssertTrue([self waitOnMainLoopUntilBlock:^BOOL{
         for(ZMTransportRequest *request in self.mockTransportSession.receivedRequests) {
-            if([request.path isEqual:@"/onboarding/v2"]) {
+            if([request.path isEqual:@"/onboarding/v3"]) {
                 onboardingRequest = request;
                 return YES;
             }

@@ -31,7 +31,7 @@
 #import "zmessaging/zmessaging-Swift.h"
 
 static NSString * const ZMAddressBookTranscoderNeedsToBeUploadedKey = @"ZMAddressBookTranscoderNeedsToBeUploaded";
-static NSString * const ZMOnboardingEndpoint = @"/onboarding/v2";
+static NSString * const ZMOnboardingEndpoint = @"/onboarding/v3";
 
 
 @interface ZMAddressBookSync ()
@@ -149,13 +149,11 @@ static NSString * const ZMOnboardingEndpoint = @"/onboarding/v2";
 - (void)didReceiveResponse:(ZMTransportResponse *)response forSingleRequest:(ZMSingleRequestSync * __unused)sync
 {
     if (response.result == ZMTransportResponseStatusSuccess) {
-        NSArray *remoteIdentifiersAsStrings = [[response.payload asDictionary] arrayForKey:@"results"];
-        NSArray *remoteIdentifiers = [remoteIdentifiersAsStrings mapWithBlock:^id(NSString *s) {
-            return s.UUID;
-        }];
-        
-        self.managedObjectContext.suggestedUsersForUser = [NSOrderedSet orderedSetWithArray:remoteIdentifiers];
         self.managedObjectContext.commonConnectionsForUsers = @{};
+        // This is a momentary workaround until we decide whether suggestions should be displayed or not
+        // At the moment they are not displayed anywhere, so I can safely set it to an empty set
+        self.managedObjectContext.suggestedUsersForUser = [NSOrderedSet orderedSet];
+
     }
     self.uploadedAddressBookDigest = self.encodedAddressBook.digest;
     self.encodedAddressBook = nil;
