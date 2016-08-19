@@ -1489,7 +1489,7 @@
 
 #pragma mark - Hiding messages
 
-- (void)testThatItHidesAMessageWhenAskedTo;
+- (void)testThatItHidesAMessageWhenAskedTo
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
@@ -1514,9 +1514,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     message = [ZMMessage fetchMessageWithNonce:messageNonce forConversation:groupConversation inManagedObjectContext:self.uiMOC];
-    XCTAssertTrue(message.hasBeenDeleted);
-    XCTAssertNil(message.visibleInConversation);
-    XCTAssertEqual(message.hiddenInConversation, groupConversation);
+    XCTAssertNil(message);
 }
 
 
@@ -1543,9 +1541,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     message = [ZMMessage fetchMessageWithNonce:messageNonce forConversation:groupConversation inManagedObjectContext:self.uiMOC];
-    XCTAssertTrue(message.hasBeenDeleted);
-    XCTAssertNil(message.visibleInConversation);
-    XCTAssertEqual(message.hiddenInConversation, groupConversation);
+    XCTAssertNil(message);
 }
 
 @end

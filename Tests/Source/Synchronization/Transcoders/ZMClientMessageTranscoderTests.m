@@ -102,160 +102,181 @@
 
 - (void)testThatItReturnsSelfClientAsDependentObjectForMessageIfItHasMissingClients
 {
-    //given
-    UserClient *client = [self createSelfClient];
-    UserClient *missingClient = [self insertMissingClientWithSelfClient:client];
-    
-    ZMConversation *conversation = [self insertGroupConversation];
-    [conversation.mutableOtherActiveParticipants addObject:missingClient.user];
-    [self.syncMOC saveOrRollback];
-    
-    ZMClientMessage *message = [self insertMessageInConversation:conversation];
-    
-    //when
-    ZMManagedObject *dependentObject = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:message];
-    
-    // then
-    XCTAssertNotNil(dependentObject);
-    XCTAssertEqual(dependentObject, client);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        //given
+        UserClient *client = [self createSelfClient];
+        UserClient *missingClient = [self insertMissingClientWithSelfClient:client];
+        
+        ZMConversation *conversation = [self insertGroupConversation];
+        [conversation.mutableOtherActiveParticipants addObject:missingClient.user];
+        [self.syncMOC saveOrRollback];
+        
+        ZMClientMessage *message = [self insertMessageInConversation:conversation];
+        
+        //when
+        ZMManagedObject *dependentObject = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:message];
+        
+        // then
+        XCTAssertNotNil(dependentObject);
+        XCTAssertEqual(dependentObject, client);
+    }];
 }
 
 
 - (void)testThatItReturnsConversationIfNeedsToBeUpdatedFromBackendBeforeMissingClients
 {
-    //given
-    UserClient *client = [self createSelfClient];
-    UserClient *missingClient = [self insertMissingClientWithSelfClient:client];
-    
-    ZMConversation *conversation = [self insertGroupConversation];
-    [conversation.mutableOtherActiveParticipants addObject:missingClient.user];
-
-    ZMClientMessage *message = [self insertMessageInConversation:conversation];
-    
-    // when
-    conversation.needsToBeUpdatedFromBackend = YES;
-    ZMManagedObject *dependentObject1 = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:message];
-    
-    // then
-    XCTAssertNotNil(dependentObject1);
-    XCTAssertEqual(dependentObject1, conversation);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        //given
+        UserClient *client = [self createSelfClient];
+        UserClient *missingClient = [self insertMissingClientWithSelfClient:client];
+        
+        ZMConversation *conversation = [self insertGroupConversation];
+        [conversation.mutableOtherActiveParticipants addObject:missingClient.user];
+        
+        ZMClientMessage *message = [self insertMessageInConversation:conversation];
+        
+        // when
+        conversation.needsToBeUpdatedFromBackend = YES;
+        ZMManagedObject *dependentObject1 = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:message];
+        
+        // then
+        XCTAssertNotNil(dependentObject1);
+        XCTAssertEqual(dependentObject1, conversation);
+    }];
 }
 
 - (void)testThatItReturnsConnectionIfNeedsToBeUpdatedFromBackendBeforeMissingClients
 {
-    //given
-    UserClient *client = [self createSelfClient];
-    UserClient *missingClient = [self insertMissingClientWithSelfClient:client];
-    
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.conversationType = ZMConversationTypeOneOnOne;
-    conversation.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.connection.to = missingClient.user;
-    [conversation.mutableOtherActiveParticipants addObject:missingClient.user];
-    
-    ZMClientMessage *message = [self insertMessageInConversation:conversation];
-    
-    // when
-    conversation.connection.needsToBeUpdatedFromBackend = YES;
-    ZMManagedObject *dependentObject1 = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:message];
-    
-    // then
-    XCTAssertNotNil(dependentObject1);
-    XCTAssertEqual(dependentObject1, conversation.connection);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        //given
+        UserClient *client = [self createSelfClient];
+        UserClient *missingClient = [self insertMissingClientWithSelfClient:client];
+        
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMConversationTypeOneOnOne;
+        conversation.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.connection.to = missingClient.user;
+        [conversation.mutableOtherActiveParticipants addObject:missingClient.user];
+        
+        ZMClientMessage *message = [self insertMessageInConversation:conversation];
+        
+        // when
+        conversation.connection.needsToBeUpdatedFromBackend = YES;
+        ZMManagedObject *dependentObject1 = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:message];
+        
+        // then
+        XCTAssertNotNil(dependentObject1);
+        XCTAssertEqual(dependentObject1, conversation.connection);
+    }];
 }
 
 
 - (void)testThatItDoesNotReturnSelfClientAsDependentObjectForMessageIfConversationIsNotAffectedByMissingClients
 {
-    //given
-    UserClient *client = [self createSelfClient];
-    UserClient *missingClient = [self insertMissingClientWithSelfClient:client];
-
-    
-    ZMConversation *conversation1 = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    [conversation1.mutableOtherActiveParticipants addObject:missingClient.user];
-    
-    ZMConversation *conversation2 = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation2.conversationType = ZMConversationTypeGroup;
-    conversation2.remoteIdentifier = [NSUUID createUUID];
-    
-    ZMClientMessage *message = [self insertMessageInConversation:conversation2];
-
-    // when
-    ZMManagedObject *dependentObject = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:message];
-    
-    // then
-    XCTAssertNil(dependentObject);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        //given
+        UserClient *client = [self createSelfClient];
+        UserClient *missingClient = [self insertMissingClientWithSelfClient:client];
+        
+        
+        ZMConversation *conversation1 = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        [conversation1.mutableOtherActiveParticipants addObject:missingClient.user];
+        
+        ZMConversation *conversation2 = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation2.conversationType = ZMConversationTypeGroup;
+        conversation2.remoteIdentifier = [NSUUID createUUID];
+        
+        ZMClientMessage *message = [self insertMessageInConversation:conversation2];
+        
+        // when
+        ZMManagedObject *dependentObject = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:message];
+        
+        // then
+        XCTAssertNil(dependentObject);
+    }];
 }
 
 - (void)testThatItReturnsNilAsDependentObjectForMessageIfItHasNoMissingClients
 {
-    //given
-    [self createSelfClient];
-    
-    ZMConversation *conversation = [self insertGroupConversation];
-    ZMClientMessage *message = [self insertMessageInConversation:conversation];
-
-    // when
-    ZMManagedObject *dependentObject = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:message];
-    
-    // then
-    XCTAssertNil(dependentObject);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        //given
+        [self createSelfClient];
+        
+        ZMConversation *conversation = [self insertGroupConversation];
+        ZMClientMessage *message = [self insertMessageInConversation:conversation];
+        
+        // when
+        ZMManagedObject *dependentObject = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:message];
+        
+        // then
+        XCTAssertNil(dependentObject);
+    }];
 }
 
 - (void)testThatItReturnsAPreviousPendingTextMessageAsDependency
 {
-    //given
-    [self createSelfClient];
-    NSDate *zeroTime = [NSDate dateWithTimeIntervalSince1970:1000];
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.remoteIdentifier = [NSUUID createUUID];
-    
-    ZMMessage *message = [conversation appendMessageWithText:@"message a1"];
-    message.nonce = [NSUUID createUUID];
-    message.serverTimestamp = zeroTime;
-    message.eventID = [self createEventID]; // already delivered message
-    
-    ZMMessage *nextMessage = [conversation appendMessageWithText:@"message a2"];
-    nextMessage.serverTimestamp = [NSDate dateWithTimeInterval:100 sinceDate:zeroTime];
-    nextMessage.nonce = [NSUUID createUUID]; // undelivered
-    
-    ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:@"message a3" nonce:[NSUUID createUUID].transportString];
-    ZMClientMessage *lastMessage = [conversation appendClientMessageWithData:genericMessage.data];
-    lastMessage.serverTimestamp = [NSDate dateWithTimeInterval:10 sinceDate:nextMessage.serverTimestamp];
-    
-    // when
-    XCTAssertTrue([self.syncMOC saveOrRollback]);
-    
-    // then
-    ZMManagedObject *dependency = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:lastMessage];
-    XCTAssertEqual(dependency, nextMessage);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        //given
+        [self createSelfClient];
+        NSDate *zeroTime = [NSDate dateWithTimeIntervalSince1970:1000];
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        
+        ZMMessage *message = [conversation appendMessageWithText:@"message a1"];
+        message.nonce = [NSUUID createUUID];
+        message.serverTimestamp = zeroTime;
+        message.eventID = [self createEventID]; // already delivered message
+        
+        ZMMessage *nextMessage = [conversation appendMessageWithText:@"message a2"];
+        nextMessage.serverTimestamp = [NSDate dateWithTimeInterval:100 sinceDate:zeroTime];
+        nextMessage.nonce = [NSUUID createUUID]; // undelivered
+        
+        ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:@"message a3" nonce:[NSUUID createUUID].transportString];
+        ZMClientMessage *lastMessage = [conversation appendClientMessageWithData:genericMessage.data];
+        lastMessage.serverTimestamp = [NSDate dateWithTimeInterval:10 sinceDate:nextMessage.serverTimestamp];
+        
+        // when
+        XCTAssertTrue([self.syncMOC saveOrRollback]);
+        
+        // then
+        ZMManagedObject *dependency = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:lastMessage];
+        XCTAssertEqual(dependency, nextMessage);
+    }];
 }
 
 - (void)testThatItGeneratesARequestToSendAClientMessage
 {
-    // given
-    [self createSelfClient];
-    ZMConversation *conversation = [self insertGroupConversation];
-    NSString *messageText = @"foo";
-    ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:messageText nonce:[NSUUID createUUID].transportString];
-    
-    ZMClientMessage *message = [conversation appendClientMessageWithData:genericMessage.data];
-    XCTAssertTrue([self.uiMOC saveOrRollback]);
-
-    // when
-    ZMUpstreamRequest *request = [(id<ZMUpstreamTranscoder>) self.sut requestForInsertingObject:message forKeys:nil];
-    
-    // then
-    // POST /conversations/{cnv}/otr/messages
-    NSString *expectedPath = [NSString pathWithComponents:@[@"/", @"conversations", conversation.remoteIdentifier.transportString, @"otr", @"messages"]];
-    
-    XCTAssertNotNil(request);
-    XCTAssertNotNil(request.transportRequest);
-    XCTAssertEqualObjects(expectedPath, request.transportRequest.path);
-    XCTAssertEqual(ZMMethodPOST, request.transportRequest.method);
-    XCTAssertEqualObjects(request.transportRequest.binaryDataType, @"application/x-protobuf");
-    XCTAssertNotNil(request.transportRequest.binaryData);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        // given
+        [self createSelfClient];
+        ZMConversation *conversation = [self insertGroupConversation];
+        NSString *messageText = @"foo";
+        ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:messageText nonce:[NSUUID createUUID].transportString];
+        
+        ZMClientMessage *message = [conversation appendClientMessageWithData:genericMessage.data];
+        XCTAssertTrue([self.syncMOC saveOrRollback]);
+        
+        // when
+        ZMUpstreamRequest *request = [(id<ZMUpstreamTranscoder>) self.sut requestForInsertingObject:message forKeys:nil];
+        
+        // then
+        // POST /conversations/{cnv}/otr/messages
+        NSString *expectedPath = [NSString pathWithComponents:@[@"/", @"conversations", conversation.remoteIdentifier.transportString, @"otr", @"messages"]];
+        
+        XCTAssertNotNil(request);
+        XCTAssertNotNil(request.transportRequest);
+        XCTAssertEqualObjects(expectedPath, request.transportRequest.path);
+        XCTAssertEqual(ZMMethodPOST, request.transportRequest.method);
+        XCTAssertEqualObjects(request.transportRequest.binaryDataType, @"application/x-protobuf");
+        XCTAssertNotNil(request.transportRequest.binaryData);
+    }];
 }
 
 
@@ -380,81 +401,84 @@
 
 - (void)testThatItDecyptsTheEncryptedEventsWhileKeepingTheUnecryptedEventsAndReturnsTheNonceToPrefetchForUpdateEvents
 {
-    // given
-    NSMutableArray <ZMUpdateEvent *>*events = [NSMutableArray array];
-    UserClient *client = self.createSelfClient;
-    
-    for (ZMUpdateEventType type = 1; type < ZMUpdateEvent_LAST; type++) {
-        if (type == ZMUpdateEventConversationClientMessageAdd ||
-            type == ZMUpdateEventConversationOtrAssetAdd ||
-            type == ZMUpdateEventConversationOtrMessageAdd) {
-            continue;
+    [self.syncMOC performGroupedBlockAndWait:^{
+
+        // given
+        NSMutableArray <ZMUpdateEvent *>*events = [NSMutableArray array];
+        UserClient *client = self.createSelfClient;
+        
+        for (ZMUpdateEventType type = 1; type < ZMUpdateEvent_LAST; type++) {
+            if (type == ZMUpdateEventConversationClientMessageAdd ||
+                type == ZMUpdateEventConversationOtrAssetAdd ||
+                type == ZMUpdateEventConversationOtrMessageAdd) {
+                continue;
+            }
+            
+            NSString *eventTypeString = [ZMUpdateEvent eventTypeStringForUpdateEventType:type];
+            NSUUID *nonce = NSUUID.createUUID;
+            NSDictionary *payload = @{
+                                      @"conversation" : NSUUID.createUUID.transportString,
+                                      @"id" : self.createEventID.transportString,
+                                      @"time" : [NSDate dateWithTimeIntervalSince1970:1234000].transportString,
+                                      @"from" : NSUUID.createUUID.transportString,
+                                      @"type" : eventTypeString,
+                                      @"data" : @{
+                                              @"content":@"fooo",
+                                              @"nonce" : nonce.transportString,
+                                              }
+                                      };
+            
+            ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
+            [events addObject:event];
         }
         
-        NSString *eventTypeString = [ZMUpdateEvent eventTypeStringForUpdateEventType:type];
-        NSUUID *nonce = NSUUID.createUUID;
-        NSDictionary *payload = @{
-                                  @"conversation" : NSUUID.createUUID.transportString,
-                                  @"id" : self.createEventID.transportString,
-                                  @"time" : [NSDate dateWithTimeIntervalSince1970:1234000].transportString,
-                                  @"from" : NSUUID.createUUID.transportString,
-                                  @"type" : eventTypeString,
-                                  @"data" : @{
-                                          @"content":@"fooo",
-                                          @"nonce" : nonce.transportString,
-                                          }
-                                  };
+        NSUUID *otrNonce = NSUUID.createUUID;
         
-        ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-        [events addObject:event];
-    }
-    
-    NSUUID *otrNonce = NSUUID.createUUID;
-    
-    NSError *error;
-    ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"OTR message" nonce:otrNonce.transportString];
-    CBPreKey *prekey = [client.keysStore lastPreKeyAndReturnError:&error];
-    CBSession *session = [client.keysStore.box sessionWithId:client.remoteIdentifier fromPreKey:prekey error:&error];
-    NSData *encryptedData = [session encrypt:message.data error:&error];
-    XCTAssertNil(error);
-    
-    NSDictionary *payload = @{ @"recipient": client.remoteIdentifier, @"sender": client.remoteIdentifier, @"text": [encryptedData base64String] };
-    ZMUpdateEvent *encryptedUpdateEvent = [ZMUpdateEvent eventFromEventStreamPayload: @{
-                                                                               @"type" : @"conversation.otr-message-add",
-                                                                               @"data" : payload,
-                                                                               @"conversation" : NSUUID.createUUID.transportString,
-                                                                               @"time" : [NSDate dateWithTimeIntervalSince1970:555555].transportString
-                                                                               } uuid:nil];
-    
-    XCTAssertTrue([self.syncMOC saveOrRollback]);
-    [events addObject:encryptedUpdateEvent];
-    
-    // when
-    XCTAssertFalse([self.sut respondsToSelector:@selector(conversationRemoteIdentifiersToPrefetchToProcessEvents:)]);
-    XCTAssertTrue([self.sut respondsToSelector:@selector(messageNoncesToPrefetchToProcessEvents:)]);
-    XCTAssertTrue([self.sut conformsToProtocol:@protocol(ZMUpdateEventDecryptor)]);
-    
-    NSArray <ZMUpdateEvent *>*decryptedEvents = [(id <ZMUpdateEventDecryptor>)self.sut decryptedUpdateEventsFromEvents:events];
-    
-    // then
-    XCTAssertEqual(decryptedEvents.count, 31lu);
-    XCTAssertEqual(decryptedEvents.count, events.count);
-    XCTAssertFalse([decryptedEvents containsObject:encryptedUpdateEvent]);
-    XCTAssertTrue(decryptedEvents.lastObject.wasDecrypted);
-    
-    for (NSUInteger idx = 0; idx < decryptedEvents.count - 1; idx++) {
-        XCTAssertFalse(decryptedEvents[idx].wasDecrypted);
-    }
-    
-    for (NSUInteger idx = 0; idx < events.count; idx++) {
-        XCTAssertFalse(events[idx].wasDecrypted);
-    }
-    
-    NSSet <NSUUID *>*noncesToFetch = [self.sut messageNoncesToPrefetchToProcessEvents:decryptedEvents];
-    
-    // then
-    XCTAssertTrue([noncesToFetch containsObject:otrNonce]);
-    XCTAssertEqual(noncesToFetch.count, 1lu);
+        NSError *error;
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"OTR message" nonce:otrNonce.transportString];
+        CBPreKey *prekey = [client.keysStore lastPreKeyAndReturnError:&error];
+        CBSession *session = [client.keysStore.box sessionWithId:client.remoteIdentifier fromPreKey:prekey error:&error];
+        NSData *encryptedData = [session encrypt:message.data error:&error];
+        XCTAssertNil(error);
+        
+        NSDictionary *payload = @{ @"recipient": client.remoteIdentifier, @"sender": client.remoteIdentifier, @"text": [encryptedData base64String] };
+        ZMUpdateEvent *encryptedUpdateEvent = [ZMUpdateEvent eventFromEventStreamPayload: @{
+                                                                                            @"type" : @"conversation.otr-message-add",
+                                                                                            @"data" : payload,
+                                                                                            @"conversation" : NSUUID.createUUID.transportString,
+                                                                                            @"time" : [NSDate dateWithTimeIntervalSince1970:555555].transportString
+                                                                                            } uuid:nil];
+        
+        XCTAssertTrue([self.syncMOC saveOrRollback]);
+        [events addObject:encryptedUpdateEvent];
+        
+        // when
+        XCTAssertFalse([self.sut respondsToSelector:@selector(conversationRemoteIdentifiersToPrefetchToProcessEvents:)]);
+        XCTAssertTrue([self.sut respondsToSelector:@selector(messageNoncesToPrefetchToProcessEvents:)]);
+        XCTAssertTrue([self.sut conformsToProtocol:@protocol(ZMUpdateEventDecryptor)]);
+        
+        NSArray <ZMUpdateEvent *>*decryptedEvents = [(id <ZMUpdateEventDecryptor>)self.sut decryptedUpdateEventsFromEvents:events];
+        
+        // then
+        XCTAssertEqual(decryptedEvents.count, 31lu);
+        XCTAssertEqual(decryptedEvents.count, events.count);
+        XCTAssertFalse([decryptedEvents containsObject:encryptedUpdateEvent]);
+        XCTAssertTrue(decryptedEvents.lastObject.wasDecrypted);
+        
+        for (NSUInteger idx = 0; idx < decryptedEvents.count - 1; idx++) {
+            XCTAssertFalse(decryptedEvents[idx].wasDecrypted);
+        }
+        
+        for (NSUInteger idx = 0; idx < events.count; idx++) {
+            XCTAssertFalse(events[idx].wasDecrypted);
+        }
+        
+        NSSet <NSUUID *>*noncesToFetch = [self.sut messageNoncesToPrefetchToProcessEvents:decryptedEvents];
+        
+        // then
+        XCTAssertTrue([noncesToFetch containsObject:otrNonce]);
+        XCTAssertEqual(noncesToFetch.count, 1lu);
+    }];
 }
 
 - (void)testThatItGeneratesARequestToSendAClientMessageExternalWithExternalBlob
@@ -467,25 +491,27 @@
 
 - (void)testThatItGeneratesARequestToSendAClientMessageWhenAMessageIsInsertedWithBlock:(void(^)(ZMMessage *message))block
 {
-    // given
-    [self createSelfClient];
-    ZMConversation *conversation = [self insertGroupConversation];
-    ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:@"foo" nonce:[NSUUID createUUID].transportString];
-    
-    ZMClientMessage *message = [conversation appendClientMessageWithData:genericMessage.data];
-    XCTAssertTrue([self.uiMOC saveOrRollback]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // when
-    block(message);
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    
-    // then
-    //POST /conversations/{cnv}/messages
-    NSString *expectedPath = [NSString pathWithComponents:@[@"/", @"conversations", conversation.remoteIdentifier.transportString, @"otr", @"messages"]];
-    XCTAssertNotNil(request);
-    XCTAssertEqualObjects(expectedPath, request.path);
-    XCTAssertNotNil(request.binaryData);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        // given
+        [self createSelfClient];
+        ZMConversation *conversation = [self insertGroupConversation];
+        ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:@"foo" nonce:[NSUUID createUUID].transportString];
+        
+        ZMClientMessage *message = [conversation appendClientMessageWithData:genericMessage.data];
+        XCTAssertTrue([self.syncMOC saveOrRollback]);
+        
+        // when
+        block(message);
+        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        
+        // then
+        //POST /conversations/{cnv}/messages
+        NSString *expectedPath = [NSString pathWithComponents:@[@"/", @"conversations", conversation.remoteIdentifier.transportString, @"otr", @"messages"]];
+        XCTAssertNotNil(request);
+        XCTAssertEqualObjects(expectedPath, request.path);
+        XCTAssertNotNil(request.binaryData);
+    }];
 }
 
 
@@ -504,8 +530,8 @@
         conversation = self.insertGroupConversation;
         message = [conversation appendOTRMessageWithText:messageText nonce:[NSUUID createUUID]];
     }];
-    
     WaitForAllGroupsToBeEmpty(0.5);
+
     XCTAssertNotNil(message);
     XCTAssertNotNil(conversation);
     
@@ -528,7 +554,7 @@
             __unused CBSession *session = [selfClient.keysStore.box sessionWithId:userClient.remoteIdentifier fromPreKey:key error:&keyError];
         }];
     }];
-
+    
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertNotNil(selfClient);
     
@@ -677,37 +703,38 @@
     
     message.uploadState = format == ZMImageFormatMedium ? ZMAssetUploadStateUploadingFullAsset : ZMAssetUploadStateUploadingPlaceholder;
     [self.syncMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItGeneratesARequestToSendOTRAssetWhenAMessageIsInsertedWithFormat:(ZMImageFormat)format block:(void(^)(ZMMessage *message))block
 {
-    NSUUID *conversationId = [NSUUID createUUID];
-    ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:conversationId];
-    [self prepareMessage:message forUploadOnlyForFormat:format];
-    
-    // when
-    block(message);
-    WaitForAllGroupsToBeEmpty(0.5);
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    
-    // then
-    //POST /conversations/{cnv}/otr/assets
-    NSString *expectedPath = [NSString pathWithComponents:@[@"/", @"conversations", conversationId.transportString, @"otr", @"assets"]];
-    XCTAssertNotNil(request);
-    if(!request) {
-        return;
-    }
-    XCTAssertEqualObjects(expectedPath, request.path);
-    ZMMultipartBodyItem *metadataItem = [request multipartBodyItems].firstObject;
-
-    ZMAssetClientMessage *syncMessage = (ZMAssetClientMessage *)[self.sut.managedObjectContext objectWithID:message.objectID];
-    
-    NSData *syncMessageData = [[syncMessage.imageAssetStorage encryptedMessagePayloadForImageFormat:format] data];
-    ZMOtrAssetMeta *expectedOtrMessageMetadata = (ZMOtrAssetMeta *)[[[ZMOtrAssetMeta builder] mergeFromData:syncMessageData] build];
-    ZMOtrAssetMeta *otrMessageMetadata = (ZMOtrAssetMeta *)[[[ZMOtrAssetMeta builder] mergeFromData:metadataItem.data] build];
-
-    [self assertOtrAssetMetadata:otrMessageMetadata expected:expectedOtrMessageMetadata conversation:message.conversation];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        NSUUID *conversationId = [NSUUID createUUID];
+        ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:conversationId];
+        [self prepareMessage:message forUploadOnlyForFormat:format];
+        
+        // when
+        block(message);
+        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        
+        // then
+        //POST /conversations/{cnv}/otr/assets
+        NSString *expectedPath = [NSString pathWithComponents:@[@"/", @"conversations", conversationId.transportString, @"otr", @"assets"]];
+        XCTAssertNotNil(request);
+        if(!request) {
+            return;
+        }
+        XCTAssertEqualObjects(expectedPath, request.path);
+        ZMMultipartBodyItem *metadataItem = [request multipartBodyItems].firstObject;
+        
+        ZMAssetClientMessage *syncMessage = (ZMAssetClientMessage *)[self.sut.managedObjectContext objectWithID:message.objectID];
+        
+        NSData *syncMessageData = [[syncMessage.imageAssetStorage encryptedMessagePayloadForImageFormat:format] data];
+        ZMOtrAssetMeta *expectedOtrMessageMetadata = (ZMOtrAssetMeta *)[[[ZMOtrAssetMeta builder] mergeFromData:syncMessageData] build];
+        ZMOtrAssetMeta *otrMessageMetadata = (ZMOtrAssetMeta *)[[[ZMOtrAssetMeta builder] mergeFromData:metadataItem.data] build];
+        
+        [self assertOtrAssetMetadata:otrMessageMetadata expected:expectedOtrMessageMetadata conversation:message.conversation];
+    }];
 }
 
 - (void)testThatItGeneratesARequestToSendAssetWhenOTRAssetIsInserted_OnInitialization
@@ -734,35 +761,41 @@
     NSData *imageData = [self verySmallJPEGData];
     NSUUID *nonce = [NSUUID createUUID];
     
-    // message
-    ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:imageData
-                                                                                            nonce:nonce
-                                                                             managedObjectContext:self.syncMOC];
-    message.isEncrypted = YES;
+    __block ZMAssetClientMessage *message;
     
-    // remove image data or it won't be downloaded
-    [self.syncMOC.zm_imageAssetCache deleteAssetData:message.nonce format:ZMImageFormatOriginal encrypted:NO];
-    
-    ZMIImageProperties *properties = [ZMIImageProperties imagePropertiesWithSize:[ZMImagePreprocessor sizeOfPrerotatedImageWithData:imageData] length:imageData.length mimeType:@"image/jpeg"];
-    ZMImageAssetEncryptionKeys *keys = [[ZMImageAssetEncryptionKeys alloc] initWithOtrKey:[NSData randomEncryptionKey] macKey:[NSData zmRandomSHA256Key] mac:[NSData zmRandomSHA256Key]];
-    [message addGenericMessage:[ZMGenericMessage messageWithMediumImageProperties:properties processedImageProperties:properties encryptionKeys:keys nonce:nonce.transportString format:ZMImageFormatMedium]];
-    [message addGenericMessage:[ZMGenericMessage messageWithMediumImageProperties:properties processedImageProperties:properties encryptionKeys:keys nonce:nonce.transportString format:ZMImageFormatPreview]];
-    [message resetLocallyModifiedKeys:[NSSet setWithObject:ZMAssetClientMessageUploadedStateKey]];
-    message.assetId = assetId;
-    
-    // Conversation
-    ZMConversation *conversation = [self insertGroupConversationInMoc:self.syncMOC];
-    conversation.remoteIdentifier = conversationId;
-    [conversation.mutableMessages addObject:message];
-    XCTAssertTrue([self.syncMOC saveOrRollback]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // message
+        message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:imageData
+                                                                                                nonce:nonce
+                                                                                 managedObjectContext:self.syncMOC];
+        message.isEncrypted = YES;
+        
+        // remove image data or it won't be downloaded
+        [self.syncMOC.zm_imageAssetCache deleteAssetData:message.nonce format:ZMImageFormatOriginal encrypted:NO];
+        
+        ZMIImageProperties *properties = [ZMIImageProperties imagePropertiesWithSize:[ZMImagePreprocessor sizeOfPrerotatedImageWithData:imageData] length:imageData.length mimeType:@"image/jpeg"];
+        ZMImageAssetEncryptionKeys *keys = [[ZMImageAssetEncryptionKeys alloc] initWithOtrKey:[NSData randomEncryptionKey] macKey:[NSData zmRandomSHA256Key] mac:[NSData zmRandomSHA256Key]];
+        [message addGenericMessage:[ZMGenericMessage messageWithMediumImageProperties:properties processedImageProperties:properties encryptionKeys:keys nonce:nonce.transportString format:ZMImageFormatMedium]];
+        [message addGenericMessage:[ZMGenericMessage messageWithMediumImageProperties:properties processedImageProperties:properties encryptionKeys:keys nonce:nonce.transportString format:ZMImageFormatPreview]];
+        [message resetLocallyModifiedKeys:[NSSet setWithObject:ZMAssetClientMessageUploadedStateKey]];
+        message.assetId = assetId;
+        
+        // Conversation
+        ZMConversation *conversation = [self insertGroupConversationInMoc:self.syncMOC];
+        conversation.remoteIdentifier = conversationId;
+        [conversation.mutableMessages addObject:message];
+        XCTAssertTrue([self.syncMOC saveOrRollback]);
 
-    // trigger download
-    [message requestImageDownload];
-    WaitForAllGroupsToBeEmpty(0.5);
+        // trigger download
+        [message requestImageDownload];
+    }];
 
     // request
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    __block ZMTransportRequest *request;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        request = [self.sut.requestGenerators nextRequest];
+    }];
+    
     return request;
 }
 
@@ -774,6 +807,8 @@
     
     // when
     ZMTransportRequest *request = [self requestToDownloadAssetWithAssetId:assetId inConversationWithId:conversationId];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
     NSString *expectedPath = [NSString pathWithComponents:@[@"/", @"conversations", conversationId.transportString, @"otr", @"assets", assetId.transportString]];
     
     // then
@@ -783,29 +818,31 @@
 
 - (void)testThatItDoesNotReturnsRequestToDownloadFileAsset
 {
-    // given
-    NSUUID *nonce = [NSUUID createUUID];
-    NSURL *testURL = [[NSBundle bundleForClass:self.class] URLForResource:@"Lorem Ipsum" withExtension:@"txt"];
-    ZMFileMetadata *metadata = [[ZMFileMetadata alloc] initWithFileURL:testURL thumbnail:nil];
-    ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithFileMetadata:metadata
-                                                                                       nonce:nonce
-                                                                        managedObjectContext:self.syncMOC];
-    message.transferState = ZMFileTransferStateUploaded;
-    message.delivered = YES;
-    message.assetId = [NSUUID createUUID];
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.remoteIdentifier = [NSUUID createUUID];
-    conversation.conversationType = ZMConversationTypeGroup;
-    
-    // when
-    for(id changeTracker in self.sut.contextChangeTrackers) {
-        [changeTracker objectsDidChange:[NSSet setWithObject:message]];
-    }
-    
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    
-    // then
-    XCTAssertNil(request);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        NSUUID *nonce = [NSUUID createUUID];
+        NSURL *testURL = [[NSBundle bundleForClass:self.class] URLForResource:@"Lorem Ipsum" withExtension:@"txt"];
+        ZMFileMetadata *metadata = [[ZMFileMetadata alloc] initWithFileURL:testURL thumbnail:nil];
+        ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithFileMetadata:metadata
+                                                                                           nonce:nonce
+                                                                            managedObjectContext:self.syncMOC];
+        message.transferState = ZMFileTransferStateUploaded;
+        message.delivered = YES;
+        message.assetId = [NSUUID createUUID];
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        conversation.conversationType = ZMConversationTypeGroup;
+        
+        // when
+        for(id changeTracker in self.sut.contextChangeTrackers) {
+            [changeTracker objectsDidChange:[NSSet setWithObject:message]];
+        }
+        
+        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        
+        // then
+        XCTAssertNil(request);
+    }];
 }
 
 - (void)testThatItDoesNotReturnRequestToDownloadAssetIfItHasNoAssetId
@@ -816,167 +853,186 @@
 
 - (void)testThatItUpdatesMessageWithImageData
 {
-    // given
-    NSData *imageData = [self verySmallJPEGData];
-    ZMAssetClientMessage *message = [ZMAssetClientMessage insertNewObjectInManagedObjectContext:self.sut.managedObjectContext];
-    id mockMessage = [OCMockObject partialMockForObject:message];
-    
-    ZMTransportResponse *response = [OCMockObject mockForClass:ZMTransportResponse.class];
-    [[[(id)response stub] andReturn:imageData] rawData];
-    [[[(id)response stub] andReturnValue:@(200)] HTTPStatus];
-    
-    //expect
-    [[mockMessage expect] updateMessageWithImageData:imageData forFormat:ZMImageFormatMedium];
-    
-    // when
-    [(ZMClientMessageTranscoder *)self.sut updateObject:message withResponse:response downstreamSync:nil];
-    
-    //then
-    [mockMessage verify];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        NSData *imageData = [self verySmallJPEGData];
+        ZMAssetClientMessage *message = [ZMAssetClientMessage insertNewObjectInManagedObjectContext:self.syncMOC];
+        id mockMessage = [OCMockObject partialMockForObject:message];
+        
+        ZMTransportResponse *response = [OCMockObject mockForClass:ZMTransportResponse.class];
+        [[[(id)response stub] andReturn:imageData] rawData];
+        [[[(id)response stub] andReturnValue:@(200)] HTTPStatus];
+        
+        //expect
+        [[mockMessage expect] updateMessageWithImageData:imageData forFormat:ZMImageFormatMedium];
+        
+        // when
+        [(ZMClientMessageTranscoder *)self.sut updateObject:message withResponse:response downstreamSync:nil];
+        
+        //then
+        [mockMessage verify];
+    }];
 }
 
 - (void)testThatItDeletesMessageIfDownstreamRequestFailed
 {
-    // given
-    ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[NSData data]
-                                                                                            nonce:[NSUUID createUUID]
-                                                                             managedObjectContext:self.syncMOC];
-    
-    // when
-    [(ZMClientMessageTranscoder *)self.sut deleteObject:message downstreamSync:nil];
-    
-    // then
-    XCTAssertTrue(message.isDeleted);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[NSData data]
+                                                                                                nonce:[NSUUID createUUID]
+                                                                                 managedObjectContext:self.syncMOC];
+        
+        // when
+        [(ZMClientMessageTranscoder *)self.sut deleteObject:message downstreamSync:nil];
+        
+        // then
+        XCTAssertTrue(message.isDeleted);
+    }];
 
 }
 
 - (void)testThatItAddsMissingRecipientInMessageRelationship
 {
-    // given
-    ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
-    
-    NSString *missingClientId = [NSString createAlphanumericalString];
-    NSDictionary *payload = @{@"missing": @{[NSUUID createUUID].transportString : @[missingClientId]}};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
-    ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
-    
-    // when
-    [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
-    
-    // then
-    UserClient *missingClient = message.missingRecipients.anyObject;
-    XCTAssertNotNil(missingClient);
-    XCTAssertEqualObjects(missingClient.remoteIdentifier, missingClientId);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
+        
+        NSString *missingClientId = [NSString createAlphanumericalString];
+        NSDictionary *payload = @{@"missing": @{[NSUUID createUUID].transportString : @[missingClientId]}};
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
+        ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
+        
+        // when
+        [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
+        
+        // then
+        UserClient *missingClient = message.missingRecipients.anyObject;
+        XCTAssertNotNil(missingClient);
+        XCTAssertEqualObjects(missingClient.remoteIdentifier, missingClientId);
+    }];
 }
 
 - (void)testThatItDeletesTheCurrentClientIfWeGetA403ResponseWithCorrectLabel
 {
-    // given
-    ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
-    id <ZMTransportData> payload = @{ @"label": @"unknown-client" };
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:403 transportSessionError:nil];
-    ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
-    
-    // expect
-    [[(id)self.mockClientRegistrationStatus expect] didDetectCurrentClientDeletion];
-    
-    // when
-    [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
+    [self.syncMOC performGroupedBlockAndWait:^{
 
-    // then
-    [(id)self.mockClientRegistrationStatus verify];
+        // given
+        ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
+        id <ZMTransportData> payload = @{ @"label": @"unknown-client" };
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:403 transportSessionError:nil];
+        ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
+        
+        // expect
+        [[(id)self.mockClientRegistrationStatus expect] didDetectCurrentClientDeletion];
+        
+        // when
+        [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
+        
+        // then
+        [(id)self.mockClientRegistrationStatus verify];
+    }];
 }
 
 - (void)testThatItDoesNotDeletesTheCurrentClientIfWeGetA403ResponseWithoutTheCorrectLabel
-{
-    // given
-    ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@[] HTTPstatus:403 transportSessionError:nil];
-    ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
-
-    // reject
-    [[(id)self.mockClientRegistrationStatus reject] didDetectCurrentClientDeletion];
-    
-    // when
-    [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
-    
-    // then
-    [(id)self.mockClientRegistrationStatus verify];
+    {
+        [self.syncMOC performGroupedBlockAndWait:^{
+            
+            // given
+            ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
+            ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@[] HTTPstatus:403 transportSessionError:nil];
+            ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
+            
+            // reject
+            [[(id)self.mockClientRegistrationStatus reject] didDetectCurrentClientDeletion];
+            
+            // when
+            [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
+            
+            // then
+            [(id)self.mockClientRegistrationStatus verify];
+        }];
 }
 
 - (void)testThatItSetsNeedsToBeUpdatedFromBackendOnConversationIfMissingMapIncludesUsersThatAreNoActiveUsers
 {
-    // given
-    ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
-    XCTAssertFalse(message.conversation.needsToBeUpdatedFromBackend);
-    
-    NSString *missingClientId = [NSString createAlphanumericalString];
-    NSDictionary *payload = @{@"missing": @{[NSUUID createUUID].transportString : @[missingClientId]}};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
-    ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
-
-    // when
-    [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
-    
-    // then
-    XCTAssertTrue(message.conversation.needsToBeUpdatedFromBackend);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        // given
+        ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
+        XCTAssertFalse(message.conversation.needsToBeUpdatedFromBackend);
+        
+        NSString *missingClientId = [NSString createAlphanumericalString];
+        NSDictionary *payload = @{@"missing": @{[NSUUID createUUID].transportString : @[missingClientId]}};
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
+        ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
+        
+        // when
+        [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
+        
+        // then
+        XCTAssertTrue(message.conversation.needsToBeUpdatedFromBackend);
+    }];
 }
 
 - (void)testThatItSetsNeedsToBeUpdatedFromBackendOnConnectionIfMissingMapIncludesUsersThatIsNoActiveUser_OneOnOne
 {
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.conversationType = ZMConversationTypeOneOnOne;
-    conversation.remoteIdentifier = [NSUUID UUID];
-    conversation.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    user.remoteIdentifier = [NSUUID UUID];
-    
-    ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversation:conversation];
-    XCTAssertFalse(message.conversation.connection.needsToBeUpdatedFromBackend);
-    
-    NSString *missingClientId = [NSString createAlphanumericalString];
-    NSDictionary *payload = @{@"missing": @{user.remoteIdentifier.transportString : @[missingClientId]}};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
-    ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
-
-    
-    // when
-    [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
-    [self.syncMOC saveOrRollback];
-
-    // then
-    XCTAssertNotNil(user.connection);
-    XCTAssertNotNil(message.conversation.connection);
-    XCTAssertTrue(message.conversation.connection.needsToBeUpdatedFromBackend);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMConversationTypeOneOnOne;
+        conversation.remoteIdentifier = [NSUUID UUID];
+        conversation.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+        ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user.remoteIdentifier = [NSUUID UUID];
+        
+        ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversation:conversation];
+        XCTAssertFalse(message.conversation.connection.needsToBeUpdatedFromBackend);
+        
+        NSString *missingClientId = [NSString createAlphanumericalString];
+        NSDictionary *payload = @{@"missing": @{user.remoteIdentifier.transportString : @[missingClientId]}};
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
+        ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
+        
+        
+        // when
+        [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
+        [self.syncMOC saveOrRollback];
+        
+        // then
+        XCTAssertNotNil(user.connection);
+        XCTAssertNotNil(message.conversation.connection);
+        XCTAssertTrue(message.conversation.connection.needsToBeUpdatedFromBackend);
+    }];
 }
 
 - (void)testThatItInsertsAndSetsNeedsToBeUpdatedFromBackendOnConnectionIfMissingMapIncludesUsersThatIsNoActiveUser_OneOnOne
 {
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.conversationType = ZMConversationTypeOneOnOne;
-    conversation.remoteIdentifier = [NSUUID UUID];
-    
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    user.remoteIdentifier = [NSUUID UUID];
-    
-    ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversation:conversation];
-    XCTAssertFalse(message.conversation.needsToBeUpdatedFromBackend);
-    
-    NSString *missingClientId = [NSString createAlphanumericalString];
-    NSDictionary *payload = @{@"missing": @{user.remoteIdentifier.transportString : @[missingClientId]}};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
-    ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
-
-    // when
-    [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
-    [self.syncMOC saveOrRollback];
-    
-    // then
-    XCTAssertNotNil(user.connection);
-    XCTAssertNotNil(message.conversation.connection);
-    XCTAssertTrue(message.conversation.connection.needsToBeUpdatedFromBackend);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMConversationTypeOneOnOne;
+        conversation.remoteIdentifier = [NSUUID UUID];
+        
+        ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user.remoteIdentifier = [NSUUID UUID];
+        
+        ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversation:conversation];
+        XCTAssertFalse(message.conversation.needsToBeUpdatedFromBackend);
+        
+        NSString *missingClientId = [NSString createAlphanumericalString];
+        NSDictionary *payload = @{@"missing": @{user.remoteIdentifier.transportString : @[missingClientId]}};
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
+        ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
+        
+        // when
+        [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:[NSSet set]];
+        [self.syncMOC saveOrRollback];
+        
+        // then
+        XCTAssertNotNil(user.connection);
+        XCTAssertNotNil(message.conversation.connection);
+        XCTAssertTrue(message.conversation.connection.needsToBeUpdatedFromBackend);
+    }];
 }
     
 - (void)testThatItDeletesDeletedRecipientsOnFailure
@@ -1075,27 +1131,30 @@
 
 - (void)checkThatItDeletesMessageIfFailedToCreatedUpdateRequestAndNoOriginalDataStored:(ZMImageFormat)format
 {
-    NSData *imageData = [self verySmallJPEGData];
-    NSUUID *nonce = [NSUUID createUUID];
-    ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:imageData nonce:nonce managedObjectContext:self.syncMOC];
-    ZMIImageProperties *properties = [ZMIImageProperties imagePropertiesWithSize:[ZMImagePreprocessor sizeOfPrerotatedImageWithData:imageData] length:imageData.length mimeType:@""];
-    [message addGenericMessage:[ZMGenericMessage messageWithMediumImageProperties:properties processedImageProperties:properties encryptionKeys:nil nonce:nonce.transportString format:format]];
-    
-    //when
-    switch (format) {
-        case ZMImageFormatPreview:
-            message.uploadState = ZMAssetUploadStateUploadingPlaceholder;
-            break;
-        case ZMImageFormatMedium:
-            message.uploadState = ZMAssetUploadStateUploadingFullAsset;
-            break;
-        default:
-            break;
-    }
-    [self.sut requestForUpdatingObject:message forKeys:[NSSet setWithObject:ZMAssetClientMessageUploadedStateKey]];
-    
-    //then
-    XCTAssertTrue(message.isZombieObject);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        NSData *imageData = [self verySmallJPEGData];
+        NSUUID *nonce = [NSUUID createUUID];
+        ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:imageData nonce:nonce managedObjectContext:self.syncMOC];
+        ZMIImageProperties *properties = [ZMIImageProperties imagePropertiesWithSize:[ZMImagePreprocessor sizeOfPrerotatedImageWithData:imageData] length:imageData.length mimeType:@""];
+        [message addGenericMessage:[ZMGenericMessage messageWithMediumImageProperties:properties processedImageProperties:properties encryptionKeys:nil nonce:nonce.transportString format:format]];
+        
+        //when
+        switch (format) {
+            case ZMImageFormatPreview:
+                message.uploadState = ZMAssetUploadStateUploadingPlaceholder;
+                break;
+            case ZMImageFormatMedium:
+                message.uploadState = ZMAssetUploadStateUploadingFullAsset;
+                break;
+            default:
+                break;
+        }
+        [self.sut requestForUpdatingObject:message forKeys:[NSSet setWithObject:ZMAssetClientMessageUploadedStateKey]];
+        
+        //then
+        XCTAssertTrue(message.isZombieObject);
+    }];
 }
 
 - (void)testThatItDeletesMessageIfFailedToCreatedUpdateRequestForMediumFormatAndNoOriginalDataStored
@@ -1110,130 +1169,146 @@
 
 - (void)testThatItChecksIfItNeedsProcessingBeforeCreatingRequest
 {
-    NSUUID *conversationId = [NSUUID createUUID];
-    ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:conversationId];
-    [self prepareMessage:message forUploadOnlyForFormat:ZMImageFormatMedium];
-    
-    NSManagedObject *syncMessage = [self.sut.managedObjectContext objectWithID:message.objectID];
-    for(id changeTracker in self.sut.contextChangeTrackers) {
-        [changeTracker objectsDidChange:[NSSet setWithObject:syncMessage]];
-    }
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // when
-    [message.managedObjectContext.zm_imageAssetCache deleteAssetData:message.nonce format:ZMImageFormatMedium encrypted:YES];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    
-    // then
-    XCTAssertNil(request);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        NSUUID *conversationId = [NSUUID createUUID];
+        ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:conversationId];
+        [self prepareMessage:message forUploadOnlyForFormat:ZMImageFormatMedium];
+        
+        NSManagedObject *syncMessage = [self.sut.managedObjectContext objectWithID:message.objectID];
+        for(id changeTracker in self.sut.contextChangeTrackers) {
+            [changeTracker objectsDidChange:[NSSet setWithObject:syncMessage]];
+        }
+        
+        // when
+        [message.managedObjectContext.zm_imageAssetCache deleteAssetData:message.nonce format:ZMImageFormatMedium encrypted:YES];
+        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        
+        // then
+        XCTAssertNil(request);
+    }];
 }
 
 - (void)testThatItResetsNeedsToUploadMediumKeyWhenParsingTheResponseForPreviewImage
 {
-    // given
-    NSString *key = ZMAssetClientMessageUploadedStateKey;
-    ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[self verySmallJPEGData]
-                                                                                            nonce:[NSUUID createUUID]
-                                                                             managedObjectContext:self.syncMOC];
-    message.uploadState = ZMAssetUploadStateUploadingPlaceholder;
-    XCTAssertTrue([message hasLocalModificationsForKey:key]);
+    [self.syncMOC performGroupedBlockAndWait:^{
 
-    NSDictionary *responsePayload = @{@"time" : [NSDate date].transportString};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
-    
-    // when
-    [self.sut updateUpdatedObject:message requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:key]];
-    
-    // then
-    XCTAssertTrue([message hasLocalModificationsForKey:key]);
-    XCTAssertEqual(message.uploadState, ZMAssetUploadStateUploadingFullAsset);
+        // given
+        NSString *key = ZMAssetClientMessageUploadedStateKey;
+        ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[self verySmallJPEGData]
+                                                                                                nonce:[NSUUID createUUID]
+                                                                                 managedObjectContext:self.syncMOC];
+        message.uploadState = ZMAssetUploadStateUploadingPlaceholder;
+        XCTAssertTrue([message hasLocalModificationsForKey:key]);
+        
+        NSDictionary *responsePayload = @{@"time" : [NSDate date].transportString};
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        
+        // when
+        [self.sut updateUpdatedObject:message requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:key]];
+        
+        // then
+        XCTAssertTrue([message hasLocalModificationsForKey:key]);
+        XCTAssertEqual(message.uploadState, ZMAssetUploadStateUploadingFullAsset);
+    }];
 }
 
 - (void)testThatItDoesNotSetTheAssetIdWhenParsingTheResponseForPreviewImage
 {
-    // given
-    ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[self verySmallJPEGData]
-                                                                                            nonce:[NSUUID createUUID]
-                                                                             managedObjectContext:self.syncMOC];
-    NSDictionary *responsePayload = @{@"time" : [NSDate date].transportString};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
-    
-    // when
-    [self.sut updateUpdatedObject:message requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:ZMAssetClientMessageUploadedStateKey]];
-    
-    // then
-    XCTAssertNil(message.assetId);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        // given
+        ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[self verySmallJPEGData]
+                                                                                                nonce:[NSUUID createUUID]
+                                                                                 managedObjectContext:self.syncMOC];
+        NSDictionary *responsePayload = @{@"time" : [NSDate date].transportString};
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        
+        // when
+        [self.sut updateUpdatedObject:message requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:ZMAssetClientMessageUploadedStateKey]];
+        
+        // then
+        XCTAssertNil(message.assetId);
+    }];
 }
 
 
 - (void)testThatItResetsNeedsToUploadMediumKeyWhenParsingTheResponseForMediumImage
 {
-    // given
-    NSString *key = ZMAssetClientMessageUploadedStateKey;
-    ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[self verySmallJPEGData]
-                                                                                            nonce:[NSUUID createUUID]
-                                                                             managedObjectContext:self.syncMOC];
-    message.uploadState = ZMAssetUploadStateUploadingFullAsset;
-    XCTAssertTrue([message hasLocalModificationsForKey:key]);
-    XCTAssertEqual(message.uploadState, ZMAssetUploadStateUploadingFullAsset);
-
-    NSDictionary *responsePayload = @{@"time" : [NSDate date].transportString};
-    NSUUID *assetID = [NSUUID createUUID];
-    
-    NSDictionary *responseHeader = @{@"Location" : assetID.transportString};
-    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil headers:responseHeader];
-    
-    // when
-    [self.sut updateUpdatedObject:message requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:key]];
-    
-    // then
-    XCTAssertFalse([message hasLocalModificationsForKey:key]);
-    XCTAssertEqual(message.uploadState, ZMAssetUploadStateDone);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        // given
+        NSString *key = ZMAssetClientMessageUploadedStateKey;
+        ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[self verySmallJPEGData]
+                                                                                                nonce:[NSUUID createUUID]
+                                                                                 managedObjectContext:self.syncMOC];
+        message.uploadState = ZMAssetUploadStateUploadingFullAsset;
+        XCTAssertTrue([message hasLocalModificationsForKey:key]);
+        XCTAssertEqual(message.uploadState, ZMAssetUploadStateUploadingFullAsset);
+        
+        NSDictionary *responsePayload = @{@"time" : [NSDate date].transportString};
+        NSUUID *assetID = [NSUUID createUUID];
+        
+        NSDictionary *responseHeader = @{@"Location" : assetID.transportString};
+        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil headers:responseHeader];
+        
+        // when
+        [self.sut updateUpdatedObject:message requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:key]];
+        
+        // then
+        XCTAssertFalse([message hasLocalModificationsForKey:key]);
+        XCTAssertEqual(message.uploadState, ZMAssetUploadStateDone);
+    }];
 }
 
 - (void)testThatItSetsTheAssetIdWhenParsingTheResponseForMediumImage
 {
-    // given
-    ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[self verySmallJPEGData]
-                                                                                            nonce:[NSUUID createUUID]
-                                                                             managedObjectContext:self.syncMOC];
-    message.uploadState = ZMAssetUploadStateUploadingFullAsset;
-    NSDictionary *responsePayload = @{@"time" : [NSDate date].transportString};
-    NSUUID *assetID = [NSUUID createUUID];
-
-    NSDictionary *responseHeader = @{@"Location" : assetID.transportString};
-    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil headers:responseHeader];
-    
-    // when
-    [self.sut updateUpdatedObject:message requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:ZMAssetClientMessageUploadedStateKey]];
-    
-    // then
-    XCTAssertEqualObjects(message.assetId, assetID);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        // given
+        ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[self verySmallJPEGData]
+                                                                                                nonce:[NSUUID createUUID]
+                                                                                 managedObjectContext:self.syncMOC];
+        message.uploadState = ZMAssetUploadStateUploadingFullAsset;
+        NSDictionary *responsePayload = @{@"time" : [NSDate date].transportString};
+        NSUUID *assetID = [NSUUID createUUID];
+        
+        NSDictionary *responseHeader = @{@"Location" : assetID.transportString};
+        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil headers:responseHeader];
+        
+        // when
+        [self.sut updateUpdatedObject:message requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:ZMAssetClientMessageUploadedStateKey]];
+        
+        // then
+        XCTAssertEqualObjects(message.assetId, assetID);
+    }];
 }
 
 - (void)testThatItResetsKeysWhenRequestFails_ClientDeleted
 {
-    // given
-    NSSet *keys = [NSSet setWithObject:ZMAssetClientMessageUploadedStateKey];
-    
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    ZMAssetClientMessage *message = [conversation appendOTRMessageWithImageData:[self verySmallJPEGData] nonce:[NSUUID createUUID]];
-    
-    [message setLocallyModifiedKeys:keys];
-    XCTAssertTrue([message hasLocalModificationsForKeys:keys]);
-    ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
-
-    // when
-    [[(id)self.mockClientRegistrationStatus stub] didDetectCurrentClientDeletion];
-    
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"label": @"unknown-client"} HTTPstatus:403 transportSessionError:nil];
-    [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:keys];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(message.uploadState, ZMAssetUploadStateUploadingFailed);
-    XCTAssertTrue([message hasLocalModificationsForKeys:keys]);
-    XCTAssertFalse(message.conversation.needsToBeUpdatedFromBackend);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        
+        // given
+        NSSet *keys = [NSSet setWithObject:ZMAssetClientMessageUploadedStateKey];
+        
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        ZMAssetClientMessage *message = [conversation appendOTRMessageWithImageData:[self verySmallJPEGData] nonce:[NSUUID createUUID]];
+        
+        [message setLocallyModifiedKeys:keys];
+        XCTAssertTrue([message hasLocalModificationsForKeys:keys]);
+        ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
+        
+        // when
+        [[(id)self.mockClientRegistrationStatus stub] didDetectCurrentClientDeletion];
+        
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"label": @"unknown-client"} HTTPstatus:403 transportSessionError:nil];
+        [self.sut shouldRetryToSyncAfterFailedToUpdateObject:message request:request response:response keysToParse:keys];
+        
+        // then
+        XCTAssertEqual(message.uploadState, ZMAssetUploadStateUploadingFailed);
+        XCTAssertTrue([message hasLocalModificationsForKeys:keys]);
+        XCTAssertFalse(message.conversation.needsToBeUpdatedFromBackend);
+    }];
 }
 
 @end
@@ -1346,23 +1421,25 @@
 
 - (void)testThatThePreviewGenericMessageDataHasTheOriginalSizeOfTheMediumGenericMessagedata
 {
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    ZMAssetClientMessage *message = [conversation appendOTRMessageWithImageData:[self dataForResource:@"1900x1500" extension:@"jpg"] nonce:[NSUUID createUUID]];
-    [[(id)self.upstreamObjectSync stub] objectsDidChange:OCMOCK_ANY];
-    [[(id)self.mockExpirationTimer stub] objectsDidChange:OCMOCK_ANY];
-    // when
-    for(id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
-        [tracker objectsDidChange:[NSSet setWithObject:message]];
-    }
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    ZMGenericMessage *mediumGenericMessage = [message.imageAssetStorage genericMessageForFormat:ZMImageFormatMedium];
-    ZMGenericMessage *previewGenericMessage = [message.imageAssetStorage genericMessageForFormat:ZMImageFormatPreview];
-    
-    XCTAssertEqual(mediumGenericMessage.image.height, previewGenericMessage.image.originalHeight);
-    XCTAssertEqual(mediumGenericMessage.image.width, previewGenericMessage.image.originalWidth);
+    [self.syncMOC performGroupedBlockAndWait:^{
+
+        // given
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        ZMAssetClientMessage *message = [conversation appendOTRMessageWithImageData:[self dataForResource:@"1900x1500" extension:@"jpg"] nonce:[NSUUID createUUID]];
+        [[(id)self.upstreamObjectSync stub] objectsDidChange:OCMOCK_ANY];
+        [[(id)self.mockExpirationTimer stub] objectsDidChange:OCMOCK_ANY];
+        // when
+        for(id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
+            [tracker objectsDidChange:[NSSet setWithObject:message]];
+        }
+        
+        // then
+        ZMGenericMessage *mediumGenericMessage = [message.imageAssetStorage genericMessageForFormat:ZMImageFormatMedium];
+        ZMGenericMessage *previewGenericMessage = [message.imageAssetStorage genericMessageForFormat:ZMImageFormatPreview];
+        
+        XCTAssertEqual(mediumGenericMessage.image.height, previewGenericMessage.image.originalHeight);
+        XCTAssertEqual(mediumGenericMessage.image.width, previewGenericMessage.image.originalWidth);
+    }];
 }
 
 @end
