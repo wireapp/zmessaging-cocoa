@@ -342,10 +342,10 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     BOOL eventIsCompletedVoiceCall = NO;
     if (event.type == ZMUpdateEventConversationVoiceChannelDeactivate) {
         NSString *reason = [[event.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"reason"];
-        eventIsCompletedVoiceCall = ! [reason isEqualToString:@"missed"];
+        eventIsCompletedVoiceCall = ![reason isEqualToString:@"missed"];
     }
     
-    if ((! [ZMMessage doesEventTypeGenerateMessage:event.type]) || eventIsCompletedVoiceCall) {
+    if (eventIsCompletedVoiceCall) {
         [self updateLastReadForInvisibleEventInConversation:conversation
                                                   timeStamp:timeStamp
                                            oldLastTimeStamp:oldLastTimeStamp

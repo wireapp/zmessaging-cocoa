@@ -36,6 +36,18 @@ public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent {
     var lastJoinedSessionID : String?
     let unknownUUID = NSUUID(UUIDString: "cc6515c4-6d3e-48c2-b09d-43a6130c9333")!
     
+    override public func containsIdenticalEvent(event: ZMUpdateEvent) -> Bool {
+        guard super.containsIdenticalEvent(event) else { return false }
+        
+        guard let lastSequence = lastEvent?.payload["sequence"] as? Int,
+              let currentSequence = event.payload["sequence"] as? Int
+            where lastSequence == currentSequence else {
+                return false
+        }
+        
+        return true
+    }
+    
     override func canCreateNotification() -> Bool {
         if (!super.canCreateNotification()) { return false }
         let lastEvent = self.lastEvent!
@@ -92,9 +104,9 @@ public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent {
         super.prepareForCopy(note)
         if let note = note as? ZMLocalNotificationForCallEvent {
             lastSessionIDToSenderID = note.lastSessionIDToSenderID
-            lastJoinedSessionID = note.lastJoinedSessionID
+            lastJoinedSessionID     = note.lastJoinedSessionID
             callStartedEventsByUser = note.callStartedEventsByUser
-            currentCallType = note.currentCallType
+            currentCallType         = note.currentCallType
         }
     }
     
