@@ -18,14 +18,20 @@
 
 import Foundation
 
+// TODO: add tracking
+// TODO: add suggested contacts parsing from response
+
 /// BE onboarding endpoint
 private let onboardingEndpoint = "/onboarding/v3"
 
 /// Maximum entries in an address book chunk
-private let maxEntriesInAddressBookChunk : UInt = 1000
+let maxEntriesInAddressBookChunk : UInt = 1000
 
 /// Key to mark the address book as uploadable
 private let addressBookNeedsToBeUploadedKey = "ZMAddressBookTranscoderNeedsToBeUploaded"
+
+/// Last contact index to be uploaded
+private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUploaded"
 
 /// This request sync generates request to upload the address book
 /// It will upload only after `markAddressBookAsNeedingToBeUploaded` is called
@@ -103,7 +109,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
             .enumerate()
             .map { (index, hashes) -> [String:AnyObject] in
                 return [
-                    "card_id" : "\(index)",
+                    "card_id" : "\(encodedChunk.includedContacts.startIndex + UInt(index))",
                     "contact" : hashes
                 ]
         }
@@ -135,7 +141,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
         }
         
         self.isGeneratingPayload = true
-        let startIndex : UInt = 0 // TODO MARCO: don't start from 0, start from where we finished last time
+        let startIndex = self.lastUploadedCardIndex
         addressBook.encodeWithCompletionHandler(self.managedObjectContext,
                                                 startingContactIndex: startIndex,
                                                 maxNumberOfContacts: maxEntriesInAddressBookChunk)
@@ -146,6 +152,10 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
             }
             strongSelf.isGeneratingPayload = false
             if let encodedChunk = encodedChunk {
+                let lastIndex = encodedChunk.includedContacts.endIndex
+                let isEndOfCards = lastIndex >= encodedChunk.numberOfTotalContacts - 1
+                // is this the last card? if it is, reset to 0 so it will restart
+                strongSelf.lastUploadedCardIndex = isEndOfCards ? 0 : lastIndex
                 strongSelf.encodedAddressBookChunk = encodedChunk
                 strongSelf.requestSync.readyForNextRequest()
                 ZMOperationLoop.notifyNewRequestsAvailable(strongSelf)
@@ -181,6 +191,24 @@ extension AddressBookUploadRequestStrategy {
         }
         set {
             AddressBook.markAddressBook(self.managedObjectContext, needsToBeUploaded: newValue)
+        }
+    }
+    
+    /// Index of last uploaded contact card
+    /// - note: This value does not offers any guarantee on which cards
+    /// where uploaded, just on the index on the card uploaded. Cards might have
+    /// changed since last time and the index might be pointing to a different card.
+    /// However, since we want to upload all cards and then restart from the first, we
+    /// uploaded the same cards over and over anyway and will eventually go through the
+    /// entire AB.
+    private var lastUploadedCardIndex : UInt {
+        get {
+            return UInt((self.managedObjectContext
+                .persistentStoreMetadataForKey(addressBookLastUploadedIndex) as? NSNumber)?.integerValue ?? 0)
+        }
+        set {
+            self.managedObjectContext
+                .setPersistentStoreMetadata(NSNumber(integer: Int(newValue)), forKey: addressBookLastUploadedIndex)
         }
     }
 }
