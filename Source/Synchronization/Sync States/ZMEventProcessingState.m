@@ -64,7 +64,6 @@
                              objectStrategyDirectory.flowTranscoder,
                              objectStrategyDirectory.callStateTranscoder,
                              objectStrategyDirectory.userProfileUpdateTranscoder,
-                             objectStrategyDirectory.addressBookTranscoder,
                              objectStrategyDirectory.connectionTranscoder,
                              objectStrategyDirectory.userTranscoder,
                              objectStrategyDirectory.selfTranscoder,

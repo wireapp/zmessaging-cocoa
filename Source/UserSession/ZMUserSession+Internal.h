@@ -39,7 +39,6 @@
 @class ClientUpdateStatus;
 @class AVSFlowManager;
 
-extern NSString * const ZMUserSessionFailedToAccessAddressBookNotificationName;
 extern NSString * const ZMAppendAVSLogNotificationName;
 
 @interface ZMUserSession (AuthenticationStatus)

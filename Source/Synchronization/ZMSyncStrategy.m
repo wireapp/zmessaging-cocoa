@@ -42,7 +42,6 @@
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
 #import "ZMFlowSync.h"
-#import "ZMAddressBookTranscoder.h"
 #import "ZMPushTokenTranscoder.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMTracing.h"
@@ -88,7 +87,6 @@
 @property (nonatomic) ZMLoginTranscoder *loginTranscoder;
 @property (nonatomic) ZMLoginCodeRequestTranscoder *loginCodeRequestTranscoder;
 @property (nonatomic) ZMFlowSync *flowTranscoder;
-@property (nonatomic) ZMAddressBookTranscoder *addressBookTranscoder;
 @property (nonatomic) ZMPushTokenTranscoder *pushTokenTranscoder;
 @property (nonatomic) ZMCallStateTranscoder *callStateTranscoder;
 @property (nonatomic) ZMSearchUserImageTranscoder *searchUserImageTranscoder;
@@ -223,7 +221,6 @@ ZM_EMPTY_ASSERTING_INIT()
     self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC objectDirectory:self];
     self.flowTranscoder = [[ZMFlowSync alloc] initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC];
-    self.addressBookTranscoder = [[ZMAddressBookTranscoder alloc] initWithManagedObjectContext:self.syncMOC];
     self.pushTokenTranscoder = [[ZMPushTokenTranscoder alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationStatus:clientRegistrationStatus];
     self.callStateTranscoder = [[ZMCallStateTranscoder alloc] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC objectStrategyDirectory:self];
     self.assetTranscoder = [[ZMAssetTranscoder alloc] initWithManagedObjectContext:self.syncMOC];
@@ -444,7 +441,6 @@ ZM_EMPTY_ASSERTING_INIT()
              self.registrationTranscoder,
              self.flowTranscoder,
              self.callStateTranscoder,
-             self.addressBookTranscoder,
              self.pushTokenTranscoder,
              self.searchUserImageTranscoder,
              self.typingTranscoder,

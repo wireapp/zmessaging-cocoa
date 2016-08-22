@@ -46,7 +46,6 @@
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
 #import "ZMFlowSync.h"
-#import "ZMAddressBookTranscoder.h"
 #import "ZMPushTokenTranscoder.h"
 #import "ZMCallStateTranscoder.h"
 #import "ZMOperationLoop.h"
@@ -169,10 +168,6 @@
     [[[[assetTranscoder expect] andReturn:assetTranscoder] classMethod] alloc];
     (void) [[[assetTranscoder expect] andReturn:assetTranscoder] initWithManagedObjectContext:self.syncMOC];
 
-    id addressBookTranscoder = [OCMockObject mockForClass:ZMAddressBookTranscoder.class];
-    [[[[addressBookTranscoder expect] andReturn:addressBookTranscoder] classMethod] alloc];
-    (void) [[[addressBookTranscoder expect] andReturn:addressBookTranscoder] initWithManagedObjectContext:self.syncMOC];
-
     id pushTokenTranscoder = [OCMockObject mockForClass:ZMPushTokenTranscoder.class];
     [[[[pushTokenTranscoder expect] andReturn:pushTokenTranscoder] classMethod] alloc];
     (void) [[[pushTokenTranscoder expect] andReturn:pushTokenTranscoder] initWithManagedObjectContext:self.syncMOC clientRegistrationStatus:OCMOCK_ANY];
@@ -231,7 +226,6 @@
                          missingUpdateEventsTranscoder,
                          registrationTranscoder,
                          flowTranscoder,
-                         addressBookTranscoder,
                          pushTokenTranscoder,
                          callStateTranscoder,
                          typingTranscoder,
@@ -283,7 +277,6 @@
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
     XCTAssertEqual(self.sut.registrationTranscoder, registrationTranscoder);
     XCTAssertEqual(self.sut.flowTranscoder, flowTranscoder);
-    XCTAssertEqual(self.sut.addressBookTranscoder, addressBookTranscoder);
     XCTAssertEqual(self.sut.pushTokenTranscoder, pushTokenTranscoder);
     XCTAssertEqual(self.sut.callStateTranscoder, callStateTranscoder);
     XCTAssertEqual(self.sut.typingTranscoder, typingTranscoder);
