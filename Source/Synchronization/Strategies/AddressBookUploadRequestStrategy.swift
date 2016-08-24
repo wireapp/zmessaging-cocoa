@@ -18,8 +18,7 @@
 
 import Foundation
 
-// TODO: add tracking
-// TODO: add suggested contacts parsing from response
+// TODO MARCO: add tracking
 
 /// BE onboarding endpoint
 private let onboardingEndpoint = "/onboarding/v3"
@@ -119,12 +118,9 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
     
     func didReceiveResponse(response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
         if response.result == .Success {
-            if let responseDict = response.payload as? [String:AnyObject],
-                let remoteIdentifiersAsStrings = responseDict["results"] as? [String] {
-                let remoteIdentifiers = remoteIdentifiersAsStrings.map { $0.UUID() }
-                self.managedObjectContext.suggestedUsersForUser = NSOrderedSet(array: remoteIdentifiers)
-                self.managedObjectContext.commonConnectionsForUsers = [:]
-            }
+            // TODO MARCO: suggested users
+            self.managedObjectContext.suggestedUsersForUser = NSOrderedSet()
+            self.managedObjectContext.commonConnectionsForUsers = [:]
             self.addressBookNeedsToBeUploaded = false
             self.encodedAddressBookChunk = nil
         }

@@ -93,21 +93,26 @@ private let addressBookProcessingQueue = dispatch_queue_create("Address book pro
 extension SequenceType {
     
     /// Returns the elements of the sequence in the positions indicated by the range
-    func elements(range: Range<UInt>) -> Array<Self.Generator.Element> {
+    func elements(range: Range<UInt>) -> AnyGenerator<Self.Generator.Element> {
+        
+        var generator = self.generate()
         var count : UInt = 0
-        var selectedElements : Array<Self.Generator.Element> = []
-        for element in self {
-            defer {
-                count += 1
-            }
-            if count < range.startIndex {
-                continue
+        
+        return AnyGenerator {
+            
+            while count < range.startIndex {
+                if generator.next() != nil {
+                    count += 1
+                    continue
+                } else {
+                    return nil
+                }
             }
             if count == range.endIndex {
-                break
+                return nil
             }
-            selectedElements.append(element)
+            count += 1
+            return generator.next()
         }
-        return selectedElements
     }
 }

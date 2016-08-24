@@ -22,7 +22,7 @@ import libPhoneNumber
 
 /// Wraps the system address book to return `ZMAddressBookContact` when iterating, filtering out those
 /// without a valid email or phone
-class AddressBook {
+@objc class AddressBook : NSObject {
     
     typealias Normalizer = (String)->(String?)
     typealias AccessCheck = ()->(Bool)
@@ -35,14 +35,18 @@ class AddressBook {
     
     /// Closure used to generate iterator. Used in testing
     private let allPeopleClosure : AllPeopleClosure
-    typealias AllPeopleClosure = (ref: ABAddressBook) -> ([ABRecordRef])
+    typealias AllPeopleClosure = (ref: ABAddressBook) -> (AnyGenerator<ABRecordRef>)
     
+    /// Closure to get number of people. Used in testing
+    private let numberOfPeopleClosure : NumberOfPeopleClosure
+    typealias NumberOfPeopleClosure = (ref: ABAddressBook) -> (Int)
 
     /// Address book. Will fail if it has no authorization to access AB
     /// - parameter generatingClosure: custom function to return an iterator (used for testing)
     /// - parameter addressBookAccessCheck: custom function to check if user granted access to AB (used for testing)
     init?(allPeopleClosure: AllPeopleClosure? = nil,
-          addressBookAccessCheck: AccessCheck? = nil) {
+          addressBookAccessCheck: AccessCheck? = nil,
+          numberOfPeopleClosure: NumberOfPeopleClosure? = nil) {
         
         // fail if no access
         guard AddressBook.checkAccessToAB(addressBookAccessCheck) else {
@@ -50,14 +54,15 @@ class AddressBook {
         }
         self.ref = ABAddressBookCreate().takeRetainedValue()
         self.allPeopleClosure = AddressBook.customOrDefaultAllPeopleClosure(allPeopleClosure)
+        self.numberOfPeopleClosure = AddressBook.customOrDefaultNumberOfPeopleClosure(numberOfPeopleClosure)
         self.phoneNormalizer = NBPhoneNumberUtil()
     }
 }
 
 // MARK: - Debugging
-extension AddressBook : CustomStringConvertible {
+extension AddressBook {
     
-    var description : String {
+    override var description : String {
         return "AB with \(self.numberOfContacts) contacts"
     }
     
@@ -82,7 +87,7 @@ protocol AddressBookAccessor {
     var numberOfContacts : UInt {get}
     
     /// Iterator for contacts
-    func iterate() -> AnyGenerator<ZMAddressBookContact>
+    func iterate() -> LazySequence<AnyGenerator<ZMAddressBookContact>>
     
     /// Encodes an arbitraty part the address book asynchronously. Will invoke the completion handler when done.
     /// - parameter groupQueue: group queue to enter while executing, and where to invoke callback
@@ -101,17 +106,16 @@ extension AddressBook : AddressBookAccessor {
     
     /// Number of contacts in the address book
     var numberOfContacts : UInt {
-        return UInt(self.allPeopleClosure(ref: self.ref).count)
+        return UInt(self.numberOfPeopleClosure(ref: self.ref))
     }
     
-    
     /// Returns a generator that will generate all elements of the address book
-    func iterate() -> AnyGenerator<ZMAddressBookContact> {
+    func iterate() -> LazySequence<AnyGenerator<ZMAddressBookContact>> {
         return AnyGenerator(AddressBookIterator(
             phoneNumberNormalizer: { self.phoneNormalizer.normalize($0)?.validatedPhoneNumber },
             emailNormalizer: { $0.validatedEmail },
             allPeople: self.allPeopleClosure(ref: self.ref)
-        ))
+        )).lazy
     }
 }
 
@@ -119,7 +123,7 @@ extension AddressBook : AddressBookAccessor {
 public class AddressBookIterator : SequenceType, GeneratorType {
     
     /// All people in the AB
-    private let people : [ABRecordRef]
+    private let people : AnyGenerator<ABRecordRef>
     
     /// normalizer for phone numbers
     private let phoneNumberNormalizer : AddressBook.Normalizer
@@ -129,35 +133,29 @@ public class AddressBookIterator : SequenceType, GeneratorType {
     
     public typealias Element = ZMAddressBookContact
     
-    /// Used to keep track while iterating the AB
-    private var currentIndex = 0
-    
     public func next() -> ZMAddressBookContact? {
-        let index = currentIndex
-        currentIndex += 1
-        guard index < people.count else {
-            return nil
-        }
+        var recordRef = self.people.next()
         
-        let recordRef = self.people[index]
-        if let parsed = ZMAddressBookContact(ref: recordRef,
-                                    phoneNumberNormalizer: self.phoneNumberNormalizer,
-                                    emailNormalizer: self.emailNormalizer) {
-            return parsed
-        } else {
-            return next()
+        while recordRef != nil {
+            if let parsed = ZMAddressBookContact(ref: recordRef!,
+                                        phoneNumberNormalizer: self.phoneNumberNormalizer,
+                                        emailNormalizer: self.emailNormalizer) {
+                return parsed
+            } else {
+                recordRef = self.people.next()
+            }
         }
+        return nil
     }
     
     private init(phoneNumberNormalizer: AddressBook.Normalizer,
                  emailNormalizer: AddressBook.Normalizer,
-                 allPeople: [ABRecordRef]
+                 allPeople: AnyGenerator<ABRecordRef>
     ) {
         self.people = allPeople
         self.phoneNumberNormalizer = phoneNumberNormalizer
         self.emailNormalizer = emailNormalizer
     }
-    
 }
 
 // MARK: - Contact parsing
@@ -284,7 +282,17 @@ extension AddressBook {
         if let custom = custom { // for some reason, using ?? won't compile here
             return custom
         } else {
-            return { ABAddressBookCopyArrayOfAllPeople($0).takeRetainedValue() as [ABRecordRef] }
+            return { AnyGenerator((ABAddressBookCopyArrayOfAllPeople($0).takeRetainedValue() as [ABRecordRef]).generate()) }
+        }
+    }
+    
+    /// Returns either the custom passed closure to get the number of people or, if the passed generating function is nil,
+    /// the standard function
+    static private func customOrDefaultNumberOfPeopleClosure(custom: NumberOfPeopleClosure?) -> NumberOfPeopleClosure {
+        if let custom = custom {
+            return custom
+        } else {
+            return { ABAddressBookGetPersonCount($0) }
         }
     }
 }

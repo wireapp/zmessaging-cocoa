@@ -17,7 +17,8 @@
 //
 
 import Foundation
-
+import AddressBook
+@testable import zmessaging
 
 class MockAuthenticationStatus: ZMAuthenticationStatus {
     
@@ -136,4 +137,69 @@ public class FakeKeysStore: UserClientKeysStore {
         }
     }
     
+}
+
+// MARK: - AddressBook
+class AddressBookContactsFake {
+    
+    struct Contact {
+        let firstName : String
+        let emailAddresses : [String]
+        let phoneNumbers : [String]
+    }
+    
+    var contacts : [Contact] = []
+    
+    var peopleCount : Int {
+        if self.createInfiniteContacts {
+            return Int.max
+        } else {
+            return contacts.count
+        }
+    }
+    
+    var createInfiniteContacts: Bool = false
+    
+    var peopleGenerator : AnyGenerator<ABRecordRef> {
+        
+        guard !self.createInfiniteContacts else {
+            return AnyGenerator {
+                let record: ABRecordRef = ABPersonCreate().takeRetainedValue()
+                ABRecordSetValue(record, kABPersonFirstNameProperty, "Johnny Infinite", nil)
+                let values: ABMutableMultiValue = ABMultiValueCreateMutable(ABPropertyType(kABMultiStringPropertyType)).takeRetainedValue()
+                ABMultiValueAddValueAndLabel(values, "neverending@example.com", kABHomeLabel, nil)
+                ABRecordSetValue(record, kABPersonEmailProperty, values, nil)
+                return record
+            }
+        }
+        
+        return AnyGenerator(self.contacts.map { contact in
+            let record: ABRecordRef = ABPersonCreate().takeRetainedValue()
+            ABRecordSetValue(record, kABPersonFirstNameProperty, contact.firstName, nil)
+            if !contact.emailAddresses.isEmpty {
+                let values: ABMutableMultiValue =
+                    ABMultiValueCreateMutable(ABPropertyType(kABMultiStringPropertyType)).takeRetainedValue()
+                contact.emailAddresses.forEach {
+                    ABMultiValueAddValueAndLabel(values, $0, kABHomeLabel, nil)
+                }
+                ABRecordSetValue(record, kABPersonEmailProperty, values, nil)
+            }
+            if !contact.phoneNumbers.isEmpty {
+                let values: ABMutableMultiValue =
+                    ABMultiValueCreateMutable(ABPropertyType(kABMultiStringPropertyType)).takeRetainedValue()
+                contact.phoneNumbers.forEach {
+                    ABMultiValueAddValueAndLabel(values, $0, kABPersonPhoneMainLabel, nil)
+                }
+                ABRecordSetValue(record, kABPersonPhoneProperty, values, nil)
+            }
+            return record
+        }.generate())
+    }
+    
+    /// Return an address book that will return contacts extracted from self
+    func addressBook() -> zmessaging.AddressBook {
+        return zmessaging.AddressBook(allPeopleClosure: { _ in self.peopleGenerator },
+                               addressBookAccessCheck: { return true },
+                               numberOfPeopleClosure: { _ in self.peopleCount })!
+    }
 }

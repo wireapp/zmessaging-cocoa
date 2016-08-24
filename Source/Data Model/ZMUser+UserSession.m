@@ -21,7 +21,6 @@
 #import "ZMUserImageTranscoder.h"
 #import "ZMOperationLoop.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMAddressBookMatcher.h"
 
 @implementation ZMUser (UserSession)
 
@@ -62,12 +61,6 @@
 - (id<ZMCommonContactsSearchToken>)searchCommonContactsInUserSession:(ZMUserSession *)session withDelegate:(id<ZMCommonContactsSearchDelegate>)delegate
 {
     return [session searchCommonContactsWithUserID:self.remoteIdentifier searchDelegate:delegate];
-}
-
-- (ZMAddressBookContact *)contactInUserSession:(ZMUserSession *)userSession
-{
-    ZMAddressBookMatcher *matcher = [[ZMAddressBookMatcher alloc] initWithUserSession:userSession];
-    return [matcher contactForUser:self];
 }
 
 @end

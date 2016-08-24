@@ -174,7 +174,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                appVersion:appVersion];
     if (self != nil) {
         self.ownsQueue = YES;
-        // self.loadAddressBookContactsOnce = 0;
     }
     return self;
 }
@@ -864,44 +863,6 @@ static NSString * const TrackingIdentifierKey = @"ZMTrackingIdentifier";
 @end
 
 
-
-@implementation ZMUserSession (AddressBook)
-
-- (NSArray *)addressBookContacts
-{
-    // TODO MARCO: do not store entire AB in memory!!
-    
-//    if (self.cachedAddressBookContacts == nil) {
-//        if (! [ZMAddressBook userHasAuthorizedAccess]) {
-//            return @[]; // Don't cache contacts without address book authorization
-//        }
-//        
-//        dispatch_once(&_loadAddressBookContactsOnce, ^{
-//            [self reloadAddressBookContacts];
-//        });
-//    }
-    
-    return [NSArray array];
-}
-
-- (void)reloadAddressBookContacts
-{
-    // TODO MARCO: do not store entire AB in memory!!
-    
-//    ZMAddressBook *addressBook = [ZMAddressBook addressBook];
-//    
-//    NSMutableArray *contacts = [NSMutableArray array];
-//    for (ZMAddressBookContact *contact in addressBook.contacts) {
-//        if(contacts.count > MaximumContactsToParse) {
-//            break;
-//        }
-//        [contacts addObject:contact];
-//    }
-//    
-//    self.cachedAddressBookContacts = contacts;
-}
-
-@end
 
 @implementation ZMUserSession (SelfUserClient)
 

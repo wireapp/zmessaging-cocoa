@@ -291,8 +291,6 @@ extension AddressBookUploadRequestStrategyTest {
 }
 
 // MARK: - Helpers
-
-
 extension AddressBookUploadRequestStrategyTest {
     
     /// Returns the next request that is supposed to contain the AB upload payload.
@@ -331,8 +329,8 @@ class AddressBookFake : zmessaging.AddressBookAccessor {
     }
     var contactHashes : [[String]] = []
     
-    func iterate() -> AnyGenerator<ZMAddressBookContact> {
-        return AnyGenerator([].generate())
+    func iterate() -> LazySequence<AnyGenerator<ZMAddressBookContact>> {
+        return AnyGenerator([].generate()).lazy
     }
     
     func encodeWithCompletionHandler(groupQueue: ZMSGroupQueue, startingContactIndex: UInt, maxNumberOfContacts: UInt, completion: (zmessaging.EncodedAddressBookChunk?) -> ()) {

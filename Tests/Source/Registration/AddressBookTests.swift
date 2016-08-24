@@ -1,9 +1,19 @@
 //
-//  AddressBookTests.swift
-//  zmessaging-cocoa
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
 //
-//  Created by Marco Conti on 17/08/16.
-//  Copyright © 2016 Zeta Project Gmbh. All rights reserved.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
 import Foundation
@@ -12,15 +22,15 @@ import AddressBook
 
 class AddressBookTests : XCTestCase {
     
-    private var iteratorFake : AddressBookContactsFake!
+    private var addressBookFake : AddressBookContactsFake!
     
     override func setUp() {
-        self.iteratorFake = AddressBookContactsFake()
+        self.addressBookFake = AddressBookContactsFake()
         super.setUp()
     }
     
     override func tearDown() {
-        self.iteratorFake = nil
+        self.addressBookFake = nil
     }
 }
 
@@ -30,7 +40,7 @@ extension AddressBookTests {
     func testThatItInitializesIfItHasAccessToAB() {
         
         // given
-        let sut = zmessaging.AddressBook(addressBookAccessCheck: { return true })
+        let sut = self.addressBookFake.addressBook()
 
         // then
         XCTAssertNotNil(sut)
@@ -39,7 +49,9 @@ extension AddressBookTests {
     func testThatItDoesNotInitializeIfItHasNoAccessToAB() {
         
         // given
-        let sut = zmessaging.AddressBook(addressBookAccessCheck: { return false })
+        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in return self.addressBookFake.peopleGenerator },
+                                         addressBookAccessCheck: { return false },
+                                         numberOfPeopleClosure: { _ in return self.addressBookFake.peopleCount })
         
         // then
         XCTAssertNil(sut)
@@ -48,12 +60,11 @@ extension AddressBookTests {
     func testThatItReturnsNumberOfContactsEvenIfTheyHaveNoEmailNorPhone() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550100"]),
-            Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: []),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550100"]),
+            AddressBookContactsFake.Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: []),
         ]
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         
         // when
         let number = sut.numberOfContacts
@@ -65,61 +76,58 @@ extension AddressBookTests {
     func testThatItReturnsAllContactsWhenTheyHaveValidEmailAndPhoneNumbers() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com", "janet@example.com"], phoneNumbers: ["+15550100"]),
-            Contact(firstName: "สยาม", emailAddresses: ["siam@example.com"], phoneNumbers: ["+15550101", "+15550102"]),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com", "janet@example.com"], phoneNumbers: ["+15550100"]),
+            AddressBookContactsFake.Contact(firstName: "สยาม", emailAddresses: ["siam@example.com"], phoneNumbers: ["+15550101", "+15550102"]),
         ]
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         
         // when
         let contacts = Array(sut.iterate())
         
         // then
         XCTAssertEqual(contacts.count, 2)
-        for i in 0..<self.iteratorFake.contacts.count {
-            XCTAssertEqual(contacts[i].emailAddresses, self.iteratorFake.contacts[i].emailAddresses)
-            XCTAssertEqual(contacts[i].phoneNumbers, self.iteratorFake.contacts[i].phoneNumbers)
+        for i in 0..<self.addressBookFake.contacts.count {
+            XCTAssertEqual(contacts[i].emailAddresses, self.addressBookFake.contacts[i].emailAddresses)
+            XCTAssertEqual(contacts[i].phoneNumbers, self.addressBookFake.contacts[i].phoneNumbers)
         }
     }
     
     func testThatItReturnsAllContactsWhenTheyHaveValidEmailOrPhoneNumbers() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: []),
-            Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550101"]),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: []),
+            AddressBookContactsFake.Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550101"]),
         ]
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         
         // when
         let contacts = Array(sut.iterate())
         
         // then
         XCTAssertEqual(contacts.count, 2)
-        for i in 0..<self.iteratorFake.contacts.count {
-            XCTAssertEqual(contacts[i].emailAddresses, self.iteratorFake.contacts[i].emailAddresses)
-            XCTAssertEqual(contacts[i].phoneNumbers, self.iteratorFake.contacts[i].phoneNumbers)
+        for i in 0..<self.addressBookFake.contacts.count {
+            XCTAssertEqual(contacts[i].emailAddresses, self.addressBookFake.contacts[i].emailAddresses)
+            XCTAssertEqual(contacts[i].phoneNumbers, self.addressBookFake.contacts[i].phoneNumbers)
         }
     }
     
     func testThatItFilterlContactsThatHaveNoEmailNorPhone() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550100"]),
-            Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: []),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550100"]),
+            AddressBookContactsFake.Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: []),
         ]
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         
         // when
         let contacts = Array(sut.iterate())
         
         // then
         XCTAssertEqual(contacts.count, 1)
-        XCTAssertEqual(contacts[0].emailAddresses, self.iteratorFake.contacts[0].emailAddresses)
+        XCTAssertEqual(contacts[0].emailAddresses, self.addressBookFake.contacts[0].emailAddresses)
     }
 }
 
@@ -129,11 +137,10 @@ extension AddressBookTests {
     func testThatItFilterlContactsThatHaveAnInvalidPhoneAndNoEmail() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["aabbccdd"]),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["aabbccdd"]),
         ]
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         
         // when
         let contacts = Array(sut.iterate())
@@ -145,29 +152,27 @@ extension AddressBookTests {
     func testThatIgnoresInvalidPhones() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["janet@example.com"], phoneNumbers: ["aabbccdd"]),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["janet@example.com"], phoneNumbers: ["aabbccdd"]),
         ]
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         
         // when
         let contacts = Array(sut.iterate())
         
         // then
         XCTAssertEqual(contacts.count, 1)
-        XCTAssertEqual(contacts[0].emailAddresses, self.iteratorFake.contacts[0].emailAddresses)
+        XCTAssertEqual(contacts[0].emailAddresses, self.addressBookFake.contacts[0].emailAddresses)
         XCTAssertEqual(contacts[0].phoneNumbers, [])
     }
     
     func testThatItFilterlContactsThatHaveNoPhoneAndInvalidEmail() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["janet"], phoneNumbers: []),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["janet"], phoneNumbers: []),
         ]
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         
         // when
         let contacts = Array(sut.iterate())
@@ -179,11 +184,10 @@ extension AddressBookTests {
     func testThatIgnoresInvalidEmails() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["janet"], phoneNumbers: ["+15550103"]),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["janet"], phoneNumbers: ["+15550103"]),
         ]
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         
         // when
         let contacts = Array(sut.iterate())
@@ -191,17 +195,16 @@ extension AddressBookTests {
         // then
         XCTAssertEqual(contacts.count, 1)
         XCTAssertEqual(contacts[0].emailAddresses, [])
-        XCTAssertEqual(contacts[0].phoneNumbers, self.iteratorFake.contacts[0].phoneNumbers)
+        XCTAssertEqual(contacts[0].phoneNumbers, self.addressBookFake.contacts[0].phoneNumbers)
     }
     
     func testThatItNormalizesPhoneNumbers() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["+1 (555) 0103"]),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["+1 (555) 0103"]),
         ]
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         
         // when
         let contacts = Array(sut.iterate())
@@ -214,11 +217,10 @@ extension AddressBookTests {
     func testThatItNormalizesEmails() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["Olaf Karlsson <janet+1@example.com>"], phoneNumbers: []),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["Olaf Karlsson <janet+1@example.com>"], phoneNumbers: []),
         ]
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         
         // when
         let contacts = Array(sut.iterate())
@@ -231,11 +233,10 @@ extension AddressBookTests {
     func testThatItDoesNotIgnoresPhonesWithPlusZero() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["+012345678"]),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["+012345678"]),
         ]
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         
         // when
         let contacts = Array(sut.iterate())
@@ -252,16 +253,15 @@ extension AddressBookTests {
     func testThatItEncodesUsers() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
-            Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            AddressBookContactsFake.Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+            AddressBookContactsFake.Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
             
         ]
         let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
         queue.createDispatchGroups()
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         let expectation = self.expectationWithDescription("Callback invoked")
         
         // when
@@ -291,11 +291,10 @@ extension AddressBookTests {
     func testThatItCallsCompletionHandlerWithNilIfNoContacts() {
         
         // given
-        self.iteratorFake.contacts = []
+        self.addressBookFake.contacts = []
         let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
         queue.createDispatchGroups()
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         let expectation = self.expectationWithDescription("Callback invoked")
         
         // when
@@ -314,16 +313,15 @@ extension AddressBookTests {
     func testThatItEncodesOnlyAMaximumNumberOfUsers() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
-            Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            AddressBookContactsFake.Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+            AddressBookContactsFake.Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
             
         ]
         let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
         queue.createDispatchGroups()
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         let expectation = self.expectationWithDescription("Callback invoked")
         
         // when
@@ -352,17 +350,16 @@ extension AddressBookTests {
     func testThatItEncodesOnlyTheRequestedUsers() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
-            Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"]),
-            Contact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: [])
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            AddressBookContactsFake.Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+            AddressBookContactsFake.Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"]),
+            AddressBookContactsFake.Contact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: [])
         ]
         
         let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
         queue.createDispatchGroups()
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         let expectation = self.expectationWithDescription("Callback invoked")
         
         // when
@@ -390,17 +387,16 @@ extension AddressBookTests {
     func testThatItEncodesAsManyContactsAsItCanIfAskedToEncodeTooMany() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            Contact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: []),
-            Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
-            Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            AddressBookContactsFake.Contact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: []),
+            AddressBookContactsFake.Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+            AddressBookContactsFake.Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
         ]
         
         let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
         queue.createDispatchGroups()
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         let expectation = self.expectationWithDescription("Callback invoked")
         
         // when
@@ -428,16 +424,15 @@ extension AddressBookTests {
     func testThatItEncodesNoContactIfAskedToEncodePastTheLastContact() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            Contact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: []),
-            Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            AddressBookContactsFake.Contact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: []),
+            AddressBookContactsFake.Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
         ]
         
         let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
         queue.createDispatchGroups()
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         let expectation = self.expectationWithDescription("Callback invoked")
         
         // when
@@ -456,16 +451,15 @@ extension AddressBookTests {
     func testThatItEncodesTheSameAddressBookInTheSameWay() {
         
         // given
-        self.iteratorFake.contacts = [
-            Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
-            Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
+        self.addressBookFake.contacts = [
+            AddressBookContactsFake.Contact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            AddressBookContactsFake.Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+            AddressBookContactsFake.Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
             
         ]
         let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
         queue.createDispatchGroups()
-        let sut = zmessaging.AddressBook(allPeopleClosure: { _ in self.iteratorFake.allPeople },
-                                         addressBookAccessCheck: { return true })!
+        let sut = self.addressBookFake.addressBook()
         let expectation1 = self.expectationWithDescription("Callback invoked once")
         
         var chunk1 : [[String]]? = nil
@@ -497,45 +491,5 @@ extension AddressBookTests {
         XCTAssertNotNil(chunk1)
         XCTAssertNotNil(chunk2)
         XCTAssertEqual(chunk1!, chunk2!)
-    }
-}
-
-
-// MARK: - Utility - faking contacts
-
-struct Contact {
-    
-    let firstName : String
-    let emailAddresses : [String]
-    let phoneNumbers : [String]
-}
-
-private class AddressBookContactsFake {
-    
-    var contacts : [Contact] = []
-    
-    var allPeople : [ABRecordRef] {
-        
-        return self.contacts.map { contact in
-            let record: ABRecordRef = ABPersonCreate().takeRetainedValue()
-            ABRecordSetValue(record, kABPersonFirstNameProperty, contact.firstName, nil)
-            if !contact.emailAddresses.isEmpty {
-                let values: ABMutableMultiValue =
-                    ABMultiValueCreateMutable(ABPropertyType(kABMultiStringPropertyType)).takeRetainedValue()
-                contact.emailAddresses.forEach {
-                    ABMultiValueAddValueAndLabel(values, $0, kABHomeLabel, nil)
-                }
-                ABRecordSetValue(record, kABPersonEmailProperty, values, nil)
-            }
-            if !contact.phoneNumbers.isEmpty {
-                let values: ABMutableMultiValue =
-                    ABMultiValueCreateMutable(ABPropertyType(kABMultiStringPropertyType)).takeRetainedValue()
-                contact.phoneNumbers.forEach {
-                    ABMultiValueAddValueAndLabel(values, $0, kABPersonPhoneMainLabel, nil)
-                }
-                ABRecordSetValue(record, kABPersonPhoneProperty, values, nil)
-            }
-            return record
-        }
     }
 }
