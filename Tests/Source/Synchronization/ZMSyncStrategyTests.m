@@ -64,6 +64,7 @@
 #import "ZMMessageTranscoder+Internal.h"
 #import "ZMClientMessageTranscoder.h"
 #import "BadgeApplication.h"
+#import "MessagingTest+EventFactory.h"
 
 
 @interface ZMSyncStrategyTests : MessagingTest
@@ -333,7 +334,12 @@
 - (void)testThatDownloadedEventsAreForwardedToAllIndividualObjects
 {
     // given
-    NSArray *eventsArray = [OCMockObject mockForClass:NSArray.class];
+    ZMConversation *conv = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+    conv.remoteIdentifier = [NSUUID createUUID];
+    NSDictionary *payload = [self payloadForMessageInConversation:conv type:EventConversationAdd data:@{@"foo" : @"bar"}];
+    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
+    NSArray *eventsArray = @[event];
+    
     
     // expect
     [self expectSyncObjectsToProcessEvents:YES
@@ -344,9 +350,9 @@
     
     // when
     [self.sut processDownloadedEvents:eventsArray];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
 }
-
-
 
 - (void)testThatPushEventsAreProcessedForConversationEventSyncBeforeConversationSync
 {
@@ -394,7 +400,6 @@
     XCTAssertTrue(didCallConversationSync);
 }
 
-
 - (void)testThatWhenItConsumesEventsTheyAreForwardedToAllIndividualObjects
 {
     // given
@@ -415,6 +420,8 @@
     for(id event in eventsArray) {
         [self.sut consumeUpdateEvents:@[event]];
     }
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItAsksClientMessageTranscoderToDecryptUpdateEvents
@@ -551,10 +558,6 @@
     
     // expect
     for(id obj in self.syncObjects) {
-        if ([obj respondsToSelector:@selector(decryptedUpdateEventsFromEvents:)]) {
-            [[obj reject] decryptedUpdateEventsFromEvents:expectedEvents];
-        }
-
         [[obj reject] processEvents:OCMOCK_ANY liveEvents:YES prefetchResult:OCMOCK_ANY];
     }
     
@@ -1153,27 +1156,27 @@
 
 - (void)expectSyncObjectsToProcessEvents:(BOOL)process liveEvents:(BOOL)liveEvents decryptEvents:(BOOL)decyptEvents returnIDsForPrefetching:(BOOL)returnIDs withEvents:(id)events;
 {
+    NOT_USED(decyptEvents);
+    
     for (id obj in self.syncObjects) {
         if (process) {
-            [[obj expect] processEvents:events liveEvents:liveEvents prefetchResult:OCMOCK_ANY];
+            [[obj expect] processEvents:[OCMArg checkWithBlock:^BOOL(NSArray *receivedEvents) {
+                return [receivedEvents isEqualToArray:events];
+            }] liveEvents:liveEvents prefetchResult:OCMOCK_ANY];
         } else {
             [[obj reject] processEvents:OCMOCK_ANY liveEvents:liveEvents prefetchResult:OCMOCK_ANY];
         }
         
-        if ([obj respondsToSelector:@selector(decryptedUpdateEventsFromEvents:)]) {
-            if (decyptEvents) {
-                [[obj expect] decryptedUpdateEventsFromEvents:events];
-            } else {
-                [[obj reject] decryptedUpdateEventsFromEvents:OCMOCK_ANY];
-            }
-        }
-        
         if (returnIDs) {
             if ([obj respondsToSelector:@selector(messageNoncesToPrefetchToProcessEvents:)]) {
-                [[obj expect] messageNoncesToPrefetchToProcessEvents:events];
+                [[obj expect] messageNoncesToPrefetchToProcessEvents:[OCMArg checkWithBlock:^BOOL(NSArray *receivedEvents) {
+                    return [receivedEvents isEqualToArray:events];
+                }]];
             }
             if ([obj respondsToSelector:@selector(conversationRemoteIdentifiersToPrefetchToProcessEvents:)]) {
-                [[obj expect] conversationRemoteIdentifiersToPrefetchToProcessEvents:events];
+                [[obj expect] conversationRemoteIdentifiersToPrefetchToProcessEvents:[OCMArg checkWithBlock:^BOOL(NSArray *receivedEvents) {
+                    return [receivedEvents isEqualToArray:events];
+                }]];
             }
         }
     }
@@ -1181,11 +1184,13 @@
 
 - (ZMUpdateEvent *)otrMessageAddPayloadFromClient:(UserClient *)client text:(NSString *)text nonce:(NSUUID *)nonce
 {
-    NSError *error;
     ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:nonce.transportString];
-    CBPreKey *prekey = [client.keysStore lastPreKeyAndReturnError:&error];
-    CBSession *session = [client.keysStore.box sessionWithId:client.remoteIdentifier fromPreKey:prekey error:&error];
-    NSData *encryptedData = [session encrypt:message.data error:&error];
+    __block NSError *error;
+    __block NSData *encryptedData;
+    
+    [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        encryptedData =  [sessionsDirectory encrypt:message.data recipientClientId:client.remoteIdentifier error:&error];
+    }];
     XCTAssertNil(error);
     
     NSDictionary *payload = @{

@@ -14,7 +14,7 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
-// 
+//
 
 
 @import ZMTransport;
@@ -24,9 +24,9 @@
 #import <zmessaging/zmessaging-Swift.h>
 
 
-NSString * CBErrorCodeToString(CBErrorCode errorCode);
+NSString * CBErrorCodeToString(CBoxResult errorCode);
 
-@implementation CBCryptoBox (UpdateEvents)
+@implementation EncryptionSessionsDirectory (UpdateEvent)
 
 - (BOOL)isEvent:(ZMUpdateEvent *)event forSelfClient:(UserClient *)selfClient
 {
@@ -82,13 +82,13 @@ NSString * CBErrorCodeToString(CBErrorCode errorCode);
                         managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
     BOOL didFailBecauseDuplicated = error != nil
-        && (error.code == CBErrorCodeOutdatedMessage || error.code == CBErrorCodeDuplicateMessage);
+    && (error.code == CBOX_OUTDATED_MESSAGE || error.code == CBOX_DUPLICATE_MESSAGE);
     
     // do not notify user if it's just a duplicated one
     if(didFailBecauseDuplicated) {
         return;
     }
-    NSMutableDictionary *userInfoDictionary = [NSMutableDictionary dictionaryWithDictionary:@{@"cause" : CBErrorCodeToString(error.code)}];
+    NSMutableDictionary *userInfoDictionary = [NSMutableDictionary dictionaryWithDictionary:@{@"cause" : CBErrorCodeToString((CBoxResult)error.code)}];
     
     NSString *senderClientID = [[event.payload.asDictionary optionalDictionaryForKey:@"data"] optionalStringForKey:@"sender"];
     
@@ -159,43 +159,19 @@ NSString * CBErrorCodeToString(CBErrorCode errorCode);
     VerifyReturnNil(data != nil);
     
     NSData *decryptedData;
-    BOOL createdNewSession = [self decryptedMessageDataFromData:data sessionId:senderClientId decryptedData:&decryptedData error:error];
-    
-    if (createdNewSession) {
+    if (![self hasSessionForID:senderClientId]) {
+        decryptedData = [self createClientSessionAndReturnPlaintext:senderClientId prekeyMessage:data error:error];
         *newSessionId = senderClientId;
+        if (nil == decryptedData) {
+            ZMLogError(@"Failed to decrypt message with session info <%@>: %@, update Event: %@", CBErrorCodeToString((CBoxResult)(*error).code), *error, event.debugInformation);
+        }
+    } else {
+        decryptedData = [self decrypt:data senderClientId:senderClientId error:error];
+        if (nil == decryptedData) {
+            ZMLogError(@"Failed to decrypt message <%@>: %@, update Event: %@", CBErrorCodeToString((CBoxResult)(*error).code), *error, event.debugInformation);
+        }
     }
-    
-    if (nil == decryptedData) {
-        ZMLogError(@"Failed to decrypt message <%@>: %@, update Event: %@", CBErrorCodeToString((*error).code), *error, event.debugInformation);
-    }
-    
     return decryptedData;
-}
-
-- (BOOL)decryptedMessageDataFromData:(NSData *)data sessionId:(NSString *)sessionId decryptedData:(NSData **)decryptedData error:(NSError **)error
-{
-    BOOL createdNewSession;
-    
-    //If we already have session with sender then we use it to decrypt message
-    CBSession *session = [self sessionById:sessionId error:error];
-    if (session != nil) {
-        *decryptedData = [session decrypt:data error:error];
-        createdNewSession = NO;
-    }
-    else {
-        //if we don't have session with sender yet we create it
-        CBSessionMessage *sessionMessage = [self sessionMessageWithId:sessionId fromMessage:data error:error];
-        
-        VerifyReturnValue(sessionMessage != nil, NO);
-        VerifyReturnValue(sessionMessage.session != nil, NO);
-        
-        *decryptedData = sessionMessage.data;
-        createdNewSession = YES;
-        session = sessionMessage.session;
-    }
-    [self setSessionToRequireSave:session];
-    
-    return createdNewSession;
 }
 
 - (UserClient *)didDiscoverNewClientWithSessionId:(NSString *)sessionId senderId:(NSUUID *)senderUserId moc:(NSManagedObjectContext *)moc {
@@ -220,40 +196,38 @@ NSString * CBErrorCodeToString(CBErrorCode errorCode);
 @end
 
 NSString *
-CBErrorCodeToString(CBErrorCode errorCode)
+CBErrorCodeToString(CBoxResult errorCode)
 {
     switch (errorCode) {
-        case CBErrorCodeUndefined:
-            return @"CBErrorCodeUndefined";
-        case CBErrorCodeStorageError:
+        case CBOX_STORAGE_ERROR:
             return @"CBErrorCodeStorageError";
-        case CBErrorCodeNoSession:
+        case CBOX_SESSION_NOT_FOUND:
             return @"CBErrorCodeNoSession";
-        case CBErrorCodeNoPreKey:
+        case CBOX_PREKEY_NOT_FOUND:
             return @"CBErrorCodeNoPreKey";
-        case CBErrorCodeDecodeError:
+        case CBOX_DECODE_ERROR:
             return @"CBErrorCodeDecodeError";
-        case CBErrorCodeRemoteIdentityChanged:
+        case CBOX_REMOTE_IDENTITY_CHANGED:
             return @"CBErrorCodeRemoteIdentityChanged";
-        case CBErrorCodeInvalidIdentity:
+        case CBOX_IDENTITY_ERROR:
             return @"CBErrorCodeInvalidIdentity";
-        case CBErrorCodeInvalidSignature:
+        case CBOX_INVALID_SIGNATURE:
             return @"CBErrorCodeInvalidSignature";
-        case CBErrorCodeInvalidMessage:
+        case CBOX_INVALID_MESSAGE:
             return @"CBErrorCodeInvalidMessage";
-        case CBErrorCodeDuplicateMessage:
+        case CBOX_DUPLICATE_MESSAGE:
             return @"CBErrorCodeDuplicateMessage";
-        case CBErrorCodeTooDistantFuture:
+        case CBOX_TOO_DISTANT_FUTURE:
             return @"CBErrorCodeTooDistantFuture";
-        case CBErrorCodeOutdatedMessage:
+        case CBOX_OUTDATED_MESSAGE:
             return @"CBErrorCodeOutdatedMessage";
-        case CBErrorCodeUTF8Error:
+        case CBOX_UTF8_ERROR:
             return @"CBErrorCodeUTF8Error";
-        case CBErrorCodeNULError:
+        case CBOX_NUL_ERROR:
             return @"CBErrorCodeNULError";
-        case CBErrorCodeEncodeError:
+        case CBOX_ENCODE_ERROR:
             return @"CBErrorCodeEncodeError";
-        case CBErrorCodePanic:
+        case CBOX_PANIC:
             return @"CBErrorCodePanic";
         default:
             return [NSString stringWithFormat:@"Unknown error code: %lu", (long)errorCode];

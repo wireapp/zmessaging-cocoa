@@ -51,6 +51,7 @@
     [super setUp];
     
     self.mockUISharedApplication = [OCMockObject mockForClass:UIApplication.class];
+    [[[self.mockUISharedApplication stub] andReturnValue:@(UIApplicationStateBackground)] applicationState];
     [self verifyMockLater:self.mockUISharedApplication];
     self.mockEventNotificationSet = [OCMockObject niceMockForClass:[ZMLocalNotificationSet class]];
     self.mockFailedNotificationSet = [OCMockObject niceMockForClass:[ZMLocalNotificationSet class]];

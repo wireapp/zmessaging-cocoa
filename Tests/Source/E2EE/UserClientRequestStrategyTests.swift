@@ -147,6 +147,15 @@ class UserClientRequestStrategyTests: MessagingTest {
         }
     }
     
+    func generatePrekeyAndLastKey(selfClient: UserClient, count: UInt16 = 2) -> (prekeys: [String], lastKey: String) {
+        var preKeys : [String] = []
+        var lastKey : String = ""
+        selfClient.keysStore.encryptionContext.perform { (sessionsDirectory) in
+            preKeys = try! sessionsDirectory.generatePrekeys(Range(0..<count)).map{ $0.prekey }
+            lastKey = try! sessionsDirectory.generateLastPrekey()
+        }
+        return (preKeys, lastKey)
+    }
 }
 
 
@@ -159,9 +168,8 @@ extension UserClientRequestStrategyTests {
         selfClient.remoteIdentifier = nil
         selfClient.user = ZMUser.selfUserInContext(context)
         return selfClient
-    
     }
-
+    
     func testThatItReturnsRequestForInsertedObject() {
         // given
         let client = createSelfClient(sut.managedObjectContext)
@@ -228,7 +236,7 @@ extension UserClientRequestStrategyTests {
         clientRegistrationStatus.mockPhase = .Unregistered
 
         let client = createSelfClient(sut.managedObjectContext)
-        let maxID_before = UInt(client.preKeysRangeMax)
+        let maxID_before = UInt16(client.preKeysRangeMax)
         XCTAssertEqual(maxID_before, 0)
         
         notifyChangeTrackers(client)
@@ -240,8 +248,8 @@ extension UserClientRequestStrategyTests {
         XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.2))
         
         // then
-        let maxID_after = UInt(client.preKeysRangeMax)
-        let (_, _, expectedMaxID) = (client.keysStore as! FakeKeysStore).lastGeneratedKeys
+        let maxID_after = UInt16(client.preKeysRangeMax)
+        let expectedMaxID = (client.keysStore as! FakeKeysStore).lastGeneratedKeys.last?.id
         
         XCTAssertNotEqual(maxID_after, maxID_before)
         XCTAssertEqual(maxID_after, expectedMaxID)
@@ -746,12 +754,10 @@ extension UserClientRequestStrategyTests {
         // given
         
         let selfClient = createSelfClient()
+        let (prekeys, lastKey) = generatePrekeyAndLastKey(selfClient)
         
-        let preKeys = try! selfClient.keysStore.box.generatePreKeys(NSMakeRange(0, 2)).map { $0.data!.base64String() }.flatMap{$0}
-        let lastKey = try! selfClient.keysStore.box.lastPreKey().data!.base64String()
-        
-        let client1 = createRemoteClient(Array(preKeys[0..<1]), lastKey: lastKey)
-        let client2 = createRemoteClient(Array(preKeys[1..<2]), lastKey: lastKey)
+        let client1 = createRemoteClient(Array(prekeys[0..<1]), lastKey: lastKey)
+        let client2 = createRemoteClient(Array(prekeys[1..<2]), lastKey: lastKey)
 
         selfClient.missesClient(client1)
         selfClient.missesClient(client2)
@@ -806,14 +812,14 @@ extension UserClientRequestStrategyTests {
     func testThatItRemovesOtherMissingClientsEvenIfOneOfThemHasANilValue() {
         //given
         let (selfClient, otherClient) = createClients()
-        let lastKey = try! selfClient.keysStore.lastPreKey().data!.base64String()
+        let lastKey = try! selfClient.keysStore.lastPreKey()
         let payload : [ String : [String : AnyObject]] = [
             otherClient.user!.remoteIdentifier!.transportString() :
-            [
-                otherClient.remoteIdentifier: [
-                    "id": 3, "key": lastKey
-                ],
-                "2360fe0d2adc69e8" : NSNull()
+                [
+                    otherClient.remoteIdentifier: [
+                        "id": 3, "key": lastKey
+                    ],
+                    "2360fe0d2adc69e8" : NSNull()
             ]
         ]
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient], payload: payload)
@@ -829,7 +835,7 @@ extension UserClientRequestStrategyTests {
         
         //given
         let (selfClient, otherClient1) = createClients()
-        let lastKey = try! selfClient.keysStore.lastPreKey().data!.base64String()
+        let lastKey = try! selfClient.keysStore.lastPreKey()
         let otherClient2 = self.createRemoteClient(generateValidPrekeysStrings(selfClient, howMany: 1), lastKey: lastKey)
         
         let payload : [ String : [String : AnyObject]] = [
@@ -865,7 +871,7 @@ extension UserClientRequestStrategyTests {
         
         //given
         let (selfClient, otherClient1) = createClients()
-        let lastKey = try! selfClient.keysStore.lastPreKey().data!.base64String()
+        let lastKey = try! selfClient.keysStore.lastPreKey()
         let otherClient2 = self.createRemoteClient(generateValidPrekeysStrings(selfClient, howMany: 1), lastKey: lastKey)
 
         let payload : [ String : [String : AnyObject]] = [
@@ -891,7 +897,7 @@ extension UserClientRequestStrategyTests {
         
         //given
         let (selfClient, otherClient1) = createClients()
-        let lastKey = try! selfClient.keysStore.lastPreKey().data!.base64String()
+        let lastKey = try! selfClient.keysStore.lastPreKey()
         let otherClient2 = self.createRemoteClient(generateValidPrekeysStrings(selfClient, howMany: 1), lastKey: lastKey)
         
         let payload : [ String : [String : AnyObject]] = [
@@ -941,7 +947,7 @@ extension UserClientRequestStrategyTests {
         let (selfClient, otherClient) = createClients()
         let message = messageThatMissesRecipient(otherClient)
         
-        let payload: [String: [String: AnyObject]] = [otherClient.user!.remoteIdentifier!.transportString(): [otherClient.remoteIdentifier: ["key": "bad key"]]]
+        let payload: [String: [String: AnyObject]] = [otherClient.user!.remoteIdentifier!.transportString(): [otherClient.remoteIdentifier: ["key": "a2V5"]]]
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient], payload: payload)
 
         //when
@@ -957,7 +963,7 @@ extension UserClientRequestStrategyTests {
         let (selfClient, otherClient) = createClients()
         let message = messageThatMissesRecipient(otherClient)
         
-        let payload: [String: [String: AnyObject]] = [otherClient.user!.remoteIdentifier!.transportString(): [otherClient.remoteIdentifier: ["key": "bad key"]]]
+        let payload: [String: [String: AnyObject]] = [otherClient.user!.remoteIdentifier!.transportString(): [otherClient.remoteIdentifier: ["key": "a2V5"]]]
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient], payload: payload)
         
         //when
@@ -994,15 +1000,19 @@ extension UserClientRequestStrategyTests {
         XCTAssertTrue(otherClient.failedToEstablishSession)
     }
     
-    func generateValidPrekeysStrings(selfClient: UserClient, howMany: Int) -> [String] {
-        return try! selfClient.keysStore.box.generatePreKeys(NSMakeRange(0, howMany)).map { $0.data!.base64String() }
+    func generateValidPrekeysStrings(selfClient: UserClient, howMany: UInt16) -> [String] {
+        var prekeys : [String] = []
+        selfClient.keysStore.encryptionContext.perform { (sessionsDirectory) in
+            let keysAndIds = try! sessionsDirectory.generatePrekeys(Range<UInt16>(0..<howMany))
+            prekeys = keysAndIds.map { $0.prekey }
+        }
+        return prekeys
     }
     
     func createClients() -> (UserClient, UserClient) {
         let selfClient = self.createSelfClient()
-        let preKeys = try! selfClient.keysStore.box.generatePreKeys(NSMakeRange(0, 2)).map { $0.data!.base64String() }.flatMap{$0}
-        let lastKey = try! selfClient.keysStore.box.lastPreKey().data!.base64String()!
-        let otherClient = self.createRemoteClient(preKeys, lastKey: lastKey)
+        let (prekeys, lastKey) = generatePrekeyAndLastKey(selfClient)
+        let otherClient = self.createRemoteClient(prekeys, lastKey: lastKey)
         return (selfClient, otherClient)
     }
     
@@ -1023,7 +1033,6 @@ extension UserClientRequestStrategyTests {
             }
         }
         XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
-
 
         let client = UserClient.insertNewObjectInManagedObjectContext(self.sut.managedObjectContext)
         client.remoteIdentifier = mockClient.identifier
@@ -1051,7 +1060,7 @@ extension UserClientRequestStrategyTests {
     func missingClientsRequestAndResponse(selfClient: UserClient, missingClients: [UserClient], payload: [String: [String: AnyObject]]? = nil)
         -> (request: ZMUpstreamRequest, response: ZMTransportResponse)
     {
-        let lastKey = try! selfClient.keysStore.lastPreKey().data!.base64String()
+        let lastKey = try! selfClient.keysStore.lastPreKey()
 
         // make sure that we are missing those clients
         for missingClient in missingClients {
@@ -1323,7 +1332,10 @@ extension UserClientRequestStrategyTests {
         let selfUser = ZMUser.selfUserInContext(syncMOC)
         let existingClient = createSelfClient()
 
-        let fingerprint = try? syncMOC.zm_cryptKeyStore.box.localFingerprint()
+        var fingerprint : NSData?
+        syncMOC.zm_cryptKeyStore.encryptionContext.perform { (sessionsDirectory) in
+            fingerprint = sessionsDirectory.localFingerprint
+        }
         let previousLastPrekey = try? syncMOC.zm_cryptKeyStore.lastPreKey()
         
         XCTAssertEqual(selfUser.clients.count, 1)
@@ -1342,7 +1354,10 @@ extension UserClientRequestStrategyTests {
         self.sut.processEvents([event], liveEvents:true, prefetchResult: .None)
         
         // then
-        let newFingerprint = try? syncMOC.zm_cryptKeyStore.box.localFingerprint()
+        var newFingerprint : NSData?
+        syncMOC.zm_cryptKeyStore.encryptionContext.perform { (sessionsDirectory) in
+            newFingerprint = sessionsDirectory.localFingerprint
+        }
         let newLastPrekey = try? syncMOC.zm_cryptKeyStore.lastPreKey()
         
         XCTAssertNotNil(fingerprint)

@@ -390,6 +390,11 @@
 		BF0D67A41C901DEC007CE00F /* libPhoneNumber.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0D67A31C901DEC007CE00F /* libPhoneNumber.framework */; };
 		BF0D67A51C901E28007CE00F /* libPhoneNumber.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0D67A31C901DEC007CE00F /* libPhoneNumber.framework */; };
 		BF158D2F1CE087D8007C6F8A /* video.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = BF158D2E1CE087D8007C6F8A /* video.mp4 */; };
+		BF2A9D511D6B536E00FA7DBC /* EventDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2A9D501D6B536E00FA7DBC /* EventDecoder.swift */; };
+		BF2A9D551D6B5B9700FA7DBC /* EventDecoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2A9D541D6B5B9700FA7DBC /* EventDecoderTests.swift */; };
+		BF2A9D581D6B5BDB00FA7DBC /* StoreUpdateEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2A9D571D6B5BDB00FA7DBC /* StoreUpdateEventTests.swift */; };
+		BF2A9D5D1D6B63DB00FA7DBC /* StoreUpdateEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2A9D5A1D6B63DB00FA7DBC /* StoreUpdateEvent.swift */; };
+		BF2A9D611D6C70EA00FA7DBC /* ZMEventModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = BF2A9D5F1D6C70EA00FA7DBC /* ZMEventModel.xcdatamodeld */; };
 		BF381FE51D509E1500075672 /* AddressBookTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF381FE41D509E1500075672 /* AddressBookTracker.swift */; };
 		BF38FAF31CA2A24600E2ACBB /* MissingClientsMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF38FAF21CA2A24600E2ACBB /* MissingClientsMapTests.swift */; };
 		BF3977661D2D344000F2BEA2 /* LinkPreviewAssetDownloadRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3977651D2D344000F2BEA2 /* LinkPreviewAssetDownloadRequestStrategyTests.swift */; };
@@ -1054,6 +1059,11 @@
 		BF00442A1C75DF94007A6EA4 /* PingBackRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PingBackRequestStrategy.swift; sourceTree = "<group>"; };
 		BF0D67A31C901DEC007CE00F /* libPhoneNumber.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libPhoneNumber.framework; path = Carthage/Build/iOS/libPhoneNumber.framework; sourceTree = "<group>"; };
 		BF158D2E1CE087D8007C6F8A /* video.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = video.mp4; sourceTree = "<group>"; };
+		BF2A9D501D6B536E00FA7DBC /* EventDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EventDecoder.swift; path = Decoding/EventDecoder.swift; sourceTree = "<group>"; };
+		BF2A9D541D6B5B9700FA7DBC /* EventDecoderTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventDecoderTests.swift; sourceTree = "<group>"; };
+		BF2A9D571D6B5BDB00FA7DBC /* StoreUpdateEventTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoreUpdateEventTests.swift; sourceTree = "<group>"; };
+		BF2A9D5A1D6B63DB00FA7DBC /* StoreUpdateEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = StoreUpdateEvent.swift; path = Decoding/StoreUpdateEvent.swift; sourceTree = "<group>"; };
+		BF2A9D601D6C70EA00FA7DBC /* ZMEventModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ZMEventModel.xcdatamodel; sourceTree = "<group>"; };
 		BF381FE41D509E1500075672 /* AddressBookTracker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookTracker.swift; sourceTree = "<group>"; };
 		BF38FAF21CA2A24600E2ACBB /* MissingClientsMapTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MissingClientsMapTests.swift; sourceTree = "<group>"; };
 		BF3977651D2D344000F2BEA2 /* LinkPreviewAssetDownloadRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkPreviewAssetDownloadRequestStrategyTests.swift; sourceTree = "<group>"; };
@@ -1998,6 +2008,7 @@
 			children = (
 				54F8D72919AB66CB00146664 /* Transcoders */,
 				54B717F3194078B100B798FA /* Sync States */,
+				BF2A9D561D6B5BB000FA7DBC /* Decoding */,
 				54A170661B300700001B41A5 /* Strategies */,
 				85D85104C6D06FA902E3253C /* ZMSyncStrategyTests.m */,
 				F96F128A1A2DBB2300FDC2F0 /* ZMChangeTrackerBootstrapTests.m */,
@@ -2048,6 +2059,7 @@
 				54B717ED19406CBD00B798FA /* Sync States */,
 				54A170621B30068B001B41A5 /* Strategies */,
 				543A16671B2F28D100AF0617 /* RequestStrategy.swift */,
+				BF2A9D591D6B639C00FA7DBC /* Decoding */,
 				85D85F3EC8565FD102AC0E5B /* ZMOperationLoop.h */,
 				F962A8EF19FFD4DC00FD0F80 /* ZMOperationLoop+Private.h */,
 				85D8502FFC4412F91D0CC1A4 /* ZMOperationLoop.m */,
@@ -2244,6 +2256,25 @@
 				BF40AC7D1D0990A900287E29 /* ClusterizerTests.swift */,
 			);
 			path = Utility;
+			sourceTree = "<group>";
+		};
+		BF2A9D561D6B5BB000FA7DBC /* Decoding */ = {
+			isa = PBXGroup;
+			children = (
+				BF2A9D541D6B5B9700FA7DBC /* EventDecoderTests.swift */,
+				BF2A9D571D6B5BDB00FA7DBC /* StoreUpdateEventTests.swift */,
+			);
+			name = Decoding;
+			sourceTree = "<group>";
+		};
+		BF2A9D591D6B639C00FA7DBC /* Decoding */ = {
+			isa = PBXGroup;
+			children = (
+				BF2A9D501D6B536E00FA7DBC /* EventDecoder.swift */,
+				BF2A9D5A1D6B63DB00FA7DBC /* StoreUpdateEvent.swift */,
+				BF2A9D5F1D6C70EA00FA7DBC /* ZMEventModel.xcdatamodeld */,
+			);
+			name = Decoding;
 			sourceTree = "<group>";
 		};
 		BF4140B91D082714008545CB /* Analytics */ = {
@@ -2719,6 +2750,7 @@
 				541228451AEE422C00D9ED1C /* ZMAuthenticationStatusTests.m in Sources */,
 				F96F128C1A2DBB3C00FDC2F0 /* ZMChangeTrackerBootstrapTests.m in Sources */,
 				548A3DD71CBE66EE00169A83 /* FilePreprocessorTests.swift in Sources */,
+				BF2A9D551D6B5B9700FA7DBC /* EventDecoderTests.swift in Sources */,
 				F9B171FA1C0F320200E6EEC6 /* ClientManagementTests.m in Sources */,
 				5476E3BD19A77C6900E68BAD /* PushChannelTests.m in Sources */,
 				5474C80C1921309400185A3A /* MessagingTestTests.m in Sources */,
@@ -2765,6 +2797,7 @@
 				F991C0AC1CB53A80004D8465 /* ZMCallTimerTests.swift in Sources */,
 				5430FF151CE4A359004ECFFE /* FileTransferTests.m in Sources */,
 				545434AE19AB6ADA003892D9 /* ZMUserTranscoderTests.m in Sources */,
+				BF2A9D581D6B5BDB00FA7DBC /* StoreUpdateEventTests.swift in Sources */,
 				3E4F72AD19ED7222002FE184 /* ZMDownstreamObjectSyncOrderingTests.m in Sources */,
 				545434A819AB6ADA003892D9 /* ZMConversationEventsTranscoderTests.m in Sources */,
 				54B7181D1940A86000B798FA /* ZMSlowSyncPhaseTwoStateTests.m in Sources */,
@@ -2847,6 +2880,7 @@
 				092083401BA95EE100F82B29 /* UserClientRequestFactory.swift in Sources */,
 				F936DB2B1C11DF40005E93AE /* ZMClientUpdateNotification.m in Sources */,
 				F9FD167C1BDFCDAD00725F5C /* ZMClientRegistrationStatus.m in Sources */,
+				BF2A9D611D6C70EA00FA7DBC /* ZMEventModel.xcdatamodeld in Sources */,
 				549815DC1A432BC700A7CE2E /* NSError+ZMUserSession.m in Sources */,
 				546E73F41ADFDDFE00AFF9BE /* ZMUserSessionRegistrationNotification.m in Sources */,
 				87508EA01D08264000162483 /* ZMSound.swift in Sources */,
@@ -2859,6 +2893,7 @@
 				549816331A432BC800A7CE2E /* ZMAddressBookTranscoder.m in Sources */,
 				549816201A432BC800A7CE2E /* ZMImagePreprocessingTracker.m in Sources */,
 				549816221A432BC800A7CE2E /* ZMAssetRequestFactory.m in Sources */,
+				BF2A9D5D1D6B63DB00FA7DBC /* StoreUpdateEvent.swift in Sources */,
 				BF40AC7C1D097AA400287E29 /* Clusterizer.swift in Sources */,
 				549816281A432BC800A7CE2E /* ZMAssetTranscoder.m in Sources */,
 				09C77C531BA6C77000E2163F /* UserClientRequestStrategy.swift in Sources */,
@@ -2943,6 +2978,7 @@
 				5498162F1A432BC800A7CE2E /* ZMRegistrationTranscoder.m in Sources */,
 				09B7308D1B301F0200A5CCC9 /* ZMUserSession+Proxy.m in Sources */,
 				09E393BE1BAB0C2A00F3EA1B /* ZMUserSession+OTR.m in Sources */,
+				BF2A9D511D6B536E00FA7DBC /* EventDecoder.swift in Sources */,
 				5490F9031AF021EB004696F4 /* ZMUserProfileUpdateStatus.m in Sources */,
 				549816501A432BC800A7CE2E /* ZMRemoteIdentifierObjectSync.m in Sources */,
 				549816581A432BC800A7CE2E /* ZMRequestGenerator.m in Sources */,
@@ -3316,6 +3352,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		BF2A9D5F1D6C70EA00FA7DBC /* ZMEventModel.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				BF2A9D601D6C70EA00FA7DBC /* ZMEventModel.xcdatamodel */,
+			);
+			currentVersion = BF2A9D601D6C70EA00FA7DBC /* ZMEventModel.xcdatamodel */;
+			name = ZMEventModel.xcdatamodeld;
+			path = Decoding/ZMEventModel.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 540029AB1918CA8500578793 /* Project object */;
 }

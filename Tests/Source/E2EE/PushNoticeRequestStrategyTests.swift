@@ -29,20 +29,17 @@ class PushNoticeRequestStrategyTests: MessagingTest {
     var sut: PushNoticeRequestStrategy!
     var authenticationStatus: MockAuthenticationStatus!
     var pingBackStatus: MockBackgroundAPNSPingBackStatus!
-    var notificationDispatcher: LocalNotificationDispatchType!
     var selfClient : UserClient!
     
     override func setUp() {
         super.setUp()
         selfClient = createSelfClient()
         
-        notificationDispatcher = MockNotificationDispatcher()
         authenticationStatus = MockAuthenticationStatus(phase: .Authenticated)
         
         pingBackStatus = MockBackgroundAPNSPingBackStatus(
             syncManagedObjectContext: syncMOC,
-            authenticationProvider: authenticationStatus,
-            localNotificationDispatcher: notificationDispatcher
+            authenticationProvider: authenticationStatus
         )
         
         sut = PushNoticeRequestStrategy(

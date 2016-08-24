@@ -31,15 +31,6 @@ private let zmLog = ZMSLog(tag: "Pingback")
 extension ZMAuthenticationStatus: AuthenticationStatusProvider {}
 
 
-// MARK: - LocalNotificationDispatchType
-
-@objc public protocol LocalNotificationDispatchType {
-    func didReceiveUpdateEvents(events: [ZMUpdateEvent]?, notificationID: NSUUID)
-}
-
-extension ZMLocalNotificationDispatcher: LocalNotificationDispatchType {}
-
-
 // MARK: - EventsWithIdentifier
 
 @objc public class EventsWithIdentifier: NSObject  {
@@ -103,16 +94,14 @@ extension EventsWithIdentifier {
     
     private var syncManagedObjectContext: NSManagedObjectContext
     private weak var authenticationStatusProvider: AuthenticationStatusProvider?
-    private weak var notificationDispatcher: LocalNotificationDispatchType?
     
     public init(
         syncManagedObjectContext moc: NSManagedObjectContext,
-        authenticationProvider: AuthenticationStatusProvider,
-        localNotificationDispatcher: LocalNotificationDispatchType
-        ) {
+                                 authenticationProvider: AuthenticationStatusProvider
+        )
+    {
         syncManagedObjectContext = moc
         authenticationStatusProvider = authenticationProvider
-        notificationDispatcher = localNotificationDispatcher
         super.init()
     }
     
@@ -136,6 +125,9 @@ extension EventsWithIdentifier {
         )
         
         notificationIDs.append(eventsWithID)
+        if !eventsWithID.isNotice {
+            notificationIDToEventsMap[eventsWithID.identifier] = eventsWithID.events
+        }
         eventsWithHandlerByNotificationID[eventsWithID.identifier] = (eventsWithID.events, handler)
         
         if authenticationStatusProvider?.currentPhase == .Authenticated {
@@ -156,15 +148,14 @@ extension EventsWithIdentifier {
         updateStatus()
         zmLog.debug("Pingback with status \(status) for notification ID: \(notificationID)")
         
-        if let unwrappedEvents = eventsWithHandler?.events where responseStatus == .Success {
-            notificationDispatcher?.didReceiveUpdateEvents(unwrappedEvents, notificationID: notificationID)
-        } else if responseStatus == .TryAgainLater {
+        if responseStatus == .TryAgainLater {
             guard let handler = eventsWithHandler?.handler else { return }
             didReceiveVoIPNotification(eventsWithID, handler: handler)
         }
         
         if responseStatus != .TryAgainLater {
-            eventsWithHandler?.handler(.Success, notificationIDToEventsMap[notificationID] ?? [])
+            let result : ZMPushPayloadResult = (responseStatus == .Success) ? .Success : .Failure
+            eventsWithHandler?.handler(result, notificationIDToEventsMap[notificationID] ?? [])
         }
     }
     
@@ -174,12 +165,8 @@ extension EventsWithIdentifier {
         
         switch responseStatus {
         case .Success: // we fetched the event and pinged back
-            let cryptoBox = syncManagedObjectContext.zm_cryptKeyStore.box
-            let decryptedEvents = events.flatMap {
-                cryptoBox.decryptUpdateEventAndAddClient($0, managedObjectContext: syncManagedObjectContext)
-            }
-            finalEvents = decryptedEvents
-            notificationIDToEventsMap[notificationID] = decryptedEvents
+            finalEvents = events
+            notificationIDToEventsMap[notificationID] = events
             fallthrough
         case .TryAgainLater:
             didPerfomPingBackRequest(eventsWithID, responseStatus: responseStatus)
@@ -190,7 +177,6 @@ extension EventsWithIdentifier {
         }
         
         zmLog.debug("Fetching notification with status \(responseStatus) for notification ID: \(notificationID)")
-        notificationDispatcher?.didReceiveUpdateEvents(finalEvents, notificationID: notificationID)
     }
     
     func updateStatus() {

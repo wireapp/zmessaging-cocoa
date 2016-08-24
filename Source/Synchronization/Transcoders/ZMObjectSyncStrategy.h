@@ -34,22 +34,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol ZMUpdateEventDecryptor <NSObject>
-
-/// All strategies  conforming to this protocol will be asked to decrypt the events array if neccessary.
-/// If a strategy performs any decryption it should remove the encrypted versions
-/// of the events it decrypted in the return value. If there is nothing to decrypt it
-/// should not implement this method or simply return the input value.
-- (NSArray <ZMUpdateEvent *>*)decryptedUpdateEventsFromEvents:(NSArray <ZMUpdateEvent *>*)events;
-
-@end
 
 
-@protocol ZMObjectStrategy <NSObject, ZMRequestGeneratorSource, ZMContextChangeTrackerSource>
-
-@property (nonatomic, readonly) BOOL isSlowSyncDone;
-
-- (void)setNeedsSlowSync;
+@protocol ZMEventConsumer <NSObject>
 
 /// Process events received either through a live update (websocket / notification / notification stream)
 /// or through history download
@@ -71,6 +58,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// The method to register conversation remoteIdentifiers for prefetching
 - (NSSet <NSUUID *>*)conversationRemoteIdentifiersToPrefetchToProcessEvents:(NSArray<ZMUpdateEvent *> *)events;
+
+@end
+
+
+
+@protocol ZMObjectStrategy <NSObject, ZMEventConsumer, ZMRequestGeneratorSource, ZMContextChangeTrackerSource>
+
+@property (nonatomic, readonly) BOOL isSlowSyncDone;
+
+- (void)setNeedsSlowSync;
 
 @end
 

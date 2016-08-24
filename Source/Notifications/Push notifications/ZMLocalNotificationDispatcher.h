@@ -21,6 +21,7 @@
 @import UIKit;
 #import "ZMPushRegistrant.h"
 #import "ZMContextChangeTracker.h"
+#import "ZMObjectSyncStrategy.h"
 
 @class ZMUpdateEvent;
 @class ZMConversation;
@@ -33,7 +34,7 @@
 extern NSString * _Null_unspecified const ZMConversationCancelNotificationForIncomingCallNotificationName;
 extern NSString * _Null_unspecified const ZMShouldHideNotificationContentKey;
 
-@interface ZMLocalNotificationDispatcher : NSObject
+@interface ZMLocalNotificationDispatcher : NSObject <ZMEventConsumer>
 
 - (nullable instancetype)initWithManagedObjectContext:(nonnull NSManagedObjectContext *)moc sharedApplication:(nonnull UIApplication *)sharedApplication;
 

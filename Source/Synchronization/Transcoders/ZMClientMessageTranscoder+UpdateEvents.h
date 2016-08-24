@@ -19,6 +19,6 @@
 
 #import "ZMClientMessageTranscoder.h"
 
-@interface ZMClientMessageTranscoder (UpdateEvents) <ZMObjectStrategy, ZMUpdateEventDecryptor>
+@interface ZMClientMessageTranscoder (UpdateEvents) <ZMObjectStrategy>
 
 @end

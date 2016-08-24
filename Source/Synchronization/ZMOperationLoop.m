@@ -126,7 +126,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     
     self = [super init];
     if (self) {
-        self.cryptoBox = [syncMOC zm_cryptKeyStore].box;
+        self.encryptionContext = [syncMOC zm_cryptKeyStore].encryptionContext;
         self.transportSession = transportSession;
         self.syncStrategy = syncStrategy;
         self.syncMOC = syncMOC;

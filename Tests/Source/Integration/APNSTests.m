@@ -163,7 +163,7 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-    id mockApplication = [OCMockObject partialMockForObject:self.userSession.application];
+    id mockApplication = self.userSession.application;
     [[[mockApplication expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.userSession performChanges:^{
@@ -186,6 +186,8 @@
 - (void)testThatItReregistersPushTokensOnDemand
 {
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
     // given
     NSData *token = [NSData dataWithBytes:@"abc" length:3];
     NSData *newToken = [NSData dataWithBytes:@"def" length:6];
@@ -201,7 +203,7 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-    id mockApplication = [OCMockObject partialMockForObject:self.userSession.application];
+    id mockApplication = self.userSession.application;
     [[[mockApplication expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.userSession performChanges:^{
@@ -242,7 +244,7 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:token] pushToken];
-    id mockApplication = [OCMockObject partialMockForObject:self.userSession.application];
+    id mockApplication = self.userSession.application;
     [[[mockApplication expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.userSession performChanges:^{

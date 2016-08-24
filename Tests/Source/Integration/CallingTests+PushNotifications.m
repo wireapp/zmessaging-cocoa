@@ -47,6 +47,8 @@
     
     id application = self.userSession.application;
     [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
     __block UILocalNotification *notification;
     [[application expect] scheduleLocalNotification:[OCMArg checkWithBlock:^BOOL(id obj) {
         notification = obj;
@@ -72,6 +74,7 @@
     }
     
     [self.mockTransportSession resetReceivedRequests];
+    [application stopMocking];
 
     // (2) we press on the action
     {
@@ -106,6 +109,9 @@
     
     id application = self.userSession.application;
     [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    
     __block UILocalNotification *notification;
     [[application expect] scheduleLocalNotification:[OCMArg checkWithBlock:^BOOL(id obj) {
         notification = obj;
@@ -201,6 +207,9 @@
     
     id application = self.userSession.application;
     [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    
     __block UILocalNotification *notification;
     
     [[application expect] scheduleLocalNotification:[OCMArg checkWithBlock:^BOOL(id obj) {

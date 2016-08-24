@@ -30,10 +30,10 @@ public class FakeKeysStore: UserClientKeysStore {
     var failToGeneratePreKeys: Bool = false
     var failToGenerateLastPreKey: Bool = false
     
-    var lastGeneratedKeys : (keys: [CBPreKey], minIndex: UInt, maxIndex: UInt) = ([],0,0)
-    var lastGeneratedLastPrekey : CBPreKey?
+    var lastGeneratedKeys : [(id: UInt16, prekey: String)] = []
+    var lastGeneratedLastPrekey : String?
     
-    override public func generateMoreKeys(count: UInt, start: UInt) throws -> ([CBPreKey], UInt, UInt) {
+    override public func generateMoreKeys(count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
         if self.failToGeneratePreKeys {
             let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
             throw error
@@ -45,7 +45,7 @@ public class FakeKeysStore: UserClientKeysStore {
         }
     }
     
-    override public func lastPreKey() throws -> CBPreKey {
+    override public func lastPreKey() throws -> String {
         if self.failToGenerateLastPreKey {
             let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
             throw error
@@ -79,10 +79,10 @@ class UserClientRequestFactoryTests: MessagingTest {
         super.tearDown()
     }
 
-    func expectedKeyPayloadForClientPreKeys(client : UserClient) -> [NSDictionary] {
+    func expectedKeyPayloadForClientPreKeys(client : UserClient) -> [[String : AnyObject]] {
         let generatedKeys = (client.keysStore as! FakeKeysStore).lastGeneratedKeys
-        let expectedPrekeys = generatedKeys.keys.enumerate().map {
-            return ["key": $1.data!.base64String(), "id": Int(generatedKeys.minIndex) + $0]
+        let expectedPrekeys : [[String: AnyObject]] = generatedKeys.map { (key: (id: UInt16, prekey: String)) in
+            return ["key": key.prekey, "id": NSNumber(unsignedShort: key.id)]
         }
         return expectedPrekeys
     }
@@ -103,11 +103,11 @@ class UserClientRequestFactoryTests: MessagingTest {
                 AssertDictionaryHasOptionalValue(payload, key: "password", expected: credentials.password!, "Payload should contain password")
                 
                 let lastPreKey = (client.keysStore as! FakeKeysStore).lastGeneratedLastPrekey!
-                let expectedLastPreKeyPayload = ["key": lastPreKey.data!.base64String(), "id": CBMaxPreKeyID+1]
+                let expectedLastPreKeyPayload = ["key": lastPreKey, "id": NSNumber(unsignedShort: UserClientKeysStore.MaxPreKeyID+1)]
                 
                 AssertDictionaryHasOptionalValue(payload, key: "lastkey", expected: expectedLastPreKeyPayload, "Payload should contain last prekey")
                 
-                let preKeysPayloadData = payload["prekeys"] as? [[NSString: AnyObject]]
+                let preKeysPayloadData = payload["prekeys"] as? [[String: AnyObject]]
                 AssertOptionalNotNil(preKeysPayloadData, "Payload should contain prekeys") {preKeysPayloadData in
                     XCTAssertEqual(preKeysPayloadData, self.expectedKeyPayloadForClientPreKeys(client))
                 }
@@ -147,7 +147,7 @@ class UserClientRequestFactoryTests: MessagingTest {
                 XCTAssertNil(payload["password"])
                 
                 let lastPreKey = try! client.keysStore.lastPreKey()
-                let expectedLastPreKeyPayload = ["key": lastPreKey.data!.base64String(), "id": CBMaxPreKeyID+1]
+                let expectedLastPreKeyPayload = ["key": lastPreKey, "id": NSNumber(unsignedShort: UserClientKeysStore.MaxPreKeyID+1)]
                 
                 AssertDictionaryHasOptionalValue(payload, key: "lastkey", expected: expectedLastPreKeyPayload, "Payload should contain last prekey")
                 

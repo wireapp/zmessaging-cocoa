@@ -150,18 +150,54 @@ ZM_EMPTY_ASSERTING_INIT();
     [self.failedMessageNotifications cancelNotifications:conversation];
 }
 
+- (void)processEvents:(NSArray<ZMUpdateEvent *> *)events liveEvents:(BOOL)liveEvents prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult;
+{
+    NOT_USED(liveEvents);
+    
+    if (self.sharedApplication.applicationState != UIApplicationStateBackground) {
+        return;
+    }
+    
+    NSArray *eventsToForward = [events filterWithBlock:^BOOL(ZMUpdateEvent *event) {
+        // we only want to process events we received through Push
+        if (event.source != ZMUpdateEventSourcePushNotification) {
+            return NO;
+        }
+        // if the event is not a message, we want to process it in any case
+        if (event.messageNonce == nil) {
+            return YES;
+        }
+        // if the event is a message, we only want to process it if it does not have a preexisting message
+        // TODO Sabine: Can this lead to multipart messages not being shown at all?
+        // e.g. when we receive an asset message, we receive a preview and medium image message
+        // However, we only process the preview. If under bad network, the medium image part arrives before the preview,
+        // we would not display any notification at all, would we?
+        NSSet <ZMMessage *>* prefetchedMessages = prefetchResult.messagesByNonce[event.messageNonce];
+        if (nil != prefetchedMessages) {
+            for (ZMMessage *prefetchedMessage in prefetchedMessages) {
+                if ([prefetchedMessage isKindOfClass:[self class]]) {
+                    return NO;
+                }
+            }
+        }
+        return YES;
+    }];
+    
+    [self didReceiveUpdateEvents:eventsToForward notificationID:[events.firstObject uuid]];
+}
+
 - (void)didReceiveUpdateEvents:(NSArray <ZMUpdateEvent *>*)events notificationID:(NSUUID *)notificationID
 {
-    ZMLogPushKit(@"Processing push events (a) %p (count = %u)", events, (unsigned) events.count);    
+    ZMLogPushKit(@"Processing push events (a) %p (count = %u)", events, (unsigned) events.count);
     for (ZMUpdateEvent *event in events) {
-        
         ZMLocalNotificationForEvent *note = [self notificationForEvent:event];
         if (note != nil && note.uiNotifications.count > 0) {
-            UIApplication *sharedApplication = self.sharedApplication;
             UILocalNotification *localNote = [[self.syncMOC persistentStoreMetadataForKey:ZMShouldHideNotificationContentKey] boolValue] ? [UILocalNotification defaultNotification] : note.uiNotifications.lastObject;
             ZMLogPushKit(@"Scheduling local notification <%@: %p> '%@'", localNote.class, localNote, localNote.alertBody);
-            [sharedApplication scheduleLocalNotification:localNote];
-            [APNSPerformanceTracker trackVOIPNotificationInNotificationDispatcher:notificationID analytics:self.syncMOC.analytics];
+            [self.sharedApplication scheduleLocalNotification:localNote];
+            if (notificationID != nil) {
+                [APNSPerformanceTracker trackVOIPNotificationInNotificationDispatcher:notificationID analytics:self.syncMOC.analytics];
+            }
         }
     }
 }

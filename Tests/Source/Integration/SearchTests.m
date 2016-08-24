@@ -302,6 +302,7 @@
     }];
     
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    WaitForAllGroupsToBeEmpty(0.5);
     
     newUser = [self userForMockUser:user];
     XCTAssertNotNil(newUser);

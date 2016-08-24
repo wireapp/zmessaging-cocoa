@@ -983,8 +983,8 @@
     // expect
     [(ZMSyncStrategy *)[self.syncStrategy expect] consumeUpdateEvents:events];
     [(ZMSyncStrategy *)[self.syncStrategy expect] updateBadgeCount];
-    [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult))) {
-        handler(ZMPushPayloadResultSuccess);
+    [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
+        handler(ZMPushPayloadResultSuccess, events);
         return YES;
     }]];
 
@@ -1004,8 +1004,8 @@
 {
     // given
     self.sut.apsSignalKeyStore = [self prepareSelfClientForAPSSignalingStore];
-    id mockCryptoBox = [OCMockObject niceMockForClass:[CBCryptoBox class]];
-    self.sut.cryptoBox = mockCryptoBox;
+    id encryptionContext = [OCMockObject niceMockForClass:[EncryptionContext class]];
+    self.sut.encryptionContext = encryptionContext;
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessageBuilder *builder = [[ZMGenericMessageBuilder alloc] init];
@@ -1030,13 +1030,12 @@
                                    @"id": NSUUID.createUUID.transportString
                                    };
     ZMUpdateEvent *event = [[ZMUpdateEvent eventsArrayFromPushChannelData:eventPayload] firstObject];
-    [[[mockCryptoBox stub] andReturn:event] decryptUpdateEventAndAddClient:OCMOCK_ANY managedObjectContext:OCMOCK_ANY];
     
     // expect
     [[self.syncStrategy expect] updateBadgeCount];
     [[self.syncStrategy expect] consumeUpdateEvents:OCMOCK_ANY];
-    [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult))) {
-        handler(ZMPushPayloadResultSuccess);
+    [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
+        handler(ZMPushPayloadResultSuccess, @[event]);
         return YES;
     }]];
 
@@ -1049,7 +1048,7 @@
     // then
     [self.syncStrategy verify];
     [self.pingBackStatus verify];
-    [mockCryptoBox verify];
+    [encryptionContext verify];
     [self clearKeyChainData];
 }
 
@@ -1066,17 +1065,19 @@
                                @"type" : eventType,
                                @"bar" : @"baz"
                                };
+    NSDictionary *pushPayload = [self pushPayloadForEventPayload:@[payload1, payload2]];
+    NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:pushPayload[@"data"]];
     
     // expect
     [[self.syncStrategy expect] updateBadgeCount];
     [[self.syncStrategy expect] consumeUpdateEvents:OCMOCK_ANY];
-    [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult))) {
-        handler(ZMPushPayloadResultSuccess);
+    [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
+        handler(ZMPushPayloadResultSuccess, events);
         return YES;
     }]];
     
     // when
-    [self.sut saveEventsAndSendNotificationForPayload:[self pushPayloadForEventPayload:@[payload1, payload2]] fetchCompletionHandler:^(ZMPushPayloadResult result) {
+    [self.sut saveEventsAndSendNotificationForPayload:pushPayload fetchCompletionHandler:^(ZMPushPayloadResult result) {
         NOT_USED(result);
     } source:ZMPushNotficationTypeVoIP];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1111,8 +1112,8 @@
     XCTAssertNotNil(events);
     
     // expect
-    [(ZMSyncStrategy *)[self.syncStrategy expect] consumeUpdateEvents:events];
-    [(ZMSyncStrategy *)[self.syncStrategy expect] updateBadgeCount];
+    [(ZMSyncStrategy *)[self.syncStrategy reject] consumeUpdateEvents:events];
+    [(ZMSyncStrategy *)[self.syncStrategy reject] updateBadgeCount];
 
     // when
     [self.sut saveEventsAndSendNotificationForPayload:pushPayload fetchCompletionHandler:nil source:ZMPushNotficationTypeAlert];
@@ -1144,55 +1145,6 @@
 - (void)forward_startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
 {
     handler(ZMBackgroundFetchResultNewData);
-}
-
-- (void)testThatItFiltersOutPreexisingMessageEventsAndForwardsTheEventsToTheSyncStrategyAndFilteredEventsToThePingBackStatus
-{
-    // given
-    NSUUID *notificationID = NSUUID.createUUID;
-    NSUUID *newNonce = NSUUID.createUUID;
-    NSUUID *preexistingNonce = NSUUID.createUUID;
-    
-    // We need to stub these for the inserting
-    [[self.syncStrategy stub] processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
-    [[self.syncStrategy stub] dataDidChange];
-    
-    ZMClientMessage *preexistingMessage = [ZMClientMessage insertNewObjectInManagedObjectContext:self.syncMOC];
-    preexistingMessage.nonce = preexistingNonce;
-    
-    XCTAssertTrue([self.syncMOC saveOrRollback]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    NSArray *updateEventPayload = [self messageAddPayloadWithNonces:@[newNonce, preexistingNonce]];
-    NSDictionary *pushPayload = [self pushPayloadForEventPayload:updateEventPayload identifier:notificationID];
-    NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:@{ @"payload": updateEventPayload, @"id": notificationID.transportString }];
-    
-    NSArray *filteredEvents = [events filterWithBlock:^BOOL(ZMUpdateEvent *event) {
-        if ([event.messageNonce isEqual:preexistingNonce]) {
-            return NO;
-        }
-        return YES;
-    }];
-    
-    XCTAssertNotNil(events);
-    XCTAssertEqual(filteredEvents.count, 1lu);
-    
-    // expect
-    [(ZMSyncStrategy *)[self.syncStrategy expect] consumeUpdateEvents:events];
-    [(ZMSyncStrategy *)[self.syncStrategy expect] updateBadgeCount];
-    [[self.pingBackStatus expect] didReceiveVoIPNotification:[OCMArg checkWithBlock:^BOOL(EventsWithIdentifier *eventsWithID) {
-        XCTAssertEqualObjects(eventsWithID.events, filteredEvents);
-        return YES;
-    }] handler:OCMOCK_ANY];
-    
-    
-    // when
-    [self.sut saveEventsAndSendNotificationForPayload:pushPayload fetchCompletionHandler:nil source:ZMPushNotficationTypeVoIP];
-    WaitForAllGroupsToBeEmpty(1.0);
-    
-    // then
-    [self.syncStrategy verify];
-    [self.pingBackStatus verify];
 }
 
 - (void)testThatItForwardsNoticeNotificationsToTheSyncStrategyAndPingBackStatus

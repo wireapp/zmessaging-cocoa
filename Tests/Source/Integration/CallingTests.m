@@ -505,6 +505,8 @@
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
     ZMConversation *oneToOneConversation = self.conversationUnderTest;
     NSUInteger messageCount = oneToOneConversation.messages.count;
     
@@ -527,6 +529,8 @@
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
     ZMConversation *oneToOneConversation = self.conversationUnderTest;
     id stateToken = [oneToOneConversation.voiceChannel addVoiceChannelStateObserver:self];
 
@@ -561,6 +565,8 @@
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
     ZMConversation *oneToOneConversation = self.conversationUnderTest;
     id stateToken = [oneToOneConversation.voiceChannel addVoiceChannelStateObserver:self];
 
@@ -1127,7 +1133,8 @@
     
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    
+    WaitForAllGroupsToBeEmpty(0.5);
+
     ZMConversation *conversation = self.conversationUnderTest;
     id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
 

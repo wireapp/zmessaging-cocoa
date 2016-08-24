@@ -39,7 +39,6 @@
 
 @property (nonatomic) BOOL contextMergingDisabled;
 
-- (NSArray <ZMUpdateEvent *>*)decryptUpdateEvents:(NSArray <ZMUpdateEvent *>*)events;
 - (ZMFetchRequestBatch *)fetchRequestBatchForEvents:(NSArray<ZMUpdateEvent *> *)events;
 
 @end
