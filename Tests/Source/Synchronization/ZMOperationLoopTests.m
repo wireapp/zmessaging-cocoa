@@ -123,6 +123,7 @@
             backgroundableSession:transportSession
             localNotificationsDispatcher:OCMOCK_ANY
             taskCancellationProvider:OCMOCK_ANY
+            appGroupIdentifier:nil
             badge:OCMOCK_ANY];
     
     // when
@@ -139,7 +140,8 @@
                                                         onDemandFlowManager:nil
                                                                       uiMOC:self.uiMOC
                                                                     syncMOC:self.syncMOC
-                                                          syncStateDelegate:nil];
+                                                          syncStateDelegate:nil
+                                                         appGroupIdentifier:nil];
     XCTAssertNotNil(ol);
     [ol tearDown];
     

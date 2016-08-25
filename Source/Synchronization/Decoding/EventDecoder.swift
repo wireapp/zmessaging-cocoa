@@ -26,17 +26,24 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
 @objc public class EventDataController: NSObject {
     
     public static var useInMemoryStore: Bool = false
+    public let managedObjectContext: NSManagedObjectContext
     
-    public let managedObjectContext: NSManagedObjectContext = {
+    /// - parameter appGroupIdentifier: Optional identifier for a shared container group to be used to store the database,
+    /// if `nil` is passed a default of `group. + bundleIdentifier` will be used (e.g. when testing)
+    public init(appGroupIdentifier: String?) {
+        self.managedObjectContext = EventDataController.createCoreDataStackAndReturnContext(appGroupIdentifier)
+        super.init()
+    }
+    
+    private static func createCoreDataStackAndReturnContext(appGroupIdentifier: String?) -> NSManagedObjectContext {
         let psc = EventDataController.createPersistentStoreCoordinator()
-        
         let managedObjectContext = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
         managedObjectContext.persistentStoreCoordinator = psc
         managedObjectContext.createDispatchGroups()
-        
-        EventDataController.addPersistentStore(psc)
+
+        EventDataController.addPersistentStore(psc, appGroupIdentifier: appGroupIdentifier)
         return managedObjectContext
-    }()
+    }
     
     private static func createPersistentStoreCoordinator() -> NSPersistentStoreCoordinator {
         guard let modelURL = NSBundle(forClass: StoredUpdateEvent.self).URLForResource("ZMEventModel", withExtension:"momd") else {
@@ -48,8 +55,8 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
         return NSPersistentStoreCoordinator(managedObjectModel: mom)
     }
     
-    private static func addPersistentStore(psc: NSPersistentStoreCoordinator, isSecondTry: Bool = false){
-        guard let storeURL = EventDataController.storeURL else {return }
+    private static func addPersistentStore(psc: NSPersistentStoreCoordinator, appGroupIdentifier: String?, isSecondTry: Bool = false) {
+        guard let storeURL = EventDataController.storeURL(forAppGroupIdentifier: appGroupIdentifier) else { return }
         do {
             let storeType = EventDataController.useInMemoryStore ? NSInMemoryStoreType : NSSQLiteStoreType
             try psc.addPersistentStoreWithType(storeType, configuration: nil, URL: storeURL, options: nil)
@@ -59,39 +66,40 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
             } else {
                 let stores = psc.persistentStores
                 stores.forEach { try! psc.removePersistentStore($0) }
-                addPersistentStore(psc, isSecondTry: true)
+                addPersistentStore(psc, appGroupIdentifier: appGroupIdentifier, isSecondTry: true)
             }
         }
     }
     
-    public func tearDown(){
+    public func tearDown() {
         if let store = managedObjectContext.persistentStoreCoordinator?.persistentStores.first {
             try! managedObjectContext.persistentStoreCoordinator?.removePersistentStore(store)
         }
     }
     
-    private static var storeURL : NSURL? {
+    private static func storeURL(forAppGroupIdentifier appGroupdIdentifier: String?) -> NSURL? {
         let fileManager = NSFileManager.defaultManager()
-        guard let directory = fileManager.URLsForDirectory(.ApplicationSupportDirectory, inDomains: .UserDomainMask).last,
-            let identifier = NSBundle.mainBundle().bundleIdentifier ?? NSBundle(forClass: ZMUser.self).bundleIdentifier
-            else { return nil }
-        let _storeURL =  directory.URLByAppendingPathComponent(identifier)
+
+        guard let identifier = NSBundle.mainBundle().bundleIdentifier ?? NSBundle(forClass: ZMUser.self).bundleIdentifier else { return nil }
+        let groupIdentifier = appGroupdIdentifier ?? "group.\(identifier)"
+        guard let directory = fileManager.containerURLForSecurityApplicationGroupIdentifier(groupIdentifier) else { return nil }
         
+        let _storeURL = directory.URLByAppendingPathComponent(identifier)
+
         if !fileManager.fileExistsAtPath(_storeURL.path!) {
             do {
                 try fileManager.createDirectoryAtURL(_storeURL, withIntermediateDirectories: true, attributes: nil)
-            }
-            catch let error as NSError {
+            } catch {
                 assertionFailure("Failed to get or create directory \(error)")
             }
         }
         
         do {
             try _storeURL.setResourceValue(1, forKey:NSURLIsExcludedFromBackupKey)
-        }
-        catch let error as NSError {
+        } catch {
             assertionFailure("Error excluding \(_storeURL.path!) from backup: \(error)")
         }
+
         let storeFileName = "ZMEventModel.sqlite"
         return _storeURL.URLByAppendingPathComponent(storeFileName)
     }
@@ -116,7 +124,7 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
     let syncMOC: NSManagedObjectContext
     weak var encryptionContext : EncryptionContext?
     
-    public init(eventMOC: NSManagedObjectContext, syncMOC: NSManagedObjectContext){
+    public init(eventMOC: NSManagedObjectContext, syncMOC: NSManagedObjectContext) {
         self.eventMOC = eventMOC
         self.syncMOC = syncMOC
         self.encryptionContext = syncMOC.zm_cryptKeyStore.encryptionContext
@@ -128,7 +136,7 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
     /// If the app crashes while processing the events, they can be recovered from the database
     /// Recovered events are processed before the passed in events to reflect event history
     public func processEvents(events: [ZMUpdateEvent], block: ConsumeBlock){
-        
+
         // fetch first batch of old events
         let batchSize = EventDecoder.BatchSize
         let oldStoredEvents = StoredUpdateEvent.nextEvents(eventMOC, batchSize: batchSize, stopAtIndex: nil)
@@ -198,8 +206,7 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
                 processBatch(events, storedEvents: storedEvents, block: consumeBlock)
                 events = []
                 storedEvents = []
-            }
-            else {
+            } else {
                 hasMoreEvents = false
             }
             

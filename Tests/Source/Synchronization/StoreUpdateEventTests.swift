@@ -29,7 +29,7 @@ class StoredUpdateEventTests: MessagingTest {
     
     override func setUp() {
         super.setUp()
-        dataController = EventDataController()
+        dataController = EventDataController(appGroupIdentifier: nil)
     }
     
     override func tearDown() {

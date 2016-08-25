@@ -145,6 +145,7 @@ ZM_EMPTY_ASSERTING_INIT()
                        backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
                 localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
                     taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
+                          appGroupIdentifier:(NSString *)appGroupIdentifier
                                        badge:(ZMBadge *)badge;
 
 {
@@ -154,6 +155,8 @@ ZM_EMPTY_ASSERTING_INIT()
         self.syncMOC = syncMOC;
         self.uiMOC = uiMOC;
         self.badge = badge;
+        
+        self.eventDataController = [[EventDataController alloc] initWithAppGroupIdentifier:appGroupIdentifier];
         
         [self createTranscodersWithClientRegistrationStatus:clientRegistrationStatus
                                     userProfileUpdateStatus:userProfileStatus
@@ -215,8 +218,7 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     NSManagedObjectContext *uiMOC = self.uiMOC;
     NSOperationQueue *imageProcessingQueue = [ZMImagePreprocessor createSuitableImagePreprocessingQueue];
-    
-    self.eventDataController = [[EventDataController alloc] init];
+
     self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventDataController.managedObjectContext syncMOC:self.syncMOC];
     
     self.connectionTranscoder = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC];

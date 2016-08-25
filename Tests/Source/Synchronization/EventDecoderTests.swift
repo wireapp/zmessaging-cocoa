@@ -30,7 +30,7 @@ class EventDecoderTest: MessagingTest {
     
     override func setUp() {
         super.setUp()
-        dataController = EventDataController()
+        dataController = EventDataController(appGroupIdentifier: nil)
         sut = EventDecoder(eventMOC: eventMOC, syncMOC: syncMOC)
     }
     

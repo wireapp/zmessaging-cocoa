@@ -91,6 +91,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
 - (void)tearDown
 {
+    WaitForAllGroupsToBeEmpty(0.5);
     [self.sut tearDown];
     self.sut = nil;
     [super tearDown];

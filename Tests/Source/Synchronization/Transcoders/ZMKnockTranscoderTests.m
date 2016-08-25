@@ -49,11 +49,11 @@
     self.sut = [[ZMKnockTranscoder alloc] initWithManagedObjectContext:self.uiMOC];
 }
 
-- (void)tearDown {
-    
+- (void)tearDown
+{
+    WaitForAllGroupsToBeEmpty(0.5);
     [self.sut tearDown];
     self.sut = nil;
-    
     [super tearDown];
 }
 

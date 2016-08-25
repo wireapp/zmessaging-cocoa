@@ -112,12 +112,16 @@
             onDemandFlowManager:OCMOCK_ANY
             uiMOC:OCMOCK_ANY
             syncMOC:OCMOCK_ANY
-            syncStateDelegate:OCMOCK_ANY];
+            syncStateDelegate:OCMOCK_ANY
+            appGroupIdentifier:OCMOCK_ANY];
 
     [[operationLoop expect] tearDown];
 
     // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager analytics:nil appVersion:@"000000"];
+    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager
+                                                               analytics:nil
+                                                              appVersion:@"000000"
+                                                      appGroupIdentifier:nil];
     XCTAssertNotNil(session);
 
     // then
@@ -143,7 +147,7 @@
     [[[userAgent expect] classMethod] setWireAppVersion:version];
     
     // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager analytics:nil appVersion:version];
+    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager analytics:nil appVersion:version appGroupIdentifier:nil];
     XCTAssertNotNil(session);
     
     // then
@@ -287,7 +291,8 @@
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
-                                                                      appVersion:@"00000"];
+                                                                      appVersion:@"00000"
+                                                              appGroupIdentifier:nil];
     [userSession didRegisterUserClient:userClient];
     
     // then
@@ -578,7 +583,8 @@
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
-                                                                      appVersion:@"00000"];
+                                                                      appVersion:@"00000"
+                                                              appGroupIdentifier:nil];
     
     // then
     [transportSession verify];

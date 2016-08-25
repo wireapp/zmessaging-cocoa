@@ -348,7 +348,8 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
                         apnsEnvironment:mockAPNSEnrvironment
                         operationLoop:nil
                         application:application
-                        appVersion:@"00000"];
+                        appVersion:@"00000"
+                        appGroupIdentifier:nil];
     WaitForEverythingToBeDone();
     
     [self.syncMOC zm_tearDownCallTimer];

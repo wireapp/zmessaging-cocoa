@@ -84,6 +84,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                                    uiMOC:(NSManagedObjectContext *)uiMOC
                                  syncMOC:(NSManagedObjectContext *)syncMOC
                        syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
+                      appGroupIdentifier:(NSString *)appGroupIdentifier
 {
     ZMBadge *badge = [[ZMBadge alloc] init];
 
@@ -102,6 +103,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                                                                   backgroundableSession:transportSession
                                                            localNotificationsDispatcher:dispatcher
                                                                taskCancellationProvider:transportSession
+                                                                     appGroupIdentifier:(NSString *)appGroupIdentifier
                                                                                   badge:badge];
     
     self = [self initWithTransportSession:transportSession
