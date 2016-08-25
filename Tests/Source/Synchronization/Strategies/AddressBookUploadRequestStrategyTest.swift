@@ -222,6 +222,8 @@ extension AddressBookUploadRequestStrategyTest {
         // given
         let cardsNumber = Int(Double(maxEntriesInAddressBookChunk) * 1.5)
         self.addressBook.fillWithContacts(UInt(cardsNumber))
+        
+        // when
         let request1 = self.getNextUploadingRequest()
         let request2 = self.getNextUploadingRequest()
         let request3 = self.getNextUploadingRequest()
@@ -288,6 +290,51 @@ extension AddressBookUploadRequestStrategyTest {
             XCTFail()
         }
     }
+    
+    func testThatItUploadsInBatchesAndRestartWhenItReachedTheEnd_WithDiscrepancyOnTheNumberOfContacts() {
+        // It could happen that we have 2000 contacts in the AB, but only 1500 of them have valid emails
+        // or phone numbers that we can upload. So we can never upload more than 1500. This test checks 
+        // that we correcly detect that we reached the end of the "uploadable" contacts and restart from
+        // the first, even if we did not yet upload as many "raw" contacts as we have in the AB
+        
+        // given
+        let cardsNumber = Int(Double(maxEntriesInAddressBookChunk) * 1.5)
+        self.addressBook.fillWithContacts(UInt(cardsNumber))
+        self.addressBook.numberOfContactsOverride = UInt(maxEntriesInAddressBookChunk * 5)
+        
+        // when
+        let request1 = self.getNextUploadingRequest()
+        let request2 = self.getNextUploadingRequest()
+        let request3 = self.getNextUploadingRequest()
+        
+        // then
+        // then
+        XCTAssertNotNil(request1)
+        XCTAssertNotNil(request2)
+        XCTAssertNotNil(request3)
+        if let cards1 = (request1?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
+            XCTAssertEqual(cards1.count, maxEntriesInAddressBookChunk)
+            XCTAssertTrue(self.checkCard(cards1.first, expectedIndex: 0))
+            XCTAssertTrue(self.checkCard(cards1.last, expectedIndex: maxEntriesInAddressBookChunk - 1))
+        } else {
+            XCTFail()
+        }
+        if let cards2 = (request2?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
+            XCTAssertEqual(cards2.count, cardsNumber - maxEntriesInAddressBookChunk)
+            XCTAssertTrue(self.checkCard(cards2.first, expectedIndex: maxEntriesInAddressBookChunk))
+            XCTAssertTrue(self.checkCard(cards2.last, expectedIndex: cardsNumber-1))
+        } else {
+            XCTFail()
+        }
+        if let cards3 = (request3?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
+            XCTAssertEqual(cards3.count, maxEntriesInAddressBookChunk)
+            XCTAssertTrue(self.checkCard(cards3.first, expectedIndex: 0))
+            XCTAssertTrue(self.checkCard(cards3.last, expectedIndex: maxEntriesInAddressBookChunk - 1))
+        } else {
+            XCTFail()
+        }
+        
+    }
 }
 
 // MARK: - Helpers
@@ -324,9 +371,15 @@ extension AddressBookUploadRequestStrategyTest {
 /// Fake to supply predefined AB hashes
 class AddressBookFake : zmessaging.AddressBookAccessor {
     
+    /// Number of contacts to return. If not set, it will count
+    /// the actual number of contact hashes
+    var numberOfContactsOverride : UInt? = nil
+    
     var numberOfContacts : UInt {
-        return UInt(contactHashes.count)
+        return self.numberOfContactsOverride ?? UInt(contactHashes.count)
     }
+    
+    /// Hashes to upload
     var contactHashes : [[String]] = []
     
     func iterate() -> LazySequence<AnyGenerator<ZMAddressBookContact>> {
@@ -340,7 +393,7 @@ class AddressBookFake : zmessaging.AddressBookAccessor {
             })
             return
         }
-        let range = startingContactIndex..<(min(numberOfContacts, startingContactIndex+maxNumberOfContacts))
+        let range = startingContactIndex..<(min(UInt(self.contactHashes.count), startingContactIndex+maxNumberOfContacts))
         let contactsInRange = Array(self.contactHashes[Int(range.startIndex)..<Int(range.endIndex)])
         let chunk = zmessaging.EncodedAddressBookChunk(numberOfTotalContacts: self.numberOfContacts,
                                                        otherContactsHashes: contactsInRange,
@@ -350,13 +403,14 @@ class AddressBookFake : zmessaging.AddressBookAccessor {
         }
     }
     
+    /// Replace the content with a given number of random hashes
     func fillWithContacts(number: UInt) {
         contactHashes = (0..<number).map {
             self.hashesForCard($0)
         }
     }
     
-    func hashesForCard(number: UInt) -> [String] {
+    private func hashesForCard(number: UInt) -> [String] {
         return ["hash-\(number)_0", "hash-\(number)_1"]
     }
 }
