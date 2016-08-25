@@ -26,6 +26,7 @@ class AddressBookUploadRequestStrategyTest : MessagingTest {
     var authenticationStatus : MockAuthenticationStatus!
     var clientRegistrationStatus : ZMMockClientRegistrationStatus!
     var addressBook : AddressBookFake!
+    var trackerFake : AddressBookTrackerFake!
     
     override func setUp() {
         super.setUp()
@@ -33,14 +34,17 @@ class AddressBookUploadRequestStrategyTest : MessagingTest {
         self.clientRegistrationStatus = ZMMockClientRegistrationStatus()
         self.clientRegistrationStatus.mockPhase = .Registered
         self.addressBook = AddressBookFake()
+        self.trackerFake = AddressBookTrackerFake()
+        
         let ab = self.addressBook // I don't want to capture self in closure later
         ab.contactHashes = [
             ["1"], ["2a", "2b"], ["3"], ["4"]
         ]
         self.sut = zmessaging.AddressBookUploadRequestStrategy(authenticationStatus: self.authenticationStatus,
-                                                    clientRegistrationStatus: self.clientRegistrationStatus,
-                                                    managedObjectContext: self.syncMOC,
-                                                    addressBookGenerator: { return ab } )
+                                                               clientRegistrationStatus: self.clientRegistrationStatus,
+                                                               managedObjectContext: self.syncMOC,
+                                                               addressBookGenerator: { return ab },
+                                                               tracker: self.trackerFake)
     }
     
     override func tearDown() {
@@ -290,6 +294,63 @@ extension AddressBookUploadRequestStrategyTest {
     }
 }
 
+// MARK: - Tracking
+extension AddressBookUploadRequestStrategyTest {
+    
+    func testThatItTagsTheEventWhenStartingToUpload() {
+        
+        // given
+        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        _ = sut.nextRequest() // this will return nil and start async processing
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        
+        // when
+        let request = sut.nextRequest()
+        XCTAssertNotNil(request)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        
+        // then
+        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [self.addressBook.contactHashes.count])
+        XCTAssertEqual(self.trackerFake.taggedEndEventCount, 0)
+    }
+    
+    func testThatItTagsTheEventWhenUploadingSuccessfully() {
+        
+        // given
+        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        _ = sut.nextRequest() // this will return nil and start async processing
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        let request = sut.nextRequest()
+        XCTAssertNotNil(request)
+        
+        // when
+        request?.completeWithResponse(ZMTransportResponse(payload: nil, HTTPstatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        
+        // then
+        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [self.addressBook.contactHashes.count])
+        XCTAssertEqual(self.trackerFake.taggedEndEventCount, 1)
+    }
+    
+    func testThatItDoesNotTagTheEventWhenUploadingUnsuccessfully() {
+        
+        // given
+        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        _ = sut.nextRequest() // this will return nil and start async processing
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        let request = sut.nextRequest()
+        XCTAssertNotNil(request)
+        
+        // when
+        request?.completeWithResponse(ZMTransportResponse(payload: nil, HTTPstatus: 400, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        
+        // then
+        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [self.addressBook.contactHashes.count])
+        XCTAssertEqual(self.trackerFake.taggedEndEventCount, 0)
+    }
+}
+
 // MARK: - Helpers
 extension AddressBookUploadRequestStrategyTest {
     
@@ -404,5 +465,21 @@ extension ZMTransportData {
         } catch {
             return nil
         }
+    }
+}
+
+/// Fake tracker to test upload tracking
+final class AddressBookTrackerFake : zmessaging.AddressBookTracker {
+    
+    var taggedStartEventParameters : [UInt] = []
+    
+    var taggedEndEventCount : UInt = 0
+    
+    func tagAddressBookUploadSuccess() {
+        self.taggedEndEventCount += 1
+    }
+    
+    func tagAddressBookUploadStarted(entireABsize: UInt) {
+        self.taggedStartEventParameters.append(entireABsize)
     }
 }

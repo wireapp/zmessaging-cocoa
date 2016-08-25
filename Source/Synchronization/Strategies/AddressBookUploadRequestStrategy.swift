@@ -18,8 +18,6 @@
 
 import Foundation
 
-// TODO MARCO: add tracking
-
 /// BE onboarding endpoint
 private let onboardingEndpoint = "/onboarding/v3"
 
@@ -76,7 +74,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
         self.clientRegistrationStatus = clientRegistrationStatus
         self.managedObjectContext = managedObjectContext
         self.addressBookGenerator = addressBookGenerator
-        self.tracker = tracker ?? AddressBookTracker(analytics: managedObjectContext.analytics)
+        self.tracker = tracker ?? AddressBookAnalytics(analytics: managedObjectContext.analytics)
         super.init()
         self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
     }
@@ -113,6 +111,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
                 ]
         }
         let payload = ["cards" : contactCards]
+        self.tracker.tagAddressBookUploadStarted(encodedChunk.numberOfTotalContacts)
         return ZMTransportRequest(path: onboardingEndpoint, method: .MethodPOST, payload: payload, shouldCompress: true)
     }
     
@@ -123,6 +122,9 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
             self.managedObjectContext.commonConnectionsForUsers = [:]
             self.addressBookNeedsToBeUploaded = false
             self.encodedAddressBookChunk = nil
+            
+            // tracking
+            self.tracker.tagAddressBookUploadSuccess()
         }
     }
     

@@ -29,38 +29,46 @@ extension NSUserDefaults {
     }
 }
 
+protocol AddressBookTracker {
+    
+    /// Tracks the successfull upload of an AB batch
+    func tagAddressBookUploadSuccess()
+    
+    /// Tracks the beginning of processing an AB batch
+    func tagAddressBookUploadStarted(entireABsize: UInt)
+}
 
-@objc final public class AddressBookTracker: NSObject {
+final class AddressBookAnalytics: AddressBookTracker {
     
     private enum Attribute: String {
-        case Outcome = "outcome"
         case Size = "size"
         case Interval = "interval"
     }
     
-    private let eventName = "connect.checked_for_address_book_changes"
+    private let startEventName = "connect.started_addressbook_search"
+    private let endEventName = "connect.completed_addressbook_search"
     private let analytics: AnalyticsType?
 
-    public init(analytics: AnalyticsType?) {
+    init(analytics: AnalyticsType?) {
         self.analytics = analytics
-        super.init()
     }
     
-    /// Tracks the size, interval and if there have been changes to the address book
-    /// - param changed if the address book content changed since the last upload (it will not be uploaded if not)
-    /// - param size the size of the addressbook (max 1000)
-    public func tagAddressBookUpload(changed: Bool, size: UInt) {
-        var attributes: [String: NSObject] = [
-            Attribute.Outcome.rawValue: changed ? "changed" : "no_changes",
-            Attribute.Size.rawValue: size
+    func tagAddressBookUploadStarted(entireABsize: UInt) {
+        let attributes: [String: NSObject] = [
+            Attribute.Size.rawValue: entireABsize
         ]
 
+        analytics?.tagEvent(startEventName, attributes: attributes)
+    }
+    
+    func tagAddressBookUploadSuccess() {
+        var attributes: [String: NSObject] = [:]
         if let interval = lastUploadInterval() {
             attributes[Attribute.Interval.rawValue] = interval
             resetUploadInterval()
         }
-
-        analytics?.tagEvent(eventName, attributes: attributes)
+        
+        analytics?.tagEvent(endEventName, attributes: attributes)
     }
 
     /// Returns the interval since the last address book upload in hours
