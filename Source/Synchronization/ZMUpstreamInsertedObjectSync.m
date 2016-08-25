@@ -212,8 +212,10 @@
     [self.insertedObjects didStartSynchronizingObject:nextObject];
 
     ZM_WEAK(self);
+    ZM_WEAK(request);
     [request.transportRequest addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.context block:^(ZMTransportResponse *response) {
         ZM_STRONG(self);
+        ZM_STRONG(request);
         
         BOOL didFinish = YES;
         

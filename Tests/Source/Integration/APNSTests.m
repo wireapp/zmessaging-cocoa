@@ -254,7 +254,7 @@
     [self.userSession performChanges:^{
         [self.userSession resetPushTokens];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForAllGroupsToBeEmpty(1.0);
     
     // then
     BOOL didContainSignalingKeyRequest = NO;

@@ -107,6 +107,8 @@
 
     [self.timeoutTimer invalidate];
     [self.updateDelayTimer invalidate];
+    self.timeoutTimer = nil;
+    self.updateDelayTimer = nil;
 }
 
 - (BOOL)tryToSendCachedResult {

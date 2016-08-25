@@ -871,7 +871,8 @@
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    
+    WaitForAllGroupsToBeEmpty(0.5);
+
     MockUser *mockUser = [self createSentConnectionToUserWithName:@"Hans Von Üser" uuid:NSUUID.createUUID];
     ZMConversation *conversation = [self oneOnOneConversationForConnectedMockUser:mockUser];
     ZMUser *user = [self userForMockUser:mockUser];

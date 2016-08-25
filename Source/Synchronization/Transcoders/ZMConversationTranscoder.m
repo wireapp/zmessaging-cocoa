@@ -326,7 +326,11 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     NSDate *timeStamp = event.timeStamp;
     ZMEventID *eventId = event.eventID;
     
-    if (timeStamp != nil) {
+    BOOL isMessageEvent = (event.type == ZMUpdateEventConversationOtrMessageAdd) ||
+                          (event.type == ZMUpdateEventConversationOtrAssetAdd);
+    
+    // Message events already update the conversation on insert. There is no need to do it here, since different message types (e.g. edit and delete) might have a different effect on the lastModifiedDate and unreadCount
+    if (timeStamp != nil && !isMessageEvent) {
         [conversation updateLastServerTimeStampIfNeeded:timeStamp];
         if (event.type != ZMUpdateEventConversationMemberUpdate) {
             conversation.lastModifiedDate = [NSDate lastestOfDate:conversation.lastModifiedDate and:timeStamp];
@@ -338,10 +342,10 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     BOOL eventIsCompletedVoiceCall = NO;
     if (event.type == ZMUpdateEventConversationVoiceChannelDeactivate) {
         NSString *reason = [[event.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"reason"];
-        eventIsCompletedVoiceCall = ! [reason isEqualToString:@"missed"];
+        eventIsCompletedVoiceCall = ![reason isEqualToString:@"missed"];
     }
     
-    if ((! [ZMMessage doesEventTypeGenerateMessage:event.type]) || eventIsCompletedVoiceCall) {
+    if (eventIsCompletedVoiceCall) {
         [self updateLastReadForInvisibleEventInConversation:conversation
                                                   timeStamp:timeStamp
                                            oldLastTimeStamp:oldLastTimeStamp

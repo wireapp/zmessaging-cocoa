@@ -9,3 +9,9 @@ workspace.xml
 *.pyc
 Carthage
 zmessaging.framework.zip
+
+# Test artefacts
+xcode-*.log
+tests.xml
+code-coverage/*
+cobertura.xml

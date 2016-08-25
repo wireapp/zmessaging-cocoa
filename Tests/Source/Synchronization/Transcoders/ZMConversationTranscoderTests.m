@@ -4404,26 +4404,20 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         NSDictionary *payload = @{
                                   @"conversation" : conversation.remoteIdentifier.transportString,
-                                  @"data" : @{},
+                                  @"data" : @{@"reason": @"completed"},
                                   @"from" : @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
                                   @"time" : newDate.transportString,
-                                  @"type" : @"conversation.voice-channel-activate",
+                                  @"type" : @"conversation.voice-channel-deactivate",
                                   @"id"   : newEventID.transportString
                                   };
         
         ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
         XCTAssertNotNil(updateEvent);
         
-        // expect
-        id messageMock = [OCMockObject mockForClass:ZMMessage.class];
-        [[[[messageMock expect] andReturnValue:OCMOCK_VALUE(NO)] classMethod] doesEventTypeGenerateMessage:ZMUpdateEventConversationVoiceChannelActivate];
-        
         // when
         [self.sut processEvents:@[updateEvent] liveEvents:YES prefetchResult:nil];
         
         // then
-        [messageMock verify];
-        [messageMock stopMocking];
         XCTAssertEqualObjects(conversation.lastReadEventID, newEventID);
         XCTAssertEqualWithAccuracy(conversation.lastReadServerTimeStamp.timeIntervalSinceReferenceDate, newDate.timeIntervalSinceReferenceDate, 0.1);
     }];
@@ -4448,13 +4442,13 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
         NSDictionary *payload = @{
                                   @"conversation" : conversation.remoteIdentifier.transportString,
-                                  @"data" : @{},
+                                  @"data" : @{@"reason": @"completed"},
                                   @"from" : @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
                                   @"time" : newDate.transportString,
-                                  @"type" : @"conversation.voice-channel-activate",
+                                  @"type" : @"conversation.voice-channel-deactivate",
                                   @"id"   : newEventID.transportString
                                   };
-        
+
         ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
         XCTAssertNotNil(updateEvent);
         
@@ -4489,7 +4483,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         NSDictionary *payload = @{
                                   @"conversation" : conversation.remoteIdentifier.transportString,
-                                  @"data" : @{},
+                                  @"data" : @{@"reason": @"completed"},
                                   @"from" : @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
                                   @"time" : newDate.transportString,
                                   @"type" : @"conversation.voice-channel-activate",
@@ -4568,28 +4562,24 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         ZMEventID *newEventID = [ZMEventID eventIDWithMajor:(conversation.lastReadEventID.major+1) minor:0xbb];
         NSDate *newDate = [NSDate dateWithTimeInterval:10 sinceDate:conversation.lastServerTimeStamp];
         
+        
         NSDictionary *payload = @{
                                   @"conversation" : conversation.remoteIdentifier.transportString,
-                                  @"data" : @{},
+                                  @"data" : @{@"reason": @"completed"},
                                   @"from" : @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
                                   @"time" : newDate.transportString,
-                                  @"type" : @"conversation.voice-channel-activate",
+                                  @"type" : @"conversation.voice-channel-deactivate",
                                   @"id"   : newEventID.transportString
                                   };
         
         ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
         XCTAssertNotNil(updateEvent);
         
-        // expect
-        id messageMock = [OCMockObject mockForClass:ZMMessage.class];
-        [[[[messageMock expect] andReturnValue:OCMOCK_VALUE(NO)] classMethod] doesEventTypeGenerateMessage:ZMUpdateEventConversationVoiceChannelActivate];
         
         // when
         [self.sut processEvents:@[updateEvent] liveEvents:NO prefetchResult:nil];
         
         // then
-        [messageMock verify];
-        [messageMock stopMocking];
         XCTAssertEqualObjects(conversation.lastReadEventID, newEventID);
         XCTAssertEqualWithAccuracy(conversation.lastReadServerTimeStamp.timeIntervalSinceReferenceDate, newDate.timeIntervalSinceReferenceDate, 0.1);
     }];
