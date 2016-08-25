@@ -42,8 +42,9 @@ import libPhoneNumber
     typealias NumberOfPeopleClosure = (ref: ABAddressBook) -> (Int)
 
     /// Address book. Will fail if it has no authorization to access AB
-    /// - parameter generatingClosure: custom function to return an iterator (used for testing)
+    /// - parameter allPeopleClosure: custom function to return an iterator (used for testing)
     /// - parameter addressBookAccessCheck: custom function to check if user granted access to AB (used for testing)
+    /// - parameter numberOfPeopleClosure: custom function to retrieve the number of people in the AB (used for testing)
     init?(allPeopleClosure: AllPeopleClosure? = nil,
           addressBookAccessCheck: AccessCheck? = nil,
           numberOfPeopleClosure: NumberOfPeopleClosure? = nil) {
@@ -268,31 +269,18 @@ extension AddressBook {
     /// Uses the passed in closure, or the standard method it the closure is nil, to
     /// check if the AB access was granted. Returns whether it was granted.
     static private func checkAccessToAB(checkClosure: (()->(Bool))?) -> Bool {
-        if let checkClosure = checkClosure { // for some reason, using ?? won't compile here
-            return checkClosure()
-        }
-        else {
-            return AddressBook.userHasAuthorizedAccess
-        }
+        return checkClosure?() ?? AddressBook.userHasAuthorizedAccess
     }
     
     /// Returns either the custom passed closure to get all people or, if the passed generating function is nil,
     /// the standard function
     static private func customOrDefaultAllPeopleClosure(custom: AllPeopleClosure?) -> AllPeopleClosure {
-        if let custom = custom { // for some reason, using ?? won't compile here
-            return custom
-        } else {
-            return { AnyGenerator((ABAddressBookCopyArrayOfAllPeople($0).takeRetainedValue() as [ABRecordRef]).generate()) }
-        }
+        return custom != nil ? custom! : { AnyGenerator((ABAddressBookCopyArrayOfAllPeople($0).takeRetainedValue() as [ABRecordRef]).generate()) }
     }
     
     /// Returns either the custom passed closure to get the number of people or, if the passed generating function is nil,
     /// the standard function
     static private func customOrDefaultNumberOfPeopleClosure(custom: NumberOfPeopleClosure?) -> NumberOfPeopleClosure {
-        if let custom = custom {
-            return custom
-        } else {
-            return { ABAddressBookGetPersonCount($0) }
-        }
+        return custom != nil ? custom! : { ABAddressBookGetPersonCount($0) }
     }
 }
