@@ -18,8 +18,6 @@
 
 import Foundation
 
-// TODO MARCO: add tracking
-
 /// BE onboarding endpoint
 private let onboardingEndpoint = "/onboarding/v3"
 
@@ -76,7 +74,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
         self.clientRegistrationStatus = clientRegistrationStatus
         self.managedObjectContext = managedObjectContext
         self.addressBookGenerator = addressBookGenerator
-        self.tracker = tracker ?? AddressBookTracker(analytics: managedObjectContext.analytics)
+        self.tracker = tracker ?? AddressBookAnalytics(analytics: managedObjectContext.analytics)
         super.init()
         self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
     }
@@ -113,16 +111,30 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
                 ]
         }
         let payload = ["cards" : contactCards]
+        self.tracker.tagAddressBookUploadStarted(encodedChunk.numberOfTotalContacts)
         return ZMTransportRequest(path: onboardingEndpoint, method: .MethodPOST, payload: payload, shouldCompress: true)
     }
     
     func didReceiveResponse(response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
         if response.result == .Success {
-            // TODO MARCO: suggested users
-            self.managedObjectContext.suggestedUsersForUser = NSOrderedSet()
+            
+            if let payload = response.payload as? [String: AnyObject],
+                let results = payload["results"] as? [[String: AnyObject]]
+            {
+                let suggestedIds = results.flatMap { $0["id"] as? String }
+                // XXX: this will always overwrite previous ones, effectively linking the suggestion to
+                // the batch size, i.e. only AB with less contacts than the batch size will have reliable
+                // suggestions. On the other hand, appending instead of replacing could cause infinite 
+                // growth. For the moment, we will live with having suggestions only from the last batch
+                self.managedObjectContext.suggestedUsersForUser = NSOrderedSet(array: suggestedIds)
+            }
+            
             self.managedObjectContext.commonConnectionsForUsers = [:]
             self.addressBookNeedsToBeUploaded = false
             self.encodedAddressBookChunkToUpload = nil
+            
+            // tracking
+            self.tracker.tagAddressBookUploadSuccess()
         }
     }
     

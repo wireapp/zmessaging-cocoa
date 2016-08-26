@@ -22,33 +22,6 @@ import XCTest
 import ZMTesting
 @testable import zmessaging
 
-struct EventWithAttributes: Equatable {
-    let event: String
-    let attributes: [String: NSObject]
-}
-
-func ==(lhs: EventWithAttributes, rhs: EventWithAttributes) -> Bool {
-    return lhs.event == rhs.event && lhs.attributes == rhs.attributes
-}
-
-final class MockAnalytics: NSObject, AnalyticsType {
-    
-    @objc func tagEvent(event: String) {
-        taggedEvents.append(event)
-    }
-    
-    @objc func tagEvent(event: String, attributes: [String : NSObject]) {
-        taggedEventsWithAttributes.append(EventWithAttributes(event: event, attributes: attributes))
-    }
-    
-    @objc func upload() {
-        uploadCallCount += 1
-    }
-
-    var taggedEvents = [String]()
-    var taggedEventsWithAttributes = [EventWithAttributes]()
-    var uploadCallCount = 0
-}
 
 
 class AnalyticsTests: XCTestCase {
@@ -74,7 +47,11 @@ class AnalyticsTests: XCTestCase {
         context.analytics = nil
         XCTAssertNil(context.analytics)
     }
+}
 
+// MARK: - Calling
+extension AnalyticsTests {
+    
     func testVOIPTimeDifferenceTracking() {
         // given
         let notificationID = NSUUID.createUUID()
@@ -116,48 +93,95 @@ class AnalyticsTests: XCTestCase {
         XCTAssertEqual(secondEventWithAttribute, secondExpected)
     }
     
-    func testThatItTracksTheAddresBookSizeWhenThereIsNoLastUploadDate_Changed() {
-        assertThatItTracksAddresBookUpload(true, size: 42)
-    }
+}
+
+// MARK: - Address book tag
+extension AnalyticsTests {
     
-    func testThatItTracksTheAddresBookSizeWhenThereIsNoLastUploadDate_Unchanged() {
-        assertThatItTracksAddresBookUpload(false, size: 24)
+    func testThatItTracksTheAddresBookSizeWhenThereIsNoLastUploadDate() {
+        assertThatItTracksAddresBookUploadEnded(0)
     }
+
     
-    func testThatItTracksTheAddresBookSizeWhenThereIsALastUploadDate_Changed() {
-        assertThatItTracksAddresBookUpload(true, size: 1024, hoursSinceLastUpload: 12)
+    func testThatItTracksTheAddresBookSizeWhenThereIsALastUploadDate() {
+        assertThatItTracksAddresBookUploadEnded(12)
     }
-    
-    func testThatItTracksTheAddresBookSizeWhenThereIsALastUploadDate_Unchanged() {
-        assertThatItTracksAddresBookUpload(false, size: 4200, hoursSinceLastUpload: 18)
-    }
+
     
     func testThatItDoesNotTrackTheIntervalSinceLastAddresBookUploadIfTheLastDateIsInTheFuture() {
-        assertThatItTracksAddresBookUpload(false, size: 4200, hoursSinceLastUpload: -42, shouldTrackInterval: false)
+        assertThatItTracksAddresBookUploadEnded(-42, shouldTrackInterval: false)
     }
     
-    func assertThatItTracksAddresBookUpload(changed: Bool, size: UInt, hoursSinceLastUpload: Int? = nil, shouldTrackInterval: Bool = true, line: UInt = #line) {
+    func testThatItTracksAddresBookUploadStarted() {
         // given
-        let tracker = AddressBookTracker(analytics: analytics)
+        let size : UInt = 345
+        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics)
+        
+        // when
+        tracker.tagAddressBookUploadStarted(size)
+        
+        // then
+        XCTAssertTrue(analytics.taggedEvents.isEmpty)
+        XCTAssertEqual(analytics.taggedEventsWithAttributes.count, 1)
+        let eventWithAtributes = analytics.taggedEventsWithAttributes.first!
+        XCTAssertEqual(eventWithAtributes.event, "connect.started_addressbook_search")
+        XCTAssertEqual(eventWithAtributes.attributes, ["size": size])
+    }
+}
+
+extension AnalyticsTests {
+    
+    func assertThatItTracksAddresBookUploadEnded(hoursSinceLastUpload: Int? = nil, shouldTrackInterval: Bool = true, line: UInt = #line) {
+        // given
+        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics)
         if let hours = hoursSinceLastUpload.map(NSTimeInterval.init) {
             let lastDate = NSDate(timeIntervalSinceNow: -hours * 3600)
             NSUserDefaults.standardUserDefaults().setObject(lastDate, forKey: "lastAddressBookUploadDate")
         }
 
         // when
-        tracker.tagAddressBookUpload(changed, size: size)
+        tracker.tagAddressBookUploadSuccess()
         
         // then
         XCTAssertTrue(analytics.taggedEvents.isEmpty)
         XCTAssertEqual(analytics.taggedEventsWithAttributes.count, 1, line: line)
         let eventWithAtributes = analytics.taggedEventsWithAttributes.first!
-        XCTAssertEqual(eventWithAtributes.event, "connect.checked_for_address_book_changes", line: line)
+        XCTAssertEqual(eventWithAtributes.event, "connect.completed_addressbook_search", line: line)
         
-        var attributes: [String: NSObject] = ["outcome": changed ? "changed" : "no_changes", "size": size]
+        var attributes: [String: NSObject] = [:]
         
         if let hours = hoursSinceLastUpload where shouldTrackInterval { attributes["interval"] = hours }
         XCTAssertEqual(eventWithAtributes.attributes, attributes, line: line)
         
         NSUserDefaults.standardUserDefaults().setObject(nil, forKey: "lastAddressBookUploadDate")
     }
+}
+
+// MARK: - Helpers
+struct EventWithAttributes: Equatable {
+    let event: String
+    let attributes: [String: NSObject]
+}
+
+func ==(lhs: EventWithAttributes, rhs: EventWithAttributes) -> Bool {
+    return lhs.event == rhs.event && lhs.attributes == rhs.attributes
+}
+
+final class MockAnalytics: NSObject, AnalyticsType {
+    
+    @objc func tagEvent(event: String) {
+        taggedEvents.append(event)
+    }
+    
+    @objc func tagEvent(event: String, attributes: [String : NSObject]) {
+        taggedEventsWithAttributes.append(EventWithAttributes(event: event, attributes: attributes))
+    }
+    
+    @objc func upload() {
+        uploadCallCount += 1
+    }
+    
+    var taggedEvents = [String]()
+    var taggedEventsWithAttributes = [EventWithAttributes]()
+    var uploadCallCount = 0
 }
