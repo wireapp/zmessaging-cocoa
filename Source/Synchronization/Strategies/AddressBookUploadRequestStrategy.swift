@@ -183,7 +183,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
 
 extension EncodedAddressBookChunk {
     
-    /// Whether another address book chunk needs to be uploaded after this one
+    /// Whether this is the last chunk and no following chunk needs to be uploaded after this one
     var isLast : Bool {
         return UInt(self.otherContactsHashes.count) < maxEntriesInAddressBookChunk
     }
