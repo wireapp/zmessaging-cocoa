@@ -24,39 +24,6 @@ import Cryptobox
 import ZMCMockTransport
 import ZMCDataModel
 
-// used by tests to fake errors on genrating pre keys
-public class FakeKeysStore: UserClientKeysStore {
-
-    var failToGeneratePreKeys: Bool = false
-    var failToGenerateLastPreKey: Bool = false
-    
-    var lastGeneratedKeys : [(id: UInt16, prekey: String)] = []
-    var lastGeneratedLastPrekey : String?
-    
-    override public func generateMoreKeys(count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
-        if self.failToGeneratePreKeys {
-            let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
-            throw error
-        }
-        else {
-            let keys = try! super.generateMoreKeys(count, start: start)
-            lastGeneratedKeys = keys
-            return keys
-        }
-    }
-    
-    override public func lastPreKey() throws -> String {
-        if self.failToGenerateLastPreKey {
-            let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
-            throw error
-        }
-        else {
-            lastGeneratedLastPrekey = try! super.lastPreKey()
-            return lastGeneratedLastPrekey!
-        }
-    }
-    
-}
 
 class UserClientRequestFactoryTests: MessagingTest {
     
@@ -67,7 +34,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
         
-        authenticationStatus = ZMMockAuthenticationStatus(managedObjectContext: self.syncMOC, cookie: nil);
+        authenticationStatus = MockAuthenticationStatus(cookie: nil);
         self.sut = UserClientRequestFactory()
         
         let newKeyStore = FakeKeysStore()

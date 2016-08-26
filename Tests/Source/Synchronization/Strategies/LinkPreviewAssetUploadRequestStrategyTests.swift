@@ -21,26 +21,16 @@ import Foundation
 import ZMCLinkPreview
 @testable import zmessaging
 
-// MARK: - Fakes
-private class FakeAuthStatus : AuthenticationStatusProvider {
-    
-    var mockedPhase : ZMAuthenticationPhase = .Authenticated
-    
-    @objc var currentPhase : ZMAuthenticationPhase {
-        return self.mockedPhase
-    }
-}
-
 // MARK: - Tests setup
 @objc class LinkPreviewAssetUploadRequestStrategyTests: MessagingTest {
     
     private var sut: LinkPreviewAssetUploadRequestStrategy!
-    private var authStatus: FakeAuthStatus!
+    private var authStatus: MockAuthenticationStatus!
     
     override func setUp() {
         super.setUp()
         
-        self.authStatus = FakeAuthStatus()
+        self.authStatus = MockAuthenticationStatus(phase: .Authenticated)
         self.sut = LinkPreviewAssetUploadRequestStrategy(authenticationStatus: authStatus, managedObjectContext: self.syncMOC)
     }
     
@@ -128,7 +118,7 @@ extension LinkPreviewAssetUploadRequestStrategyTests {
         let message = createMessage(article.permanentURL!.absoluteString, linkPreviewState: .Processed, linkPreview: article)
         self.syncMOC.zm_imageAssetCache.storeAssetData(message.nonce, format: .Medium, encrypted: true, data: article.imageData.first!)
         process(sut, message: message)
-        authStatus.mockedPhase = .Unauthenticated
+        authStatus.mockPhase = .Unauthenticated
         
         // when
         let request = sut.nextRequest()

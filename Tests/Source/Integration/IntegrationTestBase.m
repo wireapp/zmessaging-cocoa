@@ -557,7 +557,9 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     [searchUser connectWithMessageText:@"Hola" completionHandler:^{
         [connectionCreatedExpectation fulfill];
     }];
+
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    [searchDirectory tearDown];
 }
 
 - (MockUser *)createPendingConnectionFromUserWithName:(NSString *)name uuid:(NSUUID *)uuid

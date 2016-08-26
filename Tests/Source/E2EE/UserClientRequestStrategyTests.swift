@@ -24,81 +24,11 @@ import ZMTesting
 import ZMCMockTransport
 import ZMCDataModel
 
-class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus {
-    var mockPhase : ZMClientRegistrationPhase?
-    var mockCredentials : ZMEmailCredentials = ZMEmailCredentials(email: "bla@example.com", password: "secret")
-    
-    override var currentPhase: ZMClientRegistrationPhase {
-        if let phase = mockPhase {
-            return phase
-        }
-        return super.currentPhase
-    }
-    
-    override var emailCredentials : ZMEmailCredentials {
-        return mockCredentials
-    }
-    
-    var isLoggedIn: Bool {
-        return true
-    }
-}
-
-class ZMMockClientUpdateStatus: ClientUpdateStatus {
-    var fetchedClients : [UserClient!] = []
-    var mockPhase : ClientUpdatePhase = .Done
-    var deleteCallCount : Int = 0
-    var fetchCallCount : Int = 0
-    var mockCredentials: ZMEmailCredentials = ZMEmailCredentials(email: "bla@example.com", password: "secret")
-        
-    override var credentials : ZMEmailCredentials? {
-        return mockCredentials
-    }
-
-    override func didFetchClients(clients: [UserClient]) {
-        fetchedClients = clients
-        fetchCallCount += 1
-    }
-    
-    override func didDeleteClient() {
-        deleteCallCount += 1
-    }
-    
-    override var currentPhase: ClientUpdatePhase {
-        return mockPhase
-    }
-}
-
-class ZMMockAuthenticationStatus: ZMAuthenticationStatus {
-
-    override var cookieLabel: String {
-        return "label"
-    }
-}
-
-class FakeCredentialProvider: NSObject, ZMCredentialProvider
-{
-    var clearCallCount = 0
-    var email = "hello@example.com"
-    var password = "verySafePassword"
-    
-    func emailCredentials() -> ZMEmailCredentials! {
-        return ZMEmailCredentials(email: email, password: password)
-    }
-    
-    func credentialsMayBeCleared() {
-        clearCallCount += 1
-    }
-}
-
-class FakeCookieStorage: ZMPersistentCookieStorage {
-}
-
 class UserClientRequestStrategyTests: MessagingTest {
     
     var sut: UserClientRequestStrategy!
     var clientRegistrationStatus: ZMMockClientRegistrationStatus!
-    var authenticationStatus: ZMMockAuthenticationStatus!
+    var authenticationStatus: MockAuthenticationStatus!
     var clientUpdateStatus: ZMMockClientUpdateStatus!
     
     var loginProvider: FakeCredentialProvider!
@@ -117,7 +47,7 @@ class UserClientRequestStrategyTests: MessagingTest {
         loginProvider = FakeCredentialProvider()
         updateProvider = FakeCredentialProvider()
         clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, loginCredentialProvider:loginProvider, updateCredentialProvider:updateProvider, cookie:cookie, registrationStatusDelegate: nil)
-        authenticationStatus = ZMMockAuthenticationStatus(managedObjectContext: self.syncMOC, cookie: cookie);
+        authenticationStatus = MockAuthenticationStatus(cookie: cookie);
         clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
         sut = UserClientRequestStrategy(authenticationStatus:authenticationStatus, clientRegistrationStatus: clientRegistrationStatus, clientUpdateStatus:clientUpdateStatus, context: self.syncMOC)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(UserClientRequestStrategyTests.didReceiveAuthenticationNotification(_:)), name: "ZMUserSessionAuthenticationNotificationName", object: nil)

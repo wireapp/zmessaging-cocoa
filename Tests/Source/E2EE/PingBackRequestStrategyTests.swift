@@ -24,20 +24,6 @@ import ZMCMockTransport
 
 // MARK: - Mocks
 
-class MockAuthenticationStatus: ZMAuthenticationStatus {
-    
-    var mockPhase: ZMAuthenticationPhase
-    
-    init(phase: ZMAuthenticationPhase) {
-        mockPhase = phase
-        super.init()
-    }
-    
-    override var currentPhase: ZMAuthenticationPhase {
-        return mockPhase
-    }
-}
-
 class MockBackgroundAPNSPingBackStatus: BackgroundAPNSPingBackStatus {
     
     var mockNextNotificationID: NSUUID?

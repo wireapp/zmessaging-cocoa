@@ -21,6 +21,7 @@
 
 #import <ZMUtilities/ZMAccentColor.h>
 
+@class ZMBareUser;
 @class ZMConversation;
 @class ZMUserSession;
 @class ZMUser;
@@ -106,8 +107,12 @@ typedef id<ZMSearchToken> ZMSearchToken;
 
 @interface ZMSearchResult : NSObject
 
-@property (nonatomic, readonly, copy) NSArray *usersInContacts; ///< NSArray of ZMSearchUser
-@property (nonatomic, readonly, copy) NSArray *usersInDirectory; ///< NSArray of ZMSearchUser
-@property (nonatomic, readonly, copy) NSArray *groupConversations;  ///< NSArray of ZMConversation
+@property (nonatomic, readonly, copy) NSArray<ZMSearchUser *> *usersInContacts;
+@property (nonatomic, readonly, copy) NSArray<ZMSearchUser *> *usersInDirectory;
+@property (nonatomic, readonly, copy) NSArray<ZMConversation *> *groupConversations;
+
+- (instancetype)initWithUsersInContacts:(NSArray<ZMSearchUser *> *)usersInContacts
+                       usersInDirectory:(NSArray<ZMSearchUser *> *)usersInDirectory
+                     groupConversations:(NSArray<ZMConversation *> *)groupConversations;
 
 @end

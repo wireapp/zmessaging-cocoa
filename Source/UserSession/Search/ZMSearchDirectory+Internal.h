@@ -25,7 +25,6 @@
 @interface ZMSearchDirectory (Testing)
 
 @property (nonatomic, readonly) ZMUserSession *userSession;
-- (instancetype)initWithUserSession:(ZMUserSession *)userSession searchContext:(NSManagedObjectContext *)searchContext;
 - (instancetype)initWithUserSession:(ZMUserSession *)userSession
                       searchContext:(NSManagedObjectContext *)searchContext
            maxTopConversationsCount:(NSInteger)maxTopConversationsCount;

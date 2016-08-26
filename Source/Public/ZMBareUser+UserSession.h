@@ -44,10 +44,6 @@
 
 
 @interface ZMUser (UserSession) <ZMSearchableUser>
-
-/// Returns the corresponding address book contact if it exists otherwise nil.
-- (ZMAddressBookContact *)contactInUserSession:(ZMUserSession *)userSession;
-
 @end
 
 @interface ZMSearchUser (UserSession) <ZMSearchableUser>

@@ -48,7 +48,6 @@
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMFlowSync.h"
 #import "ZMCallStateTranscoder.h"
-#import "ZMAddressBookTranscoder.h"
 #import "ZMPushTokenTranscoder.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
@@ -332,8 +331,6 @@ static const int32_t Mersenne3 = 8191;
     [self verifyMockLater:flowTranscoder];
     id callStateTranscoder = [OCMockObject mockForClass:ZMCallStateTranscoder.class];
     [self verifyMockLater:callStateTranscoder];
-    id addressBookTranscoder = [OCMockObject mockForClass:ZMAddressBookTranscoder.class];
-    [self verifyMockLater:addressBookTranscoder];
     id pushTokenTranscoder = [OCMockObject mockForClass:ZMPushTokenTranscoder.class];
     [self verifyMockLater:pushTokenTranscoder];
     id loginTranscoder = [OCMockObject mockForClass:ZMLoginTranscoder.class];
@@ -365,7 +362,6 @@ static const int32_t Mersenne3 = 8191;
     [[[objectDirectory stub] andReturn:lastUpdateEventIDTranscoder] lastUpdateEventIDTranscoder];
     [[[objectDirectory stub] andReturn:flowTranscoder] flowTranscoder];
     [[[objectDirectory stub] andReturn:callStateTranscoder] callStateTranscoder];
-    [[[objectDirectory stub] andReturn:addressBookTranscoder] addressBookTranscoder];
     [[[objectDirectory stub] andReturn:pushTokenTranscoder] pushTokenTranscoder];
     [[[objectDirectory stub] andReturn:loginTranscoder] loginTranscoder];
     [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
@@ -391,7 +387,6 @@ static const int32_t Mersenne3 = 8191;
                                         lastUpdateEventIDTranscoder,
                                         flowTranscoder,
                                         callStateTranscoder,
-                                        addressBookTranscoder,
                                         pushTokenTranscoder,
                                         loginTranscoder,
                                         loginCodeRequestTranscoder,
