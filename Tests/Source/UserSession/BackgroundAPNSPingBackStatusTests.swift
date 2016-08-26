@@ -50,7 +50,6 @@ class OperationLoopNewRequestObserver {
     }
 }
 
-
 @objc class FakeGroupQueue : NSObject, ZMSGroupQueue {
     
     var dispatchGroup : ZMSDispatchGroup! {

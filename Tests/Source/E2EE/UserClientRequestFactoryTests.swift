@@ -24,7 +24,6 @@ import Cryptobox
 import ZMCMockTransport
 import ZMCDataModel
 
-
 class UserClientRequestFactoryTests: MessagingTest {
     
     var sut: UserClientRequestFactory!
