@@ -308,7 +308,6 @@ extension AddressBookUploadRequestStrategyTest {
         let request3 = self.getNextUploadingRequest()
         
         // then
-        // then
         XCTAssertNotNil(request1)
         XCTAssertNotNil(request2)
         XCTAssertNotNil(request3)
