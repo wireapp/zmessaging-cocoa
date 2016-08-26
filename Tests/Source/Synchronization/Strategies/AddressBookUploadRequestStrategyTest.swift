@@ -321,6 +321,7 @@ extension AddressBookUploadRequestStrategyTest {
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
         let request = sut.nextRequest()
+        
         XCTAssertNotNil(request)
         
         // when
@@ -339,6 +340,7 @@ extension AddressBookUploadRequestStrategyTest {
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
         let request = sut.nextRequest()
+        
         XCTAssertNotNil(request)
         
         // when
@@ -348,6 +350,108 @@ extension AddressBookUploadRequestStrategyTest {
         // then
         XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [self.addressBook.contactHashes.count])
         XCTAssertEqual(self.trackerFake.taggedEndEventCount, 0)
+    }
+}
+
+// MARK: - Suggested contacts
+
+/*
+ Expected payload for /onboarding/v3
+ 
+ {
+    "results": [
+        {
+            "cards": [
+                ""
+            ],
+            "id": "",
+            "card_id": ""
+        }
+    ]
+ }
+
+ */
+
+extension AddressBookUploadRequestStrategyTest {
+    
+    func testThatItParsesSuggestedUsersFromResponse() {
+        
+        // given
+        self.syncMOC.suggestedUsersForUser = NSOrderedSet()
+        let id1 = "aabbccddee"
+        let id2 = "bbccddeeff"
+        let payload = [
+            "results" : [
+                [
+                    "cards" : ["123","345"],
+                    "id" : id1,
+                    "card_id" : "cc11"
+                ],
+                [
+                    "cards" : ["444"],
+                    "id" : id2,
+                    "card_id" : "bb22"
+                ],
+            ]
+        ]
+        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        _ = sut.nextRequest() // this will return nil and start async processing
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        let request = sut.nextRequest()
+        
+        // when
+        request?.completeWithResponse(ZMTransportResponse(payload: payload, HTTPstatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        
+        // then
+        XCTAssertEqual(self.syncMOC.suggestedUsersForUser.set, Set([id1, id2]))
+    }
+    
+    func testThatItEmptiesSuggestedUsersIfResponseIsEmpty() {
+        
+        // given
+        let id1 = "aabbccddee"
+        let id2 = "bbccddeeff"
+        self.syncMOC.suggestedUsersForUser = NSOrderedSet(array: [id1, id2])
+        let payload = [
+            "results" : []
+        ]
+
+        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        _ = sut.nextRequest() // this will return nil and start async processing
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        let request = sut.nextRequest()
+        
+        // when
+        request?.completeWithResponse(ZMTransportResponse(payload: payload, HTTPstatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        
+        // then
+        XCTAssertEqual(self.syncMOC.suggestedUsersForUser.count, 0)
+    }
+    
+    func testThatItDoesNotParsesSuggestedUsersFromResponseIfNotParsed() {
+        
+        // given
+        let id1 = "aabbccddee"
+        let id2 = "bbccddeeff"
+        self.syncMOC.suggestedUsersForUser = NSOrderedSet(array: [id1, id2])
+        let payload = [
+            "apples" : "oranges"
+        ]
+
+        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        _ = sut.nextRequest() // this will return nil and start async processing
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        let request = sut.nextRequest()
+        XCTAssertNotNil(request)
+        
+        // when
+        request?.completeWithResponse(ZMTransportResponse(payload: payload, HTTPstatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        
+        // then
+        XCTAssertEqual(self.syncMOC.suggestedUsersForUser.set, Set([id1, id2]))
     }
 }
 

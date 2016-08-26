@@ -117,8 +117,18 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
     
     func didReceiveResponse(response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
         if response.result == .Success {
-            // TODO MARCO: suggested users
-            self.managedObjectContext.suggestedUsersForUser = NSOrderedSet()
+            
+            if let payload = response.payload as? [String: AnyObject],
+                let results = payload["results"] as? [[String: AnyObject]]
+            {
+                let suggestedIds = results.flatMap { $0["id"] as? String }
+                // XXX: this will always overwrite previous ones, effectively linking the suggestion to
+                // the batch size, i.e. only AB with less contacts than the batch size will have reliable
+                // suggestions. On the other hand, appending instead of replacing could cause infinite 
+                // growth. For the moment, we will live with having suggestions only from the last batch
+                self.managedObjectContext.suggestedUsersForUser = NSOrderedSet(array: suggestedIds)
+            }
+            
             self.managedObjectContext.commonConnectionsForUsers = [:]
             self.addressBookNeedsToBeUploaded = false
             self.encodedAddressBookChunk = nil
