@@ -147,7 +147,7 @@ ZM_EMPTY_ASSERTING_INIT()
     return [NSManagedObjectContext storeIsReady];
 }
 
-- (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager analytics:(id<AnalyticsType>)analytics appVersion:(NSString *)appVersion;
+- (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager analytics:(id<AnalyticsType>)analytics appVersion:(NSString *)appVersion appGroupIdentifier:(NSString *)appGroupIdentifier;
 {
     zmSetupEnvironments();
     ZMBackendEnvironment *environment = [[ZMBackendEnvironment alloc] init];
@@ -171,7 +171,8 @@ ZM_EMPTY_ASSERTING_INIT()
                           apnsEnvironment:apnsEnvironment
                             operationLoop:nil
                               application:application
-                               appVersion:appVersion];
+                               appVersion:appVersion
+                       appGroupIdentifier:appGroupIdentifier];
     if (self != nil) {
         self.ownsQueue = YES;
     }
@@ -185,7 +186,8 @@ ZM_EMPTY_ASSERTING_INIT()
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(ZMApplication *)application
-                              appVersion:(NSString *)appVersion;
+                              appVersion:(NSString *)appVersion
+                      appGroupIdentifier:(NSString *)appGroupIdentifier;
 
 {
     self = [super init];
@@ -234,7 +236,7 @@ ZM_EMPTY_ASSERTING_INIT()
         [[ZMLocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext sharedApplication:application];
         
         self.pingBackStatus = [[BackgroundAPNSPingBackStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext
-                                                                              authenticationProvider:self.authenticationStatus localNotificationDispatcher:self.localNotificationDispatcher];
+                                                                              authenticationProvider:self.authenticationStatus];
         
         self.transportSession = session;
         self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
@@ -258,7 +260,8 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                             onDemandFlowManager:self.onDemandFlowManager
                                                                                           uiMOC:self.managedObjectContext
                                                                                         syncMOC:self.syncManagedObjectContext
-                                                                              syncStateDelegate:self];
+                                                                              syncStateDelegate:self
+                                                                             appGroupIdentifier:appGroupIdentifier];
         
         __weak id weakSelf = self;
         session.accessTokenRenewalFailureHandler = ^(ZMTransportResponse *response) {

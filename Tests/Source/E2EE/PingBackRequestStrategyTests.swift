@@ -76,17 +76,14 @@ class PingBackRequestStrategyTests: MessagingTest {
     var sut: PingBackRequestStrategy!
     var authenticationStatus: MockAuthenticationStatus!
     var pingBackStatus: MockBackgroundAPNSPingBackStatus!
-    var notificationDispatcher: LocalNotificationDispatchType!
     
     override func setUp() {
         super.setUp()
-        notificationDispatcher = MockNotificationDispatcher()
         authenticationStatus = MockAuthenticationStatus(phase: .Authenticated)
         
         pingBackStatus = MockBackgroundAPNSPingBackStatus(
             syncManagedObjectContext: syncMOC,
-            authenticationProvider: authenticationStatus,
-            localNotificationDispatcher: notificationDispatcher
+            authenticationProvider: authenticationStatus
         )
         
         sut = PingBackRequestStrategy(

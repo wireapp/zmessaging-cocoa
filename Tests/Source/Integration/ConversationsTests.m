@@ -1725,6 +1725,7 @@
         MockEvent *lastEvent = self.selfToUser1Conversation.events.lastObject;
         self.selfToUser1Conversation.lastRead = lastEvent.identifier;
     }];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // login
     [self recreateUserSessionAndWipeCache:YES];

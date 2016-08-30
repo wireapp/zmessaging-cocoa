@@ -30,12 +30,12 @@ enum UserClientRequestError: ErrorType {
 
 public class UserClientRequestFactory {
     
-    public init(keysCount: UInt = 100, missingClientsUserPageSize pageSize: Int = 128) {
+    public init(keysCount: UInt16 = 100, missingClientsUserPageSize pageSize: Int = 128) {
         self.keyCount = keysCount
         missingClientsUserPageSize = pageSize
     }
     
-    public let keyCount : UInt
+    public let keyCount : UInt16
     ///  The number of users that can be contained in a single request to get missing clients
     public let missingClientsUserPageSize : Int
 
@@ -55,7 +55,7 @@ public class UserClientRequestFactory {
             "sigkeys": signalingKeysPayloadData,
             "cookie" : ((authenticationStatus.cookieLabel.characters.count != 0) ? authenticationStatus.cookieLabel : "")
         ]
-        
+         
         if let password = credentials?.password {
             payload["password"] = password
         }
@@ -69,7 +69,7 @@ public class UserClientRequestFactory {
     }
     
     
-    func storeMaxRangeID(client: UserClient, maxRangeID: UInt) -> ZMCompletionHandler {
+    func storeMaxRangeID(client: UserClient, maxRangeID: UInt16) -> ZMCompletionHandler {
         let completionHandler = ZMCompletionHandler(onGroupQueue: client.managedObjectContext!, block: { response in
             if response.result == .Success {
                 client.preKeysRangeMax = Int64(maxRangeID)
@@ -89,14 +89,17 @@ public class UserClientRequestFactory {
         return completionHandler
     }
     
-    internal func payloadForPreKeys(client: UserClient, startIndex: UInt = 0) throws -> (payload: [NSDictionary], maxRange: UInt) {
+    internal func payloadForPreKeys(client: UserClient, startIndex: UInt16 = 0) throws -> (payload: [NSDictionary], maxRange: UInt16) {
         //we don't want to generate new prekeys if we already have them
         do {
-            let (preKeys, preKeysRangeMin, preKeysRangeMax) = try client.keysStore.generateMoreKeys(keyCount, start: startIndex)
-            let preKeysPayloadData = preKeys.enumerate().map { (index, preKey: CBPreKey) in
-                ["key": preKey.data!.base64String(), "id": Int(preKeysRangeMin) + index]
+            let preKeys = try client.keysStore.generateMoreKeys(keyCount, start: startIndex)
+            guard preKeys.count > 0 else {
+                throw UserClientRequestError.NoPreKeys
             }
-            return (preKeysPayloadData, preKeysRangeMax)
+            let preKeysPayloadData : [[String : AnyObject]] = preKeys.map {
+                ["key": $0.prekey, "id": NSNumber(unsignedShort: $0.id)]
+            }
+            return (preKeysPayloadData, preKeys.last!.id)
         }
         catch {
             throw UserClientRequestError.NoPreKeys
@@ -106,8 +109,8 @@ public class UserClientRequestFactory {
     internal func payloadForLastPreKey(client: UserClient) throws -> [String: AnyObject] {
         do {
             let lastKey = try client.keysStore.lastPreKey()
-            let lastPreKeyString = lastKey.data!.base64String()
-            let lastPreKeyPayloadData : [String: AnyObject] = ["key": lastPreKeyString, "id": CBMaxPreKeyID + 1]
+            let lastPreKeyString = lastKey
+            let lastPreKeyPayloadData : [String: AnyObject] = ["key": lastPreKeyString, "id": NSNumber(unsignedShort: UserClientKeysStore.MaxPreKeyID+1)]
             return lastPreKeyPayloadData
         } catch  {
             throw UserClientRequestError.NoLastPreKey
@@ -122,7 +125,7 @@ public class UserClientRequestFactory {
     
     public func updateClientPreKeysRequest(client: UserClient) throws -> ZMUpstreamRequest {
         if let remoteIdentifier = client.remoteIdentifier {
-            let startIndex = UInt(client.preKeysRangeMax)
+            let startIndex = UInt16(client.preKeysRangeMax)
             let (preKeysPayloadData, preKeysRangeMax) = try payloadForPreKeys(client, startIndex: startIndex)
             let payload: [String: AnyObject] = [
                 "prekeys": preKeysPayloadData
@@ -153,8 +156,8 @@ public class UserClientRequestFactory {
     /// Password needs to be set
     public func deleteClientRequest(client: UserClient, credentials: ZMEmailCredentials) -> ZMUpstreamRequest! {
         let payload = [
-                "email" : credentials.email!,
-                "password" : credentials.password!
+            "email" : credentials.email!,
+            "password" : credentials.password!
         ]
         let request =  ZMTransportRequest(path: "/clients/\(client.remoteIdentifier)", method: ZMTransportRequestMethod.MethodDELETE, payload: payload)
         return ZMUpstreamRequest(keys: Set(arrayLiteral: ZMUserClientMarkedToDeleteKey), transportRequest: request)

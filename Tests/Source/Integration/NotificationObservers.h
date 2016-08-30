@@ -18,7 +18,7 @@
 
 
 @import ZMCDataModel;
-// TODO Sabine = build framework for this?
+
 #import <zmessaging/zmessaging-Swift.h>
 
 typedef void(^ObserverCallback)(NSObject *note);

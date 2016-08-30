@@ -484,10 +484,10 @@
     
     // when
     // register other users client
-    __unused CBCryptoBox *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                         isSelfClient:NO
-                                                         numberOfKeys:1
-                                         establishSessionWithSelfUser:NO];
+    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
+                                                               isSelfClient:NO
+                                                               numberOfKeys:1
+                                               establishSessionWithSelfUser:NO];
     __block ZMMessage *fileMessage;
     
     [self.mockTransportSession resetReceivedRequests];
@@ -1148,9 +1148,10 @@
     
     // when
     // register other users client
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session registerClientForUser:self.user1 label:@"desktop" type:@"permanent"];
-    }];
+    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
+                                                               isSelfClient:NO
+                                                               numberOfKeys:1
+                                               establishSessionWithSelfUser:NO];
     WaitForAllGroupsToBeEmpty(0.5);
     
     __block ZMMessage *fileMessage;
@@ -1328,13 +1329,16 @@
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
-                                                                 mimeType:@"text/plain"
-                                                                     name:self.name
-                                                                messageID:nonce.transportString];
+                                                                      mimeType:@"text/plain"
+                                                                          name:self.name
+                                                                     messageID:nonce.transportString];
     
-    NSError *error;
-    CBCryptoBox *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.box;
-    CBPreKey *prekey = [box lastPreKey:&error];
+    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
+    __block NSError *error;
+    __block NSString *prekey;
+    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
+    }];
     XCTAssertNil(error);
     
     // when
@@ -1575,9 +1579,12 @@
                                             fromUser:(MockUser *)user
                                       inConversation:(MockConversation *)conversation
 {
-    NSError *error;
-    CBCryptoBox *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.box;
-    CBPreKey *prekey = [box lastPreKey:&error];
+    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
+    __block NSError *error;
+    __block NSString *prekey;
+    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
+    }];
     XCTAssertNil(error);
     
     // when

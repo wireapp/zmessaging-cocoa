@@ -49,7 +49,7 @@
                      userProfileUpdateStatus:(ZMUserProfileUpdateStatus *)userProfileStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                           clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
-                          proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
+                        proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
                                accountStatus:(ZMAccountStatus *)accountStatus
                 backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
                                 mediaManager:(id<AVSMediaManager>)mediaManager
@@ -60,6 +60,7 @@
                        backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
                 localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
                     taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
+                          appGroupIdentifier:(NSString *)appGroupIdentifier
                                        badge:(ZMBadge *)badge;
 
 - (void)didInterruptUpdateEventsStream;

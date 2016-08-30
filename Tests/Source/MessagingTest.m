@@ -125,10 +125,9 @@ static const int32_t Mersenne3 = 8191;
     if ([self respondsToSelector:selector]) {
         ZM_SILENCE_CALL_TO_UNKNOWN_SELECTOR([self performSelector:selector]);
     }
-    
-    
+
     [NSManagedObjectContext setUseInMemoryStore:self.shouldUseInMemoryStore];
-    
+
     [self resetState];
     
     if (self.shouldUseRealKeychain) {
@@ -171,18 +170,20 @@ static const int32_t Mersenne3 = 8191;
 
 - (void)resetState
 {
-    [self cleanUpAndVerify];
+    [self.uiMOC.globalManagedObjectContextObserver tearDown];
+    [self.syncMOC.globalManagedObjectContextObserver tearDown];
     [self.syncMOC zm_tearDownCallTimer];
     [self.uiMOC zm_tearDownCallTimer];
     [self.testMOC zm_tearDownCallTimer];
+    
+    [self.syncMOC zm_tearDownCryptKeyStore];
+    [self.syncMOC.userInfo removeAllObjects];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // teardown all mmanagedObjectContexts
+    [self cleanUpAndVerify];
 
-    [self.syncMOC.globalManagedObjectContextObserver tearDown];
-    [self.uiMOC.globalManagedObjectContextObserver tearDown];
-
-    self.uiMOC = nil;
-    self.syncMOC = nil;
-    self.testMOC = nil;
-    self.alternativeTestMOC = nil;
     [self.mockTransportSession tearDown];
     self.mockTransportSession = nil;
     
@@ -604,6 +605,45 @@ static int32_t eventIdCounter;
 
 @implementation MessagingTest (OTR)
 
+- (NSData *)encryptedMessage:(ZMGenericMessage *)message recipient:(UserClient *)recipient
+{
+    [self establishSessionWithClient:recipient];
+    
+    __block NSData *messageData;
+    __block NSError *error;
+    
+    [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        messageData = [sessionsDirectory encrypt:message.data recipientClientId:recipient.remoteIdentifier error:&error];
+    }];
+
+    XCTAssertNil(error, @"Error encrypting message: %@", error);
+    return messageData;
+}
+
+- (void)establishSessionWithClient:(UserClient *)userClient
+{
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    
+    __block NSError *error;
+    __block NSString *lastPrekey;
+    __block BOOL hasSession = NO;
+    
+    [selfUser.selfClient.keysStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        if (![sessionsDirectory hasSessionForID:userClient.remoteIdentifier]) {
+            lastPrekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
+        } else {
+            hasSession = YES;
+        }
+    }];
+    
+    if (hasSession) {
+        return;
+    }
+    
+    XCTAssertTrue([selfUser.selfClient establishSessionWithClient:userClient usingPreKey:lastPrekey], @"Unable to establish session");
+    XCTAssertNil(error, @"Error establishing session: %@", error);
+}
+
 - (UserClient *)createSelfClient
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
@@ -631,11 +671,9 @@ static int32_t eventIdCounter;
     userClient.user = user;
     
     if (createSessionWithSeflUser) {
-        UserClient *selfClient = [ZMUser selfUserInContext:self.syncMOC].selfClient;
-        NSError *error;
-        CBPreKey *key = [selfClient.keysStore lastPreKeyAndReturnError:&error];
-        [selfClient establishSessionWithClient:userClient usingPreKey:key.data.base64String];
+        [self establishSessionWithClient:userClient];
     }
+
     return userClient;
 }
 

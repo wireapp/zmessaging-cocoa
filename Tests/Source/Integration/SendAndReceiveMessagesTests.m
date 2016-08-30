@@ -146,6 +146,7 @@
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeCompleteWithTimeout:0.6]);
+    WaitForAllGroupsToBeEmpty(0.5);
 
     __block NSUInteger count = 0;
     dispatch_block_t insertMessage  = ^{

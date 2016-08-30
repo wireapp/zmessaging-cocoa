@@ -118,7 +118,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     
     [self.uiMOC.globalManagedObjectContextObserver tearDown];
     [self.syncMOC.globalManagedObjectContextObserver tearDown];
-
+    [self.syncMOC zm_tearDownCryptKeyStore];
     [self.conversationChangeObserver tearDown];
     [self.userChangeObserver tearDown];
     [self.messageChangeObserver tearDown];
@@ -310,6 +310,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.userSession = nil;
     
     WaitForEverythingToBeDone();
+    
     [self resetUIandSyncContextsAndResetPersistentStore:wipeCache];
     if(wipeCache) {
         [ZMPersistentCookieStorage deleteAllKeychainItems];
@@ -347,7 +348,8 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
                         apnsEnvironment:mockAPNSEnrvironment
                         operationLoop:nil
                         application:application
-                        appVersion:@"00000"];
+                        appVersion:@"00000"
+                        appGroupIdentifier:nil];
     WaitForEverythingToBeDone();
     
     [self.syncMOC zm_tearDownCallTimer];
@@ -453,7 +455,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     if (self.registeredOnThisDevice) {
         // Set flag to make sure that "Started using on new device" message is suppressed
         [self.syncMOC performGroupedBlockAndWait:^{
-                [self.syncMOC setPersistentStoreMetadata:@YES forKey:RegisteredOnThisDeviceKey];
+            [self.syncMOC setPersistentStoreMetadata:@YES forKey:RegisteredOnThisDeviceKey];
         }];
         
         [self.uiMOC setPersistentStoreMetadata:@YES forKey:RegisteredOnThisDeviceKey];
@@ -555,7 +557,9 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     [searchUser connectWithMessageText:@"Hola" completionHandler:^{
         [connectionCreatedExpectation fulfill];
     }];
+
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    [searchDirectory tearDown];
 }
 
 - (MockUser *)createPendingConnectionFromUserWithName:(NSString *)name uuid:(NSUUID *)uuid
@@ -616,30 +620,36 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-- (MockUserClient *)remotelyRegisterClientForUser:(MockUser *)mockUser preKeys:(NSArray *)preKeys lastPreKey:(CBPreKey *)lastPreKey
+- (MockUserClient *)remotelyRegisterClientForUser:(MockUser *)mockUser preKeys:(NSArray *)preKeys lastPreKey:(NSString *)lastPreKey
 {
     __block MockUserClient *remoteUserClient;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        NSArray *preKeysStrings = [preKeys mapWithBlock:^id(CBPreKey *preKey) {
-            return preKey.data.base64String;
-        }];
-        NSString *lastPreKeyString = lastPreKey.data.base64String;
-        remoteUserClient = [session registerClientForUser:mockUser label:mockUser.name type:@"permanent" preKeys:preKeysStrings lastPreKey:lastPreKeyString];
+        remoteUserClient = [session registerClientForUser:mockUser label:mockUser.name type:@"permanent" preKeys:preKeys lastPreKey:lastPreKey];
     }];
     
     return remoteUserClient;
 }
 
-- (CBCryptoBox *)setupOTREnvironmentForUser:(MockUser *)mockUser isSelfClient:(BOOL)isSelfClient numberOfKeys:(NSUInteger)numberOfKeys establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser
+- (EncryptionContext *)setupOTREnvironmentForUser:(MockUser *)mockUser isSelfClient:(BOOL)isSelfClient numberOfKeys:(UInt16)numberOfKeys establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser
 {
     NSURL *url = [UserClientKeysStore otrDirectory];
     url = [url URLByAppendingPathComponent:mockUser.identifier];
     [[NSFileManager defaultManager] createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
     
-    __block NSError *error;
-    CBCryptoBox *userBox = [CBCryptoBox cryptoBoxWithPathURL:url error:&error];
-    NSArray *userPreKeys = [userBox generatePreKeys:NSMakeRange(0, numberOfKeys) error:&error];
-    CBPreKey *userLastKey = [userBox lastPreKey:&error];
+    EncryptionContext *encryptionContext = [[EncryptionContext alloc] initWithPath:url];
+    __block NSString *userLastKey;
+    __block NSMutableArray *userPreKeys = [NSMutableArray array];
+    [encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        NSError *error;
+        for (UInt16 i = 0; i < numberOfKeys; i++)  {
+            NSString *prekey = [sessionsDirectory generatePrekey:i error:&error];
+            XCTAssertNil(error, @"Error creating prekeys");
+            [userPreKeys addObject:prekey];
+        }
+        NSError *lastKeyError;
+        userLastKey = [sessionsDirectory generateLastPrekeyAndReturnError:&lastKeyError];
+        XCTAssertNil(lastKeyError, @"Error creating last key");
+    }];
     
     ZMUser *realUser = [self userForMockUser:mockUser];
     
@@ -669,13 +679,16 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         
         if (establishSessionWithSelfUser && ! isSelfClient) {
             //session from selfClient to userClient
-            UserClient *selfClient = [ZMUser selfUserInContext:self.syncMOC].selfClient;
-            [selfClient.keysStore.box sessionWithId:remoteUserClient.identifier fromPreKey:userPreKeys.firstObject error:&error];
+            [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+                NSError *error;
+                [sessionsDirectory createClientSession:remoteUserClient.identifier base64PreKeyString:userPreKeys.firstObject error:&error];
+                XCTAssertNil(error, @"Error creating session");
+            }];
         }
         
         [self.syncMOC saveOrRollback];
     }];
-    return userBox;
+    return encryptionContext;
 }
 
 - (void)inserOTRMessage:(ZMGenericMessage *)message
@@ -685,37 +698,29 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
          usingStringKey:(NSString *)preKey
                 session:(MockTransportSession<MockTransportSessionObjectCreation> *)session
 {
-    MockUserClient *senderClient = [session registerClientForUser:sender label:sender.name type:@"permanent"];
-    NSError *error;
-    
-    NSURL *url = [UserClientKeysStore otrDirectory];
-    url = [url URLByAppendingPathComponent:senderClient.label];
-    [[NSFileManager defaultManager] createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
-    CBCryptoBox *senderBox = [CBCryptoBox cryptoBoxWithPathURL:url error:&error];
-    
-    CBSession *sessionFromSenderToSelf = [senderBox sessionWithId:recipient.identifier fromStringPreKey:preKey error:&error];
-    NSData *encryptedData = [sessionFromSenderToSelf encrypt:message.data error:&error];
-    
-    [conversation insertOTRMessageFromClient:senderClient toClient:recipient data:encryptedData];
+    [self inserOTRMessage:message inConversation:conversation fromUser:sender toClient:recipient usingKey:preKey session:session];
 }
 
-- (CBCryptoBox *)inserOTRMessage:(ZMGenericMessage *)message
-                  inConversation:(MockConversation *)conversation
-                        fromUser:(MockUser *)sender
-                        toClient:(MockUserClient *)recipient
-                        usingKey:(CBPreKey *)preKey
-                         session:(MockTransportSession<MockTransportSessionObjectCreation> *)session
+- (EncryptionContext *)inserOTRMessage:(ZMGenericMessage *)message
+                        inConversation:(MockConversation *)conversation
+                              fromUser:(MockUser *)sender
+                              toClient:(MockUserClient *)recipient
+                              usingKey:(NSString *)preKey
+                               session:(MockTransportSession<MockTransportSessionObjectCreation> *)session
 {
     MockUserClient *senderClient = [session registerClientForUser:sender label:sender.name type:@"permanent"];
-    NSError *error;
+    __block NSError *error;
     
     NSURL *url = [UserClientKeysStore otrDirectory];
     url = [url URLByAppendingPathComponent:senderClient.label];
     [[NSFileManager defaultManager] createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
-    CBCryptoBox *senderBox = [CBCryptoBox cryptoBoxWithPathURL:url error:&error];
+    EncryptionContext *senderBox = [[EncryptionContext alloc] initWithPath:url];
     
-    CBSession *sessionFromSenderToSelf = [senderBox sessionWithId:recipient.identifier fromPreKey:preKey error:&error];
-    NSData *encryptedData = [sessionFromSenderToSelf encrypt:message.data error:&error];
+    __block NSData *encryptedData;
+    [senderBox perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        [sessionsDirectory createClientSession:recipient.identifier base64PreKeyString:preKey error:&error];
+        encryptedData = [sessionsDirectory encrypt:message.data recipientClientId:recipient.identifier error:&error];
+    }];
     
     [conversation insertOTRMessageFromClient:senderClient toClient:recipient data:encryptedData];
     return senderBox;

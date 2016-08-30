@@ -451,7 +451,6 @@
     [ZMConversation removeConversationObserverForToken:token2];
     [conversationListObserver tearDown];
     [pendingConversationListObserver tearDown];
-    
 } 
 
 - (void)testThatConnectionRequestsToTwoUsersAreAddedToPending;
@@ -478,6 +477,7 @@
     WaitForEverythingToBeDone();
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
 
     ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger count = active.count;

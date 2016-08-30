@@ -259,7 +259,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self.userSession registerSelfUser:user];
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForAllGroupsToBeEmpty(1);
     
     // wait for more attempts
     [self spinMainQueueWithTimeout:1];

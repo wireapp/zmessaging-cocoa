@@ -111,10 +111,11 @@ public class FakeKeysStore: UserClientKeysStore {
     var failToGeneratePreKeys: Bool = false
     var failToGenerateLastPreKey: Bool = false
     
-    var lastGeneratedKeys : (keys: [CBPreKey], minIndex: UInt, maxIndex: UInt) = ([],0,0)
-    var lastGeneratedLastPrekey : CBPreKey?
-    
-    override public func generateMoreKeys(count: UInt, start: UInt) throws -> ([CBPreKey], UInt, UInt) {
+    var lastGeneratedKeys : [(id: UInt16, prekey: String)] = []
+    var lastGeneratedLastPrekey : String?
+
+    override public func generateMoreKeys(count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
+
         if self.failToGeneratePreKeys {
             let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
             throw error
@@ -126,7 +127,7 @@ public class FakeKeysStore: UserClientKeysStore {
         }
     }
     
-    override public func lastPreKey() throws -> CBPreKey {
+    override public func lastPreKey() throws -> String {
         if self.failToGenerateLastPreKey {
             let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
             throw error

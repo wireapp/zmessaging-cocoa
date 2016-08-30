@@ -90,7 +90,8 @@ extern NSString * const ZMAppendAVSLogNotificationName;
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(ZMApplication *)application
-                              appVersion:(NSString *)appVersion;
+                              appVersion:(NSString *)appVersion
+                      appGroupIdentifier:(NSString *)appGroupIdentifier;
 
 - (void)tearDown;
 

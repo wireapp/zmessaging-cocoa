@@ -309,20 +309,12 @@
 - (ZMMessage *)messageFromUpdateEvent:(ZMUpdateEvent *)event
                        prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {
-    CBCryptoBox *box = [self.managedObjectContext zm_cryptKeyStore].box;
-    ZMUpdateEvent *decryptedEvent = [box decryptUpdateEventAndAddClient:event managedObjectContext:self.managedObjectContext];
-    
-    if (decryptedEvent == nil) {
-        return nil;
-    }
-    
     ZMMessage *message;
     switch (event.type) {
         case ZMUpdateEventConversationClientMessageAdd:
         case ZMUpdateEventConversationOtrMessageAdd:
         case ZMUpdateEventConversationOtrAssetAdd:
-            
-            message = [ZMOTRMessage createOrUpdateMessageFromUpdateEvent:decryptedEvent
+            message = [ZMOTRMessage createOrUpdateMessageFromUpdateEvent:event
                                                   inManagedObjectContext:self.managedObjectContext
                                                           prefetchResult:prefetchResult];
             break;

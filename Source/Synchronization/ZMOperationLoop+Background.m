@@ -45,77 +45,41 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 - (void)saveEventsAndSendNotificationForPayload:(NSDictionary *)payload fetchCompletionHandler:(ZMPushResultHandler)completionHandler source:(ZMPushNotficationType)source;
 {
     ZMLogDebug(@"----> Received push notification payload: %@, source: %lu", payload, (unsigned long)source);
-    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"send notification for payload"];
     [self.syncMOC performGroupedBlock:^{
         
         EventsWithIdentifier *eventsWithID = [self eventsFromPushChannelData:payload];
-        NSArray <ZMUpdateEvent *>*events = eventsWithID.events;
-        NSArray <NSUUID *>* preexistingMessageNonces = [self fetchPreexistingMessageNoncesForEvents:events];
-        EventsWithIdentifier *filteredEventsWithIdentifier = [eventsWithID filteredWithoutPreexistingNonces:preexistingMessageNonces];
+        BOOL isValidNotification = (nil != eventsWithID.identifier) && (eventsWithID.isNotice || eventsWithID.events.count > 0);
         
-        if (events.count > 0) {
-            [self forwardEvents:events];
-            
-            if (source == ZMPushNotficationTypeVoIP && nil != eventsWithID.identifier) {
-                [APNSPerformanceTracker trackVOIPNotificationInOperationLoop:eventsWithID analytics:self.syncMOC.analytics];
-                
-                ZM_WEAK(self);
-                [self.backgroundAPNSPingBackStatus didReceiveVoIPNotification:filteredEventsWithIdentifier handler:^(ZMPushPayloadResult result, NSArray<ZMUpdateEvent *> *receivedEvents) {
-                    NOT_USED(receivedEvents);
-                    ZM_STRONG(self);
-                    if (completionHandler != nil) {
-                        [self.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_main_queue() block:^{
-                            ZMLogPushKit(@"Calling CompletionHandler");
-                            completionHandler(result);
-                        }];
-                    }
-                }];
-            }
-            
-            [activity endActivity];
-        } else if (filteredEventsWithIdentifier.isNotice && source == ZMPushNotficationTypeVoIP && nil != eventsWithID.identifier) {
-            ZM_WEAK(self);
-            [APNSPerformanceTracker trackVOIPNotificationInOperationLoop:eventsWithID analytics:self.syncMOC.analytics];
-            [self.backgroundAPNSPingBackStatus didReceiveVoIPNotification:filteredEventsWithIdentifier handler:^(ZMPushPayloadResult result, NSArray<ZMUpdateEvent *> *receivedEvents) {
-                ZM_STRONG(self);
-                [self forwardEvents:receivedEvents];
-                if (completionHandler != nil) {
-                    [self.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_main_queue() block:^{
-                        ZMLogPushKit(@"Calling CompletionHandler");
-                        completionHandler(result);
-                    }];
-                }
-            }];
+        if ((source == ZMPushNotficationTypeVoIP) && isValidNotification) {
+            [self processNotification:eventsWithID fetchCompletionHandler:completionHandler];
         }
         else if (completionHandler != nil) {
             [APNSPerformanceTracker trackVOIPNotificationInOperationLoopNotCreatingNotification:self.syncMOC.analytics];
             ZMLogPushKit(@"ZMOperationLoop - calling completionHandler without creating notifications");
             [self.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_main_queue() block:^{
                 completionHandler(ZMPushPayloadResultSuccess);
-                [activity endActivity];
-            }]; 
+            }];
         }
     }];
 }
 
-- (NSArray <NSUUID *> *)fetchPreexistingMessageNoncesForEvents:(NSArray <ZMUpdateEvent *>*)events
+- (void)processNotification:(EventsWithIdentifier*)eventsWithID fetchCompletionHandler:(ZMPushResultHandler)completionHandler
 {
-    NSArray <NSData *>* messageNonces = [events mapWithBlock:^NSData *(ZMUpdateEvent *event) {
-        return event.messageNonce.data;
+    [APNSPerformanceTracker trackVOIPNotificationInOperationLoop:eventsWithID analytics:self.syncMOC.analytics];
+    ZM_WEAK(self);
+    [self.backgroundAPNSPingBackStatus didReceiveVoIPNotification:eventsWithID handler:^(ZMPushPayloadResult result, NSArray<ZMUpdateEvent *> *receivedEvents) {
+        ZM_STRONG(self);
+        
+        if (result == ZMPushPayloadResultSuccess) {
+            [self forwardEvents:receivedEvents];
+        }
+        if (completionHandler != nil) {
+            [self.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_main_queue() block:^{
+                ZMLogPushKit(@"Calling CompletionHandler");
+                completionHandler(result);
+            }];
+        }
     }];
-    
-    if (messageNonces.count == 0) {
-        return @[];
-    }
-    
-    NSPredicate *noncesPredicate = [NSPredicate predicateWithFormat:@"%K IN %@", ZMMessageNonceDataKey, messageNonces];
-    NSFetchRequest *messageRequest = [ZMMessage sortedFetchRequestWithPredicate:noncesPredicate];
-    NSArray <ZMMessage *>* preexistingMessages = [self.syncMOC executeFetchRequestOrAssert:messageRequest];
-    NSArray <NSUUID *>* preexistingNonces = [preexistingMessages mapWithBlock:^NSUUID *(ZMMessage *message) {
-        return message.nonce;
-    }];
-    
-    return preexistingNonces;
 }
 
 - (void)forwardEvents:(NSArray *)events
@@ -175,8 +139,6 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 - (EventsWithIdentifier *)eventArrayFromEncryptedMessage:(NSDictionary *)encryptedPayload
 {
     VerifyStringReturnNil(self.apsSignalKeyStore != nil, "Could not initiate APSSignalingKeystore");
-    VerifyStringReturnNil(self.cryptoBox != nil, "Could not instantiate Cryptobox");
-    
     //    @"aps" : @{ @"alert": @{@"loc-args": @[],
     //                          @"loc-key"   : @"push.notification.new_message"}
     //              },
@@ -196,15 +158,7 @@ static NSString * const PushNotificationTypeNotice = @"notice";
     NSUUID *identifier = [dataPayload optionalUuidForKey:PushChannelIdentifierKey];
     NSArray *events = [ZMUpdateEvent eventsArrayFromTransportData:dataPayload source:ZMUpdateEventSourcePushNotification];
     
-    NSArray *decryptedEvents = [events mapWithBlock:^id(ZMUpdateEvent *event) {
-        return [self.cryptoBox decryptUpdateEventAndAddClient:event managedObjectContext:self.syncMOC];
-    }];
-    
-    if(decryptedEvents.count == 0) {
-        return nil;
-    }
-    
-    return [[EventsWithIdentifier alloc] initWithEvents:decryptedEvents identifier:identifier isNotice:NO];
+    return [[EventsWithIdentifier alloc] initWithEvents:events identifier:identifier isNotice:NO];
 }
 
 - (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;

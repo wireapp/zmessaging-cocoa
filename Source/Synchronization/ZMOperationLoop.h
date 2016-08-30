@@ -61,7 +61,8 @@ extern NSString * const ZMPushChannelResponseStatusKey;
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                    uiMOC:(NSManagedObjectContext *)uiMOC
                                  syncMOC:(NSManagedObjectContext *)syncMOC
-                       syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate;
+                       syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
+                      appGroupIdentifier:(NSString *)appGroupIdentifier;
 
 - (void)tearDown;
 - (void)accessTokenDidChangeWithToken:(NSString *)token ofType:(NSString *)type;

@@ -76,10 +76,12 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
  @param mediaManager: The media manager delegate
  @param analytics: An object conforming to the @c AnalyticsType protocol that can be used to track events on the sync engine
  @param appVersion: The application version (build number)
+ @param appGroupIdentifier: The identifier of the shared application group container that should be used to store databases etc.
 */
 - (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager
                            analytics:(id<AnalyticsType>)analytics
-                          appVersion:(NSString *)appVersion;
+                          appVersion:(NSString *)appVersion
+                  appGroupIdentifier:(NSString *)appGroupIdentifier;
 
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;

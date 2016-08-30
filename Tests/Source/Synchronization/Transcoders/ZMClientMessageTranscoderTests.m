@@ -102,7 +102,7 @@
 
 - (void)testThatItReturnsSelfClientAsDependentObjectForMessageIfItHasMissingClients
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         //given
         UserClient *client = [self createSelfClient];
@@ -121,12 +121,14 @@
         XCTAssertNotNil(dependentObject);
         XCTAssertEqual(dependentObject, client);
     }];
+
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 
 - (void)testThatItReturnsConversationIfNeedsToBeUpdatedFromBackendBeforeMissingClients
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         //given
         UserClient *client = [self createSelfClient];
@@ -145,11 +147,13 @@
         XCTAssertNotNil(dependentObject1);
         XCTAssertEqual(dependentObject1, conversation);
     }];
+
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItReturnsConnectionIfNeedsToBeUpdatedFromBackendBeforeMissingClients
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         //given
         UserClient *client = [self createSelfClient];
@@ -171,12 +175,13 @@
         XCTAssertNotNil(dependentObject1);
         XCTAssertEqual(dependentObject1, conversation.connection);
     }];
-}
 
+    WaitForAllGroupsToBeEmpty(0.5);
+}
 
 - (void)testThatItDoesNotReturnSelfClientAsDependentObjectForMessageIfConversationIsNotAffectedByMissingClients
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         //given
         UserClient *client = [self createSelfClient];
@@ -198,11 +203,13 @@
         // then
         XCTAssertNil(dependentObject);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItReturnsNilAsDependentObjectForMessageIfItHasNoMissingClients
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         //given
         [self createSelfClient];
@@ -216,11 +223,13 @@
         // then
         XCTAssertNil(dependentObject);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItReturnsAPreviousPendingTextMessageAsDependency
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         //given
         [self createSelfClient];
@@ -248,11 +257,13 @@
         ZMManagedObject *dependency = [self.sut dependentObjectNeedingUpdateBeforeProcessingObject:lastMessage];
         XCTAssertEqual(dependency, nextMessage);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItGeneratesARequestToSendAClientMessage
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         // given
         [self createSelfClient];
@@ -277,36 +288,29 @@
         XCTAssertEqualObjects(request.transportRequest.binaryDataType, @"application/x-protobuf");
         XCTAssertNotNil(request.transportRequest.binaryData);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
-
 
 - (void)testThatANewOtrMessageIsCreatedFromAnEvent
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         // given
         UserClient *client = [self createSelfClient];
-        NSString *text = @"Everything";
-        NSUUID *conversationID = [NSUUID createUUID];
-        
-        //create encrypted message
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:[NSUUID createUUID].transportString];
-        NSError *error;
-        CBSession *session = [client.keysStore.box sessionWithId:client.remoteIdentifier fromPreKey:[client.keysStore lastPreKeyAndReturnError:&error] error:&error];
-        NSData *encryptedData = [session encrypt:message.data error:&error];
-        
-        NSDictionary *payload = @{@"recipient": client.remoteIdentifier, @"sender": client.remoteIdentifier, @"text": [encryptedData base64String]};
-        ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:
-                                      @{
-                                        @"type":@"conversation.otr-message-add",
-                                        @"data":payload,
-                                        @"conversation":conversationID.transportString,
-                                        @"time":[NSDate dateWithTimeIntervalSince1970:555555].transportString
-                                    } uuid:nil];
-        
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        conversation.remoteIdentifier = conversationID;
+        conversation.remoteIdentifier = [NSUUID createUUID];
         [self.syncMOC saveOrRollback];
+        
+        NSString *text = @"Everything";
+        NSString *base64String = @"CiQ5ZTU2NTQwOS0xODZiLTRlN2YtYTE4NC05NzE4MGE0MDAwMDQSDAoKRXZlcnl0aGluZw==";
+        NSDictionary *payload = @{@"recipient": client.remoteIdentifier, @"sender": client.remoteIdentifier, @"text": base64String};
+        NSDictionary *eventPayload = @{@"type":         @"conversation.otr-message-add",
+                                       @"data":         payload,
+                                       @"conversation": conversation.remoteIdentifier.transportString,
+                                       @"time":         [NSDate dateWithTimeIntervalSince1970:555555].transportString
+                                       };
+        ZMUpdateEvent *updateEvent = [ZMUpdateEvent decryptedUpdateEventFromEventStreamPayload:eventPayload uuid:[NSUUID createUUID] source:ZMUpdateEventSourceWebSocket];
         
         // when
         [self.sut processEvents:@[updateEvent] liveEvents:NO prefetchResult:nil];
@@ -314,12 +318,13 @@
         // then
         XCTAssertEqualObjects([conversation.messages.lastObject messageText], text);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
-
 
 - (void)testThatANewOtrMessageIsCreatedFromADecryptedAPNSEvent
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         // given
         UserClient *client = [self createSelfClient];
         NSString *text = @"Everything";
@@ -327,9 +332,7 @@
         
         //create encrypted message
         ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:[NSUUID createUUID].transportString];
-        NSError *error;
-        CBSession *session = [client.keysStore.box sessionWithId:client.remoteIdentifier fromPreKey:[client.keysStore lastPreKeyAndReturnError:&error] error:&error];
-        NSData *encryptedData = [session encrypt:message.data error:&error];
+        NSData *encryptedData = [self encryptedMessage:message recipient:client];
         
         NSDictionary *payload = @{@"recipient": client.remoteIdentifier, @"sender": client.remoteIdentifier, @"text": [encryptedData base64String]};
         ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:
@@ -343,142 +346,20 @@
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.remoteIdentifier = conversationID;
         [self.syncMOC saveOrRollback];
-        ZMUpdateEvent *decryptedEvent = [client.keysStore.box decryptUpdateEventAndAddClient:updateEvent managedObjectContext:self.syncMOC];
-
+        
+        __block ZMUpdateEvent *decryptedEvent;
+        [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+            decryptedEvent = [sessionsDirectory decryptUpdateEventAndAddClient:updateEvent managedObjectContext:self.syncMOC];
+        }];
+        
         // when
         [self.sut processEvents:@[decryptedEvent] liveEvents:NO prefetchResult:nil];
         
         // then
         XCTAssertEqualObjects([conversation.messages.lastObject messageText], text);
     }];
-}
-
-- (void)testThatItReturnsTheDecryptedEventsAndRemovesEncryptedOneWhenDecryptEventsIsCalled
-{
-    XCTAssertTrue([self.sut respondsToSelector:@selector(decryptedUpdateEventsFromEvents:)]);
     
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // given
-        UserClient *client = [self createSelfClient];
-        
-        // create encrypted message
-        NSError *error;
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Everything" nonce:NSUUID.createUUID.transportString];
-        CBSession *session = [client.keysStore.box sessionWithId:client.remoteIdentifier fromPreKey:[client.keysStore lastPreKeyAndReturnError:&error] error:&error];
-        NSData *encryptedData = [session encrypt:message.data error:&error];
-        XCTAssertNil(error);
-        
-        NSDictionary *payload = @{ @"recipient" : client.remoteIdentifier, @"sender" : client.remoteIdentifier, @"text" : encryptedData.base64String };
-        
-        ZMUpdateEvent *safeEvent = [ZMUpdateEvent eventFromEventStreamPayload:@{
-                                                                                @"type" : @"conversation.otr-message-add",
-                                                                                @"data" : payload,
-                                                                                @"conversation": NSUUID.createUUID.transportString,
-                                                                                @"time" : [NSDate dateWithTimeIntervalSince1970:555555].transportString
-                                                                                } uuid:nil];
-        
-        ZMUpdateEvent *unsafeEvent = [ZMUpdateEvent eventFromEventStreamPayload:@{
-                                                                                  @"conversation" : NSUUID.createUUID.transportString,
-                                                                                  @"time" : [NSDate dateWithTimeIntervalSince1970:1234000].transportString,
-                                                                                  @"type" : @"conversation.message-add",
-                                                                                  @"data" : @{ @"content" : @"fooo", @"nonce" : NSUUID.createUUID.transportString }
-                                                                                  } uuid:nil];
-        
-        [self.syncMOC saveOrRollback];
-        XCTAssertFalse(safeEvent.wasDecrypted);
-        
-        // when
-        XCTAssertTrue([self.sut conformsToProtocol:@protocol(ZMUpdateEventDecryptor)]);
-        NSArray <ZMUpdateEvent *>*updatedEvents = [(id <ZMUpdateEventDecryptor>)self.sut decryptedUpdateEventsFromEvents:@[safeEvent, unsafeEvent]];
-        
-        // then
-        XCTAssertEqual(updatedEvents.count, 2lu);
-        XCTAssertTrue(updatedEvents.firstObject.wasDecrypted);
-        XCTAssertFalse([updatedEvents containsObject:safeEvent]);
-        XCTAssertEqualObjects(updatedEvents.lastObject, unsafeEvent);
-    }];
-}
-
-- (void)testThatItDecyptsTheEncryptedEventsWhileKeepingTheUnecryptedEventsAndReturnsTheNonceToPrefetchForUpdateEvents
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-
-        // given
-        NSMutableArray <ZMUpdateEvent *>*events = [NSMutableArray array];
-        UserClient *client = self.createSelfClient;
-        
-        for (ZMUpdateEventType type = 1; type < ZMUpdateEvent_LAST; type++) {
-            if (type == ZMUpdateEventConversationClientMessageAdd ||
-                type == ZMUpdateEventConversationOtrAssetAdd ||
-                type == ZMUpdateEventConversationOtrMessageAdd) {
-                continue;
-            }
-            
-            NSString *eventTypeString = [ZMUpdateEvent eventTypeStringForUpdateEventType:type];
-            NSUUID *nonce = NSUUID.createUUID;
-            NSDictionary *payload = @{
-                                      @"conversation" : NSUUID.createUUID.transportString,
-                                      @"id" : self.createEventID.transportString,
-                                      @"time" : [NSDate dateWithTimeIntervalSince1970:1234000].transportString,
-                                      @"from" : NSUUID.createUUID.transportString,
-                                      @"type" : eventTypeString,
-                                      @"data" : @{
-                                              @"content":@"fooo",
-                                              @"nonce" : nonce.transportString,
-                                              }
-                                      };
-            
-            ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-            [events addObject:event];
-        }
-        
-        NSUUID *otrNonce = NSUUID.createUUID;
-        
-        NSError *error;
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"OTR message" nonce:otrNonce.transportString];
-        CBPreKey *prekey = [client.keysStore lastPreKeyAndReturnError:&error];
-        CBSession *session = [client.keysStore.box sessionWithId:client.remoteIdentifier fromPreKey:prekey error:&error];
-        NSData *encryptedData = [session encrypt:message.data error:&error];
-        XCTAssertNil(error);
-        
-        NSDictionary *payload = @{ @"recipient": client.remoteIdentifier, @"sender": client.remoteIdentifier, @"text": [encryptedData base64String] };
-        ZMUpdateEvent *encryptedUpdateEvent = [ZMUpdateEvent eventFromEventStreamPayload: @{
-                                                                                            @"type" : @"conversation.otr-message-add",
-                                                                                            @"data" : payload,
-                                                                                            @"conversation" : NSUUID.createUUID.transportString,
-                                                                                            @"time" : [NSDate dateWithTimeIntervalSince1970:555555].transportString
-                                                                                            } uuid:nil];
-        
-        XCTAssertTrue([self.syncMOC saveOrRollback]);
-        [events addObject:encryptedUpdateEvent];
-        
-        // when
-        XCTAssertFalse([self.sut respondsToSelector:@selector(conversationRemoteIdentifiersToPrefetchToProcessEvents:)]);
-        XCTAssertTrue([self.sut respondsToSelector:@selector(messageNoncesToPrefetchToProcessEvents:)]);
-        XCTAssertTrue([self.sut conformsToProtocol:@protocol(ZMUpdateEventDecryptor)]);
-        
-        NSArray <ZMUpdateEvent *>*decryptedEvents = [(id <ZMUpdateEventDecryptor>)self.sut decryptedUpdateEventsFromEvents:events];
-        
-        // then
-        XCTAssertEqual(decryptedEvents.count, 31lu);
-        XCTAssertEqual(decryptedEvents.count, events.count);
-        XCTAssertFalse([decryptedEvents containsObject:encryptedUpdateEvent]);
-        XCTAssertTrue(decryptedEvents.lastObject.wasDecrypted);
-        
-        for (NSUInteger idx = 0; idx < decryptedEvents.count - 1; idx++) {
-            XCTAssertFalse(decryptedEvents[idx].wasDecrypted);
-        }
-        
-        for (NSUInteger idx = 0; idx < events.count; idx++) {
-            XCTAssertFalse(events[idx].wasDecrypted);
-        }
-        
-        NSSet <NSUUID *>*noncesToFetch = [self.sut messageNoncesToPrefetchToProcessEvents:decryptedEvents];
-        
-        // then
-        XCTAssertTrue([noncesToFetch containsObject:otrNonce]);
-        XCTAssertEqual(noncesToFetch.count, 1lu);
-    }];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItGeneratesARequestToSendAClientMessageExternalWithExternalBlob
@@ -491,7 +372,7 @@
 
 - (void)testThatItGeneratesARequestToSendAClientMessageWhenAMessageIsInsertedWithBlock:(void(^)(ZMMessage *message))block
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         // given
         [self createSelfClient];
@@ -512,6 +393,8 @@
         XCTAssertEqualObjects(expectedPath, request.path);
         XCTAssertNotNil(request.binaryData);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 
@@ -542,16 +425,17 @@
         selfClient = self.createSelfClient;
         
         //other user client
-        NSError *error = nil;
-        CBCryptoBox *otherClientsBox = [CBCryptoBox cryptoBoxWithPathURL:[UserClientKeysStore otrDirectory] error:&error];
-        [conversation.otherActiveParticipants enumerateObjectsUsingBlock:^(ZMUser *user, NSUInteger idx, BOOL *__unused stop) {
+        EncryptionContext *otherClientsBox = [[EncryptionContext alloc] initWithPath:[UserClientKeysStore otrDirectory]];
+        [conversation.otherActiveParticipants enumerateObjectsUsingBlock:^(ZMUser *user, NSUInteger __unused idx, BOOL *__unused stop) {
             UserClient *userClient = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
             userClient.remoteIdentifier = [NSString createAlphanumericalString];
             userClient.user = user;
             
-            NSError *keyError;
-            CBPreKey *key = [otherClientsBox generatePreKeys:NSMakeRange(idx, 1) error:&keyError].firstObject;
-            __unused CBSession *session = [selfClient.keysStore.box sessionWithId:userClient.remoteIdentifier fromPreKey:key error:&keyError];
+            __block NSError *keyError;
+            [otherClientsBox perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+                NSString *key = [sessionsDirectory generatePrekey:1 error:&keyError];
+                [sessionsDirectory createClientSession:userClient.remoteIdentifier base64PreKeyString:key error:&keyError];
+            }];
         }];
     }];
     
@@ -707,7 +591,7 @@
 
 - (void)testThatItGeneratesARequestToSendOTRAssetWhenAMessageIsInsertedWithFormat:(ZMImageFormat)format block:(void(^)(ZMMessage *message))block
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         NSUUID *conversationId = [NSUUID createUUID];
         ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:conversationId];
@@ -735,6 +619,8 @@
         
         [self assertOtrAssetMetadata:otrMessageMetadata expected:expectedOtrMessageMetadata conversation:message.conversation];
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItGeneratesARequestToSendAssetWhenOTRAssetIsInserted_OnInitialization
@@ -789,12 +675,14 @@
         // trigger download
         [message requestImageDownload];
     }];
+    WaitForAllGroupsToBeEmpty(0.5);
 
     // request
     __block ZMTransportRequest *request;
     [self.syncMOC performGroupedBlockAndWait:^{
         request = [self.sut.requestGenerators nextRequest];
     }];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     return request;
 }
@@ -818,7 +706,7 @@
 
 - (void)testThatItDoesNotReturnsRequestToDownloadFileAsset
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         // given
         NSUUID *nonce = [NSUUID createUUID];
         NSURL *testURL = [[NSBundle bundleForClass:self.class] URLForResource:@"Lorem Ipsum" withExtension:@"txt"];
@@ -843,6 +731,8 @@
         // then
         XCTAssertNil(request);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDoesNotReturnRequestToDownloadAssetIfItHasNoAssetId
@@ -853,7 +743,7 @@
 
 - (void)testThatItUpdatesMessageWithImageData
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         // given
         NSData *imageData = [self verySmallJPEGData];
         ZMAssetClientMessage *message = [ZMAssetClientMessage insertNewObjectInManagedObjectContext:self.syncMOC];
@@ -872,11 +762,13 @@
         //then
         [mockMessage verify];
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDeletesMessageIfDownstreamRequestFailed
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         // given
         ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[NSData data]
                                                                                                 nonce:[NSUUID createUUID]
@@ -888,12 +780,13 @@
         // then
         XCTAssertTrue(message.isDeleted);
     }];
-
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItAddsMissingRecipientInMessageRelationship
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         // given
         ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
         
@@ -910,11 +803,13 @@
         XCTAssertNotNil(missingClient);
         XCTAssertEqualObjects(missingClient.remoteIdentifier, missingClientId);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDeletesTheCurrentClientIfWeGetA403ResponseWithCorrectLabel
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
 
         // given
         ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
@@ -931,11 +826,13 @@
         // then
         [(id)self.mockClientRegistrationStatus verify];
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDoesNotDeletesTheCurrentClientIfWeGetA403ResponseWithoutTheCorrectLabel
     {
-        [self.syncMOC performGroupedBlockAndWait:^{
+        [self.syncMOC performGroupedBlock:^{
             
             // given
             ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
@@ -951,11 +848,13 @@
             // then
             [(id)self.mockClientRegistrationStatus verify];
         }];
+        
+        WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItSetsNeedsToBeUpdatedFromBackendOnConversationIfMissingMapIncludesUsersThatAreNoActiveUsers
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         // given
         ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
@@ -972,11 +871,13 @@
         // then
         XCTAssertTrue(message.conversation.needsToBeUpdatedFromBackend);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItSetsNeedsToBeUpdatedFromBackendOnConnectionIfMissingMapIncludesUsersThatIsNoActiveUser_OneOnOne
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         // given
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeOneOnOne;
@@ -1003,11 +904,13 @@
         XCTAssertNotNil(message.conversation.connection);
         XCTAssertTrue(message.conversation.connection.needsToBeUpdatedFromBackend);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItInsertsAndSetsNeedsToBeUpdatedFromBackendOnConnectionIfMissingMapIncludesUsersThatIsNoActiveUser_OneOnOne
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         // given
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeOneOnOne;
@@ -1033,12 +936,14 @@
         XCTAssertNotNil(message.conversation.connection);
         XCTAssertTrue(message.conversation.connection.needsToBeUpdatedFromBackend);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
     
 - (void)testThatItDeletesDeletedRecipientsOnFailure
 {
     // given
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
         client.remoteIdentifier = @"whoopy";
         client.user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
@@ -1061,13 +966,13 @@
         XCTAssertTrue(client.isZombieObject);
         XCTAssertEqual(user.clients.count, 0u);
     }];
+    
     WaitForAllGroupsToBeEmpty(0.5);
-
 }
 
 - (void)testThatItDeletesDeletedRecipientsOnSuccessInsertion
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         // given
         UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
@@ -1093,11 +998,12 @@
         XCTAssertEqual(user.clients.count, 0u);
     }];
     
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDeletesDeletedRecipientsOnSuccessUpdate
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         // given
         ZMClientMessage *message = [ZMClientMessage insertNewObjectInManagedObjectContext:self.syncMOC];
@@ -1126,12 +1032,13 @@
         XCTAssertEqual(user.clients.count, 0u);
     }];
     
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 
 - (void)checkThatItDeletesMessageIfFailedToCreatedUpdateRequestAndNoOriginalDataStored:(ZMImageFormat)format
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         NSData *imageData = [self verySmallJPEGData];
         NSUUID *nonce = [NSUUID createUUID];
@@ -1155,6 +1062,8 @@
         //then
         XCTAssertTrue(message.isZombieObject);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDeletesMessageIfFailedToCreatedUpdateRequestForMediumFormatAndNoOriginalDataStored
@@ -1169,7 +1078,7 @@
 
 - (void)testThatItChecksIfItNeedsProcessingBeforeCreatingRequest
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         NSUUID *conversationId = [NSUUID createUUID];
         ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:conversationId];
@@ -1187,11 +1096,13 @@
         // then
         XCTAssertNil(request);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItResetsNeedsToUploadMediumKeyWhenParsingTheResponseForPreviewImage
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
 
         // given
         NSString *key = ZMAssetClientMessageUploadedStateKey;
@@ -1211,11 +1122,13 @@
         XCTAssertTrue([message hasLocalModificationsForKey:key]);
         XCTAssertEqual(message.uploadState, ZMAssetUploadStateUploadingFullAsset);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDoesNotSetTheAssetIdWhenParsingTheResponseForPreviewImage
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         // given
         ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[self verySmallJPEGData]
@@ -1230,12 +1143,14 @@
         // then
         XCTAssertNil(message.assetId);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 
 - (void)testThatItResetsNeedsToUploadMediumKeyWhenParsingTheResponseForMediumImage
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         // given
         NSString *key = ZMAssetClientMessageUploadedStateKey;
@@ -1259,11 +1174,13 @@
         XCTAssertFalse([message hasLocalModificationsForKey:key]);
         XCTAssertEqual(message.uploadState, ZMAssetUploadStateDone);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItSetsTheAssetIdWhenParsingTheResponseForMediumImage
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         // given
         ZMAssetClientMessage *message = [ZMAssetClientMessage assetClientMessageWithOriginalImageData:[self verySmallJPEGData]
@@ -1282,11 +1199,13 @@
         // then
         XCTAssertEqualObjects(message.assetId, assetID);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItResetsKeysWhenRequestFails_ClientDeleted
 {
-    [self.syncMOC performGroupedBlockAndWait:^{
+    [self.syncMOC performGroupedBlock:^{
         
         // given
         NSSet *keys = [NSSet setWithObject:ZMAssetClientMessageUploadedStateKey];
@@ -1309,6 +1228,8 @@
         XCTAssertTrue([message hasLocalModificationsForKeys:keys]);
         XCTAssertFalse(message.conversation.needsToBeUpdatedFromBackend);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 @end
@@ -1440,6 +1361,8 @@
         XCTAssertEqual(mediumGenericMessage.image.height, previewGenericMessage.image.originalHeight);
         XCTAssertEqual(mediumGenericMessage.image.width, previewGenericMessage.image.originalWidth);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 @end

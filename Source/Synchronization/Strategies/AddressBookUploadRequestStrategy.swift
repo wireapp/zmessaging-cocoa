@@ -129,7 +129,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
     
     public func didReceiveResponse(response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
         if response.result == .Success {
-            
+
             if let payload = response.payload as? [String: AnyObject],
                 let results = payload["results"] as? [[String: AnyObject]]
             {

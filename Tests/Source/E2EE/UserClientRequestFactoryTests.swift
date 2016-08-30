@@ -45,10 +45,10 @@ class UserClientRequestFactoryTests: MessagingTest {
         super.tearDown()
     }
 
-    func expectedKeyPayloadForClientPreKeys(client : UserClient) -> [NSDictionary] {
+    func expectedKeyPayloadForClientPreKeys(client : UserClient) -> [[String : AnyObject]] {
         let generatedKeys = (client.keysStore as! FakeKeysStore).lastGeneratedKeys
-        let expectedPrekeys = generatedKeys.keys.enumerate().map {
-            return ["key": $1.data!.base64String(), "id": Int(generatedKeys.minIndex) + $0]
+        let expectedPrekeys : [[String: AnyObject]] = generatedKeys.map { (key: (id: UInt16, prekey: String)) in
+            return ["key": key.prekey, "id": NSNumber(unsignedShort: key.id)]
         }
         return expectedPrekeys
     }
@@ -69,11 +69,11 @@ class UserClientRequestFactoryTests: MessagingTest {
                 AssertDictionaryHasOptionalValue(payload, key: "password", expected: credentials.password!, "Payload should contain password")
                 
                 let lastPreKey = (client.keysStore as! FakeKeysStore).lastGeneratedLastPrekey!
-                let expectedLastPreKeyPayload = ["key": lastPreKey.data!.base64String(), "id": CBMaxPreKeyID+1]
+                let expectedLastPreKeyPayload = ["key": lastPreKey, "id": NSNumber(unsignedShort: UserClientKeysStore.MaxPreKeyID+1)]
                 
                 AssertDictionaryHasOptionalValue(payload, key: "lastkey", expected: expectedLastPreKeyPayload, "Payload should contain last prekey")
                 
-                let preKeysPayloadData = payload["prekeys"] as? [[NSString: AnyObject]]
+                let preKeysPayloadData = payload["prekeys"] as? [[String: AnyObject]]
                 AssertOptionalNotNil(preKeysPayloadData, "Payload should contain prekeys") {preKeysPayloadData in
                     XCTAssertEqual(preKeysPayloadData, self.expectedKeyPayloadForClientPreKeys(client))
                 }
@@ -113,7 +113,7 @@ class UserClientRequestFactoryTests: MessagingTest {
                 XCTAssertNil(payload["password"])
                 
                 let lastPreKey = try! client.keysStore.lastPreKey()
-                let expectedLastPreKeyPayload = ["key": lastPreKey.data!.base64String(), "id": CBMaxPreKeyID+1]
+                let expectedLastPreKeyPayload = ["key": lastPreKey, "id": NSNumber(unsignedShort: UserClientKeysStore.MaxPreKeyID+1)]
                 
                 AssertDictionaryHasOptionalValue(payload, key: "lastkey", expected: expectedLastPreKeyPayload, "Payload should contain last prekey")
                 
