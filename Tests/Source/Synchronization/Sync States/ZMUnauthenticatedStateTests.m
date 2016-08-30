@@ -416,7 +416,6 @@
     [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@YES] isSelfUserComplete];
     [[[(id)self.objectDirectory.loginTranscoder stub] andReturn:nil] nextRequest];
     [[(id)self.stateMachine stub] startQuickSync];
-    [[[(id)self.objectDirectory.addressBookTranscoder stub] andReturn:nil] requestGenerators];
     
     // when
     ZMTransportRequest *nextRequest = [self.sut nextRequest];

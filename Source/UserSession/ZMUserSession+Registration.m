@@ -25,8 +25,6 @@
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Registration.h"
 #import "ZMUserSession+Authentication.h"
-#import "ZMAddressBookSync.h"
-#import "ZMEmptyAddressBookSync.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMOperationLoop.h"
 #import "ZMUserSessionRegistrationNotification.h"
@@ -60,9 +58,7 @@
     NSString *phoneNumber = registrationUser.phoneNumber;
     NSString *phoneVerificationCode = registrationUser.phoneVerificationCode;
     NSString *invitationCode = registrationUser.invitationCode;
-    
-    [ZMEmptyAddressBookSync markAddressBookAsNeedingToBeUploadedInContext:self.managedObjectContext];
-    
+        
     if (phoneNumber == nil && (password == nil || ! [ZMUser validatePassword:&password error:NULL])) {
         [ZMUserSessionRegistrationNotification notifyRegistrationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials userInfo:nil]];
         return;

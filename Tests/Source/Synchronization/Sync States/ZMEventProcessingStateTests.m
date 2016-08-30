@@ -53,7 +53,6 @@
         self.objectDirectory.flowTranscoder,
         self.objectDirectory.callStateTranscoder,
         self.objectDirectory.userProfileUpdateTranscoder,
-        self.objectDirectory.addressBookTranscoder,
         self.objectDirectory.connectionTranscoder,
         self.objectDirectory.userTranscoder,
         self.objectDirectory.selfTranscoder,

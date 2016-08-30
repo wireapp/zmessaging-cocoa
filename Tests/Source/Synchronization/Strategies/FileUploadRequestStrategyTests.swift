@@ -21,15 +21,6 @@ import Foundation
 @testable import zmessaging
 
 // MARK: - Fakes
-private class FakeAuthStatus : AuthenticationStatusProvider {
-    
-    var mockedPhase : ZMAuthenticationPhase = .Authenticated
-        
-    @objc var currentPhase : ZMAuthenticationPhase {
-        return self.mockedPhase
-    }
-}
-
 @objc class FakeClientRegistrationStatus : NSObject, ZMClientClientRegistrationStatusProvider {
     
     var readyToUse : Bool = true
@@ -66,14 +57,14 @@ private let testData = NSData(contentsOfURL: testDataURL)!
 @objc class FileUploadRequestStrategyTests: MessagingTest {
 
     private var sut: FileUploadRequestStrategy!
-    private var authStatus: FakeAuthStatus!
+    private var authStatus: MockAuthenticationStatus!
     private var cancellationProvider: FakeCancelationProvider!
 	private var clientRegistrationStatus : FakeClientRegistrationStatus!
     
     override func setUp() {
         super.setUp()
         createSelfClient()
-        self.authStatus = FakeAuthStatus()
+        self.authStatus = MockAuthenticationStatus(phase: .Authenticated)
         self.cancellationProvider = FakeCancelationProvider()
 		self.clientRegistrationStatus = FakeClientRegistrationStatus()
         self.sut = FileUploadRequestStrategy(
@@ -273,7 +264,7 @@ extension FileUploadRequestStrategyTests {
     func testThatItDoesNotGeneratesARequestWhenNotAuthenticated() {
         
         // given
-		self.authStatus.mockedPhase = .Unauthenticated
+		self.authStatus.mockPhase = .Unauthenticated
         let msg = createMessage("foo")
         self.process(sut, message: msg)
         

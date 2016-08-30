@@ -42,15 +42,6 @@ class OperationLoopNewRequestObserver {
 }
 
 
-@objc class MockAuthenticationProvider: NSObject, AuthenticationStatusProvider {
-    var mockAuthenticationPhase: ZMAuthenticationPhase = .Authenticated
-    
-    var currentPhase: ZMAuthenticationPhase {
-        return mockAuthenticationPhase
-    }
-}
-
-
 @objc class MockNotificationDispatcher: NSObject, LocalNotificationDispatchType {
     var didReceiveUpdateEventsBlock: ([ZMUpdateEvent]? -> Void)?
     var callCount = 0
@@ -138,7 +129,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
 
     var sut: BackgroundAPNSPingBackStatus!
     var observer: OperationLoopNewRequestObserver!
-    var authenticationProvider: MockAuthenticationProvider!
+    var authenticationProvider: MockAuthenticationStatus!
     var notificationDispatcher: MockNotificationDispatcher!
     
     override func setUp() {
@@ -146,7 +137,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         
         BackgroundActivityFactory.sharedInstance().mainGroupQueue = FakeGroupQueue()
         
-        authenticationProvider = MockAuthenticationProvider()
+        authenticationProvider = MockAuthenticationStatus()
         notificationDispatcher = MockNotificationDispatcher()
         sut = BackgroundAPNSPingBackStatus(
             syncManagedObjectContext: syncMOC,
@@ -453,7 +444,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     
     func testThatItDoesNotStartABackgroundActivityWhenTheStatusIsNotAuthenticated() {
         // given
-        authenticationProvider.mockAuthenticationPhase = .Unauthenticated
+        authenticationProvider.mockPhase = .Unauthenticated
         
         // when
         sut.didReceiveVoIPNotification(createEventsWithID())

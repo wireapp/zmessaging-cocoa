@@ -1371,10 +1371,10 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     XCTAssertEqual(result.usersInDirectory.count, 0u);
     XCTAssertEqual(result.groupConversations.count, 0u);
     
-    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
+    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMSearchUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
         return [obj.remoteIdentifier isEqual:user1.remoteIdentifier];
     }], (NSUInteger)NSNotFound);
-    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
+    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMSearchUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
         return [obj.remoteIdentifier isEqual:user2.remoteIdentifier];
     }], (NSUInteger)NSNotFound);
     
@@ -1417,10 +1417,10 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     XCTAssertEqual(result.usersInDirectory.count, 0u);
     XCTAssertEqual(result.groupConversations.count, 0u);
     
-    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
+    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMSearchUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
         return [obj.remoteIdentifier isEqual:user1.remoteIdentifier];
     }], (NSUInteger)NSNotFound);
-    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
+    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMSearchUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
         return [obj.remoteIdentifier isEqual:user2.remoteIdentifier];
     }], (NSUInteger)NSNotFound);
     
@@ -1472,10 +1472,10 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     XCTAssertEqual(result.usersInDirectory.count, 0u);
     XCTAssertEqual(result.groupConversations.count, 0u);
     
-    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
+    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMSearchUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
         return [obj.remoteIdentifier isEqual:user1.remoteIdentifier];
     }], (NSUInteger)NSNotFound);
-    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
+    XCTAssertNotEqual([result.usersInContacts indexOfObjectPassingTest:^BOOL(ZMSearchUser *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
         return [obj.remoteIdentifier isEqual:user2.remoteIdentifier];
     }], (NSUInteger)NSNotFound);
  

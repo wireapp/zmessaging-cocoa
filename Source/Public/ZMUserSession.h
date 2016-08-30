@@ -33,7 +33,6 @@
 
 @protocol AnalyticsType;
 @protocol AVSMediaManager;
-@protocol AddressBookUploadObserver;
 @protocol ZMNetworkAvailabilityObserver;
 @protocol ZMRequestsToOpenViewsDelegate;
 @protocol ZMThirdPartyServicesDelegate;
@@ -134,20 +133,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 @end
 
 
-
-@interface ZMUserSession (AddressBookUpload)
-
-+ (void)addAddressBookUploadObserver:(id<AddressBookUploadObserver>)observer;
-+ (void)removeAddressBookUploadObserver:(id<AddressBookUploadObserver>)observer;
-
-/// Asynchronously uploads the address book.
-/// Once the address book has been uploaded, subsequent calls will only cause a re-upload if there are local changes to the address book.
-- (void)uploadAddressBook;
-
-@end
-
-
-
 @interface ZMUserSession (LaunchOptions)
 
 - (void)didLaunchWithURL:(NSURL *)URL;
@@ -164,15 +149,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 + (void)removeAVSLogObserver:(id<ZMAVSLogObserverToken>)token;
 
 + (void)appendAVSLogMessageForConversation:(ZMConversation *)conversation withMessage:(NSString *)message;
-
-@end
-
-
-
-@protocol AddressBookUploadObserver <NSObject>
-
-/// This method will get called when the app tries to upload the address book, but does not have access to it.
-- (void)failedToAccessAddressBook:(NSNotification *)note;
 
 @end
 

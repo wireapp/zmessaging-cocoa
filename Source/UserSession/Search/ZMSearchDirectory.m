@@ -32,7 +32,6 @@
 #import "ZMOperationLoop.h"
 #import "ZMSuggestionResult.h"
 #import "ZMSearchResult+Internal.h"
-#import "ZMAddressBookMatcher.h"
 #import "ZMSearchRequest.h"
 
 static NSString * const TopConversationsDidChangeName = @"ZMTopConversationsDidChange";
@@ -226,11 +225,18 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
     
     
     NSString *query = searchRequest.query;
+    ZM_WEAK(self);
     search.resultHandler = ^(ZMSearchResult *searchResult) {
+        ZM_STRONG(self);
+        if (self == nil) {
+            return;
+        }
         [self storeSearchResultUserIDsInCache:searchResult];
         
         if (searchRequest.includeAddressBookContacts) {
-            searchResult = [self extendSearchResultWithContactsFromAddressBook:searchResult queryString:query];
+            searchResult = [searchResult extendWithContactsFromAddressBook:query
+                                                              usersToMatch:self.connectedAndBlockedAndPendingUsers
+                                                               userSession:self.userSession];
         }
         
         [self sendSearchResult:searchResult forToken:token];
@@ -362,40 +368,6 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
             [self.userSession.transportSession enqueueSearchRequest:request];            
         }
     }];
-}
-
-- (ZMSearchResult *)extendSearchResultWithContactsFromAddressBook:(ZMSearchResult *)searchResult queryString:(NSString *)queryString
-{
-    ZMAddressBookMatcher *matcher = [[ZMAddressBookMatcher alloc] initWithUserSession:self.userSession];
-    
-    NSArray *queryContacts = [matcher contactsMatchingQuery:queryString];
-    NSArray *queryUsers = [searchResult.usersInContacts valueForKey:@"user"];
-    
-    NSMutableArray *matchedUsers = [NSMutableArray array];
-    NSMutableArray *localMatchedUsers = [NSMutableArray array];
-    
-    [matcher matchUsers:[self connectedAndBlockedAndPendingUsers]
-           withContacts:self.userSession.addressBookContacts
-                  block:^(ZMAddressBookContact *contact, ZMUser *user) {
-                      if ([queryUsers containsObject:user] && (user.connection.status == ZMConnectionStatusAccepted)) {
-                          if (contact == nil) {
-                              [localMatchedUsers addObject:user];
-                          } else {
-                              [matchedUsers addObject:[[ZMSearchUser alloc] initWithContact:contact user:user userSession:self.userSession]];
-                          }
-                      } else if ([queryContacts containsObject:contact] && (user == nil || (user.connection.status != ZMConnectionStatusBlocked))) {
-                          [matchedUsers addObject:[[ZMSearchUser alloc] initWithContact:contact user:user userSession:self.userSession]];
-                      }
-                  }];
-    
-    [matchedUsers addObjectsFromArray:[ZMSearchUser usersWithUsers:localMatchedUsers userSession:self.userSession]];
-    
-    ZMSearchResult *extendedSearchResult = [[ZMSearchResult alloc] init];
-    [extendedSearchResult addUsersInContacts:matchedUsers];
-    [extendedSearchResult addUsersInDirectory:searchResult.usersInDirectory];
-    [extendedSearchResult addGroupConversations:searchResult.groupConversations];
-    
-    return extendedSearchResult;
 }
 
 - (NSArray *)connectedAndBlockedAndPendingUsers

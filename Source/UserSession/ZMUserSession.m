@@ -33,19 +33,15 @@
 #import "ZMSearchDirectory+Internal.h"
 #import <libkern/OSAtomic.h>
 #import "ZMAuthenticationStatus.h"
-#import "ZMAddressBookTranscoder.h"
 #import "ZMPushToken.h"
 #import "ZMCommonContactsSearch.h"
 #import "ZMBlacklistVerificator.h"
 #import "ZMTracing.h"
-#import "ZMAddressBookSync.h"
-#import "ZMEmptyAddressBookSync.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMUserProfileUpdateStatus.h"
 #import "NSURL+LaunchOptions.h"
 #import "ZMessagingLogs.h"
-#import "ZMAddressBook.h"
 #import "ZMAVSBridge.h"
 #import "ZMOnDemandFlowManager.h"
 #import "ZMCookie.h"
@@ -56,11 +52,8 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMLocalNotificationDispatcher.h"
 
-static NSInteger const MaximumContactsToParse = 10000;
-
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
-NSString * const ZMUserSessionFailedToAccessAddressBookNotificationName = @"ZMUserSessionFailedToAccessAddressBook";
 NSString * const ZMUserSessionTrackingIdentifierDidChangeNotification = @"ZMUserSessionTrackingIdentifierDidChange";
 static NSString * const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
 NSString * const ZMAppendAVSLogNotificationName = @"ZMAppendAVSLogNotification";
@@ -94,8 +87,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 
 @property (nonatomic) BOOL isVersionBlacklisted;
-@property (nonatomic) NSArray *cachedAddressBookContacts;
-@property (nonatomic) dispatch_once_t loadAddressBookContactsOnce;
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
 
 @property (nonatomic) ZMPushRegistrant *pushRegistrant;
@@ -183,7 +174,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                appVersion:appVersion];
     if (self != nil) {
         self.ownsQueue = YES;
-        self.loadAddressBookContactsOnce = 0;
     }
     return self;
 }
@@ -652,27 +642,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 
 
-@implementation ZMUserSession (AddressBookUpload)
 
-+ (void)addAddressBookUploadObserver:(id<AddressBookUploadObserver>)observer;
-{
-    ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:observer selector:@selector(failedToAccessAddressBook:) name:ZMUserSessionFailedToAccessAddressBookNotificationName object:nil]);
-}
-
-+ (void)removeAddressBookUploadObserver:(id<AddressBookUploadObserver>)observer;
-{
-    [[NSNotificationCenter defaultCenter] removeObserver:observer name:ZMUserSessionFailedToAccessAddressBookNotificationName object:nil];
-}
-
-- (void)uploadAddressBook;
-{
-    [ZMAddressBookSync markAddressBookAsNeedingToBeUploadedInContext:self.managedObjectContext];
-    if (![self.managedObjectContext forceSaveOrRollback]) {
-        ZMLogWarn(@"Failed to save addressBook");
-    }
-}
-
-@end
 
 
 @implementation ZMUserSession(NetworkState)
@@ -893,40 +863,6 @@ static NSString * const TrackingIdentifierKey = @"ZMTrackingIdentifier";
 @end
 
 
-
-@implementation ZMUserSession (AddressBook)
-
-- (NSArray *)addressBookContacts
-{
-    if (self.cachedAddressBookContacts == nil) {
-        if (! [ZMAddressBook userHasAuthorizedAccess]) {
-            return @[]; // Don't cache contacts without address book authorization
-        }
-        
-        dispatch_once(&_loadAddressBookContactsOnce, ^{
-            [self reloadAddressBookContacts];
-        });
-    }
-    
-    return self.cachedAddressBookContacts;
-}
-
-- (void)reloadAddressBookContacts
-{
-    ZMAddressBook *addressBook = [ZMAddressBook addressBook];
-    
-    NSMutableArray *contacts = [NSMutableArray array];
-    for (ZMAddressBookContact *contact in addressBook.contacts) {
-        if(contacts.count > MaximumContactsToParse) {
-            break;
-        }
-        [contacts addObject:contact];
-    }
-    
-    self.cachedAddressBookContacts = contacts;
-}
-
-@end
 
 @implementation ZMUserSession (SelfUserClient)
 

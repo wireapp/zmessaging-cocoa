@@ -39,7 +39,6 @@
 @class ClientUpdateStatus;
 @class AVSFlowManager;
 
-extern NSString * const ZMUserSessionFailedToAccessAddressBookNotificationName;
 extern NSString * const ZMAppendAVSLogNotificationName;
 
 @interface ZMUserSession (AuthenticationStatus)
@@ -177,11 +176,3 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 @end
 
-@interface ZMUserSession (AddressBook)
-
-@property (nonatomic, readonly) NSArray *addressBookContacts;
-
-/// This operation is very expensive if the user's address book is large.
-- (void)reloadAddressBookContacts;
-
-@end

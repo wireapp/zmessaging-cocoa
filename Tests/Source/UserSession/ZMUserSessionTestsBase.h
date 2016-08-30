@@ -37,11 +37,8 @@
 #import "ZMSyncStrategy.h"
 #import "ZMOperationLoop.h"
 #import "ZMFlowSync.h"
-#import "ZMAddressBookTranscoder.h"
 #import "ZMPushToken.h"
 #import "ZMCommonContactsSearch.h"
-#import "ZMAddressBookSync.h"
-#import "ZMEmptyAddressBookSync.h"
 
 #import "ZMCredentials.h"
 #import "NSURL+LaunchOptions.h"
