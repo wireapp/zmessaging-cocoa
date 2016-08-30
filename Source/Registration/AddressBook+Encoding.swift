@@ -27,13 +27,12 @@ extension AddressBook {
                                      maxNumberOfContacts: UInt,
                                      completion: (EncodedAddressBookChunk?)->()
         ) {
-        groupQueue.dispatchGroup.asyncOnQueue(addressBookProcessingQueue) { [weak self] in
-            guard let strongSelf = self else {
-                return
-            }
-            
+        // here we are explicitly capturing self, this is executed on a queue that is
+        // never blocked indefinitely as this is the only function using it
+        groupQueue.dispatchGroup.asyncOnQueue(addressBookProcessingQueue) {
+
             let range = startingContactIndex..<(startingContactIndex+maxNumberOfContacts)
-            let cards = strongSelf.generateContactCards(range)
+            let cards = self.generateContactCards(range)
             guard cards.count > 0 else {
                 groupQueue.performGroupedBlock({
                     completion(nil)
@@ -41,7 +40,7 @@ extension AddressBook {
                 return
             }
             let cardsRange = startingContactIndex..<(startingContactIndex+UInt(cards.count))
-            let encodedAB = EncodedAddressBookChunk(numberOfTotalContacts: strongSelf.numberOfContacts,
+            let encodedAB = EncodedAddressBookChunk(numberOfTotalContacts: self.numberOfContacts,
                                                     otherContactsHashes: cards,
                                                     includedContacts: cardsRange)
             groupQueue.performGroupedBlock({ 

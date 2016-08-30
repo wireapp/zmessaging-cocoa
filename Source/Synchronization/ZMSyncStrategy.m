@@ -178,6 +178,9 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[AssetDownloadRequestStrategy alloc] initWithAuthStatus:authenticationStatus
                                                                    taskCancellationProvider:taskCancellationProvider
                                                                        managedObjectContext:self.syncMOC],
+                                   [[AddressBookUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus
+                                                                                 clientRegistrationStatus:clientRegistrationStatus
+                                                                                                      moc:self.syncMOC],
                                    self.pingBackRequestStrategy,
                                    self.pushNoticeFetchStrategy,
                                    self.fileUploadRequestStrategy,

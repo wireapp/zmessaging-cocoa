@@ -32,7 +32,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
 
 /// This request sync generates request to upload the address book
 /// It will upload only after `markAddressBookAsNeedingToBeUploaded` is called
-@objc class AddressBookUploadRequestStrategy: NSObject {
+@objc public class AddressBookUploadRequestStrategy: NSObject {
     
     /// Auth status to know whether we can make requests
     private let authenticationStatus : AuthenticationStatusProvider
@@ -57,6 +57,17 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
     
     /// Address book
     private let addressBookGenerator : ()->(AddressBookAccessor?)
+    
+    public convenience init(authenticationStatus: AuthenticationStatusProvider,
+        clientRegistrationStatus: ZMClientClientRegistrationStatusProvider,
+        moc: NSManagedObjectContext)
+    {
+        
+        self.init(authenticationStatus: authenticationStatus,
+            clientRegistrationStatus: clientRegistrationStatus,
+            managedObjectContext: moc
+        )
+    }
     
     init(authenticationStatus: AuthenticationStatusProvider,
                 clientRegistrationStatus: ZMClientClientRegistrationStatusProvider,
@@ -91,6 +102,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
         
         // already encoded? just send it
         if self.encodedAddressBookChunkToUpload != nil {
+            self.requestSync.readyForNextRequestIfNotBusy()
             return self.requestSync.nextRequest()
         }
         
@@ -98,7 +110,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
         return nil
     }
     
-    func requestForSingleRequestSync(sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
+    public func requestForSingleRequestSync(sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
         guard sync == self.requestSync, let encodedChunk = self.encodedAddressBookChunkToUpload else {
             return nil
         }
@@ -110,12 +122,12 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
                     "contact" : hashes
                 ]
         }
-        let payload = ["cards" : contactCards]
+        let payload = ["cards" : contactCards, "self" : []]
         self.tracker.tagAddressBookUploadStarted(encodedChunk.numberOfTotalContacts)
         return ZMTransportRequest(path: onboardingEndpoint, method: .MethodPOST, payload: payload, shouldCompress: true)
     }
     
-    func didReceiveResponse(response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
+    public func didReceiveResponse(response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
         if response.result == .Success {
             
             if let payload = response.payload as? [String: AnyObject],
@@ -188,7 +200,6 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
     /// Start uploading a given chunk
     private func startUpload(encodedChunk: EncodedAddressBookChunk) {
         self.encodedAddressBookChunkToUpload = encodedChunk
-        self.requestSync.readyForNextRequest()
         ZMOperationLoop.notifyNewRequestsAvailable(self)
     }
 }
