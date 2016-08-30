@@ -96,6 +96,9 @@ extension AddressBookUploadRequestStrategyTest {
                 XCTFail("No parsed cards")
             }
             XCTAssertTrue(request.shouldCompress)
+            let selfArray = (request.payload as? [String : AnyObject])?["self"] as? [String]
+            XCTAssertNotNil(selfArray)
+            XCTAssertEqual(selfArray?.count, 0)
         }
     }
     
