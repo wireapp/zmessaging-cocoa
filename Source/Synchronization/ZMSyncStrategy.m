@@ -106,7 +106,7 @@
 @property (nonatomic) FileUploadRequestStrategy *fileUploadRequestStrategy;
 @property (nonatomic) LinkPreviewAssetDownloadRequestStrategy *linkPreviewAssetDownloadRequestStrategy;
 
-@property (nonatomic) EventDataController *eventDataController;
+@property (nonatomic) NSManagedObjectContext *eventMOC;
 @property (nonatomic) EventDecoder *eventDecoder;
 @property (nonatomic, weak) ZMLocalNotificationDispatcher *localNotificationDispatcher;
 
@@ -153,8 +153,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.syncMOC = syncMOC;
         self.uiMOC = uiMOC;
         self.badge = badge;
-        
-        self.eventDataController = [[EventDataController alloc] initWithAppGroupIdentifier:appGroupIdentifier];
+        self.eventMOC = [NSManagedObjectContext createEventContextWithAppGroupIdentifier:appGroupIdentifier];
         
         [self createTranscodersWithClientRegistrationStatus:clientRegistrationStatus
                                     userProfileUpdateStatus:userProfileStatus
@@ -220,8 +219,7 @@ ZM_EMPTY_ASSERTING_INIT()
     NSManagedObjectContext *uiMOC = self.uiMOC;
     NSOperationQueue *imageProcessingQueue = [ZMImagePreprocessor createSuitableImagePreprocessingQueue];
 
-    self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventDataController.managedObjectContext syncMOC:self.syncMOC];
-    
+    self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventMOC syncMOC:self.syncMOC];
     self.connectionTranscoder = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC];
     self.userTranscoder = [[ZMUserTranscoder alloc] initWithManagedObjectContext:self.syncMOC];
     self.selfTranscoder = [[ZMSelfTranscoder alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
@@ -300,8 +298,8 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     self.tornDown = YES;
     self.eventDecoder = nil;
-    [self.eventDataController tearDown];
-    self.eventDataController = nil;
+    [self.eventMOC tearDown];
+    self.eventMOC = nil;
     [self.stateMachine tearDown];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self appTerminated:nil];

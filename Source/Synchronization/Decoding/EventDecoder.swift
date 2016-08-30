@@ -22,29 +22,31 @@ import ZMCDataModel
 
 private let zmLog = ZMSLog(tag: "EventDecoder")
 
+extension NSManagedObjectContext {
 
-@objc public class EventDataController: NSObject {
-    
-    public static var useInMemoryStore: Bool = false
-    public let managedObjectContext: NSManagedObjectContext
-    
+    private static var eventPersistentStoreCoordinator: NSPersistentStoreCoordinator?
+
+    /// Creates and returns the `ManagedObjectContext` used for storing update events, ee `ZMEventModel`, `StorUpdateEvent` and `EventDecoder`.
     /// - parameter appGroupIdentifier: Optional identifier for a shared container group to be used to store the database,
     /// if `nil` is passed a default of `group. + bundleIdentifier` will be used (e.g. when testing)
-    public init(appGroupIdentifier: String?) {
-        self.managedObjectContext = EventDataController.createCoreDataStackAndReturnContext(appGroupIdentifier)
-        super.init()
-    }
-    
-    private static func createCoreDataStackAndReturnContext(appGroupIdentifier: String?) -> NSManagedObjectContext {
-        let psc = EventDataController.createPersistentStoreCoordinator()
+    public static func createEventContext(withAppGroupIdentifier appGroupIdentifier: String?) -> NSManagedObjectContext {
+        eventPersistentStoreCoordinator = createPersistentStoreCoordinator()
         let managedObjectContext = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
-        managedObjectContext.persistentStoreCoordinator = psc
+        managedObjectContext.persistentStoreCoordinator = eventPersistentStoreCoordinator
         managedObjectContext.createDispatchGroups()
-
-        EventDataController.addPersistentStore(psc, appGroupIdentifier: appGroupIdentifier)
+        
+        addPersistentStore(eventPersistentStoreCoordinator!, appGroupIdentifier: appGroupIdentifier)
         return managedObjectContext
     }
-    
+
+    public func tearDown() {
+        if let store = persistentStoreCoordinator?.persistentStores.first {
+            try! persistentStoreCoordinator?.removePersistentStore(store)
+        }
+        
+        self.dynamicType.eventPersistentStoreCoordinator = nil
+    }
+
     private static func createPersistentStoreCoordinator() -> NSPersistentStoreCoordinator {
         guard let modelURL = NSBundle(forClass: StoredUpdateEvent.self).URLForResource("ZMEventModel", withExtension:"momd") else {
             fatalError("Error loading model from bundle")
@@ -54,11 +56,11 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
         }
         return NSPersistentStoreCoordinator(managedObjectModel: mom)
     }
-    
+
     private static func addPersistentStore(psc: NSPersistentStoreCoordinator, appGroupIdentifier: String?, isSecondTry: Bool = false) {
-        guard let storeURL = EventDataController.storeURL(forAppGroupIdentifier: appGroupIdentifier) else { return }
+        guard let storeURL = storeURL(forAppGroupIdentifier: appGroupIdentifier) else { return }
         do {
-            let storeType = EventDataController.useInMemoryStore ? NSInMemoryStoreType : NSSQLiteStoreType
+            let storeType = useInMemoryStore() ? NSInMemoryStoreType : NSSQLiteStoreType
             try psc.addPersistentStoreWithType(storeType, configuration: nil, URL: storeURL, options: nil)
         } catch {
             if isSecondTry {
@@ -70,22 +72,16 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
             }
         }
     }
-    
-    public func tearDown() {
-        if let store = managedObjectContext.persistentStoreCoordinator?.persistentStores.first {
-            try! managedObjectContext.persistentStoreCoordinator?.removePersistentStore(store)
-        }
-    }
-    
+
     private static func storeURL(forAppGroupIdentifier appGroupdIdentifier: String?) -> NSURL? {
         let fileManager = NSFileManager.defaultManager()
-
+        
         guard let identifier = NSBundle.mainBundle().bundleIdentifier ?? NSBundle(forClass: ZMUser.self).bundleIdentifier else { return nil }
         let groupIdentifier = appGroupdIdentifier ?? "group.\(identifier)"
         guard let directory = fileManager.containerURLForSecurityApplicationGroupIdentifier(groupIdentifier) else { return nil }
         
         let _storeURL = directory.URLByAppendingPathComponent(identifier)
-
+        
         if !fileManager.fileExistsAtPath(_storeURL.path!) {
             do {
                 try fileManager.createDirectoryAtURL(_storeURL, withIntermediateDirectories: true, attributes: nil)
@@ -95,16 +91,15 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
         }
         
         do {
-            try _storeURL.setResourceValue(1, forKey:NSURLIsExcludedFromBackupKey)
+            try _storeURL.setResourceValue(1, forKey: NSURLIsExcludedFromBackupKey)
         } catch {
             assertionFailure("Error excluding \(_storeURL.path!) from backup: \(error)")
         }
-
+        
         let storeFileName = "ZMEventModel.sqlite"
         return _storeURL.URLByAppendingPathComponent(storeFileName)
     }
 }
-
 
 @objc public class EventDecoder: NSObject {
     
@@ -135,7 +130,7 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
     /// It then calls the passed in block (multiple times if necessary), returning the decrypted events
     /// If the app crashes while processing the events, they can be recovered from the database
     /// Recovered events are processed before the passed in events to reflect event history
-    public func processEvents(events: [ZMUpdateEvent], block: ConsumeBlock){
+    public func processEvents(events: [ZMUpdateEvent], block: ConsumeBlock) {
 
         // fetch first batch of old events
         let batchSize = EventDecoder.BatchSize
@@ -152,11 +147,15 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
         var newStoredEvents = [StoredUpdateEvent]()
         var newEvents = [ZMUpdateEvent]()
         
+        
+        // We decrypt the events and store them in the event database
         encryptionContext?.perform({ [weak self] (sessionsDirectory) in
             guard let strongSelf = self else { return }
-            
+
             newEvents = events.flatMap { sessionsDirectory.decryptUpdateEventAndAddClient($0, managedObjectContext: strongSelf.syncMOC) }
-            
+
+            // This call has to be synchronous to ensure that we close the
+            // encryption context only if we stored all events in the database
             strongSelf.eventMOC.performGroupedBlockAndWait {
                 // decryptEvents and insert counting upwards from highest index in DB
                 for (idx, event) in newEvents.enumerate() {
@@ -185,7 +184,7 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
         block(events)
         let strongEventMOC = eventMOC
 
-        eventMOC.performGroupedBlockAndWait {
+        eventMOC.performGroupedBlock {
             storedEvents.forEach(strongEventMOC.deleteObject)
             strongEventMOC.saveOrRollback()
         }
@@ -203,13 +202,16 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
             hasMoreEvents = storedEvents.last?.sortIndex != lastIndexToFetch
             
             if events.count > 0 {
+                // process the current event batch
                 processBatch(events, storedEvents: storedEvents, block: consumeBlock)
                 events = []
                 storedEvents = []
             } else {
+                // we do not have any non-stored events, exit the loop
                 hasMoreEvents = false
             }
             
+            // If the last event's index was not the last stored index, we try to fetch the next batch
             if hasMoreEvents {
                 storedEvents = StoredUpdateEvent.nextEvents(eventMOC, batchSize: EventDecoder.BatchSize, stopAtIndex: lastIndexToFetch)
                 if storedEvents.count > 0 {

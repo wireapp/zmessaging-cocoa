@@ -413,9 +413,8 @@
     // when
     for(id event in eventsArray) {
         [self.sut consumeUpdateEvents:@[event]];
+        WaitForAllGroupsToBeEmpty(0.5);
     }
-    
-    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItAsksClientMessageTranscoderToDecryptUpdateEvents
@@ -433,8 +432,8 @@
                                 withEvents:eventsArray];
     
     // when
-    WaitForAllGroupsToBeEmpty(0.5);
     [self.sut processUpdateEvents:eventsArray ignoreBuffer:YES];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItProcessUpdateEventsIfTheCurrentStateShouldProcessThem
@@ -463,7 +462,7 @@
     
     // when
     [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
-    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 
@@ -499,6 +498,7 @@
     
     // when
     [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItProcessUpdateEventsToBufferIfTheCurrentStateShouldBufferThemButIgnoreBufferIsYes
@@ -529,6 +529,7 @@
     
     // when
     [self.sut processUpdateEvents:expectedEvents ignoreBuffer:YES];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDoesNotProcessUpdateEventsIfTheCurrentStateShouldIgnoreThem
@@ -557,6 +558,7 @@
     
     // when
     [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDoesProcessesFlowUpdateEvents;
@@ -596,6 +598,7 @@
     
     // when
     [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDoesProcessCallEventsIfTheCurrentEventPolicyIsIgnore;
@@ -625,6 +628,7 @@
 
     // when
     [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDoesProcessesCallingUpdateEventsIfTheCurrentEventPolicyIsBuffer;
@@ -657,6 +661,7 @@
     
     // when
     [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDoesProcessUpdateEventsIfTheCurrentStateShouldIgnoreThemButIgnoreBuffesIsYes
@@ -687,6 +692,7 @@
     
     // when
     [self.sut processUpdateEvents:expectedEvents ignoreBuffer:YES];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItItCreatesAFetchBatchRequestWithTheNoncesAndRemoteIdentifiersFromUpdateEvents
@@ -740,6 +746,7 @@
     
     // when
     [self.sut processUpdateEvents:events ignoreBuffer:YES];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItRequestsNoncesAndRemoteIdentifiersToPrefetchFromAllOfItsSyncObjects
@@ -767,6 +774,7 @@
     
     // when
     [self.sut fetchRequestBatchForEvents:events];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatCallingNextRequestFetchesObjectsAndDistributesThemToTheChangeTracker
@@ -794,7 +802,6 @@
     
     // when
     (void)[self.sut nextRequest];
-    
 }
 
 
@@ -842,6 +849,7 @@
     
     // when
     [self.sut processSaveWithInsertedObjects:cacheInsertSet updateObjects:cacheUpdateSet];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 
@@ -910,6 +918,8 @@
         XCTAssertNotNil(syncConversation);
         XCTAssertTrue(syncConversation.callDeviceIsActive);
     }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 

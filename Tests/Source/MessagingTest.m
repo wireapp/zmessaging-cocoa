@@ -127,7 +127,6 @@ static const int32_t Mersenne3 = 8191;
     }
 
     [NSManagedObjectContext setUseInMemoryStore:self.shouldUseInMemoryStore];
-    EventDataController.useInMemoryStore = self.shouldUseInMemoryStore;
 
     [self resetState];
     

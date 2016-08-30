@@ -22,20 +22,16 @@ import ZMTesting
 
 class EventDecoderTest: MessagingTest {
     
-    var dataController : EventDataController!
-    var eventMOC: NSManagedObjectContext {
-        return dataController.managedObjectContext
-    }
+    var eventMOC = NSManagedObjectContext.createEventContext(withAppGroupIdentifier: nil)
     var sut : EventDecoder!
     
     override func setUp() {
         super.setUp()
-        dataController = EventDataController(appGroupIdentifier: nil)
         sut = EventDecoder(eventMOC: eventMOC, syncMOC: syncMOC)
     }
     
     override func tearDown() {
-        dataController.tearDown()
+        eventMOC.tearDown()
         super.tearDown()
     }
     

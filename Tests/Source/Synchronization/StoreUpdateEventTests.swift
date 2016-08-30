@@ -21,19 +21,11 @@ import ZMTesting
 @testable import zmessaging
 
 class StoredUpdateEventTests: MessagingTest {
-    
-    var dataController : EventDataController!
-    var eventMOC: NSManagedObjectContext {
-        return dataController.managedObjectContext
-    }
-    
-    override func setUp() {
-        super.setUp()
-        dataController = EventDataController(appGroupIdentifier: nil)
-    }
-    
+
+    var eventMOC = NSManagedObjectContext.createEventContext(withAppGroupIdentifier: nil)
+
     override func tearDown() {
-        dataController.tearDown()
+        eventMOC.tearDown()
         super.tearDown()
     }
     
