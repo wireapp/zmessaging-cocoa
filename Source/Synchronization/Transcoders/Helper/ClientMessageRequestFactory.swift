@@ -29,19 +29,22 @@ public class ClientMessageRequestFactory: NSObject {
     let octetStreamContentType = "application/octet-stream"
     
     public func upstreamRequestForMessage(message: ZMClientMessage, forConversationWithId conversationId: NSUUID) -> ZMTransportRequest? {
-        return upstreamRequestForEncriptedClientMessage(message, forConversationWithId: conversationId);
+        return upstreamRequestForEncryptedClientMessage(message, forConversationWithId: conversationId);
     }
     
     public func upstreamRequestForAssetMessage(format: ZMImageFormat, message: ZMAssetClientMessage, forConversationWithId conversationId: NSUUID) -> ZMTransportRequest? {
             return upstreamRequestForEncryptedImageMessage(format, message: message, forConversationWithId: conversationId);
     }
     
-    private func upstreamRequestForEncriptedClientMessage(message: ZMClientMessage, forConversationWithId conversationId: NSUUID) -> ZMTransportRequest? {
+    private func upstreamRequestForEncryptedClientMessage(message: ZMClientMessage, forConversationWithId conversationId: NSUUID) -> ZMTransportRequest? {
         let path = "/" + ["conversations", conversationId.transportString(), "otr", "messages"].joinWithSeparator("/")
         let metaData = message.encryptedMessagePayloadData()
         let request = ZMTransportRequest(path: path, method: .MethodPOST, binaryData: metaData, type: protobufContentType, contentDisposition: nil)
         var debugInfo = "\(message.genericMessage)"
         if let genericMessage = message.genericMessage where genericMessage.hasExternal() { debugInfo = "External message: " + debugInfo }
+        
+        // if we upload a message with a reaction, we need to remove it locally
+        if let genericMessage = message.genericMessage where genericMessage.hasReaction() { /* TODO: remove message */ }
         request.appendDebugInformation(debugInfo)
         return request
     }

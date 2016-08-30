@@ -246,6 +246,12 @@
 {
     [super updateInsertedObject:message request:upstreamRequest response:response];
     [(ZMClientMessage *)message parseUploadResponse:response clientDeletionDelegate:self.clientRegistrationStatus];
+    
+    // if it's reaction
+    if (((ZMClientMessage *)message).genericMessage.hasReaction) {
+        [message.managedObjectContext deleteObject:message];
+    }
+
 }
 
 - (BOOL)updateUpdatedObject:(ZMAssetClientMessage *)message
@@ -315,6 +321,7 @@
         case ZMUpdateEventConversationClientMessageAdd:
         case ZMUpdateEventConversationOtrMessageAdd:
         case ZMUpdateEventConversationOtrAssetAdd:
+            
             message = [ZMOTRMessage createOrUpdateMessageFromUpdateEvent:decryptedEvent
                                                   inManagedObjectContext:self.managedObjectContext
                                                           prefetchResult:prefetchResult];
