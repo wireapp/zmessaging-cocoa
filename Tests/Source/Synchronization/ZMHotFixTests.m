@@ -569,7 +569,7 @@
     conversation.conversationType = ZMConversationTypeOneOnOne;
     
     ZMAssetClientMessage *uploadedImageMessage = [conversation appendOTRMessageWithImageData:self.mediumJPEGData nonce:NSUUID.createUUID];
-    [uploadedImageMessage markAsDelivered];
+    [uploadedImageMessage markAsSent];
     uploadedImageMessage.uploadState = ZMAssetUploadStateDone;
     uploadedImageMessage.assetId = NSUUID.createUUID;
     XCTAssertTrue(uploadedImageMessage.delivered);
@@ -583,7 +583,7 @@
     XCTAssertEqual(notUploadedImageMessage.uploadState, ZMAssetUploadStateUploadingFullAsset);
     
     ZMAssetClientMessage *uploadedFileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
-    [uploadedFileMessage markAsDelivered];
+    [uploadedFileMessage markAsSent];
     uploadedFileMessage.uploadState = ZMAssetUploadStateDone;
     uploadedFileMessage.assetId = NSUUID.createUUID;
     XCTAssertTrue(uploadedFileMessage.delivered);
@@ -591,7 +591,7 @@
     XCTAssertEqual(uploadedFileMessage.uploadState, ZMAssetUploadStateDone);
     
     ZMAssetClientMessage *notUploadedFileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
-    [notUploadedFileMessage markAsDelivered];
+    [notUploadedFileMessage markAsSent];
     notUploadedFileMessage.uploadState = ZMAssetUploadStateDone;
     XCTAssertTrue(notUploadedFileMessage.delivered);
     XCTAssertTrue(notUploadedFileMessage.hasDownloadedImage);

@@ -191,7 +191,7 @@ typedef NS_ENUM(int8_t, ZMAssetTag) {
 {
     [self.messageExpirationTimer stopTimerForMessage:message];
     [message removeExpirationDate];
-    [message markAsDelivered];
+    [message markAsSent];
     [message updateWithPostPayload:response.payload.asDictionary updatedKeys:updatedKeys];
 }
 

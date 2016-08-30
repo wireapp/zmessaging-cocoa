@@ -116,7 +116,7 @@
     ZMClientMessage *message = [ZMClientMessage createOrUpdateMessageFromUpdateEvent:event
                                                               inManagedObjectContext:self.managedObjectContext
                                                                       prefetchResult:prefetchResult];
-    [message markAsDelivered];
+    [message markAsSent];
     return message;
 }
 

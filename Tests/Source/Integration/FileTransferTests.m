@@ -74,7 +74,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
     
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
@@ -122,7 +122,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
     
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
@@ -183,7 +183,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
 }
 
@@ -214,9 +214,9 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
-    XCTAssertEqual(textMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(textMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(conversation.messages.count, 3lu);
 }
 
@@ -498,7 +498,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
 
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
     
@@ -555,7 +555,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
     
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
@@ -624,7 +624,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
     XCTAssertEqualObjects(fileMessage.fileMessageData.filename.stringByDeletingPathExtension, @"video");
     XCTAssertEqualObjects(fileMessage.fileMessageData.filename.pathExtension, @"mp4");
@@ -681,7 +681,7 @@
     
     //then
     XCTAssertEqual(assetUploadCounter, 2lu);
-    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
     XCTAssertEqualObjects(fileMessage.fileMessageData.filename.stringByDeletingPathExtension, @"video");
     XCTAssertEqualObjects(fileMessage.fileMessageData.filename.pathExtension, @"mp4");
@@ -1164,7 +1164,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
     
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
@@ -1220,7 +1220,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
     
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];

@@ -172,7 +172,7 @@
     ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
     XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     MockUserClient *user1Client = [self.user1.clients anyObject];
     MockUserClient *selfClient = [self.selfUser.clients anyObject];
@@ -205,7 +205,7 @@
     ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
     XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRAssetAdd);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
     UserClient *selfClient = selfUser.selfClient;
@@ -310,7 +310,7 @@
     }
     
     XCTAssertEqual(messagesReceived, 1lu);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
 }
 
 - (void)testThatItDeliveresOTRMessageAfterMissingClientsAreFetched
@@ -336,7 +336,7 @@
     ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
     XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     MockUserClient *user1Client = [self.user1.clients anyObject];
     MockUserClient *selfClient = [self.selfUser.clients anyObject];
@@ -368,7 +368,7 @@
     ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
     XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRAssetAdd);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
     UserClient *selfClient = selfUser.selfClient;
@@ -469,9 +469,9 @@
     }];
     WaitForEverythingToBeDone();
     
-    XCTAssertEqual(imageMessage1.deliveryState, ZMDeliveryStateDelivered);
-    XCTAssertEqual(textMessage.deliveryState, ZMDeliveryStateDelivered);
-    XCTAssertEqual(imageMessage2.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(imageMessage1.deliveryState, ZMDeliveryStateSent);
+    XCTAssertEqual(textMessage.deliveryState, ZMDeliveryStateSent);
+    XCTAssertEqual(imageMessage2.deliveryState, ZMDeliveryStateSent);
 }
 
 - (void)testThatItSendsFailedSessionOTRAssetMessageAfterMissingClientsAreFetchedButSessionIsNotCreated
@@ -542,7 +542,7 @@
     
     XCTAssertEqual(previewReceived, 1lu);
     XCTAssertEqual(mediumReceived, 1lu);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
 }
 
 - (void)testThatItOTRMessagesCanExpire
@@ -661,7 +661,7 @@
     
     // then
     XCTAssertEqual(conversation.messages.lastObject, message);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
 }
 
 - (void)testThatItSendsANotificationWhenRecievingAOtrMessageThroughThePushChannel
@@ -874,7 +874,7 @@
     ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
     XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     MockUserClient *selfClient = [self.selfUser.clients anyObject];
     MockUserClient *user1Client = [self.user1.clients anyObject];
@@ -1292,7 +1292,7 @@
     ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
     XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     XCTAssertEqual(message.conversation.securityLevel, ZMConversationSecurityLevelSecure);
 }
@@ -1351,7 +1351,7 @@
     WaitForEverythingToBeDone();
     
     XCTAssertTrue(notificationRecieved);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     XCTAssertEqual(message.visibleInConversation, message.conversation);
     XCTAssertEqual(message.conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
@@ -1471,7 +1471,7 @@
     // then
     XCTAssertTrue(notificationRecieved);
     
-    XCTAssertEqual(message2.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message2.deliveryState, ZMDeliveryStateSent);
     XCTAssertNotNil(message2);
     XCTAssertEqual(message2.conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
     
