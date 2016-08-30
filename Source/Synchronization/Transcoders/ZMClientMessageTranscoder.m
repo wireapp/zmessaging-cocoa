@@ -234,7 +234,7 @@
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.managedObjectContext block:^(ZMTransportResponse *response) {
         if (response.result == ZMTransportResponseStatusSuccess) {
             ZM_STRONG(self);
-            [message markAsDelivered];
+            [message markAsSent];
             [ZMOperationLoop notifyNewRequestsAvailable:self]; //to send next image
         }
     }]];
@@ -322,7 +322,7 @@
             return nil;
     }
     
-    [message markAsDelivered];
+    [message markAsSent];
     return message;
 }
 
