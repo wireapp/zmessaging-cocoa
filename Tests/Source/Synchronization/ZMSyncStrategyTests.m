@@ -262,7 +262,7 @@
                                               backgroundableSession:self.backgroundableSession
                                        localNotificationsDispatcher:OCMOCK_ANY
                                            taskCancellationProvider:OCMOCK_ANY
-                                                 appGroupIdentifier:nil
+                                                 appGroupIdentifier:self.groupIdentifier
                                                               badge:self.badge];
     
     

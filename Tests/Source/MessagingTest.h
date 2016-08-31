@@ -63,6 +63,8 @@
 
 @property (nonatomic, readonly) MockTransportSession *mockTransportSession;
 
+@property (nonatomic, readonly) NSString *groupIdentifier;
+
 /// reset ui and sync contexts
 - (void)resetUIandSyncContextsAndResetPersistentStore:(BOOL)resetPersistentStore;
 - (void)resetUIandSyncContextsAndResetPersistentStore:(BOOL)resetPersistentStore notificationContentHidden:(BOOL)notificationContentHidden;

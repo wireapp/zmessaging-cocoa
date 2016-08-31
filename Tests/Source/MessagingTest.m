@@ -74,6 +74,8 @@ static const int32_t Mersenne3 = 8191;
 @property (nonatomic) NSManagedObjectContext *alternativeTestMOC;
 @property (nonatomic) NSManagedObjectContext *searchMOC;
 
+@property (nonatomic) NSString *groupIdentifier;
+@property (nonatomic) NSURL *databaseDirectory;
 @property (nonatomic) MockTransportSession *mockTransportSession;
 
 @property (nonatomic) NSTimeInterval originalConversationLastReadEventIDTimerValue; // this will speed up the tests A LOT
@@ -116,6 +118,10 @@ static const int32_t Mersenne3 = 8191;
 {
     [super setUp];
     
+    NSFileManager *fm = NSFileManager.defaultManager;
+    self.groupIdentifier = [@"group." stringByAppendingString:[NSBundle bundleForClass:self.class].bundleIdentifier];
+    self.databaseDirectory = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
+
     self.originalConversationLastReadEventIDTimerValue = ZMConversationDefaultLastReadEventIDSaveDelay;
     ZMConversationDefaultLastReadEventIDSaveDelay = 0.02;
     
@@ -152,7 +158,7 @@ static const int32_t Mersenne3 = 8191;
     [self.testMOC addGroup:self.dispatchGroup];
     self.alternativeTestMOC = [MockModelObjectContextFactory alternativeMocForPSC:self.testMOC.persistentStoreCoordinator];
     [self.alternativeTestMOC addGroup:self.dispatchGroup];
-    self.searchMOC = [NSManagedObjectContext createSearchContext];
+    self.searchMOC = [NSManagedObjectContext createSearchContextWithStoreDirectory:self.databaseDirectory];
     [self.searchMOC addGroup:self.dispatchGroup];
     self.mockTransportSession = [[MockTransportSession alloc] initWithDispatchGroup:self.dispatchGroup];
     self.mockTransportSession.cryptoboxLocation = [UserClientKeysStore otrDirectory];
@@ -262,12 +268,12 @@ static const int32_t Mersenne3 = 8191;
         [NSManagedObjectContext resetSharedPersistentStoreCoordinator];
     }
     [self performIgnoringZMLogError:^{
-        self.uiMOC = [NSManagedObjectContext createUserInterfaceContext];
+        self.uiMOC = [NSManagedObjectContext createUserInterfaceContextWithStoreDirectory:self.databaseDirectory];
     }];
     [self.uiMOC addGroup:self.dispatchGroup];
     self.uiMOC.userInfo[@"TestName"] = self.name;
     
-    self.syncMOC = [NSManagedObjectContext createSyncContext];
+    self.syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectory];
     [self.syncMOC performGroupedBlockAndWait:^{
         self.syncMOC.userInfo[@"TestName"] = self.name;
     }];

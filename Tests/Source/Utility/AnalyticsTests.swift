@@ -35,7 +35,8 @@ class AnalyticsTests: XCTestCase {
     
     func testThatItSetsAnalyticsOnManagedObjectContext() {
         // given
-        let context = NSManagedObjectContext.createSyncContext()
+        let directory = try! NSFileManager.defaultManager().URLForDirectory(.DocumentDirectory, inDomain: .UserDomainMask, appropriateForURL: nil, create:true)
+        let context = NSManagedObjectContext.createSyncContextWithStoreDirectory(directory)
         context.markAsSyncContext()
         
         // when

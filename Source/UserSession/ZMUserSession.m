@@ -93,6 +93,9 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 @property (nonatomic) ZMLocalNotificationDispatcher *localNotificationDispatcher;
+@property (nonatomic) NSString *applicationGroupIdentifier;
+@property (nonatomic) NSURL *databaseDirectoryURL;
+
 
 /// Build number of the Wire app
 @property (nonatomic) NSString *appVersion;
@@ -130,16 +133,28 @@ ZM_EMPTY_ASSERTING_INIT()
     return [[NSProcessInfo processInfo] environment][@"ZMEncryptionOnly"] != nil;
 }
 
-+ (BOOL)needsToPrepareLocalStore
++ (NSURL *)sharedContainerDirectoryForApplicationGroup:(NSString *)appGroupIdentifier
 {
-    return [NSManagedObjectContext needsToPrepareLocalStore];
+    NSFileManager *fm = NSFileManager.defaultManager;
+    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:appGroupIdentifier];
+    RequireString(nil != sharedContainerURL, "Unable to create shared container url using app group identifier: %s", appGroupIdentifier.UTF8String);
+    return sharedContainerURL;
 }
 
-+ (void)prepareLocalStore:(void (^)())completionHandler
++ (BOOL)needsToPrepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier
+{
+    
+    return [NSManagedObjectContext needsToPrepareLocalStoreInDirectory:[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]];
+}
+
++ (void)prepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier completion:(void (^)())completionHandler
 {
     ZMDeploymentEnvironmentType environment = [[ZMDeploymentEnvironment alloc] init].environmentType;
     BOOL shouldBackupCorruptedDatabase = environment == ZMDeploymentEnvironmentTypeInternal || DEBUG;
-    [NSManagedObjectContext prepareLocalStoreSync:NO backingUpCorruptedDatabase:shouldBackupCorruptedDatabase completionHandler:completionHandler];
+    [NSManagedObjectContext prepareLocalStoreSync:NO
+                                      inDirectory:[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]
+                       backingUpCorruptedDatabase:shouldBackupCorruptedDatabase
+                                completionHandler:completionHandler];
 }
 
 + (BOOL)storeIsReady
@@ -153,17 +168,20 @@ ZM_EMPTY_ASSERTING_INIT()
     ZMBackendEnvironment *environment = [[ZMBackendEnvironment alloc] init];
     NSURL *backendURL = environment.backendURL;
     NSURL *websocketURL = environment.backendWSURL;
-    
+    self.applicationGroupIdentifier = appGroupIdentifier;
+
     ZMAPNSEnvironment *apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
 
-    NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContext];
-    
-    NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContext];
+    self.databaseDirectoryURL = [NSFileManager.defaultManager containerURLForSecurityApplicationGroupIdentifier:appGroupIdentifier];
+    RequireString(nil != self.databaseDirectoryURL, "Unable to get a container URL using group identifier: %s", appGroupIdentifier.UTF8String);
+
+    NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContextWithStoreDirectory:self.databaseDirectoryURL];
+    NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectoryURL];
     syncMOC.analytics = analytics;
-    
+
     ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC mainGroupQueue:userInterfaceContext];
     UIApplication *application = [UIApplication sharedApplication];
-    
+
     self = [self initWithTransportSession:session
                      userInterfaceContext:userInterfaceContext
                  syncManagedObjectContext:syncMOC
