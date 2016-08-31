@@ -103,6 +103,7 @@
 @property (nonatomic) ZMChangeTrackerBootstrap *changeTrackerBootStrap;
 @property (nonatomic) ConversationStatusStrategy *conversationStatusSync;
 @property (nonatomic) UserClientRequestStrategy *userClientRequestStrategy;
+@property (nonatomic) MissingClientsRequestStrategy *missingClientsRequestStrategy;
 @property (nonatomic) FileUploadRequestStrategy *fileUploadRequestStrategy;
 @property (nonatomic) LinkPreviewAssetDownloadRequestStrategy *linkPreviewAssetDownloadRequestStrategy;
 
@@ -175,8 +176,10 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                 clientRegistrationStatus:clientRegistrationStatus
                                                                                       clientUpdateStatus:clientUpdateStatus
                                                                                                  context:self.syncMOC];
+        self.missingClientsRequestStrategy = [[MissingClientsRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
         
         self.requestStrategies = @[self.userClientRequestStrategy,
+                                   self.missingClientsRequestStrategy,
                                    [[ProxiedRequestStrategy alloc] initWithRequestsStatus:proxiedRequestStatus
                                                                      managedObjectContext:self.syncMOC],
                                    [[DeleteAccountRequestStrategy alloc] initWithAuthStatus:authenticationStatus

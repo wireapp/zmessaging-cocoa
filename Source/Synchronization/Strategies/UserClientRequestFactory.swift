@@ -30,14 +30,11 @@ enum UserClientRequestError: ErrorType {
 
 public class UserClientRequestFactory {
     
-    public init(keysCount: UInt16 = 100, missingClientsUserPageSize pageSize: Int = 128) {
+    public init(keysCount: UInt16 = 100) {
         self.keyCount = keysCount
-        missingClientsUserPageSize = pageSize
     }
     
     public let keyCount : UInt16
-    ///  The number of users that can be contained in a single request to get missing clients
-    public let missingClientsUserPageSize : Int
 
     public func registerClientRequest(client: UserClient, credentials: ZMEmailCredentials?, authenticationStatus: ZMAuthenticationStatus) throws -> ZMUpstreamRequest {
         
@@ -161,11 +158,6 @@ public class UserClientRequestFactory {
         ]
         let request =  ZMTransportRequest(path: "/clients/\(client.remoteIdentifier)", method: ZMTransportRequestMethod.MethodDELETE, payload: payload)
         return ZMUpstreamRequest(keys: Set(arrayLiteral: ZMUserClientMarkedToDeleteKey), transportRequest: request)
-    }
-    
-    public func fetchMissingClientKeysRequest(missingClientsMap: MissingClientsMap) -> ZMUpstreamRequest! {
-        let request = ZMTransportRequest(path: "/users/prekeys", method: ZMTransportRequestMethod.MethodPOST, payload: missingClientsMap.payload)
-        return ZMUpstreamRequest(keys: Set(arrayLiteral: ZMUserClientMissingKey), transportRequest: request, userInfo: missingClientsMap.userInfo)
     }
     
     public func fetchClientsRequest() -> ZMTransportRequest! {
