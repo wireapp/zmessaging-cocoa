@@ -42,9 +42,6 @@ public class ClientMessageRequestFactory: NSObject {
         let request = ZMTransportRequest(path: path, method: .MethodPOST, binaryData: metaData, type: protobufContentType, contentDisposition: nil)
         var debugInfo = "\(message.genericMessage)"
         if let genericMessage = message.genericMessage where genericMessage.hasExternal() { debugInfo = "External message: " + debugInfo }
-        
-        // if we upload a message with a reaction, we need to remove it locally
-        if let genericMessage = message.genericMessage where genericMessage.hasReaction() { /* TODO: remove message */ }
         request.appendDebugInformation(debugInfo)
         return request
     }
