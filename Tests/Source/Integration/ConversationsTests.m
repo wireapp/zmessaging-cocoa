@@ -2528,6 +2528,7 @@
     XCTAssertEqual(message.usersReaction.count, 1lu);
     XCTAssertNotNil(message.usersReaction[reactionEmoji]);
     XCTAssertEqual([message.usersReaction[reactionEmoji] count], 1lu);
+    XCTAssertEqualObjects([message.usersReaction[reactionEmoji] firstObject], [self userForMockUser:self.selfUser]);
     XCTAssertEqual(conversation.hiddenMessages.count, 0lu);
 }
 
@@ -2565,6 +2566,7 @@
     XCTAssertEqual(message.usersReaction.count, 1lu);
     XCTAssertNotNil(message.usersReaction[reactionEmoji]);
     XCTAssertEqual([message.usersReaction[reactionEmoji] count], 1lu);
+    XCTAssertEqualObjects([message.usersReaction[reactionEmoji] firstObject], [self userForMockUser:self.user1]);
     XCTAssertEqual(conversation.hiddenMessages.count, 0lu);
 }
 
