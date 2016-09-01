@@ -27,8 +27,24 @@ class ConversationTests_Confirmation: ConversationTestsBase {
         let fromClient = user1.clients.anyObject() as! MockUserClient
         let toClient = selfUser.clients.anyObject() as! MockUserClient
         let textMessage = ZMGenericMessage(text: "Hello", nonce: NSUUID.createUUID().transportString())
+        let conversation = conversationForMockConversation(selfToUser1Conversation)
 
-        mockTransportSession.resetReceivedRequests()
+        let requestPath = "/conversations/\(conversation.remoteIdentifier.transportString())/otr/messages"
+        
+        // expect
+        mockTransportSession.responseGeneratorBlock = { request in
+            if (request.path == requestPath) {
+                guard let hiddenMessage = conversation.hiddenMessages.lastObject as? ZMClientMessage,
+                      let message = conversation.messages.lastObject as? ZMClientMessage
+                else {
+                    XCTFail("Did not insert confirmation message.")
+                    return nil
+                }
+                XCTAssertTrue(hiddenMessage.genericMessage!.hasConfirmation())
+                XCTAssertEqual(hiddenMessage.genericMessage!.confirmation.messageId, message.nonce.transportString())
+            }
+            return nil
+        }
         
         // when
         mockTransportSession.performRemoteChanges { session in
@@ -37,24 +53,13 @@ class ConversationTests_Confirmation: ConversationTestsBase {
         XCTAssertTrue(waitForEverythingToBeDone())
         
         // then
-        let conversation = conversationForMockConversation(selfToUser1Conversation)
         let messages = conversation.messages
         XCTAssertEqual(messages.count, 2) // system message & inserted message
         
-        
-        let hiddenMessages = conversation.hiddenMessages
-        XCTAssertEqual(hiddenMessages.count, 1)
-        
-        guard let hiddenMessage = hiddenMessages.lastObject as? ZMClientMessage,
-              let confirmationMessage = hiddenMessage.genericMessage
-        else { return XCTFail() }
-        XCTAssertTrue(confirmationMessage.hasConfirmation())
-        
         guard let request = mockTransportSession.receivedRequests().last else {return XCTFail()}
-        XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier.transportString())/otr/messages")
+        XCTAssertEqual(request.path, requestPath)
         
         XCTAssertEqual(conversation.lastModifiedDate, (messages.lastObject as! ZMClientMessage).serverTimestamp)
-        XCTAssertNotEqual(conversation.lastModifiedDate, hiddenMessage.serverTimestamp)
     }
     
     
@@ -68,7 +73,6 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             message = conversation.appendMessageWithText("Hello") as! ZMClientMessage
         }
         XCTAssertTrue(waitForEverythingToBeDone())
-        XCTAssertEqual(conversation.hiddenMessages.count, 0)
         XCTAssertEqual(message.deliveryState, ZMDeliveryState.Sent)
 
         let fromClient = user1.clients.anyObject() as! MockUserClient

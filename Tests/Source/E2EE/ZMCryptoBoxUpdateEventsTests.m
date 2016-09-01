@@ -61,7 +61,7 @@
     XCTAssertNotNil(decryptedEvent.payload.asDictionary[@"data"]);
     XCTAssertEqualObjects(decryptedEvent.payload.asDictionary[@"data"][@"sender"], selfClient.remoteIdentifier);
     XCTAssertEqualObjects(decryptedEvent.payload.asDictionary[@"data"][@"recipient"], selfClient.remoteIdentifier);
-    ZMClientMessage *decryptedMessage = [ZMClientMessage createOrUpdateMessageFromUpdateEvent:decryptedEvent inManagedObjectContext:self.syncMOC prefetchResult:nil];
+    ZMClientMessage *decryptedMessage = (id)[ZMClientMessage messageUpdateResultFromUpdateEvent:decryptedEvent inManagedObjectContext:self.syncMOC prefetchResult:nil].message;
     XCTAssertEqualObjects(decryptedMessage.nonce.transportString, message.messageId);
     XCTAssertEqualObjects(decryptedMessage.textMessageData.messageText, message.text.content);
     XCTAssertEqualObjects(decryptedEvent.uuid, notificationID);
@@ -109,7 +109,7 @@
     
     // then
     XCTAssertNotNil(decryptedEvent.payload.asDictionary[@"data"]);
-    ZMAssetClientMessage *decryptedMessage = [ZMAssetClientMessage createOrUpdateMessageFromUpdateEvent:decryptedEvent inManagedObjectContext:self.syncMOC prefetchResult:nil];
+    ZMAssetClientMessage *decryptedMessage = (id)[ZMAssetClientMessage messageUpdateResultFromUpdateEvent:decryptedEvent inManagedObjectContext:self.syncMOC prefetchResult:nil].message;
     XCTAssertEqualObjects(decryptedMessage.nonce.transportString, message.messageId);
     XCTAssertEqualObjects(decryptedMessage.imageAssetStorage.mediumGenericMessage, message);
     XCTAssertEqualObjects(decryptedEvent.uuid, notificationID);
@@ -203,9 +203,9 @@
     XCTAssertNotNil(text);
     
     // when
-    ZMClientMessage *decryptedMessage = [ZMClientMessage createOrUpdateMessageFromUpdateEvent:decryptedEvent
+    ZMClientMessage *decryptedMessage = (id)[ZMClientMessage messageUpdateResultFromUpdateEvent:decryptedEvent
                                                                        inManagedObjectContext:self.syncMOC
-                                                                               prefetchResult:nil];
+                                                                               prefetchResult:nil].message;
     
     // then
     XCTAssertFalse(decryptedMessage.genericMessage.hasExternal);

@@ -28,16 +28,19 @@
 @class NSManagedObjectContext;
 @class ZMLocalNotificationDispatcher;
 @class ZMBadge;
+
 @protocol ZMSyncStateDelegate;
 @protocol ZMTransportData;
 @protocol AVSMediaManager;
+@protocol ApplicationStateOwner;
+
 @class ZMOnDemandFlowManager;
 @class ProxiedRequestsStatus;
 @class ClientUpdateStatus;
 
 @class BackgroundAPNSPingBackStatus;
-@class ZMApplication;
 @class ZMAccountStatus;
+@class ZMApplication;
 
 extern NSString * const ZMPushChannelStateChangeNotificationName;
 extern NSString * const ZMPushChannelIsOpenKey;
@@ -62,7 +65,8 @@ extern NSString * const ZMPushChannelResponseStatusKey;
                                    uiMOC:(NSManagedObjectContext *)uiMOC
                                  syncMOC:(NSManagedObjectContext *)syncMOC
                        syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
-                      appGroupIdentifier:(NSString *)appGroupIdentifier;
+                      appGroupIdentifier:(NSString *)appGroupIdentifier
+                             application:(ZMApplication *)application;
 
 - (void)tearDown;
 - (void)accessTokenDidChangeWithToken:(NSString *)token ofType:(NSString *)type;

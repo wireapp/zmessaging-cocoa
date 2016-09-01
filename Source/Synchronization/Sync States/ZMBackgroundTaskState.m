@@ -36,8 +36,6 @@ static NSTimeInterval const MaximumTimeInState = 25;
 @interface ZMBackgroundTaskState () <ZMTimerClient>
 
 @property (nonatomic, readonly, weak) ZMMessageTranscoder *clientMessageTranscoder;
-@property (nonatomic) BOOL isRequestingClients;
-@property (nonatomic) BOOL hasMissingClients;
 @property (nonatomic) BOOL errorPerformingTask;
 @property (nonatomic) BOOL didFinishTask;
 
@@ -69,8 +67,6 @@ static NSTimeInterval const MaximumTimeInState = 25;
     self.timer = [ZMTimer timerWithTarget:self];
     [self.timer fireAfterTimeInterval:self.maximumTimeInState];
     self.didFinishTask = NO;
-    self.isRequestingClients = NO;
-    self.hasMissingClients = NO;
     self.errorPerformingTask = NO;
     
     self.stateEnterDate = [NSDate date];
@@ -135,11 +131,6 @@ static NSTimeInterval const MaximumTimeInState = 25;
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:directory.moc block:^(ZMTransportResponse *response) {
         if (response.result == ZMTransportResponseStatusSuccess) {
             self.didFinishTask = YES;
-            // Need to save synchronously here to make sure we pick up assets.
-            // The normal 'enqueueDelayedSave' would cause us to drop out of this state since the asset transcoder hasn't
-            // picked up the changes, yet, hence doesn't realize it has assets to download.
-            [directory.moc saveOrRollback];
-            
         } else if (response.result == ZMTransportResponseStatusPermanentError) {
             ZM_STRONG(self);
             BOOL hasMissingClients = ([[response.payload.asDictionary optionalDictionaryForKey:@"missing"] count] > 0);
