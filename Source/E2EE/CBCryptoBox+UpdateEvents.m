@@ -24,7 +24,7 @@
 #import <zmessaging/zmessaging-Swift.h>
 
 
-NSString * CBErrorCodeToString(CBoxResult errorCode);
+NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
 
 @implementation EncryptionSessionsDirectory (UpdateEvent)
 
@@ -82,13 +82,13 @@ NSString * CBErrorCodeToString(CBoxResult errorCode);
                         managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
     BOOL didFailBecauseDuplicated = error != nil
-    && (error.code == CBOX_OUTDATED_MESSAGE || error.code == CBOX_DUPLICATE_MESSAGE);
+    && (error.code == CryptoboxErrorCryptoboxOutdatedMessage || error.code == CryptoboxErrorCryptoboxDuplicateMessage);
     
     // do not notify user if it's just a duplicated one
     if(didFailBecauseDuplicated) {
         return;
     }
-    NSMutableDictionary *userInfoDictionary = [NSMutableDictionary dictionaryWithDictionary:@{@"cause" : CBErrorCodeToString((CBoxResult)error.code)}];
+    NSMutableDictionary *userInfoDictionary = [NSMutableDictionary dictionaryWithDictionary:@{@"cause" : CBErrorCodeToString((CryptoboxError)error.code)}];
     
     NSString *senderClientID = [[event.payload.asDictionary optionalDictionaryForKey:@"data"] optionalStringForKey:@"sender"];
     
@@ -163,12 +163,12 @@ NSString * CBErrorCodeToString(CBoxResult errorCode);
         decryptedData = [self createClientSessionAndReturnPlaintext:senderClientId prekeyMessage:data error:error];
         *newSessionId = senderClientId;
         if (nil == decryptedData) {
-            ZMLogError(@"Failed to decrypt message with session info <%@>: %@, update Event: %@", CBErrorCodeToString((CBoxResult)(*error).code), *error, event.debugInformation);
+            ZMLogError(@"Failed to decrypt message with session info <%@>: %@, update Event: %@", CBErrorCodeToString((CryptoboxError)(*error).code), *error, event.debugInformation);
         }
     } else {
         decryptedData = [self decrypt:data senderClientId:senderClientId error:error];
         if (nil == decryptedData) {
-            ZMLogError(@"Failed to decrypt message <%@>: %@, update Event: %@", CBErrorCodeToString((CBoxResult)(*error).code), *error, event.debugInformation);
+            ZMLogError(@"Failed to decrypt message <%@>: %@, update Event: %@", CBErrorCodeToString((CryptoboxError)(*error).code), *error, event.debugInformation);
         }
     }
     return decryptedData;
@@ -195,39 +195,38 @@ NSString * CBErrorCodeToString(CBoxResult errorCode);
 
 @end
 
-NSString *
-CBErrorCodeToString(CBoxResult errorCode)
+NSString * CBErrorCodeToString(CryptoboxError errorCode)
 {
     switch (errorCode) {
-        case CBOX_STORAGE_ERROR:
+        case CryptoboxErrorCryptoboxStorageError:
             return @"CBErrorCodeStorageError";
-        case CBOX_SESSION_NOT_FOUND:
+        case CryptoboxErrorCryptoboxSessionNotFound:
             return @"CBErrorCodeNoSession";
-        case CBOX_PREKEY_NOT_FOUND:
+        case CryptoboxErrorCryptoboxPrekeyNotFound:
             return @"CBErrorCodeNoPreKey";
-        case CBOX_DECODE_ERROR:
+        case CryptoboxErrorCryptoboxDecodeError:
             return @"CBErrorCodeDecodeError";
-        case CBOX_REMOTE_IDENTITY_CHANGED:
+        case CryptoboxErrorCryptoboxRemoteIdentityChanged:
             return @"CBErrorCodeRemoteIdentityChanged";
-        case CBOX_IDENTITY_ERROR:
+        case CryptoboxErrorCryptoboxIdentityError:
             return @"CBErrorCodeInvalidIdentity";
-        case CBOX_INVALID_SIGNATURE:
+        case CryptoboxErrorCryptoboxInvalidSignature:
             return @"CBErrorCodeInvalidSignature";
-        case CBOX_INVALID_MESSAGE:
+        case CryptoboxErrorCryptoboxInvalidMessage:
             return @"CBErrorCodeInvalidMessage";
-        case CBOX_DUPLICATE_MESSAGE:
+        case CryptoboxErrorCryptoboxDuplicateMessage:
             return @"CBErrorCodeDuplicateMessage";
-        case CBOX_TOO_DISTANT_FUTURE:
+        case CryptoboxErrorCryptoboxTooDistantFuture:
             return @"CBErrorCodeTooDistantFuture";
-        case CBOX_OUTDATED_MESSAGE:
+        case CryptoboxErrorCryptoboxOutdatedMessage:
             return @"CBErrorCodeOutdatedMessage";
-        case CBOX_UTF8_ERROR:
+        case CryptoboxErrorCryptoboxUTF8Error:
             return @"CBErrorCodeUTF8Error";
-        case CBOX_NUL_ERROR:
+        case CryptoboxErrorCryptoboxNulError:
             return @"CBErrorCodeNULError";
-        case CBOX_ENCODE_ERROR:
+        case CryptoboxErrorCryptoboxEncodeError:
             return @"CBErrorCodeEncodeError";
-        case CBOX_PANIC:
+        case CryptoboxErrorCryptoboxPanic:
             return @"CBErrorCodePanic";
         default:
             return [NSString stringWithFormat:@"Unknown error code: %lu", (long)errorCode];

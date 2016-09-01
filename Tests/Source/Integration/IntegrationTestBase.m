@@ -349,7 +349,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
                         operationLoop:nil
                         application:application
                         appVersion:@"00000"
-                        appGroupIdentifier:nil];
+                        appGroupIdentifier:self.groupIdentifier];
     WaitForEverythingToBeDone();
     
     [self.syncMOC zm_tearDownCallTimer];
