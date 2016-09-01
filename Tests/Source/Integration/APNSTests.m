@@ -512,6 +512,9 @@
     
     NSDictionary *payload = [event.transportData asDictionary];
     
+    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
+    WaitForAllGroupsToBeEmpty(0.2);
+    
     // expect
     [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
     
@@ -521,6 +524,7 @@
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         NSString *confirmationPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", self.selfToUser1Conversation.identifier];
         if ([request.path isEqualToString:confirmationPath] && request.method == ZMMethodPOST) {
+            XCTAssertTrue(request.shouldUseVoipSession);
             requestCount++;
             if (requestCount == 2) {
                 [confirmationExpectation fulfill];
@@ -528,6 +532,7 @@
         }
         NSString *clientsPath = [NSString stringWithFormat:@"/users/prekeys"];
         if ([request.path isEqualToString:clientsPath]) {
+            XCTAssertTrue(request.shouldUseVoipSession);
             XCTAssertEqual(requestCount, 1u);
             [missingClientsExpectation fulfill];
         }

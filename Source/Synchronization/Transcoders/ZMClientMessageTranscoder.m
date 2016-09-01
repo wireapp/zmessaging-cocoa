@@ -138,29 +138,24 @@
     return trackers;
 }
 
-
-- (NSArray *)internalRequestGenerators
+- (NSArray * __nonnull)requestGenerators
 {
+    if (self.apnsConfirmationStatus.canSyncMessage) {
+        return @[self.upstreamObjectSync];
+    }
     NSMutableArray *generators = [[super requestGenerators] mutableCopy];
     [generators addObject:self.assetModifiedSync];
     [generators addObject:self.downstreamSync];
     return generators;
 }
 
-- (NSArray * __nonnull)requestGenerators
-{
-    BackgroundAPNSConfirmationStatus *confirmationStatus = self.apnsConfirmationStatus;
-    if (confirmationStatus != nil && confirmationStatus.canSyncMessage) {
-        return @[self.upstreamObjectSync];
-    } else {
-        return self.internalRequestGenerators;
-    }
-}
-
 - (ZMTransportRequest *)requestForInsertingObject:(ZMClientMessage *)message
 {
     //should be called only for not-image client messages
     ZMTransportRequest *request = [self.requestsFactory upstreamRequestForMessage:message forConversationWithId:message.conversation.remoteIdentifier];
+    if ([message isKindOfClass:ZMClientMessage.class] && message.genericMessage.hasConfirmation) {
+        [request forceToVoipSession]; // we might receive a message while in the background
+    }
     return request;
 }
 

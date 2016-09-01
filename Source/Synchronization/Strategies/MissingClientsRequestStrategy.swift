@@ -51,13 +51,16 @@ public extension UserClient {
 public class MissingClientsRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, ZMUpstreamTranscoder {
         
     weak var clientRegistrationStatus: ZMClientRegistrationStatus?
-    
+    weak var apnsConfirmationStatus: BackgroundAPNSConfirmationStatus?
+
     private(set) var modifiedSync: ZMUpstreamModifiedObjectSync! = nil
     public var requestsFactory = MissingClientsRequestFactory()
     
     public init(clientRegistrationStatus:ZMClientRegistrationStatus,
+                apnsConfirmationStatus: BackgroundAPNSConfirmationStatus,
                 managedObjectContext: NSManagedObjectContext)
     {
+        self.apnsConfirmationStatus = apnsConfirmationStatus
         self.clientRegistrationStatus = clientRegistrationStatus
         super.init(managedObjectContext: managedObjectContext)
         
@@ -116,7 +119,11 @@ public class MissingClientsRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrate
         guard let missing = client.missingClients where missing.count > 0
         else { fatal("no missing clients found") }
         
-        return requestsFactory.fetchMissingClientKeysRequest(missing)
+        let request = requestsFactory.fetchMissingClientKeysRequest(missing)
+        if let confStatus = apnsConfirmationStatus where confStatus.canSyncMessage {
+            request.transportRequest.forceToVoipSession()
+        }
+        return request
     }
     
     /// Returns whether synchronization of this object needs additional requests
