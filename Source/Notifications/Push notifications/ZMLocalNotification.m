@@ -70,6 +70,7 @@ NSString *const ZMPushStringMemberLeaveMany = @"member.leave.many";
 // "[senderName] removed people from [conversationName]"
 
 NSString *const ZMPushStringKnock = @"knock"; // "[senderName] pinged you x times in [conversationName]" // "x pings in
+NSString *const ZMPushStringReaction = @"reaction"; // "[senderName] [emoji] your message in [conversationName]"
 
 NSString *const ZMPushStringVideoCallStarts = @"call.started.video"; // "[senderName] wants to talk"
 NSString *const ZMPushStringCallStarts = @"call.started"; // "[senderName] wants to talk"

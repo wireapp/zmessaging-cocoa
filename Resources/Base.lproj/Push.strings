@@ -147,6 +147,9 @@
 "push.notification.failed.message.group" = "Unable to send a message in %1$@";
 "push.notification.failed.message.group.noconversationname" = "Unable to send a message";
 
+"push.notification.reaction" = "%@ %@ your message in %@";
+"push.notification.reaction.noconversationname" = "%@ %@ your message in a conversation";
+
 "push.notification.new_user" = "%@ just joined Wire";
 
 "push.notification.action.message.open" = "Open";

@@ -216,3 +216,51 @@ public class ZMLocalNotificationForKnockMessage : ZMLocalNotificationForPostInCo
     }
 
 }
+
+public class ZMLocalNotificationForReaction : ZMLocalNotificationForPostInConversationEvent {
+    
+    private var emoji : String?
+    
+    public override var eventType: ZMLocalNotificationForEventType {
+        return .Reaction
+    }
+    
+    override var copiedEventTypes: [ZMUpdateEventType] {
+        return [.ConversationOtrMessageAdd]
+    }
+    
+    // We create notification only if self users message was reacted to
+    override func canCreateNotification() -> Bool {
+        guard super.canCreateNotification() else { return false }
+
+        guard let encryptedEventData = encryptedEventData else { return false }
+        var genericMessage : ZMGenericMessage?
+        let exception = zm_tryBlock{
+            genericMessage = ZMGenericMessage(base64String: encryptedEventData)
+        }
+        
+        guard exception == nil else { return false }
+    
+        guard let receivedMessage = genericMessage
+            where receivedMessage.hasReaction()
+            else { return false }
+    
+        // fetch message that was reacted to and make sure the sender
+        guard let conversation = self.conversation,
+              let message = ZMMessage.fetchMessageWithNonce(NSUUID(UUIDString: receivedMessage.reaction.messageId), forConversation: conversation, inManagedObjectContext: self.managedObjectContext)
+            where message.sender == ZMUser.selfUserInContext(self.managedObjectContext)
+            else { return false }
+
+        emoji = receivedMessage.reaction.emoji
+        
+        return true
+
+    }
+    
+    override func configureAlertBody() -> String {
+        // TODO: use correct string
+        return ZMPushStringReaction.localizedStringWithUser(self.sender, conversation: conversation, emoji: self.emoji!)
+    }
+}
+
+

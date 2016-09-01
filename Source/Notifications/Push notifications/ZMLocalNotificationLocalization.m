@@ -263,6 +263,22 @@ static NSString *const NoOtherUserNameKey = @"nootherusername";
     return localizedStringWithKeyAndArguments(ZMPushLocalizedString(key), arguments);
 }
 
+- (NSString *)localizedStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation emoji:(NSString *)emoji;
+{
+    NSString *conversationName = conversation.userDefinedName;
+    NSMutableArray *arguments = [NSMutableArray arrayWithArray:@[user.name, emoji]];
+    
+    
+    NSString *key = self;
+    if (conversationName == nil) {
+        key = [key stringByAppendingPathExtension:NoConversationNameKey];
+    } else {
+        [arguments addObject:conversationName];
+    }
+        
+    return localizedStringWithKeyAndArguments(ZMPushLocalizedString(key), arguments);
+}
+
 
 - (NSString *)localizedStringWithUserName:(NSString *)userName;
 {
@@ -282,6 +298,7 @@ static NSString *const NoOtherUserNameKey = @"nootherusername";
 {
     return localizedStringWithKeyAndArguments(ZMPushLocalizedString(self), nil);
 }
+
 
 @end
 

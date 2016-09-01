@@ -47,7 +47,8 @@ typedef NS_ENUM(int, ZMLocalNotificationForEventType) {
     ZMLocalNotificationForEventTypeConversationRename,
     ZMLocalNotificationForEventTypeConnectionRequest,
     ZMLocalNotificationForEventTypeConnectionAccepted,
-    ZMLocalNotificationForEventTypeNewConnection
+    ZMLocalNotificationForEventTypeNewConnection,
+    ZMLocalNotificationForEventTypeReaction
 };
 
 
@@ -69,6 +70,7 @@ extern NSString * _Null_unspecified const ZMPushStringMemberJoinMany;
 extern NSString * _Null_unspecified const ZMPushStringMemberLeaveMany;
 
 extern NSString * _Null_unspecified const ZMPushStringKnock;
+extern NSString * _Null_unspecified const ZMPushStringReaction;
 
 extern NSString * _Null_unspecified const ZMPushStringCallStarts;
 extern NSString * _Null_unspecified const ZMPushStringCallMissed;

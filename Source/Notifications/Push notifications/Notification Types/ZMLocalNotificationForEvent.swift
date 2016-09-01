@@ -24,7 +24,6 @@ let ZMLocalNotificationRingingDefaultSoundName = "ringing_from_them_long.caf"
 let ZMLocalNotificationPingDefaultSoundName = "ping_from_them.caf"
 let ZMLocalNotificationNewMessageDefaultSoundName = "new_message_apns.caf"
 
-
 func ZMCustomSoundName(key: String) -> String? {
     guard let soundName = NSUserDefaults.standardUserDefaults().objectForKey(key) as? String else { return nil }
     return ZMSound(rawValue: soundName)?.filename()
@@ -49,6 +48,9 @@ public extension ZMLocalNotificationForEvent {
         switch event.type {
         case .ConversationOtrMessageAdd:
             if let note = ZMLocalNotificationForKnockMessage(event: event, managedObjectContext: managedObjectContext, application: application) {
+                return note
+            }
+            if let note = ZMLocalNotificationForReaction(event: event, managedObjectContext: managedObjectContext, application: application) {
                 return note
             }
             return ZMLocalNotificationForMessage(event: event, managedObjectContext: managedObjectContext, application: application)

@@ -2530,6 +2530,7 @@
     XCTAssertEqual([message.usersReaction[reactionEmoji] count], 1lu);
     XCTAssertEqualObjects([message.usersReaction[reactionEmoji] firstObject], [self userForMockUser:self.selfUser]);
     XCTAssertEqual(conversation.hiddenMessages.count, 0lu);
+    XCTAssertNotNil([self.mockTransportSession.receivedRequests lastObject]);
 }
 
 - (void)testThatAppendingAReactionWithReceivingAMessageWithReaction;

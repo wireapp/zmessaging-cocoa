@@ -34,12 +34,15 @@
 - (NSString *)localizedStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation text:(NSString *)text;
 - (NSString *)localizedStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation;
 
+
 - (NSString *)localizedStringWithUser:(ZMUser *)user count:(NSNumber *)count text:(NSString *)text;
 - (NSString *)localizedStringWithUser:(ZMUser *)user count:(NSNumber *)count;
 - (NSString *)localizedStringWithUserName:(NSString *)userName;
 
 - (NSString *)localizedStringWithConversation:(ZMConversation *)conversation count:(NSNumber *)count text:(NSString *)text;
 - (NSString *)localizedStringWithConversation:(ZMConversation *)conversation count:(NSNumber *)count;
+
+- (NSString *)localizedStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation emoji:(NSString *)emoji;
 
 - (NSString *)localizedString;
 
