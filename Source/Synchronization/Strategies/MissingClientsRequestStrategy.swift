@@ -120,7 +120,7 @@ public class MissingClientsRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrate
         else { fatal("no missing clients found") }
         
         let request = requestsFactory.fetchMissingClientKeysRequest(missing)
-        if let confStatus = apnsConfirmationStatus where confStatus.canSyncMessage {
+        if let confStatus = apnsConfirmationStatus where confStatus.needsToSyncMessages {
             request.transportRequest.forceToVoipSession()
         }
         return request

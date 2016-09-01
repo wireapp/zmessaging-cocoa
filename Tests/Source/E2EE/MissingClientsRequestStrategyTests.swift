@@ -24,7 +24,7 @@ import ZMCMockTransport
 import ZMCDataModel
 
 class FakeConfirmationStatus : BackgroundAPNSConfirmationStatus {
-    override var canSyncMessage: Bool {
+    override var needsToSyncMessages: Bool {
         return true
     }
 }

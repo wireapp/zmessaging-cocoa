@@ -67,7 +67,7 @@
 {
     [super setUp];
     self.mockAPNSConfirmationStatus = [OCMockObject niceMockForClass:[BackgroundAPNSConfirmationStatus class]];
-    [[[(id)self.mockAPNSConfirmationStatus stub] andReturnValue:@(NO)] canSyncMessage];
+    [[[(id)self.mockAPNSConfirmationStatus stub] andReturnValue:@(NO)] needsToSyncMessages];
     self.mockClientRegistrationStatus = [OCMockObject mockForProtocol:@protocol(ZMClientClientRegistrationStatusProvider)];
     self.sut = [[ZMClientMessageTranscoder alloc] initWithManagedObjectContext:self.syncMOC
                                                               localNotificationDispatcher:self.notificationDispatcher
@@ -1396,31 +1396,6 @@
     }
     return [ZMUpdateEvent eventsArrayFromTransportData:@{@"id" : NSUUID.createUUID.transportString,
                                                          @"payload" : @[eventPayload]} source:eventSource].firstObject;
-}
-
-- (void)recreateSUT
-{
-    [self.sut tearDown];
-    
-    self.mockAPNSConfirmationStatus = [OCMockObject niceMockForClass:[BackgroundAPNSConfirmationStatus class]];
-    [[[(id)self.mockAPNSConfirmationStatus stub] andReturnValue:@(YES)] canSyncMessage];
-    self.sut = [[ZMClientMessageTranscoder alloc] initWithManagedObjectContext:self.syncMOC
-                                                   localNotificationDispatcher:self.notificationDispatcher
-                                                      clientRegistrationStatus:self.mockClientRegistrationStatus
-                                                        apnsConfirmationStatus:self.mockAPNSConfirmationStatus];
-}
-
-- (void)testThatItOnlyReturnsTheUpstreamTranscoderWhenItShouldSyncAMessage
-{
-    // given
-    [self recreateSUT];
-    
-    // when
-    NSArray *generators = [self.sut requestGenerators];
-    
-    // then
-    XCTAssertEqual(generators.count, 1u);
-    XCTAssertEqual(self.sut.upstreamObjectSync, generators.firstObject);
 }
 
 - (void)testThatItInsertAConfirmationMessageWhenReceivingAnEvent

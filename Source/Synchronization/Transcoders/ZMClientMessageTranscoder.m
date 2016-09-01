@@ -140,9 +140,6 @@
 
 - (NSArray * __nonnull)requestGenerators
 {
-    if (self.apnsConfirmationStatus.canSyncMessage) {
-        return @[self.upstreamObjectSync];
-    }
     NSMutableArray *generators = [[super requestGenerators] mutableCopy];
     [generators addObject:self.assetModifiedSync];
     [generators addObject:self.downstreamSync];
@@ -153,7 +150,7 @@
 {
     //should be called only for not-image client messages
     ZMTransportRequest *request = [self.requestsFactory upstreamRequestForMessage:message forConversationWithId:message.conversation.remoteIdentifier];
-    if ([message isKindOfClass:ZMClientMessage.class] && message.genericMessage.hasConfirmation) {
+    if ([message isKindOfClass:ZMClientMessage.class] && message.genericMessage.hasConfirmation && self.apnsConfirmationStatus.needsToSyncMessages) {
         [request forceToVoipSession]; // we might receive a message while in the background
     }
     return request;

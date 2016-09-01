@@ -36,7 +36,7 @@ public class BackgroundAPNSConfirmationStatus : NSObject {
     private unowned var managedObjectContext : NSManagedObjectContext
     private unowned var backgroundActivityFactory : BackgroundActivityFactory
 
-    public var canSyncMessage : Bool {
+    public var needsToSyncMessages : Bool {
         return messageNonces.count > 0 && application.applicationState == .Background
     }
     

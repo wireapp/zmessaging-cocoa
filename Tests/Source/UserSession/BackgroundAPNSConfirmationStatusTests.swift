@@ -81,7 +81,7 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
-        XCTAssertTrue(sut.canSyncMessage)
+        XCTAssertTrue(sut.needsToSyncMessages)
     }
     
     func testThat_CanSendMessage_IsSetToFalse_MessageConfirmed() {
@@ -95,7 +95,7 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
 
         // then
-        XCTAssertFalse(sut.canSyncMessage)
+        XCTAssertFalse(sut.needsToSyncMessages)
     }
     
     func testThat_CanSendMessage_IsSetToTrue_OneMessageConfirmed_OneMessageNew() {
@@ -112,7 +112,7 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
 
         // then
-        XCTAssertTrue(sut.canSyncMessage)
+        XCTAssertTrue(sut.needsToSyncMessages)
     }
     
     func testThat_CanSendMessage_IsSetToFalse_MessageTimedOut() {
@@ -127,7 +127,7 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
-        XCTAssertFalse(sut.canSyncMessage)
+        XCTAssertFalse(sut.needsToSyncMessages)
     }
     
     func testThat_CanSendMessage_IsSetToTrue_OneMessageTimedOut_OneMessageNew() {
@@ -144,7 +144,7 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
-        XCTAssertTrue(sut.canSyncMessage)
+        XCTAssertTrue(sut.needsToSyncMessages)
     }
 }
 
