@@ -246,6 +246,12 @@
 {
     [super updateInsertedObject:message request:upstreamRequest response:response];
     [(ZMClientMessage *)message parseUploadResponse:response clientDeletionDelegate:self.clientRegistrationStatus];
+    
+    // if it's reaction
+    if ([message isKindOfClass:[ZMClientMessage class]] && ((ZMClientMessage *)message).genericMessage.hasReaction) {
+        [message.managedObjectContext deleteObject:message];
+    }
+
 }
 
 - (BOOL)updateUpdatedObject:(ZMAssetClientMessage *)message

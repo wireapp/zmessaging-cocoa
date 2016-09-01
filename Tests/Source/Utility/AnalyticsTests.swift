@@ -113,10 +113,27 @@ extension AnalyticsTests {
         assertThatItTracksAddresBookUploadEnded(-42, shouldTrackInterval: false)
     }
     
+    func testThatItDoesTrackTheIntervalBetweenTwoUploads() {
+        // given
+        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: NSManagedObjectContext.createSyncContext())
+        
+        
+        // when
+        tracker.tagAddressBookUploadSuccess()
+        tracker.tagAddressBookUploadSuccess()
+        
+        // then
+        XCTAssertTrue(analytics.taggedEvents.isEmpty)
+        XCTAssertEqual(analytics.taggedEventsWithAttributes.count, 2)
+        let eventWithAtributes = analytics.taggedEventsWithAttributes.last!
+        XCTAssertEqual(eventWithAtributes.event, "connect.completed_addressbook_search")
+        XCTAssertEqual(eventWithAtributes.attributes["interval"] as? Int, 0)
+    }
+    
     func testThatItTracksAddresBookUploadStarted() {
         // given
         let size : UInt = 345
-        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics)
+        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: NSManagedObjectContext.createSyncContext())
         
         // when
         tracker.tagAddressBookUploadStarted(size)
@@ -134,10 +151,10 @@ extension AnalyticsTests {
     
     func assertThatItTracksAddresBookUploadEnded(hoursSinceLastUpload: Int? = nil, shouldTrackInterval: Bool = true, line: UInt = #line) {
         // given
-        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics)
+        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: NSManagedObjectContext.createSyncContext())
         if let hours = hoursSinceLastUpload.map(NSTimeInterval.init) {
             let lastDate = NSDate(timeIntervalSinceNow: -hours * 3600)
-            NSUserDefaults.standardUserDefaults().setObject(lastDate, forKey: "lastAddressBookUploadDate")
+            tracker.managedObjectContext.lastAddressBookUploadDate = lastDate
         }
 
         // when
@@ -151,10 +168,10 @@ extension AnalyticsTests {
         
         var attributes: [String: NSObject] = [:]
         
-        if let hours = hoursSinceLastUpload where shouldTrackInterval { attributes["interval"] = hours }
+        if let hours = hoursSinceLastUpload where shouldTrackInterval {
+            attributes["interval"] = hours
+        }
         XCTAssertEqual(eventWithAtributes.attributes, attributes, line: line)
-        
-        NSUserDefaults.standardUserDefaults().setObject(nil, forKey: "lastAddressBookUploadDate")
     }
 }
 
