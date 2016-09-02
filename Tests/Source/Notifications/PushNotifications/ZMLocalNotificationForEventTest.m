@@ -1370,6 +1370,15 @@
 
 @end
 
+@implementation ZMLocalNotificationForEvent (Reaction)
+
+- (void)testThatItCreatesAReactionNotificationWhenSomeoneReactToSelfUserMessage;
+{
+    
+}
+
+@end
+
 
 
 //////
