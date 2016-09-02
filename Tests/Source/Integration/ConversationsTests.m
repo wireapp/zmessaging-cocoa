@@ -2692,5 +2692,85 @@
     [observer tearDown];
 }
 
+- (void)testThatReceivingALikeInAClearedConversationDoesNotUnarchiveTheConversation
+{
+    //given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    
+    [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    MockConversation *mockConversation = self.selfToUser1Conversation;
+    ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
+    
+    __block ZMTextMessage *message;
+    [self.userSession performChanges:^{
+        message = (ZMTextMessage *)[conversation appendMessageWithText:@"Je t'aime JCVD"];
+    }];
+    NSUUID *nonce = message.nonce;
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    NSString *reactionEmoji = @"I like this";
+    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce.transportString nonce:[NSUUID UUID].transportString];
+    MockUserClient *fromClient = [self.user1.clients anyObject];
+    MockUserClient *toClient = [self.selfUser.clients anyObject];
+    
+    // when
+    [self.userSession performChanges:^{
+        [conversation clearMessageHistory];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue(conversation.isArchived);
+    
+    [self.mockTransportSession performRemoteChanges:^( __unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [mockConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:reactionMessage.data];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    //then
+    XCTAssertTrue(conversation.isArchived);
+}
+
+- (void)testThatReceivingALikeInAnArchivedConversationDoesNotUnarchiveTheConversation
+{
+    //given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    
+    [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    MockConversation *mockConversation = self.selfToUser1Conversation;
+    ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
+    
+    __block ZMTextMessage *message;
+    [self.userSession performChanges:^{
+        message = (ZMTextMessage *)[conversation appendMessageWithText:@"Je t'aime JCVD"];
+    }];
+    NSUUID *nonce = message.nonce;
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    NSString *reactionEmoji = @"I like this";
+    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce.transportString nonce:[NSUUID UUID].transportString];
+    MockUserClient *fromClient = [self.user1.clients anyObject];
+    MockUserClient *toClient = [self.selfUser.clients anyObject];
+    
+    // when
+    [self.userSession performChanges:^{
+        [conversation setIsArchived:YES];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue(conversation.isArchived);
+    
+    [self.mockTransportSession performRemoteChanges:^( __unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [mockConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:reactionMessage.data];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    //then
+    XCTAssertTrue(conversation.isArchived);
+}
+
 @end
 
