@@ -90,6 +90,7 @@ extension UIApplication : NotificationScheduler {
 
 public class ZMLocalNotificationForEvent : ZMLocalNotification {
     
+    public var shouldBeDiscarded : Bool = false
     public let sender : ZMUser?
 
     public let notificationType : ZMLocalNotificationType = ZMLocalNotificationType.Event

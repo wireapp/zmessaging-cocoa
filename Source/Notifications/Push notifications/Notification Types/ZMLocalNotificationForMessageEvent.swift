@@ -41,9 +41,8 @@ public class ZMLocalNotificationForPostInConversationEvent : ZMLocalNotification
         return true
     }
     
-    var encryptedEventData : String? {
-        guard let lastEvent = lastEvent,
-              let payload = lastEvent.payload as? [String : AnyObject]
+    func encryptedEventData(event: ZMUpdateEvent) -> String? {
+        guard let payload = event.payload as? [String : AnyObject]
         else { return nil }
         
         if let data = payload["data"] {
@@ -55,6 +54,17 @@ public class ZMLocalNotificationForPostInConversationEvent : ZMLocalNotification
             }
         }
         return nil
+    }
+    
+    func genericMessage(event: ZMUpdateEvent) -> ZMGenericMessage? {
+        guard let encryptedEventData = encryptedEventData(event) else { return nil }
+        
+        var genericMessage : ZMGenericMessage?
+        let exception = zm_tryBlock{
+            genericMessage = ZMGenericMessage(base64String: encryptedEventData)
+        }
+        guard exception == nil else { return nil }
+        return genericMessage
     }
 }
 
@@ -108,13 +118,8 @@ public class ZMLocalNotificationForMessage: ZMLocalNotificationForPostInConversa
         
         switch lastEvent!.type {
         case .ConversationOtrAssetAdd, .ConversationOtrMessageAdd:
-            guard let encryptedEventData = encryptedEventData else { return false }
-            
-            var genericMessage : ZMGenericMessage?
-            let exception = zm_tryBlock {
-                genericMessage = ZMGenericMessage(base64String: encryptedEventData)
-            }
-            guard exception == nil, let message = genericMessage else { return false }
+            guard let lastEvent = lastEvent,
+                  let message = genericMessage(lastEvent) else { return false }
             
             let aType = ZMLocalNotificationContentType.typeForMessage(message)
             guard aType != .Undefined else { return false }
@@ -182,15 +187,8 @@ public class ZMLocalNotificationForKnockMessage : ZMLocalNotificationForPostInCo
         
         switch lastEvent!.type {
         case .ConversationOtrMessageAdd:
-            guard let encryptedEventData = encryptedEventData else { return false }
-            
-            var genericMessage : ZMGenericMessage?
-            let exception = zm_tryBlock{
-                genericMessage = ZMGenericMessage(base64String: encryptedEventData)
-            }
-            
-            guard exception == nil,
-                let message = genericMessage where message.hasKnock()
+            guard let lastEvent = lastEvent,
+                  let message = genericMessage(lastEvent) where message.hasKnock()
             else { return false }
             
             return true
@@ -220,6 +218,7 @@ public class ZMLocalNotificationForKnockMessage : ZMLocalNotificationForPostInCo
 public class ZMLocalNotificationForReaction : ZMLocalNotificationForPostInConversationEvent {
     
     private var emoji : String?
+    private var nonce : String?
     
     public override var eventType: ZMLocalNotificationForEventType {
         return .Reaction
@@ -232,19 +231,12 @@ public class ZMLocalNotificationForReaction : ZMLocalNotificationForPostInConver
     // We create notification only if self users message was reacted to
     override func canCreateNotification() -> Bool {
         guard super.canCreateNotification() else { return false }
-
-        guard let encryptedEventData = encryptedEventData else { return false }
-        var genericMessage : ZMGenericMessage?
-        let exception = zm_tryBlock{
-            genericMessage = ZMGenericMessage(base64String: encryptedEventData)
-        }
+        guard let lastEvent = lastEvent,
+              let receivedMessage = genericMessage(lastEvent) where receivedMessage.hasReaction() else { return false }
         
-        guard exception == nil else { return false }
-    
-        guard let receivedMessage = genericMessage
-            where receivedMessage.hasReaction()
-            else { return false }
-    
+        // If the message is an "unlike", we don't want to display a notification
+        guard receivedMessage.reaction.emoji != "" else { return false }
+        
         // fetch message that was reacted to and make sure the sender
         guard let conversation = self.conversation,
               let message = ZMMessage.fetchMessageWithNonce(NSUUID(UUIDString: receivedMessage.reaction.messageId), forConversation: conversation, inManagedObjectContext: self.managedObjectContext)
@@ -252,9 +244,25 @@ public class ZMLocalNotificationForReaction : ZMLocalNotificationForPostInConver
             else { return false }
 
         emoji = receivedMessage.reaction.emoji
-        
+        nonce = receivedMessage.reaction.messageId
         return true
-
+    }
+    
+    public override func copyByAddingEvent(event: ZMUpdateEvent) -> ZMLocalNotificationForEvent? {
+        guard canAddEvent(event),
+              let otherMessage = genericMessage(event) where otherMessage.hasReaction()
+        else { return nil }
+        
+        // If new event is an "unlike" from the same sender we want to cancel the previous notification
+        if otherMessage.reaction.messageId == nonce &&
+            otherMessage.reaction.emoji == "" &&
+            event.senderUUID() == sender?.remoteIdentifier
+        {
+            cancelNotifications()
+            shouldBeDiscarded = true
+            return nil
+        }
+        return nil
     }
     
     override func configureAlertBody() -> String {

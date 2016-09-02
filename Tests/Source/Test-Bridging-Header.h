@@ -23,3 +23,4 @@
 #import "IntegrationTestBase.h"
 #import "MessagingTest+EventFactory.h"
 #import "ConversationTestsBase.h"
+#import "ZMLocalNotificationForEventTest.h"

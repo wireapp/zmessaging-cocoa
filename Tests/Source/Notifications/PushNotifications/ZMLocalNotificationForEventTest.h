@@ -37,4 +37,6 @@
 @property (nonatomic) ZMConversation *groupConversationWithoutName;
 @property (nonatomic) ZMUser *selfUser;
 @property (nonatomic) ZMUser *otherUser;
+@property (nonatomic) ZMUser *otherUser2;
+
 @end
