@@ -38,8 +38,9 @@ public class ClientMessageRequestFactory: NSObject {
     
     private func upstreamRequestForEncryptedClientMessage(message: ZMClientMessage, forConversationWithId conversationId: NSUUID) -> ZMTransportRequest? {
         let path = "/" + ["conversations", conversationId.transportString(), "otr", "messages"].joinWithSeparator("/")
-        let metaData = message.encryptedMessagePayloadData()
-        let request = ZMTransportRequest(path: path, method: .MethodPOST, binaryData: metaData, type: protobufContentType, contentDisposition: nil)
+        let dataAndMissingClientStrategy = message.encryptedMessagePayloadData()!
+        let pathWithStrategy = self.pathWithMissingClientStrategy(path, strategy: dataAndMissingClientStrategy.strategy)
+        let request = ZMTransportRequest(path: pathWithStrategy, method: .MethodPOST, binaryData: dataAndMissingClientStrategy.data, type: protobufContentType, contentDisposition: nil)
         var debugInfo = "\(message.genericMessage)"
         if let genericMessage = message.genericMessage where genericMessage.hasExternal() { debugInfo = "External message: " + debugInfo }
         request.appendDebugInformation(debugInfo)
@@ -69,8 +70,8 @@ public class ClientMessageRequestFactory: NSObject {
     private func upstreamRequestForInsertedEncryptedImageMessage(format: ZMImageFormat, message: ZMAssetClientMessage, forConversationWithId conversationId: NSUUID) -> ZMTransportRequest? {
         if let imageData = message.imageAssetStorage!.imageDataForFormat(format, encrypted: true) {
             let path = "/" +  ["conversations", conversationId.transportString(), "otr", "assets"].joinWithSeparator("/")
-            let metaData = message.imageAssetStorage!.encryptedMessagePayloadForImageFormat(format)
-            let request = ZMTransportRequest.multipartRequestWithPath(path, imageData: imageData, metaData: metaData!.data(), metaDataContentType: protobufContentType, mediaContentType: octetStreamContentType)
+            let metaData = message.encryptedMessagePayloadForImageFormat(format)!
+            let request = ZMTransportRequest.multipartRequestWithPath(path, imageData: imageData, metaData: metaData.data(), metaDataContentType: protobufContentType, mediaContentType: octetStreamContentType)
             request.appendDebugInformation("\(message.imageAssetStorage!.genericMessageForFormat(format))")
             request.appendDebugInformation("\(metaData)")
             request.forceToBackgroundSession()
@@ -82,8 +83,8 @@ public class ClientMessageRequestFactory: NSObject {
     // request to reupload image (not inline)
     private func upstreamRequestForUpdatedEncryptedImageMessage(format: ZMImageFormat, message: ZMAssetClientMessage, forConversationWithId conversationId: NSUUID) -> ZMTransportRequest? {
         let path = "/" + ["conversations", conversationId.transportString(), "otr", "assets", message.assetId!.transportString()].joinWithSeparator("/")
-        let metaData = message.imageAssetStorage!.encryptedMessagePayloadForImageFormat(format)
-        let request = ZMTransportRequest(path: path, method: ZMTransportRequestMethod.MethodPOST, binaryData: metaData!.data(), type: protobufContentType, contentDisposition: nil)
+        let metaData = message.encryptedMessagePayloadForImageFormat(format)!
+        let request = ZMTransportRequest(path: path, method: ZMTransportRequestMethod.MethodPOST, binaryData: metaData.data(), type: protobufContentType, contentDisposition: nil)
         request.appendDebugInformation("\(message.imageAssetStorage!.genericMessageForFormat(format))")
         request.appendDebugInformation("\(metaData)")
         request.forceToBackgroundSession()
@@ -97,4 +98,22 @@ public class ClientMessageRequestFactory: NSObject {
         return request
     }
     
+    private func pathWithMissingClientStrategy(originalPath: String, strategy: MissingClientsStrategy) -> String {
+        switch strategy {
+        case .DoNotIgnoreAnyMissingClient:
+            return originalPath
+        case .IgnoreAllMissingClients:
+            return originalPath + "?ignore_missing"
+        case .IgnoreAllMissingClientsNotFromUser(let user):
+            return originalPath + "?report_missing=\(user.remoteIdentifier?.transportString() ?? "")"
+        }
+    }
+    
+}
+
+// MARK: - Testing Helper
+extension ZMClientMessage {
+    public var encryptedMessagePayloadDataOnly : NSData? {
+        return self.encryptedMessagePayloadData()?.data
+    }
 }
