@@ -266,7 +266,6 @@ public class ZMLocalNotificationForReaction : ZMLocalNotificationForPostInConver
     }
     
     override func configureAlertBody() -> String {
-        // TODO: use correct string
         return ZMPushStringReaction.localizedStringWithUser(self.sender, conversation: conversation, emoji: self.emoji!)
     }
 }

@@ -64,8 +64,50 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         XCTAssertNotNil(sut)
         
         guard let localNote = sut?.uiNotifications.first else {return XCTFail()}
-        XCTAssertEqual(localNote.alertBody, "Other User liked your message in Super Conversation")
+        XCTAssertEqual(localNote.alertBody, "Other User liked your message")
         XCTAssertEqual(localNote.zm_messageNonce, event.messageNonce())
+    }
+    
+    func alertBody(conversation: ZMConversation, sender: ZMUser) -> String? {
+        // given
+        let message = conversation.appendMessageWithText("text") as! ZMClientMessage
+        let reaction = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
+        let event = createUpdateEvent(NSUUID(), conversationID: conversation.remoteIdentifier, genericMessage: reaction, senderID: sender.remoteIdentifier!)
+        
+        // when
+        let sut = ZMLocalNotificationForReaction(events: [event], conversation: conversation, managedObjectContext: message.managedObjectContext!, application: nil)
+        
+        // then
+        guard let localNote = sut?.uiNotifications.first else {return nil }
+        return localNote.alertBody
+    }
+    
+    func testThatItCreatesTheCorrectAlertBody_ConvWithoutName(){
+        guard let alertBody = alertBody(groupConversationWithoutName, sender: otherUser) else { return XCTFail()}
+        XCTAssertEqual(alertBody, "Other User liked your message in a conversation")
+    }
+    
+    func testThatItCreatesTheCorrectAlertBody(){
+        guard let alertBody = alertBody(groupConversation, sender: otherUser) else { return XCTFail()}
+        XCTAssertEqual(alertBody, "Other User liked your message in Super Conversation")
+    }
+    
+    func testThatItCreatesTheCorrectAlertBody_UnknownUser(){
+        otherUser.name = ""
+        guard let alertBody = alertBody(groupConversation, sender: otherUser) else { return XCTFail()}
+        XCTAssertEqual(alertBody, "Someone liked your message in Super Conversation")
+    }
+    
+    func testThatItCreatesTheCorrectAlertBody_UnknownUser_UnknownConversationName(){
+        otherUser.name = ""
+        guard let alertBody = alertBody(groupConversationWithoutName, sender: otherUser) else { return XCTFail()}
+        XCTAssertEqual(alertBody, "Someone liked your message in a conversation")
+    }
+    
+    func testThatItCreatesTheCorrectAlertBody_UnknownUser_OneOnOneConv(){
+        otherUser.name = ""
+        guard let alertBody = alertBody(oneOnOneConversation, sender: otherUser) else { return XCTFail()}
+        XCTAssertEqual(alertBody, "Someone liked your message")
     }
     
     func testThatItCreatesANotifcationForAReaction_CallingSuperFunction(){
@@ -82,7 +124,7 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         XCTAssertNotNil(sut)
         
         guard let localNote = sut?.uiNotifications.first else {return XCTFail()}
-        XCTAssertEqual(localNote.alertBody, "Other User liked your message in Super Conversation")
+        XCTAssertEqual(localNote.alertBody, "Other User liked your message")
         XCTAssertEqual(localNote.zm_messageNonce, event.messageNonce())
     }
     
