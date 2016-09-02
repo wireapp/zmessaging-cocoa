@@ -43,7 +43,7 @@ extension ClientMessageRequestFactoryTests {
         //then
         XCTAssertEqual(request?.method, ZMTransportRequestMethod.MethodPOST)
         XCTAssertEqual(request?.path, "/conversations/\(conversationId.transportString())/otr/messages")
-        XCTAssertEqual(message.encryptedMessagePayloadData()?.data, request?.binaryData)
+        XCTAssertEqual(message.encryptedMessagePayloadDataOnly, request?.binaryData)
     }
 }
 
@@ -440,6 +440,5 @@ extension ClientMessageRequestFactoryTests {
                 }
             }
         }
-    }
-    
+    }    
 }
