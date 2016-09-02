@@ -115,7 +115,9 @@
         
         id mockUserSession = [OCMockObject mockForClass:ZMUserSession.class];
         [[[mockUserSession stub] andReturn:self.syncMOC] syncManagedObjectContext];
-        
+        [[mockUserSession expect] databaseDirectoryURL];
+        [[mockUserSession expect] managedObjectContext];
+
         ZMSearchDirectory *directory = [[ZMSearchDirectory alloc] initWithUserSession:mockUserSession];
         NSMutableSet *userIDs = [NSMutableSet setWithObjects:[self createSearchUser], [self createSearchUser], nil];
         

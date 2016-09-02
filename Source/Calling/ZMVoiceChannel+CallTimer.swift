@@ -41,7 +41,7 @@ extension ZMVoiceChannel {
         guard let conversation = conversation,
               let context = conversation.managedObjectContext where context.zm_isSyncContext
         else { return }
-        let uiContext = NSManagedObjectContext.createUserInterfaceContext()
+        let uiContext = context.zm_userInterfaceContext
         
         guard let uiConv = (try? uiContext.existingObjectWithID(conversation.objectID)) as? ZMConversation where !uiConv.isZombieObject
         else { return }

@@ -66,7 +66,7 @@
         _state = ZMSearchStateNotStarted;
         _request = request;
         _searchContext = context;
-        _userInterfaceContext = [NSManagedObjectContext createUserInterfaceContext];
+        _userInterfaceContext = userSession.managedObjectContext;
         _userSession = userSession;
         _resultCache = resultCache;
         

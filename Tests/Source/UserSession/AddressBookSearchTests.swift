@@ -235,17 +235,17 @@ extension AddressBookSearchTests {
         user1.emailAddress = "oli@example.com"
         let user2 = ZMUser.insertNewObjectInManagedObjectContext(self.uiMOC)
         user2.phoneNumber = "+155505012"
-        
+
         // when
         let result = sut.matchInAddressBook([user1, user2])
         
         // then
         XCTAssertEqual(result.count, 2)
         guard result.count == 2 else { return }
-        XCTAssertEqual(result[0].user, user1)
-        XCTAssertNil(result[0].contact)
-        XCTAssertEqual(result[1].user, user2)
-        XCTAssertNil(result[1].contact)
+        
+        let users = Set(result.flatMap { $0.user })
+        XCTAssertEqual(users, Set([user1, user2]))
+        XCTAssertTrue(result.flatMap { $0.contact }.isEmpty)
     }
     
     func testThatItMatchesUserWithInfiniteContacts() {

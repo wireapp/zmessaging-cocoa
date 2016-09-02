@@ -26,7 +26,7 @@
 
 @interface ZMUserSessionTests : ZMUserSessionTestsBase
 
-@property(nonatomic) NSNotification *lastReceivedNotification;
+@property (nonatomic) NSNotification *lastReceivedNotification;
 
 - (void)didReceiveNotification:(NSNotification *)notification;
 - (void)simulateLoggedInUser;
@@ -98,6 +98,7 @@
     // expect
     id operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
     [[[[operationLoop expect] classMethod] andReturn:operationLoop] alloc];
+    
     (void) [[[operationLoop expect] andReturn:operationLoop]
             initWithTransportSession:transportSession
             authenticationStatus:OCMOCK_ANY
@@ -122,7 +123,7 @@
     ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager
                                                                analytics:nil
                                                               appVersion:@"000000"
-                                                      appGroupIdentifier:nil];
+                                                      appGroupIdentifier:self.groupIdentifier];
     XCTAssertNotNil(session);
 
     // then
@@ -148,7 +149,10 @@
     [[[userAgent expect] classMethod] setWireAppVersion:version];
     
     // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager analytics:nil appVersion:version appGroupIdentifier:nil];
+    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager
+                                                               analytics:nil
+                                                              appVersion:version
+                                                      appGroupIdentifier:self.groupIdentifier];
     XCTAssertNotNil(session);
     
     // then
@@ -293,7 +297,7 @@
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                              appGroupIdentifier:nil];
+                                                              appGroupIdentifier:self.groupIdentifier];
     [userSession didRegisterUserClient:userClient];
     
     // then
@@ -585,7 +589,7 @@
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                              appGroupIdentifier:nil];
+                                                              appGroupIdentifier:self.groupIdentifier];
     
     // then
     [transportSession verify];

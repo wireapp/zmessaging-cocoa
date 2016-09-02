@@ -85,7 +85,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
         self.clientRegistrationStatus = clientRegistrationStatus
         self.managedObjectContext = managedObjectContext
         self.addressBookGenerator = addressBookGenerator
-        self.tracker = tracker ?? AddressBookAnalytics(analytics: managedObjectContext.analytics)
+        self.tracker = tracker ?? AddressBookAnalytics(analytics: managedObjectContext.analytics, managedObjectContext: managedObjectContext)
         super.init()
         self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
     }

@@ -20,12 +20,13 @@
 import Foundation
 
 
-extension NSUserDefaults {
-    private var lastAddressBookUploadDateKey: String { return "lastAddressBookUploadDate" }
+extension NSManagedObjectContext {
+    
+    private static var lastAddressBookUploadDateKey: String { return "lastAddressBookUploadDate" }
 
     var lastAddressBookUploadDate: NSDate? {
-        set { setObject(newValue, forKey: lastAddressBookUploadDateKey) }
-        get { return objectForKey(lastAddressBookUploadDateKey) as? NSDate }
+        set { self.setPersistentStoreMetadata(newValue, forKey: NSManagedObjectContext.lastAddressBookUploadDateKey) }
+        get { return self.persistentStoreMetadataForKey(NSManagedObjectContext.lastAddressBookUploadDateKey) as? NSDate }
     }
 }
 
@@ -40,6 +41,8 @@ protocol AddressBookTracker {
 
 final class AddressBookAnalytics: AddressBookTracker {
     
+    let managedObjectContext : NSManagedObjectContext
+    
     private enum Attribute: String {
         case Size = "size"
         case Interval = "interval"
@@ -49,8 +52,9 @@ final class AddressBookAnalytics: AddressBookTracker {
     private let endEventName = "connect.completed_addressbook_search"
     private let analytics: AnalyticsType?
 
-    init(analytics: AnalyticsType?) {
+    init(analytics: AnalyticsType?, managedObjectContext: NSManagedObjectContext) {
         self.analytics = analytics
+        self.managedObjectContext = managedObjectContext
     }
     
     func tagAddressBookUploadStarted(entireABsize: UInt) {
@@ -65,22 +69,21 @@ final class AddressBookAnalytics: AddressBookTracker {
         var attributes: [String: NSObject] = [:]
         if let interval = lastUploadInterval() {
             attributes[Attribute.Interval.rawValue] = interval
-            resetUploadInterval()
         }
-        
+        resetUploadInterval()
         analytics?.tagEvent(endEventName, attributes: attributes)
     }
 
     /// Returns the interval since the last address book upload in hours
     private func lastUploadInterval() -> UInt? {
-        guard let lastDate = NSUserDefaults.standardUserDefaults().lastAddressBookUploadDate else { return nil }
+        guard let lastDate = self.managedObjectContext.lastAddressBookUploadDate else { return nil }
         let seconds = -round(lastDate.timeIntervalSinceNow)
         guard !seconds.isSignMinus else { return nil }
         return UInt(seconds / 3600)
     }
 
     private func resetUploadInterval() {
-        NSUserDefaults.standardUserDefaults().lastAddressBookUploadDate = NSDate()
+        self.managedObjectContext.lastAddressBookUploadDate = NSDate()
     }
 
 }

@@ -266,9 +266,6 @@
                                                               badge:self.badge
                                                         application:nil];
     
-    
-    
-    
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
     XCTAssertEqual(self.sut.userImageTranscoder, userImageTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);

@@ -86,7 +86,7 @@
                                                  operationLoop:self.operationLoop
                                                    application:self.application
                                                     appVersion:@"00000"
-                                            appGroupIdentifier:nil];
+                                            appGroupIdentifier:self.groupIdentifier];
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
     
     WaitForAllGroupsToBeEmpty(0.5);

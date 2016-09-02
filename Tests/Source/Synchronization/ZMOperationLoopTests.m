@@ -144,6 +144,7 @@
                                                           syncStateDelegate:nil
                                                          appGroupIdentifier:nil
                                                                 application:nil];
+
     XCTAssertNotNil(ol);
     [ol tearDown];
     

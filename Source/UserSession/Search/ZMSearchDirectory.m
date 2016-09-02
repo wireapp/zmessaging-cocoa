@@ -116,7 +116,7 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
 - (instancetype)initWithUserSession:(ZMUserSession *)userSession
 {
     return [self initWithUserSession:userSession 
-                       searchContext:[NSManagedObjectContext createSearchContext] 
+                       searchContext:[NSManagedObjectContext createSearchContextWithStoreDirectory:userSession.databaseDirectoryURL]
             maxTopConversationsCount:24];
 }
 
@@ -124,7 +124,7 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
            maxTopConversationsCount:(NSInteger)maxTopConversationsCount
 {
     return [self initWithUserSession:userSession 
-                       searchContext:[NSManagedObjectContext createSearchContext] 
+                       searchContext:[NSManagedObjectContext createSearchContextWithStoreDirectory:userSession.databaseDirectoryURL]
             maxTopConversationsCount:maxTopConversationsCount];
 }
 
@@ -173,7 +173,7 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
     self = [super init];
     if (self) {
         self.searchContext = searchContext;
-        self.userInterfaceContext = [NSManagedObjectContext createUserInterfaceContext];
+        self.userInterfaceContext = userSession.managedObjectContext;
         self.observers = [[NSHashTable alloc] initWithOptions:NSHashTableWeakMemory capacity:10];
         self.userSession = userSession;
         self.searchMap = [NSMutableDictionary dictionary];
