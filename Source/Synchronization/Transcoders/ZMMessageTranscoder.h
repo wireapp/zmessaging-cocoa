@@ -30,6 +30,7 @@
 @interface ZMMessageTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
 
 @property (nonatomic, readonly) BOOL hasPendingMessages;
+@property (nonatomic, readonly) ZMUpstreamInsertedObjectSync *upstreamObjectSync;
 
 + (instancetype)systemMessageTranscoderWithManagedObjectContext:(NSManagedObjectContext *)moc
                                     localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher;

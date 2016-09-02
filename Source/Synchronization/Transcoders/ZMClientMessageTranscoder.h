@@ -20,11 +20,13 @@
 #import "ZMMessageTranscoder+Internal.h"
 
 @class ZMClientRegistrationStatus;
+@class BackgroundAPNSConfirmationStatus;
 
 @interface ZMClientMessageTranscoder : ZMMessageTranscoder
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                  localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher
-                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus;
+                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
+                      apnsConfirmationStatus:(BackgroundAPNSConfirmationStatus *)apnsConfirmationStatus;
 
 @end

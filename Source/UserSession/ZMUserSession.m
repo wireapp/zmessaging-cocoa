@@ -266,20 +266,21 @@ ZM_EMPTY_ASSERTING_INIT()
         _application = application;
         
         self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
-                                                                           authenticationStatus:self.authenticationStatus
-                                                                        userProfileUpdateStatus:self.userProfileUpdateStatus
-                                                                       clientRegistrationStatus:self.clientRegistrationStatus
-                                                                             clientUpdateStatus:self.clientUpdateStatus
-                                                                           proxiedRequestStatus:self.proxiedRequestStatus
-                                                                                  accountStatus:self.accountStatus
-                                                                   backgroundAPNSPingBackStatus:self.pingBackStatus
-                                                                    localNotificationdispatcher:self.localNotificationDispatcher
-                                                                                   mediaManager:mediaManager
-                                                                            onDemandFlowManager:self.onDemandFlowManager
-                                                                                          uiMOC:self.managedObjectContext
-                                                                                        syncMOC:self.syncManagedObjectContext
-                                                                              syncStateDelegate:self
-                                                                             appGroupIdentifier:appGroupIdentifier];
+                                                                            authenticationStatus:self.authenticationStatus
+                                                                         userProfileUpdateStatus:self.userProfileUpdateStatus
+                                                                        clientRegistrationStatus:self.clientRegistrationStatus
+                                                                              clientUpdateStatus:self.clientUpdateStatus
+                                                                            proxiedRequestStatus:self.proxiedRequestStatus
+                                                                                   accountStatus:self.accountStatus
+                                                                    backgroundAPNSPingBackStatus:self.pingBackStatus
+                                                                     localNotificationdispatcher:self.localNotificationDispatcher
+                                                                                    mediaManager:mediaManager
+                                                                             onDemandFlowManager:self.onDemandFlowManager
+                                                                                           uiMOC:self.managedObjectContext
+                                                                                         syncMOC:self.syncManagedObjectContext
+                                                                               syncStateDelegate:self
+                                                                              appGroupIdentifier:appGroupIdentifier
+                                                                                     application:application];
         
         __weak id weakSelf = self;
         session.accessTokenRenewalFailureHandler = ^(ZMTransportResponse *response) {

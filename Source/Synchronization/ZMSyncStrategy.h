@@ -28,12 +28,8 @@
 @class ZMTransportRequest;
 @class ZMPushChannelConnection;
 @class ZMAuthenticationStatus;
-@protocol ZMTransportData;
-@protocol AVSMediaManager;
 @class ZMOnDemandFlowManager;
-@protocol ZMSyncStateDelegate;
 @class ZMTransportSession;
-@protocol ZMBackgroundable;
 @class ZMBadge;
 @class ZMLocalNotificationDispatcher;
 @class ZMUserProfileUpdateStatus;
@@ -42,6 +38,13 @@
 @class ClientUpdateStatus;
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
+
+@protocol ZMTransportData;
+@protocol AVSMediaManager;
+@protocol ZMSyncStateDelegate;
+@protocol ZMBackgroundable;
+@protocol ApplicationStateOwner;
+
 
 @interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory, ZMUpdateEventConsumer>
 
@@ -61,7 +64,8 @@
                 localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
                     taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
                           appGroupIdentifier:(NSString *)appGroupIdentifier
-                                       badge:(ZMBadge *)badge;
+                                       badge:(ZMBadge *)badge
+                                 application:(ZMApplication *)application;
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;

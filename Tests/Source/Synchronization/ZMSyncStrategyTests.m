@@ -133,7 +133,7 @@
 
     id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
-    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:OCMOCK_ANY clientRegistrationStatus:OCMOCK_ANY];
+    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:OCMOCK_ANY clientRegistrationStatus:OCMOCK_ANY apnsConfirmationStatus:OCMOCK_ANY];
 
     id knockTranscoder = [OCMockObject mockForClass:ZMKnockTranscoder.class];
     [[[[knockTranscoder expect] andReturn:knockTranscoder] classMethod] alloc];
@@ -262,11 +262,9 @@
                                               backgroundableSession:self.backgroundableSession
                                        localNotificationsDispatcher:OCMOCK_ANY
                                            taskCancellationProvider:OCMOCK_ANY
-                                                 appGroupIdentifier:self.groupIdentifier
-                                                              badge:self.badge];
-    
-    
-    
+                                                 appGroupIdentifier:nil
+                                                              badge:self.badge
+                                                        application:nil];
     
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
     XCTAssertEqual(self.sut.userImageTranscoder, userImageTranscoder);

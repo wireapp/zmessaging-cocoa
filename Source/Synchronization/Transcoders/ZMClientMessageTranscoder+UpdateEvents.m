@@ -89,7 +89,7 @@
             case ZMUpdateEventConversationClientMessageAdd:
             case ZMUpdateEventConversationOtrMessageAdd:
             case ZMUpdateEventConversationOtrAssetAdd:
-                nonce = [self nonceForUpdateEvent:event];
+                nonce = event.messageNonce;
                 break;
                 
             default:
@@ -105,19 +105,5 @@
     return noncesForUpdateEvents;
 }
 
-- (NSUUID *)nonceForUpdateEvent:(ZMUpdateEvent *)event
-{
-    ZMGenericMessage *message = [ZMGenericMessage genericMessageFromUpdateEvent:event];
-    return [NSUUID uuidWithTransportString:message.messageId];
-}
-
-- (ZMMessage *)processClientMessageAddEvent:(ZMUpdateEvent *)event prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
-{
-    ZMClientMessage *message = [ZMClientMessage createOrUpdateMessageFromUpdateEvent:event
-                                                              inManagedObjectContext:self.managedObjectContext
-                                                                      prefetchResult:prefetchResult];
-    [message markAsSent];
-    return message;
-}
 
 @end

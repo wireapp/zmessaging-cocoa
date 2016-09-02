@@ -257,40 +257,4 @@ class UserClientRequestFactoryTests: MessagingTest {
             XCTAssertEqual($0.transportRequest.method, ZMTransportRequestMethod.MethodDELETE)
         }
     }
-    
-    func testThatItCreatesMissingClientsRequest() {
-        
-        // given
-        let client = UserClient.insertNewObjectInManagedObjectContext(self.syncMOC)
-        
-        let missingUser = ZMUser.insertNewObjectInManagedObjectContext(self.syncMOC)
-        missingUser.remoteIdentifier = NSUUID.createUUID()
-        
-        let firstMissingClient = UserClient.insertNewObjectInManagedObjectContext(self.syncMOC)
-        firstMissingClient.remoteIdentifier = NSString.createAlphanumericalString()
-        firstMissingClient.user = missingUser
-        
-        let secondMissingClient = UserClient.insertNewObjectInManagedObjectContext(self.syncMOC)
-        secondMissingClient.remoteIdentifier = NSString.createAlphanumericalString()
-        secondMissingClient.user = missingUser
-
-        // when
-        client.missesClient(firstMissingClient)
-        client.missesClient(secondMissingClient)
-        
-        let map = MissingClientsMap(Array(client.missingClients!), pageSize: sut.missingClientsUserPageSize)
-        let request = sut.fetchMissingClientKeysRequest(map)
-        _ = [missingUser.remoteIdentifier!.transportString(): [firstMissingClient.remoteIdentifier, secondMissingClient.remoteIdentifier]]
-        
-        // then
-        AssertOptionalNotNil(request, "Should create request to fetch clients' keys") {request in
-            XCTAssertEqual(request.transportRequest.method, ZMTransportRequestMethod.MethodPOST)
-            XCTAssertEqual(request.transportRequest.path, "/users/prekeys")
-            let userPayload = request.transportRequest.payload.asDictionary()[missingUser.remoteIdentifier!.transportString()] as? NSArray
-            AssertOptionalNotNil(userPayload, "Clients map should contain missid user id") {userPayload in
-                XCTAssertTrue(userPayload.containsObject(firstMissingClient.remoteIdentifier), "Clients map should contain all missed clients id for each user")
-                XCTAssertTrue(userPayload.containsObject(secondMissingClient.remoteIdentifier), "Clients map should contain all missed clients id for each user")
-            }
-        }
-    }
 }

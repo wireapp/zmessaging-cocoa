@@ -123,8 +123,9 @@
             backgroundableSession:transportSession
             localNotificationsDispatcher:OCMOCK_ANY
             taskCancellationProvider:OCMOCK_ANY
-            appGroupIdentifier:self.groupIdentifier
-            badge:OCMOCK_ANY];
+            appGroupIdentifier:nil
+            badge:OCMOCK_ANY
+            application:nil];
     
     // when
     ZMOperationLoop *ol = [[ZMOperationLoop alloc] initWithTransportSession:transportSession
@@ -141,7 +142,9 @@
                                                                       uiMOC:self.uiMOC
                                                                     syncMOC:self.syncMOC
                                                           syncStateDelegate:nil
-                                                         appGroupIdentifier:self.groupIdentifier];
+                                                         appGroupIdentifier:nil
+                                                                application:nil];
+
     XCTAssertNotNil(ol);
     [ol tearDown];
     

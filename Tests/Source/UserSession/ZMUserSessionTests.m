@@ -114,7 +114,8 @@
             uiMOC:OCMOCK_ANY
             syncMOC:OCMOCK_ANY
             syncStateDelegate:OCMOCK_ANY
-            appGroupIdentifier:OCMOCK_ANY];
+            appGroupIdentifier:OCMOCK_ANY
+            application:OCMOCK_ANY];
 
     [[operationLoop expect] tearDown];
 

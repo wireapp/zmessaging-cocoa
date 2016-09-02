@@ -29,7 +29,7 @@ private let zmLog = ZMSLog(tag: "Crypto")
 
 // Register new client, update it with new keys, deletes clients.
 @objc
-public class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, ZMUpstreamTranscoder, ZMSingleRequestTranscoder {
+public class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextChangeTrackerSource, ZMObjectStrategy, ZMUpstreamTranscoder, ZMSingleRequestTranscoder {
     
     weak var clientRegistrationStatus: ZMClientRegistrationStatus?
     weak var authenticationStatus: ZMAuthenticationStatus?
@@ -68,7 +68,7 @@ public class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, 
         let deletePredicate = NSPredicate(format: "\(ZMUserClientMarkedToDeleteKey) == YES")
         let modifiedPredicate = self.modifiedPredicate()
 
-        self.modifiedSync = ZMUpstreamModifiedObjectSync(transcoder: self, entityName: UserClient.entityName(), updatePredicate: modifiedPredicate, filter: nil, keysToSync: [ZMUserClientNumberOfKeysRemainingKey, ZMUserClientMissingKey, ZMUserClientNeedsToUpdateSignalingKeysKey], managedObjectContext: context)
+        self.modifiedSync = ZMUpstreamModifiedObjectSync(transcoder: self, entityName: UserClient.entityName(), updatePredicate: modifiedPredicate, filter: nil, keysToSync: [ZMUserClientNumberOfKeysRemainingKey, ZMUserClientNeedsToUpdateSignalingKeysKey], managedObjectContext: context)
         self.deleteSync = ZMUpstreamModifiedObjectSync(transcoder: self, entityName: UserClient.entityName(), updatePredicate: deletePredicate, filter: nil, keysToSync: [ZMUserClientMarkedToDeleteKey], managedObjectContext: context)
         self.insertSync = ZMUpstreamInsertedObjectSync(transcoder: self, entityName: UserClient.entityName(), filter: insertSyncFilter, managedObjectContext: context)
         
@@ -92,19 +92,13 @@ public class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, 
     }
     
     func modifiedPredicate() -> NSPredicate {
-        let notDeletedPredicate = NSPredicate(format: "\(ZMUserClientMarkedToDeleteKey) == NO")
-        
         let baseModifiedPredicate = UserClient.predicateForObjectsThatNeedToBeUpdatedUpstream()
         let needToUploadKeysPredicate = NSPredicate(format: "\(ZMUserClientNumberOfKeysRemainingKey) < \(minNumberOfRemainingKeys)")
         let needsToUploadSignalingKeysPredicate = NSPredicate(format: "\(ZMUserClientNeedsToUpdateSignalingKeysKey) == YES")
-        let missingClientsPredicate = NSPredicate(format: "\(ZMUserClientMissingKey).@count > 0")
-        let remoteIdentifierPresentPredicate = NSPredicate(format: "\(ZMUserClientRemoteIdentifierKey) != nil")
         
         let modifiedPredicate = NSCompoundPredicate(andPredicateWithSubpredicates:[
             baseModifiedPredicate,
-            notDeletedPredicate,
-            NSCompoundPredicate(orPredicateWithSubpredicates:[needToUploadKeysPredicate, missingClientsPredicate, needsToUploadSignalingKeysPredicate]),
-            remoteIdentifierPresentPredicate
+            NSCompoundPredicate(orPredicateWithSubpredicates:[needToUploadKeysPredicate, needsToUploadSignalingKeysPredicate]),
             ])
         return modifiedPredicate
     }
@@ -160,21 +154,6 @@ public class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, 
         return requestsFactory.fetchClientsRequest()
     }
     
-    public func shouldCreateRequestToSyncObject(managedObject: ZMManagedObject, forKeys keys: Set<String>, withSync sync: AnyObject) -> Bool {
-        guard let sync = sync as? ZMUpstreamModifiedObjectSync where sync == self.modifiedSync
-        else { return true }
-        
-        var keysToSync = keys
-        if keys.contains(ZMUserClientMissingKey),
-            let client = managedObject as? UserClient where (client.missingClients == nil || client.missingClients?.count == 0)
-        {
-            keysToSync.remove(ZMUserClientMissingKey)
-            client.resetLocallyModifiedKeys(Set(arrayLiteral: ZMUserClientMissingKey))
-            self.modifiedSync.objectsDidChange(Set(arrayLiteral: client))
-        }
-        return (keysToSync.count > 0)
-    }
-    
     public func requestForUpdatingObject(managedObject: ZMManagedObject, forKeys keys: Set<NSObject>) -> ZMUpstreamRequest? {
         if let managedObject = managedObject as? UserClient {
             guard let clientUpdateStatus = self.clientUpdateStatus else { fatal("clientUpdateStatus is not set") }
@@ -201,12 +180,6 @@ public class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, 
                 } catch let e {
                     fatal("Couldn't create request for new signaling keys: \(e)")
                 }
-            case _ where keys.contains(ZMUserClientMissingKey):
-                if let missing = managedObject.missingClients where missing.count > 0 {
-                    let map = MissingClientsMap(Array(missing), pageSize: requestsFactory.missingClientsUserPageSize)
-                    request = requestsFactory.fetchMissingClientKeysRequest(map)
-                }
-
             default: fatal("Unknown keys to sync (\(keys))")
             }
             
@@ -343,10 +316,9 @@ public class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, 
                     return client
                 }
                 
-                let clients = payload.map(createSelfUserClient).filter { $0 != nil }
-                let unwrappedClients = clients.map{$0!}
+                let clients = payload.flatMap(createSelfUserClient)
                 self.managedObjectContext.saveOrRollback()
-                clientUpdateStatus?.didFetchClients(unwrappedClients)
+                clientUpdateStatus?.didFetchClients(clients)
             }
             break
         case .Expired:
@@ -360,10 +332,7 @@ public class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, 
     /// Returns whether synchronization of this object needs additional requests
     public func updateUpdatedObject(managedObject: ZMManagedObject, requestUserInfo: [NSObject : AnyObject]?, response: ZMTransportResponse, keysToParse: Set<NSObject>) -> Bool {
         
-        if keysToParse.contains(ZMUserClientMissingKey) {
-            return processResponseForUpdatingMissingClients(managedObject, requestUserInfo: requestUserInfo, responsePayload: response.payload)
-        }
-        else if keysToParse.contains(ZMUserClientMarkedToDeleteKey) {
+        if keysToParse.contains(ZMUserClientMarkedToDeleteKey) {
             return processResponseForDeletingClients(managedObject, requestUserInfo: requestUserInfo, responsePayload: response.payload)
         }
         else if keysToParse.contains(ZMUserClientNumberOfKeysRemainingKey) {
@@ -374,157 +343,6 @@ public class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, 
         }
         
         return false
-    }
-    
-    /// Make sure that we don't block messages or continue requesting messages for a client that can not be fetched
-    private func clearMissingMessagesBecauseClientCanNotBeFeched(client: UserClient, selfClient: UserClient) {
-        client.failedToEstablishSession = true
-        cleanMessagesMissingRecipient(client)
-        selfClient.removeMissingClient(client)
-    }
-
-    /** 
-    Creates session and update missing clients and messages that depend on those clients
-    */
-    private func establishSessionAndUpdateMissingClients(clientId: String,
-        prekeyString: String,
-        selfClient: UserClient,
-        missingClient: UserClient?) {
-            guard let missingClient = missingClient else { return }
-            
-            let sessionCreated = selfClient.establishSessionWithClient(missingClient, usingPreKey: prekeyString)
-            // If the session creation failed, the client probably has corrupted prekeys,
-            // we mark the client in order to send him a bogus message and not block all requests
-            missingClient.failedToEstablishSession = !sessionCreated
-            
-            cleanMessagesMissingRecipient(missingClient)
-            selfClient.removeMissingClient(missingClient)
-    }
-    
-    /// Process a client entry in a response to a missed clients (prekeys) request
-    private func processPrekeyEntry(clientId: String, prekeyData: Any?, selfClient: UserClient, missingClient: UserClient) {
-        if let prekeyDictionary = prekeyData as? [String : AnyObject],
-            let prekeyString = prekeyDictionary["key"] as? String
-        {
-            self.establishSessionAndUpdateMissingClients(
-                clientId,
-                prekeyString: prekeyString,
-                selfClient: selfClient,
-                missingClient:missingClient)
-        }
-        else {
-            self.clearMissingMessagesBecauseClientCanNotBeFeched(missingClient, selfClient: selfClient)
-        }
-    }
-    
-    /// - returns: a lookup table for missing client by remote client ID
-    private func missingUserClientIdToUserClientMap(selfClient: UserClient) -> [String : UserClient] {
-        var missedClientIdsToClientsMap = [String : UserClient]()
-        guard let missingClients = selfClient.missingClients else {
-            return missedClientIdsToClientsMap
-        }
-        for missingClient in missingClients {
-            missedClientIdsToClientsMap[missingClient.remoteIdentifier] = missingClient
-        }
-        return missedClientIdsToClientsMap
-    }
-    
-    /** 
-    Processes a response to a request to fetch missing client
-    The response will contain clientid and prekeys in the following format:
-     
-         {
-            <userId> : {
-                <clientId> : {
-                    key : <index>
-                    id : <prekey>
-                },
-                <clientId> : {
-                    key : <index>
-                    id : <prekey>
-                },
-                ...
-            }
-            <userId> : {
-                <clientId> : null   // this will happen in case the
-                                    // client was deleted just before we requested it
-            }
-         }
-    */
-    private func processResponseForUpdatingMissingClients(
-        managedObject: ZMManagedObject!,
-        requestUserInfo: [NSObject : AnyObject]!,
-        responsePayload payload: ZMTransportData!) -> Bool {
-        
-        guard let dictionary = payload.asDictionary() as? [String : [String : AnyObject]],
-              let selfClient = ZMUser.selfUserInContext(self.managedObjectContext).selfClient()
-        else {
-            zmLog.error("Response payload for client-keys is not a valid [String : [String : AnyObject]]")
-            return false
-        }
-        
-        let missedClientLookupByRemoteIdentifier = self.missingUserClientIdToUserClientMap(selfClient)
-
-        /// client IDs that are still remaining to download. Will be updated (removed) as we discover more clients in the payload
-        var remainingClientsIds = Set((requestUserInfo[MissingClientsRequestUserInfoKeys.clients] as! [String]).filter {
-            missedClientLookupByRemoteIdentifier[$0] != nil // I will not consider the clients that are not missing anymore
-                                                            // as still to download
-        })
-        let originalRemainingClientsCount = remainingClientsIds.count
-            
-        /// for each user ID
-        for (userIdString, clients) in dictionary {
-            guard let _ = NSUUID.uuidWithTransportString(userIdString) else {
-                zmLog.error("\(userIdString) is not a valid UUID")
-                continue
-            }
-            
-            /// for each client ID
-            for (clientId, prekeyData) in clients {
-                remainingClientsIds.remove(clientId)
-                
-                guard let missedClient = missedClientLookupByRemoteIdentifier[clientId] else {
-                    /// If the client id is not missing (anymore), we should not do anything.
-                    /// maybe a previous request solved it, or it was deleted by a push, or...
-                    continue
-                }
-                self.processPrekeyEntry(clientId, prekeyData: prekeyData, selfClient: selfClient, missingClient: missedClient)
-            }
-        }
-        
-        // check if this request actually changed something. If not, it means that the requested client ids
-        // are deleted on the BE side and we should ignore them
-        
-        let remainingClientsCountDidNotChange = remainingClientsIds.count == originalRemainingClientsCount
-        if remainingClientsCountDidNotChange {
-            for clientId in remainingClientsIds {
-                if let client = missedClientLookupByRemoteIdentifier[clientId] {
-                    self.clearMissingMessagesBecauseClientCanNotBeFeched(client, selfClient: selfClient)
-                }
-            }
-        }
-        return selfClient.missingClients?.count > 0 // we are done
-    }
-    
-    private func expireMessagesMissingRecipient(client: UserClient) {
-        if let messagesMissingRecipient = client.messagesMissingRecipient {
-            for message in messagesMissingRecipient {
-                message.expire()
-            }
-        }
-    }
-    
-    private func cleanMessagesMissingRecipient(client: UserClient) {
-        if let messagesMissingRecipient = client.messagesMissingRecipient {
-            for message in messagesMissingRecipient {
-                if let message = message as? ZMOTRMessage {
-                    message.doesNotMissRecipient(client)
-                }
-                else {
-                    client.mutableSetValueForKey("messagesMissingRecipient").removeObject(message)
-                }
-            }
-        }
     }
     
     func processResponseForDeletingClients(managedObject: ZMManagedObject!, requestUserInfo: [NSObject : AnyObject]!, responsePayload payload: ZMTransportData!) -> Bool {
@@ -591,42 +409,8 @@ public class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, 
     }
 }
 
-struct MissingClientsRequestUserInfoKeys {
-    static let clients = "clients"
-}
-
-public struct MissingClientsMap {
-
-    /// The mapping from user-id's to an array of missing clients for that user `{ <user-id>: [<client-id>] }`
-    let payload: [String: [String]]
-    /// The `MissingClientsRequestUserInfoKeys.clients` key holds all missing clients
-    let userInfo: [String: [String]]
-    
-    public init(_ missingClients: [UserClient], pageSize: Int) {
-        
-        let addClientIdToMap = { (clientsMap: [String : [String]], missingClient: UserClient) -> [String:[String]] in
-            var clientsMap = clientsMap
-            let missingUserId = missingClient.user!.remoteIdentifier!.transportString()
-            clientsMap[missingUserId] = (clientsMap[missingUserId] ?? []) + [missingClient.remoteIdentifier]
-            return clientsMap
-        }
-        
-        var users = Set<ZMUser>()
-        let missing = missingClients.filter {
-            guard let user = $0.user else { return false }
-            users.insert(user)
-            return users.count <= pageSize
-        }
-        
-        payload = missing.filter { $0.user?.remoteIdentifier != nil } .reduce([String:[String]](), combine: addClientIdToMap)
-        userInfo = [MissingClientsRequestUserInfoKeys.clients: missing.map { $0.remoteIdentifier }]
-    }
-    
-}
 
 
-// { <user-id>: { <client-id>: { "id": int, "key": string } } }
-typealias MissingClientsKeysPayload = [String: [String: [String: AnyObject]]]
 
 // Used to fetch clients of particluar user when ui asks for them
 extension UserClientRequestStrategy: ZMRemoteIdentifierObjectTranscoder {
