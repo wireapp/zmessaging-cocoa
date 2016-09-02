@@ -522,8 +522,8 @@
     XCTestExpectation *missingClientsExpectation = [self expectationWithDescription:@"Did fetch missing client"];
     __block NSUInteger requestCount = 0;
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        NSString *confirmationPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", self.selfToUser1Conversation.identifier];
-        if ([request.path isEqualToString:confirmationPath] && request.method == ZMMethodPOST) {
+        NSString *confirmationPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages?report_missing=", self.selfToUser1Conversation.identifier];
+        if ([request.path hasPrefix:confirmationPath] && request.method == ZMMethodPOST) {
             XCTAssertTrue(request.shouldUseVoipSession);
             requestCount++;
             if (requestCount == 2) {
