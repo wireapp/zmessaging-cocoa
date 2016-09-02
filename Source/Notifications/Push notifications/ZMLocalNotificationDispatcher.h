@@ -34,20 +34,17 @@
 extern NSString * _Null_unspecified const ZMConversationCancelNotificationForIncomingCallNotificationName;
 extern NSString * _Null_unspecified const ZMShouldHideNotificationContentKey;
 
-@interface ZMLocalNotificationDispatcher : NSObject <ZMEventConsumer>
+
+
+@interface ZMLocalNotificationDispatcher : NSObject
+
+@property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *eventsNotifications;
+@property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *messageNotifications;
+@property (nonatomic, readonly, nonnull) UIApplication *sharedApplication;
 
 - (nullable instancetype)initWithManagedObjectContext:(nonnull NSManagedObjectContext *)moc sharedApplication:(nonnull UIApplication *)sharedApplication;
 
 - (void)tearDown;
-
-@property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *eventsNotifications;
-
-- (void)didFailToSentMessage:(nonnull ZMMessage *)message;
-- (void)didFailToSendMessageInConversation:(nonnull ZMConversation *)conversation;
-
-- (void)didReceiveUpdateEvents:(nullable NSArray <ZMUpdateEvent *>*)events notificationID:(nonnull NSUUID *)notificationID;
-- (nullable ZMLocalNotificationForEvent *)notificationForEvent:(nullable ZMUpdateEvent *)event;
-
 
 // Can be used for cancelling all conversations if need
 // Notifications for a specific conversation are otherwise deleted automatically when the message window changes and
@@ -56,4 +53,19 @@ extern NSString * _Null_unspecified const ZMShouldHideNotificationContentKey;
 - (void)cancelNotificationForConversation:(nonnull ZMConversation *)conversation;
 
 @end
+
+
+
+@interface ZMLocalNotificationDispatcher (EventProcessing) <ZMEventConsumer>
+@end
+
+
+
+@interface ZMLocalNotificationDispatcher (FailedMessages)
+
+- (void)didFailToSentMessage:(nonnull ZMMessage *)message;
+- (void)didFailToSendMessageInConversation:(nonnull ZMConversation *)conversation;
+
+@end
+
 

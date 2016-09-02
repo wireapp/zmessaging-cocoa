@@ -20,7 +20,7 @@
 @import UIKit;
 @class ZMConversation;
 @class ZMUpdateEvent;
-
+@class ZMOTRMessage;
 
 @interface UILocalNotification (UserInfo)
 
@@ -33,5 +33,6 @@
 - (nullable ZMMessage *)messageInConversation:(nonnull ZMConversation *)conversation inManagedObjectContext:(nonnull NSManagedObjectContext *)MOC;
 
 - (void)setupUserInfo:(nullable ZMConversation *)conversation forEvent:(nullable ZMUpdateEvent *)event;
+- (void)setupUserInfo:(nonnull ZMMessage *)message;
 
 @end

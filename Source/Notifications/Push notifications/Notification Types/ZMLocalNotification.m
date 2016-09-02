@@ -89,38 +89,24 @@ NSString *const ZMPushStringNewConnection = @"new_user";
 
 @interface ZMLocalNotification ()
 
-@property (nonatomic) ZMLocalNotificationType type;
-@property (nonatomic) ZMCallEventType currentCallType;
-
-- (instancetype)initWithType:(ZMLocalNotificationType)notificationType;
-
 @end
 
 
 @implementation ZMLocalNotification
 
-- (instancetype)initWithType:(ZMLocalNotificationType)notificationType
+
+- (instancetype)initWithConversationID:(NSUUID *)conversationID
 {
     self = [super init];
-    if(self) {
-        self.type = notificationType;
+    if (self) {
+        _conversationID = conversationID;
     }
     return self;
-}
-
-- (NSUUID *)conversationID
-{
-    return  self.conversation.remoteIdentifier;
 }
 
 - (NSArray<UILocalNotification *> *)uiNotifications
 {
     return  @[];
-}
-
-- (ZMLocalNotificationForEventType)eventType
-{
-    return ZMLocalNotificationForEventTypeInvalid;
 }
 
 @end
@@ -136,10 +122,9 @@ NSString *const ZMPushStringNewConnection = @"new_user";
 
 - (instancetype)initWithExpiredMessage:(ZMMessage *)message
 {
-    self = [super initWithType:ZMLocalNotificationTypeExpiredMessage];
+    self = [super initWithConversationID:message.conversation.remoteIdentifier];
     if(self) {
         _message = message;
-        self.conversation = message.conversation;
         UILocalNotification *note = [[UILocalNotification alloc] init];
         [self createBodyForConversation:message.conversation notification:note];
         _uiNotification = note;
@@ -154,9 +139,8 @@ NSString *const ZMPushStringNewConnection = @"new_user";
 
 - (instancetype)initWithConversation:(ZMConversation *)conversation
 {
-    self = [super initWithType:ZMLocalNotificationTypeExpiredMessage];
+    self = [super initWithConversationID:conversation.remoteIdentifier];
     if(self) {
-        self.conversation = conversation;
         UILocalNotification *note = [[UILocalNotification alloc] init];
         [self createBodyForConversation:conversation notification:note];
         _uiNotification = note;
@@ -166,7 +150,7 @@ NSString *const ZMPushStringNewConnection = @"new_user";
 
 - (void)createBodyForConversation:(ZMConversation *)conversation notification:(UILocalNotification *)notification
 {
-    if(self.message.conversation.conversationType == ZMConversationTypeGroup) {
+    if(conversation.conversationType == ZMConversationTypeGroup) {
         notification.alertBody = [FailedMessageInGroupConversationText localizedStringWithConversation:conversation count:nil];
     }
     else {

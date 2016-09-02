@@ -26,5 +26,11 @@ extern NSString * ZMLocalNotificationDispatcherUIApplicationClass;
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                            sharedApplication:(ZMApplication *)sharedApplication
                         eventNotificationSet:(ZMLocalNotificationSet *)eventNotificationSet
-                       failedNotificationSet:(ZMLocalNotificationSet *)failedNotificationSet;
+                       failedNotificationSet:(ZMLocalNotificationSet *)failedNotificationSet
+                        messageNotifications:(ZMLocalNotificationSet *)messageNotifications;
+
+- (void)didReceiveUpdateEvents:(NSArray <ZMUpdateEvent *>*)events conversationMap:(ZMConversationMapping *)conversationMap notificationID:(NSUUID *)notificationID;
+
+- (ZMLocalNotificationForEvent *)notificationForEvent:(ZMUpdateEvent *)event conversationMap:(ZMConversationMapping *)conversationMap;
+
 @end

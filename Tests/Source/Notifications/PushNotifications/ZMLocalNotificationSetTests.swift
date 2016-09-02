@@ -56,7 +56,8 @@ public class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
 
 class MockLocalNotification : ZMLocalNotification {
 
-    var eventTypeUnderTest: ZMLocalNotificationForEventType = .PostInConversation
+    var eventTypeUnderTest : ZMUpdateEventType?
+    
     internal var notifications = [UILocalNotification]()
     
     func add(notification: UILocalNotification){
@@ -65,10 +66,6 @@ class MockLocalNotification : ZMLocalNotification {
     
     override var uiNotifications : [UILocalNotification] {
         return notifications
-    }
-    
-    override var eventType: ZMLocalNotificationForEventType {
-        return eventTypeUnderTest
     }
 }
 
@@ -116,17 +113,15 @@ class ZMLocalNotificationSetTests : MessagingTest {
         conversation1.remoteIdentifier = NSUUID()
         let localNote1 = UILocalNotification()
         localNote1.alertBody = "note1"
-        let note1 = MockLocalNotification()
+        let note1 = MockLocalNotification(conversationID: conversation1.remoteIdentifier)
         note1.add(localNote1)
-        note1.conversation = conversation1
         
         let conversation2 = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
         conversation2.remoteIdentifier = NSUUID()
         let localNote2 = UILocalNotification()
         localNote2.alertBody = "note2"
-        let note2 = MockLocalNotification()
+        let note2 = MockLocalNotification(conversationID: conversation2.remoteIdentifier)
         note2.add(localNote2)
-        note2.conversation = conversation2
         
         // when
         sut.addObject(note1)
@@ -147,16 +142,14 @@ class ZMLocalNotificationSetTests : MessagingTest {
         conversation1.remoteIdentifier = NSUUID()
         let localNote1 = UILocalNotification()
         localNote1.alertBody = "note1"
-        let note1 = MockLocalNotification()
+        let note1 = MockLocalNotification(conversationID: conversation1.remoteIdentifier)
         note1.add(localNote1)
-        note1.conversation = conversation1
-        note1.eventTypeUnderTest = .Call
+        note1.eventTypeUnderTest = .CallState
         
         let localNote2 = UILocalNotification()
         localNote1.alertBody = "note2"
-        let note2 = MockLocalNotification()
+        let note2 = MockLocalNotification(conversationID: conversation1.remoteIdentifier)
         note2.add(localNote2)
-        note2.conversation = conversation1
         
         sut.addObject(note1)
         sut.addObject(note2)

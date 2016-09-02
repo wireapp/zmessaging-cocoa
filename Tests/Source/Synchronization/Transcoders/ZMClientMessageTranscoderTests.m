@@ -56,6 +56,7 @@
 
 @property (nonatomic) ZMClientRegistrationStatus *mockClientRegistrationStatus;
 @property (nonatomic) BackgroundAPNSConfirmationStatus *mockAPNSConfirmationStatus;
+@property (nonatomic) BackgroundAPNSConfirmationStatus *mockNotificationDispatcher;
 
 @end
 
@@ -69,9 +70,10 @@
     self.mockAPNSConfirmationStatus = [OCMockObject niceMockForClass:[BackgroundAPNSConfirmationStatus class]];
     [[[(id)self.mockAPNSConfirmationStatus stub] andReturnValue:@(NO)] needsToSyncMessages];
     self.mockClientRegistrationStatus = [OCMockObject mockForProtocol:@protocol(ZMClientClientRegistrationStatusProvider)];
+    self.mockNotificationDispatcher = [OCMockObject niceMockForClass:[ZMLocalNotificationDispatcher class]];
     self.sut = [[ZMClientMessageTranscoder alloc] initWithManagedObjectContext:self.syncMOC
-                                                              localNotificationDispatcher:self.notificationDispatcher
-                                                                 clientRegistrationStatus:self.mockClientRegistrationStatus
+                                                   localNotificationDispatcher:self.notificationDispatcher
+                                                      clientRegistrationStatus:self.mockClientRegistrationStatus
                                                         apnsConfirmationStatus:self.mockAPNSConfirmationStatus];
     
     [[self.mockExpirationTimer stub] tearDown];

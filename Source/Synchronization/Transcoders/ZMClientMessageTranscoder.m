@@ -336,6 +336,15 @@
                     }
                 }
             }
+            if (event.source == ZMUpdateEventSourcePushNotification &&
+                (updateResult.wasInserted && updateResult.message != nil))
+            {
+                ZMGenericMessage *genericMessage = [ZMGenericMessage genericMessageFromUpdateEvent:event];
+                if (genericMessage != nil) {
+                    [self.localNotificationDispatcher processGenericMessage:genericMessage];
+                }
+                [self.localNotificationDispatcher processMessage:(ZMOTRMessage *)updateResult.message];
+            }
             break;
         default:
             return nil;

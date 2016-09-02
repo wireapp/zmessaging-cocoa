@@ -39,6 +39,7 @@
 @property (nonatomic) id mockUISharedApplication;
 @property (nonatomic) id mockEventNotificationSet;
 @property (nonatomic) id mockFailedNotificationSet;
+@property (nonatomic) id mockMessageNotificationSet;
 
 @end
 
@@ -55,13 +56,16 @@
     [self verifyMockLater:self.mockUISharedApplication];
     self.mockEventNotificationSet = [OCMockObject niceMockForClass:[ZMLocalNotificationSet class]];
     self.mockFailedNotificationSet = [OCMockObject niceMockForClass:[ZMLocalNotificationSet class]];
+    self.mockMessageNotificationSet = [OCMockObject niceMockForClass:[ZMLocalNotificationSet class]];
+
     [self verifyMockLater:self.mockEventNotificationSet];
     [self verifyMockLater:self.mockFailedNotificationSet];
     
     self.sut = [[ZMLocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncMOC
                                                                  sharedApplication:self.mockUISharedApplication
                                                               eventNotificationSet:self.mockEventNotificationSet
-                                                             failedNotificationSet:self.mockFailedNotificationSet];
+                                                             failedNotificationSet:self.mockFailedNotificationSet
+                                                              messageNotifications:nil];
     
     self.conversation1 = [self insertConversationWithRemoteID:[NSUUID createUUID] name:@"Conversation 1"];
     self.conversation2 = [self insertConversationWithRemoteID:[NSUUID createUUID] name:@"Conversation 2"];
@@ -83,6 +87,7 @@
     self.mockUISharedApplication = nil;
     self.mockFailedNotificationSet = nil;
     self.mockEventNotificationSet = nil;
+    self.mockMessageNotificationSet = nil;
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.sut tearDown];
@@ -146,18 +151,18 @@
 
 @implementation ZMLocalNotificationDispatcherTest (Tests)
 
-- (void)testThatItCreatesNotifications
+- (void)testThatItCreatesNotificationFromMessages
 {
     // given
-    NSDictionary *data = @{@"content" : @"hallo"};
-    ZMUpdateEvent *event = [self eventWithPayload:data inConversation:self.conversation1 type:EventConversationAdd];
+    ZMClientMessage *message = (id)[self.conversation1 appendMessageWithText:@"foo"];
+    message.sender = self.user1;
     
     // expect
     __block UILocalNotification *scheduledNotification;
     [[self.mockUISharedApplication expect] scheduleLocalNotification:ZM_ARG_SAVE(scheduledNotification)];
     
     // when
-    [self.sut didReceiveUpdateEvents:@[event] notificationID:NSUUID.createUUID];
+    [self.sut processMessage:message];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -171,10 +176,10 @@
 - (void)testThatItAddsNotificationsOfDifferentConversationsToTheList
 {
     // given
-    NSDictionary *data = @{@"content" : @"hallo"};
-    
-    ZMUpdateEvent *event1 = [self eventWithPayload:data inConversation:self.conversation1 type:EventConversationAdd];
-    ZMUpdateEvent *event2 = [self eventWithPayload:data inConversation:self.conversation2 type:EventConversationAdd];
+    ZMClientMessage *message1 = (id)[self.conversation1 appendMessageWithText:@"foo"];
+    message1.sender = self.user1;
+    ZMClientMessage *message2 = (id)[self.conversation2 appendMessageWithText:@"bar"];
+    message2.sender = self.user1;
 
     // expect
     __block UILocalNotification *notification1;
@@ -183,7 +188,8 @@
     [[self.mockUISharedApplication expect] scheduleLocalNotification:ZM_ARG_SAVE(notification2)];
     
     // when
-    [self.sut didReceiveUpdateEvents:@[event1,event2] notificationID:NSUUID.createUUID];
+    [self.sut processMessage:message1];
+    [self.sut processMessage:message2];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -206,28 +212,28 @@
     [[self.mockUISharedApplication reject] scheduleLocalNotification:OCMOCK_ANY];
     
     // when
-    [self.sut didReceiveUpdateEvents:@[event] notificationID:NSUUID.createUUID];
+    [self.sut didReceiveUpdateEvents:@[event] conversationMap:nil notificationID:NSUUID.createUUID];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDoesNotCancelNotificationsForCallStateSelfUserIdleEvents
 {
     // given
-    ZMUpdateEvent *callEvent = [self callStateEventInConversation:self.conversation2 joinedUsers:@[self.user1] videoSendingUsers:@[] sequence:nil];
-    ZMUpdateEvent *selfUserDoesNotJoinCallEvent = [self callStateEventInConversation:self.conversation2 joinedUsers:@[self.user1, self.user2] videoSendingUsers:@[] sequence:nil];
+    ZMUpdateEvent *callEvent = [self callStateEventInConversation:self.conversation2 joinedUsers:@[self.user1] videoSendingUsers:@[] sequence:@1 session:@"session1"];
+    ZMUpdateEvent *selfUserDoesNotJoinCallEvent = [self callStateEventInConversation:self.conversation2 joinedUsers:@[self.user1, self.user2] videoSendingUsers:@[] sequence:@2 session:@"session1"];
     
     // expect
     __block UILocalNotification *scheduledNotification1;
     
     [[self.mockUISharedApplication expect] scheduleLocalNotification:ZM_ARG_SAVE(scheduledNotification1)];
     
-    [self.sut didReceiveUpdateEvents:@[callEvent] notificationID:NSUUID.createUUID];
+    [self.sut didReceiveUpdateEvents:@[callEvent] conversationMap:nil notificationID:NSUUID.createUUID];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [[self.conversation2 mutableOrderedSetValueForKey:@"callParticipants"] addObject:self.user1];
 
     // when
-    [self.sut didReceiveUpdateEvents:@[selfUserDoesNotJoinCallEvent] notificationID:NSUUID.createUUID];
+    [self.sut didReceiveUpdateEvents:@[selfUserDoesNotJoinCallEvent] conversationMap:nil notificationID:NSUUID.createUUID];
     WaitForAllGroupsToBeEmpty(0.5);
 
     [self.mockUISharedApplication verify];
@@ -243,11 +249,11 @@
 - (void)testThatItCancelsNotificationsWhenReceivingANotificationThatTheCallWasIgnored
 {
     // given
-    ZMUpdateEvent *callEvent = [self callStateEventInConversation:self.conversation2 joinedUsers:@[self.user1] videoSendingUsers:@[] sequence:nil];
+    ZMUpdateEvent *callEvent = [self callStateEventInConversation:self.conversation2 joinedUsers:@[self.user1] videoSendingUsers:@[] sequence:@1 session:@"session1"];
     self.conversation2.isIgnoringCall = YES;
     [[self.mockUISharedApplication expect] scheduleLocalNotification:OCMOCK_ANY];
     
-    [self.sut didReceiveUpdateEvents:@[callEvent] notificationID:NSUUID.createUUID];
+    [self.sut didReceiveUpdateEvents:@[callEvent] conversationMap:nil notificationID:NSUUID.createUUID];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
@@ -354,28 +360,6 @@
              };
 }
 
-- (void)testThatItCanParseGenericMessages
-{
-    // given
-    NSDictionary *payload = [self payloadForEncryptedOTRMessageWithText:@"Hallo" nonce:[NSUUID UUID]];
-    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-    
-    // expect
-    __block UILocalNotification *scheduledNotification;
-    [[self.mockUISharedApplication expect] scheduleLocalNotification:ZM_ARG_SAVE(scheduledNotification)];
-    
-    // when
-    [self.sut didReceiveUpdateEvents:@[event] notificationID:NSUUID.createUUID];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertNotNil(scheduledNotification);
-    
-    // after
-    [[self.mockUISharedApplication stub] cancelLocalNotification:OCMOCK_ANY];
-}
-
-
 - (void)testThatItCancelsReadNotificationsIfTheLastReadChanges
 {
     // given
@@ -406,7 +390,7 @@
     }]];
     
     //when
-    [self.sut didReceiveUpdateEvents:@[event] notificationID:NSUUID.createUUID];
+    [self.sut didReceiveUpdateEvents:@[event] conversationMap:nil notificationID:NSUUID.createUUID];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -424,25 +408,26 @@
     [self.sut tearDown];
     self.sut = [[ZMLocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncMOC
                                                                  sharedApplication:self.mockUISharedApplication
-                                                              eventNotificationSet:localNotificationSet
-                                                             failedNotificationSet:self.mockFailedNotificationSet];
+                                                              eventNotificationSet:self.mockEventNotificationSet
+                                                             failedNotificationSet:self.mockFailedNotificationSet
+                                                              messageNotifications:localNotificationSet];
     
     // given
-    NSDictionary *payload = [self payloadForEncryptedOTRMessageWithText:@"Hallo" nonce:[NSUUID UUID]];
-    ZMUpdateEvent *event1 = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-    ZMUpdateEvent *event2 = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
+    ZMClientMessage *message = (id)[self.conversation1 appendMessageWithText:@"foo"];
+    message.sender = self.user1;
     
     // expect
     __block UILocalNotification *scheduledNotification;
     [[self.mockUISharedApplication expect] scheduleLocalNotification:ZM_ARG_SAVE(scheduledNotification)];
     
     // when
-    [self.sut didReceiveUpdateEvents:@[event1] notificationID:NSUUID.createUUID];
+    [self.sut processMessage:message];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertNotNil(scheduledNotification);
-    
+    XCTAssertEqual(localNotificationSet.notifications.count, 1u);
+
     // after
     [[self.mockUISharedApplication stub] cancelLocalNotification:OCMOCK_ANY];
     
@@ -450,8 +435,11 @@
     [[self.mockUISharedApplication reject] scheduleLocalNotification:OCMOCK_ANY];
     
     // when
-    [self.sut didReceiveUpdateEvents:@[event2] notificationID:NSUUID.createUUID];
+    [self.sut processMessage:message];
     WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    XCTAssertEqual(localNotificationSet.notifications.count, 1u);
 }
 
 - (void)testThatItDoesNotCreateNotificationForFileUploadEventsWithTheSameNonce
@@ -460,31 +448,31 @@
                                                                                           archivingKey:@"ZMLocalNotificationDispatcherEventNotificationsKey"
                                                                                          keyValueStore:[OCMockObject niceMockForProtocol:@protocol(ZMSynchonizableKeyValueStore)]];
     
-    NSUUID *nonce = [NSUUID UUID];
-    ZMAudioMetadata *audioMetadata = [[ZMAudioMetadata alloc] initWithFileURL:[NSURL fileURLWithPath:@"audiofile.m4a"] duration:100 normalizedLoudness:@[] thumbnail:nil];
-    ZMGenericMessage *genericMessage = [ZMGenericMessage genericMessageWithFileMetadata:audioMetadata messageID:nonce.transportString];
+    NSURL *url = [[NSBundle bundleForClass:self.class] URLForResource:@"video" withExtension:@"mp4"];
+    ZMAudioMetadata *audioMetadata = [[ZMAudioMetadata alloc] initWithFileURL:url duration:100 normalizedLoudness:@[] thumbnail:nil];
+    ZMAssetClientMessage *message = [self.conversation1 appendMessageWithFileMetadata:audioMetadata];
+    message.sender = self.user1;
     
     // Replace the default sut since we need a real ZMLocalNotificationSet
     [self.sut tearDown];
     self.sut = [[ZMLocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncMOC
                                                                  sharedApplication:self.mockUISharedApplication
-                                                              eventNotificationSet:localNotificationSet
-                                                             failedNotificationSet:self.mockFailedNotificationSet];
-    // given
-    ZMUpdateEvent *event1 = [ZMUpdateEvent eventFromEventStreamPayload:[self payloadForOTRMessageWithGenericMessage:genericMessage] uuid:nil];
-    ZMUpdateEvent *event2 = [ZMUpdateEvent eventFromEventStreamPayload:[self payloadForOTRAssetWithGenericMessage:genericMessage] uuid:nil];
+                                                              eventNotificationSet:self.mockEventNotificationSet
+                                                             failedNotificationSet:self.mockFailedNotificationSet
+                                                              messageNotifications:localNotificationSet];
     
     // expect
     __block UILocalNotification *scheduledNotification;
     [[self.mockUISharedApplication expect] scheduleLocalNotification:ZM_ARG_SAVE(scheduledNotification)];
     
     // when
-    [self.sut didReceiveUpdateEvents:@[event1] notificationID:NSUUID.createUUID];
+    [self.sut processMessage:message];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertNotNil(scheduledNotification);
-    
+    XCTAssertEqual(localNotificationSet.notifications.count, 1u);
+
     // after
     [[self.mockUISharedApplication stub] cancelLocalNotification:OCMOCK_ANY];
     
@@ -492,8 +480,12 @@
     [[self.mockUISharedApplication reject] scheduleLocalNotification:OCMOCK_ANY];
     
     // when
-    [self.sut didReceiveUpdateEvents:@[event2] notificationID:NSUUID.createUUID];
+    [self.sut processMessage:message];
     WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    XCTAssertEqual(localNotificationSet.notifications.count, 1u);
+
 }
 
 @end
