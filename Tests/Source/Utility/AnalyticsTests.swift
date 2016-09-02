@@ -28,6 +28,12 @@ class AnalyticsTests: XCTestCase {
     
     var analytics: MockAnalytics!
     
+    func createSyncMOC() -> NSManagedObjectContext {
+        let fm = NSFileManager.defaultManager()
+        let url = try! fm.URLForDirectory(.DocumentDirectory, inDomain: .UserDomainMask, appropriateForURL: nil, create:true)
+        return .createSyncContextWithStoreDirectory(url)
+    }
+    
     override func setUp() {
         super.setUp()
         analytics = MockAnalytics()
@@ -35,8 +41,7 @@ class AnalyticsTests: XCTestCase {
     
     func testThatItSetsAnalyticsOnManagedObjectContext() {
         // given
-        let directory = try! NSFileManager.defaultManager().URLForDirectory(.DocumentDirectory, inDomain: .UserDomainMask, appropriateForURL: nil, create:true)
-        let context = NSManagedObjectContext.createSyncContextWithStoreDirectory(directory)
+        let context = createSyncMOC()
         context.markAsSyncContext()
         
         // when
@@ -115,7 +120,7 @@ extension AnalyticsTests {
     
     func testThatItDoesTrackTheIntervalBetweenTwoUploads() {
         // given
-        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: NSManagedObjectContext.createSyncContext())
+        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
         
         
         // when
@@ -133,7 +138,7 @@ extension AnalyticsTests {
     func testThatItTracksAddresBookUploadStarted() {
         // given
         let size : UInt = 345
-        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: NSManagedObjectContext.createSyncContext())
+        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
         
         // when
         tracker.tagAddressBookUploadStarted(size)
@@ -151,7 +156,7 @@ extension AnalyticsTests {
     
     func assertThatItTracksAddresBookUploadEnded(hoursSinceLastUpload: Int? = nil, shouldTrackInterval: Bool = true, line: UInt = #line) {
         // given
-        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: NSManagedObjectContext.createSyncContext())
+        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
         if let hours = hoursSinceLastUpload.map(NSTimeInterval.init) {
             let lastDate = NSDate(timeIntervalSinceNow: -hours * 3600)
             tracker.managedObjectContext.lastAddressBookUploadDate = lastDate
