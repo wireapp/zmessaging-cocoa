@@ -18,12 +18,10 @@
 
 
 #import "ZMBadge.h"
-
-@class UIApplication;
-
+#import <zmessaging/zmessaging-Swift.h>
 
 @interface ZMBadge ()
 
-@property (nonatomic, weak) UIApplication *application;
+@property (nonatomic, weak) id<ZMApplication> application;
 
 @end

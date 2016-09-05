@@ -31,45 +31,22 @@
 
 @class BackgroundTests;
 
-static BackgroundTests *zmCurrentBackgroundTest;
 static NSTimeInterval zmMessageExpirationTimer = 0.3;
 
 
 
 @interface BackgroundTests : IntegrationTestBase
-
-@property (nonatomic) NSMutableArray *firedNotifications;
-
 @end
 
 
 @implementation BackgroundTests
 
-- (BOOL)scheduleLocalNotification:(UILocalNotification *)notification;
-{
-    [zmCurrentBackgroundTest.firedNotifications addObject:notification];
-    return YES;
-}
-
-- (BOOL)cancelLocalNotification:(UILocalNotification *)notification;
-{
-    [zmCurrentBackgroundTest.firedNotifications removeObject:notification];
-    return YES;
-}
-
 - (void)setUp {
     [super setUp];
-    [(UIApplication *)[(id)self.userSession.application stub] scheduleLocalNotification:[OCMArg checkWithSelector:@selector(scheduleLocalNotification:) onObject:self]];
-    [(UIApplication *)[(id)self.userSession.application stub] cancelLocalNotification:[OCMArg checkWithSelector:@selector(cancelLocalNotification:) onObject:self]];
-
-    zmCurrentBackgroundTest = self;
-    self.firedNotifications = [NSMutableArray array];
 }
 
 - (void)tearDown {
     
-    self.firedNotifications = nil;
-    zmCurrentBackgroundTest = nil;
     self.mockTransportSession.disableEnqueueRequests = NO;
     [ZMMessage resetDefaultExpirationTime];
     [super tearDown];
@@ -100,7 +77,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertEqual(self.firedNotifications.count, 1u);
+    XCTAssertEqual(self.application.scheduledLocalNotification.count, 1u);
 }
 
 - (void)testThatItSendsUILocalNotificationsForExpiredMessageNotPickedUpForRequestWhenGoingToTheBackground

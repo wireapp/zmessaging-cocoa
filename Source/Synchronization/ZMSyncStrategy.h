@@ -24,6 +24,7 @@
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUpdateEventsBuffer.h"
 #import "ZMBackgroundFetch.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 @class ZMTransportRequest;
 @class ZMPushChannelConnection;
@@ -65,7 +66,7 @@
                     taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
                           appGroupIdentifier:(NSString *)appGroupIdentifier
                                        badge:(ZMBadge *)badge
-                                 application:(ZMApplication *)application;
+                                 application:(id<ZMApplication>)application;
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;

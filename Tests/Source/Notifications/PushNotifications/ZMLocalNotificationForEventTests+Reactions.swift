@@ -19,18 +19,6 @@
 import ZMTesting
 @testable import zmessaging
 
-class FakeNotificationScheduler : NSObject, NotificationScheduler {
-    var didCallCancel = false
-    
-    func scheduleLocalNotification(notification: UILocalNotification) {
-        // no-op
-    }
-    
-    func cancelLocalNotification(notification: UILocalNotification) {
-        didCallCancel = true
-    }
-}
-
 class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventTest {
 
     
@@ -172,7 +160,7 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
     
     func testThatItCancelsNotificationWhenUserDeletesLike(){
         // given
-        let fakeNotificationScheduler = FakeNotificationScheduler()
+        let fakeNotificationScheduler = ApplicationMock()
         
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
         let reaction1 = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
@@ -186,7 +174,7 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         let sut2 = sut1!.copyByAddingEvent(event2)
         
         // then
-        XCTAssertTrue(fakeNotificationScheduler.didCallCancel)
+        XCTAssertEqual(fakeNotificationScheduler.cancelledLocalNotifications.count, 1)
         XCTAssertNotNil(sut1)
         XCTAssertTrue(sut1!.shouldBeDiscarded)
         XCTAssertNil(sut2)
@@ -194,7 +182,7 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
     
     func testThatItDoesNotCancelNotificationWhenADifferentUserDeletesLike(){
         // given
-        let fakeNotificationScheduler = FakeNotificationScheduler()
+        let fakeNotificationScheduler = ApplicationMock()
         
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
         let reaction1 = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
@@ -210,7 +198,7 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         // then
         XCTAssertNotNil(sut1)
         XCTAssertFalse(sut1!.shouldBeDiscarded)
-        XCTAssertFalse(fakeNotificationScheduler.didCallCancel)
+        XCTAssertEqual(fakeNotificationScheduler.cancelledLocalNotifications.count, 1)
         XCTAssertNil(sut2)
     }
 }

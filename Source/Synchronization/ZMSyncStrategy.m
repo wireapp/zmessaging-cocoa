@@ -147,7 +147,7 @@ ZM_EMPTY_ASSERTING_INIT()
                     taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
                           appGroupIdentifier:(NSString *)appGroupIdentifier
                                        badge:(ZMBadge *)badge
-                                 application:(ZMApplication *)application;
+                                 application:(id<ZMApplication>)application;
 
 {
     self = [super init];

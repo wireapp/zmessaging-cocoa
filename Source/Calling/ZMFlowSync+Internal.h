@@ -21,7 +21,7 @@
 
 @class ZMOnDemandFlowManager;
 @class NSManagedObjectContext;
-@class ZMApplication;
+@protocol ZMApplication;
 
 @interface ZMFlowSync (Internal)
 
@@ -29,6 +29,6 @@
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
             syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
               uiManagedObjectContext:(NSManagedObjectContext *)uiManagedObjectContext
-                         application:(ZMApplication *)application;
+                         application:(id<ZMApplication>)application;
 
 @end

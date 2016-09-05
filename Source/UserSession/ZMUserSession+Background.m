@@ -50,11 +50,11 @@ static const char *ZMLogTag = "Push";
 
 - (void)receivedPushNotificationWithPayload:(NSDictionary *)payload completionHandler:(ZMPushNotificationCompletionHandler)handler source:(ZMPushNotficationType)source
 {
-    BOOL isNotInBackground = self.application.applicationState != UIApplicationStateBackground;
+    BOOL isNotInBackground = !self.application.isInBackground;
     BOOL notAuthenticated = self.authenticationStatus.currentPhase != ZMAuthenticationPhaseAuthenticated;
 
     if (source == ZMPushNotficationTypeVoIP) {
-        [APNSPerformanceTracker trackAPNSInUserSession:self.syncManagedObjectContext.analytics authenticated:!notAuthenticated applicationState:self.application.applicationState];
+        [APNSPerformanceTracker trackAPNSInUserSession:self.syncManagedObjectContext.analytics authenticated:!notAuthenticated isInBackground:self.application.isInBackground];
     }
     
     if (notAuthenticated || isNotInBackground) {

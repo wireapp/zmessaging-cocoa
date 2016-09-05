@@ -24,6 +24,7 @@
 #import "MessagingTest.h"
 #import "NotificationObservers.h"
 #import "MockLinkPreviewDetector.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 @import ZMCMockTransport;
 @import Cryptobox;
@@ -31,6 +32,7 @@
 @class ZMUserSession;
 @class ZMGenericMessage;
 @class ZMGSMCallHandler;
+@class ApplicationMock;
 
 #define WaitForEverythingToBeDoneWithTimeout(_timeout) \
     do { \
@@ -63,6 +65,7 @@ extern NSString * const SelfUserPassword;
 @property (nonatomic, readonly) NSArray *allUsers;
 @property (nonatomic, readonly) MockFlowManager *mockFlowManager;
 @property (nonatomic, readonly) MockLinkPreviewDetector *mockLinkPreviewDetector;
+@property (nonatomic, readonly) id<ZMApplication> application;
 
 @property (nonatomic, readonly) ZMGSMCallHandler *gsmCallHandler;
 

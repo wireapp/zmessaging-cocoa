@@ -36,6 +36,7 @@
 #import "ZMSyncStrategy.h"
 #import "ZMCallStateTranscoder.h"
 #import "MockLinkPreviewDetector.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 
 NSString * const SelfUserEmail = @"myself@user.example.com";
@@ -92,6 +93,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.mockObjectIDToRemoteID = [NSMutableDictionary dictionary];
     self.mockFlowManager = self.mockTransportSession.mockFlowManager;
     self.mockTransportSession.cryptoboxLocation = [UserClientKeysStore otrDirectory];
+    self.application = ApplicationMock()
 
     ZMFlowSyncInternalFlowManagerOverride = self.mockFlowManager;
     

@@ -22,6 +22,7 @@
 #import "ZMSyncState.h"
 #import "ZMUserSession.h"
 #import "ZMAuthenticationStatus.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 @class ZMTimer;
 
@@ -39,6 +40,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
                         stateMachineDelegate:(id<ZMStateMachineDelegate>)stateMachineDelegate
-                                 application:(ZMApplication *)application NS_DESIGNATED_INITIALIZER;
+                                 application:(id<ZMApplication>)application NS_DESIGNATED_INITIALIZER;
 
 @end

@@ -49,7 +49,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
 @property (nonatomic) NSMutableSet <ZMConversation*> *conversationsNeedingUpdate;
 @property (nonatomic) NSMutableDictionary <NSString *, NSMutableSet<ZMUser*>*> *usersNeedingToBeAdded;
 @property (nonatomic) NSMutableSet <ZMUpdateEvent *> *eventsNeedingToBeForwarded;
-@property (nonatomic, readonly, weak) ZMApplication *application;
+@property (nonatomic, readonly, weak) id<ZMApplication> application;
 
 @end
 
@@ -75,7 +75,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
             syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
               uiManagedObjectContext:(NSManagedObjectContext *)uiManagedObjectContext
-                         application:(ZMApplication *)application
+                         application:(id<ZMApplication>)application
 {
     self = [super initWithManagedObjectContext:syncManagedObjectContext];
     if(self != nil) {
@@ -89,7 +89,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
         self.voiceGainNotificationQueue = [[NSNotificationQueue alloc] initWithNotificationCenter:[NSNotificationCenter defaultCenter]];
 
         self.onDemandFlowManager = onDemandFlowManager;
-        if (self.application.applicationState == UIApplicationStateActive) {
+        if (!self.application.isInBackground) {
             [self setUpFlowManagerIfNeeded];
         }
         
@@ -174,7 +174,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
     if (!self.pushChannelIsOpen) {
         return nil;
     }
-    if (self.application.applicationState != UIApplicationStateBackground && self.flowManager == nil) {
+    if (!self.application.isInBackground && self.flowManager == nil) {
         [self setUpFlowManagerIfNeeded];  // this should not happen, but we should recover after all
     }
     
@@ -243,7 +243,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
     if(!liveEvents) {
         return;
     }
-    if (self.application.applicationState != UIApplicationStateBackground) {
+    if (!self.application.isInBackground) {
         [self setUpFlowManagerIfNeeded];
     }
     if (!self.isFlowManagerReady) {
@@ -282,7 +282,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
 
 - (void)acquireFlowsForConversation:(ZMConversation *)conversation;
 {
-    if (self.application.applicationState != UIApplicationStateBackground) {
+    if (!self.application.isInBackground) {
         [self setUpFlowManagerIfNeeded];
     }
     if (!self.isFlowManagerReady) {
@@ -302,7 +302,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
 
 - (void)releaseFlowsForConversation:(ZMConversation *)conversation;
 {
-    if (self.application.applicationState != UIApplicationStateBackground) {
+    if (!self.application.isInBackground) {
         [self setUpFlowManagerIfNeeded];
     }
     if (!self.isFlowManagerReady) {

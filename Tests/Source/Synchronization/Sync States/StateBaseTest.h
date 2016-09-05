@@ -38,7 +38,7 @@
 @property (nonatomic, readonly) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;
-@property (nonatomic, readonly) ZMApplication *mockApplication;
+@property (nonatomic, readonly) id<ZMApplication> mockApplication;
 
 - (void)checkThatItCallsRequestGeneratorsOnObjectsOfClass:(NSArray *)objectsToTest creationOfStateBlock:(ZMSyncState *(^)(id<ZMObjectStrategyDirectory> directory))creationBlock;
 

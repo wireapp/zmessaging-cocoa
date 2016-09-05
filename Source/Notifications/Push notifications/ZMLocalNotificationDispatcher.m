@@ -58,7 +58,7 @@ NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShou
 @property (nonatomic) ZMLocalNotificationSet *failedMessageNotifications;
 @property (nonatomic) ZMLocalNotificationSet *eventsNotifications;
 @property (nonatomic) BOOL isTornDown;
-@property (nonatomic) ZMApplication *sharedApplication;
+@property (nonatomic) id<ZMApplication> sharedApplication;
 
 
 @end
@@ -72,13 +72,13 @@ NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShou
 ZM_EMPTY_ASSERTING_INIT();
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                           sharedApplication:(ZMApplication *)sharedApplication
+                           sharedApplication:(id<ZMApplication>)sharedApplication
 {
     return [self initWithManagedObjectContext:moc sharedApplication:sharedApplication eventNotificationSet:nil failedNotificationSet:nil];
 }
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                           sharedApplication:(ZMApplication *)sharedApplication
+                           sharedApplication:(id<ZMApplication>)sharedApplication
                         eventNotificationSet:(ZMLocalNotificationSet *)eventNotificationSet
                        failedNotificationSet:(ZMLocalNotificationSet *)failedNotificationSet
 {
@@ -154,7 +154,7 @@ ZM_EMPTY_ASSERTING_INIT();
 {
     NOT_USED(liveEvents);
     
-    if (self.sharedApplication.applicationState != UIApplicationStateBackground) {
+    if (!self.sharedApplication.isInBackground) {
         return;
     }
     

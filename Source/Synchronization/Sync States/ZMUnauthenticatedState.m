@@ -52,7 +52,7 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 
 @property (nonatomic) ZMTimer* loginFailureTimer;
 @property (nonatomic) NSDate* lastTimerStart;
-@property (nonatomic, weak) ZMApplication *application;
+@property (nonatomic, weak) id<ZMApplication>application;
 @property (nonatomic) BOOL didLaunchInForeground;
 
 @end
@@ -84,7 +84,7 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
                         stateMachineDelegate:(id<ZMStateMachineDelegate>)stateMachineDelegate
-                                 application:(ZMApplication *)application;
+                                 application:(id<ZMApplication>)application;
 {
     application = application ?: [UIApplication sharedApplication];
     self = [super initWithAuthenticationCenter:authenticationStatus
@@ -133,7 +133,7 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 
 - (BOOL)shouldStartQuickSync;
 {
-    if (!self.didLaunchInForeground && self.application.applicationState != UIApplicationStateBackground) {
+    if (!self.didLaunchInForeground && !self.application.isInBackground) {
         self.didLaunchInForeground = YES;
     }
     return (self.isDoneWithLogin && self.didLaunchInForeground);
@@ -295,8 +295,7 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     
     if ([self isDoneWithLogin]) {
         ZMTraceAuthLoginStateEnter(2);
-        BOOL const isBackgrounded = self.application.applicationState == UIApplicationStateBackground;
-        if (isBackgrounded) {
+        if (self.application.isInBackground) {
             ZMLogDebug(@"%@ is already logged in on enter. Launched suspended. Entering background state.", self.class);
             [stateMachine goToState:stateMachine.backgroundState];
         } else {

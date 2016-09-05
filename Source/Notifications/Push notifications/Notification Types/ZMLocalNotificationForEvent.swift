@@ -18,6 +18,7 @@
 
 
 import Foundation
+import ZMUtilities
 
 
 let ZMLocalNotificationRingingDefaultSoundName = "ringing_from_them_long.caf"
@@ -80,14 +81,6 @@ public extension ZMLocalNotificationForEvent {
     }
 }
 
-@objc public protocol NotificationScheduler: NSObjectProtocol {
-    func scheduleLocalNotification(notification: UILocalNotification);
-    func cancelLocalNotification(notification: UILocalNotification);
-}
-
-extension UIApplication : NotificationScheduler {
-}
-
 public class ZMLocalNotificationForEvent : ZMLocalNotification {
     
     public var shouldBeDiscarded : Bool = false
@@ -100,7 +93,7 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification {
         return notifications
     }
     
-    let application : NotificationScheduler
+    let application : Application
     let managedObjectContext : NSManagedObjectContext
     
     var events : [ZMUpdateEvent] = []
@@ -116,12 +109,12 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification {
         return [:]
     }
     
-    public convenience init?(event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, application: NotificationScheduler?) {
+    public convenience init?(event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, application: Application?) {
        let conversation = ZMLocalNotificationForEvent.fetchConversation(event, managedObjectContext: managedObjectContext)
         self.init(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application:application)
     }
     
-    required public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: NotificationScheduler?, copyFromNote: ZMLocalNotificationForEvent? = nil) {
+    required public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?, copyFromNote: ZMLocalNotificationForEvent? = nil) {
         self.application = application ?? UIApplication.sharedApplication()
         self.events = events
         if let senderUUID = events.last?.senderUUID() {

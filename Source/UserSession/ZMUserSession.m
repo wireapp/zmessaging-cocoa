@@ -203,7 +203,7 @@ ZM_EMPTY_ASSERTING_INIT()
                             mediaManager:(id<AVSMediaManager>)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
-                             application:(ZMApplication *)application
+                             application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
                       appGroupIdentifier:(NSString *)appGroupIdentifier;
 

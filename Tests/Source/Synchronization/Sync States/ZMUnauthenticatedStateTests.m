@@ -33,6 +33,8 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMRegistrationTranscoder.h"
+#import "zmessaging_iOS_Tests-Swift.h"
+
 
 
 @interface ZMUnauthenticatedStateTests : StateBaseTest
@@ -47,7 +49,7 @@
 @property (nonatomic) NSDictionary *timerUserInfo;
 
 @property (nonatomic, readonly) id staticMockedTimer;
-@property (nonatomic) ZMApplication *application;
+@property (nonatomic) ApplicationMock *application;
 
 @end
 

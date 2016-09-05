@@ -20,13 +20,6 @@
 import ZMTesting
 import ZMCMockTransport
 
-class FakeApplication : NSObject, ApplicationStateOwner {
-    var mockApplicationState : UIApplicationState = .Background
-    var applicationState: UIApplicationState {
-        return mockApplicationState
-    }
-}
-
 class FakeBackgroundActivityFactory : BackgroundActivityFactory {
     var nameToHandler : [String : (Void -> Void)] = [:]
     
@@ -51,12 +44,12 @@ class FakeBackgroundActivityFactory : BackgroundActivityFactory {
 class BackgroundAPNSConfirmationStatusTests : MessagingTest {
 
     var sut : BackgroundAPNSConfirmationStatus!
-    var fakeApplication : FakeApplication!
+    var fakeApplication : ApplicationMock!
     var fakeBGActivityFactory : FakeBackgroundActivityFactory!
 
     override func setUp() {
         super.setUp()
-        fakeApplication = FakeApplication()
+        fakeApplication = ApplicationMock()
         fakeBGActivityFactory = FakeBackgroundActivityFactory()
         fakeBGActivityFactory.mainGroupQueue = uiMOC // this mimics the real BackgroundActivityFactory
         sut = BackgroundAPNSConfirmationStatus(application: fakeApplication, managedObjectContext: syncMOC, backgroundActivityFactory: fakeBGActivityFactory)

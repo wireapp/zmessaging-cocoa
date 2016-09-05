@@ -22,21 +22,6 @@ import ZMCDataModel;
 
 @testable import zmessaging;
 
-
-class MockApplication: NSObject, NotificationScheduler {
-    
-    var scheduledNotifications = [UILocalNotification]()
-    var cancelledNotifications = [UILocalNotification]()
-    
-    @objc func scheduleLocalNotification(notification: UILocalNotification){
-        scheduledNotifications.append(notification)
-    }
-    
-    @objc func cancelLocalNotification(notification: UILocalNotification){
-        cancelledNotifications.append(notification)
-    }
-}
-
 public class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
     
     var keysAndValues = [String : AnyObject]()
@@ -75,13 +60,13 @@ class MockLocalNotification : ZMLocalNotification {
 class ZMLocalNotificationSetTests : MessagingTest {
 
     var sut : ZMLocalNotificationSet!
-    var mockApplication : MockApplication!
+    var mockApplication : ApplicationMock!
     var keyValueStore : MockKVStore!
     let archivingKey = "archivingKey"
     
     override func setUp(){
         super.setUp()
-        mockApplication = MockApplication()
+        mockApplication = ApplicationMock()
         keyValueStore = MockKVStore()
         sut = ZMLocalNotificationSet(application: mockApplication, archivingKey: archivingKey, keyValueStore: keyValueStore)
     }
@@ -135,10 +120,10 @@ class ZMLocalNotificationSetTests : MessagingTest {
         
         // then
         XCTAssertFalse(sut.notifications.contains(note1))
-        XCTAssertTrue(mockApplication.cancelledNotifications.contains(localNote1))
+        XCTAssertTrue(mockApplication.cancelledLocalNotifications.contains(localNote1))
 
         XCTAssertTrue(sut.notifications.contains(note2))
-        XCTAssertFalse(mockApplication.cancelledNotifications.contains(localNote2))
+        XCTAssertFalse(mockApplication.cancelledLocalNotifications.contains(localNote2))
     }
     
     func testThatItOnlyCancelsCallNotificationsIfSpecified(){
@@ -166,10 +151,10 @@ class ZMLocalNotificationSetTests : MessagingTest {
         
         // then
         XCTAssertFalse(sut.notifications.contains(note1))
-        XCTAssertTrue(mockApplication.cancelledNotifications.contains(localNote1))
+        XCTAssertTrue(mockApplication.cancelledLocalNotifications.contains(localNote1))
         
         XCTAssertTrue(sut.notifications.contains(note2))
-        XCTAssertFalse(mockApplication.cancelledNotifications.contains(localNote2))
+        XCTAssertFalse(mockApplication.cancelledLocalNotifications.contains(localNote2))
     }
     
     func testThatItPersistsNotifications() {
