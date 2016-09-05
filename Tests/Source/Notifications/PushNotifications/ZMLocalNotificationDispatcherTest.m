@@ -393,7 +393,7 @@
 
 - (void)testThatItSchedulesADefaultNotificationIfContentShouldNotBeVisible;
 {
-    [self.syncMOC setPersistentStoreMetadata:@(YES) forKey:@"ZMShouldHideNotificationContentKey"];
+    [self.syncMOC setPersistentStoreMetadata:@(YES) forKey:ZMShouldHideNotificationContentKey];
     [self.syncMOC saveOrRollback];
     // given
     NSDictionary *data = @{@"content" : @"hallo", @"nonce": [NSUUID UUID].transportString };
@@ -401,8 +401,8 @@
     
     // expect
     [[self.mockUISharedApplication stub] scheduleLocalNotification:[OCMArg checkWithBlock:^BOOL(UILocalNotification *localNotification) {
-        
-        return [localNotification.alertBody isEqualToString:[ZMPushStringDefault localizedString]];
+        return ([localNotification.alertBody isEqualToString:[ZMPushStringDefault localizedString]] &&
+                [localNotification.soundName isEqualToString:@"new_message_apns.caf"]);
     }]];
     
     //when
