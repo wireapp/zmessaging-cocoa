@@ -167,9 +167,15 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification {
     
     func configureNotification() -> UILocalNotification {
         let notification = UILocalNotification()
-        notification.alertBody = configureAlertBody().stringByEscapingPercentageSymbols()
-        notification.soundName = soundName
-        notification.category = category
+        let shouldHideContent = managedObjectContext.valueForKey(ZMShouldHideNotificationContentKey)
+        if let shouldHideContent = shouldHideContent as? NSNumber where shouldHideContent.boolValue == true {
+            notification.alertBody = ZMPushStringDefault.localizedString()
+            notification.soundName = ZMLocalNotificationNewMessageSoundName()
+        } else {
+            notification.alertBody = configureAlertBody().stringByEscapingPercentageSymbols()
+            notification.soundName = soundName
+            notification.category = category
+        }
         notification.setupUserInfo(conversation, forEvent: lastEvent)
         return notification
     }
