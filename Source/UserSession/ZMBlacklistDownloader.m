@@ -24,6 +24,7 @@
 
 #import "ZMBlacklistDownloader+Testing.h"
 #import "ZMUserSession.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 static char* const ZMLogTag ZM_UNUSED = "Blacklist";
 
@@ -79,6 +80,9 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 /// Group used to do work on. Will be entered when starting a request and exit when the response is received
 @property (nonatomic) ZMSDispatchGroup *workingGroup;
 
+/// Application
+@property (nonatomic) id<ZMApplication> application;
+
 @end
 
 
@@ -104,12 +108,14 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 
 - (instancetype)initWithDownloadInterval:(NSTimeInterval)downloadInterval
                             workingGroup:(ZMSDispatchGroup *)workingGroup
+                             application:(id<ZMApplication>)application
                        completionHandler:(void (^)(NSString *, NSArray *))completionHandler {
     return [self initWithURLSession:nil
                                 env:[ZMBackendEnvironment new]
                successCheckInterval:downloadInterval
                failureCheckInterval:UnsuccessfulDownloadRetryInterval
                        userDefaults:[NSUserDefaults standardUserDefaults]
+                        application:application
                        workingGroup:workingGroup
                   completionHandler:completionHandler];
 }
@@ -121,11 +127,13 @@ static NSString * const ExcludeVersionsKey = @"exclude";
               successCheckInterval:(NSTimeInterval)successCheckInterval
               failureCheckInterval:(NSTimeInterval)failureCheckInterval
                       userDefaults:(NSUserDefaults *)userDefaults
+                       application:(id<ZMApplication>)application
                       workingGroup:(__unused ZMSDispatchGroup *)workingGroup
                  completionHandler:(void (^)(NSString *, NSArray *))completionHandler
 {
     self = [super init];
     if (self != nil) {
+        self.application = application;
         self.urlSession = session ?: [self defaultSession];
         self.successCheckInterval = successCheckInterval;
         self.failureCheckInterval = MIN(failureCheckInterval,successCheckInterval);  // Make sure we don't download slower when unsuccessful
@@ -140,8 +148,8 @@ static NSString * const ExcludeVersionsKey = @"exclude";
         self.dateOfLastUnsuccessfulDownload = nil;
         self.workingGroup = workingGroup;
         
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willResignActive:) name:UIApplicationWillResignActiveNotification object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
+        [application registerObserverForDidBecomeActive:self selector:@selector(didBecomeActive:)];
+        [application registerObserverForWillResignActive:self selector:@selector(willResignActive:)];
         
         [self startTimerIfNeeded];
         
@@ -153,6 +161,7 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 - (void)teardown
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [self.application unregisterObserverForStateChange:self];
     self.inBackground = YES;
     dispatch_sync(self.queue, ^{
         [self.currentTimer invalidate];

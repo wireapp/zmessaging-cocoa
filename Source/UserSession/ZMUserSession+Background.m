@@ -138,7 +138,7 @@ static const char *ZMLogTag = "Push";
 
 @implementation ZMUserSession (ZMBackground)
 
-- (void)setupPushNotificationsForApplication:(UIApplication *)application
+- (void)setupPushNotificationsForApplication:(id<ZMApplication>)application
 {
     [application registerForRemoteNotifications];
     NSSet *categories = [NSSet setWithArray:@[self.replyCategory, self.missedCallCategory, self.incomingCallCategory, self.connectCategory]];
@@ -432,9 +432,7 @@ static const char *ZMLogTag = "Push";
 - (void)enableBackgroundFetch;
 {
     // We enable background fetch by setting the minimum interval to something different from UIApplicationBackgroundFetchIntervalNever
-    UIApplication *application = self.application;
-    Require(application != nil);
-    [application setMinimumBackgroundFetchInterval:10. * 60. + arc4random_uniform(5 * 60)];
+    [self.application setMinimumBackgroundFetchInterval:10. * 60. + arc4random_uniform(5 * 60)];
 }
 
 @end

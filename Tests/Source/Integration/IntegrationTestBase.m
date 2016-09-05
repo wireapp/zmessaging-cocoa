@@ -63,6 +63,8 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 @property (nonatomic) NSArray *nonConnectedUsers;
 @property (nonatomic) MockFlowManager *mockFlowManager;
 @property (nonatomic) MockLinkPreviewDetector *mockLinkPreviewDetector;
+@property (nonatomic) ApplicationMock *application;
+
 
 @end
 
@@ -93,7 +95,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.mockObjectIDToRemoteID = [NSMutableDictionary dictionary];
     self.mockFlowManager = self.mockTransportSession.mockFlowManager;
     self.mockTransportSession.cryptoboxLocation = [UserClientKeysStore otrDirectory];
-    self.application = ApplicationMock()
+    self.application = [[ApplicationMock alloc] init];
 
     ZMFlowSyncInternalFlowManagerOverride = self.mockFlowManager;
     
@@ -323,9 +325,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     // which will be triggered for every test and log an error caused by the pushRegistrant
     // being nil and no pushToken being present in the NSManagedObjectContext
     [self disableHotfixes];
-    
-    UIApplication *application = [OCMockObject niceMockForClass:UIApplication.class];
-    
+        
     id mockAPNSEnrvironment = [OCMockObject niceMockForClass:[ZMAPNSEnvironment class]];
     [[[mockAPNSEnrvironment stub] andReturn:@"com.wire.production"] appIdentifier];
     [[[mockAPNSEnrvironment stub] andReturn:@"APNS"] transportTypeForTokenType:ZMAPNSTypeNormal];

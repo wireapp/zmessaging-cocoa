@@ -27,6 +27,7 @@
               failureCheckInterval:(NSTimeInterval)failureCheckInterval
                       userDefaults:(NSUserDefaults *)userDefaults
                       workingGroup:(ZMSDispatchGroup *)workingGroup
-                 completionHandler:(void (^)(NSString *minVersion, NSArray *excludedVersions))completionHandler;
+                 completionHandler:(void (^)(NSString *minVersion, NSArray *excludedVersions))completionHandler
+                       application:(id<ZMApplication>)application;
 
 @end

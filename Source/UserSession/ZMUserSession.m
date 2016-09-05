@@ -162,7 +162,10 @@ ZM_EMPTY_ASSERTING_INIT()
     return [NSManagedObjectContext storeIsReady];
 }
 
-- (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager analytics:(id<AnalyticsType>)analytics appVersion:(NSString *)appVersion appGroupIdentifier:(NSString *)appGroupIdentifier;
+- (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager
+                           analytics:(id<AnalyticsType>)analytics
+                          appVersion:(NSString *)appVersion
+                  appGroupIdentifier:(NSString *)appGroupIdentifier;
 {
     zmSetupEnvironments();
     ZMBackendEnvironment *environment = [[ZMBackendEnvironment alloc] init];
@@ -310,6 +313,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)tearDown
 {
+    [self.application unregisterObserverForStateChange:self];
     self.mediaManager = nil;
     [self.operationLoop tearDown];
     [self.localNotificationDispatcher tearDown];
@@ -343,7 +347,6 @@ ZM_EMPTY_ASSERTING_INIT()
             // nop
         }];
     }
-    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -370,8 +373,8 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)registerForBackgroundNotifications;
 {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
+    [self.application registerObserverForDidEnterBackground:self selector:@selector(applicationDidEnterBackground:)];
+    [self.application registerObserverForWillEnterForeground:self selector:@selector(applicationWillEnterForeground:)];
 }
 
 - (void)registerForResetPushTokensNotification
@@ -439,6 +442,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.blackList = [[ZMBlacklistVerificator alloc] initWithCheckInterval:interval
                                                                    version:self.appVersion
                                                               workingGroup:self.syncManagedObjectContext.dispatchGroup
+                                                               application:self.application
                                                          blacklistCallback:^(BOOL isBlackListed) {
         ZM_STRONG(self);
         if (!self.isVersionBlacklisted && isBlackListed && blackListed) {
@@ -686,7 +690,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
     ZMNetworkState const previous = self.networkState;
     self.networkState = state;
-    if(previous != self.networkState && [[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground) {
+    if(previous != self.networkState && !self.application.isInBackground) {
         [[NSNotificationCenter defaultCenter] postNotification:[ZMNetworkAvailabilityChangeNotification notificationWithNetworkState:self.networkState userSession:self]];
     }
 }

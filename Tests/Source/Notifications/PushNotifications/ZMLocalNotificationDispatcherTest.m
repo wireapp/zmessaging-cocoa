@@ -36,7 +36,6 @@
 @property (nonatomic) ZMUser *user2;
 
 @property (nonatomic) ZMUser *selfUser;
-@property (nonatomic) id mockUISharedApplication;
 @property (nonatomic) id mockEventNotificationSet;
 @property (nonatomic) id mockFailedNotificationSet;
 
@@ -50,9 +49,6 @@
 {
     [super setUp];
     
-    self.mockUISharedApplication = [OCMockObject mockForClass:UIApplication.class];
-    [[[self.mockUISharedApplication stub] andReturnValue:@(UIApplicationStateBackground)] applicationState];
-    [self verifyMockLater:self.mockUISharedApplication];
     self.mockEventNotificationSet = [OCMockObject niceMockForClass:[ZMLocalNotificationSet class]];
     self.mockFailedNotificationSet = [OCMockObject niceMockForClass:[ZMLocalNotificationSet class]];
     [self verifyMockLater:self.mockEventNotificationSet];

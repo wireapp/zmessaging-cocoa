@@ -28,7 +28,6 @@
 #import "ZMPushRegistrant.h"
 #import <zmessaging/zmessaging-Swift.h>
 
-NSString * ZMLocalNotificationDispatcherUIApplicationClass = @"UIApplication";
 NSString * const ZMConversationCancelNotificationForIncomingCallNotificationName = @"ZMConversationCancelNotificationForIncomingCallNotification";
 
 NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShouldHideNotificationContentKey";

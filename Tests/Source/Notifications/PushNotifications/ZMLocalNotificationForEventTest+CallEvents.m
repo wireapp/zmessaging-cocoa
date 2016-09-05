@@ -276,8 +276,6 @@
 - (void)testThatItDoesNotCreateANotificationWhenUsersAreJoiningAfterSelfUserJoinedAndLeft
 {
     // first user joins
-    id mockApplication = [OCMockObject mockForClass:[UIApplication class]];
-    
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
     ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:mockApplication];
     
@@ -304,9 +302,6 @@
 
     XCTAssertNil(note3);
     XCTAssertNil(note4);
-    
-    [mockApplication verify];
-    [mockApplication stopMocking];
 }
 
 

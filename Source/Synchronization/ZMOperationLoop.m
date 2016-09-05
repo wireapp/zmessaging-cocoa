@@ -88,7 +88,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                       appGroupIdentifier:(NSString *)appGroupIdentifier
                              application:(id<ZMApplication>)application;
 {
-    ZMBadge *badge = [[ZMBadge alloc] init];
+    ZMBadge *badge = [[ZMBadge alloc] initWithApplication:application];
 
     ZMSyncStrategy *syncStrategy = [[ZMSyncStrategy alloc] initWithAuthenticationCenter:authenticationStatus
                                                                 userProfileUpdateStatus:userProfileUpdateStatus

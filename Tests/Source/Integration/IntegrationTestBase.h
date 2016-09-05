@@ -65,7 +65,7 @@ extern NSString * const SelfUserPassword;
 @property (nonatomic, readonly) NSArray *allUsers;
 @property (nonatomic, readonly) MockFlowManager *mockFlowManager;
 @property (nonatomic, readonly) MockLinkPreviewDetector *mockLinkPreviewDetector;
-@property (nonatomic, readonly) id<ZMApplication> application;
+@property (nonatomic, readonly) ApplicationMock *application;
 
 @property (nonatomic, readonly) ZMGSMCallHandler *gsmCallHandler;
 

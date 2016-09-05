@@ -21,7 +21,7 @@
 @import ZMUtilities;
 @import ZMCDataModel;
 
-#import "ZMFlowSync+Internal.h"
+#import "ZMFlowSync.h"
 #import "ZMTracing.h"
 #import "ZMOperationLoop.h"
 #import "ZMAVSBridge.h"
@@ -82,7 +82,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
         _uiManagedObjectContext = uiManagedObjectContext;
         _mediaManager = mediaManager;
         _requestStack = [NSMutableArray array];
-        _application = application ?: [UIApplication sharedApplication];
+        _application = application;
         self.conversationsNeedingUpdate = [NSMutableSet set];
         self.eventsNeedingToBeForwarded = [NSMutableSet set];
         self.usersNeedingToBeAdded = [NSMutableDictionary dictionary];
@@ -93,8 +93,8 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
             [self setUpFlowManagerIfNeeded];
         }
         
+        [application registerObserverForDidBecomeActive:self selector:@selector(appDidBecomeActive:)];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
         ZM_WEAK(self);
         self.authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note){
             ZM_STRONG(self);
@@ -128,6 +128,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
 - (void)tearDown;
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [self.application unregisterObserverForStateChange:self];
     [ZMUserSessionAuthenticationNotification removeObserver:self.authenticationObserverToken];
     [super tearDown];
 }

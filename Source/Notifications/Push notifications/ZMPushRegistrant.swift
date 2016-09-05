@@ -133,13 +133,13 @@ public class ApplicationRemoteNotification : NSObject, PushNotificationSource {
 }
 
 
-extension ApplicationRemoteNotification : UIApplicationDelegate {
-    public func application(application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData) {
+extension ApplicationRemoteNotification {
+    public func application(application: Application, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData) {
         pushToken = deviceToken
         didUpdateCredentials(deviceToken)
     }
     
-    public func application(application: UIApplication, didReceiveRemoteNotification userInfo: [NSObject : AnyObject], fetchCompletionHandler completionHandler: (UIBackgroundFetchResult) -> Void) {
+    public func application(application: Application, didReceiveRemoteNotification userInfo: [NSObject : AnyObject], fetchCompletionHandler completionHandler: (UIBackgroundFetchResult) -> Void) {
         if let a = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process remote notification payload") {
             didReceivePayload(userInfo, .Alert) { result in
                 completionHandler(self.fetchResult(result))

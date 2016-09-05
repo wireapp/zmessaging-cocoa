@@ -28,6 +28,7 @@
 #import "ZMOperationLoop.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMOnDemandFlowManager.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 static NSString * const FlowEventName1 = @"conversation.message-add";
 static NSString * const FlowEventName2 = @"conversation.member-join";
@@ -43,7 +44,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
 @property (nonatomic) id deploymentEnvironment;
 @property (nonatomic) NSMutableArray *voiceChannelGainNotifications;
-@property (nonatomic) id mockApplication;
+@property (nonatomic) ApplicationMock *mockApplication;
 @end
 
 
@@ -66,8 +67,6 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     self.deploymentEnvironment = [OCMockObject niceMockForClass:ZMDeploymentEnvironment.class];
     ZMFlowSyncInternalDeploymentEnvironmentOverride = self.deploymentEnvironment;
     [[[self.deploymentEnvironment stub] andReturnValue:OCMOCK_VALUE(ZMDeploymentEnvironmentTypeInternal)] environmentType];
-    self.mockApplication = [OCMockObject niceMockForClass:[ZMApplication class]];
-    [[[self.mockApplication stub] andReturnValue:@(UIApplicationStateActive)] applicationState];
 
     [self recreateSUT];
     self.voiceChannelGainNotifications = [NSMutableArray array];

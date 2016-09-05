@@ -20,8 +20,6 @@
 #import "ZMLocalNotificationDispatcher.h"
 #import <zmessaging/zmessaging-Swift.h>
 
-extern NSString * ZMLocalNotificationDispatcherUIApplicationClass;
-
 @interface ZMLocalNotificationDispatcher (Testing)
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc

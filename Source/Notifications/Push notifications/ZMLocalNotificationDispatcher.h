@@ -30,13 +30,14 @@
 @class ZMLocalNotificationForExpiredMessage;
 @class ZMMessage;
 @class ZMLocalNotificationSet;
+@protocol ZMApplication;
 
 extern NSString * _Null_unspecified const ZMConversationCancelNotificationForIncomingCallNotificationName;
 extern NSString * _Null_unspecified const ZMShouldHideNotificationContentKey;
 
 @interface ZMLocalNotificationDispatcher : NSObject <ZMEventConsumer>
 
-- (nullable instancetype)initWithManagedObjectContext:(nonnull NSManagedObjectContext *)moc sharedApplication:(nonnull UIApplication *)sharedApplication;
+- (nullable instancetype)initWithManagedObjectContext:(nonnull NSManagedObjectContext *)moc sharedApplication:(nonnull id<ZMApplication>)sharedApplication;
 
 - (void)tearDown;
 

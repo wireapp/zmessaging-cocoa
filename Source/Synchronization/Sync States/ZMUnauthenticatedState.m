@@ -73,20 +73,8 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
                         stateMachineDelegate:(id<ZMStateMachineDelegate>)stateMachineDelegate
-{
-    return [self initWithAuthenticationCenter:authenticationStatus
-                     clientRegistrationStatus:clientRegistrationStatus
-                      objectStrategyDirectory:objectStrategyDirectory
-                         stateMachineDelegate:stateMachineDelegate application:nil];
-}
-
-- (instancetype)initWithAuthenticationCenter:(ZMAuthenticationStatus *)authenticationStatus
-                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
-                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
-                        stateMachineDelegate:(id<ZMStateMachineDelegate>)stateMachineDelegate
                                  application:(id<ZMApplication>)application;
 {
-    application = application ?: [UIApplication sharedApplication];
     self = [super initWithAuthenticationCenter:authenticationStatus
                       clientRegistrationStatus:clientRegistrationStatus
                        objectStrategyDirectory:objectStrategyDirectory

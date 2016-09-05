@@ -45,7 +45,7 @@ func ZMLocalNotificationNewMessageSoundName() -> String {
 public extension ZMLocalNotificationForEvent {
     
     
-    public static func notification(forEvent event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, application: UIApplication?) -> ZMLocalNotificationForEvent? {
+    public static func notification(forEvent event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, application: Application) -> ZMLocalNotificationForEvent? {
         switch event.type {
         case .ConversationOtrMessageAdd:
             if let note = ZMLocalNotificationForKnockMessage(event: event, managedObjectContext: managedObjectContext, application: application) {
@@ -109,13 +109,13 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification {
         return [:]
     }
     
-    public convenience init?(event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, application: Application?) {
+    public convenience init?(event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, application: Application) {
        let conversation = ZMLocalNotificationForEvent.fetchConversation(event, managedObjectContext: managedObjectContext)
         self.init(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application:application)
     }
     
-    required public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?, copyFromNote: ZMLocalNotificationForEvent? = nil) {
-        self.application = application ?? UIApplication.sharedApplication()
+    required public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application, copyFromNote: ZMLocalNotificationForEvent? = nil) {
+        self.application = application
         self.events = events
         if let senderUUID = events.last?.senderUUID() {
             self.sender = ZMUser(remoteID: senderUUID, createIfNeeded: false, inContext: managedObjectContext)

@@ -24,10 +24,9 @@
 #import "IntegrationTestBase.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
-
-// needed to override very long timers
 #import "ZMLocalNotificationDispatcher+Testing.h"
-// -----------------------------------
+#import "zmessaging_iOS_Tests-Swift.h"
+
 
 @class BackgroundTests;
 
@@ -77,7 +76,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertEqual(self.application.scheduledLocalNotification.count, 1u);
+    XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1u);
 }
 
 - (void)testThatItSendsUILocalNotificationsForExpiredMessageNotPickedUpForRequestWhenGoingToTheBackground
@@ -101,7 +100,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.firedNotifications.count, 1u);
+    XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1u);
 }
 
 - (void)testThatItDoesNotCreateNotificationsForMessagesInTheSelfConversation
@@ -125,7 +124,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.firedNotifications.count, 0u);
+    XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0u);
 
 }
 

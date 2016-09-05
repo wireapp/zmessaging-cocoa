@@ -22,6 +22,8 @@
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Background+Testing.h"
+#import "zmessaging_iOS_Tests-Swift.h"
+
 
 @interface APNSTests : IntegrationTestBase
 
@@ -88,9 +90,7 @@
                               @"time" : @"2015-03-11T09:34:00.436Z",
                               @"type" : @"conversation.create"
                               };
-    
-    // expect
-    [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
+    self.application.isInBackground = true;
     
     // when
     if(useAPNS) {
@@ -296,9 +296,7 @@
                               @"time" : @"2015-03-11T09:34:00.436Z",
                               @"type" : @"conversation.create"
                               };
-    
-    // expect
-    [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
+    self.application.isInBackground = true;
     
     // when
     [self.mockTransportSession resetReceivedRequests];
@@ -342,8 +340,9 @@
                               @"type" : @"conversation.create"
                               };
     
+    self.application.isInBackground = true;
+
     // expect
-    [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
     
     __block NSUInteger callCount = 0;
@@ -404,9 +403,7 @@
                                                                      transportData:conversationTransportData
                                                                           senderID:self.user1.identifier];
     NSDictionary *noticePayload = [self noticePayloadWithIdentifier:notificationID];
-    
-    // expect
-    [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
+    self.application.isInBackground = true;
     
     // when
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
@@ -457,9 +454,7 @@
                                                                      transportData:conversationTransportData
                                                                           senderID:self.user1.identifier];
     NSDictionary *noticePayload = [self noticePayloadWithIdentifier:notificationID];
-    
-    // expect
-    [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
+    self.application.isInBackground = true;
     
     // when
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
@@ -511,12 +506,12 @@
     WaitForAllGroupsToBeEmpty(0.2);
     
     NSDictionary *payload = [event.transportData asDictionary];
-    
+    self.application.isInBackground = true;
+
     [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
     WaitForAllGroupsToBeEmpty(0.2);
     
     // expect
-    [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
     
     XCTestExpectation *confirmationExpectation = [self expectationWithDescription:@"Did send confirmation"];
     XCTestExpectation *missingClientsExpectation = [self expectationWithDescription:@"Did fetch missing client"];
