@@ -354,7 +354,10 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     }
     
     // Unarchive conversations when applicable
-    [conversation unarchiveConversationFromEvent:event];
+    // Message events are parsed separately since they might contain "invisible" messages
+    if (!isMessageEvent) {
+        [conversation unarchiveConversationFromEvent:event];
+    }
 }
 
 - (void)updateLastReadForInvisibleEventInConversation:(ZMConversation *)conversation

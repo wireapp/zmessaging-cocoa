@@ -34,24 +34,6 @@ NSString * const ZMConversationCancelNotificationForIncomingCallNotificationName
 NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShouldHideNotificationContentKey";
 
 
-@interface UILocalNotification (Default)
-
-+ (instancetype)defaultNotification;
-
-@end
-
-@implementation UILocalNotification (Default)
-
-+ (instancetype)defaultNotification;
-{
-    UILocalNotification *notification = [[UILocalNotification alloc] init];
-    notification.alertBody = [ZMPushStringDefault localizedString];
-    return notification;
-}
-
-@end
-
-
 @interface ZMLocalNotificationDispatcher ()
 
 @property (nonatomic) NSManagedObjectContext *syncMOC;
@@ -192,7 +174,7 @@ ZM_EMPTY_ASSERTING_INIT();
     for (ZMUpdateEvent *event in events) {
         ZMLocalNotificationForEvent *note = [self notificationForEvent:event];
         if (note != nil && note.uiNotifications.count > 0) {
-            UILocalNotification *localNote = [[self.syncMOC persistentStoreMetadataForKey:ZMShouldHideNotificationContentKey] boolValue] ? [UILocalNotification defaultNotification] : note.uiNotifications.lastObject;
+            UILocalNotification *localNote = note.uiNotifications.lastObject;
             ZMLogPushKit(@"Scheduling local notification <%@: %p> '%@'", localNote.class, localNote, localNote.alertBody);
             [self.sharedApplication scheduleLocalNotification:localNote];
             if (notificationID != nil) {
