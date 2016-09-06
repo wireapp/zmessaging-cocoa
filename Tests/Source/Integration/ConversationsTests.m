@@ -2518,7 +2518,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    NSString *reactionEmoji = @"I like this";
+    NSString *reactionEmoji = @"❤️";
     [self.userSession performChanges:^{
         [ZMMessage addReaction:reactionEmoji toMessage:message];
     }];
@@ -2552,7 +2552,7 @@
     NSUUID *nonce = message.nonce;
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSString *reactionEmoji = @"I like this";
+    NSString *reactionEmoji = @"❤️";
     ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce.transportString nonce:[NSUUID UUID].transportString];
     MockUserClient *fromClient = [self.user1.clients anyObject];
     MockUserClient *toClient = [self.selfUser.clients anyObject];
@@ -2592,7 +2592,7 @@
     MessageChangeObserver *observer = [[MessageChangeObserver alloc] initWithMessage:message];
     
     // when
-    NSString *reactionEmoji = @"I like this";
+    NSString *reactionEmoji = @"❤️";
     [self.userSession performChanges:^{
         [ZMMessage addReaction:reactionEmoji toMessage:message];
     }];
@@ -2624,7 +2624,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSString *reactionEmoji = @"I like this";
+    NSString *reactionEmoji = @"❤️";
     [self.userSession performChanges:^{
         [ZMMessage addReaction:reactionEmoji toMessage:message];
     }];
@@ -2665,7 +2665,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSString *reactionEmoji = @"I like this";
+    NSString *reactionEmoji = @"❤️";
     [self.userSession performChanges:^{
         [ZMMessage addReaction:reactionEmoji toMessage:message];
     }];
@@ -2691,6 +2691,42 @@
     
     [observer tearDown];
 }
+
+- (void)testThatReceivingAReactionThatIsNotHandledDoesntSaveIt;
+{
+    //given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    
+    [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    MockConversation *mockConversation = self.selfToUser1Conversation;
+    ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
+    
+    __block ZMTextMessage *message;
+    [self.userSession performChanges:^{
+        message = (ZMTextMessage *)[conversation appendMessageWithText:@"Je t'aime JCVD"];
+    }];
+    NSUUID *nonce = message.nonce;
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    NSString *reactionEmoji = @"Jean Robert, j'ai mal aux pieds";
+    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce.transportString nonce:[NSUUID UUID].transportString];
+    MockUserClient *fromClient = [self.user1.clients anyObject];
+    MockUserClient *toClient = [self.selfUser.clients anyObject];
+    
+    //when
+    [self.mockTransportSession performRemoteChanges:^( __unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [mockConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:reactionMessage.data];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    //then
+    XCTAssertEqual(message.usersReaction.count, 0lu);
+    XCTAssertEqual(message.reactions.count, 0lu);
+}
+
 
 @end
 
