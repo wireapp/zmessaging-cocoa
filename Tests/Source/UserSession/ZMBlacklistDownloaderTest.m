@@ -56,9 +56,9 @@
                                             successCheckInterval:self.successCheckTimeInterval
                                             failureCheckInterval:self.failureCheckTimeInterval
                                                     userDefaults:[NSUserDefaults standardUserDefaults]
+                                                     application:self.application
                                                     workingGroup:self.syncMOC.dispatchGroup
                                                completionHandler:completionHandler
-                                                     application:self.application
                 ];
 }
 

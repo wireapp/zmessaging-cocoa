@@ -52,6 +52,164 @@
                BlueprintName = "zmessaging-iOS-Tests"
                ReferencedContainer = "container:zmessaging-cocoa.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "APNSTests">
+               </Test>
+               <Test
+                  Identifier = "AssetUploadAndDownload">
+               </Test>
+               <Test
+                  Identifier = "BackgroundTests">
+               </Test>
+               <Test
+                  Identifier = "CallingTests">
+               </Test>
+               <Test
+                  Identifier = "ClientManagementTests">
+               </Test>
+               <Test
+                  Identifier = "ConnectionTests">
+               </Test>
+               <Test
+                  Identifier = "ConversationTests">
+               </Test>
+               <Test
+                  Identifier = "ConversationTestsBase">
+               </Test>
+               <Test
+                  Identifier = "ConversationTestsOTR">
+               </Test>
+               <Test
+                  Identifier = "ConversationTests_MessageEditing">
+               </Test>
+               <Test
+                  Identifier = "EmailRegistrationTests">
+               </Test>
+               <Test
+                  Identifier = "FileTransferTests">
+               </Test>
+               <Test
+                  Identifier = "IsTypingTests">
+               </Test>
+               <Test
+                  Identifier = "LinkPreviewTests">
+               </Test>
+               <Test
+                  Identifier = "LoginFlowTests">
+               </Test>
+               <Test
+                  Identifier = "NSString_NormalizationTests">
+               </Test>
+               <Test
+                  Identifier = "NSURL_LaunchOptionsTests">
+               </Test>
+               <Test
+                  Identifier = "PhoneRegistrationTests">
+               </Test>
+               <Test
+                  Identifier = "PushChannelTests">
+               </Test>
+               <Test
+                  Identifier = "SearchTests">
+               </Test>
+               <Test
+                  Identifier = "SendAndReceiveMessagesTests">
+               </Test>
+               <Test
+                  Identifier = "SlowSyncTests">
+               </Test>
+               <Test
+                  Identifier = "UserProfileTests">
+               </Test>
+               <Test
+                  Identifier = "UserSessionErrorTests">
+               </Test>
+               <Test
+                  Identifier = "UserTests">
+               </Test>
+               <Test
+                  Identifier = "ZMAPSMessageDecoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMAssetTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMAuthenticationStatusTests">
+               </Test>
+               <Test
+                  Identifier = "ZMBackgroundFetchStateTests">
+               </Test>
+               <Test
+                  Identifier = "ZMBackgroundStateTests">
+               </Test>
+               <Test
+                  Identifier = "ZMBackgroundTaskStateTests">
+               </Test>
+               <Test
+                  Identifier = "ZMBadgeTest">
+               </Test>
+               <Test
+                  Identifier = "ZMBlacklistDownloaderTest">
+               </Test>
+               <Test
+                  Identifier = "ZMCallStateTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMChangeTrackerBootstrapTests">
+               </Test>
+               <Test
+                  Identifier = "ZMCommonContactsSearchTests">
+               </Test>
+               <Test
+                  Identifier = "ZMConnectionTranscoderTest">
+               </Test>
+               <Test
+                  Identifier = "ZMConversationTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMCredentialsTests">
+               </Test>
+               <Test
+                  Identifier = "ZMCryptoBoxUpdateEventsTests">
+               </Test>
+               <Test
+                  Identifier = "ZMDependentObjectsTests">
+               </Test>
+               <Test
+                  Identifier = "ZMDownloadLastUpdateEventIDStateTests">
+               </Test>
+               <Test
+                  Identifier = "ZMDownstreamObjectSyncOrderingTests">
+               </Test>
+               <Test
+                  Identifier = "ZMDownstreamObjectTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMEventProcessingStateTests">
+               </Test>
+               <Test
+                  Identifier = "ZMFlowSyncTests">
+               </Test>
+               <Test
+                  Identifier = "ZMGSMCallHandlerTest">
+               </Test>
+               <Test
+                  Identifier = "ZMHotFixTests">
+               </Test>
+               <Test
+                  Identifier = "ZMIncompleteConversationsCacheTests">
+               </Test>
+               <Test
+                  Identifier = "ZMKnockTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMLastUpdateEventIDTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMLocalInsertedObjectSetTests">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
       <MacroExpansion>
