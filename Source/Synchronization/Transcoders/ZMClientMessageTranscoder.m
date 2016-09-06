@@ -329,12 +329,13 @@
             updateResult = [ZMOTRMessage messageUpdateResultFromUpdateEvent:event
                                                   inManagedObjectContext:self.managedObjectContext
                                                           prefetchResult:prefetchResult];
-            if (updateResult.needsConfirmation) {
-                ZMClientMessage *confirmation = [updateResult.message confirmReception];
-                if (event.source == ZMUpdateEventSourcePushNotification) {
-                    [self.apnsConfirmationStatus needsToConfirmMessage:confirmation.nonce];
-                }
-            }
+            // TODO Confirmation: comment back in 
+//            if (updateResult.needsConfirmation) {
+//                ZMClientMessage *confirmation = [updateResult.message confirmReception];
+//                if (event.source == ZMUpdateEventSourcePushNotification) {
+//                    [self.apnsConfirmationStatus needsToConfirmMessage:confirmation.nonce];
+//                }
+//            }
             break;
         default:
             return nil;
