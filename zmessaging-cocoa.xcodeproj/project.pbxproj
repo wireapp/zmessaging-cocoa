@@ -1062,6 +1062,12 @@
 		AF8D1AC21D2C196F00653612 /* AssetDownloadRequestFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AssetDownloadRequestFactory.swift; sourceTree = "<group>"; };
 		B40DC79C1D01A61600CEF65C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Push.strings"; sourceTree = "<group>"; };
 		B40DC79D1D01A61600CEF65C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "pt-BR"; path = "pt-BR.lproj/Push.stringsdict"; sourceTree = "<group>"; };
+		B4D37F921D7EEA3F00D0C1BC /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Push.strings; sourceTree = "<group>"; };
+		B4D37F931D7EEA3F00D0C1BC /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = es; path = es.lproj/Push.stringsdict; sourceTree = "<group>"; };
+		B4D37F941D7EEA5100D0C1BC /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Push.strings; sourceTree = "<group>"; };
+		B4D37F951D7EEA5100D0C1BC /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = uk; path = uk.lproj/Push.stringsdict; sourceTree = "<group>"; };
+		B4D37F961D7EEA5B00D0C1BC /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Push.strings; sourceTree = "<group>"; };
+		B4D37F971D7EEA5B00D0C1BC /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ru; path = ru.lproj/Push.stringsdict; sourceTree = "<group>"; };
 		BF00441A1C737CE9007A6EA4 /* BackgroundAPNSPingBackStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackgroundAPNSPingBackStatus.swift; sourceTree = "<group>"; };
 		BF00442A1C75DF94007A6EA4 /* PingBackRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PingBackRequestStrategy.swift; sourceTree = "<group>"; };
 		BF0D67A31C901DEC007CE00F /* libPhoneNumber.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libPhoneNumber.framework; path = Carthage/Build/iOS/libPhoneNumber.framework; sourceTree = "<group>"; };
@@ -2586,6 +2592,9 @@
 				Base,
 				de,
 				"pt-BR",
+				es,
+				uk,
+				ru,
 			);
 			mainGroup = 540029AA1918CA8500578793;
 			productRefGroup = 540029B51918CA8500578793 /* Products */;
@@ -3103,6 +3112,9 @@
 				F91CA6AC1BECBD3F000EE5C2 /* Base */,
 				F91CA6AE1BECBD51000EE5C2 /* de */,
 				B40DC79C1D01A61600CEF65C /* pt-BR */,
+				B4D37F921D7EEA3F00D0C1BC /* es */,
+				B4D37F941D7EEA5100D0C1BC /* uk */,
+				B4D37F961D7EEA5B00D0C1BC /* ru */,
 			);
 			name = Push.strings;
 			sourceTree = "<group>";
@@ -3113,6 +3125,9 @@
 				F91CA6AD1BECBD46000EE5C2 /* Base */,
 				F91CA6AF1BECBD51000EE5C2 /* de */,
 				B40DC79D1D01A61600CEF65C /* pt-BR */,
+				B4D37F931D7EEA3F00D0C1BC /* es */,
+				B4D37F951D7EEA5100D0C1BC /* uk */,
+				B4D37F971D7EEA5B00D0C1BC /* ru */,
 			);
 			name = Push.stringsdict;
 			sourceTree = "<group>";
