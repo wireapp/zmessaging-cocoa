@@ -41,6 +41,10 @@
 @class MockUser;
 @class ZMClientMessage;
 
+// TODO Confirmation: comment back in
+#define SendDeliveryReceipts    0
+
+
 /// This is a base test class with utility stuff for all tests.
 @interface MessagingTest : ZMTBaseTest
 

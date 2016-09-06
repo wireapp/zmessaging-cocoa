@@ -33,7 +33,8 @@
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMOperationLoop.h"
 
-
+// TODO Confirmation enable
+static const BOOL SendDeliveryReceipts = NO;
 
 @interface ZMAssetClientMessage (ImagePredicates)
 
@@ -327,15 +328,16 @@
         case ZMUpdateEventConversationOtrMessageAdd:
         case ZMUpdateEventConversationOtrAssetAdd:
             updateResult = [ZMOTRMessage messageUpdateResultFromUpdateEvent:event
-                                                  inManagedObjectContext:self.managedObjectContext
-                                                          prefetchResult:prefetchResult];
-            // TODO Confirmation: comment back in 
-//            if (updateResult.needsConfirmation) {
-//                ZMClientMessage *confirmation = [updateResult.message confirmReception];
-//                if (event.source == ZMUpdateEventSourcePushNotification) {
-//                    [self.apnsConfirmationStatus needsToConfirmMessage:confirmation.nonce];
-//                }
-//            }
+                                                     inManagedObjectContext:self.managedObjectContext
+                                                             prefetchResult:prefetchResult];
+            if (SendDeliveryReceipts) {
+                if (updateResult.needsConfirmation) {
+                    ZMClientMessage *confirmation = [updateResult.message confirmReception];
+                    if (event.source == ZMUpdateEventSourcePushNotification) {
+                        [self.apnsConfirmationStatus needsToConfirmMessage:confirmation.nonce];
+                    }
+                }
+            }
             break;
         default:
             return nil;
