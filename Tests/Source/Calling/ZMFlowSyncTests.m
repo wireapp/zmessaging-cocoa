@@ -23,7 +23,6 @@
 @import zmessaging;
 
 #import "MessagingTest.h"
-#import "ZMFlowSync+Internal.h"
 #import "AVSFlowManager.h"
 #import "ZMOperationLoop.h"
 #import "ZMUserSessionAuthenticationNotification.h"
@@ -44,7 +43,6 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
 @property (nonatomic) id deploymentEnvironment;
 @property (nonatomic) NSMutableArray *voiceChannelGainNotifications;
-@property (nonatomic) ApplicationMock *mockApplication;
 @end
 
 
@@ -96,7 +94,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 - (void)recreateSUT;
 {
     [self.sut tearDown];
-    self.sut = (id) [[ZMFlowSync alloc] initWithMediaManager:self.mediaManager onDemandFlowManager:self.onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.mockApplication];
+    self.sut = (id) [[ZMFlowSync alloc] initWithMediaManager:self.mediaManager onDemandFlowManager:self.onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -931,7 +929,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [[self.internalFlowManager expect] addUser:conv.remoteIdentifier.transportString userId:user.remoteIdentifier.transportString name:user.name];
     
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self.application simulateApplicationDidBecomeActive];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -965,7 +963,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [[self.internalFlowManager expect] releaseFlows:conv.remoteIdentifier.transportString];
 
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self.application simulateApplicationDidBecomeActive];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -1007,7 +1005,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [[self.internalFlowManager expect] processEventWithMediaType:@"application/json" content:innerPayloadData];
     
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self.application simulateApplicationDidBecomeActive];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -1023,8 +1021,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 - (void)testThatItSetsUpTheFlowManagerOnApplicationDidBecomeActive
 {
     // given
-    self.mockApplication = [OCMockObject niceMockForClass:[ZMApplication class]];
-    [[[self.mockApplication expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    [self.application setBackground];
     
     // when
     self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:self.mediaManager];
@@ -1037,7 +1034,8 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     
     
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self.application simulateApplicationDidBecomeActive];
+
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -1047,8 +1045,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 - (void)testThatItSetsUpTheFlowManagerWhenApplicationStateChanged
 {
     // given
-    self.mockApplication = [OCMockObject niceMockForClass:[ZMApplication class]];
-    [[[self.mockApplication expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    [self.application setBackground];
     [[[self.internalFlowManager expect] andReturnValue:@NO] isReady];
 
     // when
@@ -1063,7 +1060,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     
     
     // and when
-    [[[self.mockApplication expect] andReturnValue:@(UIApplicationStateActive)] applicationState];
+    [self.application setActive];
     [self.sut nextRequest];
     WaitForAllGroupsToBeEmpty(0.5);
     

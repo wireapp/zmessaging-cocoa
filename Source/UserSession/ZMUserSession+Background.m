@@ -50,11 +50,11 @@ static const char *ZMLogTag = "Push";
 
 - (void)receivedPushNotificationWithPayload:(NSDictionary *)payload completionHandler:(ZMPushNotificationCompletionHandler)handler source:(ZMPushNotficationType)source
 {
-    BOOL isNotInBackground = !self.application.isInBackground;
+    BOOL isNotInBackground = self.application.applicationState != UIApplicationStateBackground;
     BOOL notAuthenticated = self.authenticationStatus.currentPhase != ZMAuthenticationPhaseAuthenticated;
 
     if (source == ZMPushNotficationTypeVoIP) {
-        [APNSPerformanceTracker trackAPNSInUserSession:self.syncManagedObjectContext.analytics authenticated:!notAuthenticated isInBackground:self.application.isInBackground];
+        [APNSPerformanceTracker trackAPNSInUserSession:self.syncManagedObjectContext.analytics authenticated:!notAuthenticated isInBackground:self.application.applicationState == UIApplicationStateBackground];
     }
     
     if (notAuthenticated || isNotInBackground) {
@@ -149,13 +149,13 @@ static const char *ZMLogTag = "Push";
 }
 
 
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
+- (void)application:(id<ZMApplication>)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
 {
     [self.applicationRemoteNotification application:application didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
 }
 
 
-- (void)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
+- (void)application:(id<ZMApplication>)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
 {
     UILocalNotification *notification = launchOptions[UIApplicationLaunchOptionsLocalNotificationKey];
     if (notification != nil) {
@@ -170,7 +170,7 @@ static const char *ZMLogTag = "Push";
 }
 
 
-- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
+- (void)application:(id<ZMApplication>)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 {
     NOT_USED(application);
     NOT_USED(userInfo);
@@ -178,9 +178,9 @@ static const char *ZMLogTag = "Push";
 }
 
 
-- (void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification;
+- (void)application:(id<ZMApplication>)application didReceiveLocalNotification:(UILocalNotification *)notification;
 {
-    if (application.applicationState == UIApplicationStateInactive) {
+    if (application.applicationState == UIApplicationStateInactive || application.applicationState == UIApplicationStateBackground) {
         self.pendingLocalNotification = [[ZMStoredLocalNotification alloc] initWithNotification:notification
                                                                            managedObjectContext:self.managedObjectContext
                                                                                actionIdentifier:nil
@@ -188,7 +188,7 @@ static const char *ZMLogTag = "Push";
     }
 }
 
-- (void)application:(UIApplication *)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)())completionHandler;
+- (void)application:(id<ZMApplication>)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)())completionHandler;
 {
     if ([identifier isEqualToString:ZMCallIgnoreAction]){
         [self ignoreCallForNotification:notification withCompletionHandler:completionHandler];
@@ -221,7 +221,7 @@ static const char *ZMLogTag = "Push";
     }
 }
 
-- (void)application:(UIApplication *)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
+- (void)application:(id<ZMApplication>)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 {
     NOT_USED(application);
     ZM_WEAK(self);
@@ -248,7 +248,7 @@ static const char *ZMLogTag = "Push";
     [self.operationLoop startBackgroundFetchWithCompletionHandler:handler];
 }
 
-- (void)application:(UIApplication *)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler;
+- (void)application:(id<ZMApplication>)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler;
 {
     NOT_USED(application);
     NOT_USED(identifier);

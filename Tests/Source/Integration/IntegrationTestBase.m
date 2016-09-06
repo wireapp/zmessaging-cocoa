@@ -63,7 +63,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 @property (nonatomic) NSArray *nonConnectedUsers;
 @property (nonatomic) MockFlowManager *mockFlowManager;
 @property (nonatomic) MockLinkPreviewDetector *mockLinkPreviewDetector;
-@property (nonatomic) ApplicationMock *application;
 
 
 @end
@@ -95,7 +94,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.mockObjectIDToRemoteID = [NSMutableDictionary dictionary];
     self.mockFlowManager = self.mockTransportSession.mockFlowManager;
     self.mockTransportSession.cryptoboxLocation = [UserClientKeysStore otrDirectory];
-    self.application = [[ApplicationMock alloc] init];
 
     ZMFlowSyncInternalFlowManagerOverride = self.mockFlowManager;
     
@@ -106,7 +104,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.conversationChangeObserver = [[ConversationChangeObserver alloc] init];
     self.userChangeObserver = [[UserChangeObserver alloc] init];
     self.messageChangeObserver = [[MessageChangeObserver alloc] init];
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self.application simulateApplicationDidBecomeActive];
     WaitForEverythingToBeDoneWithTimeout(0.5);
 }
 
@@ -349,7 +347,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
                         mediaManager:nil
                         apnsEnvironment:mockAPNSEnrvironment
                         operationLoop:nil
-                        application:application
+                        application:self.application
                         appVersion:@"00000"
                         appGroupIdentifier:self.groupIdentifier];
     WaitForEverythingToBeDone();

@@ -47,18 +47,11 @@
     XCTAssert([self logIn]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    id application = self.userSession.application;
-    self.application.isInBackground = true;
-
-    __block UILocalNotification *notification;
-    [[application expect] scheduleLocalNotification:[OCMArg checkWithBlock:^BOOL(id obj) {
-        notification = obj;
-        return YES;
-    }]];
+    [self.application setBackground];
     XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 0u);
     
     NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest othersAreJoined:YES selfIsJoined:NO otherIsSendingVideo:NO selfIsSendingVideo:NO sequence:nil];
-    
+    UILocalNotification *notification;
     // (1) when we recieve a push notification
     {
         [self simulateReceivePushNotification:@{@"data": @{@"payload": @[payload],
@@ -68,14 +61,13 @@
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        [application verify];
+        notification = self.application.scheduledLocalNotifications.firstObject;
         XCTAssertNotNil(notification);
         XCTAssertEqualObjects(notification.alertBody, @"Extra User2 is calling");
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 1u);
     }
     
     [self.mockTransportSession resetReceivedRequests];
-    [application stopMocking];
 
     // (2) we press on the action
     {
@@ -86,7 +78,7 @@
             }
             return nil;
         };
-        self.application.isInBackground = true;
+        [self.application setInactive];
         [self.userSession application:self.userSession.application handleActionWithIdentifier:ZMCallAcceptAction forLocalNotification:notification responseInfo:nil completionHandler:nil];
 
         XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
@@ -96,7 +88,6 @@
         XCTAssertTrue([self lastRequestContainsSelfStateJoined]);
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 2u);
     }
-    [application stopMocking];
 }
 
 - (void)testThatItJoinsAVideoCallFromAPushNotification_DuringEventProcessingState
@@ -108,7 +99,7 @@
     XCTAssert([self logIn]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    self.application.isInBackground = true;
+    [self.application setBackground];
     NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest othersAreJoined:YES selfIsJoined:NO otherIsSendingVideo:YES selfIsSendingVideo:NO sequence:nil];
     
     // (1) when we recieve a push notification
@@ -138,6 +129,7 @@
             }
             return nil;
         };
+        [self.application setInactive];
         [self.userSession application:self.userSession.application handleActionWithIdentifier:ZMCallAcceptAction forLocalNotification:notification responseInfo:nil completionHandler:nil];
 
         XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
@@ -192,10 +184,8 @@
 
     [self simulateRestartWithoutEnteringEventProcessing];
     
-    XCTestExpectation *notificationExpectation = [self expectationWithDescription:@"Schedule notification"];
-    UILocalNotification *notification;
-    
-    self.application.isInBackground = true;
+    UILocalNotification *notification;    
+    [self.application setBackground];
     XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 0u);
     NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest othersAreJoined:YES selfIsJoined:NO otherIsSendingVideo:YES selfIsSendingVideo:NO sequence:nil];
     
@@ -219,6 +209,7 @@
     
     // (2) we press on the action
     {
+        [self.application setInactive];
         [self.userSession application:self.userSession.application handleActionWithIdentifier:ZMCallAcceptAction forLocalNotification:notification responseInfo:nil completionHandler:nil];
         WaitForAllGroupsToBeEmpty(0.5);
         

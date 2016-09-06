@@ -70,7 +70,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // background
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
+    [self.application simulateApplicationDidEnterBackground];
     
     [self.mockTransportSession expireAllBlockedRequests];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -94,7 +94,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     }];
     
     // background
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
+    [self.application simulateApplicationDidEnterBackground];
     [self spinMainQueueWithTimeout:zmMessageExpirationTimer + 0.1];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -118,7 +118,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     }];
     
     // background
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
+    [self.application simulateApplicationDidEnterBackground];
     [self spinMainQueueWithTimeout:zmMessageExpirationTimer + 0.1];
     
     WaitForAllGroupsToBeEmpty(0.5);

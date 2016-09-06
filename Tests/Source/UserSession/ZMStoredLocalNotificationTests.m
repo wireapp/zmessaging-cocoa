@@ -24,6 +24,7 @@
 #import "ZMLocalNotification.h"
 #import "ZMStoredLocalNotification.h"
 #import "ZMUserSession+UserNotificationCategories.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @interface ZMStoredLocalNotificationTests : MessagingTest
 @property (nonatomic) ZMConversation *conversation;
@@ -102,7 +103,7 @@
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventPayload];
     NSString *textInput = @"Text";
     
-    ZMLocalNotificationForEvent *note = [[ZMLocalNotificationForEvent alloc] initWithEvent:events.firstObject managedObjectContext:self.uiMOC application:nil];
+    ZMLocalNotificationForEvent *note = [[ZMLocalNotificationForEvent alloc] initWithEvent:events.firstObject managedObjectContext:self.uiMOC application:self.application];
     XCTAssertNotNil(note);
     
     // when

@@ -20,7 +20,9 @@ import ZMTesting
 @testable import zmessaging
 
 class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventTest {
+}
 
+extension ZMLocalNotificationForEventsTests_Reactions {
     
     func createUpdateEvent(nonce: NSUUID, conversationID: NSUUID, genericMessage: ZMGenericMessage, senderID: NSUUID = .createUUID()) -> ZMUpdateEvent {
         let payload = [
@@ -46,7 +48,7 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         XCTAssertNotNil(event)
         
         // when
-        let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: nil)
+        let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: self.application)
         
         // then
         XCTAssertNotNil(sut)
@@ -63,7 +65,7 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         let event = createUpdateEvent(NSUUID(), conversationID: conversation.remoteIdentifier, genericMessage: reaction, senderID: sender.remoteIdentifier!)
         
         // when
-        let sut = ZMLocalNotificationForReaction(events: [event], conversation: conversation, managedObjectContext: message.managedObjectContext!, application: nil)
+        let sut = ZMLocalNotificationForReaction(events: [event], conversation: conversation, managedObjectContext: message.managedObjectContext!, application: self.application)
         
         // then
         guard let localNote = sut?.uiNotifications.first else {return nil }
@@ -106,7 +108,7 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         XCTAssertNotNil(event)
         
         // when
-        let sut = ZMLocalNotificationForEvent.notification(forEvent: event, managedObjectContext: message.managedObjectContext!, application: nil)
+        let sut = ZMLocalNotificationForEvent.notification(forEvent: event, managedObjectContext: message.managedObjectContext!, application: self.application)
         
         // then
         XCTAssertNotNil(sut)
@@ -124,7 +126,7 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         XCTAssertNotNil(event)
         
         // when
-        let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: nil)
+        let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: self.application)
         
         // then
         XCTAssertNil(sut)
@@ -137,7 +139,7 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         let event = createUpdateEvent(NSUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction, senderID: selfUser.remoteIdentifier!)
         
         // when
-        let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: nil)
+        let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: self.application)
         
         // then
         XCTAssertNil(sut)
@@ -152,7 +154,7 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         let event = createUpdateEvent(NSUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction, senderID: otherUser.remoteIdentifier!)
         
         // when
-        let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: nil)
+        let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: self.application)
         
         // then
         XCTAssertNil(sut)
@@ -160,8 +162,6 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
     
     func testThatItCancelsNotificationWhenUserDeletesLike(){
         // given
-        let fakeNotificationScheduler = ApplicationMock()
-        
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
         let reaction1 = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
@@ -170,11 +170,11 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         let event2 = createUpdateEvent(NSUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction2, senderID: otherUser.remoteIdentifier!)
         
         // when
-        let sut1 = ZMLocalNotificationForReaction(events: [event1], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: fakeNotificationScheduler)
+        let sut1 = ZMLocalNotificationForReaction(events: [event1], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: self.application)
         let sut2 = sut1!.copyByAddingEvent(event2)
         
         // then
-        XCTAssertEqual(fakeNotificationScheduler.cancelledLocalNotifications.count, 1)
+        XCTAssertEqual(self.application.cancelledLocalNotifications.count, 1)
         XCTAssertNotNil(sut1)
         XCTAssertTrue(sut1!.shouldBeDiscarded)
         XCTAssertNil(sut2)
@@ -182,8 +182,6 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
     
     func testThatItDoesNotCancelNotificationWhenADifferentUserDeletesLike(){
         // given
-        let fakeNotificationScheduler = ApplicationMock()
-        
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
         let reaction1 = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
@@ -192,13 +190,13 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         let event2 = createUpdateEvent(NSUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction2, senderID: otherUser2.remoteIdentifier!)
         
         // when
-        let sut1 = ZMLocalNotificationForReaction(events: [event1], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: fakeNotificationScheduler)
+        let sut1 = ZMLocalNotificationForReaction(events: [event1], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: self.application)
         let sut2 = sut1!.copyByAddingEvent(event2)
         
         // then
         XCTAssertNotNil(sut1)
         XCTAssertFalse(sut1!.shouldBeDiscarded)
-        XCTAssertEqual(fakeNotificationScheduler.cancelledLocalNotifications.count, 1)
+        XCTAssertEqual(self.application.cancelledLocalNotifications.count, 1)
         XCTAssertNil(sut2)
     }
 }

@@ -18,6 +18,7 @@
 
 
 #import "ZMLocalNotificationForEventTest.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 
 @implementation ZMLocalNotificationForEventTest (MissedCall)
@@ -56,7 +57,7 @@
                                                      session:session];
     XCTAssertNotNil(event);
     
-    return [ZMLocalNotificationForEvent notificationForEvent:event managedObjectContext:self.syncMOC application:nil];
+    return [ZMLocalNotificationForEvent notificationForEvent:event managedObjectContext:self.syncMOC application:self.application];
 }
 
 - (void)testThatItCreatesANotificationWhenTheConversationIsSilenced_CallStartedEevnt
@@ -237,7 +238,7 @@
 {
     // first user joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:nil];
+    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:self.application];
     
     // when second user joins
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender, self.otherUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
@@ -253,7 +254,7 @@
 {
     // first user joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:nil];
+    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:self.application];
     
     // when selfUser joins
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender, self.selfUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
@@ -277,11 +278,10 @@
 {
     // first user joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:mockApplication];
+    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:self.application];
     
     // when selfUser joins
-    [[mockApplication expect] cancelLocalNotification:OCMOCK_ANY];
-    
+
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender, self.selfUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
     ZMLocalNotificationForEvent *note2 = [note1 copyByAddingEvent:event2];
     
@@ -302,6 +302,8 @@
 
     XCTAssertNil(note3);
     XCTAssertNil(note4);
+    
+    XCTAssertEqual(self.application.cancelledLocalNotifications.count, 1u);
 }
 
 
@@ -309,7 +311,7 @@
 {
     // first user joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:nil];
+    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:self.application];
     
     // then
     XCTAssertNotNil(note1);
@@ -342,7 +344,7 @@
 {
     // first user joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:nil];
+    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:self.application];
     
     // then
     XCTAssertNotNil(note1);
@@ -374,7 +376,7 @@
 {
     // first selfuser joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.selfUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:nil];
+    ZMLocalNotificationForEvent *note1 = [ZMLocalNotificationForEvent notificationForEvent:event1 managedObjectContext:self.syncMOC application:self.application];
     
     // then
     XCTAssertNotNil(note1);

@@ -29,7 +29,7 @@ public class BackgroundAPNSConfirmationStatus : NSObject {
     private unowned var backgroundActivityFactory : BackgroundActivityFactory
 
     public var needsToSyncMessages : Bool {
-        return messageNonces.count > 0 && application.isInBackground
+        return messageNonces.count > 0 && application.applicationState == .Background
     }
     
     @objc public init(application: Application,

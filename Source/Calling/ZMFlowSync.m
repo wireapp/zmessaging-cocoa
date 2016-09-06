@@ -89,7 +89,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
         self.voiceGainNotificationQueue = [[NSNotificationQueue alloc] initWithNotificationCenter:[NSNotificationCenter defaultCenter]];
 
         self.onDemandFlowManager = onDemandFlowManager;
-        if (!self.application.isInBackground) {
+        if (self.application.applicationState != UIApplicationStateBackground) {
             [self setUpFlowManagerIfNeeded];
         }
         
@@ -175,7 +175,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
     if (!self.pushChannelIsOpen) {
         return nil;
     }
-    if (!self.application.isInBackground && self.flowManager == nil) {
+    if (self.application.applicationState != UIApplicationStateBackground && self.flowManager == nil) {
         [self setUpFlowManagerIfNeeded];  // this should not happen, but we should recover after all
     }
     
@@ -244,7 +244,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
     if(!liveEvents) {
         return;
     }
-    if (!self.application.isInBackground) {
+    if (self.application.applicationState != UIApplicationStateBackground) {
         [self setUpFlowManagerIfNeeded];
     }
     if (!self.isFlowManagerReady) {
@@ -283,7 +283,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
 
 - (void)acquireFlowsForConversation:(ZMConversation *)conversation;
 {
-    if (!self.application.isInBackground) {
+    if (self.application.applicationState != UIApplicationStateBackground) {
         [self setUpFlowManagerIfNeeded];
     }
     if (!self.isFlowManagerReady) {
@@ -303,7 +303,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
 
 - (void)releaseFlowsForConversation:(ZMConversation *)conversation;
 {
-    if (!self.application.isInBackground) {
+    if (self.application.applicationState != UIApplicationStateBackground) {
         [self setUpFlowManagerIfNeeded];
     }
     if (!self.isFlowManagerReady) {

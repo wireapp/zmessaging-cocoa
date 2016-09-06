@@ -22,8 +22,8 @@ import UIKit
 /// An abstraction of the application (UIApplication, NSApplication)
 @objc(ZMApplication) public protocol Application : NSObjectProtocol {
     
-    /// Whether the application is currently in the background
-    var isInBackground : Bool { get }
+    /// the current application state
+    var applicationState : UIApplicationState { get }
 
     /// Schedules a local notification
     func scheduleLocalNotification(notification: UILocalNotification)
@@ -65,11 +65,8 @@ import UIKit
     @objc func setMinimumBackgroundFetchInterval(minimumBackgroundFetchInterval: NSTimeInterval)
 }
 
+
 extension UIApplication : Application {
-    
-    public var isInBackground : Bool {
-        return self.applicationState == .Background
-    }
     
     public var alertNotificationsEnabled : Bool {
         return self.currentUserNotificationSettings()?.types.contains(.Alert) ?? false

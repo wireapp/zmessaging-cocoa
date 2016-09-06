@@ -121,7 +121,7 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 
 - (BOOL)shouldStartQuickSync;
 {
-    if (!self.didLaunchInForeground && !self.application.isInBackground) {
+    if (!self.didLaunchInForeground && self.application.applicationState != UIApplicationStateBackground) {
         self.didLaunchInForeground = YES;
     }
     return (self.isDoneWithLogin && self.didLaunchInForeground);
@@ -283,7 +283,7 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     
     if ([self isDoneWithLogin]) {
         ZMTraceAuthLoginStateEnter(2);
-        if (self.application.isInBackground) {
+        if (self.application.applicationState == UIApplicationStateBackground) {
             ZMLogDebug(@"%@ is already logged in on enter. Launched suspended. Entering background state.", self.class);
             [stateMachine goToState:stateMachine.backgroundState];
         } else {

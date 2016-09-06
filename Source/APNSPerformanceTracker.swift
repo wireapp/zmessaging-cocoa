@@ -136,7 +136,7 @@ public extension APNSPerformanceTracker {
 
     @objc static func trackVOIPNotificationInOperationLoop(eventsWithIdentifier: EventsWithIdentifier, analytics: AnalyticsType?, application: Application) {
         guard analytics != nil, let payload = eventsWithIdentifier.events?.first?.payload, timestamp = (payload as NSDictionary).dateForKey("time") else { return }
-        let background = application.isInBackground
+        let background = application.applicationState == .Background
         APNSPerformanceTracker.sharedTracker.trackNotification(
             eventsWithIdentifier.identifier,
             state: .OperationLoop(serverTimestamp: timestamp, notificationsEnabled: application.alertNotificationsEnabled, background: background, currentDate: NSDate()),

@@ -19,6 +19,7 @@
 
 #import <Foundation/Foundation.h>
 #include "ZMUserSessionTestsBase.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @implementation ThirdPartyServices
 
@@ -74,10 +75,6 @@
     [[[self.apnsEnvironment stub] andReturn:@"APNS_VOIP"] transportTypeForTokenType:ZMAPNSTypeVoIP];
     
     self.backgroundFetchInterval = UIApplicationBackgroundFetchIntervalNever;
-    self.application = [OCMockObject niceMockForClass:UIApplication.class];
-    UIApplication *a = [[[self.application stub] ignoringNonObjectArgs] andCall:@selector(setBackgroundFetchInterval:) onObject:self];
-    [a setMinimumBackgroundFetchInterval:0];
-    
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                           userInterfaceContext:self.uiMOC
                                       syncManagedObjectContext:self.syncMOC

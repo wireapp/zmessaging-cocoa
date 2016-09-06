@@ -67,7 +67,6 @@
 @property (nonatomic) NSUInteger dataChangeNotificationsCount;
 @property (nonatomic) ThirdPartyServices *thirdPartyServices;
 @property (nonatomic) id operationLoop;
-@property (nonatomic) id application;
 @property (nonatomic) id apnsEnvironment;
 @property (nonatomic) NSTimeInterval backgroundFetchInterval;
 

@@ -23,6 +23,7 @@
 
 #import "MessagingTest.h"
 #import "ZMBlacklistDownloader+Testing.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @interface ZMBlacklistDownloaderTest : MessagingTest
 
@@ -56,7 +57,9 @@
                                             failureCheckInterval:self.failureCheckTimeInterval
                                                     userDefaults:[NSUserDefaults standardUserDefaults]
                                                     workingGroup:self.syncMOC.dispatchGroup
-                                               completionHandler:completionHandler];
+                                               completionHandler:completionHandler
+                                                     application:self.application
+                ];
 }
 
 - (void)stopTimers
@@ -321,12 +324,12 @@ typedef NS_ENUM(int, TestPhase) {
             // suspend after first call
             if(phase == WaitForFirstCall) {
                 phase = Suspended;
-                [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationWillResignActiveNotification object:nil];
+                [self.application simulateApplicationWillResignActive];
                 
                 // make it restart after a while
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     phase = Resumed;
-                    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+                    [self.application simulateApplicationDidBecomeActive];
                 });
             }
             // because of a race condition, might be called a couple of times even when suspended

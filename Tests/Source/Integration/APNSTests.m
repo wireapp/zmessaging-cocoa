@@ -90,7 +90,8 @@
                               @"time" : @"2015-03-11T09:34:00.436Z",
                               @"type" : @"conversation.create"
                               };
-    self.application.isInBackground = true;
+    
+    [self.application setBackground];
     
     // when
     if(useAPNS) {
@@ -163,13 +164,11 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-    id mockApplication = self.userSession.application;
-    [[[mockApplication expect] andDo:^(NSInvocation *inv) {
-        NOT_USED(inv);
+    self.application.registerForRemoteNotificationsCallback = ^{
         [self.userSession performChanges:^{
-            [self.userSession application:self.userSession.application didRegisterForRemoteNotificationsWithDeviceToken:newToken];
+            [self.userSession application:self.application didRegisterForRemoteNotificationsWithDeviceToken:newToken];
         }];
-    }] registerForRemoteNotifications];
+    };
     
     // when
     [self.userSession start];
@@ -181,6 +180,7 @@
 
     // then
     XCTAssertTrue([self lastRequestsContainedTokenRequests], @"Did receive: %@", self.mockTransportSession.receivedRequests);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
 }
 
 - (void)testThatItReregistersPushTokensOnDemand
@@ -203,13 +203,11 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-    id mockApplication = self.userSession.application;
-    [[[mockApplication expect] andDo:^(NSInvocation *inv) {
-        NOT_USED(inv);
+    self.application.registerForRemoteNotificationsCallback = ^{
         [self.userSession performChanges:^{
             [self.userSession application:self.userSession.application didRegisterForRemoteNotificationsWithDeviceToken:newToken];
         }];
-    }] registerForRemoteNotifications];
+    };
     
     // when
     [self.userSession resetPushTokens];
@@ -225,8 +223,8 @@
     }
     XCTAssertTrue(didContainSignalingKeyRequest);
     XCTAssertTrue([self lastRequestsContainedTokenRequests]);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
     [mockPushRegistrant verify];
-    [mockApplication verify];
 }
 
 - (void)testThatItReregistersPushTokensOnDemandEvenIfItDidNotChange
@@ -244,13 +242,11 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:token] pushToken];
-    id mockApplication = self.userSession.application;
-    [[[mockApplication expect] andDo:^(NSInvocation *inv) {
-        NOT_USED(inv);
+    self.application.registerForRemoteNotificationsCallback = ^{
         [self.userSession performChanges:^{
             [self.userSession application:self.userSession.application didRegisterForRemoteNotificationsWithDeviceToken:token];
         }];
-    }] registerForRemoteNotifications];
+    };
     
     // when
     [self.userSession performChanges:^{
@@ -268,9 +264,8 @@
     }
     XCTAssertTrue(didContainSignalingKeyRequest);
     XCTAssertTrue([self lastRequestsContainedTokenRequests]);
-
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
     [mockPushRegistrant verify];
-    [mockApplication verify];
 }
 
 - (void)testThatItPingsBackToTheBackendWhenReceivingAVoIPNotificationToCancelTheAPNSNotification
@@ -296,7 +291,7 @@
                               @"time" : @"2015-03-11T09:34:00.436Z",
                               @"type" : @"conversation.create"
                               };
-    self.application.isInBackground = true;
+    [self.application setBackground];
     
     // when
     [self.mockTransportSession resetReceivedRequests];
@@ -340,7 +335,7 @@
                               @"type" : @"conversation.create"
                               };
     
-    self.application.isInBackground = true;
+    [self.application setBackground];
 
     // expect
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
@@ -403,7 +398,7 @@
                                                                      transportData:conversationTransportData
                                                                           senderID:self.user1.identifier];
     NSDictionary *noticePayload = [self noticePayloadWithIdentifier:notificationID];
-    self.application.isInBackground = true;
+    [self.application setBackground];
     
     // when
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
@@ -454,7 +449,7 @@
                                                                      transportData:conversationTransportData
                                                                           senderID:self.user1.identifier];
     NSDictionary *noticePayload = [self noticePayloadWithIdentifier:notificationID];
-    self.application.isInBackground = true;
+    [self.application setBackground];
     
     // when
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
@@ -506,9 +501,8 @@
     WaitForAllGroupsToBeEmpty(0.2);
     
     NSDictionary *payload = [event.transportData asDictionary];
-    self.application.isInBackground = true;
-
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
+    [self.application setBackground];
+    [self.application simulateApplicationDidEnterBackground];
     WaitForAllGroupsToBeEmpty(0.2);
     
     // expect

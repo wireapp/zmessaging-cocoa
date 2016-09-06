@@ -23,6 +23,7 @@
 #import "ZMPushToken.h"
 #import "UILocalNotification+UserInfo.h"
 #import "ZMUserSession+UserNotificationCategories.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @interface ZMUserSessionTests : ZMUserSessionTestsBase
 
@@ -1041,7 +1042,7 @@
                                                          isRegistered:YES];
     // expect
     id mockRemoteRegistrant = [OCMockObject partialMockForObject:self.sut.applicationRemoteNotification];
-    [[[mockRemoteRegistrant expect] andForwardToRealObject] application:OCMOCK_ANY didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
+    [(ZMApplicationRemoteNotification *)[[mockRemoteRegistrant expect] andForwardToRealObject] application:OCMOCK_ANY didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
     
     // when
     [self.sut application:OCMOCK_ANY didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
@@ -1080,9 +1081,6 @@
     XCTAssertNil(self.uiMOC.pushToken);
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:[NSData data]] pushToken];
-
-    // expect
-    [[self.application expect] registerForRemoteNotifications];
     
     // when
     [self performIgnoringZMLogError:^{
@@ -1091,7 +1089,7 @@
     }];
 
     // then
-    [self.application verify];
+    XCTAssertEqual(self.application.registeredUserNotificationSettings.count, 1u);
 }
 
 - (void)testThatItCallsRegisterForPushNotificationsAgainIfNoPushTokenIsSet
@@ -1101,10 +1099,6 @@
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:[NSData data]] pushToken];
     
-    // expect
-    [[self.application expect] registerForRemoteNotifications];
-    [[self.application expect] registerForRemoteNotifications];
-    
     // when
     [self performIgnoringZMLogError:^{
         [self.sut resetPushTokens];
@@ -1113,7 +1107,7 @@
     }];
     
     // then
-    [self.application verify];
+    XCTAssertEqual(self.application.registeredUserNotificationSettings.count, 2u);
 }
 
 - (void)testThatItMarksPushTokenAsNotRegisteredWhenResettingEvenIfItHasSameData
@@ -1128,7 +1122,6 @@
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:deviceToken] pushToken];
     self.uiMOC.pushKitToken = pushToken;
-    [[self.application stub] registerForRemoteNotifications];
     
     // when
     [self performIgnoringZMLogError:^{
@@ -1137,7 +1130,7 @@
     }];
     
     // then
-    [self.application verify];
+    XCTAssertEqual(self.application.registeredUserNotificationSettings.count, 1u);
     XCTAssertFalse(self.uiMOC.pushKitToken.isRegistered);
 }
 
@@ -1193,7 +1186,7 @@
     // when
     __block BOOL didCallCompletionHandler = NO;
     self.sut.requestToOpenViewDelegate = mockDelegate;
-    [self.sut application:self.application handleActionWithIdentifier:actionIdentifier forLocalNotification:notification responseInfo:responseInfo completionHandler:^{
+    [self.sut application:nil handleActionWithIdentifier:actionIdentifier forLocalNotification:notification responseInfo:responseInfo completionHandler:^{
         didCallCompletionHandler = YES;
     }];
     
@@ -1202,7 +1195,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [mockDelegate verify];
-    [self.application verify];
     XCTAssertTrue(didCallCompletionHandler);
 }
 
@@ -1217,7 +1209,7 @@
     
     // when
     self.sut.requestToOpenViewDelegate = mockDelegate;
-    [self.sut application:self.application didFinishLaunchingWithOptions:launchOptions];
+    [self.sut application:nil didFinishLaunchingWithOptions:launchOptions];
     
     WaitForAllGroupsToBeEmpty(0.5);
     [[NSNotificationCenter defaultCenter] postNotificationName:@"ZMApplicationDidEnterEventProcessingStateNotification" object:nil];
@@ -1234,7 +1226,7 @@
     note.category = ZMConversationCategory;
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversationList];
@@ -1250,7 +1242,7 @@
     note.category = ZMConversationCategory;
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
     
     [self checkThatItCallsOnLaunchTheDelegateForNotification:note withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversationList];
@@ -1279,7 +1271,7 @@
     UILocalNotification *note = [self notificationWithConversationForCategory:ZMConversationCategory];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:OCMOCK_ANY];
@@ -1297,7 +1289,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
     
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMConversationMuteAction withBlock:^(id mockDelegate) {
         [[mockDelegate reject] showConversation:OCMOCK_ANY];
@@ -1317,7 +1309,7 @@
     UILocalNotification *note = [self notificationWithConversationForCategory:ZMConversationCategory];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsOnLaunchTheDelegateForNotification:note withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:OCMOCK_ANY];
@@ -1339,7 +1331,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
 
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:conversation];
@@ -1365,7 +1357,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMConnectAcceptAction withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:conversation];
@@ -1390,7 +1382,7 @@
     [self.uiMOC saveOrRollback];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:conversation];
@@ -1411,7 +1403,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
     
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:conversation];
@@ -1432,7 +1424,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
     
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMCallIgnoreAction withBlock:^(id mockDelegate) {
         [[mockDelegate reject] showConversation:conversation];
@@ -1456,7 +1448,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMCallAcceptAction withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:conversation];

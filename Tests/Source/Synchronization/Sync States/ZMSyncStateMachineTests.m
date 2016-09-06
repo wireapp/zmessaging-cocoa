@@ -44,13 +44,13 @@
 #import "ZMBackgroundTaskState.h"
 
 #import "ZMUserSessionAuthenticationNotification.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @interface ZMSyncStateMachineTests : MessagingTest
 
 @property (nonatomic, readonly) id objectDirectory;
 @property (nonatomic, readonly) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
-@property (nonatomic, readonly) id mockApplication;
 @property (nonatomic, readonly) id backgroundableSession;
 @property (nonatomic, readonly) ZMSyncStateMachine *sut;
 
@@ -81,7 +81,6 @@
     _backgroundableSession = [OCMockObject mockForProtocol:@protocol(ZMBackgroundable)];
     [self verifyMockLater:self.backgroundableSession];
     
-    _mockApplication = [OCMockObject niceMockForClass:[ZMApplication class]];
     ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.uiMOC cookieStorage:[ZMPersistentCookieStorage storageForServerName:@"test"]];
     
     _authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:cookie];
@@ -156,7 +155,8 @@
                                            clientRegistrationStatus:self.clientRegistrationStatus
                                             objectStrategyDirectory:self.objectDirectory
                                                   syncStateDelegate:self.syncStateDelegate
-                                              backgroundableSession:self.backgroundableSession];
+                                              backgroundableSession:self.backgroundableSession
+                                                        application:self.application];
     WaitForAllGroupsToBeEmpty(0.5);
     
     self.dummyState = [OCMockObject mockForClass:ZMSyncState.class];

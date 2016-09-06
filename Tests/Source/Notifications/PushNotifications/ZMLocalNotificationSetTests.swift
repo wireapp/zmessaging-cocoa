@@ -60,19 +60,16 @@ class MockLocalNotification : ZMLocalNotification {
 class ZMLocalNotificationSetTests : MessagingTest {
 
     var sut : ZMLocalNotificationSet!
-    var mockApplication : ApplicationMock!
     var keyValueStore : MockKVStore!
     let archivingKey = "archivingKey"
     
     override func setUp(){
         super.setUp()
-        mockApplication = ApplicationMock()
         keyValueStore = MockKVStore()
-        sut = ZMLocalNotificationSet(application: mockApplication, archivingKey: archivingKey, keyValueStore: keyValueStore)
+        sut = ZMLocalNotificationSet(application: self.application, archivingKey: archivingKey, keyValueStore: keyValueStore)
     }
     
     override func tearDown(){
-        mockApplication = nil
         keyValueStore = nil
         sut = nil
         super.tearDown()
@@ -120,10 +117,10 @@ class ZMLocalNotificationSetTests : MessagingTest {
         
         // then
         XCTAssertFalse(sut.notifications.contains(note1))
-        XCTAssertTrue(mockApplication.cancelledLocalNotifications.contains(localNote1))
+        XCTAssertTrue(self.application.cancelledLocalNotifications.contains(localNote1))
 
         XCTAssertTrue(sut.notifications.contains(note2))
-        XCTAssertFalse(mockApplication.cancelledLocalNotifications.contains(localNote2))
+        XCTAssertFalse(self.application.cancelledLocalNotifications.contains(localNote2))
     }
     
     func testThatItOnlyCancelsCallNotificationsIfSpecified(){
@@ -151,10 +148,10 @@ class ZMLocalNotificationSetTests : MessagingTest {
         
         // then
         XCTAssertFalse(sut.notifications.contains(note1))
-        XCTAssertTrue(mockApplication.cancelledLocalNotifications.contains(localNote1))
+        XCTAssertTrue(self.application.cancelledLocalNotifications.contains(localNote1))
         
         XCTAssertTrue(sut.notifications.contains(note2))
-        XCTAssertFalse(mockApplication.cancelledLocalNotifications.contains(localNote2))
+        XCTAssertFalse(self.application.cancelledLocalNotifications.contains(localNote2))
     }
     
     func testThatItPersistsNotifications() {
@@ -165,7 +162,7 @@ class ZMLocalNotificationSetTests : MessagingTest {
         sut.addObject(note1)
         
         // when recreate sut to release non-persisted objects
-        sut = ZMLocalNotificationSet(application: mockApplication, archivingKey: archivingKey, keyValueStore: keyValueStore)
+        sut = ZMLocalNotificationSet(application: self.application, archivingKey: archivingKey, keyValueStore: keyValueStore)
         
         // then
         XCTAssertTrue(sut.oldNotifications.contains(localNote1))

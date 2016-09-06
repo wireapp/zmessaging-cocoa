@@ -135,7 +135,7 @@ ZM_EMPTY_ASSERTING_INIT();
 {
     NOT_USED(liveEvents);
     
-    if (!self.sharedApplication.isInBackground) {
+    if (self.sharedApplication.applicationState != UIApplicationStateBackground) {
         return;
     }
     
