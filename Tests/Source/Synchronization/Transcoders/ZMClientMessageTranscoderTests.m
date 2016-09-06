@@ -1372,7 +1372,6 @@
 
 @end
 
-#if SendDeliveryReceipts
 
 @implementation ZMClientMessageTranscoderTests (MessageConfirmation)
 
@@ -1400,64 +1399,68 @@
 
 - (void)testThatItInsertAConfirmationMessageWhenReceivingAnEvent
 {
-    // given
-    UserClient *client = [self createSelfClient];
-    ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    user1.remoteIdentifier = [NSUUID createUUID];
-    UserClient *senderClient = [self createClientForUser:user1 createSessionWithSelfUser:YES];
-    [self.syncMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    NSString *text = @"Everything";
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.conversationType = ZMTConversationTypeOneOnOne;
-    conversation.remoteIdentifier = [NSUUID createUUID];
-    
-    ZMUpdateEvent *updateEvent = [self updateEventForTextMessage:text inConversationWithID:conversation.remoteIdentifier forClient:client senderClient:senderClient eventSource:ZMUpdateEventSourcePushNotification];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // when
-    [self.sut processEvents:@[updateEvent] liveEvents:YES prefetchResult:nil];
-
-    // then
-    XCTAssertEqual(conversation.hiddenMessages.count, 1u);
-    ZMClientMessage *confirmationMessage = conversation.hiddenMessages.lastObject;
-    XCTAssertTrue(confirmationMessage.genericMessage.hasConfirmation);
-    XCTAssertEqualObjects(confirmationMessage.genericMessage.confirmation.messageId, updateEvent.messageNonce.transportString);
-    
+    if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
+        
+        // given
+        UserClient *client = [self createSelfClient];
+        ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user1.remoteIdentifier = [NSUUID createUUID];
+        UserClient *senderClient = [self createClientForUser:user1 createSessionWithSelfUser:YES];
+        [self.syncMOC saveOrRollback];
+        WaitForAllGroupsToBeEmpty(0.5);
+        
+        NSString *text = @"Everything";
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMTConversationTypeOneOnOne;
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        
+        ZMUpdateEvent *updateEvent = [self updateEventForTextMessage:text inConversationWithID:conversation.remoteIdentifier forClient:client senderClient:senderClient eventSource:ZMUpdateEventSourcePushNotification];
+        WaitForAllGroupsToBeEmpty(0.5);
+        
+        // when
+        [self.sut processEvents:@[updateEvent] liveEvents:YES prefetchResult:nil];
+        
+        // then
+        XCTAssertEqual(conversation.hiddenMessages.count, 1u);
+        ZMClientMessage *confirmationMessage = conversation.hiddenMessages.lastObject;
+        XCTAssertTrue(confirmationMessage.genericMessage.hasConfirmation);
+        XCTAssertEqualObjects(confirmationMessage.genericMessage.confirmation.messageId, updateEvent.messageNonce.transportString);
+    }
 }
 
 
 - (void)checkThatItCallsConfirmationStatus:(BOOL)shouldCallConfirmationStatus whenReceivingAnEventThroughSource:(ZMUpdateEventSource)source
 {
-    // given
-    UserClient *client = [self createSelfClient];
-    
-    ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    user1.remoteIdentifier = [NSUUID createUUID];
-    UserClient *senderClient = [self createClientForUser:user1 createSessionWithSelfUser:YES];
-    [self.syncMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    NSString *text = @"Everything";
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.conversationType = ZMTConversationTypeOneOnOne;
-    conversation.remoteIdentifier = [NSUUID createUUID];
-    
-    ZMUpdateEvent *updateEvent = [self updateEventForTextMessage:text inConversationWithID:conversation.remoteIdentifier forClient:client senderClient:senderClient eventSource:source];
-    
-    // expect
-    if (shouldCallConfirmationStatus) {
-    [[(id)self.mockAPNSConfirmationStatus expect] needsToConfirmMessage:[OCMArg checkWithBlock:^BOOL(NSUUID *messageNonce) {
-        return ([[conversation.hiddenMessages.lastObject nonce] isEqual:messageNonce]);
-    }]];
-    } else {
-        [[(id)self.mockAPNSConfirmationStatus reject] needsToConfirmMessage:OCMOCK_ANY];
+    if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
+        // given
+        UserClient *client = [self createSelfClient];
+        
+        ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user1.remoteIdentifier = [NSUUID createUUID];
+        UserClient *senderClient = [self createClientForUser:user1 createSessionWithSelfUser:YES];
+        [self.syncMOC saveOrRollback];
+        WaitForAllGroupsToBeEmpty(0.5);
+        
+        NSString *text = @"Everything";
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMTConversationTypeOneOnOne;
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        
+        ZMUpdateEvent *updateEvent = [self updateEventForTextMessage:text inConversationWithID:conversation.remoteIdentifier forClient:client senderClient:senderClient eventSource:source];
+        
+        // expect
+        if (shouldCallConfirmationStatus) {
+            [[(id)self.mockAPNSConfirmationStatus expect] needsToConfirmMessage:[OCMArg checkWithBlock:^BOOL(NSUUID *messageNonce) {
+                return ([[conversation.hiddenMessages.lastObject nonce] isEqual:messageNonce]);
+            }]];
+        } else {
+            [[(id)self.mockAPNSConfirmationStatus reject] needsToConfirmMessage:OCMOCK_ANY];
+        }
+        
+        // when
+        [self.sut processEvents:@[updateEvent] liveEvents:YES prefetchResult:nil];
+        [(id)self.mockAPNSConfirmationStatus verify];
     }
-    
-    // when
-    [self.sut processEvents:@[updateEvent] liveEvents:YES prefetchResult:nil];
-    [(id)self.mockAPNSConfirmationStatus verify];
 }
 
 
@@ -1478,51 +1481,56 @@
 
 - (void)testThatItCallsConfirmationStatusWhenConfirmationMessageIsSentSuccessfully
 {
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.conversationType = ZMTConversationTypeOneOnOne;
-    conversation.remoteIdentifier = [NSUUID createUUID];
-    
-    ZMMessage *message = [conversation appendMessageWithText:@"text"];
-    ZMClientMessage *confirmationMessage = [(id)message confirmReception];
-    NSUUID *confirmationUUID = confirmationMessage.nonce;
-    [self.sut.upstreamObjectSync objectsDidChange:[NSSet setWithObject:confirmationMessage]];
-
-    // expect
-    [[(id)self.mockAPNSConfirmationStatus expect] didConfirmMessage:[OCMArg checkWithBlock:^BOOL(NSUUID *messageNonce) {
-        return ([confirmationUUID isEqual:messageNonce]);
-    }]];
-    
-    // when
-    ZMTransportRequest *request = [self.sut.upstreamObjectSync nextRequest];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil]];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    [(id)self.mockAPNSConfirmationStatus verify];
+    if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
+        
+        // given
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMTConversationTypeOneOnOne;
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        
+        ZMMessage *message = [conversation appendMessageWithText:@"text"];
+        ZMClientMessage *confirmationMessage = [(id)message confirmReception];
+        NSUUID *confirmationUUID = confirmationMessage.nonce;
+        [self.sut.upstreamObjectSync objectsDidChange:[NSSet setWithObject:confirmationMessage]];
+        
+        // expect
+        [[(id)self.mockAPNSConfirmationStatus expect] didConfirmMessage:[OCMArg checkWithBlock:^BOOL(NSUUID *messageNonce) {
+            return ([confirmationUUID isEqual:messageNonce]);
+        }]];
+        
+        // when
+        ZMTransportRequest *request = [self.sut.upstreamObjectSync nextRequest];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil]];
+        WaitForAllGroupsToBeEmpty(0.5);
+        
+        // then
+        [(id)self.mockAPNSConfirmationStatus verify];
+    }
 }
 
 - (void)testThatItDeletesTheConfirmationMessageWhenSentSuccessfully
 {
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.conversationType = ZMTConversationTypeOneOnOne;
-    conversation.remoteIdentifier = [NSUUID createUUID];
-    
-    ZMMessage *message = [conversation appendMessageWithText:@"text"];
-    ZMClientMessage *confirmationMessage = [(id)message confirmReception];
-    [self.sut.upstreamObjectSync objectsDidChange:[NSSet setWithObject:confirmationMessage]];
-    
-    // when
-    ZMTransportRequest *request = [self.sut.upstreamObjectSync nextRequest];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil]];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(confirmationMessage.isZombieObject);
+    if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
+        
+        // given
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMTConversationTypeOneOnOne;
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        
+        ZMMessage *message = [conversation appendMessageWithText:@"text"];
+        ZMClientMessage *confirmationMessage = [(id)message confirmReception];
+        [self.sut.upstreamObjectSync objectsDidChange:[NSSet setWithObject:confirmationMessage]];
+        
+        // when
+        ZMTransportRequest *request = [self.sut.upstreamObjectSync nextRequest];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil]];
+        WaitForAllGroupsToBeEmpty(0.5);
+        
+        // then
+        XCTAssertTrue(confirmationMessage.isZombieObject);
+    }
 }
 
 @end
 
-#endif
 

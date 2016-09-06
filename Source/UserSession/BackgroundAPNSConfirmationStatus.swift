@@ -29,6 +29,9 @@ extension UIApplication : ApplicationStateOwner {}
 @objc
 public class BackgroundAPNSConfirmationStatus : NSObject {
     
+    // TODO Confirmation enable
+    public static let sendDeliveryReceipts : Bool = false
+
     let backgroundTime : NSTimeInterval = 25
     private var tornDown = false
     private var messageNonces : [NSUUID : ZMBackgroundActivity] = [:]
