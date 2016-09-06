@@ -14,7 +14,7 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
-// 
+//
 
 
 "push.notification.default" = "Nova mensagem";
@@ -146,6 +146,14 @@
 
 "push.notification.failed.message.group" = "Não é possível enviar uma mensagem em %1$@";
 "push.notification.failed.message.group.noconversationname" = "Não é possível enviar uma mensagem";
+
+"push.notification.reaction.group" = "%1$@ %3$@ sua mensagem em %2$@";
+"push.notification.reaction.group.nousername.noconversationname" = "Alguém %@ sua mensagem em uma conversa";
+"push.notification.reaction.group.nousername" = "Alguém %2$@ sua mensagem em %1$@";
+"push.notification.reaction.group.noconversationname" = "%@ %@ sua mensagem em uma conversa";
+
+"push.notification.reaction.oneonone" = "%@ %@ sua mensagem";
+"push.notification.reaction.oneonone.nousername" = "Alguém %@ sua mensagem";
 
 "push.notification.new_user" = "%@ entrou no Wire";
 
