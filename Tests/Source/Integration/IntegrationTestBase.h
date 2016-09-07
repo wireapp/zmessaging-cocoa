@@ -23,6 +23,7 @@
 
 #import "MessagingTest.h"
 #import "NotificationObservers.h"
+#import "MockLinkPreviewDetector.h"
 
 @import ZMCMockTransport;
 @import Cryptobox;
@@ -61,6 +62,7 @@ extern NSString * const SelfUserPassword;
 @property (nonatomic, readonly) NSArray *nonConnectedUsers;
 @property (nonatomic, readonly) NSArray *allUsers;
 @property (nonatomic, readonly) MockFlowManager *mockFlowManager;
+@property (nonatomic, readonly) MockLinkPreviewDetector *mockLinkPreviewDetector;
 
 @property (nonatomic, readonly) ZMGSMCallHandler *gsmCallHandler;
 
@@ -102,17 +104,17 @@ extern NSString * const SelfUserPassword;
 
 - (void)prefetchRemoteClientByInsertingMessageInConversation:(MockConversation *)conversation;
 
-- (CBCryptoBox *)setupOTREnvironmentForUser:(MockUser *)mockUser
-                               isSelfClient:(BOOL)isSelfClient
-                               numberOfKeys:(NSUInteger)numberOfKeys
-               establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser;
+- (EncryptionContext *)setupOTREnvironmentForUser:(MockUser *)mockUser
+                                     isSelfClient:(BOOL)isSelfClient
+                                     numberOfKeys:(UInt16)numberOfKeys
+                     establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser;
 
-- (CBCryptoBox *)inserOTRMessage:(ZMGenericMessage *)message
-                  inConversation:(MockConversation *)conversation
-                        fromUser:(MockUser *)sender
-                        toClient:(MockUserClient *)recipient
-                        usingKey:(CBPreKey *)preKey
-                         session:(MockTransportSession<MockTransportSessionObjectCreation> *)session;
+- (EncryptionContext *)inserOTRMessage:(ZMGenericMessage *)message
+                        inConversation:(MockConversation *)conversation
+                              fromUser:(MockUser *)sender
+                              toClient:(MockUserClient *)recipient
+                              usingKey:(NSString *)preKey
+                               session:(MockTransportSession<MockTransportSessionObjectCreation> *)session;
 
 - (void)inserOTRMessage:(ZMGenericMessage *)message
          inConversation:(MockConversation *)conversation
@@ -129,8 +131,8 @@ extern NSString * const SelfUserPassword;
 - (void)remotelyAppendSelfConversationWithZMLastReadForMockConversation:(MockConversation *)mockConversation
                                                                  atTime:(NSDate *)newClearedTimeStamp;
 
-- (void)remotelyAppendSelfConversationWithZMMsgDeletedForMessageID:(NSString *)messageID
-                                                    conversationID:(NSString *)conversationID;
+- (void)remotelyAppendSelfConversationWithZMMessageHideForMessageID:(NSString *)messageID
+                                                     conversationID:(NSString *)conversationID;
 - (void)simulateAppStopped;
 - (void)simulateAppRestarted;
 

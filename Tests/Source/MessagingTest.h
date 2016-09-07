@@ -41,6 +41,7 @@
 @class MockUser;
 @class ZMClientMessage;
 
+
 /// This is a base test class with utility stuff for all tests.
 @interface MessagingTest : ZMTBaseTest
 
@@ -62,6 +63,8 @@
 @property (nonatomic, readonly) NSManagedObjectContext *searchMOC;
 
 @property (nonatomic, readonly) MockTransportSession *mockTransportSession;
+
+@property (nonatomic, readonly) NSString *groupIdentifier;
 
 /// reset ui and sync contexts
 - (void)resetUIandSyncContextsAndResetPersistentStore:(BOOL)resetPersistentStore;
@@ -121,6 +124,8 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 
 
 @interface MessagingTest (OTR)
+
+- (NSData *)encryptedMessage:(ZMGenericMessage *)message recipient:(UserClient *)recipient;
 
 - (UserClient *)createSelfClient;
 - (UserClient *)createClientForUser:(ZMUser *)user createSessionWithSelfUser:(BOOL)createSessionWithSeflUser;

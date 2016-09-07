@@ -23,11 +23,11 @@ import Foundation
 class LinkPreviewAssetDownloadRequestStrategyTests: MessagingTest {
 
     var sut: LinkPreviewAssetDownloadRequestStrategy!
-    var authStatus: MockAuthStatus!
+    var authStatus: MockAuthenticationStatus!
     
     override func setUp() {
         super.setUp()
-        authStatus = MockAuthStatus()
+        authStatus = MockAuthenticationStatus()
         sut = LinkPreviewAssetDownloadRequestStrategy(
             authStatus: authStatus,
             managedObjectContext: syncMOC

@@ -139,27 +139,6 @@
     [self.userSession removeAuthenticationObserverForToken:authenticationObserverToken];
 }
 
-- (void)testThatItUploadsAnEmptyAddressBookOnRegistration
-{
-    // when
-    [self registerUser];
-    
-    // then
-    __block ZMTransportRequest *onboardingRequest;
-    XCTAssertTrue([self waitOnMainLoopUntilBlock:^BOOL{
-        for(ZMTransportRequest *request in self.mockTransportSession.receivedRequests) {
-            if([request.path isEqual:@"/onboarding/v2"]) {
-                onboardingRequest = request;
-                return YES;
-            }
-        }
-        return NO;
-    } timeout:0.5]);
-    XCTAssertNotNil(onboardingRequest);
-    NSArray *selfArray = [onboardingRequest.payload.asDictionary arrayForKey:@"self"];
-    XCTAssertNotNil(selfArray.firstObject);
-}
-
 
 - (void)testThatItUsesTheContactsReceivedFromAddressBookUploadWhenDoingASearch
 {

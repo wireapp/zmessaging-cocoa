@@ -1,9 +1,19 @@
- //
-//  ZMCallStateTranscoder.m
-//  zmessaging-cocoa
 //
-//  Created by Daniel Eggert on 14/08/14.
-//  Copyright (c) 2014 Zeta Project Gmbh. All rights reserved.
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
 @import ZMCSystem;
@@ -730,11 +740,11 @@ _Pragma("clang diagnostic pop")
             
             isVoiceChannelFull = [NSError fullVoiceChannelErrorFromResponse:response] != nil;
             
-            dispatch_async(dispatch_get_main_queue(), ^{
+            [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
                 [[NSNotificationCenter defaultCenter] postNotificationName:ZMConversationVoiceChannelJoinFailedNotification
                                                                     object:conversation.objectID
                                                                   userInfo:@{@"error": callbackError}];
-            });
+            }];
         }
         // the BE refused the request
         if (!conversation.callDeviceIsActive) {
@@ -761,7 +771,7 @@ _Pragma("clang diagnostic pop")
     BOOL isInterruptedCall = [self.gsmCallHandler isInterruptedCallConversation:conversation];
     
     NSMutableDictionary *selfStateDict = [NSMutableDictionary dictionary];
-    selfStateDict[StateKey] = newState;
+    selfStateDict[StateKey] = [newState copy];
     if (conversation.callDeviceIsActive ) {
         BOOL isInitiatingCall = conversation.callParticipants.count == 0;
         BOOL isVideoCall = (conversation.isVideoCall && isInitiatingCall) || conversation.isSendingVideo;

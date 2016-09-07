@@ -22,11 +22,6 @@ import Foundation
 
 private let testDataURL = NSBundle(forClass: FilePreprocessorTests.self).URLForResource("Lorem Ipsum", withExtension: "txt")!
 
-
-class MockAuthStatus: AuthenticationStatusProvider {
-    @objc var currentPhase: ZMAuthenticationPhase = .Authenticated
-}
-
 class MockTaskCancellationProvider: NSObject, ZMRequestCancellation {
     
     var cancelledIdentifiers = [ZMTaskIdentifier]()
@@ -39,14 +34,14 @@ class MockTaskCancellationProvider: NSObject, ZMRequestCancellation {
 
 @objc class AssetDownloadRequestStrategyTests: MessagingTest {
     
-    var authStatus: MockAuthStatus!
+    var authStatus: MockAuthenticationStatus!
     var cancellationProvider: MockTaskCancellationProvider!
     var sut: AssetDownloadRequestStrategy!
     var conversation: ZMConversation!
     
     override func setUp() {
         super.setUp()
-        authStatus = MockAuthStatus()
+        authStatus = MockAuthenticationStatus()
         cancellationProvider = MockTaskCancellationProvider()
         sut = AssetDownloadRequestStrategy(
             authStatus: authStatus,
@@ -87,7 +82,7 @@ extension AssetDownloadRequestStrategyTests {
     
     func testThatItGeneratesNoRequestsIfNotAuthenticated() {
         // given
-        self.authStatus.currentPhase = .Unauthenticated
+        self.authStatus.mockPhase = .Unauthenticated
         let _ = self.createFileTransferMessage(self.conversation)
         
         // when

@@ -73,22 +73,20 @@
     [[[self.apnsEnvironment stub] andReturn:@"APNS"] transportTypeForTokenType:ZMAPNSTypeNormal];
     [[[self.apnsEnvironment stub] andReturn:@"APNS_VOIP"] transportTypeForTokenType:ZMAPNSTypeVoIP];
     
-#if TARGET_OS_IPHONE
     self.backgroundFetchInterval = UIApplicationBackgroundFetchIntervalNever;
     self.application = [OCMockObject niceMockForClass:UIApplication.class];
     UIApplication *a = [[[self.application stub] ignoringNonObjectArgs] andCall:@selector(setBackgroundFetchInterval:) onObject:self];
     [a setMinimumBackgroundFetchInterval:0];
-#else
-    self.application = [OCMockObject niceMockForClass:NSApplication.class];
-#endif
     
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
+                                          userInterfaceContext:self.uiMOC
                                       syncManagedObjectContext:self.syncMOC
                                                   mediaManager:self.mediaManager
                                                apnsEnvironment:self.apnsEnvironment
                                                  operationLoop:self.operationLoop
                                                    application:self.application
-                                                    appVersion:@"00000"];
+                                                    appVersion:@"00000"
+                                            appGroupIdentifier:self.groupIdentifier];
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
     
     WaitForAllGroupsToBeEmpty(0.5);

@@ -26,7 +26,7 @@
 @interface ZMOperationLoop ()
 
 @property (nonatomic) APSSignalingKeysStore *apsSignalKeyStore;
-@property (nonatomic) CBCryptoBox *cryptoBox;
+@property (nonatomic) EncryptionContext *encryptionContext;
 @property (nonatomic) ZMSyncStrategy *syncStrategy;
 @property (nonatomic) NSManagedObjectContext *syncMOC;
 @property (nonatomic) BackgroundAPNSPingBackStatus *backgroundAPNSPingBackStatus;

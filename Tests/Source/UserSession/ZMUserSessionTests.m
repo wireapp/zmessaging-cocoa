@@ -26,7 +26,7 @@
 
 @interface ZMUserSessionTests : ZMUserSessionTestsBase
 
-@property(nonatomic) NSNotification *lastReceivedNotification;
+@property (nonatomic) NSNotification *lastReceivedNotification;
 
 - (void)didReceiveNotification:(NSNotification *)notification;
 - (void)simulateLoggedInUser;
@@ -90,7 +90,7 @@
     
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     [[[[transportSession expect] classMethod] andReturn:transportSession] alloc];
-    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY];
+    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY mainGroupQueue:OCMOCK_ANY];
     
     id cookieStorage = [OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]];
     (void) [[[transportSession stub] andReturn:cookieStorage] cookieStorage];
@@ -98,6 +98,7 @@
     // expect
     id operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
     [[[[operationLoop expect] classMethod] andReturn:operationLoop] alloc];
+    
     (void) [[[operationLoop expect] andReturn:operationLoop]
             initWithTransportSession:transportSession
             authenticationStatus:OCMOCK_ANY
@@ -112,12 +113,17 @@
             onDemandFlowManager:OCMOCK_ANY
             uiMOC:OCMOCK_ANY
             syncMOC:OCMOCK_ANY
-            syncStateDelegate:OCMOCK_ANY];
+            syncStateDelegate:OCMOCK_ANY
+            appGroupIdentifier:OCMOCK_ANY
+            application:OCMOCK_ANY];
 
     [[operationLoop expect] tearDown];
 
     // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager analytics:nil appVersion:@"000000"];
+    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager
+                                                               analytics:nil
+                                                              appVersion:@"000000"
+                                                      appGroupIdentifier:self.groupIdentifier];
     XCTAssertNotNil(session);
 
     // then
@@ -135,7 +141,7 @@
     id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     [[[[transportSession stub] classMethod] andReturn:transportSession] alloc];
-    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY];
+    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY mainGroupQueue:OCMOCK_ANY];
     [[[transportSession stub] andReturn:[OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]]] cookieStorage];
     
     // expect
@@ -143,7 +149,10 @@
     [[[userAgent expect] classMethod] setWireAppVersion:version];
     
     // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager analytics:nil appVersion:version];
+    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager
+                                                               analytics:nil
+                                                              appVersion:version
+                                                      appGroupIdentifier:self.groupIdentifier];
     XCTAssertNotNil(session);
     
     // then
@@ -281,12 +290,14 @@
     
     // when
     ZMUserSession *userSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
+                                                            userInterfaceContext:self.uiMOC
                                                         syncManagedObjectContext:self.syncMOC
                                                                     mediaManager:self.mediaManager
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
-                                                                      appVersion:@"00000"];
+                                                                      appVersion:@"00000"
+                                                              appGroupIdentifier:self.groupIdentifier];
     [userSession didRegisterUserClient:userClient];
     
     // then
@@ -571,12 +582,14 @@
 
     // when
     ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
+                                                            userInterfaceContext:self.uiMOC
                                                         syncManagedObjectContext:self.syncMOC
                                                                     mediaManager:self.mediaManager
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
-                                                                      appVersion:@"00000"];
+                                                                      appVersion:@"00000"
+                                                              appGroupIdentifier:self.groupIdentifier];
     
     // then
     [transportSession verify];

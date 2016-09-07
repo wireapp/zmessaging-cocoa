@@ -77,23 +77,6 @@
     }].set;
 }
 
-- (NSArray <ZMUpdateEvent *>*)decryptedUpdateEventsFromEvents:(NSArray <ZMUpdateEvent *>*)events
-{
-    NSMutableOrderedSet <ZMUpdateEvent *>*orderedEvents = [NSMutableOrderedSet orderedSetWithArray:events];
-    for(ZMUpdateEvent *event in events) {
-        if (event.type == ZMUpdateEventConversationOtrMessageAdd || event.type == ZMUpdateEventConversationOtrAssetAdd) {
-            NSUInteger index = [orderedEvents indexOfObject:event];
-            ZMUpdateEvent *decryptedEvent = [self decryptedUpdateEventForUpdateEvent:event];
-            [orderedEvents removeObject:event];
-            if (nil != decryptedEvent) {
-                [orderedEvents insertObject:decryptedEvent atIndex:index];
-            }
-        }
-    }
-    
-    return orderedEvents.array;
-}
-
 /// Returns an array of generic messages that are parsed from the given events
 - (NSArray <ZMUpdateEventWithNonce*>*)noncesForUpdateEvents:(NSArray<ZMUpdateEvent *> *)events
 {
@@ -106,7 +89,7 @@
             case ZMUpdateEventConversationClientMessageAdd:
             case ZMUpdateEventConversationOtrMessageAdd:
             case ZMUpdateEventConversationOtrAssetAdd:
-                nonce = [self nonceForUpdateEvent:event];
+                nonce = event.messageNonce;
                 break;
                 
             default:
@@ -122,45 +105,5 @@
     return noncesForUpdateEvents;
 }
 
-- (NSUUID *)nonceForUpdateEvent:(ZMUpdateEvent *)event
-{
-    ZMGenericMessage *message = [ZMGenericMessage genericMessageFromUpdateEvent:event];
-    return [NSUUID uuidWithTransportString:message.messageId];
-}
-
-- (ZMMessage *)processClientMessageAddEvent:(ZMUpdateEvent *)event prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
-{
-    ZMClientMessage *message = [ZMClientMessage createOrUpdateMessageFromUpdateEvent:event
-                                                              inManagedObjectContext:self.managedObjectContext
-                                                                      prefetchResult:prefetchResult];
-    [message markAsDelivered];
-    return message;
-}
-
-- (ZMUpdateEvent *)decryptedUpdateEventForUpdateEvent:(ZMUpdateEvent *)event {
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    VerifyReturnNil(selfUser.selfClient != nil);
-    
-    ZMUpdateEvent *decryptedEvent;
-    if (event.isEncrypted && event.wasDecrypted) {
-        decryptedEvent = event;
-    }
-    else if (event.isEncrypted) {
-        CBCryptoBox *box = [self.managedObjectContext zm_cryptKeyStore].box;
-        VerifyReturnNil(box != nil);
-        
-        // to be sure that this message was sent to this device check 'recipient'
-        NSString *recipient = [[event.payload.asDictionary optionalDictionaryForKey:@"data"] optionalStringForKey:@"recipient"];
-        if (recipient == nil || ![recipient isEqualToString:selfUser.selfClient.remoteIdentifier]) {
-            return nil;
-        }
-        BOOL createdNewSession = NO;
-        decryptedEvent = [box decryptUpdateEventAndAddClient:event managedObjectContext:self.managedObjectContext];
-        if (createdNewSession) {
-            [selfUser.selfClient decrementNumberOfRemainingKeys];
-        }
-    }
-    return decryptedEvent;
-}
 
 @end

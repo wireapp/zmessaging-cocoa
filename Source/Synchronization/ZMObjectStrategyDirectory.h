@@ -30,7 +30,6 @@
 @class ZMMissingUpdateEventsTranscoder;
 @class ZMRegistrationTranscoder;
 @class ZMFlowSync;
-@class ZMAddressBookTranscoder;
 @class ZMPushTokenTranscoder;
 @class ZMCallStateTranscoder;
 @class ZMLastUpdateEventIDTranscoder;
@@ -54,7 +53,6 @@
 @property (nonatomic, readonly) ZMSelfTranscoder *selfTranscoder;
 @property (nonatomic, readonly) ZMConversationTranscoder *conversationTranscoder;
 @property (nonatomic, readonly) ZMMessageTranscoder *systemMessageTranscoder;
-@property (nonatomic, readonly) ZMMessageTranscoder *textMessageTranscoder;
 @property (nonatomic, readonly) ZMMessageTranscoder *clientMessageTranscoder;
 @property (nonatomic, readonly) ZMKnockTranscoder *knockTranscoder;
 @property (nonatomic, readonly) ZMAssetTranscoder *assetTranscoder;
@@ -66,7 +64,6 @@
 @property (nonatomic, readonly) ZMLoginTranscoder *loginTranscoder;
 @property (nonatomic, readonly) ZMLoginCodeRequestTranscoder *loginCodeRequestTranscoder;
 @property (nonatomic, readonly) ZMFlowSync *flowTranscoder;
-@property (nonatomic, readonly) ZMAddressBookTranscoder *addressBookTranscoder;
 @property (nonatomic, readonly) ZMCallStateTranscoder *callStateTranscoder;
 @property (nonatomic, readonly) ZMPushTokenTranscoder *pushTokenTranscoder;
 @property (nonatomic, readonly) ZMSearchUserImageTranscoder *searchUserImageTranscoder;

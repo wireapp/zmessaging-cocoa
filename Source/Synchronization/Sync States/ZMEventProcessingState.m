@@ -64,14 +64,12 @@
                              objectStrategyDirectory.flowTranscoder,
                              objectStrategyDirectory.callStateTranscoder,
                              objectStrategyDirectory.userProfileUpdateTranscoder,
-                             objectStrategyDirectory.addressBookTranscoder,
                              objectStrategyDirectory.connectionTranscoder,
                              objectStrategyDirectory.userTranscoder,
                              objectStrategyDirectory.selfTranscoder,
                              objectStrategyDirectory.conversationTranscoder,
                              objectStrategyDirectory.pushTokenTranscoder,
                              objectStrategyDirectory.systemMessageTranscoder,
-                             objectStrategyDirectory.textMessageTranscoder,
                              objectStrategyDirectory.clientMessageTranscoder,
                              objectStrategyDirectory.knockTranscoder,
                              objectStrategyDirectory.userImageTranscoder,
@@ -105,13 +103,16 @@
 
 - (void)didEnterState
 {
-    [self.objectStrategyDirectory processAllEventsInBuffer];
+    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
+    [directory processAllEventsInBuffer];
     [self.hotFix applyPatches];
 
     [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
     [self.stateMachineDelegate didFinishSync];
 
-    [ZMUserSession notifyInitialSyncCompleted];
+    [directory.moc.zm_userInterfaceContext performBlock:^{
+        [ZMUserSession notifyInitialSyncCompleted];
+    }];
 }
 
 - (void)tearDown

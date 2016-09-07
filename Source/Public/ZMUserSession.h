@@ -33,7 +33,6 @@
 
 @protocol AnalyticsType;
 @protocol AVSMediaManager;
-@protocol AddressBookUploadObserver;
 @protocol ZMNetworkAvailabilityObserver;
 @protocol ZMRequestsToOpenViewsDelegate;
 @protocol ZMThirdPartyServicesDelegate;
@@ -61,13 +60,13 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 /**
  Returns YES if data store needs to be migrated.
  */
-+ (BOOL)needsToPrepareLocalStore;
++ (BOOL)needsToPrepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier;
 
 /**
  Should be called <b>before</b> using ZMUserSession when applications is started if +needsToPrepareLocalStore returns YES. It will intialize persistent store and perform migration (if needed) on background thread.
  When it's done it will call completionHandler block on main thread. UI is supposed to present some kind of spinner until block is invoked.
  */
-+ (void)prepareLocalStore:(void (^)())completionHandler;
++ (void)prepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier completion:(void (^)())completionHandler;
 
 /// Whether the local store is ready to be opened. If it returns false, the user session can't be started yet
 + (BOOL)storeIsReady;
@@ -77,10 +76,12 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
  @param mediaManager: The media manager delegate
  @param analytics: An object conforming to the @c AnalyticsType protocol that can be used to track events on the sync engine
  @param appVersion: The application version (build number)
+ @param appGroupIdentifier: The identifier of the shared application group container that should be used to store databases etc.
 */
 - (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager
                            analytics:(id<AnalyticsType>)analytics
-                          appVersion:(NSString *)appVersion;
+                          appVersion:(NSString *)appVersion
+                  appGroupIdentifier:(NSString *)appGroupIdentifier;
 
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
@@ -134,20 +135,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 @end
 
 
-
-@interface ZMUserSession (AddressBookUpload)
-
-+ (void)addAddressBookUploadObserver:(id<AddressBookUploadObserver>)observer;
-+ (void)removeAddressBookUploadObserver:(id<AddressBookUploadObserver>)observer;
-
-/// Asynchronously uploads the address book.
-/// Once the address book has been uploaded, subsequent calls will only cause a re-upload if there are local changes to the address book.
-- (void)uploadAddressBook;
-
-@end
-
-
-
 @interface ZMUserSession (LaunchOptions)
 
 - (void)didLaunchWithURL:(NSURL *)URL;
@@ -164,15 +151,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 + (void)removeAVSLogObserver:(id<ZMAVSLogObserverToken>)token;
 
 + (void)appendAVSLogMessageForConversation:(ZMConversation *)conversation withMessage:(NSString *)message;
-
-@end
-
-
-
-@protocol AddressBookUploadObserver <NSObject>
-
-/// This method will get called when the app tries to upload the address book, but does not have access to it.
-- (void)failedToAccessAddressBook:(NSNotification *)note;
 
 @end
 

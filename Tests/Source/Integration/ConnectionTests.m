@@ -451,7 +451,6 @@
     [ZMConversation removeConversationObserverForToken:token2];
     [conversationListObserver tearDown];
     [pendingConversationListObserver tearDown];
-    
 } 
 
 - (void)testThatConnectionRequestsToTwoUsersAreAddedToPending;
@@ -478,6 +477,7 @@
     WaitForEverythingToBeDone();
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
 
     ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger count = active.count;
@@ -871,7 +871,8 @@
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    
+    WaitForAllGroupsToBeEmpty(0.5);
+
     MockUser *mockUser = [self createSentConnectionToUserWithName:@"Hans Von Üser" uuid:NSUUID.createUUID];
     ZMConversation *conversation = [self oneOnOneConversationForConnectedMockUser:mockUser];
     ZMUser *user = [self userForMockUser:mockUser];

@@ -28,12 +28,8 @@
 @class ZMTransportRequest;
 @class ZMPushChannelConnection;
 @class ZMAuthenticationStatus;
-@protocol ZMTransportData;
-@protocol AVSMediaManager;
 @class ZMOnDemandFlowManager;
-@protocol ZMSyncStateDelegate;
 @class ZMTransportSession;
-@protocol ZMBackgroundable;
 @class ZMBadge;
 @class ZMLocalNotificationDispatcher;
 @class ZMUserProfileUpdateStatus;
@@ -43,13 +39,20 @@
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
 
+@protocol ZMTransportData;
+@protocol AVSMediaManager;
+@protocol ZMSyncStateDelegate;
+@protocol ZMBackgroundable;
+@protocol ApplicationStateOwner;
+
+
 @interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory, ZMUpdateEventConsumer>
 
 - (instancetype)initWithAuthenticationCenter:(ZMAuthenticationStatus *)authenticationStatus
                      userProfileUpdateStatus:(ZMUserProfileUpdateStatus *)userProfileStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                           clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
-                          proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
+                        proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
                                accountStatus:(ZMAccountStatus *)accountStatus
                 backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
                                 mediaManager:(id<AVSMediaManager>)mediaManager
@@ -60,7 +63,9 @@
                        backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
                 localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
                     taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
-                                       badge:(ZMBadge *)badge;
+                          appGroupIdentifier:(NSString *)appGroupIdentifier
+                                       badge:(ZMBadge *)badge
+                                 application:(ZMApplication *)application;
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;

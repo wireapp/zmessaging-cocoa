@@ -36,6 +36,7 @@
 
 @property (nonatomic) ClientMessageRequestFactory *requestsFactory;
 @property (nonatomic, weak) ZMClientRegistrationStatus *clientRegistrationStatus;
+@property (nonatomic, weak) BackgroundAPNSConfirmationStatus *apnsConfirmationStatus;
 
 @end
 
@@ -44,7 +45,8 @@
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                  localNotificationDispatcher:(ZMLocalNotificationDispatcher *)dispatcher
-                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus;
+                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
+                      apnsConfirmationStatus:(BackgroundAPNSConfirmationStatus *)apnsConfirmationStatus;
 {
     ZMUpstreamInsertedObjectSync *clientTextMessageUpstreamSync = [[ZMUpstreamInsertedObjectSync alloc] initWithTranscoder:self entityName:[ZMClientMessage entityName] filter:nil managedObjectContext:moc];
     ZMMessageExpirationTimer *messageTimer = [[ZMMessageExpirationTimer alloc] initWithManagedObjectContext:moc entityName:[ZMClientMessage entityName] localNotificationDispatcher:dispatcher filter:nil];
@@ -56,6 +58,7 @@
     if (self) {
         self.requestsFactory = [ClientMessageRequestFactory new];
         self.clientRegistrationStatus = clientRegistrationStatus;
+        self.apnsConfirmationStatus = apnsConfirmationStatus;
     }
     return self;
 }
@@ -63,6 +66,9 @@
 - (ZMTransportRequest *)requestForInsertingObject:(ZMClientMessage *)message
 {
     ZMTransportRequest *request = [self.requestsFactory upstreamRequestForMessage:message forConversationWithId:message.conversation.remoteIdentifier];
+    if ([message isKindOfClass:ZMClientMessage.class] && message.genericMessage.hasConfirmation && self.apnsConfirmationStatus.needsToSyncMessages) {
+        [request forceToVoipSession]; // we might receive a message while in the background
+    }
     return request;
 }
 
@@ -70,6 +76,18 @@
 {
     [super updateInsertedObject:message request:upstreamRequest response:response];
     [(ZMClientMessage *)message parseUploadResponse:response clientDeletionDelegate:self.clientRegistrationStatus];
+    
+    // if it's reaction
+    if ([message isKindOfClass:[ZMClientMessage class]]){
+        ZMClientMessage *clientMessage = (id)message;
+        if (clientMessage.genericMessage.hasReaction) {
+            [message.managedObjectContext deleteObject:clientMessage];
+        }
+        if (clientMessage.genericMessage.hasConfirmation) {
+            [self.apnsConfirmationStatus didConfirmMessage:clientMessage.nonce];
+            [message.managedObjectContext deleteObject:clientMessage]; // we don't need the message anymore
+        }
+    }
 }
 
 - (ZMManagedObject *)dependentObjectNeedingUpdateBeforeProcessingObject:(ZMClientMessage *)message;
@@ -80,28 +98,30 @@
 - (ZMMessage *)messageFromUpdateEvent:(ZMUpdateEvent *)event
                        prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {
-    CBCryptoBox *box = [self.managedObjectContext zm_cryptKeyStore].box;
-    ZMUpdateEvent *decryptedEvent = [box decryptUpdateEventAndAddClient:event managedObjectContext:self.managedObjectContext];
-    
-    if (decryptedEvent == nil) {
-        return nil;
-    }
-    
-    ZMMessage *message;
+    MessageUpdateResult *updateResult;
     switch (event.type) {
         case ZMUpdateEventConversationClientMessageAdd:
         case ZMUpdateEventConversationOtrMessageAdd:
         case ZMUpdateEventConversationOtrAssetAdd:
-            message = [ZMOTRMessage createOrUpdateMessageFromUpdateEvent:decryptedEvent
-                                                  inManagedObjectContext:self.managedObjectContext
-                                                          prefetchResult:prefetchResult];
+            updateResult = [ZMOTRMessage messageUpdateResultFromUpdateEvent:event
+                                                     inManagedObjectContext:self.managedObjectContext
+                                                             prefetchResult:prefetchResult];
+            if ([BackgroundAPNSConfirmationStatus sendDeliveryReceipts]) {
+                if (updateResult.needsConfirmation) {
+                    ZMClientMessage *confirmation = [updateResult.message confirmReception];
+                    if (event.source == ZMUpdateEventSourcePushNotification) {
+                        [self.apnsConfirmationStatus needsToConfirmMessage:confirmation.nonce];
+                    }
+                }
+            }
             break;
         default:
             return nil;
     }
     
-    [message markAsDelivered];
-    return message;
+    [updateResult.message markAsSent];
+    return updateResult.message;
 }
+
 
 @end

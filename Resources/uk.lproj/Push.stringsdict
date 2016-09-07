@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>push.notification.add.message.many.group</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%2$#@new_messages@ в %1$@</string>
+            <key>new_messages</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string>Нове повідомлення</string>
+                <key>other</key>
+                <string>%2$@ повідомлень</string>
+            </dict>
+        </dict>
+        <key>push.notification.add.message.many.group.noconversationname</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%1$#@new_messages@ в розмові</string>
+            <key>new_messages</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string>Нове повідомлення</string>
+                <key>other</key>
+                <string>%1$@ повідомлень</string>
+            </dict>
+        </dict>
+        <key>push.notification.add.message.many.oneonone</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%2$#@new_messages@ від %1$@</string>
+            <key>new_messages</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string>Нове повідомлення</string>
+                <key>other</key>
+                <string>%2$@ повідомлень</string>
+            </dict>
+        </dict>
+        <key>push.notification.add.message.many.oneonone.nousername</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%1$#@new_messages@ в розмові</string>
+            <key>new_messages</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string>Нове повідомлення</string>
+                <key>other</key>
+                <string>%1$@ повідомлень</string>
+            </dict>
+        </dict>
+        <key>push.notification.call.missed.oneonone</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%1$@ дзвонив %2$#@new_calls@</string>
+            <key>new_calls</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string></string>
+                <key>other</key>
+                <string> %2$@ разів</string>
+            </dict>
+        </dict>
+        <key>push.notification.call.missed.oneonone.nousername</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>Хтось дзвонив %1$#@new_calls@</string>
+            <key>new_calls</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string></string>
+                <key>other</key>
+                <string> %1$@ разів</string>
+            </dict>
+        </dict>
+        <key>push.notification.call.missed.group</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%1$@ дзвонив %3$#@new_calls@ в %2$@</string>
+            <key>new_calls</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string></string>
+                <key>other</key>
+                <string> %3$@ разів</string>
+            </dict>
+        </dict>
+        <key>push.notification.call.missed.group.nousername</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>Хтось дзвонив %2$#@new_calls@ в %1$@</string>
+            <key>new_calls</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string></string>
+                <key>other</key>
+                <string> %2$@ разів</string>
+            </dict>
+        </dict>
+        <key>push.notification.call.missed.group.nousername.noconversationname</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>Хтось дзвонив %1$#@new_calls@ в розмові</string>
+            <key>new_calls</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string></string>
+                <key>other</key>
+                <string> %1$@ разів</string>
+            </dict>
+        </dict>
+        <key>push.notification.call.missed.group.noconversationname</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%1$@ дзвонив %2$#@new_calls@ в розмові</string>
+            <key>new_calls</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string></string>
+                <key>other</key>
+                <string> %2$@ разів</string>
+            </dict>
+        </dict>
+        <key>push.notification.call.missed.many</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>У вас є %2$#@new_calls@ в %1@</string>
+            <key>new_calls</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string>один пропущений дзвінок</string>
+                <key>other</key>
+                <string>%2@ пропущених дзвінків</string>
+            </dict>
+        </dict>
+        <key>push.notification.call.missed.many.noconversationname</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>У вас є %1$#@new_calls@ в розмові</string>
+            <key>new_calls</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string>один пропущений дзвінок</string>
+                <key>other</key>
+                <string>%1$@ пропущених дзвінків</string>
+            </dict>
+        </dict>
+        <key>push.notification.knock.group</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%1$@ віправив(-ла) %3$#@new_knocks@ пінгів в %2$@</string>
+            <key>new_knocks</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string> </string>
+                <key>other</key>
+                <string> %3$@ разів </string>
+            </dict>
+        </dict>
+        <key>push.notification.knock.group.noconversationname</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%1$@ віправив(-ла) %2$#@new_knocks@ пінгів в розмові</string>
+            <key>new_knocks</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string> </string>
+                <key>other</key>
+                <string> %2$@ разів </string>
+            </dict>
+        </dict>
+        <key>push.notification.knock.group.nousername</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%2$#@new_knocks@ в %1$@</string>
+            <key>new_knocks</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string>Пінг</string>
+                <key>other</key>
+                <string>%2$@ пінгів</string>
+            </dict>
+        </dict>
+        <key>push.notification.knock.group.nousername.noconversationname</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%1$#@new_knocks@ в розмові</string>
+            <key>new_knocks</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string>Пінг</string>
+                <key>other</key>
+                <string>%1$@ пінгів</string>
+            </dict>
+        </dict>
+        <key>push.notification.knock.oneonone</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%1$@ віправив(-ла) %3$#@new_knocks@ пінгів</string>
+            <key>new_knocks</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string> </string>
+                <key>other</key>
+                <string> %3$@ разів</string>
+            </dict>
+        </dict>
+        <key>push.notification.knock.oneonone.nousername</key>
+        <dict>
+            <key>NSStringLocalizedFormatKey</key>
+            <string>%2$#@new_knocks@</string>
+            <key>new_knocks</key>
+            <dict>
+                <key>NSStringFormatSpecTypeKey</key>
+                <string>NSStringPluralRuleType</string>
+                <key>NSStringFormatValueTypeKey</key>
+                <string>@</string>
+                <key>one</key>
+                <string>Пінг</string>
+                <key>other</key>
+                <string>%2$@ пінгів</string>
+            </dict>
+        </dict>
+    </dict>
+</plist>

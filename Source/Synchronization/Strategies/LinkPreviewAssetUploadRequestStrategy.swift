@@ -20,7 +20,30 @@
 import Foundation
 import ZMCLinkPreview
 
+@objc public class LinkPreviewDetectorHelper : NSObject {
+    private static var _test_debug_linkPreviewDetector : LinkPreviewDetectorType? = nil
+    
+    @objc public class func test_debug_linkPreviewDetector() -> LinkPreviewDetectorType?
+    {
+        return _test_debug_linkPreviewDetector
+    }
+    
+    @objc public class func setTest_debug_linkPreviewDetector(detectorType: LinkPreviewDetectorType?)
+    {
+        _test_debug_linkPreviewDetector = detectorType
+    }
+    
+    @objc public class func tearDown()
+    {
+        _test_debug_linkPreviewDetector = nil
+    }
+    
+}
+
+
 public class LinkPreviewAssetUploadRequestStrategy : ZMObjectSyncStrategy, RequestStrategy, ZMContextChangeTrackerSource {
+    
+    
     
     let requestFactory = AssetRequestFactory()
     
@@ -34,22 +57,35 @@ public class LinkPreviewAssetUploadRequestStrategy : ZMObjectSyncStrategy, Reque
     /// Upstream sync
     private var assetUpstreamSync : ZMUpstreamModifiedObjectSync!
     
-    public init(authenticationStatus: AuthenticationStatusProvider, managedObjectContext: NSManagedObjectContext) {
-        self.authenticationStatus = authenticationStatus
-        self.linkPreviewPreprocessor = LinkPreviewPreprocessor(managedObjectContext: managedObjectContext)
+    public convenience init(authenticationStatus: AuthenticationStatusProvider, managedObjectContext: NSManagedObjectContext) {
+        
+        if nil == LinkPreviewDetectorHelper.test_debug_linkPreviewDetector() {
+            LinkPreviewDetectorHelper.setTest_debug_linkPreviewDetector(LinkPreviewDetector(resultsQueue: NSOperationQueue.currentQueue()!))
+        }
+        
+        let linkPreviewPreprocessor = LinkPreviewPreprocessor(linkPreviewDetector: LinkPreviewDetectorHelper.test_debug_linkPreviewDetector()!, managedObjectContext: managedObjectContext)
+
         let imageFetchPredicate = NSPredicate(format: "%K == %d",ZMClientMessageLinkPreviewStateKey, ZMLinkPreviewState.Downloaded.rawValue)
         let needsProccessing = NSPredicate { object, _ in
             guard let message = object as? ZMClientMessage else { return false }
             return nil != managedObjectContext.zm_imageAssetCache.assetData(message.nonce, format: .Original, encrypted: false)
         }
         
-        self.previewImagePreprocessor = ZMImagePreprocessingTracker(
-            managedObjectContext: managedObjectContext,
-            imageProcessingQueue: NSOperationQueue(),
-            fetchPredicate: imageFetchPredicate,
-            needsProcessingPredicate:needsProccessing,
-            entityClass: ZMClientMessage.self
+        let previewImagePreprocessor = ZMImagePreprocessingTracker(
+            managedObjectContext:       managedObjectContext,
+            imageProcessingQueue:       NSOperationQueue(),
+            fetchPredicate:             imageFetchPredicate,
+            needsProcessingPredicate:   needsProccessing,
+            entityClass:                ZMClientMessage.self
         )
+        self.init(authenticationStatus:authenticationStatus, linkPreviewPreprocessor: linkPreviewPreprocessor, previewImagePreprocessor:  previewImagePreprocessor, managedObjectContext: managedObjectContext)
+    }
+    
+    init(authenticationStatus: AuthenticationStatusProvider, linkPreviewPreprocessor: LinkPreviewPreprocessor, previewImagePreprocessor: ZMImagePreprocessingTracker, managedObjectContext: NSManagedObjectContext)
+    {
+        self.authenticationStatus = authenticationStatus
+        self.linkPreviewPreprocessor = linkPreviewPreprocessor
+        self.previewImagePreprocessor = previewImagePreprocessor
         
         super.init(managedObjectContext: managedObjectContext)
         
@@ -59,8 +95,8 @@ public class LinkPreviewAssetUploadRequestStrategy : ZMObjectSyncStrategy, Reque
             updatePredicate: predicateForAssetUpload,
             filter: filterForAssetUpload,
             keysToSync: [ZMClientMessageLinkPreviewStateKey],
-            managedObjectContext: managedObjectContext
-        )
+            managedObjectContext: managedObjectContext)
+
     }
     
     var predicateForAssetUpload : NSPredicate {

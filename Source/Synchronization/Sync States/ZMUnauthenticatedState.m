@@ -34,7 +34,6 @@
 #import "ZMCredentials.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMTracing.h"
-#import "ZMAddressBookTranscoder.h"
 #import "ZMStateMachineDelegate.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMRegistrationTranscoder.h"

@@ -20,7 +20,6 @@
 #import "ZMClientMessageTranscoder.h"
 #import "ZMDownstreamObjectSync.h"
 
-@class CBCryptoBox;
 
 @interface ZMClientMessageTranscoder (Internal)
 

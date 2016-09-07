@@ -48,7 +48,6 @@
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMFlowSync.h"
 #import "ZMCallStateTranscoder.h"
-#import "ZMAddressBookTranscoder.h"
 #import "ZMPushTokenTranscoder.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
@@ -75,6 +74,8 @@ static const int32_t Mersenne3 = 8191;
 @property (nonatomic) NSManagedObjectContext *alternativeTestMOC;
 @property (nonatomic) NSManagedObjectContext *searchMOC;
 
+@property (nonatomic) NSString *groupIdentifier;
+@property (nonatomic) NSURL *databaseDirectory;
 @property (nonatomic) MockTransportSession *mockTransportSession;
 
 @property (nonatomic) NSTimeInterval originalConversationLastReadEventIDTimerValue; // this will speed up the tests A LOT
@@ -117,6 +118,10 @@ static const int32_t Mersenne3 = 8191;
 {
     [super setUp];
     
+    NSFileManager *fm = NSFileManager.defaultManager;
+    self.groupIdentifier = [@"group." stringByAppendingString:[NSBundle bundleForClass:self.class].bundleIdentifier];
+    self.databaseDirectory = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
+
     self.originalConversationLastReadEventIDTimerValue = ZMConversationDefaultLastReadEventIDSaveDelay;
     ZMConversationDefaultLastReadEventIDSaveDelay = 0.02;
     
@@ -126,10 +131,9 @@ static const int32_t Mersenne3 = 8191;
     if ([self respondsToSelector:selector]) {
         ZM_SILENCE_CALL_TO_UNKNOWN_SELECTOR([self performSelector:selector]);
     }
-    
-    
+
     [NSManagedObjectContext setUseInMemoryStore:self.shouldUseInMemoryStore];
-    
+
     [self resetState];
     
     if (self.shouldUseRealKeychain) {
@@ -154,7 +158,7 @@ static const int32_t Mersenne3 = 8191;
     [self.testMOC addGroup:self.dispatchGroup];
     self.alternativeTestMOC = [MockModelObjectContextFactory alternativeMocForPSC:self.testMOC.persistentStoreCoordinator];
     [self.alternativeTestMOC addGroup:self.dispatchGroup];
-    self.searchMOC = [NSManagedObjectContext createSearchContext];
+    self.searchMOC = [NSManagedObjectContext createSearchContextWithStoreDirectory:self.databaseDirectory];
     [self.searchMOC addGroup:self.dispatchGroup];
     self.mockTransportSession = [[MockTransportSession alloc] initWithDispatchGroup:self.dispatchGroup];
     self.mockTransportSession.cryptoboxLocation = [UserClientKeysStore otrDirectory];
@@ -172,18 +176,20 @@ static const int32_t Mersenne3 = 8191;
 
 - (void)resetState
 {
-    [self cleanUpAndVerify];
+    [self.uiMOC.globalManagedObjectContextObserver tearDown];
+    [self.syncMOC.globalManagedObjectContextObserver tearDown];
     [self.syncMOC zm_tearDownCallTimer];
     [self.uiMOC zm_tearDownCallTimer];
     [self.testMOC zm_tearDownCallTimer];
+    
+    [self.syncMOC zm_tearDownCryptKeyStore];
+    [self.syncMOC.userInfo removeAllObjects];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // teardown all mmanagedObjectContexts
+    [self cleanUpAndVerify];
 
-    [self.syncMOC.globalManagedObjectContextObserver tearDown];
-    [self.uiMOC.globalManagedObjectContextObserver tearDown];
-
-    self.uiMOC = nil;
-    self.syncMOC = nil;
-    self.testMOC = nil;
-    self.alternativeTestMOC = nil;
     [self.mockTransportSession tearDown];
     self.mockTransportSession = nil;
     
@@ -262,12 +268,12 @@ static const int32_t Mersenne3 = 8191;
         [NSManagedObjectContext resetSharedPersistentStoreCoordinator];
     }
     [self performIgnoringZMLogError:^{
-        self.uiMOC = [NSManagedObjectContext createUserInterfaceContext];
+        self.uiMOC = [NSManagedObjectContext createUserInterfaceContextWithStoreDirectory:self.databaseDirectory];
     }];
     [self.uiMOC addGroup:self.dispatchGroup];
     self.uiMOC.userInfo[@"TestName"] = self.name;
     
-    self.syncMOC = [NSManagedObjectContext createSyncContext];
+    self.syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectory];
     [self.syncMOC performGroupedBlockAndWait:^{
         self.syncMOC.userInfo[@"TestName"] = self.name;
     }];
@@ -308,8 +314,6 @@ static const int32_t Mersenne3 = 8191;
     [self verifyMockLater:conversationEventsTranscoder];
     id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
     [self verifyMockLater:systemMessageTranscoder];
-    id textMessageTranscoder = [OCMockObject mockForClass:ZMTextMessageTranscoder.class];
-    [self verifyMockLater:textMessageTranscoder];
     id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
     [self verifyMockLater:clientMessageTranscoder];
     id knockTranscoder = [OCMockObject mockForClass:ZMKnockTranscoder.class];
@@ -332,8 +336,6 @@ static const int32_t Mersenne3 = 8191;
     [self verifyMockLater:flowTranscoder];
     id callStateTranscoder = [OCMockObject mockForClass:ZMCallStateTranscoder.class];
     [self verifyMockLater:callStateTranscoder];
-    id addressBookTranscoder = [OCMockObject mockForClass:ZMAddressBookTranscoder.class];
-    [self verifyMockLater:addressBookTranscoder];
     id pushTokenTranscoder = [OCMockObject mockForClass:ZMPushTokenTranscoder.class];
     [self verifyMockLater:pushTokenTranscoder];
     id loginTranscoder = [OCMockObject mockForClass:ZMLoginTranscoder.class];
@@ -354,7 +356,6 @@ static const int32_t Mersenne3 = 8191;
     [[[objectDirectory stub] andReturn:userImageTranscoder] userImageTranscoder];
     [[[objectDirectory stub] andReturn:conversationTranscoder] conversationTranscoder];
     [[[objectDirectory stub] andReturn:systemMessageTranscoder] systemMessageTranscoder];
-    [[[objectDirectory stub] andReturn:textMessageTranscoder] textMessageTranscoder];
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
     [[[objectDirectory stub] andReturn:knockTranscoder] knockTranscoder];
     [[[objectDirectory stub] andReturn:assetTranscoder] assetTranscoder];
@@ -366,7 +367,6 @@ static const int32_t Mersenne3 = 8191;
     [[[objectDirectory stub] andReturn:lastUpdateEventIDTranscoder] lastUpdateEventIDTranscoder];
     [[[objectDirectory stub] andReturn:flowTranscoder] flowTranscoder];
     [[[objectDirectory stub] andReturn:callStateTranscoder] callStateTranscoder];
-    [[[objectDirectory stub] andReturn:addressBookTranscoder] addressBookTranscoder];
     [[[objectDirectory stub] andReturn:pushTokenTranscoder] pushTokenTranscoder];
     [[[objectDirectory stub] andReturn:loginTranscoder] loginTranscoder];
     [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
@@ -381,7 +381,6 @@ static const int32_t Mersenne3 = 8191;
                                         conversationTranscoder,
                                         conversationEventsTranscoder,
                                         systemMessageTranscoder,
-                                        textMessageTranscoder,
                                         clientMessageTranscoder,
                                         knockTranscoder,
                                         assetTranscoder,
@@ -393,7 +392,6 @@ static const int32_t Mersenne3 = 8191;
                                         lastUpdateEventIDTranscoder,
                                         flowTranscoder,
                                         callStateTranscoder,
-                                        addressBookTranscoder,
                                         pushTokenTranscoder,
                                         loginTranscoder,
                                         loginCodeRequestTranscoder,
@@ -613,6 +611,45 @@ static int32_t eventIdCounter;
 
 @implementation MessagingTest (OTR)
 
+- (NSData *)encryptedMessage:(ZMGenericMessage *)message recipient:(UserClient *)recipient
+{
+    [self establishSessionWithClient:recipient];
+    
+    __block NSData *messageData;
+    __block NSError *error;
+    
+    [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        messageData = [sessionsDirectory encrypt:message.data recipientClientId:recipient.remoteIdentifier error:&error];
+    }];
+
+    XCTAssertNil(error, @"Error encrypting message: %@", error);
+    return messageData;
+}
+
+- (void)establishSessionWithClient:(UserClient *)userClient
+{
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    
+    __block NSError *error;
+    __block NSString *lastPrekey;
+    __block BOOL hasSession = NO;
+    
+    [selfUser.selfClient.keysStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        if (![sessionsDirectory hasSessionForID:userClient.remoteIdentifier]) {
+            lastPrekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
+        } else {
+            hasSession = YES;
+        }
+    }];
+    
+    if (hasSession) {
+        return;
+    }
+    
+    XCTAssertTrue([selfUser.selfClient establishSessionWithClient:userClient usingPreKey:lastPrekey], @"Unable to establish session");
+    XCTAssertNil(error, @"Error establishing session: %@", error);
+}
+
 - (UserClient *)createSelfClient
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
@@ -640,11 +677,9 @@ static int32_t eventIdCounter;
     userClient.user = user;
     
     if (createSessionWithSeflUser) {
-        UserClient *selfClient = [ZMUser selfUserInContext:self.syncMOC].selfClient;
-        NSError *error;
-        CBPreKey *key = [selfClient.keysStore lastPreKeyAndReturnError:&error];
-        [selfClient establishSessionWithClient:userClient usingPreKey:key.data.base64String];
+        [self establishSessionWithClient:userClient];
     }
+
     return userClient;
 }
 

@@ -163,7 +163,7 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-    id mockApplication = [OCMockObject partialMockForObject:self.userSession.application];
+    id mockApplication = self.userSession.application;
     [[[mockApplication expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.userSession performChanges:^{
@@ -186,6 +186,8 @@
 - (void)testThatItReregistersPushTokensOnDemand
 {
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
     // given
     NSData *token = [NSData dataWithBytes:@"abc" length:3];
     NSData *newToken = [NSData dataWithBytes:@"def" length:6];
@@ -201,7 +203,7 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-    id mockApplication = [OCMockObject partialMockForObject:self.userSession.application];
+    id mockApplication = self.userSession.application;
     [[[mockApplication expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.userSession performChanges:^{
@@ -242,7 +244,7 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:token] pushToken];
-    id mockApplication = [OCMockObject partialMockForObject:self.userSession.application];
+    id mockApplication = self.userSession.application;
     [[[mockApplication expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.userSession performChanges:^{
@@ -254,7 +256,7 @@
     [self.userSession performChanges:^{
         [self.userSession resetPushTokens];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForAllGroupsToBeEmpty(1.0);
     
     // then
     BOOL didContainSignalingKeyRequest = NO;
@@ -487,6 +489,66 @@
     ZMConversation *conversation = [ZMConversation fetchObjectWithRemoteIdentifier:conversationID inManagedObjectContext:self.uiMOC];
     XCTAssertNotNil(conversation);
 }
+
+- (void)testThatItSendsAConfirmationMessageWhenReceivingATextMessage
+{
+    if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
+        // given
+        XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+        WaitForAllGroupsToBeEmpty(0.2);
+        
+        ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Hello" nonce:[NSUUID createUUID].transportString];
+        
+        [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
+        __block MockEvent *event;
+        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+            NOT_USED(session);
+            // insert message on "backend"
+            event = [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:textMessage.data];
+            
+            // register new client
+            [session registerClientForUser:self.user1 label:@"foobar" type:@"permanent"];
+        }];
+        WaitForAllGroupsToBeEmpty(0.2);
+        
+        NSDictionary *payload = [event.transportData asDictionary];
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
+        WaitForAllGroupsToBeEmpty(0.2);
+        
+        // expect
+        [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
+        
+        XCTestExpectation *confirmationExpectation = [self expectationWithDescription:@"Did send confirmation"];
+        XCTestExpectation *missingClientsExpectation = [self expectationWithDescription:@"Did fetch missing client"];
+        __block NSUInteger requestCount = 0;
+        self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
+            NSString *confirmationPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages?report_missing=", self.selfToUser1Conversation.identifier];
+            if ([request.path hasPrefix:confirmationPath] && request.method == ZMMethodPOST) {
+                XCTAssertTrue(request.shouldUseVoipSession);
+                requestCount++;
+                if (requestCount == 2) {
+                    [confirmationExpectation fulfill];
+                }
+            }
+            NSString *clientsPath = [NSString stringWithFormat:@"/users/prekeys"];
+            if ([request.path isEqualToString:clientsPath]) {
+                XCTAssertTrue(request.shouldUseVoipSession);
+                XCTAssertEqual(requestCount, 1u);
+                [missingClientsExpectation fulfill];
+            }
+            return nil;
+        };
+        
+        // when
+        [self.userSession receivedPushNotificationWithPayload:[self APNSPayloadForNotificationPayload:payload] completionHandler:nil source:ZMPushNotficationTypeVoIP];
+        WaitForAllGroupsToBeEmpty(0.2);
+        
+        
+        XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
+    }
+}
+
 
 #pragma mark - Helper
 

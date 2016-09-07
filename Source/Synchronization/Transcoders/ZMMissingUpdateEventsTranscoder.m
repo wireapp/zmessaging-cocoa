@@ -134,6 +134,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
         NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventDict];
         for (ZMUpdateEvent *event in events) {
             [event appendDebugInformation:@"From missing update events transcoder, processUpdateEventsAndReturnLastNotificationIDFromPayload"];
+
             if (event.type == ZMUpdateEventCallState) {
                 lastCallStateEvents[event.conversationUUID] = event;
             }

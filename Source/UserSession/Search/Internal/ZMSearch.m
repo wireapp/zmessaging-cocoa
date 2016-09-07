@@ -66,7 +66,7 @@
         _state = ZMSearchStateNotStarted;
         _request = request;
         _searchContext = context;
-        _userInterfaceContext = [NSManagedObjectContext createUserInterfaceContext];
+        _userInterfaceContext = userSession.managedObjectContext;
         _userSession = userSession;
         _resultCache = resultCache;
         
@@ -107,6 +107,8 @@
 
     [self.timeoutTimer invalidate];
     [self.updateDelayTimer invalidate];
+    self.timeoutTimer = nil;
+    self.updateDelayTimer = nil;
 }
 
 - (BOOL)tryToSendCachedResult {

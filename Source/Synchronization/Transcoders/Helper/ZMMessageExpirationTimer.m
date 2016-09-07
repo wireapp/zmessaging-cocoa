@@ -155,7 +155,7 @@ ZM_EMPTY_ASSERTING_INIT()
             return;
         }
         
-        if (message.deliveryState != ZMDeliveryStateDelivered) {
+        if (message.deliveryState != ZMDeliveryStateDelivered && message.deliveryState != ZMDeliveryStateSent) {
             [message expire];
             [message.managedObjectContext enqueueDelayedSave];
             [self.localNotificationsDispatcher didFailToSentMessage:message];

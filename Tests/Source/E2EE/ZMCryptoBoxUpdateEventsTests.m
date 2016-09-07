@@ -41,9 +41,7 @@
     
     // create encrypted message
     ZMGenericMessage *message = [ZMGenericMessage messageWithText:self.name nonce:[NSUUID createUUID].transportString];
-    NSError *error;
-    CBSession *session = [selfClient.keysStore.box sessionWithId:selfClient.remoteIdentifier fromPreKey:[selfClient.keysStore lastPreKeyAndReturnError:&error] error:&error];
-    NSData *encryptedData = [session encrypt:message.data error:&error];
+    NSData *encryptedData = [self encryptedMessage:message recipient:selfClient];
     
     NSDictionary *payload = @{
                               @"recipient": selfClient.remoteIdentifier,
@@ -54,13 +52,16 @@
     ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:streamPayload uuid:notificationID];
     
     // when
-    ZMUpdateEvent *decryptedEvent = [selfClient.keysStore.box decryptUpdateEventAndAddClient:event managedObjectContext:self.syncMOC];
+    __block ZMUpdateEvent *decryptedEvent;
+    [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        decryptedEvent = [sessionsDirectory decryptUpdateEventAndAddClient:event managedObjectContext:self.syncMOC];
+    }];
     
     // then
     XCTAssertNotNil(decryptedEvent.payload.asDictionary[@"data"]);
     XCTAssertEqualObjects(decryptedEvent.payload.asDictionary[@"data"][@"sender"], selfClient.remoteIdentifier);
     XCTAssertEqualObjects(decryptedEvent.payload.asDictionary[@"data"][@"recipient"], selfClient.remoteIdentifier);
-    ZMClientMessage *decryptedMessage = [ZMClientMessage createOrUpdateMessageFromUpdateEvent:decryptedEvent inManagedObjectContext:self.syncMOC prefetchResult:nil];
+    ZMClientMessage *decryptedMessage = (id)[ZMClientMessage messageUpdateResultFromUpdateEvent:decryptedEvent inManagedObjectContext:self.syncMOC prefetchResult:nil].message;
     XCTAssertEqualObjects(decryptedMessage.nonce.transportString, message.messageId);
     XCTAssertEqualObjects(decryptedMessage.textMessageData.messageText, message.text.content);
     XCTAssertEqualObjects(decryptedEvent.uuid, notificationID);
@@ -88,9 +89,7 @@
                                                                              nonce:messageNonce.transportString
                                                                             format:ZMImageFormatMedium];
     
-    NSError *error;
-    CBSession *session = [selfClient.keysStore.box sessionWithId:selfClient.remoteIdentifier fromPreKey:[selfClient.keysStore lastPreKeyAndReturnError:&error] error:&error];
-    NSData *encryptedData = [session encrypt:message.data error:&error];
+    NSData *encryptedData = [self encryptedMessage:message recipient:selfClient];
     
     NSDictionary *payload = @{
                               @"recipient": selfClient.remoteIdentifier,
@@ -103,11 +102,14 @@
     ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:streamPayload uuid:notificationID];
     
     // when
-    ZMUpdateEvent *decryptedEvent = [selfClient.keysStore.box decryptUpdateEventAndAddClient:event managedObjectContext:self.syncMOC];
+    __block ZMUpdateEvent *decryptedEvent;
+    [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        decryptedEvent = [sessionsDirectory decryptUpdateEventAndAddClient:event managedObjectContext:self.syncMOC];
+    }];
     
     // then
     XCTAssertNotNil(decryptedEvent.payload.asDictionary[@"data"]);
-    ZMAssetClientMessage *decryptedMessage = [ZMAssetClientMessage createOrUpdateMessageFromUpdateEvent:decryptedEvent inManagedObjectContext:self.syncMOC prefetchResult:nil];
+    ZMAssetClientMessage *decryptedMessage = (id)[ZMAssetClientMessage messageUpdateResultFromUpdateEvent:decryptedEvent inManagedObjectContext:self.syncMOC prefetchResult:nil].message;
     XCTAssertEqualObjects(decryptedMessage.nonce.transportString, message.messageId);
     XCTAssertEqualObjects(decryptedMessage.imageAssetStorage.mediumGenericMessage, message);
     XCTAssertEqualObjects(decryptedEvent.uuid, notificationID);
@@ -145,7 +147,9 @@
     // when
     __block ZMUpdateEvent *decryptedEvent;
     [self performIgnoringZMLogError:^{
-        decryptedEvent = [selfClient.keysStore.box decryptUpdateEventAndAddClient:event managedObjectContext:self.syncMOC];
+        [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+            decryptedEvent = [sessionsDirectory decryptUpdateEventAndAddClient:event managedObjectContext:self.syncMOC];
+        }];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -164,14 +168,11 @@
     UserClient *selfClient = self.createSelfClient;
     
     // create symmetrically encrypted text message and encrypt external message holding the keys using cryptobox
-    NSError *error = nil;
     ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:self.name nonce:NSUUID.createUUID.transportString];
     ZMExternalEncryptedDataWithKeys *dataWithKeys = [ZMGenericMessage encryptedDataWithKeysFromMessage:textMessage];
     
     ZMGenericMessage *externalMessage = [ZMGenericMessage genericMessageWithKeyWithChecksum:dataWithKeys.keys messageID:NSUUID.createUUID.transportString];
-    CBSession *session = [selfClient.keysStore.box sessionWithId:selfClient.remoteIdentifier fromPreKey:[selfClient.keysStore lastPreKeyAndReturnError:&error] error:&error];
-    NSData *encryptedData = [session encrypt:externalMessage.data error:&error];
-    XCTAssertNil(error);
+    NSData *encryptedData = [self encryptedMessage:externalMessage recipient:selfClient];
     
     // create encrypted update event
     NSDictionary *payload = @{
@@ -186,7 +187,10 @@
     ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:streamPayload uuid:notificationID];
     
     // when
-    ZMUpdateEvent *decryptedEvent = [selfClient.keysStore.box decryptUpdateEventAndAddClient:event managedObjectContext:self.syncMOC];
+    __block ZMUpdateEvent *decryptedEvent;
+    [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        decryptedEvent = [sessionsDirectory decryptUpdateEventAndAddClient:event managedObjectContext:self.syncMOC];
+    }];
     
     // then
     NSDictionary *eventPayload = decryptedEvent.payload.asDictionary;
@@ -199,9 +203,9 @@
     XCTAssertNotNil(text);
     
     // when
-    ZMClientMessage *decryptedMessage = [ZMClientMessage createOrUpdateMessageFromUpdateEvent:decryptedEvent
+    ZMClientMessage *decryptedMessage = (id)[ZMClientMessage messageUpdateResultFromUpdateEvent:decryptedEvent
                                                                        inManagedObjectContext:self.syncMOC
-                                                                               prefetchResult:nil];
+                                                                               prefetchResult:nil].message;
     
     // then
     XCTAssertFalse(decryptedMessage.genericMessage.hasExternal);

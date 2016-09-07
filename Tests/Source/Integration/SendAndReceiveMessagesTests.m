@@ -91,8 +91,8 @@
     }];
 
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(firstMessage.deliveryState, ZMDeliveryStateDelivered);
-    XCTAssertEqual(secondMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(firstMessage.deliveryState, ZMDeliveryStateSent);
+    XCTAssertEqual(secondMessage.deliveryState, ZMDeliveryStateSent);
 
     NSUInteger otrResponseCount = 0;
     NSString *otrConversationPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", self.groupConversation.identifier];
@@ -119,7 +119,8 @@
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:messageText nonce:[NSUUID createUUID]];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:messageText nonce:NSUUID.createUUID.transportString];
+        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -145,11 +146,19 @@
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeCompleteWithTimeout:0.6]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    __block NSUInteger count = 0;
+    dispatch_block_t insertMessage  = ^{
+        NSString *text = [NSString stringWithFormat:@"text %lu", count];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:NSUUID.createUUID.transportString];
+        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
+    };
+    
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"text 1" nonce:[NSUUID UUID]];
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"text 2" nonce:[NSUUID UUID]];
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"text 3" nonce:[NSUUID UUID]];
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"text 4" nonce:[NSUUID UUID]];
+        for (int i = 0; i < 4; i++) {
+            insertMessage();
+        }
         [self spinMainQueueWithTimeout:1.0];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -180,7 +189,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"text 5" nonce:[NSUUID UUID]];
+        insertMessage();
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -204,23 +213,13 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeCompleteWithTimeout:0.6]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    ZMConversation *conversation =  [self conversationForMockConversation:self.groupConversation];
-    NSString *convIDString = conversation.remoteIdentifier.transportString;
+    [self prefetchRemoteClientByInsertingMessageInConversation:self.groupConversation];
     
-    NSDate *pastDate = [[NSDate date] dateByAddingTimeInterval:-100];
-    XCTAssertEqual(conversation.messages.count, 2u);
-    XCTAssertNil(conversation.lastReadServerTimeStamp);
-
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request){
-        if ([request.path containsString:@"assets"] && request.method == ZMMethodPOST && [request.path containsString:convIDString]) {
-            // set the date to a previous date to make sure we see if the serverTimeStamp changes
-            [self.userSession performChanges:^{
-                [conversation.messages.lastObject setServerTimestamp:pastDate];
-            }];
-            return nil;
-        }
-        return nil;
-    };
+    ZMConversation *conversation =  [self conversationForMockConversation:self.groupConversation];
+    
+    XCTAssertEqual(conversation.messages.count, 3u);
+    id<ZMConversationMessage> originalMessage = [conversation.messages lastObject];
+    XCTAssertEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [originalMessage.serverTimestamp timeIntervalSince1970], 0.1);
     
     // when
     __block ZMMessage *message;
@@ -231,7 +230,7 @@
     
     // then
     XCTAssertNotNil(conversation.lastReadServerTimeStamp);
-    XCTAssertNotEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [pastDate timeIntervalSince1970], 1.0);
+    XCTAssertNotEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [originalMessage.serverTimestamp timeIntervalSince1970], 0.1);
 }
 
 - (void)testThatItSetsTheLastReadWhenInsertingAText
@@ -335,28 +334,6 @@
     XCTAssertNotEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [pastDate timeIntervalSince1970], 1.0);
 }
 
-- (void)testThatItAppendsMessages
-{
-    NSString *expectedText1 = @"The sky above the port was the color of ";
-    NSString *expectedText2 = @"television, tuned to a dead channel.";
-    
-    NSUUID *nonce1 = [NSUUID createUUID];
-    NSUUID *nonce2 = [NSUUID createUUID];
-    
-    [self testThatItAppendsMessageToConversation:self.groupConversation
-                                       withBlock:^NSArray *(id __unused session){
-                                           [self.groupConversation insertTextMessageFromUser:self.user2 text:expectedText1 nonce:nonce1];
-                                           [self spinMainQueueWithTimeout:0.2];
-                                           [self.groupConversation insertTextMessageFromUser:self.user3 text:expectedText2 nonce:nonce2];
-                                           return @[nonce1, nonce2];
-                                       } verify:^(ZMConversation *conversation){
-                                           ZMTextMessage *msg1 = conversation.messages[conversation.messages.count - 2];
-                                           XCTAssertEqualObjects(msg1.text, expectedText1);
-                                           ZMTextMessage *msg2 = conversation.messages[conversation.messages.count - 1];
-                                           XCTAssertEqualObjects(msg2.text, expectedText2);
-                                       }];
-}
-
 - (void)testThatItAppendsClientMessages
 {
     NSString *expectedText1 = @"The sky above the port was the color of ";
@@ -448,8 +425,8 @@
     
     
     //then
-    XCTAssertEqual(imageMessage.deliveryState, ZMDeliveryStateDelivered);
-    XCTAssertEqual(textMessage.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(imageMessage.deliveryState, ZMDeliveryStateSent);
+    XCTAssertEqual(textMessage.deliveryState, ZMDeliveryStateSent);
 }
 
 - (void)testThatNextMessageIsSentAfterPreviousMessageInConversationIsDelivered
@@ -560,8 +537,8 @@
     WaitForAllGroupsToBeEmpty(0.5f);
     
     //then
-    XCTAssertEqual(secondMessage.deliveryState, ZMDeliveryStateDelivered);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(secondMessage.deliveryState, ZMDeliveryStateSent);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
 }
 
 - (void)testThatItSendsMessagesFromDifferentConversationsInParallel
@@ -610,10 +587,11 @@
     [self testThatItSendsANotificationInConversation:self.groupConversation
                                       ignoreLastRead:NO
                           onRemoteMessageCreatedWith:^{
-                              [self.groupConversation insertTextMessageFromUser:self.user2 text:expectedText nonce:nonce];
+                              ZMGenericMessage *message = [ZMGenericMessage messageWithText:expectedText nonce:nonce.transportString];
+                              [self.groupConversation encryptAndInsertDataFromClient:self.user2.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
                           } verify:^(ZMConversation *conversation) {
-                              ZMTextMessage *msg = conversation.messages[conversation.messages.count - 1];
-                              XCTAssertEqualObjects(msg.text, expectedText);
+                              ZMMessage *msg = conversation.messages[conversation.messages.count - 1];
+                              XCTAssertEqualObjects(msg.textMessageData.messageText, expectedText);
                           }];
 }
 
@@ -640,7 +618,7 @@
                               [self.groupConversation insertImageEventsFromUser:self.user2];
                           } verify:^(ZMConversation *conversation) {
                               ZMImageMessage *msg = conversation.messages.lastObject;
-                              XCTAssertEqual(msg.deliveryState, ZMDeliveryStateDelivered);
+                              XCTAssertEqual(msg.deliveryState, ZMDeliveryStateSent);
                               XCTAssertEqual(msg.mediumData.length, (NSUInteger) 0);
                               XCTAssertEqual(msg.previewData.length, (NSUInteger) 2338);
                           }];
@@ -656,7 +634,7 @@
                               ZMImageMessage *msg = conversation.messages.lastObject;
                               [msg requestImageDownload];
                               WaitForAllGroupsToBeEmpty(0.5);
-                              XCTAssertEqual(msg.deliveryState, ZMDeliveryStateDelivered);
+                              XCTAssertEqual(msg.deliveryState, ZMDeliveryStateSent);
                               XCTAssertEqual(msg.mediumData.length, (NSUInteger) 317748u);
                               XCTAssertEqual(msg.previewData.length, (NSUInteger) 2338);
                           }];
@@ -678,7 +656,7 @@
                                          [msg requestImageDownload];
                                          WaitForAllGroupsToBeEmpty(0.5);
                                          XCTAssertEqual(observer.notifications.count, 1u);
-                                         XCTAssertEqual(msg.deliveryState, ZMDeliveryStateDelivered);
+                                         XCTAssertEqual(msg.deliveryState, ZMDeliveryStateSent);
                                          XCTAssertEqual(msg.mediumData.length, 317748u);
                                          XCTAssertEqual(msg.previewData.length, 2338u);
                                      }];
@@ -728,7 +706,7 @@
         XCTAssertEqual(conversation.messages.count, 3u);
         
         msg = conversation.messages.lastObject;
-        XCTAssertEqual(msg.deliveryState, ZMDeliveryStateDelivered);
+        XCTAssertEqual(msg.deliveryState, ZMDeliveryStateSent);
         XCTAssertEqual(msg.mediumData.length, (NSUInteger) 0);
         XCTAssertEqual(msg.previewData.length, (NSUInteger) 2338);
     }
@@ -753,7 +731,7 @@
         ConversationChangeInfo *note = observer.notifications.firstObject;
         XCTAssertTrue(note.lastModifiedDateChanged);
         XCTAssertEqual(conversation.messages.count, 3u); // including "new conversation" and "you started using this device" message
-        XCTAssertEqual(msg.deliveryState, ZMDeliveryStateDelivered);
+        XCTAssertEqual(msg.deliveryState, ZMDeliveryStateSent);
         XCTAssertEqual(msg.mediumData.length, (NSUInteger) 0);
         XCTAssertEqual(msg.previewData.length, (NSUInteger) 2338);
     }
@@ -796,7 +774,7 @@
     
     void (^checkImageMessage)(ZMConversation*, ZMTFailureRecorder *) = ^(ZMConversation* conv, ZMTFailureRecorder *recorder){
         ZMImageMessage *msg = conv.messages.lastObject;
-        FHAssertEqual(recorder, msg.deliveryState, ZMDeliveryStateDelivered);
+        FHAssertEqual(recorder, msg.deliveryState, ZMDeliveryStateSent);
         FHAssertEqual(recorder, msg.mediumData.length, (NSUInteger) 0);
         FHAssertEqual(recorder, msg.previewData.length, (NSUInteger) 2338);
     };
@@ -870,7 +848,8 @@
 
     NSUUID *firstMessageNonce = NSUUID.createUUID;
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"Message Text" nonce:firstMessageNonce];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Message Text" nonce:firstMessageNonce.transportString];
+        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -917,7 +896,8 @@
     
     NSUUID *firstMessageNonce = NSUUID.createUUID;
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"Message Text" nonce:firstMessageNonce];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Message Text" nonce:firstMessageNonce.transportString];
+        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -926,11 +906,15 @@
     }];
     XCTAssertNotNil(groupConversation);
     
-    ZMUser *otherUser = [self userForMockUser:self.user2];
     NSUUID *payloadNotificationID = NSUUID.createUUID;
     ZMEventID *firstEventID = self.createEventID;
     NSUUID *lastMessageNonce = NSUUID.createUUID;
     NSDate *messageTimeStamp = [[NSDate date] dateByAddingTimeInterval:1000];
+    MockUserClient *fromClient = self.user2.clients.anyObject, *toClient = self.selfUser.clients.anyObject;
+    
+    ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"this should be inserted after the system message"
+                                                            nonce:lastMessageNonce.transportString];
+    NSData *encryptedData = [MockUserClient encryptedDataFromClient:fromClient toClient:toClient data:message.data];
     
     // when
     NSDictionary *payload = @{
@@ -939,15 +923,15 @@
                                                        @"payload" : @[
                                                                @{
                                                                    @"id": firstEventID.transportString,
-                                                                   @"conversation" : groupConversation.remoteIdentifier.transportString,
-                                                                   @"type" : @"conversation.message-add",
+                                                                   @"conversation": groupConversation.remoteIdentifier.transportString,
+                                                                   @"type": @"conversation.otr-message-add",
                                                                    // We use a later date to simulate the time between the last message
                                                                    @"time": messageTimeStamp.transportString,
-                                                                   @"data" : @{
-                                                                           @"sender": otherUser.remoteIdentifier.transportString,
-                                                                           @"nonce" : lastMessageNonce.transportString,
-                                                                           @"content" : @"this should be inserted after the system message"
-                                                                           },
+                                                                   @"data": @{
+                                                                           @"recipient": toClient.identifier,
+                                                                           @"sender": fromClient.identifier,
+                                                                           @"text": encryptedData.base64String
+                                                                           }
                                                                    },
                                                                ]
                                                        }]
@@ -995,7 +979,8 @@
 
     NSUUID *firstMessageNonce = NSUUID.createUUID;
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"Message Text" nonce:firstMessageNonce];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Message Text" nonce:firstMessageNonce.transportString];
+        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1045,7 +1030,8 @@
     
     NSUUID *firstMessageNonce = NSUUID.createUUID;
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"Message Text" nonce:firstMessageNonce];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Message Text" nonce:firstMessageNonce.transportString];
+        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1127,7 +1113,8 @@
     
     NSUUID *firstMessageNonce = NSUUID.createUUID;
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
-        [self.groupConversation insertTextMessageFromUser:self.user1 text:@"Hello" nonce:firstMessageNonce];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Hello" nonce:firstMessageNonce.transportString];
+        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1141,7 +1128,7 @@
     
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
         [session simulatePushChannelClosed];
-        newMockUser = [session insertUserWithName:@"Brüno"];
+        newMockUser = [session insertUserWithName:@"Bruno"];
         [self storeRemoteIDForObject:newMockUser];
     }];
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
@@ -1192,7 +1179,7 @@
     XCTAssertEqual(systemMessage.removedUsers.count, 0lu);
     XCTAssertEqual(systemMessage.addedUsers.count, 1lu);
     XCTAssertNotNil(addedUser);
-    XCTAssertEqualObjects(addedUser.name, @"Brüno");
+    XCTAssertEqualObjects(addedUser.name, @"Bruno");
     XCTAssertFalse(systemMessage.needsUpdatingUsers);
 }
 
@@ -1393,7 +1380,7 @@
     
     
     //then
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     // finally
     [ZMMessage resetDefaultExpirationTime];
@@ -1494,16 +1481,16 @@
     
     // then
     XCTAssertTrue([self waitOnMainLoopUntilBlock:^BOOL{
-        return message.deliveryState == ZMDeliveryStateDelivered;
+        return message.deliveryState == ZMDeliveryStateSent;
     } timeout:0.5]);
     
     // finally
     [ZMMessage resetDefaultExpirationTime];
 }
 
-#pragma mark - Deleted messages
+#pragma mark - Hiding messages
 
-- (void)testThatItDeleteMessageWhenAskedTo;
+- (void)testThatItHidesAMessageWhenAskedTo
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
@@ -1523,7 +1510,7 @@
     
     //when
     [self.userSession performChanges:^{
-        [ZMMessage deleteMessage:message];
+        [ZMMessage hideMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1532,7 +1519,7 @@
 }
 
 
-- (void)testThatItSyncsWhenAMessageDeleteIsRemotelyAppended;
+- (void)testThatItSyncsWhenAMessageHideIsRemotelyAppended;
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
@@ -1551,7 +1538,7 @@
     WaitForEverythingToBeDone();
     
     //when
-    [self remotelyAppendSelfConversationWithZMMsgDeletedForMessageID:messageNonce.transportString conversationID:groupConversation.remoteIdentifier.transportString];
+    [self remotelyAppendSelfConversationWithZMMessageHideForMessageID:messageNonce.transportString conversationID:groupConversation.remoteIdentifier.transportString];
     WaitForAllGroupsToBeEmpty(0.5);
     
     message = [ZMMessage fetchMessageWithNonce:messageNonce forConversation:groupConversation inManagedObjectContext:self.uiMOC];

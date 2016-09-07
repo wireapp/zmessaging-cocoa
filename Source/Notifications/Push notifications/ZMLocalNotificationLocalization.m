@@ -19,6 +19,7 @@
 @import ZMCDataModel;
 #import "ZMLocalNotificationLocalization.h"
 #import "ZMUserSession.h"
+#import "zmessaging/zmessaging-Swift.h"
 
 static NSString *localizedStringWithKeyAndArguments(NSString *key, NSArray *arguments);
 static NSString * ZMPushLocalizedString(NSString *key);
@@ -90,88 +91,27 @@ static NSString *const NoOtherUserNameKey = @"nootherusername";
 
 - (NSString *)localizedStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation count:(NSNumber *)count formattedCountOrText:(NSString *)text;
 {
-    NSString *userName = user.name;
-    NSString *conversationName = conversation.userDefinedName;
-    NSMutableArray *arguments = [NSMutableArray array];
-    NSMutableArray *keyComponents = [NSMutableArray array];
+    LocalizationInfo *localizationInfo = [self localizationInfoForUser:user conversation:conversation];
     
-    if (conversation.conversationType != ZMConversationTypeOneOnOne) {
-        [keyComponents addObject:GroupKey];
-    }
-    else {
-        [keyComponents addObject:OneOnOneKey];
-    }
-    
-    if (userName.length == 0) {
-        [keyComponents addObject:NoUserNameKey];
-    }
-    else {
-        [arguments addObject:userName];
-    }
-    
-    if (conversation.conversationType != ZMConversationTypeOneOnOne) {
-        if (conversationName.length == 0) {
-            [keyComponents addObject:NoConversationNameKey];
-        }
-        else {
-            [arguments addObject:conversationName];
-        }
-    }
-    
+    NSString *key = localizationInfo.localizationString;
+    NSMutableArray *arguments = [localizationInfo.arguments mutableCopy];
     if (count != nil) {
         [arguments addObject:count];
     }
     if (text != nil) {
         [arguments addObject:text];
     }
-    
-    NSString *key = self;
-    for (NSString *component in keyComponents) {
-        key = [key stringByAppendingPathExtension:component];
-    }
-    
     return localizedStringWithKeyAndArguments(ZMPushLocalizedString(key), arguments);
 }
 
 - (NSString *)localizedStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation count:(NSNumber *)count;
 {
-    NSString *userName = user.name;
-    NSString *conversationName = conversation.userDefinedName;
-    NSMutableArray *arguments = [NSMutableArray array];
-    NSMutableArray *keyComponents = [NSMutableArray array];
-    
-    if (conversation.conversationType != ZMConversationTypeOneOnOne) {
-        [keyComponents addObject:GroupKey];
-    }
-    else {
-        [keyComponents addObject:OneOnOneKey];
-    }
-    
-    if (userName.length == 0) {
-        [keyComponents addObject:NoUserNameKey];
-    }
-    else {
-        [arguments addObject:userName];
-    }
-    
-    if (conversation.conversationType != ZMConversationTypeOneOnOne) {
-        if (conversationName.length == 0) {
-            [keyComponents addObject:NoConversationNameKey];
-        }
-        else {
-            [arguments addObject:conversationName];
-        }
-    }
-    
+    LocalizationInfo *localizationInfo = [self localizationInfoForUser:user conversation:conversation];
+    NSString *key = localizationInfo.localizationString;
+    NSMutableArray *arguments = [localizationInfo.arguments mutableCopy];
     if (count != nil) {
         [arguments addObject:count];
     }
-    
-    NSString *key = self;
-    for (NSString *component in keyComponents) {
-        key = [key stringByAppendingPathExtension:component];
-    }
-    
     return localizedStringWithKeyAndArguments(ZMPushLocalizedString(key), arguments);
 }
 
@@ -263,6 +203,16 @@ static NSString *const NoOtherUserNameKey = @"nootherusername";
     return localizedStringWithKeyAndArguments(ZMPushLocalizedString(key), arguments);
 }
 
+- (NSString *)localizedStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation emoji:(NSString *)emoji;
+{
+    LocalizationInfo *localizationInfo = [self localizationInfoForUser:user conversation:conversation];
+    NSString *key = localizationInfo.localizationString;
+    NSMutableArray *arguments = [localizationInfo.arguments mutableCopy];
+    [arguments addObject:emoji];
+        
+    return localizedStringWithKeyAndArguments(ZMPushLocalizedString(key), arguments);
+}
+
 
 - (NSString *)localizedStringWithUserName:(NSString *)userName;
 {
@@ -282,6 +232,7 @@ static NSString *const NoOtherUserNameKey = @"nootherusername";
 {
     return localizedStringWithKeyAndArguments(ZMPushLocalizedString(self), nil);
 }
+
 
 @end
 

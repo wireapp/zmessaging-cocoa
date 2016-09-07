@@ -24,7 +24,6 @@ let ZMLocalNotificationRingingDefaultSoundName = "ringing_from_them_long.caf"
 let ZMLocalNotificationPingDefaultSoundName = "ping_from_them.caf"
 let ZMLocalNotificationNewMessageDefaultSoundName = "new_message_apns.caf"
 
-
 func ZMCustomSoundName(key: String) -> String? {
     guard let soundName = NSUserDefaults.standardUserDefaults().objectForKey(key) as? String else { return nil }
     return ZMSound(rawValue: soundName)?.filename()
@@ -49,6 +48,9 @@ public extension ZMLocalNotificationForEvent {
         switch event.type {
         case .ConversationOtrMessageAdd:
             if let note = ZMLocalNotificationForKnockMessage(event: event, managedObjectContext: managedObjectContext, application: application) {
+                return note
+            }
+            if let note = ZMLocalNotificationForReaction(event: event, managedObjectContext: managedObjectContext, application: application) {
                 return note
             }
             return ZMLocalNotificationForMessage(event: event, managedObjectContext: managedObjectContext, application: application)
@@ -88,6 +90,7 @@ extension UIApplication : NotificationScheduler {
 
 public class ZMLocalNotificationForEvent : ZMLocalNotification {
     
+    public var shouldBeDiscarded : Bool = false
     public let sender : ZMUser?
 
     public let notificationType : ZMLocalNotificationType = ZMLocalNotificationType.Event
@@ -164,9 +167,15 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification {
     
     func configureNotification() -> UILocalNotification {
         let notification = UILocalNotification()
-        notification.alertBody = configureAlertBody().stringByEscapingPercentageSymbols()
-        notification.soundName = soundName
-        notification.category = category
+        let shouldHideContent = managedObjectContext.valueForKey(ZMShouldHideNotificationContentKey)
+        if let shouldHideContent = shouldHideContent as? NSNumber where shouldHideContent.boolValue == true {
+            notification.alertBody = ZMPushStringDefault.localizedString()
+            notification.soundName = ZMLocalNotificationNewMessageSoundName()
+        } else {
+            notification.alertBody = configureAlertBody().stringByEscapingPercentageSymbols()
+            notification.soundName = soundName
+            notification.category = category
+        }
         notification.setupUserInfo(conversation, forEvent: lastEvent)
         return notification
     }
@@ -231,8 +240,15 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification {
               let lastEvent = lastEvent where (!senderIsSelfUser(lastEvent) || lastEvent.type == .CallState)
         else { return false }
 
-        if let conversation = conversation where conversation.isSilenced && !ignoresSilencedState {
-            return false
+        if let conversation = conversation {
+            if conversation.isSilenced && !ignoresSilencedState {
+                return false
+            }
+            if let timeStamp = lastEvent.timeStamp(),
+               let lastRead = conversation.lastReadServerTimeStamp where lastRead.compare(timeStamp) != .OrderedAscending {
+                // don't show notifications that have already been read
+                return false
+            }
         }
         return true
     }

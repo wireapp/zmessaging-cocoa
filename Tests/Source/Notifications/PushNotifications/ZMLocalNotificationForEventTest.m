@@ -30,6 +30,8 @@
     self.sender = [self insertUserWithRemoteID:[NSUUID createUUID] name:@"Super User"];
     
     self.otherUser = [self insertUserWithRemoteID:[NSUUID createUUID] name:@"Other User"];
+    
+    self.otherUser2 = [self insertUserWithRemoteID:[NSUUID createUUID] name:@"Other User2"];
 
     self.oneOnOneConversation = [self insertConversationWithRemoteID:[NSUUID createUUID] name:@"Super Conversation" type:ZMConversationTypeOneOnOne isSilenced:NO];
     
@@ -1366,6 +1368,15 @@
     XCTAssertEqualObjects(notif.alertBody, expectedText);
     XCTAssertEqualObjects(notif.zm_messageNonce, nonce);
     XCTAssertEqualObjects(notif.zm_senderUUID, self.sender.remoteIdentifier);
+}
+
+@end
+
+@implementation ZMLocalNotificationForEvent (Reaction)
+
+- (void)testThatItCreatesAReactionNotificationWhenSomeoneReactToSelfUserMessage;
+{
+    
 }
 
 @end

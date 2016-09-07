@@ -33,19 +33,15 @@
 #import "ZMSearchDirectory+Internal.h"
 #import <libkern/OSAtomic.h>
 #import "ZMAuthenticationStatus.h"
-#import "ZMAddressBookTranscoder.h"
 #import "ZMPushToken.h"
 #import "ZMCommonContactsSearch.h"
 #import "ZMBlacklistVerificator.h"
 #import "ZMTracing.h"
-#import "ZMAddressBookSync.h"
-#import "ZMEmptyAddressBookSync.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMUserProfileUpdateStatus.h"
 #import "NSURL+LaunchOptions.h"
 #import "ZMessagingLogs.h"
-#import "ZMAddressBook.h"
 #import "ZMAVSBridge.h"
 #import "ZMOnDemandFlowManager.h"
 #import "ZMCookie.h"
@@ -56,11 +52,8 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMLocalNotificationDispatcher.h"
 
-static NSInteger const MaximumContactsToParse = 10000;
-
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
-NSString * const ZMUserSessionFailedToAccessAddressBookNotificationName = @"ZMUserSessionFailedToAccessAddressBook";
 NSString * const ZMUserSessionTrackingIdentifierDidChangeNotification = @"ZMUserSessionTrackingIdentifierDidChange";
 static NSString * const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
 NSString * const ZMAppendAVSLogNotificationName = @"ZMAppendAVSLogNotification";
@@ -94,14 +87,15 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 
 @property (nonatomic) BOOL isVersionBlacklisted;
-@property (nonatomic) NSArray *cachedAddressBookContacts;
-@property (nonatomic) dispatch_once_t loadAddressBookContactsOnce;
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
 
 @property (nonatomic) ZMPushRegistrant *pushRegistrant;
 @property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 @property (nonatomic) ZMLocalNotificationDispatcher *localNotificationDispatcher;
+@property (nonatomic) NSString *applicationGroupIdentifier;
+@property (nonatomic) NSURL *databaseDirectoryURL;
+
 
 /// Build number of the Wire app
 @property (nonatomic) NSString *appVersion;
@@ -139,16 +133,28 @@ ZM_EMPTY_ASSERTING_INIT()
     return [[NSProcessInfo processInfo] environment][@"ZMEncryptionOnly"] != nil;
 }
 
-+ (BOOL)needsToPrepareLocalStore
++ (NSURL *)sharedContainerDirectoryForApplicationGroup:(NSString *)appGroupIdentifier
 {
-    return [NSManagedObjectContext needsToPrepareLocalStore];
+    NSFileManager *fm = NSFileManager.defaultManager;
+    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:appGroupIdentifier];
+    RequireString(nil != sharedContainerURL, "Unable to create shared container url using app group identifier: %s", appGroupIdentifier.UTF8String);
+    return sharedContainerURL;
 }
 
-+ (void)prepareLocalStore:(void (^)())completionHandler
++ (BOOL)needsToPrepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier
+{
+    
+    return [NSManagedObjectContext needsToPrepareLocalStoreInDirectory:[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]];
+}
+
++ (void)prepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier completion:(void (^)())completionHandler
 {
     ZMDeploymentEnvironmentType environment = [[ZMDeploymentEnvironment alloc] init].environmentType;
     BOOL shouldBackupCorruptedDatabase = environment == ZMDeploymentEnvironmentTypeInternal || DEBUG;
-    [NSManagedObjectContext prepareLocalStoreSync:NO backingUpCorruptedDatabase:shouldBackupCorruptedDatabase completionHandler:completionHandler];
+    [NSManagedObjectContext prepareLocalStoreSync:NO
+                                      inDirectory:[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]
+                       backingUpCorruptedDatabase:shouldBackupCorruptedDatabase
+                                completionHandler:completionHandler];
 }
 
 + (BOOL)storeIsReady
@@ -156,42 +162,50 @@ ZM_EMPTY_ASSERTING_INIT()
     return [NSManagedObjectContext storeIsReady];
 }
 
-- (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager analytics:(id<AnalyticsType>)analytics appVersion:(NSString *)appVersion;
+- (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager analytics:(id<AnalyticsType>)analytics appVersion:(NSString *)appVersion appGroupIdentifier:(NSString *)appGroupIdentifier;
 {
     zmSetupEnvironments();
     ZMBackendEnvironment *environment = [[ZMBackendEnvironment alloc] init];
     NSURL *backendURL = environment.backendURL;
     NSURL *websocketURL = environment.backendWSURL;
-    
+    self.applicationGroupIdentifier = appGroupIdentifier;
+
     ZMAPNSEnvironment *apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
 
-    NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContext];
+    self.databaseDirectoryURL = [NSFileManager.defaultManager containerURLForSecurityApplicationGroupIdentifier:appGroupIdentifier];
+    RequireString(nil != self.databaseDirectoryURL, "Unable to get a container URL using group identifier: %s", appGroupIdentifier.UTF8String);
+
+    NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContextWithStoreDirectory:self.databaseDirectoryURL];
+    NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectoryURL];
     syncMOC.analytics = analytics;
-    
-    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC];
+
+    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC mainGroupQueue:userInterfaceContext];
     UIApplication *application = [UIApplication sharedApplication];
-    
+
     self = [self initWithTransportSession:session
+                     userInterfaceContext:userInterfaceContext
                  syncManagedObjectContext:syncMOC
                              mediaManager:mediaManager
                           apnsEnvironment:apnsEnvironment
                             operationLoop:nil
                               application:application
-                               appVersion:appVersion];
+                               appVersion:appVersion
+                       appGroupIdentifier:appGroupIdentifier];
     if (self != nil) {
         self.ownsQueue = YES;
-        self.loadAddressBookContactsOnce = 0;
     }
     return self;
 }
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
+                    userInterfaceContext:(NSManagedObjectContext *)userInterfaceContext
                 syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
                             mediaManager:(id<AVSMediaManager>)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(ZMApplication *)application
-                              appVersion:(NSString *)appVersion;
+                              appVersion:(NSString *)appVersion
+                      appGroupIdentifier:(NSString *)appGroupIdentifier;
 
 {
     self = [super init];
@@ -203,8 +217,8 @@ ZM_EMPTY_ASSERTING_INIT()
         self.didStartInitialSync = NO;
         self.apnsEnvironment = apnsEnvironment;
         self.networkIsOnline = YES;
+        self.managedObjectContext = userInterfaceContext;
         self.managedObjectContext.isOffline = NO;
-        self.managedObjectContext = [NSManagedObjectContext createUserInterfaceContext];
         self.syncManagedObjectContext = syncManagedObjectContext;
         
         self.syncManagedObjectContext.zm_userInterfaceContext = self.managedObjectContext;
@@ -240,7 +254,7 @@ ZM_EMPTY_ASSERTING_INIT()
         [[ZMLocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext sharedApplication:application];
         
         self.pingBackStatus = [[BackgroundAPNSPingBackStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext
-                                                                              authenticationProvider:self.authenticationStatus localNotificationDispatcher:self.localNotificationDispatcher];
+                                                                              authenticationProvider:self.authenticationStatus];
         
         self.transportSession = session;
         self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
@@ -252,19 +266,21 @@ ZM_EMPTY_ASSERTING_INIT()
         _application = application;
         
         self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
-                                                                           authenticationStatus:self.authenticationStatus
-                                                                        userProfileUpdateStatus:self.userProfileUpdateStatus
-                                                                       clientRegistrationStatus:self.clientRegistrationStatus
-                                                                             clientUpdateStatus:self.clientUpdateStatus
-                                                                           proxiedRequestStatus:self.proxiedRequestStatus
-                                                                                  accountStatus:self.accountStatus
-                                                                   backgroundAPNSPingBackStatus:self.pingBackStatus
-                                                                    localNotificationdispatcher:self.localNotificationDispatcher
-                                                                                   mediaManager:mediaManager
-                                                                            onDemandFlowManager:self.onDemandFlowManager
-                                                                                          uiMOC:self.managedObjectContext
-                                                                                        syncMOC:self.syncManagedObjectContext
-                                                                              syncStateDelegate:self];
+                                                                            authenticationStatus:self.authenticationStatus
+                                                                         userProfileUpdateStatus:self.userProfileUpdateStatus
+                                                                        clientRegistrationStatus:self.clientRegistrationStatus
+                                                                              clientUpdateStatus:self.clientUpdateStatus
+                                                                            proxiedRequestStatus:self.proxiedRequestStatus
+                                                                                   accountStatus:self.accountStatus
+                                                                    backgroundAPNSPingBackStatus:self.pingBackStatus
+                                                                     localNotificationdispatcher:self.localNotificationDispatcher
+                                                                                    mediaManager:mediaManager
+                                                                             onDemandFlowManager:self.onDemandFlowManager
+                                                                                           uiMOC:self.managedObjectContext
+                                                                                         syncMOC:self.syncManagedObjectContext
+                                                                               syncStateDelegate:self
+                                                                              appGroupIdentifier:appGroupIdentifier
+                                                                                     application:application];
         
         __weak id weakSelf = self;
         session.accessTokenRenewalFailureHandler = ^(ZMTransportResponse *response) {
@@ -648,27 +664,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 
 
-@implementation ZMUserSession (AddressBookUpload)
 
-+ (void)addAddressBookUploadObserver:(id<AddressBookUploadObserver>)observer;
-{
-    ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:observer selector:@selector(failedToAccessAddressBook:) name:ZMUserSessionFailedToAccessAddressBookNotificationName object:nil]);
-}
-
-+ (void)removeAddressBookUploadObserver:(id<AddressBookUploadObserver>)observer;
-{
-    [[NSNotificationCenter defaultCenter] removeObserver:observer name:ZMUserSessionFailedToAccessAddressBookNotificationName object:nil];
-}
-
-- (void)uploadAddressBook;
-{
-    [ZMAddressBookSync markAddressBookAsNeedingToBeUploadedInContext:self.managedObjectContext];
-    if (![self.managedObjectContext forceSaveOrRollback]) {
-        ZMLogWarn(@"Failed to save addressBook");
-    }
-}
-
-@end
 
 
 @implementation ZMUserSession(NetworkState)
@@ -889,40 +885,6 @@ static NSString * const TrackingIdentifierKey = @"ZMTrackingIdentifier";
 @end
 
 
-
-@implementation ZMUserSession (AddressBook)
-
-- (NSArray *)addressBookContacts
-{
-    if (self.cachedAddressBookContacts == nil) {
-        if (! [ZMAddressBook userHasAuthorizedAccess]) {
-            return @[]; // Don't cache contacts without address book authorization
-        }
-        
-        dispatch_once(&_loadAddressBookContactsOnce, ^{
-            [self reloadAddressBookContacts];
-        });
-    }
-    
-    return self.cachedAddressBookContacts;
-}
-
-- (void)reloadAddressBookContacts
-{
-    ZMAddressBook *addressBook = [ZMAddressBook addressBook];
-    
-    NSMutableArray *contacts = [NSMutableArray array];
-    for (ZMAddressBookContact *contact in addressBook.contacts) {
-        if(contacts.count > MaximumContactsToParse) {
-            break;
-        }
-        [contacts addObject:contact];
-    }
-    
-    self.cachedAddressBookContacts = contacts;
-}
-
-@end
 
 @implementation ZMUserSession (SelfUserClient)
 

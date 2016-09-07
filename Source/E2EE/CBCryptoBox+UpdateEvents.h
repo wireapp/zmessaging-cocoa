@@ -24,11 +24,11 @@
 
 
 
-@interface CBCryptoBox (UpdateEvents)
+@interface EncryptionSessionsDirectory (UpdateEvent)
 
 /// Decrypts an event (if needed) and return a decrypted copy (or the original if no
 /// decryption was needed) and information about the decryption result.
 ///
-- (ZMUpdateEvent *)decryptUpdateEventAndAddClient:(ZMUpdateEvent *)event managedObjectContext:(NSManagedObjectContext *)moc;
+- (ZMUpdateEvent * __nullable)decryptUpdateEventAndAddClient:(ZMUpdateEvent * __nullable)event managedObjectContext:(NSManagedObjectContext * __nonnull)moc;
 
 @end

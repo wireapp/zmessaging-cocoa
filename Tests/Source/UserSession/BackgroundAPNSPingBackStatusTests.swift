@@ -50,15 +50,17 @@ class OperationLoopNewRequestObserver {
     }
 }
 
-
-@objc class MockNotificationDispatcher: NSObject, LocalNotificationDispatchType {
-    var didReceiveUpdateEventsBlock: ([ZMUpdateEvent]? -> Void)?
-    var callCount = 0
+@objc class FakeGroupQueue : NSObject, ZMSGroupQueue {
     
-    func didReceiveUpdateEvents(events: [ZMUpdateEvent]?, notificationID: NSUUID) {
-        callCount += 1
-        didReceiveUpdateEventsBlock?(events)
+    var dispatchGroup : ZMSDispatchGroup! {
+        return nil
     }
+    
+    func performGroupedBlock(block : dispatch_block_t)
+    {
+        block()
+    }
+    
 }
 
 
@@ -90,6 +92,7 @@ class EventsWithIdentifierTests: ZMTBaseTest {
             "id": identifier.transportString(),
             "payload": [messageAddPayload(), messageAddPayload()]
         ]
+        
         
         events = ZMUpdateEvent.eventsArrayFromPushChannelData(pushChannelData)
         sut = EventsWithIdentifier(events: events, identifier: identifier, isNotice:true)
@@ -125,18 +128,23 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     var sut: BackgroundAPNSPingBackStatus!
     var observer: OperationLoopNewRequestObserver!
     var authenticationProvider: MockAuthenticationProvider!
-    var notificationDispatcher: MockNotificationDispatcher!
     
     override func setUp() {
         super.setUp()
+        
+        BackgroundActivityFactory.sharedInstance().mainGroupQueue = FakeGroupQueue()
         authenticationProvider = MockAuthenticationProvider()
-        notificationDispatcher = MockNotificationDispatcher()
+
         sut = BackgroundAPNSPingBackStatus(
             syncManagedObjectContext: syncMOC,
-            authenticationProvider: authenticationProvider,
-            localNotificationDispatcher: notificationDispatcher
+            authenticationProvider: authenticationProvider
         )
         observer = OperationLoopNewRequestObserver()
+    }
+    
+    override func tearDown() {
+        BackgroundActivityFactory.tearDownInstance()
+        super.tearDown()
     }
 
     func testThatItSetsTheNotificationID() {
@@ -238,52 +246,6 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertEqual(observer.notifications.count, 1)
     }
     
-    func testThatItNotifiesTheLocalNotificationDispatcherIfThePingBackSucceded() {
-        
-        // given
-        let eventsWithID = createEventsWithID()
-        sut.didReceiveVoIPNotification(eventsWithID)
-        notificationDispatcher.didReceiveUpdateEventsBlock = { events in
-            guard let unwrappedEvents = events else { return XCTFail() }
-            XCTAssertEqual(unwrappedEvents, eventsWithID.events!)
-        }
-        
-        // when
-        _ = sut.nextNotificationEventsWithID()
-        sut.didPerfomPingBackRequest(eventsWithID, responseStatus: .Success)
-        
-        // then
-        XCTAssertEqual(notificationDispatcher.callCount, 1)
-    }
-    
-    func testThatItDoesNotNotifyTheLocalNotificationDispatcherIfThePingBackFailed_TemporaryError() {
-        
-        // given
-        let eventsWithID = createEventsWithID()
-        sut.didReceiveVoIPNotification(eventsWithID)
-        
-        // when
-        _ = sut.nextNotificationEventsWithID()
-        sut.didPerfomPingBackRequest(eventsWithID, responseStatus: .TemporaryError)
-        
-        // then
-        XCTAssertEqual(notificationDispatcher.callCount, 0)
-    }
-    
-    func testThatItDoesNotNotifyTheLocalNotificationDispatcherIfThePingBackFailed_TryAgainLater() {
-        
-        // given
-        let eventsWithID = createEventsWithID()
-        sut.didReceiveVoIPNotification(eventsWithID)
-        
-        // when
-        _ = sut.nextNotificationEventsWithID()
-        sut.didPerfomPingBackRequest(eventsWithID, responseStatus: .TryAgainLater)
-        
-        // then
-        XCTAssertEqual(notificationDispatcher.callCount, 0)
-    }
-    
     func testThatItDoesNotCallTheHandlerAfterPingBackRequestCompletedUnsuccessfully_TryAgain_Until_Sucess() {
         // given
         let eventsWithID = createEventsWithID()
@@ -326,7 +288,9 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         
         // expect
         sut.didReceiveVoIPNotification(eventsWithID) { result in
-            XCTAssertEqual(result.0, ZMPushPayloadResult.Success)
+            let expectedResult : ZMPushPayloadResult = (status == .Success) ? .Success : .Failure
+            XCTAssertEqual(result.0, expectedResult)
+            XCTAssertEqual(result.1, eventsWithID.events!)
             expectation.fulfill()
         }
         

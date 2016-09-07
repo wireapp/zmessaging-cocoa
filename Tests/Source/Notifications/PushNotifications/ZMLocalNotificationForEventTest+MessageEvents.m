@@ -31,6 +31,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
+        
         NSUUID *conversationID = [NSUUID createUUID];
         
         //create encrypted message

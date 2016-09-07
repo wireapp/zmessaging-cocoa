@@ -262,7 +262,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateDelivered);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     ZMTransportRequest *messageRequest = [self.mockTransportSession.receivedRequests firstObjectMatchingWithBlock:^BOOL(ZMTransportRequest *req) {
         return [req.path isEqualToString:[NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString]];
     }];

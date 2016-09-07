@@ -133,7 +133,12 @@ public extension ZMLocalNotificationSet {
         for note in notificationsCopy {
             if let note = note as? ZMLocalNotificationForEvent {
                 if let copied = note.copyByAddingEvent(event) {
-                    replaceObject(note, newObject: copied)
+                    if note.shouldBeDiscarded {
+                        remove(note)
+                    }
+                    else {
+                        replaceObject(note, newObject: copied)
+                    }
                     return copied
                 }
             }

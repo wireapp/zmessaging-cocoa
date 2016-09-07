@@ -45,6 +45,19 @@
     return self;
 }
 
+- (instancetype)initWithUsersInContacts:(NSArray<ZMSearchUser *> *)usersInContacts
+                       usersInDirectory:(NSArray<ZMSearchUser *> *)usersInDirectory
+                     groupConversations:(NSArray<ZMConversation *> *)groupConversations;
+{
+    self = [super init];
+    if (self) {
+        self.mutableUsersInContacts = [usersInContacts mutableCopy];
+        self.mutableUsersInDirectory = [usersInDirectory mutableCopy];
+        self.mutableGroupConversations = [groupConversations mutableCopy];
+    }
+    return self;
+}
+
 - (void)addUsersInContacts:(NSArray *)objects;
 {
     [self.mutableUsersInContacts addObjectsFromArray:objects];

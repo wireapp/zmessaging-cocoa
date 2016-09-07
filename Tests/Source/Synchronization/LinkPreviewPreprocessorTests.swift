@@ -26,7 +26,7 @@ final class MockLinkDetector: LinkPreviewDetectorType {
     var nextResult = [LinkPreview]()
     var downloadLinkPreviewsCallCount = 0
     
-    func downloadLinkPreviews(inText text: String, completion: [LinkPreview] -> Void) {
+    @objc func downloadLinkPreviews(inText text: String, completion: [LinkPreview] -> Void) {
         downloadLinkPreviewsCallCount += 1
         completion(nextResult)
     }
@@ -41,7 +41,7 @@ class LinkPreviewPreprocessorTests: MessagingTest {
     override func setUp() {
         super.setUp()
         mockDetector = MockLinkDetector()
-        sut = LinkPreviewPreprocessor(managedObjectContext: syncMOC, linkPreviewDetector: mockDetector)
+        sut = LinkPreviewPreprocessor(linkPreviewDetector: mockDetector, managedObjectContext: syncMOC)
     }
     
     func testThatItOnlyProcessesMessagesWithLinkPreviewState_WaitingToBeProcessed() {

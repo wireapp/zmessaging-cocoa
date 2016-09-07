@@ -84,6 +84,8 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                                    uiMOC:(NSManagedObjectContext *)uiMOC
                                  syncMOC:(NSManagedObjectContext *)syncMOC
                        syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
+                      appGroupIdentifier:(NSString *)appGroupIdentifier
+                             application:(ZMApplication *)application;
 {
     ZMBadge *badge = [[ZMBadge alloc] init];
 
@@ -102,7 +104,9 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                                                                   backgroundableSession:transportSession
                                                            localNotificationsDispatcher:dispatcher
                                                                taskCancellationProvider:transportSession
-                                                                                  badge:badge];
+                                                                     appGroupIdentifier:(NSString *)appGroupIdentifier
+                                                                                  badge:badge
+                                                                            application:application];
     
     self = [self initWithTransportSession:transportSession
                              syncStrategy:syncStrategy
@@ -126,7 +130,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     
     self = [super init];
     if (self) {
-        self.cryptoBox = [syncMOC zm_cryptKeyStore].box;
+        self.encryptionContext = [syncMOC zm_cryptKeyStore].encryptionContext;
         self.transportSession = transportSession;
         self.syncStrategy = syncStrategy;
         self.syncMOC = syncMOC;
@@ -308,7 +312,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     // this generates the request
     ZMTransportRequestGenerator generator = [self requestGenerator];
     
-    ZMBackgroundActivity * const enqueueActivity = [ZMBackgroundActivity beginBackgroundActivityWithName:@"executeNextOperation"];
+    ZMBackgroundActivity * const enqueueActivity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"executeNextOperation"];
     ZM_WEAK(self);
     [self.syncMOC performGroupedBlock:^{
         ZM_STRONG(self);

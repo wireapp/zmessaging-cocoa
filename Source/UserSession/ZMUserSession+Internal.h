@@ -39,7 +39,6 @@
 @class ClientUpdateStatus;
 @class AVSFlowManager;
 
-extern NSString * const ZMUserSessionFailedToAccessAddressBookNotificationName;
 extern NSString * const ZMAppendAVSLogNotificationName;
 
 @interface ZMUserSession (AuthenticationStatus)
@@ -80,14 +79,19 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic, readonly) NSManagedObjectContext *syncManagedObjectContext;
 @property (nonatomic, readonly) AVSFlowManager *flowManager;
 @property (nonatomic, readonly) ZMLocalNotificationDispatcher *localNotificationDispatcher;
+@property (nonatomic, readonly) NSURL *databaseDirectoryURL;
+
+
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
+                    userInterfaceContext:(NSManagedObjectContext *)userInterfaceContext
                 syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
                             mediaManager:(id<AVSMediaManager>)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(ZMApplication *)application
-                              appVersion:(NSString *)appVersion;
+                              appVersion:(NSString *)appVersion
+                      appGroupIdentifier:(NSString *)appGroupIdentifier;
 
 - (void)tearDown;
 
@@ -173,11 +177,3 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 @end
 
-@interface ZMUserSession (AddressBook)
-
-@property (nonatomic, readonly) NSArray *addressBookContacts;
-
-/// This operation is very expensive if the user's address book is large.
-- (void)reloadAddressBookContacts;
-
-@end

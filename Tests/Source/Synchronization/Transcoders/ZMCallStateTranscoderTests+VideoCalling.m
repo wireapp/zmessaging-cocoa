@@ -171,6 +171,7 @@
     
     // then
     XCTAssertTrue(conversation.isVideoCall);
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItAddsParticipantsWithActiveuserToOtherActiveVideoCallParticipants

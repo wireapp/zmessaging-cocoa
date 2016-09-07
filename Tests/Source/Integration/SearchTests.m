@@ -132,13 +132,15 @@
     XCTAssertFalse(newUser.isPendingApprovalByOtherUser);
 
     XCTAssertTrue([oneOnOneConversation.activeParticipants containsObject:newUser]);
+
+    [searchDirectory tearDown];
 }
 
 
 - (void)testThatItLoadsTheCommonConnectionsFromSearchResult
 {
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-
+    WaitForAllGroupsToBeEmpty(0.5);
     // given
     NSString *userName = @"Werther";
     __block MockUser *user;
@@ -173,10 +175,7 @@
         [[session createConnectionRequestFromUser:commonFriend1 toUser:user message:@""] accept];
         [[session createConnectionRequestFromUser:commonFriend2 toUser:user message:@""] accept];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    
-//    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForAllGroupsToBeEmpty(1.0);
     
     ZMSearchDirectory *searchDirectory = [[ZMSearchDirectory alloc] initWithUserSession:self.userSession];
     [searchDirectory addSearchResultObserver:self];
@@ -185,7 +184,7 @@
     self.expectation = [self expectationWithDescription:@"wait for search results"];
     ZMSearchToken token = [searchDirectory searchForSuggestedPeople];
     
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:1.0]);
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMSearchResult *searchResult = self.searchResults[token];
@@ -200,8 +199,9 @@
     BOOL isEqual = [searchUser.topCommonConnections containsObject:realUser1] && [searchUser.topCommonConnections containsObject:realUser2];
     XCTAssertTrue(isEqual);
     XCTAssertEqual(searchUser.totalCommonConnections, (NSUInteger)2);
+    
+    [searchDirectory tearDown];
 }
-
 
 - (void)testThatItReturnsCommonUsersWithAUser
 {
@@ -305,6 +305,7 @@
     }];
     
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    WaitForAllGroupsToBeEmpty(0.5);
     
     newUser = [self userForMockUser:user];
     XCTAssertNotNil(newUser);
@@ -317,6 +318,7 @@
     XCTAssertTrue(note.connectionStateChanged);
     
     [ZMUser removeUserObserverForToken:userToken];
+    [searchDirectory tearDown];
 }
 
 - (void)testThatItNotifiesObserversWhenTheConnectionStatusChanges_LocalUser
@@ -374,6 +376,7 @@
     XCTAssertTrue(note1.connectionStateChanged);
     
     [ZMUser removeUserObserverForToken:userToken];
+    [searchDirectory tearDown];
 }
 
 @end
@@ -422,6 +425,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     AssertEqualData(searchUser.imageSmallProfileData, profileImageData);
+
+    [searchDirectory tearDown];
 }
 
 - (void)testThatItReturnsTheProfileImageForAnUnconnectedSearchUser
@@ -461,6 +466,8 @@
     XCTAssertNotNil(searchUser);
     
     AssertEqualData(searchUser.imageSmallProfileData, profileImageData);
+
+    [searchDirectory tearDown];
 }
 
 
@@ -525,6 +532,7 @@
     [userListener verify];
     
     [ZMUser removeUserObserverForToken:token];
+    [searchDirectory tearDown];
 }
 
 - (void)testThatItReturnsNoImageIfTheUnconnectedSearchUserHasNoImage
@@ -561,6 +569,7 @@
     XCTAssertNotNil(searchUser);
     
     XCTAssertNil(searchUser.imageSmallProfileData);
+    [searchDirectory tearDown];
 }
 
 
@@ -617,6 +626,8 @@
     AssertEqualData(searchUser.imageMediumData, profileImageData);
     XCTAssertEqualObjects([mediumAssetIDCache objectForKey:userRemoteIdentifier], mediumImageIdentifier);
     XCTAssertEqualObjects([mediumImageCache objectForKey:userRemoteIdentifier], profileImageData);
+
+    [searchDirectory tearDown];
 }
 
 
@@ -677,6 +688,7 @@
         AssertEqualData(searchUser1.imageMediumData, profileImageData);
         XCTAssertEqualObjects([mediumAssetIDCache objectForKey:userRemoteIdentifier], mediumImageIdentifier);
         XCTAssertEqualObjects([mediumImageCache objectForKey:userRemoteIdentifier], profileImageData);
+        [searchDirectory tearDown];
     }
     
     // (2) remove mediumData and assetID from caches (the cache is emptied due to memory limitations)
@@ -721,6 +733,8 @@
         
         XCTAssertNotEqual(searchUser1, searchUser2);
         XCTAssertEqualObjects(searchUser1.remoteIdentifier, searchUser2.remoteIdentifier);
+
+        [searchDirectory tearDown];
     }
 }
 
@@ -770,6 +784,7 @@
         
         XCTAssertEqualObjects([mediumAssetIDCache objectForKey:userRemoteIdentifier], mediumImageIdentifier);
         XCTAssertNil([mediumImageCache objectForKey:userRemoteIdentifier]);
+        [searchDirectory tearDown];
     }
     
     // (2) remove mediumAssetID from Cache
@@ -853,6 +868,7 @@
         XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
         
         WaitForAllGroupsToBeEmpty(0.5);
+        [searchDirectory tearDown];
     }
     
     // when requesting medium image
@@ -878,7 +894,6 @@
     [userListener verify];
     [ZMUser removeUserObserverForToken:userToken];
 }
-
 
 - (void)DISABLED_testThatItDoesNotDownloadCachedImagesAgainButNotifiesObservers
 {
@@ -941,6 +956,7 @@
         XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
         
         WaitForAllGroupsToBeEmpty(0.5);
+        [searchDirectory tearDown];
     }
     
     // when requesting medium image
@@ -1015,6 +1031,8 @@
     }]];
     NSSet *expected = [NSSet setWithObjects:@"Extra User4", @"Extra User5", @"Extra User3", nil];
     XCTAssertEqualObjects(names, expected);
+
+    [searchDirectory tearDown];
 }
 
 - (void)testThatItRemovedSuggestedPeople;
@@ -1049,6 +1067,8 @@
                 [request.path.pathComponents[4] isEqualToString:@"ignore"]);
     }]];
     XCTAssertEqual(requests.count, 1u);
+
+    [searchDirectory tearDown];
 }
 
 @end

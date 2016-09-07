@@ -181,7 +181,7 @@
         <key>push.notification.call.missed.many.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>Du hast %1$#@new_calls@ in einer Unterhaltung</string>
+            <string>Du hast %1$#@new_calls@ verpasste Anrufe in einer Unterhaltung</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>

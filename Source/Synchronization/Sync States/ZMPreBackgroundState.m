@@ -44,7 +44,7 @@
         [strongDelegate goToState:strongDelegate.backgroundState];
         return;
     }
-    self.activity = [ZMBackgroundActivity beginBackgroundActivityWithName:@"ZMPreBackgroundState"];
+    self.activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"ZMPreBackgroundState"];
 }
 
 - (void)tearDown
@@ -90,7 +90,6 @@
     NSArray *transcoders = @[
                              directory.flowTranscoder,
                              directory.systemMessageTranscoder,
-                             directory.textMessageTranscoder,
                              directory.clientMessageTranscoder,
                              directory.selfTranscoder,
                              directory.assetTranscoder,

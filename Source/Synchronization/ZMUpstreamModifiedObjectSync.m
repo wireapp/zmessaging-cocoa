@@ -1,10 +1,19 @@
-
 //
-//  ZMUpstreamModifiedObjectSync.m
-//  zmessaging-cocoa
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
 //
-//  Created by Marco Conti on 08/07/14.
-//  Copyright (c) 2014 Zeta Project Gmbh. All rights reserved.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
 @import ZMTransport;
@@ -252,15 +261,19 @@ ZM_EMPTY_ASSERTING_INIT();
     }
     
     ZMModifiedObjectSyncToken *token = [self.updatedObjects didStartSynchronizingKeys:request.keys forObject:objectWithKeys];
+    NSDictionary *userInfo = request.userInfo;
+    NSSet *keys = request.keys;
     
     ZM_WEAK(self);
-    ZM_WEAK(transcoder);
+    ZM_WEAK(request);
     [request.transportRequest addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.context block:^(ZMTransportResponse *response) {
         ZM_STRONG(self);
-        ZM_STRONG(transcoder);
+        ZM_STRONG(request);
+        
+        id <ZMUpstreamTranscoder> localTranscoder = self.transcoder;
         NSSet *keysToParse = [self.updatedObjects keysToParseAfterSyncingToken:token];
         if(response.result == ZMTransportResponseStatusSuccess) {
-            BOOL transcoderNeedsMoreRequests = [transcoder updateUpdatedObject:objectWithKeys.object requestUserInfo:request.userInfo response:response keysToParse:keysToParse];
+            BOOL transcoderNeedsMoreRequests = [transcoder updateUpdatedObject:objectWithKeys.object requestUserInfo:userInfo response:response keysToParse:keysToParse];
             BOOL needsMoreRequests = (keysToParse.count > 0) && transcoderNeedsMoreRequests;
             if (needsMoreRequests) {
                 [self.updatedObjects didNotFinishToSynchronizeToken:token];
@@ -274,25 +287,25 @@ ZM_EMPTY_ASSERTING_INIT();
         }
         else if (response.result == ZMTransportResponseStatusExpired) {
             [self.updatedObjects didFailToSynchronizeToken:token];
-            if ([transcoder respondsToSelector:@selector(requestExpiredForObject:forKeys:)]) {
-                [transcoder requestExpiredForObject:objectWithKeys.object forKeys:objectWithKeys.keysToSync];
+            if ([localTranscoder respondsToSelector:@selector(requestExpiredForObject:forKeys:)]) {
+                [localTranscoder requestExpiredForObject:objectWithKeys.object forKeys:objectWithKeys.keysToSync];
             }
         }
         else {
             BOOL shouldResyncObject = NO;
-            if ([transcoder respondsToSelector:@selector(shouldRetryToSyncAfterFailedToUpdateObject:request:response:keysToParse:)]) {
-                shouldResyncObject = [transcoder shouldRetryToSyncAfterFailedToUpdateObject:objectWithKeys.object request:request response:response keysToParse:keysToParse];
+            if ([localTranscoder respondsToSelector:@selector(shouldRetryToSyncAfterFailedToUpdateObject:request:response:keysToParse:)]) {
+                shouldResyncObject = [localTranscoder shouldRetryToSyncAfterFailedToUpdateObject:objectWithKeys.object request:request response:response keysToParse:keysToParse];
             }
 
             if (shouldResyncObject) {
                 //if there is no new dependencies for currently synced object than we just try again
                 [self.updatedObjects didFailToSynchronizeToken:token];
-                [objectWithKeys.object setLocallyModifiedKeys:request.keys];
+                [objectWithKeys.object setLocallyModifiedKeys:keys];
                 [self addUpdatedObject:objectWithKeys.object];
             }
             else {
                 [self.updatedObjects didFailToSynchronizeToken:token];
-                ZMManagedObject *objectToRefetch = [self.transcoder objectToRefetchForFailedUpdateOfObject:objectWithKeys.object];
+                ZMManagedObject *objectToRefetch = [localTranscoder objectToRefetchForFailedUpdateOfObject:objectWithKeys.object];
                 objectToRefetch.needsToBeUpdatedFromBackend = YES;
             }
         }

@@ -24,40 +24,6 @@ import Cryptobox
 import ZMCMockTransport
 import ZMCDataModel
 
-// used by tests to fake errors on genrating pre keys
-public class FakeKeysStore: UserClientKeysStore {
-
-    var failToGeneratePreKeys: Bool = false
-    var failToGenerateLastPreKey: Bool = false
-    
-    var lastGeneratedKeys : (keys: [CBPreKey], minIndex: UInt, maxIndex: UInt) = ([],0,0)
-    var lastGeneratedLastPrekey : CBPreKey?
-    
-    override public func generateMoreKeys(count: UInt, start: UInt) throws -> ([CBPreKey], UInt, UInt) {
-        if self.failToGeneratePreKeys {
-            let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
-            throw error
-        }
-        else {
-            let keys = try! super.generateMoreKeys(count, start: start)
-            lastGeneratedKeys = keys
-            return keys
-        }
-    }
-    
-    override public func lastPreKey() throws -> CBPreKey {
-        if self.failToGenerateLastPreKey {
-            let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
-            throw error
-        }
-        else {
-            lastGeneratedLastPrekey = try! super.lastPreKey()
-            return lastGeneratedLastPrekey!
-        }
-    }
-    
-}
-
 class UserClientRequestFactoryTests: MessagingTest {
     
     var sut: UserClientRequestFactory!
@@ -67,7 +33,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
         
-        authenticationStatus = ZMMockAuthenticationStatus(managedObjectContext: self.syncMOC, cookie: nil);
+        authenticationStatus = MockAuthenticationStatus(cookie: nil);
         self.sut = UserClientRequestFactory()
         
         let newKeyStore = FakeKeysStore()
@@ -79,10 +45,10 @@ class UserClientRequestFactoryTests: MessagingTest {
         super.tearDown()
     }
 
-    func expectedKeyPayloadForClientPreKeys(client : UserClient) -> [NSDictionary] {
+    func expectedKeyPayloadForClientPreKeys(client : UserClient) -> [[String : AnyObject]] {
         let generatedKeys = (client.keysStore as! FakeKeysStore).lastGeneratedKeys
-        let expectedPrekeys = generatedKeys.keys.enumerate().map {
-            return ["key": $1.data!.base64String(), "id": Int(generatedKeys.minIndex) + $0]
+        let expectedPrekeys : [[String: AnyObject]] = generatedKeys.map { (key: (id: UInt16, prekey: String)) in
+            return ["key": key.prekey, "id": NSNumber(unsignedShort: key.id)]
         }
         return expectedPrekeys
     }
@@ -103,11 +69,11 @@ class UserClientRequestFactoryTests: MessagingTest {
                 AssertDictionaryHasOptionalValue(payload, key: "password", expected: credentials.password!, "Payload should contain password")
                 
                 let lastPreKey = (client.keysStore as! FakeKeysStore).lastGeneratedLastPrekey!
-                let expectedLastPreKeyPayload = ["key": lastPreKey.data!.base64String(), "id": CBMaxPreKeyID+1]
+                let expectedLastPreKeyPayload = ["key": lastPreKey, "id": NSNumber(unsignedShort: UserClientKeysStore.MaxPreKeyID+1)]
                 
                 AssertDictionaryHasOptionalValue(payload, key: "lastkey", expected: expectedLastPreKeyPayload, "Payload should contain last prekey")
                 
-                let preKeysPayloadData = payload["prekeys"] as? [[NSString: AnyObject]]
+                let preKeysPayloadData = payload["prekeys"] as? [[String: AnyObject]]
                 AssertOptionalNotNil(preKeysPayloadData, "Payload should contain prekeys") {preKeysPayloadData in
                     XCTAssertEqual(preKeysPayloadData, self.expectedKeyPayloadForClientPreKeys(client))
                 }
@@ -147,7 +113,7 @@ class UserClientRequestFactoryTests: MessagingTest {
                 XCTAssertNil(payload["password"])
                 
                 let lastPreKey = try! client.keysStore.lastPreKey()
-                let expectedLastPreKeyPayload = ["key": lastPreKey.data!.base64String(), "id": CBMaxPreKeyID+1]
+                let expectedLastPreKeyPayload = ["key": lastPreKey, "id": NSNumber(unsignedShort: UserClientKeysStore.MaxPreKeyID+1)]
                 
                 AssertDictionaryHasOptionalValue(payload, key: "lastkey", expected: expectedLastPreKeyPayload, "Payload should contain last prekey")
                 
@@ -289,42 +255,6 @@ class UserClientRequestFactoryTests: MessagingTest {
                 "password" : password
                 ])
             XCTAssertEqual($0.transportRequest.method, ZMTransportRequestMethod.MethodDELETE)
-        }
-    }
-    
-    func testThatItCreatesMissingClientsRequest() {
-        
-        // given
-        let client = UserClient.insertNewObjectInManagedObjectContext(self.syncMOC)
-        
-        let missingUser = ZMUser.insertNewObjectInManagedObjectContext(self.syncMOC)
-        missingUser.remoteIdentifier = NSUUID.createUUID()
-        
-        let firstMissingClient = UserClient.insertNewObjectInManagedObjectContext(self.syncMOC)
-        firstMissingClient.remoteIdentifier = NSString.createAlphanumericalString()
-        firstMissingClient.user = missingUser
-        
-        let secondMissingClient = UserClient.insertNewObjectInManagedObjectContext(self.syncMOC)
-        secondMissingClient.remoteIdentifier = NSString.createAlphanumericalString()
-        secondMissingClient.user = missingUser
-
-        // when
-        client.missesClient(firstMissingClient)
-        client.missesClient(secondMissingClient)
-        
-        let map = MissingClientsMap(Array(client.missingClients!), pageSize: sut.missingClientsUserPageSize)
-        let request = sut.fetchMissingClientKeysRequest(map)
-        _ = [missingUser.remoteIdentifier!.transportString(): [firstMissingClient.remoteIdentifier, secondMissingClient.remoteIdentifier]]
-        
-        // then
-        AssertOptionalNotNil(request, "Should create request to fetch clients' keys") {request in
-            XCTAssertEqual(request.transportRequest.method, ZMTransportRequestMethod.MethodPOST)
-            XCTAssertEqual(request.transportRequest.path, "/users/prekeys")
-            let userPayload = request.transportRequest.payload.asDictionary()[missingUser.remoteIdentifier!.transportString()] as? NSArray
-            AssertOptionalNotNil(userPayload, "Clients map should contain missid user id") {userPayload in
-                XCTAssertTrue(userPayload.containsObject(firstMissingClient.remoteIdentifier), "Clients map should contain all missed clients id for each user")
-                XCTAssertTrue(userPayload.containsObject(secondMissingClient.remoteIdentifier), "Clients map should contain all missed clients id for each user")
-            }
         }
     }
 }

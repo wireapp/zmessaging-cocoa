@@ -51,6 +51,7 @@
     [super setUp];
     
     self.mockUISharedApplication = [OCMockObject mockForClass:UIApplication.class];
+    [[[self.mockUISharedApplication stub] andReturnValue:@(UIApplicationStateBackground)] applicationState];
     [self verifyMockLater:self.mockUISharedApplication];
     self.mockEventNotificationSet = [OCMockObject niceMockForClass:[ZMLocalNotificationSet class]];
     self.mockFailedNotificationSet = [OCMockObject niceMockForClass:[ZMLocalNotificationSet class]];
@@ -392,7 +393,7 @@
 
 - (void)testThatItSchedulesADefaultNotificationIfContentShouldNotBeVisible;
 {
-    [self.syncMOC setPersistentStoreMetadata:@(YES) forKey:@"ZMShouldHideNotificationContentKey"];
+    [self.syncMOC setPersistentStoreMetadata:@(YES) forKey:ZMShouldHideNotificationContentKey];
     [self.syncMOC saveOrRollback];
     // given
     NSDictionary *data = @{@"content" : @"hallo", @"nonce": [NSUUID UUID].transportString };
@@ -400,8 +401,8 @@
     
     // expect
     [[self.mockUISharedApplication stub] scheduleLocalNotification:[OCMArg checkWithBlock:^BOOL(UILocalNotification *localNotification) {
-        
-        return [localNotification.alertBody isEqualToString:[ZMPushStringDefault localizedString]];
+        return ([localNotification.alertBody isEqualToString:[ZMPushStringDefault localizedString]] &&
+                [localNotification.soundName isEqualToString:@"new_message_apns.caf"]);
     }]];
     
     //when
