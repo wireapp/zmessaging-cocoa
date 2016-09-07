@@ -19,15 +19,12 @@
 
 @import ZMTransport;
 @import ZMCDataModel;
+@import WireRequestStrategy;
 
 #import "ZMConnectionTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMUpstreamInsertedObjectSync.h"
 #import "ZMOperationLoop.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import "ZMUpstreamRequest.h"
-#import "ZMDownstreamObjectSync.h"
 #import "ZMNotifications+UserSessionInternal.h"
 
 static NSString *const PathConnections = @"/connections";

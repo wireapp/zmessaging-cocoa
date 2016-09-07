@@ -20,18 +20,13 @@
 
 #import "ZMClientMessageTranscoder+Internal.h"
 #import "ZMMessageTranscoder+Internal.h"
-#import "ZMUpstreamInsertedObjectSync.h"
 #import "ZMMessageExpirationTimer.h"
-#import "ZMUpstreamTranscoder.h"
-#import "ZMImagePreprocessingTracker.h"
-#import "ZMDownstreamObjectSyncWithWhitelist.h"
 
 #import "ZMClientRegistrationStatus.h"
 #import "ZMLocalNotificationDispatcher.h"
 
 #import "CBCryptoBox+UpdateEvents.h"
 #import <zmessaging/zmessaging-Swift.h>
-#import "ZMOperationLoop.h"
 
 
 @interface ZMAssetClientMessage (ImagePredicates)
@@ -124,7 +119,8 @@
         if(imageMessage != nil) {
             [self.downstreamSync whiteListObject:imageMessage];
         }
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+//        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 
@@ -225,7 +221,7 @@
                                                                        nonce:message.nonce.transportString
                                                                       format:format];
     [message addGenericMessage:genericMessage];
-    [ZMOperationLoop notifyNewRequestsAvailable:self];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (ZMUpstreamRequest *)requestForUpdatingAssetClientMessage:(ZMAssetClientMessage *)message format:(ZMImageFormat)format
@@ -240,7 +236,7 @@
         if (response.result == ZMTransportResponseStatusSuccess) {
             ZM_STRONG(self);
             [message markAsSent];
-            [ZMOperationLoop notifyNewRequestsAvailable:self]; //to send next image
+            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self]; // to send next image
         }
     }]];
     

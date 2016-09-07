@@ -39,7 +39,6 @@
 #import "ZMBackgroundTaskState.h"
 
 #import "ZMObjectStrategyDirectory.h"
-#import "ZMObjectSyncStrategy.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 

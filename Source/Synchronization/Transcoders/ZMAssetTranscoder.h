@@ -19,8 +19,7 @@
 
 @import Foundation;
 @import CoreData;
-#import <zmessaging/ZMObjectSyncStrategy.h>
-#import <zmessaging/ZMOutstandingItems.h>
+@import WireRequestStrategy;
 
 @class ZMImageMessage;
 

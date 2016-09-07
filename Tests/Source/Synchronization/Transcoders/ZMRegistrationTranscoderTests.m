@@ -22,7 +22,6 @@
 
 #import "ObjectTranscoderTests.h"
 #import "ZMRegistrationTranscoder.h"
-#import "ZMSingleRequestSync.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMCredentials.h"
 #import "ZMUserSessionRegistrationNotification.h"

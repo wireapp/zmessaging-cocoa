@@ -1267,17 +1267,16 @@
     [[self.stateMachine stub] enterBackground];
     [[self.stateMachine stub] enterForeground];
 
-    
     // expect
-    id mockLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
-    [[[mockLoop expect] classMethod] notifyNewRequestsAvailable:OCMOCK_ANY];
+    id mockRequestNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
+    [[[mockRequestNotification expect] classMethod] notifyNewRequestsAvailable:OCMOCK_ANY];
 
     // when
     [self goToBackground];
     
     // then
-    [mockLoop verify];
-    [mockLoop stopMocking];
+    [mockRequestNotification verify];
+    [mockRequestNotification stopMocking];
 }
 
 - (void)testThatItNotifiesTheOperationLoopOfNewOperationWhenEnteringForeground
@@ -1287,15 +1286,15 @@
     [[self.stateMachine stub] enterForeground];
     
     // expect
-    id mockLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
-    [[mockLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    id mockRequestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
+    [[mockRequestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     
     // when
     [self goToForeground];
     
     // then
-    [mockLoop verify];
-    [mockLoop stopMocking];
+    [mockRequestAvailableNotification verify];
+    [mockRequestAvailableNotification stopMocking];
 }
 
 - (void)testThatItUpdatesTheBadgeCount

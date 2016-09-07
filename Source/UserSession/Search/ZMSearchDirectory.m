@@ -29,7 +29,6 @@
 #import "ZMSuggestionSearch.h"
 #import "ZMSearchTopConversations.h"
 #import "ZMUserIDsForSearchDirectoryTable.h"
-#import "ZMOperationLoop.h"
 #import "ZMSuggestionResult.h"
 #import "ZMSearchResult+Internal.h"
 #import "ZMSearchRequest.h"
@@ -393,7 +392,7 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
             return user.isLocalOrHasCachedProfileImageData ? nil : user;
         }];
         [[ZMSearchDirectory userIDsMissingProfileImage] setSearchUsers:userWithoutImage forSearchDirectory:self];
-        [ZMOperationLoop notifyNewRequestsAvailable:nil];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:nil];
     }
 }
 

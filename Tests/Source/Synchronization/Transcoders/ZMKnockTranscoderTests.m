@@ -24,9 +24,6 @@
 
 #import "MessagingTest.h"
 #import "ZMKnockTranscoder.h"
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMUpstreamInsertedObjectSync.h"
-#import <zmessaging/ZMUpstreamRequest.h>
 
 @interface ZMKnockTranscoderTests : MessagingTest
 

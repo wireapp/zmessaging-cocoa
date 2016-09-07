@@ -18,6 +18,7 @@
 
 
 import Foundation
+import WireRequestStrategy
 
 
 private let reponseHeaderAssetIdKey = "Location"
@@ -255,7 +256,7 @@ private let reponseHeaderAssetIdKey = "Location"
         })
     }
     
-    func nextRequest() -> ZMTransportRequest? {
+    public func nextRequest() -> ZMTransportRequest? {
         guard self.authenticationStatus.currentPhase == .Authenticated else { return nil }
         guard self.clientRegistrationStatus.currentClientReadyToUse else  { return nil }
         return self.fullFileUpstreamSync.nextRequest()

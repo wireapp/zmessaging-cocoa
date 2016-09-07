@@ -19,7 +19,7 @@
 
 @import Foundation;
 @import CoreData;
-#import "ZMObjectSyncStrategy.h"
+@import WireRequestStrategy;
 #import "ZMObjectStrategyDirectory.h"
 
 @class ZMConversation;

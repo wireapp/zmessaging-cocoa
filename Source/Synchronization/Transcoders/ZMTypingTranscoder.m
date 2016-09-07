@@ -22,7 +22,6 @@
 
 #import "ZMTypingTranscoder.h"
 #import "ZMTyping.h"
-#import "ZMOperationLoop.h"
 #import "ZMTypingTranscoder+Internal.h"
 
 
@@ -123,7 +122,7 @@ static NSString * const StartedKey = @"started";
             self.lastSentTypingEvent = nil;
         } else {
             self.conversations[conversation.objectID] = isTypingNumber;
-            [ZMOperationLoop notifyNewRequestsAvailable:self];
+            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
         }
     }];
 }

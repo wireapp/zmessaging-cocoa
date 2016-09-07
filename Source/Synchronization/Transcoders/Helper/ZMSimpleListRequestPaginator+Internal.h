@@ -18,7 +18,7 @@
 
 
 #import "ZMSimpleListRequestPaginator.h"
-#import "ZMSingleRequestSync.h"
+@import WireRequestStrategy;
 
 @interface ZMSimpleListRequestPaginator (Internal) <ZMSingleRequestTranscoder>
 

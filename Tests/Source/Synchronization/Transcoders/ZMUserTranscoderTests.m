@@ -25,9 +25,6 @@
 #import "ZMUserTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
 #import "ZMUserSession.h"
-#import "ZMContextChangeTracker.h"
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMRemoteIdentifierObjectSync.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMUserSession+Internal.h"
 

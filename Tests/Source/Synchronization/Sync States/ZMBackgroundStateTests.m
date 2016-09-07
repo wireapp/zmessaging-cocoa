@@ -24,8 +24,6 @@
 #import "ZMStateMachineDelegate.h"
 #import "StateBaseTest.h"
 #import "ZMBackgroundState.h"
-#import "ZMObjectSyncStrategy.h"
-#import "ZMRequestGenerator.h"
 
 
 

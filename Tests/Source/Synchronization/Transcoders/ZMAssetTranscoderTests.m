@@ -26,17 +26,7 @@
 @import ZMCDataModel;
 
 #import "MessagingTest.h"
-
 #import "ZMAssetTranscoder.h"
-#import "ZMContextChangeTracker.h"
-#import "ZMUpstreamAssetSync.h"
-#import "ZMContextChangeTracker.h"
-#import "ZMUpstreamTranscoder.h"
-#import "ZMDownstreamObjectSync.h"
-#import "ZMImagePreprocessingTracker.h"
-#import "ZMChangeTrackerBootstrap+Testing.h"
-
-
 
 
 #if TARGET_OS_IPHONE

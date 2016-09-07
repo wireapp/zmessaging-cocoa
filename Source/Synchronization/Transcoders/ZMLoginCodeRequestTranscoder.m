@@ -18,10 +18,10 @@
 
 
 @import ZMTransport;
+@import WireRequestStrategy;
 
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMAuthenticationStatus.h"
-#import "ZMSingleRequestSync.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMCredentials.h"
 #import "ZMUserSessionAuthenticationNotification.h"

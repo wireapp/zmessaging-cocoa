@@ -23,7 +23,6 @@
 @import Cryptobox;
 @import ZMCDataModel;
 
-
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "ZMUserTranscoder.h"
@@ -40,7 +39,6 @@ NSString * const ZMPushChannelStateChangeNotificationName = @"ZMPushChannelState
 NSString * const ZMPushChannelIsOpenKey = @"pushChannelIsOpen";
 NSString * const ZMPushChannelResponseStatusKey = @"responseStatus";
 
-static NSString * const ZMOperationLoopNewRequestAvailableNotification = @"ZMOperationLoopNewRequestAvailable";
 static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 
@@ -62,13 +60,11 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @end
 
 
+@interface ZMOperationLoop (NewRequests) <ZMRequestAvailableObserver>
+@end
+
 
 @implementation ZMOperationLoop
-
-+ (void)notifyNewRequestsAvailable:(id<NSObject>)sender;
-{
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMOperationLoopNewRequestAvailableNotification object:sender];
-}
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                     authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
@@ -150,7 +146,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                                                        object:syncMOC];
         }
         
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleNewRequestAvailable:) name:ZMOperationLoopNewRequestAvailableNotification object:nil];
+        [ZMRequestAvailableNotification addObserver:self];
         
         // this is needed to avoid loading from syncMOC on the main queue
         [self.syncMOC performGroupedBlock:^{
@@ -168,6 +164,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     
     [self.transportSession closePushChannelAndRemoveConsumer];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [ZMRequestAvailableNotification removeObserver:self];
     
     ZMSyncStrategy *strategy = self.syncStrategy;
     self.syncStrategy = nil;
@@ -242,7 +239,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
         NSSet *syncUpdatedObjects = [ZMOperationLoop objectSetFromObjectIDs:updatedObjectsIDs inContext:self.syncStrategy.syncMOC];
         
         [self.syncStrategy processSaveWithInsertedObjects:syncInsertedObjects updateObjects:syncUpdatedObjects];
-        [self.class notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 
@@ -260,13 +257,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     }
     
     [self.syncStrategy processSaveWithInsertedObjects:syncInsertedObjects updateObjects:syncUpdatedObjects];
-    [self.class notifyNewRequestsAvailable:self];
-}
-
-- (void)handleNewRequestAvailable:(NSNotification *)note
-{
-    NOT_USED(note);
-    [self executeNextOperation];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (ZMTransportRequestGenerator)requestGenerator {
@@ -286,11 +277,10 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
             [self.syncStrategy.syncMOC enqueueDelayedSaveWithGroup:response.dispatchGroup];
             
             // Check if there is something to do now and when the save completes
-            Class selfClass = self.class;
-            [selfClass notifyNewRequestsAvailable:self];
+            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
             
             [self.syncStrategy.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_global_queue(0, 0) block:^{
-                [selfClass notifyNewRequestsAvailable:self];
+                [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
             }];
         }]];
         
@@ -333,6 +323,15 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @end
 
 
+@implementation ZMOperationLoop (NewRequests)
+
+- (void)newRequestsAvailable
+{
+    [self executeNextOperation];
+}
+
+@end
+
 
 @implementation ZMOperationLoop (ZMPushChannel)
 
@@ -360,14 +359,14 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     NOT_USED(response);
         [[NSNotificationCenter defaultCenter] postNotificationName:ZMPushChannelStateChangeNotificationName object:self userInfo:@{ZMPushChannelIsOpenKey : @(NO), ZMPushChannelResponseStatusKey : @(response.statusCode)}];
     [self.syncStrategy didInterruptUpdateEventsStream];
-    [ZMOperationLoop notifyNewRequestsAvailable:channel];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:channel];
 }
 
 - (void)pushChannelDidOpen:(ZMPushChannelConnection *)channel withResponse:(NSHTTPURLResponse *)response;
 {
         [[NSNotificationCenter defaultCenter] postNotificationName:ZMPushChannelStateChangeNotificationName object:self userInfo:@{ZMPushChannelIsOpenKey : @(YES), ZMPushChannelResponseStatusKey : @(response.statusCode)}];
     [self.syncStrategy didEstablishUpdateEventsStream];
-    [ZMOperationLoop notifyNewRequestsAvailable:channel];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:channel];
 }
 
 @end

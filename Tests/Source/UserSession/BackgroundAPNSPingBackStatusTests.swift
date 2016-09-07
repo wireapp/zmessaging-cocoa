@@ -28,7 +28,7 @@ class OperationLoopNewRequestObserver {
     
     var notifications = [NSNotification]()
     private var notificationCenter = NSNotificationCenter.defaultCenter()
-    private var newRequestNotification = "ZMOperationLoopNewRequestAvailable"
+    private var newRequestNotification = "RequestAvailableNotification"
     
     init() {
         notificationCenter.addObserverForName(newRequestNotification, object: nil, queue: .mainQueue()) { [weak self] note in

@@ -138,7 +138,7 @@ extension EventsWithIdentifier {
             updateStatus()
         }
         
-        ZMOperationLoop.notifyNewRequestsAvailable(self)
+        RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
     
     public func didPerfomPingBackRequest(eventsWithID: EventsWithIdentifier, responseStatus: ZMTransportResponseStatus) {

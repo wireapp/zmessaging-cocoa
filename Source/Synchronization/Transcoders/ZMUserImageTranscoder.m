@@ -22,14 +22,7 @@
 @import ZMCDataModel;
 
 #import "ZMUserImageTranscoder.h"
-#import "ZMDownstreamObjectSync.h"
-#import "ZMDownstreamObjectSyncWithWhitelist.h"
-#import "ZMImagePreprocessingTracker.h"
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMUpstreamAssetSync.h"
 #import "ZMAssetRequestFactory.h"
-#import "ZMUpstreamTranscoder.h"
-#import "ZMUpstreamRequest.h"
 
 
 

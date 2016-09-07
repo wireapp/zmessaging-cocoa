@@ -17,7 +17,7 @@
 // 
 
 
-#import "ZMObjectSyncStrategy.h"
+@import WireRequestStrategy;
 
 @class ZMTransportResponse;
 @class ZMAuthenticationStatus;

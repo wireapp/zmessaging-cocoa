@@ -23,7 +23,7 @@
 #import "ZMUserSession+Authentication.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMTracing.h"
-#import "ZMOperationLoop.h"
+//#import "ZMOperationLoop.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
 #import "ZMUserSessionAuthenticationNotification.h"
@@ -59,7 +59,7 @@ static NSString *const HasHistoryKey = @"hasHistory";
         if (self.isLoggedIn) {
             ZMLogDebug(@"User session has a cookie in loginWithEmail, no need to log in");
             [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
-            [ZMOperationLoop notifyNewRequestsAvailable:self];
+            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
             return;
         }
         else if (   (loginCredentials.email.length == 0 || loginCredentials.password.length == 0)
@@ -81,7 +81,7 @@ static NSString *const HasHistoryKey = @"hasHistory";
         }
     }];
     
-    [ZMOperationLoop notifyNewRequestsAvailable:self];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (BOOL)hadHistoryAtLastLogin
@@ -96,7 +96,7 @@ static NSString *const HasHistoryKey = @"hasHistory";
     }
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForLogin:phoneNumber];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
     return YES;
 }

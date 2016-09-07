@@ -235,7 +235,7 @@
     }]];
    
     // when
-    [ZMOperationLoop notifyNewRequestsAvailable:self];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     
     // then
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
@@ -253,7 +253,7 @@
     [[[self.transportSession expect] andReturn:result] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     
     // when
-    [ZMOperationLoop notifyNewRequestsAvailable:self];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     
     // then
     [self.transportSession verifyWithDelay:0.15];
@@ -299,7 +299,7 @@
     [[self.transportSession reject] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
 
     // when
-    [ZMOperationLoop notifyNewRequestsAvailable:self];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 
     // then
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.6]);
@@ -337,7 +337,7 @@
     [[[self.transportSession expect] andReturn:resultNO] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     [[[self.transportSession expect] andReturn:resultNO] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     [[[self.transportSession expect] andReturn:resultNO] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
-    [ZMOperationLoop notifyNewRequestsAvailable:self]; // this will enqueue `request`
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self]; // this will enqueue `request`
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
@@ -379,7 +379,7 @@
     [[[self.transportSession stub] andReturn:resultNO] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     [[self.syncStrategy stub] processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
 
-    [ZMOperationLoop notifyNewRequestsAvailable:self]; // this will enqueue `request`
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self]; // this will enqueue `request`
     WaitForAllGroupsToBeEmpty(0.5);
     
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *resp ZM_UNUSED) {
@@ -429,7 +429,8 @@
     [[[self.transportSession expect] andReturn:resultYES] attemptToEnqueueSyncRequestWithGenerator:[OCMArg checkWithBlock:checkGenerator]];
     [[[self.transportSession stub] andReturn:resultNO] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     [[self.syncStrategy stub] processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
-    [ZMOperationLoop notifyNewRequestsAvailable:self]; // this will enqueue `request`
+//    [ZMOperationLoop notifyNewRequestsAvailable:self]; // this will enqueue `request`
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *resp ZM_UNUSED) {
@@ -712,7 +713,7 @@
     [self verifyMockLater:self.syncStrategy];
     
     // when
-    [ZMOperationLoop notifyNewRequestsAvailable:self];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     WaitForAllGroupsToBeEmpty(0.5);
     
 }
@@ -828,7 +829,7 @@
     [[self.syncStrategy expect] dataDidChange];
     
     // when
-    [ZMOperationLoop notifyNewRequestsAvailable:nil];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 

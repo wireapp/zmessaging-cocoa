@@ -132,7 +132,7 @@
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(UInt64(lowPriorityRequestsCooldownInterval) * NSEC_PER_SEC)), dispatch_get_global_queue(0, 0)) {
                 [weak self] in
                 self?.managedObjectContext.performGroupedBlock {
-                    ZMOperationLoop.notifyNewRequestsAvailable(self)
+                    RequestAvailableNotification.notifyNewRequestsAvailable(self)
                 }
             }
     }

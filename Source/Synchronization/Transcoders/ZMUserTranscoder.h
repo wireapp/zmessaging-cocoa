@@ -18,7 +18,8 @@
 
 
 @import Foundation;
-#import <zmessaging/ZMObjectSyncStrategy.h>
+@import WireRequestStrategy;
+
 @class NSManagedObjectContext;
 
 extern NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest;

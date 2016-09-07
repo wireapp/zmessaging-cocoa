@@ -19,7 +19,6 @@
 
 @import ZMCDataModel;
 #import "MessagingTest.h"
-#import "ZMSyncOperationSet.h"
 #import "MockEntity.h"
 #import "MockEntity2.h"
 

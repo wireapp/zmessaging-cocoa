@@ -26,15 +26,8 @@
 
 #import "MessagingTest.h"
 #import "ZMUserImageTranscoder.h"
-#import "ZMContextChangeTracker.h"
-#import "ZMDownstreamObjectSync.h"
-#import "ZMDownstreamObjectSyncWithWhitelist.h"
 #import "ZMAssetRequestFactory.h"
 #import "ZMUserImageTranscoder+Testing.h"
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMImagePreprocessingTracker.h"
-#import "ZMUpstreamAssetSync.h"
-
 
 
 @interface ZMUserImageTranscoderTests : MessagingTest

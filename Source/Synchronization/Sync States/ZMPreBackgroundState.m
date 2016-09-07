@@ -21,7 +21,6 @@
 @import ZMTransport;
 
 #import "ZMPreBackgroundState.h"
-#import "ZMObjectSyncStrategy.h"
 #import "ZMFlowSync.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMStateMachineDelegate.h"

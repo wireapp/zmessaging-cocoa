@@ -26,17 +26,9 @@
 #import "ObjectTranscoderTests.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMConversationTranscoder+Internal.h"
-#import "ZMSyncOperationSet.h"
-#import "ZMDownstreamObjectSync.h"
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMUpstreamInsertedObjectSync.h"
 #import "ZMSyncStrategy.h"
 #import "BadgeApplication.h"
-#import "ZMUpstreamTranscoder.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import "ZMRemoteIdentifierObjectSync.h"
-#import "ZMChangeTrackerBootstrap+Testing.h"
-#import "ZMSyncStrategy.h"
 
 
 static NSString *const CONVERSATIONS_PATH = @"/conversations";

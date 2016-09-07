@@ -24,8 +24,6 @@
 #import "MessagingTest.h"
 #import "ZMPushTokenTranscoder.h"
 #import "ZMPushToken.h"
-#import "ZMContextChangeTracker.h"
-#import "ZMSingleRequestSync.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 static NSString * const FallbackAPNS = @"APNS";

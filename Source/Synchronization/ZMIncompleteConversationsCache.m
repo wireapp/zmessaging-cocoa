@@ -21,7 +21,6 @@
 @import ZMCDataModel;
 
 #import "ZMIncompleteConversationsCache.h"
-#import "ZMOperationLoop.h"
 
 static const NSUInteger ConversationPriorityCount = 5;
 
@@ -129,7 +128,7 @@ static const NSUInteger ConversationPriorityCount = 5;
         [self.conversationsToFetch removeObject:conversation];
     }
     [self.conversationsToFetch insertObject:conversation atIndex:0];
-    [ZMOperationLoop notifyNewRequestsAvailable:self];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (void)processConversationWhitelistingAndFetching:(ZMConversation *)conversation;

@@ -101,7 +101,7 @@
     
     // expectations
     [[(id) self.authenticationObserver stub] authenticationDidSucceed];
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     
     // when
     ZMCredentials *cred = [ZMEmailCredentials credentialsWithEmail:@"anything@example.com" password:@"123456"];
@@ -110,7 +110,7 @@
     
     // then
     XCTAssertTrue(self.sut.isLoggedIn);
-    [self.operationLoop stopMocking];
+    [self.requestAvailableNotification verify];
 }
 
 - (void)testThatNotifiesThatRequestsAreAvailableIfRegisteringClient
@@ -121,7 +121,7 @@
     
     // expectations
     [[(id) self.authenticationObserver stub] authenticationDidSucceed];
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     
     // when
     ZMCredentials *cred = [ZMEmailCredentials credentialsWithEmail:@"anything@example.com" password:@"123456"];
@@ -131,7 +131,7 @@
     // then
     XCTAssertFalse(self.sut.isLoggedIn);
     XCTAssertEqualObjects(self.sut.authenticationStatus.loginCredentials, cred);
-    [self.operationLoop stopMocking];
+    [self.requestAvailableNotification verify];
 }
 
 
@@ -211,7 +211,7 @@
     ZMCredentials *credentials = [ZMPhoneCredentials credentialsWithPhoneNumber:@"+49123456789" verificationCode:@"123456"];
     
     // expect
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     
     // when
     [self.sut loginWithCredentials:credentials];
@@ -220,7 +220,7 @@
     // then
     XCTAssertEqualObjects(self.sut.authenticationStatus.loginCredentials, credentials);
     XCTAssertEqual(self.sut.authenticationStatus.currentPhase, ZMAuthenticationPhaseLoginWithPhone);
-    [self.operationLoop stopMocking];
+    [self.requestAvailableNotification verify];
 }
 
 - (void)testThatItSetsLoginCredentialsWithEmail
@@ -229,7 +229,7 @@
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:@"foo@example.com" password:@"dsg$#%24"];
     
     // expect
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     
     // when
     [self.sut loginWithCredentials:credentials];
@@ -238,7 +238,7 @@
     // then
     XCTAssertEqualObjects(self.sut.authenticationStatus.loginCredentials, credentials);
     XCTAssertEqual(self.sut.authenticationStatus.currentPhase, ZMAuthenticationPhaseLoginWithEmail);
-    [self.operationLoop stopMocking];
+    [self.requestAvailableNotification verify];
 }
 
 - (void)testThatItRequestsLoginValidationCode
@@ -247,7 +247,7 @@
     NSString *phone = @"+4912345678900";
     
     // expect
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     
     // when
     [self.sut requestPhoneVerificationCodeForLogin:phone];
@@ -256,7 +256,7 @@
     // then
     XCTAssertEqualObjects(self.sut.authenticationStatus.loginPhoneNumberThatNeedsAValidationCode, phone);
     XCTAssertEqual(self.sut.authenticationStatus.currentPhase, ZMAuthenticationPhaseRequestPhoneVerificationCodeForLogin);
-    [self.operationLoop stopMocking];
+    [self.requestAvailableNotification verify];
 }
 
 @end

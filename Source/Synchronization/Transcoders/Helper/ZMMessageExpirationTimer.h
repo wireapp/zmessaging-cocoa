@@ -18,7 +18,7 @@
 
 
 #import <Foundation/Foundation.h>
-#import "ZMContextChangeTracker.h"
+@import WireRequestStrategy;
 
 @class ZMMessage;
 @class ZMLocalNotificationDispatcher;

@@ -18,7 +18,6 @@
 
 
 #import "ZMClientMessageTranscoder.h"
-#import "ZMDownstreamObjectSync.h"
 
 
 @interface ZMClientMessageTranscoder (Internal)

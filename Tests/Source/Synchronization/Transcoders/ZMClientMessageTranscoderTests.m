@@ -26,17 +26,9 @@
 #import "ZMClientMessageTranscoder+Internal.h"
 #import "ZMMessageTranscoderTests.h"
 #import "ZMSyncStrategy.h"
-#import "ZMUpstreamInsertedObjectSync.h"
-#import "ZMUpstreamModifiedObjectSync.h"
 #import "ZMMessageExpirationTimer.h"
-#import "ZMUpstreamTranscoder.h"
-#import "ZMChangeTrackerBootstrap+Testing.h"
-#import "ZMImagePreprocessingTracker.h"
-
 #import "ZMLocalNotificationDispatcher.h"
-#import <zmessaging/ZMUpstreamRequest.h>
 #import <zmessaging/zmessaging-Swift.h>
-#import "ZMContextChangeTracker.h"
 
 @interface FakeClientMessageRequestFactory : NSObject
 

@@ -18,7 +18,7 @@
 
 
 #import <Foundation/Foundation.h>
-#import <zmessaging/ZMObjectSyncStrategy.h>
+@import WireRequestStrategy;
 
 @interface ZMKnockTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
 

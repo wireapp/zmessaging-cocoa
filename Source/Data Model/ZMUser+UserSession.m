@@ -19,7 +19,6 @@
 
 #import "ZMBareUser+UserSession.h"
 #import "ZMUserImageTranscoder.h"
-#import "ZMOperationLoop.h"
 #import "ZMUserSession+Internal.h"
 
 @implementation ZMUser (UserSession)
@@ -38,7 +37,7 @@
     }
     
     [ZMUserImageTranscoder requestAssetForUserWithObjectID:self.objectID];
-    [ZMOperationLoop notifyNewRequestsAvailable:self];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (void)requestSmallProfileImageInUserSession:(ZMUserSession *)userSession;
@@ -55,7 +54,7 @@
     }
     
     [ZMUserImageTranscoder requestSmallAssetForUserWithObjectID:self.objectID];
-    [ZMOperationLoop notifyNewRequestsAvailable:self];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (id<ZMCommonContactsSearchToken>)searchCommonContactsInUserSession:(ZMUserSession *)session withDelegate:(id<ZMCommonContactsSearchDelegate>)delegate

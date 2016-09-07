@@ -21,19 +21,12 @@
 @import ZMUtilities;
 @import ZMTransport;
 @import ZMCDataModel;
+@import WireRequestStrategy;
 
 #import "ZMConversationTranscoder.h"
 #import "ZMAuthenticationStatus.h"
-
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMUpstreamInsertedObjectSync.h"
-#import "ZMDownstreamObjectSync.h"
 #import "ZMSyncStrategy.h"
-#import "ZMSingleRequestSync.h"
-#import "ZMRemoteIdentifierObjectSync.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import "ZMUpstreamTranscoder.h"
-#import "ZMUpstreamRequest.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 static NSString *const ConversationsPath = @"/conversations";

@@ -19,7 +19,6 @@
 
 #import "ZMLoginTranscoder.h"
 #import "ZMAuthenticationStatus.h"
-#import "ZMSingleRequestSync.h"
 
 extern NSString * const ZMLoginURL;
 extern NSString * const ZMResendVerificationURL;

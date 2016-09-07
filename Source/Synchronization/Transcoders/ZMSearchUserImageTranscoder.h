@@ -18,7 +18,7 @@
 
 
 @import Foundation;
-#import <zmessaging/ZMObjectSyncStrategy.h>
+@import WireRequestStrategy;
 
 @class ZMUserIDsForSearchDirectoryTable;
 @class ZMAssetIDsForSearchDirectoryTable;

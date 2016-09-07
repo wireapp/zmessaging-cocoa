@@ -18,10 +18,8 @@
 
 
 @import Foundation;
-#import "ZMObjectSyncStrategy.h"
+@import WireRequestStrategy;
 #import "ZMMissingUpdateEventsTranscoder.h"
-#import "ZMDownstreamObjectSync.h"
-#import "ZMSingleRequestSync.h"
 
 extern NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize;
 

@@ -22,13 +22,10 @@
 @import ZMCDataModel;
 
 #import "ZMLoginTranscoder+Internal.h"
-#import "ZMSingleRequestSync.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMCredentials.h"
 #import "NSError+ZMUserSessionInternal.h"
-#import "ZMTimedSingleRequestSync.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMOperationLoop.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMUserSessionRegistrationNotification.h"
 
@@ -158,7 +155,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
 {
     [self.managedObjectContext performGroupedBlock:^{
         [self.verificationResendRequest readyForNextRequest];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 

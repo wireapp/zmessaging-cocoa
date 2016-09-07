@@ -17,7 +17,7 @@
 // 
 
 
-#import <zmessaging/ZMObjectSyncStrategy.h>
+@import WireRequestStrategy;
 
 @class NSManagedObjectContext;
 @class NSOperationQueue;

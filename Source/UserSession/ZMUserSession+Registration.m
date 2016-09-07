@@ -21,12 +21,12 @@
 @import CoreData;
 @import ZMCSystem;
 @import ZMCDataModel;
+@import WireRequestStrategy;
 
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Registration.h"
 #import "ZMUserSession+Authentication.h"
 #import "NSError+ZMUserSessionInternal.h"
-#import "ZMOperationLoop.h"
 #import "ZMUserSessionRegistrationNotification.h"
 #import "ZMCredentials.h"
 #import "ZMUserSessionRegistrationNotification.h"
@@ -78,7 +78,7 @@
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.authenticationStatus prepareForRegistrationOfUser:registrationUser];
         
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 
@@ -96,7 +96,7 @@
 {
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForRegistration:phoneNumber];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 
@@ -104,7 +104,7 @@
 {
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.authenticationStatus prepareForRegistrationPhoneVerificationWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phoneNumber verificationCode:verificationCode]];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 

@@ -48,8 +48,6 @@ extern NSString * const ZMPushChannelResponseStatusKey;
 
 @interface ZMOperationLoop : NSObject
 
-+ (void)notifyNewRequestsAvailable:(id<NSObject>)sender;
-
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                     authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus

@@ -23,7 +23,6 @@
 
 #import "ZMFlowSync+Internal.h"
 #import "ZMTracing.h"
-#import "ZMOperationLoop.h"
 #import "ZMAVSBridge.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMUserSessionAuthenticationNotification.h"
@@ -348,7 +347,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
     }
     
     if (!oldValue && newValue && self.requestStack.count > 0) {
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
 }
 
@@ -447,7 +446,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
         
         [self.requestStack insertObject:request atIndex:0];
         if (self.pushChannelIsOpen) {
-            [ZMOperationLoop notifyNewRequestsAvailable:self];
+            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
         }
     }];
     return YES;

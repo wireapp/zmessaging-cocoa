@@ -21,7 +21,6 @@
 @import ZMCDataModel;
 
 #import "MessagingTest.h"
-#import "ZMChangeTrackerBootstrap+Testing.h"
 
 @interface FakeChangeTracker : NSObject <ZMContextChangeTracker>
 @property (nonatomic) NSFetchRequest *fetchRequest;

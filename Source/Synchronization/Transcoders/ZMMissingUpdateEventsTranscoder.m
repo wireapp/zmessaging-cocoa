@@ -19,9 +19,9 @@
 
 @import ZMUtilities;
 @import ZMTransport;
+@import WireRequestStrategy;
 
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import "ZMSingleRequestSync.h"
 #import "ZMSyncStrategy.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMSimpleListRequestPaginator.h"

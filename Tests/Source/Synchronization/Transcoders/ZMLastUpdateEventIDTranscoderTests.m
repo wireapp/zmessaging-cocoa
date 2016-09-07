@@ -22,7 +22,6 @@
 
 #import "MessagingTest.h"
 #import "ZMLastUpdateEventIDTranscoder+Internal.h"
-#import "ZMSingleRequestSync.h"
 #import "ZMSyncStrategy.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"

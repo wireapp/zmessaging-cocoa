@@ -35,7 +35,7 @@
 #import "ZMKnockTranscoder.h"
 #import "ZMAssetTranscoder.h"
 #import "ZMUserImageTranscoder.h"
-#import "ZMContextChangeTracker.h"
+//#import "ZMContextChangeTracker.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
@@ -48,8 +48,8 @@
 #import "ZMSearchUserImageTranscoder.h"
 #import "ZMTypingTranscoder.h"
 #import "ZMCallStateTranscoder.h"
-#import "ZMOperationLoop.h"
-#import "ZMChangeTrackerBootstrap.h"
+//#import "ZMOperationLoop.h"
+//#import "ZMChangeTrackerBootstrap.h"
 #import "ZMRemovedSuggestedPeopleTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
@@ -266,7 +266,7 @@ ZM_EMPTY_ASSERTING_INIT()
     ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"enter background"];
     [self.syncMOC performGroupedBlock:^{
         [self.stateMachine enterBackground];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
         [self updateBadgeCount];
         [activity endActivity];
     }];
@@ -278,7 +278,7 @@ ZM_EMPTY_ASSERTING_INIT()
     ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"enter foreground"];
     [self.syncMOC performGroupedBlock:^{
         [self.stateMachine enterForeground];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
         [activity endActivity];
     }];
 }

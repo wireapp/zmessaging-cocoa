@@ -44,7 +44,7 @@
 {
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.clientUpdateStatus needsToFetchClientsWithAndVerifySelfClient:YES];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 

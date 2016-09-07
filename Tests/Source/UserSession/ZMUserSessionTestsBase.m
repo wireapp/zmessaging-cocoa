@@ -66,6 +66,7 @@
     }]];
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
     self.mediaManager = [OCMockObject niceMockForClass:NSObject.class];
+    self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     self.operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
     [[self.operationLoop stub] tearDown];
     self.apnsEnvironment = [OCMockObject niceMockForClass:[ZMAPNSEnvironment class]];
@@ -118,6 +119,8 @@
     self.transportSession = nil;
     [self.operationLoop stopMocking];
     self.operationLoop = nil;
+    [self.requestAvailableNotification stopMocking];
+    self.requestAvailableNotification = nil;
     self.sut.requestToOpenViewDelegate = nil;
     
     [self.sut removeAuthenticationObserverForToken:self.authenticationObserverToken];

@@ -19,8 +19,8 @@
 
 
 @import Foundation;
+@import WireRequestStrategy;
 
-#import "ZMObjectSyncStrategy.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUpdateEventsBuffer.h"
 #import "ZMBackgroundFetch.h"

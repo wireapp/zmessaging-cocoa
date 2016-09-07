@@ -18,7 +18,7 @@
 
 
 @import Foundation;
-#import "ZMObjectSyncStrategy.h"
+@import WireRequestStrategy;
 
 @class ZMUserProfileUpdateStatus;
 

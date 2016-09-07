@@ -18,7 +18,6 @@
 
 
 #import "ZMUserImageTranscoder.h"
-#import "ZMUpstreamTranscoder.h"
 
 
 ZM_TEST_ONLY_HEADER

@@ -43,7 +43,7 @@
 {
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.userProfileUpdateStatus prepareForEmailAndPasswordChangeWithCredentials:credentials];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 
@@ -51,7 +51,7 @@
 - (void)requestVerificationCodeForPhoneNumberUpdate:(NSString *)phoneNumber {
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.userProfileUpdateStatus prepareForRequestingPhoneVerificationCodeForRegistration:phoneNumber];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 
@@ -60,7 +60,7 @@
 {
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.userProfileUpdateStatus prepareForPhoneChangeWithCredentials:credentials];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 

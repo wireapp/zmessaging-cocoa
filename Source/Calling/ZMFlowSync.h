@@ -18,10 +18,10 @@
 
 
 #import <Foundation/Foundation.h>
+@import WireRequestStrategy;
 
 #import "AVSMediaManager.h"
 #import "AVSFlowManager.h"
-#import "ZMObjectSyncStrategy.h"
 @class ZMConversation;
 @class ZMUser;
 @class ZMOnDemandFlowManager;

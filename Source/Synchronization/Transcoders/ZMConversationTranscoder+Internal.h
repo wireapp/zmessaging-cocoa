@@ -18,7 +18,6 @@
 
 
 #import "ZMConversationTranscoder.h"
-#import "ZMContextChangeTracker.h"
 
 @class ZMUnsynchronizedObjectsCollection;
 

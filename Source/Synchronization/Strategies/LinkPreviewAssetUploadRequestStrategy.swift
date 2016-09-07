@@ -114,7 +114,7 @@ public class LinkPreviewAssetUploadRequestStrategy : ZMObjectSyncStrategy, Reque
         return [self.linkPreviewPreprocessor, self.previewImagePreprocessor, self.assetUpstreamSync]
     }
     
-    func nextRequest() -> ZMTransportRequest? {
+    public func nextRequest() -> ZMTransportRequest? {
         guard self.authenticationStatus.currentPhase == .Authenticated else { return nil }
         return self.assetUpstreamSync.nextRequest()
     }

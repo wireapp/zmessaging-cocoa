@@ -66,6 +66,7 @@
 @property (nonatomic) id mediaManager;
 @property (nonatomic) NSUInteger dataChangeNotificationsCount;
 @property (nonatomic) ThirdPartyServices *thirdPartyServices;
+@property (nonatomic) id requestAvailableNotification;
 @property (nonatomic) id operationLoop;
 @property (nonatomic) id application;
 @property (nonatomic) id apnsEnvironment;

@@ -22,19 +22,11 @@
 
 #import "MessagingTest.h"
 #import "ZMCallStateTranscoder.h"
-#import "ZMContextChangeTracker.h"
-#import "ZMDownstreamObjectSync.h"
-
-#import "ZMUpstreamModifiedObjectSync.h"
 #import "ZMFlowSync.h"
 #import "ZMObjectStrategyDirectory.h"
-#import "ZMUpstreamTranscoder.h"
-#import "ZMChangeTrackerBootstrap+Testing.h"
-#import "ZMUpstreamModifiedObjectSync.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMOperationLoop.h"
 #import "ZMGSMCallHandler.h"
-#import <zmessaging/ZMUpstreamRequest.h>
 
 @interface ZMCallStateTranscoderTests : MessagingTest
 

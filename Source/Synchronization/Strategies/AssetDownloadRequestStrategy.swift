@@ -70,7 +70,7 @@ import ZMTransport
         }
     }
 
-    func nextRequest() -> ZMTransportRequest? {
+    public func nextRequest() -> ZMTransportRequest? {
         guard self.authStatus.currentPhase == .Authenticated else {
             return .None
         }

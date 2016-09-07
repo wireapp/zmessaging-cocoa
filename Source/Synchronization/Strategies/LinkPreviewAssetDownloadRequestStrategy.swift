@@ -18,6 +18,7 @@
 
 
 import Foundation
+import WireRequestStrategy
 
 
 @objc final public class LinkPreviewAssetDownloadRequestStrategy: ZMObjectSyncStrategy, RequestStrategy {
@@ -66,11 +67,12 @@ import Foundation
             guard let objectID = note.object as? NSManagedObjectID else { return }
             guard let message = try? self.managedObjectContext.existingObjectWithID(objectID) as? ZMClientMessage else { return }
             self.assetDownstreamObjectSync.whiteListObject(message)
-            ZMOperationLoop.notifyNewRequestsAvailable(self)
+            RequestAvailableNotification.notifyNewRequestsAvailable(self)
+//            ZMOperationLoop.notifyNewRequestsAvailable(self)
         }
     }
     
-    func nextRequest() -> ZMTransportRequest? {
+    public func nextRequest() -> ZMTransportRequest? {
         guard authStatus.currentPhase == .Authenticated else { return nil }
         return assetDownstreamObjectSync.nextRequest()
     }
