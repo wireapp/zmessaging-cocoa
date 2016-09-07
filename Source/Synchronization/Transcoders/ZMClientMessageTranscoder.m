@@ -90,6 +90,20 @@
     }
 }
 
+- (BOOL)updateUpdatedObject:(ZMAssetClientMessage *)message requestUserInfo:(NSDictionary *)requestUserInfo response:(ZMTransportResponse *)response keysToParse:(NSSet *)keysToParse
+{
+    BOOL result = [super updateUpdatedObject:message requestUserInfo:requestUserInfo response:response keysToParse:keysToParse];
+    
+    [message parseUploadResponse:response clientDeletionDelegate:self.clientRegistrationStatus];
+    
+    return result;
+}
+
+- (BOOL)shouldRetryToSyncAfterFailedToUpdateObject:(ZMClientMessage *)message request:(ZMUpstreamRequest *__unused)upstreamRequest response:(ZMTransportResponse *)response keysToParse:(NSSet * __unused)keys
+{
+    return [message parseUploadResponse:response clientDeletionDelegate:self.clientRegistrationStatus];
+}
+
 - (ZMManagedObject *)dependentObjectNeedingUpdateBeforeProcessingObject:(ZMClientMessage *)message;
 {
     return message.dependendObjectNeedingUpdateBeforeProcessing;
