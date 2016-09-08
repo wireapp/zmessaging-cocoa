@@ -94,7 +94,7 @@
     
     _unauthenticatedState = [OCMockObject mockForClass:ZMUnauthenticatedState.class];
     [[[[self.unauthenticatedState expect] andReturn:self.unauthenticatedState] classMethod] alloc];
-    (void) [[[self.unauthenticatedState expect] andReturn:self.unauthenticatedState] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:OCMOCK_ANY];
+    (void) [[[self.unauthenticatedState expect] andReturn:self.unauthenticatedState] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:OCMOCK_ANY application:self.application];
     [[self.unauthenticatedState stub] tearDown];
     [self verifyMockLater:self.unauthenticatedState];
     
