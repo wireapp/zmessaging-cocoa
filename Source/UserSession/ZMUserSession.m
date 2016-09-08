@@ -151,7 +151,7 @@ ZM_EMPTY_ASSERTING_INIT()
             RequireString(nil != sharedContainerURL, "Unable to create shared container url using app group identifier: %s", appGroupIdentifier.UTF8String);
         }
         else {
-            sharedContainerURL = [NSURL fileURLWithPath:NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES).firstObject];
+            sharedContainerURL = [[fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask] firstObject];
             ZMLogError(@"ERROR: self.databaseDirectoryURL == nil and deploymentEnvironment = %d", deploymentEnvironment);
             ZMLogError(@"================================WARNING================================");
             ZMLogError(@"Wire is going to use APPLICATION SUPPORT directory to host the database");

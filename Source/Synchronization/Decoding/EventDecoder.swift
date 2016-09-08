@@ -78,7 +78,33 @@ extension NSManagedObjectContext {
         
         guard let identifier = NSBundle.mainBundle().bundleIdentifier ?? NSBundle(forClass: ZMUser.self).bundleIdentifier else { return nil }
         let groupIdentifier = appGroupdIdentifier ?? "group.\(identifier)"
-        guard let directory = fileManager.containerURLForSecurityApplicationGroupIdentifier(groupIdentifier) else { return nil }
+        let directoryInContainer = fileManager.containerURLForSecurityApplicationGroupIdentifier(groupIdentifier)
+        
+        let directory: NSURL
+        
+        if directoryInContainer != .None {
+            directory = directoryInContainer!
+        }
+        else {
+            // Seems like the shared container is not available. This could happen for series of reasons:
+            // 1. The app is compiled with with incorrect provisioning profile (for example with 3rd parties)
+            // 2. App is running on simulator and there is no correct provisioning profile on the system
+            // 3. Bug with signing
+            //
+            // The app should allow not having a shared container in cases 1 and 2; in case 3 the app should crash
+            
+            let deploymentEnvironment = ZMDeploymentEnvironment().environmentType()
+            if TARGET_IPHONE_SIMULATOR == 0 && (deploymentEnvironment == ZMDeploymentEnvironmentType.AppStore || deploymentEnvironment == ZMDeploymentEnvironmentType.Internal) {
+                return nil
+            }
+            else {
+                directory = fileManager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first!
+                zmLog.error(String(format: "ERROR: self.databaseDirectoryURL == nil and deploymentEnvironment = %d", deploymentEnvironment.rawValue))
+                zmLog.error("================================WARNING================================")
+                zmLog.error("Wire is going to use APPLICATION SUPPORT directory to host the EventDecoder database")
+                zmLog.error("================================WARNING================================")
+            }
+        }
         
         let _storeURL = directory.URLByAppendingPathComponent(identifier)
         
