@@ -119,6 +119,8 @@ extension NSManagedObjectContext {
     let syncMOC: NSManagedObjectContext
     weak var encryptionContext : EncryptionContext?
     
+    private typealias EventsWithStoredEvents = (storedEvents: [StoredUpdateEvent], updateEvents: [ZMUpdateEvent])
+    
     public init(eventMOC: NSManagedObjectContext, syncMOC: NSManagedObjectContext) {
         self.eventMOC = eventMOC
         self.syncMOC = syncMOC
@@ -131,11 +133,11 @@ extension NSManagedObjectContext {
     /// If the app crashes while processing the events, they can be recovered from the database
     /// Recovered events are processed before the passed in events to reflect event history
     public func processEvents(events: [ZMUpdateEvent], block: ConsumeBlock) {
-
+        
         // fetch first batch of old events
         let batchSize = EventDecoder.BatchSize
         let oldStoredEvents = StoredUpdateEvent.nextEvents(eventMOC, batchSize: batchSize, stopAtIndex: nil)
-        let oldEvents = StoredUpdateEvent.eventsFromStoredEvents(oldStoredEvents)
+        let oldUpdateEvents = StoredUpdateEvent.eventsFromStoredEvents(oldStoredEvents)
         
         // get highest index of events in DB
         var lastIndex = oldStoredEvents.last?.sortIndex ?? 0
@@ -145,20 +147,20 @@ extension NSManagedObjectContext {
 
         // decryptEvents and insert counting upwards from highest index in DB
         var newStoredEvents = [StoredUpdateEvent]()
-        var newEvents = [ZMUpdateEvent]()
+        var newUpdateEvents = [ZMUpdateEvent]()
         
         
         // We decrypt the events and store them in the event database
         encryptionContext?.perform({ [weak self] (sessionsDirectory) in
             guard let strongSelf = self else { return }
 
-            newEvents = events.flatMap { sessionsDirectory.decryptUpdateEventAndAddClient($0, managedObjectContext: strongSelf.syncMOC) }
+            newUpdateEvents = events.flatMap { sessionsDirectory.decryptUpdateEventAndAddClient($0, managedObjectContext: strongSelf.syncMOC) }
 
             // This call has to be synchronous to ensure that we close the
             // encryption context only if we stored all events in the database
             strongSelf.eventMOC.performGroupedBlockAndWait {
                 // decryptEvents and insert counting upwards from highest index in DB
-                for (idx, event) in newEvents.enumerate() {
+                for (idx, event) in newUpdateEvents.enumerate() {
                     if let storedEvent = StoredUpdateEvent.create(event, managedObjectContext: strongSelf.eventMOC, index: idx + lastIndex + 1) {
                         newStoredEvents.append(storedEvent)
                     }
@@ -168,28 +170,43 @@ extension NSManagedObjectContext {
             }
         })
         
-        // process old events
-        consumeStoredEvents(oldStoredEvents, someEvents: oldEvents, lastIndexToFetch: lastIndex, consumeBlock: block)
-        
-        // process new events
-        if newEvents.count > 0 {
-            processBatch(newEvents, storedEvents: newStoredEvents, block: block)
-        } else {
-            block([])
+        process(
+            oldEvents: (storedEvents: oldStoredEvents, updateEvents: oldUpdateEvents),
+            newEvents: (storedEvents: newStoredEvents, updateEvents: newUpdateEvents),
+            lastIndexToFetch: lastIndex,
+            consumeBlock: block
+        )
+    }
+    
+    // Processes first the old, then the new events
+    private func process(oldEvents oldEvents: EventsWithStoredEvents, newEvents: EventsWithStoredEvents, lastIndexToFetch: Int64, consumeBlock: ConsumeBlock) {
+        eventMOC.performGroupedBlock {
+            // process old events
+            self.consumeStoredEvents(oldEvents.storedEvents, someEvents: oldEvents.updateEvents, lastIndexToFetch: lastIndexToFetch, consumeBlock: consumeBlock)
+            
+            // process new events
+            if newEvents.updateEvents.count > 0 {
+                self.processBatch(newEvents.updateEvents, storedEvents: newEvents.storedEvents, block: consumeBlock)
+            } else {
+                consumeBlock([])
+            }
         }
     }
     
     /// calls the consuming block and deletes the respective stored events subsequently
-    private func processBatch(events:[ZMUpdateEvent], storedEvents:[StoredUpdateEvent], block: ConsumeBlock) {
-        block(events)
+    private func processBatch(events:[ZMUpdateEvent], storedEvents:[NSManagedObject], block: ConsumeBlock) {
         let strongEventMOC = eventMOC
 
-        eventMOC.performGroupedBlock {
-            storedEvents.forEach(strongEventMOC.deleteObject)
-            strongEventMOC.saveOrRollback()
+        // switch to the sync queue to call the passed in block with the update events
+        syncMOC.performGroupedBlock { 
+            block(events)
+            
+            strongEventMOC.performGroupedBlock {
+                storedEvents.forEach(strongEventMOC.deleteObject)
+                strongEventMOC.saveOrRollback()
+            }
         }
     }
-    
     
     /// consumes passed in stored events and fetches more events if the last passed in event is not the last event to fetch
     private func consumeStoredEvents(someStoredEvents: [StoredUpdateEvent], someEvents: [ZMUpdateEvent], lastIndexToFetch: Int64, consumeBlock: ConsumeBlock) {
