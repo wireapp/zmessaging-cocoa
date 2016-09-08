@@ -257,7 +257,7 @@
                                            taskCancellationProvider:OCMOCK_ANY
                                                  appGroupIdentifier:nil
                                                               badge:self.badge
-                                                        application:nil];
+                                                        application:self.application];
     
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
     XCTAssertEqual(self.sut.userImageTranscoder, userImageTranscoder);
@@ -391,7 +391,7 @@
     XCTAssertEqual(eventsArray.count, 2u);
     
     // expect
-        for(ZMUpdateEvent *event in eventsArray) {
+    for(ZMUpdateEvent *event in eventsArray) {
             [self expectSyncObjectsToProcessEvents:YES
                                         liveEvents:YES
                                      decryptEvents:YES
