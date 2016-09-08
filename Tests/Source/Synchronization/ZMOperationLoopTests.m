@@ -102,7 +102,6 @@
     id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
     ZMAuthenticationStatus *authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:nil];
     ZMUserProfileUpdateStatus *userProfileStatus = [[ZMUserProfileUpdateStatus alloc] initWithManagedObjectContext:self.uiMOC];
-    id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     
     // expect
     id syncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
@@ -120,7 +119,7 @@
             syncMOC:self.syncMOC
             uiMOC:self.uiMOC
             syncStateDelegate:nil
-            backgroundableSession:transportSession
+            backgroundableSession:self.transportSession
             localNotificationsDispatcher:OCMOCK_ANY
             taskCancellationProvider:OCMOCK_ANY
             appGroupIdentifier:nil
@@ -128,7 +127,7 @@
             application:nil];
     
     // when
-    ZMOperationLoop *ol = [[ZMOperationLoop alloc] initWithTransportSession:transportSession
+    ZMOperationLoop *ol = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
                                                        authenticationStatus:authenticationStatus
                                                     userProfileUpdateStatus:userProfileStatus
                                                    clientRegistrationStatus:nil
@@ -151,7 +150,6 @@
     [syncStrategy verify];
     
     [syncStrategy stopMocking];
-    [transportSession stopMocking];
 }
 
 - (void)testThatItNotifiesTheSyncStrategyWhenThePushChannelIsOpened
@@ -186,10 +184,12 @@
     __block id<ZMPushChannelConsumer> receivedConsumer;
     
     // given
-    self.transportSession = [OCMockObject mockForClass:[ZMTransportSession class]];
+    self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
     [[self.transportSession stub] closePushChannelAndRemoveConsumer];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Open push channel opened"];
     [[self.transportSession expect] openPushChannelWithConsumer:[OCMArg checkWithBlock:^BOOL(id obj) {
         receivedConsumer = obj;
+        [expectation fulfill];
         return YES;
     }] groupQueue:OCMOCK_ANY];
     
@@ -203,7 +203,7 @@
     
     // then
     XCTAssertNotNil(op);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     [op tearDown];
 
     XCTAssertEqual(op, (id)receivedConsumer);
@@ -796,7 +796,7 @@
 {
     
     // given
-    ZMTransportSession *transportSession = [OCMockObject mockForClass:[ZMTransportSession class]];
+    ZMTransportSession *transportSession = self.transportSession;
     [[(id) transportSession stub] openPushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
     
     ZMOperationLoop *sut = [[ZMOperationLoop alloc] initWithTransportSession:transportSession

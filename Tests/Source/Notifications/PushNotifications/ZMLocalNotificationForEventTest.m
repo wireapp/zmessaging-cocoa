@@ -131,7 +131,7 @@
                       fromUserID:fromUser.remoteIdentifier
                   inConversation:conversation
                             type:type
-                     application:nil];
+                     application:self.application];
 }
 
 - (ZMLocalNotificationForEvent *)copyNote:(ZMLocalNotificationForEvent*)note withPayload:(NSDictionary *)data fromUser:(ZMUser *)fromUser inConversation:(ZMConversation *)conversation type:(NSString *)type
