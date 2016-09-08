@@ -39,7 +39,6 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 @property (nonatomic) ZMFlowSync<AVSFlowManagerDelegate, ZMRequestGenerator> *sut;
 @property (nonatomic) id internalFlowManager;
-@property (nonatomic) id mediaManager;
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
 @property (nonatomic) id deploymentEnvironment;
 @property (nonatomic) NSMutableArray *voiceChannelGainNotifications;
@@ -52,12 +51,10 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 - (void)setUp
 {
     [super setUp];
-    self.mediaManager = [OCMockObject mockForClass:NSObject.class];
-    [self verifyMockLater:self.mediaManager];
         
     self.internalFlowManager = [OCMockObject mockForClass:AVSFlowManager.class];
     ZMFlowSyncInternalFlowManagerOverride = self.internalFlowManager;
-    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:self.mediaManager];
+    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:nil];
     NSArray *events = @[FlowEventName1, FlowEventName2];
     [(AVSFlowManager *)[[self.internalFlowManager stub] andReturn:events] events];
     [[self.internalFlowManager stub] setValue:OCMOCK_ANY forKey:@"delegate"];
@@ -94,7 +91,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 - (void)recreateSUT;
 {
     [self.sut tearDown];
-    self.sut = (id) [[ZMFlowSync alloc] initWithMediaManager:self.mediaManager onDemandFlowManager:self.onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
+    self.sut = (id) [[ZMFlowSync alloc] initWithMediaManager:nil onDemandFlowManager:self.onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -1024,7 +1021,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [self.application setBackground];
     
     // when
-    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:self.mediaManager];
+    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:nil];
     NSArray *events = @[FlowEventName1, FlowEventName2];
     [(AVSFlowManager *)[[self.internalFlowManager stub] andReturn:events] events];
     [self recreateSUT];
@@ -1049,7 +1046,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [[[self.internalFlowManager expect] andReturnValue:@NO] isReady];
 
     // when
-    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:self.mediaManager];
+    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:nil];
     NSArray *events = @[FlowEventName1, FlowEventName2];
     [(AVSFlowManager *)[[self.internalFlowManager stub] andReturn:events] events];
     [self recreateSUT];

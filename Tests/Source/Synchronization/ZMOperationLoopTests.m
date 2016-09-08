@@ -96,61 +96,6 @@
 }
 
 
-- (void)testThatItPassesTheMediaManagerDelegateToTheSyncStrategy;
-{
-    // given
-    id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
-    ZMAuthenticationStatus *authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:nil];
-    ZMUserProfileUpdateStatus *userProfileStatus = [[ZMUserProfileUpdateStatus alloc] initWithManagedObjectContext:self.uiMOC];
-    
-    // expect
-    id syncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
-    [[[[syncStrategy expect] classMethod] andReturn:syncStrategy] alloc];
-    (void) [[[syncStrategy expect] andReturn:syncStrategy]
-            initWithAuthenticationCenter:authenticationStatus
-            userProfileUpdateStatus:userProfileStatus
-            clientRegistrationStatus:nil
-            clientUpdateStatus:nil
-            proxiedRequestStatus:nil
-            accountStatus:nil
-            backgroundAPNSPingBackStatus:nil
-            mediaManager:mediaManager
-            onDemandFlowManager:nil
-            syncMOC:self.syncMOC
-            uiMOC:self.uiMOC
-            syncStateDelegate:nil
-            backgroundableSession:self.transportSession
-            localNotificationsDispatcher:OCMOCK_ANY
-            taskCancellationProvider:OCMOCK_ANY
-            appGroupIdentifier:nil
-            badge:OCMOCK_ANY
-            application:nil];
-    
-    // when
-    ZMOperationLoop *ol = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
-                                                       authenticationStatus:authenticationStatus
-                                                    userProfileUpdateStatus:userProfileStatus
-                                                   clientRegistrationStatus:nil
-                                                         clientUpdateStatus:nil
-                                                       proxiedRequestStatus:nil
-                                                              accountStatus:nil
-                                               backgroundAPNSPingBackStatus:nil
-                                                localNotificationdispatcher:nil
-                                                               mediaManager:mediaManager
-                                                        onDemandFlowManager:nil
-                                                                      uiMOC:self.uiMOC
-                                                                    syncMOC:self.syncMOC
-                                                          syncStateDelegate:nil
-                                                         appGroupIdentifier:nil
-                                                                application:nil];
-
-    XCTAssertNotNil(ol);
-    [ol tearDown];
-    
-    [syncStrategy verify];
-    
-    [syncStrategy stopMocking];
-}
 
 - (void)testThatItNotifiesTheSyncStrategyWhenThePushChannelIsOpened
 {
@@ -177,7 +122,6 @@
     // then
     [self.syncStrategy verify];
 }
-
 
 - (void)testThatItInitializesThePushChannel
 {

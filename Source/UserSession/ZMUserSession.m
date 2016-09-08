@@ -73,7 +73,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMTransportSession *transportSession;
 @property (nonatomic) NSManagedObjectContext *managedObjectContext;
 @property (nonatomic) NSManagedObjectContext *syncManagedObjectContext;
-@property (nonatomic) id<AVSMediaManager> mediaManager;
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
@@ -264,7 +263,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.transportSession.networkStateDelegate = self;
         self.mediaManager = mediaManager;
         
-        self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:self.mediaManager];
+        self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
         
         _application = application;
         

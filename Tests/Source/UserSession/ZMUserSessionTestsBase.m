@@ -66,7 +66,6 @@
         return YES;
     }]];
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
-    self.mediaManager = [OCMockObject niceMockForClass:NSObject.class];
     self.operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
     [[self.operationLoop stub] tearDown];
     self.apnsEnvironment = [OCMockObject niceMockForClass:[ZMAPNSEnvironment class]];

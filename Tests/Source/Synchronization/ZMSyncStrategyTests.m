@@ -147,12 +147,10 @@
     id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
     (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY];
-
-    id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
     
     id flowTranscoder = [OCMockObject mockForClass:ZMFlowSync.class];
     [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];
-    (void)[[[flowTranscoder expect] andReturn:flowTranscoder] initWithMediaManager:mediaManager onDemandFlowManager:nil syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
+    (void)[[[flowTranscoder expect] andReturn:flowTranscoder] initWithMediaManager:nil onDemandFlowManager:nil syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
 
     id userImageTranscoder = [OCMockObject mockForClass:ZMUserImageTranscoder.class];
     [[[[userImageTranscoder expect] andReturn:userImageTranscoder] classMethod] alloc];
@@ -249,7 +247,7 @@
                                                proxiedRequestStatus:nil
                                                       accountStatus:nil
                                        backgroundAPNSPingBackStatus:nil
-                                                       mediaManager:mediaManager
+                                                       mediaManager:nil
                                                 onDemandFlowManager:nil
                                                             syncMOC:self.syncMOC
                                                               uiMOC:self.uiMOC

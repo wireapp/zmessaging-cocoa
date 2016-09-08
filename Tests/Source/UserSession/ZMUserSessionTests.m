@@ -78,68 +78,10 @@
     XCTAssertEqualObjects(staging.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/staging/ios"]);
 }
 
-- (void)testThatItPassesTheMediaManagerToTheOperationLoop;
-{
-    // given
-    id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
-
-    id backendEnvironment = [OCMockObject niceMockForClass:ZMBackendEnvironment.class];
-    [[[[(id) backendEnvironment expect] classMethod] andReturn:backendEnvironment] alloc];
-    (void)[[[(id) backendEnvironment expect] andReturn:backendEnvironment] init];
-    (void)[[(id) backendEnvironment expect] backendURL];
-    (void)[[(id) backendEnvironment expect] backendWSURL];
-    
-    id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
-    [[[[transportSession expect] classMethod] andReturn:transportSession] alloc];
-    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY mainGroupQueue:OCMOCK_ANY];
-    
-    id cookieStorage = [OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]];
-    (void) [[[transportSession stub] andReturn:cookieStorage] cookieStorage];
-
-    // expect
-    id operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
-    [[[[operationLoop expect] classMethod] andReturn:operationLoop] alloc];
-    
-    (void) [[[operationLoop expect] andReturn:operationLoop]
-            initWithTransportSession:transportSession
-            authenticationStatus:OCMOCK_ANY
-            userProfileUpdateStatus:OCMOCK_ANY
-            clientRegistrationStatus:OCMOCK_ANY
-            clientUpdateStatus:OCMOCK_ANY
-            proxiedRequestStatus:OCMOCK_ANY
-            accountStatus:OCMOCK_ANY
-            backgroundAPNSPingBackStatus:OCMOCK_ANY
-            localNotificationdispatcher:OCMOCK_ANY
-            mediaManager:mediaManager
-            onDemandFlowManager:OCMOCK_ANY
-            uiMOC:OCMOCK_ANY
-            syncMOC:OCMOCK_ANY
-            syncStateDelegate:OCMOCK_ANY
-            appGroupIdentifier:OCMOCK_ANY
-            application:OCMOCK_ANY];
-
-    [[operationLoop expect] tearDown];
-
-    // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager
-                                                               analytics:nil
-                                                              appVersion:@"000000"
-                                                      appGroupIdentifier:self.groupIdentifier];
-    XCTAssertNotNil(session);
-
-    // then
-    [session tearDown];
-    [operationLoop verify];
-    
-    [transportSession stopMocking];
-    [operationLoop stopMocking];
-}
-
 - (void)testThatItSetsTheUserAgentOnStart;
 {
     // given
     NSString *version = @"The-version-123";
-    id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     [[[[transportSession stub] classMethod] andReturn:transportSession] alloc];
     (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY mainGroupQueue:OCMOCK_ANY];
@@ -150,7 +92,7 @@
     [[[userAgent expect] classMethod] setWireAppVersion:version];
     
     // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager
+    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
                                                                analytics:nil
                                                               appVersion:version
                                                       appGroupIdentifier:self.groupIdentifier];
