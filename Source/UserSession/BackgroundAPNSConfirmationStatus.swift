@@ -29,8 +29,8 @@ extension UIApplication : ApplicationStateOwner {}
 @objc
 public class BackgroundAPNSConfirmationStatus : NSObject {
     
-    /// Switch for sending delivery receipts
-    public static let sendDeliveryReceipts : Bool = true
+    // TODO Confirmation enable
+    public static let sendDeliveryReceipts : Bool = false
 
     let backgroundTime : NSTimeInterval = 25
     private var tornDown = false
