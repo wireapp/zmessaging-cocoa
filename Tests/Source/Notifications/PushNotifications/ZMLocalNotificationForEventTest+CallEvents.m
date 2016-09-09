@@ -31,10 +31,11 @@
 
 - (void)setUp {
     [super setUp];
-    self.sessionTracker = [[SessionTracker alloc] init];
+    self.sessionTracker = [[SessionTracker alloc] initWithManagedObjectContext:self.syncMOC];
 }
 
 - (void)tearDown {
+    [self.sessionTracker tearDown];
     self.sessionTracker = nil;
     [super tearDown];
 }
@@ -73,7 +74,7 @@
                                                      session:session];
     XCTAssertNotNil(event);
     
-    [self.sessionTracker addEvent:event managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event];
     return (id)[ZMLocalNotificationForEvent notificationForEvent:event conversation:conversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
 }
 
@@ -97,8 +98,7 @@
     // when
     ZMLocalNotificationForCallEvent *note1 = [self callNotificationForConversation:self.oneOnOneConversation otherUser:self.sender othersAreJoined:YES selfIsJoined:NO sequence:@1 session:@"session1"];
     ZMUpdateEvent *event = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event managedObjectContext:self.syncMOC];
-    
+    [self.sessionTracker addEvent:event];
     XCTAssertNotNil(note1);
     ZMLocalNotificationForEvent *note2 = [note1 copyByAddingEvent:event conversation:self.oneOnOneConversation];
     
@@ -113,7 +113,7 @@
     // given
     ZMLocalNotificationForCallEvent *note1 = [self callNotificationForConversation:self.oneOnOneConversation otherUser:self.sender othersAreJoined:YES selfIsJoined:NO sequence:@1 session:@"session1"];
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
 
     // when
     ZMLocalNotificationForEvent *note2 = [note1 copyByAddingEvent:event2 conversation:self.oneOnOneConversation];
@@ -128,7 +128,7 @@
     // given
     ZMLocalNotificationForCallEvent *note1 = [self callNotificationForConversation:self.oneOnOneConversation otherUser:self.sender othersAreJoined:YES selfIsJoined:NO sequence:@1 session:@"session1"];
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@2 session:@"session2"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
 
     // when
     ZMLocalNotificationForEvent *note2 = [note1 copyByAddingEvent:event2 conversation:self.oneOnOneConversation];
@@ -144,7 +144,7 @@
 {
     ZMLocalNotificationForCallEvent *note1 = [self callNotificationForConversation:self.oneOnOneConversation otherUser:self.sender othersAreJoined:YES selfIsJoined:NO sequence:@1 session:@"session1"];
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
 
     // when
     ZMLocalNotificationForEvent *note2 = [note1 copyByAddingEvent:event2 conversation:self.oneOnOneConversation];
@@ -160,7 +160,7 @@
 {
     ZMLocalNotificationForCallEvent *note1 = [self callNotificationForConversation:self.oneOnOneConversation otherUser:self.sender othersAreJoined:YES selfIsJoined:NO sequence:@1 session:@"session1"];
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[self.sender, self.selfUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
 
     // when
     ZMLocalNotificationForEvent *note2 = [note1 copyByAddingEvent:event2 conversation:self.oneOnOneConversation];
@@ -178,7 +178,7 @@
     
     // The self user joins
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[self.sender, self.selfUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
 
     ZMLocalNotificationForCallEvent *note1Copy = [note1 copyByAddingEvent:event2 conversation:self.oneOnOneConversation];
     ZMLocalNotificationForCallEvent *note2 = (id)[ZMLocalNotificationForEvent notificationForEvent:event2 conversation:self.oneOnOneConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
@@ -192,7 +192,7 @@
     
     // and when
     ZMUpdateEvent *event3 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[] videoSendingUsers:@[] sequence:@3 session:@"session1"];
-    [self.sessionTracker addEvent:event3 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event3];
 
     // when
     ZMLocalNotificationForCallEvent *note3 = (id)[ZMLocalNotificationForEvent notificationForEvent:event3 conversation:self.oneOnOneConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
@@ -209,7 +209,7 @@
     
     // when self user joins
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender, self.selfUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForCallEvent *note2 = [note1 copyByAddingEvent:event2 conversation:self.groupConversation];
 
     // then
@@ -220,7 +220,7 @@
     
     // and when second session in same conversation
     ZMUpdateEvent *event3 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:@"session2"];
-    [self.sessionTracker addEvent:event3 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event3];
     ZMLocalNotificationForCallEvent *note3 = (id)[ZMLocalNotificationForEvent notificationForEvent:event3 conversation:self.groupConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
     
     // then
@@ -237,12 +237,12 @@
     
     // when user toggles video on
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[self.sender] videoSendingUsers:@[self.sender] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForCallEvent *note2 = [note1 copyByAddingEvent:event2 conversation:self.oneOnOneConversation];
     
     // when user toggles video off
     ZMUpdateEvent *event3 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@3 session:@"session1"];
-    [self.sessionTracker addEvent:event3 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event3];
     ZMLocalNotificationForEvent *note3 = [note1 copyByAddingEvent:event3 conversation:self.oneOnOneConversation];
     
     // then
@@ -260,7 +260,7 @@
     
     // when user toggles video on
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[self.sender, self.selfUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForCallEvent *note2 = [note1 copyByAddingEvent:event2 conversation:self.oneOnOneConversation];
     
     // then
@@ -268,7 +268,7 @@
 
     // when user toggles video off
     ZMUpdateEvent *event3 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[self.sender, self.selfUser] videoSendingUsers:@[self.sender] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForEvent *note3 = [note2 copyByAddingEvent:event3 conversation:self.oneOnOneConversation];
     
     // then
@@ -279,12 +279,12 @@
 {
     // first user joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event1 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event1];
     ZMLocalNotificationForCallEvent *note1 = (id)[ZMLocalNotificationForEvent notificationForEvent:event1 conversation:self.groupConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
     
     // when second user joins
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender, self.otherUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForEvent *note1Copy = [note1 copyByAddingEvent:event2  conversation:self.oneOnOneConversation];
     ZMLocalNotificationForCallEvent *note2 = (id)[ZMLocalNotificationForEvent notificationForEvent:event2 conversation:self.oneOnOneConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
 
@@ -299,7 +299,7 @@
 {
     // first user joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@1 session:@"session1"];
-    [self.sessionTracker addEvent:event1 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event1];
 
     ZMLocalNotificationForCallEvent *note1 = (id)[ZMLocalNotificationForEvent notificationForEvent:event1 conversation:self.groupConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
     
@@ -309,7 +309,7 @@
     
     // when selfUser joins
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender, self.selfUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForCallEvent *note2 = [note1 copyByAddingEvent:event2  conversation:self.groupConversation];
     
     // then
@@ -319,7 +319,7 @@
     
     // when second user joins
     ZMUpdateEvent *event3 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender, self.selfUser, self.otherUser] videoSendingUsers:@[] sequence:@3 session:@"session1"];
-    [self.sessionTracker addEvent:event3 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event3];
     ZMLocalNotificationForCallEvent *note3 = (id)[ZMLocalNotificationForEvent notificationForEvent:event3  conversation:self.groupConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
     
     // then
@@ -330,7 +330,7 @@
 {
     // first user joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@1 session:@"session1"];
-    [self.sessionTracker addEvent:event1 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event1];
     ZMLocalNotificationForCallEvent *note1 = (id)[ZMLocalNotificationForEvent notificationForEvent:event1 conversation:self.groupConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
     
     // then
@@ -339,7 +339,7 @@
     
     // when selfUser joins
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender, self.selfUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForCallEvent *note2 = [note1 copyByAddingEvent:event2  conversation:self.groupConversation];
     
     // then
@@ -349,7 +349,7 @@
     
     // when selfUser leaves
     ZMUpdateEvent *event3 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@3 session:@"session1"];
-    [self.sessionTracker addEvent:event3 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event3];
     ZMLocalNotificationForCallEvent *note3 = (id)[ZMLocalNotificationForEvent notificationForEvent:event3 conversation:self.groupConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
     
     // then
@@ -357,7 +357,7 @@
     
     // when second user joins
     ZMUpdateEvent *event4 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender, self.otherUser] videoSendingUsers:@[] sequence:@4 session:@"session1"];
-    [self.sessionTracker addEvent:event4 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event4];
     ZMLocalNotificationForCallEvent *note4 = (id)[ZMLocalNotificationForEvent notificationForEvent:event4  conversation:self.groupConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
     
     // then
@@ -369,7 +369,7 @@
 {
     // first user joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event1 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event1];
 
     ZMLocalNotificationForCallEvent *note1 = (id)[ZMLocalNotificationForEvent notificationForEvent:event1 conversation:self.groupConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
     
@@ -382,7 +382,7 @@
     
     // when other user joins
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.otherUser, self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForEvent *note2 = [note1 copyByAddingEvent:event2 conversation:self.groupConversation];
     
     // then
@@ -391,7 +391,7 @@
     
     // when all user leave
     ZMUpdateEvent *event3 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event3 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event3];
     ZMLocalNotificationForEvent *note3 = [note1 copyByAddingEvent:event3 conversation:self.groupConversation];
     
     // then
@@ -406,7 +406,7 @@
 {
     // first user joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event1 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event1];
 
     ZMLocalNotificationForCallEvent *note1 = (id)[ZMLocalNotificationForEvent notificationForEvent:event1 conversation:self.groupConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
     
@@ -419,7 +419,7 @@
     
     // when other user joins
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.otherUser, self.sender] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForCallEvent *note2 = [note1 copyByAddingEvent:event2 conversation:self.groupConversation];
     
     // then
@@ -428,7 +428,7 @@
     
     // when all user leave
     ZMUpdateEvent *event3 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:@"session2"];
-    [self.sessionTracker addEvent:event3 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event3];
     ZMLocalNotificationForEvent *note3 = [note1 copyByAddingEvent:event3 conversation:self.groupConversation];
     
     // then
@@ -442,7 +442,7 @@
 {
     // first selfuser joins
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[self.selfUser] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event1 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event1];
     ZMLocalNotificationForCallEvent *note1 = (id)[ZMLocalNotificationForEvent notificationForEvent:event1 conversation:self.groupConversation managedObjectContext:self.syncMOC application:nil sessionTracker:self.sessionTracker];
     
     // then
@@ -450,7 +450,7 @@
     
     // when selfuser leaves
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForEvent *note2 = [note1 copyByAddingEvent:event2  conversation:self.groupConversation];
     
     // then
@@ -508,17 +508,17 @@
     // when
     ZMLocalNotificationForCallEvent *note01 = [self callNotificationForConversation:self.oneOnOneConversation otherUser:self.sender othersAreJoined:YES selfIsJoined:NO sequence:@1 session:@"session1"];
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event1 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event1];
     ZMLocalNotificationForEvent *note1 = [note01 copyByAddingEvent:event1 conversation:self.oneOnOneConversation];
     
     ZMLocalNotificationForCallEvent *note02 = [self callNotificationForConversation:self.groupConversation otherUser:self.sender othersAreJoined:YES selfIsJoined:NO sequence:@1 session:@"session1"];
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForEvent *note2 = [note02 copyByAddingEvent:event2 conversation:self.groupConversation];
     
     ZMLocalNotificationForCallEvent *note03 = [self callNotificationForConversation:self.groupConversationWithoutName otherUser:self.sender othersAreJoined:YES selfIsJoined:NO sequence:@1 session:@"session1"];
     ZMUpdateEvent *event3 = [self callStateEventInConversation:self.groupConversationWithoutName joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:@"session1"];
-    [self.sessionTracker addEvent:event3 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event3];
     ZMLocalNotificationForEvent *note3 = [note03 copyByAddingEvent:event3 conversation:self.groupConversationWithoutName];
     
     // then
@@ -536,19 +536,19 @@
     
     ZMLocalNotificationForCallEvent *note01 = [self callNotificationForConversation:self.oneOnOneConversation otherUser:self.sender othersAreJoined:YES selfIsJoined:NO sequence:@1 session:session];
     ZMUpdateEvent *event1 = [self callStateEventInConversation:self.oneOnOneConversation joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:session];
-    [self.sessionTracker addEvent:event1 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event1];
     ZMLocalNotificationForEvent *note1 = [note01 copyByAddingEvent:event1 conversation:self.oneOnOneConversation];
     XCTAssertNotNil(note1);
     
     ZMLocalNotificationForCallEvent *note02 = [self callNotificationForConversation:self.groupConversation otherUser:self.sender othersAreJoined:YES selfIsJoined:NO sequence:@1 session:session];
     ZMUpdateEvent *event2 = [self callStateEventInConversation:self.groupConversation joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:session];
-    [self.sessionTracker addEvent:event2 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event2];
     ZMLocalNotificationForEvent *note2 = [note02 copyByAddingEvent:event2 conversation:self.groupConversation];
     XCTAssertNotNil(note2);
 
     ZMLocalNotificationForCallEvent *note03 = [self callNotificationForConversation:self.groupConversationWithoutName otherUser:self.sender othersAreJoined:YES selfIsJoined:NO sequence:@1 session:session];
     ZMUpdateEvent *event3 = [self callStateEventInConversation:self.groupConversationWithoutName joinedUsers:@[] videoSendingUsers:@[] sequence:@2 session:session];
-    [self.sessionTracker addEvent:event3 managedObjectContext:self.syncMOC];
+    [self.sessionTracker addEvent:event3];
     ZMLocalNotificationForEvent *note3 = [note03 copyByAddingEvent:event3 conversation:self.groupConversationWithoutName];
     XCTAssertNotNil(note3);
 

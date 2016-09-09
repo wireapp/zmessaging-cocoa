@@ -77,7 +77,7 @@ ZM_EMPTY_ASSERTING_INIT();
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(cancelNotificationForLastReadChangedNotification:) name:ZMConversationLastReadDidChangeNotificationName object:nil];
         
         self.sharedApplication = sharedApplication;
-        self.sessionTracker = [[SessionTracker alloc] init];
+        self.sessionTracker = [[SessionTracker alloc] initWithManagedObjectContext:self.syncMOC];
     }
     return self;
 }
@@ -85,6 +85,7 @@ ZM_EMPTY_ASSERTING_INIT();
 - (void)tearDown;
 {
     self.isTornDown = YES;
+    [self.sessionTracker tearDown];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self cancelAllNotifications];
 }
@@ -172,7 +173,7 @@ ZM_EMPTY_ASSERTING_INIT();
     ZMLogPushKit(@"Processing push events (a) %p (count = %u)", events, (unsigned) events.count);
     for (ZMUpdateEvent *event in events) {
         // Forward events to the session tracker which keeps track if the selfUser joined or not
-        [self.sessionTracker addEvent:event managedObjectContext:self.syncMOC];
+        [self.sessionTracker addEvent:event];
         
         // The create the notification
         ZMLocalNotificationForEvent *note = [self notificationForEvent:event conversationMap:conversationMap];

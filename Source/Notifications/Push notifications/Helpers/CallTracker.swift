@@ -72,13 +72,17 @@ extension ZMUpdateEvent {
     }
 }
 
-struct Session {
+class Session : NSObject, NSCoding, NSCopying {
     let sessionID : String
     let initiatorID : NSUUID
     let conversationID : NSUUID
     
     var lastSequence : Int = 0
     var isVideo : Bool = false
+    var callStarted : Bool = false
+    var othersJoined : Bool = false
+    var selfUserJoined : Bool = false
+    var callEnded : Bool = false
     
     init(sessionID: String, conversationID: NSUUID, initiatorID: NSUUID) {
         self.sessionID = sessionID
@@ -86,15 +90,9 @@ struct Session {
         self.initiatorID = initiatorID
     }
     
-    var callStarted : Bool = false
-    var othersJoined : Bool = false
-    var selfUserJoined : Bool = false
-    var callEnded : Bool = false
-    
     enum State : Int {
         case Incoming, Ongoing, SelfUserJoined, SessionEndedSelfJoined, SessionEnded
     }
-    
     var currentState : State {
         switch (callEnded, selfUserJoined) {
         case (true, true):
@@ -108,7 +106,7 @@ struct Session {
         }
     }
     
-    mutating func changeState(event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext) -> State {
+    func changeState(event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext) -> State {
         guard let sequence = event.callingSequence where sequence >= lastSequence else { return currentState }
         lastSequence = sequence
         let callStateType = event.callStateType(managedObjectContext)
@@ -136,44 +134,106 @@ struct Session {
         }
         return currentState
     }
+    
+    func encodeWithCoder(aCoder: NSCoder) {
+        aCoder.encodeBool(callStarted, forKey: "callStarted")
+        aCoder.encodeBool(othersJoined, forKey: "othersJoined")
+        aCoder.encodeBool(selfUserJoined, forKey: "selfUserJoined")
+        aCoder.encodeBool(callEnded, forKey: "callEnded")
+        aCoder.encodeBool(isVideo, forKey: "isVideo")
+        aCoder.encodeInteger(lastSequence, forKey: "lastSequence")
+        aCoder.encodeObject(sessionID, forKey: "sessionID")
+        aCoder.encodeObject(initiatorID, forKey: "iniatorID")
+        aCoder.encodeObject(conversationID, forKey: "conversationID")
+    }
+    
+    convenience required init?(coder aDecoder: NSCoder) {
+        guard let sessionID = aDecoder.decodeObjectForKey("sessionID") as? String,
+        let initiatorID = aDecoder.decodeObjectForKey("initiatorID") as? NSUUID,
+        let conversationID = aDecoder.decodeObjectForKey("conversationID") as? NSUUID else {return nil}
+        
+        self.init(sessionID: sessionID, conversationID: conversationID, initiatorID: initiatorID)
+        self.callStarted = aDecoder.decodeBoolForKey("callStarted")
+        self.othersJoined = aDecoder.decodeBoolForKey("othersJoined")
+        self.selfUserJoined = aDecoder.decodeBoolForKey("selfUserJoined")
+        self.callEnded = aDecoder.decodeBoolForKey("callEnded")
+        self.isVideo = aDecoder.decodeBoolForKey("isVideo")
+        self.lastSequence = aDecoder.decodeIntegerForKey("lastSequence")
+    }
+    
+    func copyWithZone(zone: NSZone) -> AnyObject {
+        let copy = Session(sessionID: sessionID, conversationID: conversationID, initiatorID: initiatorID)
+        copy.callStarted = callStarted
+        copy.othersJoined = othersJoined
+        copy.selfUserJoined = selfUserJoined
+        copy.callEnded = callEnded
+        copy.isVideo = isVideo
+        copy.lastSequence = lastSequence
+        return copy
+    }
 }
 
 @objc public class SessionTracker : NSObject {
-    
-    var sessions : [Session] = []
+    static let ArchivingKey = "SessionTracker"
+    let managedObjectContext: NSManagedObjectContext
+
+    var sessions : [Session] = [] {
+        didSet {
+            updateArchive()
+        }
+    }
     
     var joinedSessions : [String] {
         return sessions.filter{$0.selfUserJoined}.map{$0.sessionID}
+    }
+    
+    public init(managedObjectContext: NSManagedObjectContext) {
+        self.managedObjectContext = managedObjectContext
+        super.init()
+        unarchiveOldSessions()
+    }
+    
+    public func tearDown(){
+        sessions = []
+        managedObjectContext.saveOrRollback()
     }
     
     public func clearSessions(conversation: ZMConversation){
         sessions = sessions.filter{$0.conversationID != conversation.remoteIdentifier}
     }
     
-    public func addEvent(event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext)  {
+    /// unarchives previous calls that haven't been cancelled yet
+    func unarchiveOldSessions(){
+        guard let archive = managedObjectContext.valueForKey(SessionTracker.ArchivingKey) as? NSData,
+            let archivedSessions =  NSKeyedUnarchiver.unarchiveObjectWithData(archive) as? [Session]
+            else { return }
+        self.sessions = archivedSessions
+    }
+    
+    /// Archives sessions
+    func updateArchive(){
+        let data = NSKeyedArchiver.archivedDataWithRootObject(sessions)
+        managedObjectContext.setValue(data, forKey: SessionTracker.ArchivingKey)
+        managedObjectContext.saveOrRollback() // we need to save otherwiese changes might not be stored
+    }
+    
+    public func addEvent(event: ZMUpdateEvent)  {
         guard event.type == .CallState, let sessionID = event.callingSessionID
         else { return }
         
         // If we have an existing session with that ID, we update it
-        let sessionsCopy = sessions
-        for (index, session) in sessionsCopy.enumerate() {
+        for session in sessions {
             guard session.conversationID == event.conversationUUID() else { continue }
-            
-            var updatedSession = session
             if session.sessionID == sessionID {
                 if session.callEnded {
                     return
                 }
-                updatedSession.changeState(event, managedObjectContext: managedObjectContext)
-                sessions.removeAtIndex(index)
-                sessions.insert(updatedSession, atIndex: index)
+                session.changeState(event, managedObjectContext: managedObjectContext)
                 return
             }
             else if let sequence = event.callingSequence where session.lastSequence < sequence {
                 // We have a new sessionID, so the previous call must have ended and we didn't notice
-                updatedSession.callEnded = true
-                sessions.removeAtIndex(index)
-                sessions.insert(updatedSession, atIndex: index)
+                session.callEnded = true
                 // We don't return but break and insert a new session
                 break
             }
@@ -184,14 +244,14 @@ struct Session {
     }
     
     func insertNewSession(event: ZMUpdateEvent, sessionID: String, managedObjectContext: NSManagedObjectContext) {
-        var call = Session(sessionID: sessionID, conversationID: event.conversationUUID()!, initiatorID: event.senderUUID()!)
+        let call = Session(sessionID: sessionID, conversationID: event.conversationUUID()!, initiatorID: event.senderUUID()!)
         call.changeState(event, managedObjectContext: managedObjectContext)
         sessions.append(call)
     }
     
     func sessionForEvent(event: ZMUpdateEvent) -> Session? {
         guard let sessionID = event.callingSessionID, let conversationID = event.conversationUUID()  else {return nil}
-        return sessions.filter{$0.sessionID == sessionID && $0.conversationID == conversationID}.first
+        return (sessions.filter{$0.sessionID == sessionID && $0.conversationID == conversationID}.first)?.copy() as? Session
     }
     
     func missedSessionsFor(conversationID: NSUUID) -> [Session] {
