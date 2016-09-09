@@ -24,10 +24,11 @@ class EventDecoderTest: MessagingTest {
     
     var eventMOC = NSManagedObjectContext.createEventContext(withAppGroupIdentifier: nil)
     var sut : EventDecoder!
-    
+
     override func setUp() {
         super.setUp()
         sut = EventDecoder(eventMOC: eventMOC, syncMOC: syncMOC)
+        eventMOC.addGroup(self.dispatchGroup)
     }
     
     override func tearDown() {
@@ -53,13 +54,14 @@ class EventDecoderTest: MessagingTest {
             XCTAssertTrue(events.contains(event))
             didCallBlock = true
         }
+
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
         XCTAssertTrue(didCallBlock)
     }
     
-    func testThatItProcessesPreviouslyStoredEventsFirst(){
+    func testThatItProcessesPreviouslyStoredEventsFirst() {
         // given
         let event1 = dummyEvent()
         let event2 = dummyEvent()
@@ -84,7 +86,7 @@ class EventDecoderTest: MessagingTest {
         XCTAssertEqual(callCount, 2)
     }
     
-    func testThatItProcessesInBatches(){
+    func testThatItProcessesInBatches() {
         // given
         EventDecoder.testingBatchSize = 2
         

@@ -177,64 +177,64 @@ extension NSManagedObjectContext {
             consumeBlock: block
         )
     }
-    
-    // Processes first the old, then the new events
+
+    // Processes first the old, then the new events subsequently
     private func process(oldEvents oldEvents: EventsWithStoredEvents, newEvents: EventsWithStoredEvents, lastIndexToFetch: Int64, consumeBlock: ConsumeBlock) {
         eventMOC.performGroupedBlock {
             // process old events
-            self.consumeStoredEvents(oldEvents.storedEvents, someEvents: oldEvents.updateEvents, lastIndexToFetch: lastIndexToFetch, consumeBlock: consumeBlock)
-            
-            // process new events
-            if newEvents.updateEvents.count > 0 {
-                self.processBatch(newEvents.updateEvents, storedEvents: newEvents.storedEvents, block: consumeBlock)
-            } else {
-                consumeBlock([])
+            self.consumeStoredEvents(oldEvents.storedEvents, someEvents: oldEvents.updateEvents, lastIndexToFetch: lastIndexToFetch, consumeBlock: consumeBlock) {
+                // process new events
+                if newEvents.updateEvents.count > 0 {
+                    self.processBatch(newEvents.updateEvents, storedEvents: newEvents.storedEvents, block: consumeBlock, completion: nil)
+                } else {
+                    consumeBlock([])
+                }
             }
         }
     }
     
-    /// calls the consuming block and deletes the respective stored events subsequently
-    private func processBatch(events:[ZMUpdateEvent], storedEvents:[NSManagedObject], block: ConsumeBlock) {
+    /// Calls the `ComsumeBlock` and deletes the respective stored events subsequently,
+    /// The consume block is guaranteed to be called on the syncMOC's queue.
+    /// The completion closure is invokes after the `StoredEvent`'s have been deleted on the eventMOC.
+    private func processBatch(events:[ZMUpdateEvent], storedEvents:[NSManagedObject], block: ConsumeBlock, completion: (() -> Void)?) {
         let strongEventMOC = eventMOC
 
         // switch to the sync queue to call the passed in block with the update events
         syncMOC.performGroupedBlock { 
             block(events)
-            
+
             strongEventMOC.performGroupedBlock {
                 storedEvents.forEach(strongEventMOC.deleteObject)
                 strongEventMOC.saveOrRollback()
+                completion?()
             }
         }
     }
     
-    /// consumes passed in stored events and fetches more events if the last passed in event is not the last event to fetch
-    private func consumeStoredEvents(someStoredEvents: [StoredUpdateEvent], someEvents: [ZMUpdateEvent], lastIndexToFetch: Int64, consumeBlock: ConsumeBlock) {
-        var storedEvents = someStoredEvents
-        var events = someEvents
+    /// Consumes passed in stored events and fetches more events if the last passed in event is not the last event to fetch
+    /// Calls itself recursivly if there are multiple batches (of size `EventDecoder.BatchSize`) to fetch. The completion closure is called
+    /// when there are no more stored events to fetch (respecting the `lastIndexToFetch`)
+    private func consumeStoredEvents(someStoredEvents: [StoredUpdateEvent], someEvents: [ZMUpdateEvent], lastIndexToFetch: Int64, consumeBlock: ConsumeBlock, completion: () -> Void) {
+
+        guard someEvents.count > 0 else { return completion() }
         
-        var hasMoreEvents = true
-        while hasMoreEvents {
-            // if the index of the last fetched object is not the lastIndexToFetch, we have more objects to fetch
-            hasMoreEvents = storedEvents.last?.sortIndex != lastIndexToFetch
+        var (storedEvents, events) = (someStoredEvents, someEvents)
+        let hasMore = storedEvents.last?.sortIndex != lastIndexToFetch
+
+        processBatch(events, storedEvents: storedEvents, block: consumeBlock) {
+            (storedEvents, events) = ([], [])
+            guard hasMore else { return completion() }
             
-            if events.count > 0 {
-                // process the current event batch
-                processBatch(events, storedEvents: storedEvents, block: consumeBlock)
-                events = []
-                storedEvents = []
-            } else {
-                // we do not have any non-stored events, exit the loop
-                hasMoreEvents = false
-            }
-            
-            // If the last event's index was not the last stored index, we try to fetch the next batch
-            if hasMoreEvents {
-                storedEvents = StoredUpdateEvent.nextEvents(eventMOC, batchSize: EventDecoder.BatchSize, stopAtIndex: lastIndexToFetch)
+            self.eventMOC.performGroupedBlock {
+                storedEvents = StoredUpdateEvent.nextEvents(self.eventMOC, batchSize: EventDecoder.BatchSize, stopAtIndex: lastIndexToFetch)
+                
                 if storedEvents.count > 0 {
                     events = StoredUpdateEvent.eventsFromStoredEvents(storedEvents)
+                    self.syncMOC.performGroupedBlock {
+                        self.consumeStoredEvents(storedEvents, someEvents: events, lastIndexToFetch: lastIndexToFetch, consumeBlock: consumeBlock, completion: completion)
+                    }
                 } else {
-                    hasMoreEvents = false
+                    return completion()
                 }
             }
         }
