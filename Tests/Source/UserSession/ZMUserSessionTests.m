@@ -1031,7 +1031,7 @@
     }];
 
     // then
-    XCTAssertEqual(self.application.registeredUserNotificationSettings.count, 1u);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
 }
 
 - (void)testThatItCallsRegisterForPushNotificationsAgainIfNoPushTokenIsSet
@@ -1049,7 +1049,7 @@
     }];
     
     // then
-    XCTAssertEqual(self.application.registeredUserNotificationSettings.count, 2u);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
 }
 
 - (void)testThatItMarksPushTokenAsNotRegisteredWhenResettingEvenIfItHasSameData
@@ -1072,7 +1072,7 @@
     }];
     
     // then
-    XCTAssertEqual(self.application.registeredUserNotificationSettings.count, 1u);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
     XCTAssertFalse(self.uiMOC.pushKitToken.isRegistered);
 }
 
@@ -1128,7 +1128,7 @@
     // when
     __block BOOL didCallCompletionHandler = NO;
     self.sut.requestToOpenViewDelegate = mockDelegate;
-    [self.sut application:nil handleActionWithIdentifier:actionIdentifier forLocalNotification:notification responseInfo:responseInfo completionHandler:^{
+    [self.sut application:self.application handleActionWithIdentifier:actionIdentifier forLocalNotification:notification responseInfo:responseInfo completionHandler:^{
         didCallCompletionHandler = YES;
     }];
     
@@ -1151,7 +1151,7 @@
     
     // when
     self.sut.requestToOpenViewDelegate = mockDelegate;
-    [self.sut application:nil didFinishLaunchingWithOptions:launchOptions];
+    [self.sut application:self.application didFinishLaunchingWithOptions:launchOptions];
     
     WaitForAllGroupsToBeEmpty(0.5);
     [[NSNotificationCenter defaultCenter] postNotificationName:@"ZMApplicationDidEnterEventProcessingStateNotification" object:nil];
@@ -1477,9 +1477,9 @@
 
 - (void)testThatItSetsTheMinimumBackgroundFetchInterval;
 {
-    XCTAssertNotEqual(self.backgroundFetchInterval, UIApplicationBackgroundFetchIntervalNever);
-    XCTAssertGreaterThanOrEqual(self.backgroundFetchInterval, UIApplicationBackgroundFetchIntervalMinimum);
-    XCTAssertLessThanOrEqual(self.backgroundFetchInterval, (NSTimeInterval) (20 * 60));
+    XCTAssertNotEqual(self.application.minimumBackgroundFetchInverval, UIApplicationBackgroundFetchIntervalNever);
+    XCTAssertGreaterThanOrEqual(self.application.minimumBackgroundFetchInverval, UIApplicationBackgroundFetchIntervalMinimum);
+    XCTAssertLessThanOrEqual(self.application.minimumBackgroundFetchInverval, (NSTimeInterval) (20 * 60));
 }
 
 - (void)testThatItForwardsTheBackgroundFetchRequestToTheOperationLoop
@@ -1495,7 +1495,7 @@
     [(ZMOperationLoop *)[[(id) self.operationLoop expect] andCall:@selector(forward_startBackgroundFetchWithCompletionHandler:) onObject:self] startBackgroundFetchWithCompletionHandler:OCMOCK_ANY];
     
     // when
-    [self.sut application:nil performFetchWithCompletionHandler:handler];
+    [self.sut application:self.application performFetchWithCompletionHandler:handler];
     
     // then
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);

@@ -42,7 +42,7 @@ import zmessaging
     public var registeredUserNotificationSettings : [UIUserNotificationSettings] = []
     
     /// Records calls to `setMinimumBackgroundFetchInterval`
-    public var settedMinimumBackgroundFetchInverval : [NSTimeInterval] = []
+    public var minimumBackgroundFetchInverval : NSTimeInterval = UIApplicationBackgroundFetchIntervalNever
     
     /// Callback invoked when `registerUserNotificationSettings` is invoked
     public var registerForRemoteNotificationsCallback : ()->() = { _ in }
@@ -69,7 +69,7 @@ extension ApplicationMock : Application {
     }
     
     public func setMinimumBackgroundFetchInterval(minimumBackgroundFetchInterval: NSTimeInterval) {
-        self.settedMinimumBackgroundFetchInverval.append(minimumBackgroundFetchInterval)
+        self.minimumBackgroundFetchInverval = minimumBackgroundFetchInterval
     }
 }
 

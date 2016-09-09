@@ -604,7 +604,7 @@
 - (void)testThatItDoesntBundleFileAddNotification
 {
     // given
-    ZMLocalNotificationForEvent *note1 = [self notificationForType:EventConversationAdd inConversation:self.oneOnOneConversation fromUser:self.sender unreadCrount:4 application:nil];
+    ZMLocalNotificationForEvent *note1 = [self notificationForType:EventConversationAdd inConversation:self.oneOnOneConversation fromUser:self.sender unreadCrount:4 application:self.application];
     
     // when
     ZMLocalNotificationForEvent *note2 = [self copyNote:note1 withPayload:[self payloadForEncryptedOTRMessageWithFileNonce:[NSUUID UUID] mimeType:@"application/pdf" sender:self.sender conversation:self.oneOnOneConversation] fromUser:self.sender inConversation:self.oneOnOneConversation type:EventConversationAddOTRAsset];
@@ -650,7 +650,7 @@
 - (void)testThatItDoesntBundleVideoAddNotification
 {
     // given
-    ZMLocalNotificationForEvent *note1 = [self notificationForType:EventConversationAdd inConversation:self.oneOnOneConversation fromUser:self.sender unreadCrount:4 application:nil];
+    ZMLocalNotificationForEvent *note1 = [self notificationForType:EventConversationAdd inConversation:self.oneOnOneConversation fromUser:self.sender unreadCrount:4 application:self.application];
     
     // when
     ZMLocalNotificationForEvent *note2 = [self copyNote:note1 withPayload:[self payloadForEncryptedOTRMessageWithFileNonce:[NSUUID UUID] mimeType:@"video/mp4" sender:self.sender conversation:self.oneOnOneConversation] fromUser:self.sender inConversation:self.oneOnOneConversation type:EventConversationAddOTRAsset];
@@ -698,7 +698,7 @@
 - (void)testThatItDoesntBundleAudioAddNotification
 {
     // given
-    ZMLocalNotificationForEvent *note1 = [self notificationForType:EventConversationAdd inConversation:self.oneOnOneConversation fromUser:self.sender unreadCrount:4 application:nil];
+    ZMLocalNotificationForEvent *note1 = [self notificationForType:EventConversationAdd inConversation:self.oneOnOneConversation fromUser:self.sender unreadCrount:4 application:self.application];
     
     // when
     ZMLocalNotificationForEvent *note2 = [self copyNote:note1 withPayload:[self payloadForEncryptedOTRMessageWithFileNonce:[NSUUID UUID] mimeType:@"audio/x-m4a" sender:self.sender conversation:self.oneOnOneConversation] fromUser:self.sender inConversation:self.oneOnOneConversation type:EventConversationAddOTRAsset];
@@ -890,7 +890,7 @@
     NSDictionary *data = @{@"user_ids" : users};
     
     // when
-    ZMLocalNotificationForEvent *note1 = [self noteWithPayload:data fromUserID:userID inConversation:conversation type:event application:nil];
+    ZMLocalNotificationForEvent *note1 = [self noteWithPayload:data fromUserID:userID inConversation:conversation type:event application:self.application];
     
     // then
     
