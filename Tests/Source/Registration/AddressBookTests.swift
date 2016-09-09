@@ -439,7 +439,13 @@ extension AddressBookTests {
         sut.encodeWithCompletionHandler(queue, startingContactIndex: 20, maxNumberOfContacts: 20) { chunk in
             
             // then
-            XCTAssertNil(chunk)
+            if let chunk = chunk {
+                XCTAssertEqual(chunk.numberOfTotalContacts, 3)
+                XCTAssertEqual(chunk.includedContacts, UInt(20)..<UInt(20))
+                XCTAssertEqual(chunk.otherContactsHashes, [])
+            } else {
+                XCTFail()
+            }
             expectation.fulfill()
         }
         

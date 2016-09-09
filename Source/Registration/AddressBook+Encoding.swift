@@ -33,12 +33,15 @@ extension AddressBook {
 
             let range = startingContactIndex..<(startingContactIndex+maxNumberOfContacts)
             let cards = self.generateContactCards(range)
-            guard cards.count > 0 else {
+            
+            guard cards.count > 0 || startingContactIndex > 0 else {
+                // this should happen if I have zero contacts
                 groupQueue.performGroupedBlock({
                     completion(nil)
                 })
                 return
             }
+            
             let cardsRange = startingContactIndex..<(startingContactIndex+UInt(cards.count))
             let encodedAB = EncodedAddressBookChunk(numberOfTotalContacts: self.numberOfContacts,
                                                     otherContactsHashes: cards,

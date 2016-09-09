@@ -34,7 +34,6 @@
 #import "ZMOperationLoop.h"
 
 
-
 @interface ZMAssetClientMessage (ImagePredicates)
 
 + (NSPredicate *)filterForUploadingImageMessages;
@@ -327,12 +326,14 @@
         case ZMUpdateEventConversationOtrMessageAdd:
         case ZMUpdateEventConversationOtrAssetAdd:
             updateResult = [ZMOTRMessage messageUpdateResultFromUpdateEvent:event
-                                                  inManagedObjectContext:self.managedObjectContext
-                                                          prefetchResult:prefetchResult];
-            if (updateResult.needsConfirmation) {
-                ZMClientMessage *confirmation = [updateResult.message confirmReception];
-                if (event.source == ZMUpdateEventSourcePushNotification) {
-                    [self.apnsConfirmationStatus needsToConfirmMessage:confirmation.nonce];
+                                                     inManagedObjectContext:self.managedObjectContext
+                                                             prefetchResult:prefetchResult];
+            if ([BackgroundAPNSConfirmationStatus sendDeliveryReceipts]) {
+                if (updateResult.needsConfirmation) {
+                    ZMClientMessage *confirmation = [updateResult.message confirmReception];
+                    if (event.source == ZMUpdateEventSourcePushNotification) {
+                        [self.apnsConfirmationStatus needsToConfirmMessage:confirmation.nonce];
+                    }
                 }
             }
             break;

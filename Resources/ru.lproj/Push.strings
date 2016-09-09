@@ -1,0 +1,169 @@
+// 
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
+//
+
+
+"push.notification.default" = "Новое сообщение";
+
+"push.notification.add.message.group" = "%1$@ в %2$@: %3$@";
+"push.notification.add.message.group.nousername" = "Новое сообщение в %1$@: %2$@";
+"push.notification.add.message.group.nousername.noconversationname" = "Новое сообщение: %1$@";
+"push.notification.add.message.group.noconversationname" = "%1$@ в разговоре: %2$@";
+
+"push.notification.add.message.oneonone" = "%1$@: %2$@";
+"push.notification.add.message.oneonone.nousername" = "Новое сообщение: %1$@";
+
+"push.notification.add.image.group" = "%1$@ поделился картинкой в %2$@";
+"push.notification.add.image.group.nousername" = "Новая картинка в %1$@";
+"push.notification.add.image.group.nousername.noconversationname" = "Новая картинка в разговоре";
+"push.notification.add.image.group.noconversationname" = "%1$@ поделился картинкой в разговоре";
+
+"push.notification.add.image.oneonone" = "%1$@ поделился картинкой";
+"push.notification.add.image.oneonone.nousername" = "Новая картинка в беседе";
+
+"push.notification.add.video.group" = "%1$@ поделился(-лась) видео в %2$@";
+"push.notification.add.video.group.nousername" = "Новое видео в %1$@";
+"push.notification.add.video.group.nousername.noconversationname" = "Новое видео в разговоре";
+"push.notification.add.video.group.noconversationname" = "%1$@ поделился(-лась) видео в разговоре";
+
+"push.notification.add.video.oneonone" = "%1$@ поделился(-лась) видео";
+"push.notification.add.video.oneonone.nousername" = "Новое видео в разговоре";
+
+"push.notification.add.audio.group" = "%1$@ поделился(-лась) аудио сообщением в %2$@";
+"push.notification.add.audio.group.nousername" = "Новое аудио сообщение в %1$@";
+"push.notification.add.audio.group.nousername.noconversationname" = "Новое звуковое сообщение в разговоре";
+"push.notification.add.audio.group.noconversationname" = "%1$@ поделился(-лась) аудио сообщением в разговоре";
+
+"push.notification.add.audio.oneonone" = "%1$@ поделился(-лась) звуковым сообщением";
+"push.notification.add.audio.oneonone.nousername" = "Новое аудио сообщение в разговоре";
+
+"push.notification.add.file.group" = "%1$@ поделился файлом в %2$@";
+"push.notification.add.file.group.nousername" = "Новый файл в %1$@";
+"push.notification.add.file.group.nousername.noconversationname" = "Новый файл в разговоре";
+"push.notification.add.file.group.noconversationname" = "%1$@ поделился(-лась) файлом в разговоре";
+
+"push.notification.add.file.oneonone" = "%1$@ поделился(-лась) файлом";
+"push.notification.add.file.oneonone.nousername" = "Новый файл в разговоре";
+
+"push.notification.add.location.group" = "%1$@ поделился(-лась) местоположением в %2$@";
+"push.notification.add.location.group.nousername" = "Новое местоположение в %1$@";
+"push.notification.add.location.group.nousername.noconversationname" = "Новое местоположение в разговоре";
+"push.notification.add.location.group.noconversationname" = "%1$@ поделился(-лась) местоположением в разговоре";
+
+"push.notification.add.location.oneonone" = "%1$@ поделился(-лась) местоположением";
+"push.notification.add.location.oneonone.nousername" = "Новое местоположение в разговоре";
+
+"push.notification.member.join" = "%1$@ добавил %3$@ в %2$@";
+"push.notification.member.join.noconversationname" = "%1$@ добавил %2$@ в разговор";
+"push.notification.member.join.nousername.noconversationname" = "%1$@ был добавлен в разговор";
+"push.notification.member.join.nousername" = "%2$@ был добавлен в %1$@";
+
+"push.notification.member.join.many.nootherusername" = "%1$@ добавил людей в %2$@";
+"push.notification.member.join.many.nootherusername.noconversationname" = "%1$@ добавил людей в разговор";
+"push.notification.member.join.many.nootherusername.nousername" = "Новые участники добавлены в %1$@";
+"push.notification.member.join.many.nootherusername.nousername.noconversationname" = "Новые участники добавлены в разговор";
+
+"push.notification.member.join.self" = "%1$@ добавил вас в %2$@";
+"push.notification.member.join.self.noconversationname" = "%1$@ добавил вас в разговор";
+"push.notification.member.join.self.nousername.noconversationname" = "Вы были добавлены в разговор";
+"push.notification.member.join.self.nousername" = "Вы были добавлены в %1$@";
+
+"push.notification.member.join.nootherusername" = "%1$@ добавил людей в %2$@";
+"push.notification.member.join.nootherusername.noconversationname" = "%1$@ добавил людей в беседу";
+"push.notification.member.join.nootherusername.nousername.noconversationname" = "Новые участники добавлены в разговор";
+"push.notification.member.join.nootherusername.nousername" = "Новые участники добавлены в %1$@";
+
+"push.notification.member.leave" = "%1$@ удалил %3$@ из %2$@";
+"push.notification.member.leave.noconversationname" = "%1$@ удалил %2$@ из разговора";
+"push.notification.member.leave.nousername.noconversationname" = "%1$@ был удален из разговора";
+"push.notification.member.leave.nousername" = "%2$@ был удален из %1$@";
+
+"push.notification.member.leave.many.nootherusername" = "%1$@ удалил людей из %2$@";
+"push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@ удалил участников из разговора";
+"push.notification.member.leave.many.nootherusername.nousername" = "Участники были удалены из %1$@";
+"push.notification.member.leave.many.nootherusername.nousername.noconversationname" = "Участники были удалены из разговора";
+
+"push.notification.member.leave.self" = "%1$@ удалил вас из %2$@";
+"push.notification.member.leave.self.noconversationname" = "%1$@ удалил вас из разговора";
+"push.notification.member.leave.self.nousername.noconversationname" = "Вы были удалены из разговора";
+"push.notification.member.leave.self.nousername" = "Вы были удалены из %1$@";
+
+"push.notification.member.leave.nootherusername" = "%1$@ удалил людей из %2$@";
+"push.notification.member.leave.nootherusername.noconversationname" = "%1$@ удалил участников из разговора";
+"push.notification.member.leave.nootherusername.nousername.noconversationname" = "Участники были удалены из разговора";
+"push.notification.member.leave.nootherusername.nousername" = "Участники были удалены из %1$@";
+
+"push.notification.member.leave.sender.nootherusername" = "%1$@ покинули %2$@";
+"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ покинул разговор";
+"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Участники покинули разговор";
+"push.notification.member.leave.sender.nootherusername.nousername" = "Участники покинули %1$@";
+
+
+"push.notification.call.started.video.oneonone" = "%1$@ звонит с видео";
+"push.notification.call.started.video.oneonone.nousername" = "Видеозвонок";
+
+"push.notification.call.started.video.group" = "%1$@ звонит с видео в %2$@";
+"push.notification.call.started.video.group.nousername" = "Видеозвонок в %1$@";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ звонит с видео в разговоре";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Видеозвонок";
+
+"push.notification.call.started.oneonone" = "%1$@ звонит";
+"push.notification.call.started.oneonone.nousername" = "Звонок";
+
+"push.notification.call.started.group" = "%1$@ звонит в %2$@";
+"push.notification.call.started.group.nousername" = "Звонок в %1$@";
+"push.notification.call.started.group.noconversationname" = "%1$@ звонит в разговоре";
+"push.notification.call.started.group.nousername.noconversationname" = "Кто-то звонит в разговоре";
+
+"push.notification.conversation.create" = "%1$@ создал группу с вами";
+"push.notification.conversation.create.nousername" = "Создана группа с вами";
+
+"push.notification.conversation.rename" = "%1$@ переименовал разговор в %2$@";
+"push.notification.conversation.rename.nousername" = "Разговор был переименован в %1$@";
+
+"push.notification.connection.request" = "%@ хочет подключиться";
+"push.notification.connection.request.nousername" = "Кто-то хочет подключиться";
+
+"push.notification.connection.accepted" = "Вы и %@ сейчас подключены";
+"push.notification.connection.accepted.nousername" = "У вас есть новый контакт";
+
+"push.notification.failed.message.oneonone" = "Не удается отправить сообщение для %1$@";
+"push.notification.failed.message.oneonone.nousername" = "Не удается отправить сообщение";
+
+"push.notification.failed.message.group" = "Не удается отправить сообщение в %1$@";
+"push.notification.failed.message.group.noconversationname" = "Не удается отправить сообщение";
+
+"push.notification.reaction.group" = "%1$@ %3$@ ваше сообщение в %2$@";
+"push.notification.reaction.group.nousername.noconversationname" = "Кто-то %@ ваше сообщение в разговоре";
+"push.notification.reaction.group.nousername" = "Кто-то %2$@ ваше сообщение в %1$@";
+"push.notification.reaction.group.noconversationname" = "%@ %@ ваше сообщение в разговоре";
+
+"push.notification.reaction.oneonone" = "%@ %@ ваше сообщение";
+"push.notification.reaction.oneonone.nousername" = "Кто-то %@ ваше сообщение";
+
+"push.notification.new_user" = "%@ присоединился к Wire";
+
+"push.notification.action.message.open" = "Открыть";
+"push.notification.action.message.reply" = "Ответить";
+"push.notification.action.message.reply.button.title" = "Отправить";
+"push.notification.action.conversation.mute" = "Выкл.звук";
+
+"push.notification.action.call.accept" = "Принять";
+"push.notification.action.call.ignore" = "Отклонить";
+"push.notification.action.call.message" = "Сообщение";
+"push.notification.action.call.callback" = "Перезвонить";
+"push.notification.action.connection.accept" = "Принять";

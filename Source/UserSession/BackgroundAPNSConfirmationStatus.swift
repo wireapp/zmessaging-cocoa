@@ -21,6 +21,9 @@ import UIKit
 @objc
 public class BackgroundAPNSConfirmationStatus : NSObject {
     
+    /// Switch for sending delivery receipts
+    public static let sendDeliveryReceipts : Bool = true
+
     let backgroundTime : NSTimeInterval = 25
     private var tornDown = false
     private var messageNonces : [NSUUID : ZMBackgroundActivity] = [:]

@@ -232,14 +232,16 @@ public class ZMLocalNotificationForReaction : ZMLocalNotificationForPostInConver
     override func canCreateNotification() -> Bool {
         guard super.canCreateNotification() else { return false }
         guard let lastEvent = lastEvent,
-              let receivedMessage = genericMessage(lastEvent) where receivedMessage.hasReaction() else { return false }
+              let receivedMessage = genericMessage(lastEvent)
+            where receivedMessage.hasReaction() &&
+                  Reaction.transportReaction(receivedMessage.reaction.emoji) != TransportReaction.None else { return false }
         
         // If the message is an "unlike", we don't want to display a notification
         guard receivedMessage.reaction.emoji != "" else { return false }
         
         // fetch message that was reacted to and make sure the sender
         guard let conversation = self.conversation,
-              let message = ZMMessage.fetchMessageWithNonce(NSUUID(UUIDString: receivedMessage.reaction.messageId), forConversation: conversation, inManagedObjectContext: self.managedObjectContext)
+            let message = ZMMessage.fetchMessageWithNonce(NSUUID(UUIDString: receivedMessage.reaction.messageId), forConversation: conversation, inManagedObjectContext: self.managedObjectContext)
             where message.sender == ZMUser.selfUserInContext(self.managedObjectContext)
             else { return false }
 
@@ -250,7 +252,9 @@ public class ZMLocalNotificationForReaction : ZMLocalNotificationForPostInConver
     
     public override func copyByAddingEvent(event: ZMUpdateEvent) -> ZMLocalNotificationForEvent? {
         guard canAddEvent(event),
-              let otherMessage = genericMessage(event) where otherMessage.hasReaction()
+              let otherMessage = genericMessage(event)
+            where otherMessage.hasReaction() &&
+                  Reaction.transportReaction(otherMessage.reaction.emoji) != TransportReaction.None
         else { return nil }
         
         // If new event is an "unlike" from the same sender we want to cancel the previous notification
