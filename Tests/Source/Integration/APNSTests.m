@@ -508,9 +508,6 @@
         [self.application simulateApplicationDidEnterBackground];
         WaitForAllGroupsToBeEmpty(0.2);
         
-        // expect
-        [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
-        
         XCTestExpectation *confirmationExpectation = [self expectationWithDescription:@"Did send confirmation"];
         XCTestExpectation *missingClientsExpectation = [self expectationWithDescription:@"Did fetch missing client"];
         __block NSUInteger requestCount = 0;
