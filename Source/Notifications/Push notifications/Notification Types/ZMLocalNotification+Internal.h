@@ -20,15 +20,13 @@
 
 #import "ZMLocalNotification.h"
 @class ZMConversation;
-@class UIApplication;
-
-
+@protocol ZMApplication;
 
 @interface ZMLocalNotificationForEvent (Internal)
 
 - (instancetype)initWithEvents:(NSArray *)events
                   conversation:(ZMConversation *)conversation
           managedObjectContext:(NSManagedObjectContext *)moc
-                   application:(UIApplication *)application;
+                   application:(id<ZMApplication>)application;
 
 @end

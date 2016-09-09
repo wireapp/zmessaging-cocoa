@@ -21,31 +21,33 @@
 
 @import UIKit;
 
+@protocol ZMApplication;
+
 @interface ZMUserSession (ZMBackground)
 
 /// Store deviceToken
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
+- (void)application:(id<ZMApplication>)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
 
 /// Process the payload of the remote notification. This may cause a @c UILocalNotification to be displayed.
-- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
+- (void)application:(id<ZMApplication>)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 
 /// Process the local notifications.
-- (void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification;
+- (void)application:(id<ZMApplication>)application didReceiveLocalNotification:(UILocalNotification *)notification;
 
 /// Notifies the receiver about callbacks from a local notification.
-- (void)application:(UIApplication *)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)())completionHandler;
+- (void)application:(id<ZMApplication>)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)())completionHandler;
 
 /// Causes the user session to update its state from the backend.
-- (void)application:(UIApplication *)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
+- (void)application:(id<ZMApplication>)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 
 /// Lets the user session process event for a background URL session it has set up.
-- (void)application:(UIApplication *)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler;
+- (void)application:(id<ZMApplication>)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler;
 
 /// Lets the user session process local and remote notifications contained in the launch options;
-- (void)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
+- (void)application:(id<ZMApplication>)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
 
 /// Calls registerUserNotificationSettings on application
-- (void)setupPushNotificationsForApplication:(UIApplication *)application;
+- (void)setupPushNotificationsForApplication:(id<ZMApplication>)application;
 
 - (void)applicationDidEnterBackground:(NSNotification *)note;
 - (void)applicationWillEnterForeground:(NSNotification *)note;

@@ -40,13 +40,15 @@
 
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
-@class ZMApplication;
+@protocol ZMApplication;
 
 extern NSString * const ZMPushChannelStateChangeNotificationName;
 extern NSString * const ZMPushChannelIsOpenKey;
 extern NSString * const ZMPushChannelResponseStatusKey;
 
 @interface ZMOperationLoop : NSObject
+
+@property (nonatomic, readonly) id<ZMApplication> application;
 
 + (void)notifyNewRequestsAvailable:(id<NSObject>)sender;
 
@@ -66,7 +68,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
                                  syncMOC:(NSManagedObjectContext *)syncMOC
                        syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                       appGroupIdentifier:(NSString *)appGroupIdentifier
-                             application:(ZMApplication *)application;
+                             application:(id<ZMApplication>)application;
 
 - (void)tearDown;
 - (void)accessTokenDidChangeWithToken:(NSString *)token ofType:(NSString *)type;

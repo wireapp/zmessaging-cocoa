@@ -37,7 +37,6 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
     var loginProvider: FakeCredentialProvider!
     var updateProvider: FakeCredentialProvider!
     var cookieStorage : ZMPersistentCookieStorage!
-    var fakeApplication : FakeApplication!
     
     override func setUp() {
         super.setUp()
@@ -48,9 +47,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let cookie = ZMCookie(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage)
         loginProvider = FakeCredentialProvider()
         updateProvider = FakeCredentialProvider()
-        fakeApplication = FakeApplication()
-        fakeApplication.mockApplicationState = UIApplicationState.Active
-        confirmationStatus = FakeConfirmationStatus(application: fakeApplication, managedObjectContext: self.syncMOC, backgroundActivityFactory: FakeBackgroundActivityFactory())
+        confirmationStatus = FakeConfirmationStatus(application: self.application, managedObjectContext: self.syncMOC, backgroundActivityFactory: FakeBackgroundActivityFactory())
         
         clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, loginCredentialProvider:loginProvider, updateCredentialProvider:updateProvider, cookie:cookie, registrationStatusDelegate: nil)
         

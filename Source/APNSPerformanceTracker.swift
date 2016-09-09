@@ -134,15 +134,12 @@ extension NSTimeInterval {
 
 public extension APNSPerformanceTracker {
 
-    @objc static func trackVOIPNotificationInOperationLoop(eventsWithIdentifier: EventsWithIdentifier, analytics: AnalyticsType?) {
+    @objc static func trackVOIPNotificationInOperationLoop(eventsWithIdentifier: EventsWithIdentifier, analytics: AnalyticsType?, application: Application) {
         guard analytics != nil, let payload = eventsWithIdentifier.events?.first?.payload, timestamp = (payload as NSDictionary).dateForKey("time") else { return }
-        let application = UIApplication.sharedApplication()
-        let notificationTypes = application.currentUserNotificationSettings()?.types
-        let alertEnabled = notificationTypes?.contains(.Alert) ?? false
         let background = application.applicationState == .Background
         APNSPerformanceTracker.sharedTracker.trackNotification(
             eventsWithIdentifier.identifier,
-            state: .OperationLoop(serverTimestamp: timestamp, notificationsEnabled: alertEnabled, background: background, currentDate: NSDate()),
+            state: .OperationLoop(serverTimestamp: timestamp, notificationsEnabled: application.alertNotificationsEnabled, background: background, currentDate: NSDate()),
             analytics: analytics
         )
     }
@@ -163,8 +160,8 @@ public extension APNSPerformanceTracker {
         analytics?.tagEvent(notificationDecryptionFailedEventName)
     }
     
-    @objc static func trackAPNSInUserSession(analytics: AnalyticsType?, authenticated: Bool, applicationState: UIApplicationState) {
-        analytics?.tagEvent(notificationUserSessionEventName, attributes: ["authenticated": authenticated, "background": applicationState.description])
+    @objc static func trackAPNSInUserSession(analytics: AnalyticsType?, authenticated: Bool, isInBackground: Bool) {
+        analytics?.tagEvent(notificationUserSessionEventName, attributes: ["authenticated": authenticated, "background": isInBackground ? "background" : "active"])
     }
     
     @objc static func trackReceivedNotification(analytics: AnalyticsType?) {
@@ -173,14 +170,3 @@ public extension APNSPerformanceTracker {
 
 }
 
-extension UIApplicationState: CustomStringConvertible {
-    
-    public var description: String {
-        switch self {
-        case .Active: return "active"
-        case .Inactive: return "inactive"
-        case .Background: return "background"
-        }
-    }
-    
-}

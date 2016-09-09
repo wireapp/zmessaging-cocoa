@@ -18,14 +18,6 @@
 
 import UIKit
 
-
-@objc public protocol ApplicationStateOwner : NSObjectProtocol {
-    var applicationState : UIApplicationState { get }
-}
-
-extension UIApplication : ApplicationStateOwner {}
-
-
 @objc
 public class BackgroundAPNSConfirmationStatus : NSObject {
     
@@ -35,7 +27,7 @@ public class BackgroundAPNSConfirmationStatus : NSObject {
     let backgroundTime : NSTimeInterval = 25
     private var tornDown = false
     private var messageNonces : [NSUUID : ZMBackgroundActivity] = [:]
-    private unowned var application : ApplicationStateOwner
+    private unowned var application : Application
     private unowned var managedObjectContext : NSManagedObjectContext
     private unowned var backgroundActivityFactory : BackgroundActivityFactory
 
@@ -43,7 +35,7 @@ public class BackgroundAPNSConfirmationStatus : NSObject {
         return messageNonces.count > 0 && application.applicationState == .Background
     }
     
-    @objc public init(application: ApplicationStateOwner,
+    @objc public init(application: Application,
                       managedObjectContext: NSManagedObjectContext,
                       backgroundActivityFactory: BackgroundActivityFactory) {
         self.application = application

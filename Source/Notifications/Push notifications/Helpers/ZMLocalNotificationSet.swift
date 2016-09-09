@@ -33,13 +33,13 @@ import ZMTransport
         }
     }
     
-    internal var oldNotifications = [UILocalNotification]()
+    var oldNotifications = [UILocalNotification]()
     
-    internal weak var application: NotificationScheduler?
-    internal let archivingKey : String
-    internal let keyValueStore : ZMSynchonizableKeyValueStore
+    weak var application: Application?
+    let archivingKey : String
+    let keyValueStore : ZMSynchonizableKeyValueStore
     
-    public init(application: NotificationScheduler, archivingKey: String, keyValueStore: ZMSynchonizableKeyValueStore) {
+    public init(application: Application, archivingKey: String, keyValueStore: ZMSynchonizableKeyValueStore) {
         self.application = application
         self.archivingKey = archivingKey
         self.keyValueStore = keyValueStore

@@ -20,6 +20,8 @@
 @import PushKit;
 #import "CallingTests.h"
 #import "ZMUserSession+UserNotificationCategories.h"
+#import "zmessaging_iOS_Tests-Swift.h"
+
 
 
 @interface CallingTests (PushNotifications)
@@ -45,20 +47,13 @@
     XCTAssert([self logIn]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    id application = self.userSession.application;
-    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
-    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
-    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
-    __block UILocalNotification *notification;
-    [[application expect] scheduleLocalNotification:[OCMArg checkWithBlock:^BOOL(id obj) {
-        notification = obj;
-        return YES;
-    }]];
+    [self.application setBackground];
     XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 0u);
     
     ZMUser *user2 = [self userForMockUser:self.user2];
     NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest joinedUsers:@[user2] videoSendingUsers:@[] sequence:@1 session:@"session1"];
     
+    UILocalNotification *notification;
     // (1) when we recieve a push notification
     {
         [self simulateReceivePushNotification:@{@"data": @{@"payload": @[payload],
@@ -68,14 +63,13 @@
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        [application verify];
+        notification = self.application.scheduledLocalNotifications.firstObject;
         XCTAssertNotNil(notification);
         XCTAssertEqualObjects(notification.alertBody, @"Extra User2 is calling");
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 1u);
     }
     
     [self.mockTransportSession resetReceivedRequests];
-    [application stopMocking];
 
     // (2) we press on the action
     {
@@ -86,7 +80,7 @@
             }
             return nil;
         };
-        [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateInactive)] applicationState];
+        [self.application setInactive];
         [self.userSession application:self.userSession.application handleActionWithIdentifier:ZMCallAcceptAction forLocalNotification:notification responseInfo:nil completionHandler:nil];
 
         XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
@@ -96,7 +90,6 @@
         XCTAssertTrue([self lastRequestContainsSelfStateJoined]);
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 2u);
     }
-    [application stopMocking];
 }
 
 - (void)testThatItJoinsAVideoCallFromAPushNotification_DuringEventProcessingState
@@ -108,21 +101,14 @@
     XCTAssert([self logIn]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    id application = self.userSession.application;
-    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
-    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
-    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
-    
-    __block UILocalNotification *notification;
-    [[application expect] scheduleLocalNotification:[OCMArg checkWithBlock:^BOOL(id obj) {
-        notification = obj;
-        return YES;
-    }]];
-    
+
+    [self.application setBackground];
+
     ZMUser *user2 = [self userForMockUser:self.user2];
     NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest joinedUsers:@[user2] videoSendingUsers:@[user2] sequence:@1 session:@"session1"];
     
     // (1) when we recieve a push notification
+    UILocalNotification *notification;
     {
         [self simulateReceivePushNotification:@{@"data": @{@"payload": @[payload],
                                                            @"id": [NSUUID createUUID].transportString
@@ -131,7 +117,7 @@
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        [application verify];
+        notification = self.application.scheduledLocalNotifications.firstObject;
         XCTAssertNotNil(notification);
         XCTAssertEqualObjects(notification.alertBody, @"Extra User2 is video calling");
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 1u);
@@ -148,7 +134,7 @@
             }
             return nil;
         };
-        [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateInactive)] applicationState];
+        [self.application setInactive];
         [self.userSession application:self.userSession.application handleActionWithIdentifier:ZMCallAcceptAction forLocalNotification:notification responseInfo:nil completionHandler:nil];
 
         XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
@@ -158,8 +144,6 @@
         XCTAssertTrue([self lastRequestContainsSelfStateJoined]);
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 2u);
     }
-    
-    [application stopMocking];
 }
 
 - (void)simulateRestartWithoutEnteringEventProcessing
@@ -209,22 +193,9 @@
 
     [self simulateRestartWithoutEnteringEventProcessing];
     
-    XCTestExpectation *notificationExpectation = [self expectationWithDescription:@"Schedule notification"];
-    
-    id application = self.userSession.application;
-    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
-    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
-    [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
-    
-    __block UILocalNotification *notification;
-    
-    [[application expect] scheduleLocalNotification:[OCMArg checkWithBlock:^BOOL(id obj) {
-        notification = obj;
-        [notificationExpectation fulfill];
-        return YES;
-    }]];
+    UILocalNotification *notification;    
+    [self.application setBackground];
     XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 0u);
-
     
     // (1) when we recieve a push notification
     {
@@ -237,7 +208,7 @@
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        [application verify];
+        notification = self.application.scheduledLocalNotifications.firstObject;
         XCTAssertNotNil(notification);
         XCTAssertEqualObjects(notification.alertBody, @"Extra User2 is video calling");
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 1u);
@@ -246,7 +217,7 @@
     
     // (2) we press on the action
     {
-        [(UIApplication *)[[application expect] andReturnValue:@(UIApplicationStateInactive)] applicationState];
+        [self.application setInactive];
         [self.userSession application:self.userSession.application handleActionWithIdentifier:ZMCallAcceptAction forLocalNotification:notification responseInfo:nil completionHandler:nil];
         WaitForAllGroupsToBeEmpty(0.5);
         
@@ -278,7 +249,6 @@
         XCTAssertFalse(self.userSession.isPerformingSync);
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 2u);
     }
-    [application stopMocking];
 }
 
 @end

@@ -32,11 +32,13 @@
 - (instancetype)initWithCheckInterval:(NSTimeInterval)checkInterval
                               version:(NSString *)version
                          workingGroup:(ZMSDispatchGroup *)workingGroup
+                          application:(id<ZMApplication>)application
                     blacklistCallback:(void (^)(BOOL))blacklistCallback
 {
     return [self initWithCheckInterval:checkInterval
                                version:version
                           workingGroup:workingGroup
+                           application:application
                      blacklistCallback:blacklistCallback
                         blacklistClass:ZMBlacklistDownloader.class];
 }
@@ -44,6 +46,7 @@
 - (instancetype)initWithCheckInterval:(NSTimeInterval)checkInterval
                               version:(NSString *)version
                          workingGroup:(ZMSDispatchGroup *)workingGroup
+                          application:(id<ZMApplication>)application
                     blacklistCallback:(void (^)(BOOL))blacklistCallback
                        blacklistClass:(Class)blacklistClass
 {
@@ -51,6 +54,7 @@
     if(self) {
         self.downloader = [[blacklistClass alloc] initWithDownloadInterval:checkInterval
                                                               workingGroup:workingGroup
+                                                               application:application
                                                          completionHandler:^(NSString *minVersion, NSArray *excludedVersions) {
             [ZMBlacklistVerificator checkIfVersionIsBlacklisted:version completion:blacklistCallback minVersion:minVersion excludedVersions:excludedVersions];
         }];

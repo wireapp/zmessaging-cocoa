@@ -59,11 +59,10 @@
 #import "ZMUserProfileUpdateTranscoder.h"
 #import "ZMUserProfileUpdateStatus.h"
 #import "ZMBadge.h"
-#import "ZMBadge+Testing.h"
 #import "ZMMessageTranscoder+Internal.h"
 #import "ZMClientMessageTranscoder.h"
-#import "BadgeApplication.h"
 #import "MessagingTest+EventFactory.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 
 @interface ZMSyncStrategyTests : MessagingTest
@@ -73,8 +72,6 @@
 @property (nonatomic) ZMUserProfileUpdateStatus *userProfileUpdateStatus;
 @property (nonatomic) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic) ClientUpdateStatus *clientUpdateStatus;
-
-@property (nonatomic) id mockApplication;
 
 @property (nonatomic) id stateMachine;
 @property (nonatomic) NSArray *syncObjects;
@@ -89,7 +86,6 @@
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects2;
 
 @property (nonatomic) ZMBadge *badge;
-@property (nonatomic) BadgeApplication *badgeApplication;
 
 @end
 
@@ -101,11 +97,8 @@
 {
     [super setUp];
     
-    self.badge = [[ZMBadge alloc] init];
-    self.badgeApplication = [[BadgeApplication alloc] init];
-    self.badge.application = (id) self.badgeApplication;
+    self.badge = [[ZMBadge alloc] initWithApplication:self.application];
     
-    self.mockApplication = [OCMockObject niceMockForClass:[ZMApplication class]];
     self.mockUpstreamSync1 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     self.mockUpstreamSync2 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     [self verifyMockLater:self.mockUpstreamSync1];
@@ -154,12 +147,10 @@
     id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
     (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY];
-
-    id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
     
     id flowTranscoder = [OCMockObject mockForClass:ZMFlowSync.class];
     [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];
-    (void)[[[flowTranscoder expect] andReturn:flowTranscoder] initWithMediaManager:mediaManager onDemandFlowManager:nil syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC];
+    (void)[[[flowTranscoder expect] andReturn:flowTranscoder] initWithMediaManager:nil onDemandFlowManager:nil syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
 
     id userImageTranscoder = [OCMockObject mockForClass:ZMUserImageTranscoder.class];
     [[[[userImageTranscoder expect] andReturn:userImageTranscoder] classMethod] alloc];
@@ -204,7 +195,9 @@
                                                                          clientRegistrationStatus:self.clientRegistrationStatus
                                                                           objectStrategyDirectory:OCMOCK_ANY
                                                                                 syncStateDelegate:OCMOCK_ANY
-                                                                            backgroundableSession:self.backgroundableSession];
+                                                                            backgroundableSession:self.backgroundableSession
+                                                                                      application:self.application
+            ];
     [self verifyMockLater:self.stateMachine];
     
     self.updateEventsBuffer = [OCMockObject mockForClass:ZMUpdateEventsBuffer.class];
@@ -254,7 +247,7 @@
                                                proxiedRequestStatus:nil
                                                       accountStatus:nil
                                        backgroundAPNSPingBackStatus:nil
-                                                       mediaManager:mediaManager
+                                                       mediaManager:nil
                                                 onDemandFlowManager:nil
                                                             syncMOC:self.syncMOC
                                                               uiMOC:self.uiMOC
@@ -264,7 +257,7 @@
                                            taskCancellationProvider:OCMOCK_ANY
                                                  appGroupIdentifier:nil
                                                               badge:self.badge
-                                                        application:nil];
+                                                        application:self.application];
     
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
     XCTAssertEqual(self.sut.userImageTranscoder, userImageTranscoder);
@@ -318,8 +311,6 @@
     self.clientUpdateStatus = nil;
     self.syncObjects = nil;
     self.badge = nil;
-    self.badgeApplication = nil;
-    
     [super tearDown];
 }
 
@@ -400,7 +391,7 @@
     XCTAssertEqual(eventsArray.count, 2u);
     
     // expect
-        for(ZMUpdateEvent *event in eventsArray) {
+    for(ZMUpdateEvent *event in eventsArray) {
             [self expectSyncObjectsToProcessEvents:YES
                                         liveEvents:YES
                                      decryptEvents:YES
@@ -1217,21 +1208,13 @@
 
 - (void)goToBackground
 {
-#if ! TARGET_OS_IPHONE
-    [self.sut appDidEnterBackground:nil];
-#else
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
-#endif
+    [self.application simulateApplicationDidEnterBackground];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)goToForeground
 {
-#if ! TARGET_OS_IPHONE
-    [self.sut appWillEnterForeground:nil];
-#else
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationWillEnterForegroundNotification object:nil];
-#endif
+    [self.application simulateApplicationWillEnterForeground];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -1315,7 +1298,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.badgeApplication.applicationIconBadgeNumber, 1);
+    XCTAssertEqual(self.application.applicationIconBadgeNumber, 1);
 }
 
 - (void)testThatItForwardsTheBackgroundFetchRequestToTheStateMachine

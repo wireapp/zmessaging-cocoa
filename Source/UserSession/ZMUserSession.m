@@ -73,7 +73,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMTransportSession *transportSession;
 @property (nonatomic) NSManagedObjectContext *managedObjectContext;
 @property (nonatomic) NSManagedObjectContext *syncManagedObjectContext;
-@property (nonatomic) id<AVSMediaManager> mediaManager;
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
@@ -162,7 +161,10 @@ ZM_EMPTY_ASSERTING_INIT()
     return [NSManagedObjectContext storeIsReady];
 }
 
-- (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager analytics:(id<AnalyticsType>)analytics appVersion:(NSString *)appVersion appGroupIdentifier:(NSString *)appGroupIdentifier;
+- (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager
+                           analytics:(id<AnalyticsType>)analytics
+                          appVersion:(NSString *)appVersion
+                  appGroupIdentifier:(NSString *)appGroupIdentifier;
 {
     zmSetupEnvironments();
     ZMBackendEnvironment *environment = [[ZMBackendEnvironment alloc] init];
@@ -203,7 +205,7 @@ ZM_EMPTY_ASSERTING_INIT()
                             mediaManager:(id<AVSMediaManager>)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
-                             application:(ZMApplication *)application
+                             application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
                       appGroupIdentifier:(NSString *)appGroupIdentifier;
 
@@ -261,7 +263,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.transportSession.networkStateDelegate = self;
         self.mediaManager = mediaManager;
         
-        self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:self.mediaManager];
+        self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
         
         _application = application;
         
@@ -310,6 +312,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)tearDown
 {
+    [self.application unregisterObserverForStateChange:self];
     self.mediaManager = nil;
     [self.operationLoop tearDown];
     [self.localNotificationDispatcher tearDown];
@@ -343,7 +346,6 @@ ZM_EMPTY_ASSERTING_INIT()
             // nop
         }];
     }
-    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -370,8 +372,8 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)registerForBackgroundNotifications;
 {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
+    [self.application registerObserverForDidEnterBackground:self selector:@selector(applicationDidEnterBackground:)];
+    [self.application registerObserverForWillEnterForeground:self selector:@selector(applicationWillEnterForeground:)];
 }
 
 - (void)registerForResetPushTokensNotification
@@ -439,6 +441,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.blackList = [[ZMBlacklistVerificator alloc] initWithCheckInterval:interval
                                                                    version:self.appVersion
                                                               workingGroup:self.syncManagedObjectContext.dispatchGroup
+                                                               application:self.application
                                                          blacklistCallback:^(BOOL isBlackListed) {
         ZM_STRONG(self);
         if (!self.isVersionBlacklisted && isBlackListed && blackListed) {
@@ -686,7 +689,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
     ZMNetworkState const previous = self.networkState;
     self.networkState = state;
-    if(previous != self.networkState && [[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground) {
+    if(previous != self.networkState && self.application.applicationState != UIApplicationStateBackground) {
         [[NSNotificationCenter defaultCenter] postNotification:[ZMNetworkAvailabilityChangeNotification notificationWithNetworkState:self.networkState userSession:self]];
     }
 }

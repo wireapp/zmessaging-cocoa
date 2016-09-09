@@ -28,7 +28,6 @@
 #import "ZMPushRegistrant.h"
 #import <zmessaging/zmessaging-Swift.h>
 
-NSString * ZMLocalNotificationDispatcherUIApplicationClass = @"UIApplication";
 NSString * const ZMConversationCancelNotificationForIncomingCallNotificationName = @"ZMConversationCancelNotificationForIncomingCallNotification";
 
 NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShouldHideNotificationContentKey";
@@ -42,7 +41,7 @@ NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShou
 @property (nonatomic) ZMLocalNotificationSet *messageNotifications;
 
 @property (nonatomic) BOOL isTornDown;
-@property (nonatomic) UIApplication *sharedApplication;
+@property (nonatomic) id<ZMApplication> sharedApplication;
 @property (nonatomic) SessionTracker *sessionTracker;
 
 @end
@@ -56,13 +55,13 @@ NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShou
 ZM_EMPTY_ASSERTING_INIT();
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                           sharedApplication:(UIApplication *)sharedApplication
+                           sharedApplication:(id<ZMApplication>)sharedApplication
 {
     return [self initWithManagedObjectContext:moc sharedApplication:sharedApplication eventNotificationSet:nil failedNotificationSet:nil messageNotifications:nil];
 }
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                           sharedApplication:(UIApplication *)sharedApplication
+                           sharedApplication:(id<ZMApplication>)sharedApplication
                         eventNotificationSet:(ZMLocalNotificationSet *)eventNotificationSet
                        failedNotificationSet:(ZMLocalNotificationSet *)failedNotificationSet
                         messageNotifications:(ZMLocalNotificationSet *)messageNotifications

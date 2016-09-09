@@ -1,6 +1,6 @@
 github "wireapp/PINCache" "2.3"
 github "wireapp/libPhoneNumber-iOS" "0.8.12"
-github "wireapp/ocmock" "v2.2.4-wire"
+github "wireapp/ocmock" "v3.2.2"
 github "wireapp/ono" "1.2.3"
 github "wireapp/protobuf-objc" "1.9.11"
 github "wireapp/wire-ios-cryptobox" "3.1.4"

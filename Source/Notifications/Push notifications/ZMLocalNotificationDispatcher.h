@@ -40,9 +40,9 @@ extern NSString * _Null_unspecified const ZMShouldHideNotificationContentKey;
 
 @property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *eventsNotifications;
 @property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *messageNotifications;
-@property (nonatomic, readonly, nonnull) UIApplication *sharedApplication;
+@property (nonatomic, readonly, nonnull) id<ZMApplication> *sharedApplication;
 
-- (nullable instancetype)initWithManagedObjectContext:(nonnull NSManagedObjectContext *)moc sharedApplication:(nonnull UIApplication *)sharedApplication;
+- (nullable instancetype)initWithManagedObjectContext:(nonnull NSManagedObjectContext *)moc sharedApplication:(nonnull id<ZMApplication>)sharedApplication;
 
 - (void)tearDown;
 
