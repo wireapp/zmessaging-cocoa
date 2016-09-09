@@ -72,7 +72,7 @@ extension ZMUpdateEvent {
     }
 }
 
-class Session : NSObject, NSCoding, NSCopying {
+public class Session : NSObject, NSCoding, NSCopying {
     let sessionID : String
     let initiatorID : NSUUID
     let conversationID : NSUUID
@@ -84,16 +84,16 @@ class Session : NSObject, NSCoding, NSCopying {
     var selfUserJoined : Bool = false
     var callEnded : Bool = false
     
-    init(sessionID: String, conversationID: NSUUID, initiatorID: NSUUID) {
+    public init(sessionID: String, conversationID: NSUUID, initiatorID: NSUUID) {
         self.sessionID = sessionID
         self.conversationID = conversationID
         self.initiatorID = initiatorID
     }
     
-    enum State : Int {
+    public enum State : Int {
         case Incoming, Ongoing, SelfUserJoined, SessionEndedSelfJoined, SessionEnded
     }
-    var currentState : State {
+    public var currentState : State {
         switch (callEnded, selfUserJoined) {
         case (true, true):
             return .SessionEndedSelfJoined
@@ -106,7 +106,7 @@ class Session : NSObject, NSCoding, NSCopying {
         }
     }
     
-    func changeState(event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext) -> State {
+    public func changeState(event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext) -> State {
         guard let sequence = event.callingSequence where sequence >= lastSequence else { return currentState }
         lastSequence = sequence
         let callStateType = event.callStateType(managedObjectContext)
@@ -135,7 +135,7 @@ class Session : NSObject, NSCoding, NSCopying {
         return currentState
     }
     
-    func encodeWithCoder(aCoder: NSCoder) {
+    public func encodeWithCoder(aCoder: NSCoder) {
         aCoder.encodeBool(callStarted, forKey: "callStarted")
         aCoder.encodeBool(othersJoined, forKey: "othersJoined")
         aCoder.encodeBool(selfUserJoined, forKey: "selfUserJoined")
@@ -147,7 +147,7 @@ class Session : NSObject, NSCoding, NSCopying {
         aCoder.encodeObject(conversationID, forKey: "conversationID")
     }
     
-    convenience required init?(coder aDecoder: NSCoder) {
+    convenience required public init?(coder aDecoder: NSCoder) {
         guard let sessionID = aDecoder.decodeObjectForKey("sessionID") as? String,
         let initiatorID = aDecoder.decodeObjectForKey("initiatorID") as? NSUUID,
         let conversationID = aDecoder.decodeObjectForKey("conversationID") as? NSUUID else {return nil}
@@ -161,7 +161,7 @@ class Session : NSObject, NSCoding, NSCopying {
         self.lastSequence = aDecoder.decodeIntegerForKey("lastSequence")
     }
     
-    func copyWithZone(zone: NSZone) -> AnyObject {
+    public func copyWithZone(zone: NSZone) -> AnyObject {
         let copy = Session(sessionID: sessionID, conversationID: conversationID, initiatorID: initiatorID)
         copy.callStarted = callStarted
         copy.othersJoined = othersJoined
