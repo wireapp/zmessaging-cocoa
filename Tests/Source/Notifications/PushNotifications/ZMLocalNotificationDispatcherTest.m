@@ -179,7 +179,7 @@
     // then
     XCTAssertEqual(self.application.scheduledLocalNotifications.count, 2u);
     UILocalNotification *notification1 = self.application.scheduledLocalNotifications.firstObject;
-    UILocalNotification *notification2 = self.application.scheduledLocalNotifications.firstObject;
+    UILocalNotification *notification2 = self.application.scheduledLocalNotifications.lastObject;
     XCTAssertNotNil(notification1);
     XCTAssertNotNil(notification2);
     XCTAssertEqualObjects([notification1 conversationInManagedObjectContext:self.syncMOC], self.conversation1);
@@ -355,11 +355,12 @@
     [self.syncMOC setPersistentStoreMetadata:@(YES) forKey:ZMShouldHideNotificationContentKey];
     [self.syncMOC saveOrRollback];
     // given
-    NSDictionary *data = @{@"content" : @"hallo", @"nonce": [NSUUID UUID].transportString };
-    ZMUpdateEvent *event = [self eventWithPayload:data inConversation:self.conversation1 type:EventConversationAdd];
+    
+    ZMClientMessage *message = (id)[self.conversation1 appendMessageWithText:@"foo"];
+    message.sender = self.user1;
 
     //when
-    [self.sut didReceiveUpdateEvents:@[event] conversationMap:nil notificationID:NSUUID.createUUID];
+    [self.sut processMessage:message];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -423,10 +424,6 @@
                                                               eventNotificationSet:self.mockEventNotificationSet
                                                              failedNotificationSet:self.mockFailedNotificationSet
                                                               messageNotifications:localNotificationSet];
-
-    // given
-    ZMUpdateEvent *event1 = [ZMUpdateEvent eventFromEventStreamPayload:[self payloadForOTRMessageWithGenericMessage:genericMessage] uuid:nil];
-    ZMUpdateEvent *event2 = [ZMUpdateEvent eventFromEventStreamPayload:[self payloadForOTRAssetWithGenericMessage:genericMessage] uuid:nil];
     
     // when
     [self.sut processMessage:message];

@@ -25,12 +25,12 @@ public extension ZMLocalNotificationDispatcher {
     public func processMessage(message: ZMMessage) {
         if let message = message as? ZMOTRMessage {
             if let note = localNotificationForMessage(message), let uiNote = note.uiNotifications.last {
-                sharedApplication.scheduleLocalNotification(uiNote)
+                (sharedApplicationForSwift as! Application).scheduleLocalNotification(uiNote)
             }
         }
         if let message = message as? ZMSystemMessage {
             if let note = localNotificationForSystemMessage(message), let uiNote = note.uiNotifications.last {
-                sharedApplication.scheduleLocalNotification(uiNote)
+                (sharedApplicationForSwift as! Application).scheduleLocalNotification(uiNote)
             }
         }
     }
@@ -60,7 +60,7 @@ extension ZMLocalNotificationDispatcher {
             return newNote;
         }
         
-        if let newNote = ZMLocalNotificationForMessage(message: message, application:sharedApplication) {
+        if let newNote = ZMLocalNotificationForMessage(message: message, application:(sharedApplicationForSwift as! Application)) {
             messageNotifications.addObject(newNote)
             return newNote;
         }
@@ -88,7 +88,7 @@ extension ZMLocalNotificationDispatcher {
     private func cancelNotificationForMessageID(messageID: NSUUID) {
         for note in messageNotifications.notifications where note is ZMLocalNotificationForMessage {
             if (note as! ZMLocalNotificationForMessage).isNotificationFor(messageID) {
-                note.uiNotifications.forEach{sharedApplication.cancelLocalNotification($0)}
+                note.uiNotifications.forEach{(sharedApplicationForSwift as! Application).cancelLocalNotification($0)}
                 messageNotifications.remove(note);
             }
         }
@@ -106,7 +106,7 @@ extension ZMLocalNotificationDispatcher {
             return newNote;
         }
         
-        if let newNote = ZMLocalNotificationForSystemMessage(message: message, application:sharedApplication) {
+        if let newNote = ZMLocalNotificationForSystemMessage(message: message, application:(sharedApplicationForSwift as! Application)) {
             messageNotifications.addObject(newNote)
             return newNote;
         }

@@ -94,6 +94,11 @@ ZM_EMPTY_ASSERTING_INIT();
     Require(self.isTornDown);
 }
 
+- (id)sharedApplicationForSwift
+{
+    return self.sharedApplication;
+}
+
 - (void)cancelNotificationForLastReadChangedNotification:(NSNotification *)note
 {
     ZMConversation *conversation = note.object;

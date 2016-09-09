@@ -19,17 +19,9 @@
 
 import Foundation
 
-@objc public protocol NotificationScheduler: NSObjectProtocol {
-    func scheduleLocalNotification(notification: UILocalNotification);
-    func cancelLocalNotification(notification: UILocalNotification);
-}
-
-extension UIApplication : NotificationScheduler {
-}
-
 public protocol LocalNotification {
     var conversationID : NSUUID? { get }
-    var application : NotificationScheduler {get}
+    var application : Application {get}
     var notifications : [UILocalNotification] {get set}
     func cancelNotifications()
 }
@@ -46,12 +38,12 @@ public protocol EventNotification : LocalNotification {
     var ignoresSilencedState : Bool { get }
     var eventType : ZMUpdateEventType { get }
     var managedObjectContext: NSManagedObjectContext {get }
-    init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: NotificationScheduler?)
+    init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?)
 }
 
 
 public extension ZMLocalNotificationForEvent {
-    public static func notification(forEvent event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: UIApplication?, sessionTracker: SessionTracker) -> ZMLocalNotificationForEvent? {
+    public static func notification(forEvent event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?, sessionTracker: SessionTracker) -> ZMLocalNotificationForEvent? {
         switch event.type {
         case .ConversationOtrMessageAdd:
             if let note = ZMLocalNotificationForReaction(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application: application) {
@@ -88,7 +80,7 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotificatio
         return notifications
     }
     
-    public let application : NotificationScheduler
+    public let application : Application
     public let managedObjectContext : NSManagedObjectContext
     
     public var events : [ZMUpdateEvent] = []
@@ -104,7 +96,7 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotificatio
         return [:]
     }
     
-    required public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: NotificationScheduler?) {
+    required public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?) {
         self.application = application ?? UIApplication.sharedApplication()
         self.events = events
         if let senderUUID = events.last?.senderUUID() {

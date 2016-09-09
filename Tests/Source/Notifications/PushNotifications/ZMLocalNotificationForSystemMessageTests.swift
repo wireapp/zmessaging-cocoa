@@ -21,17 +21,6 @@ import ZMTesting;
 
 class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest {
     
-    var fakeApplication : FakeNotificationScheduler!
-    
-    override func setUp(){
-        super.setUp()
-        fakeApplication = FakeNotificationScheduler()
-    }
-    
-    override func tearDown() {
-        fakeApplication = nil
-        super.tearDown()
-    }
     
     func testThatItCreatesANotificationForConversationRename(){
         // given
@@ -42,7 +31,7 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         systemMessage.visibleInConversation = groupConversation
         
         // when
-        let note = ZMLocalNotificationForSystemMessage(message: systemMessage, application: fakeApplication)
+        let note = ZMLocalNotificationForSystemMessage(message: systemMessage, application: application)
         
         // then
         XCTAssertNotNil(note)
@@ -59,7 +48,7 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         systemMessage.visibleInConversation = conversation
         
         // when
-        let note = ZMLocalNotificationForSystemMessage(message: systemMessage, application: fakeApplication)
+        let note = ZMLocalNotificationForSystemMessage(message: systemMessage, application: application)
         
         // then
         guard let uiNote = note?.uiNotifications.first else { return nil }
@@ -98,7 +87,7 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         systemMessage.visibleInConversation = conversation
         
         // when
-        let note = ZMLocalNotificationForSystemMessage(message: systemMessage, application: fakeApplication)
+        let note = ZMLocalNotificationForSystemMessage(message: systemMessage, application: application)
         
         // then
         guard let uiNote = note?.uiNotifications.first else { return nil }
@@ -143,7 +132,7 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         systemMessage.text = "Special User"
         
         // when
-        let note = ZMLocalNotificationForSystemMessage(message: systemMessage, application: fakeApplication)
+        let note = ZMLocalNotificationForSystemMessage(message: systemMessage, application: application)
         
         // then
         guard let uiNote = note?.uiNotifications.first else { return XCTFail() }

@@ -1419,6 +1419,10 @@
         ZMUpdateEvent *updateEvent = [self updateEventForTextMessage:text inConversationWithID:conversation.remoteIdentifier forClient:client senderClient:senderClient eventSource:ZMUpdateEventSourcePushNotification];
         WaitForAllGroupsToBeEmpty(0.5);
         
+        // expect
+        [[self.notificationDispatcher expect] processMessage:OCMOCK_ANY];
+        [[self.notificationDispatcher expect] processGenericMessage:OCMOCK_ANY];
+
         // when
         [self.sut processEvents:@[updateEvent] liveEvents:YES prefetchResult:nil];
         
@@ -1455,6 +1459,8 @@
             [[(id)self.mockAPNSConfirmationStatus expect] needsToConfirmMessage:[OCMArg checkWithBlock:^BOOL(NSUUID *messageNonce) {
                 return ([[conversation.hiddenMessages.lastObject nonce] isEqual:messageNonce]);
             }]];
+            [[self.notificationDispatcher expect] processMessage:OCMOCK_ANY];
+            [[self.notificationDispatcher expect] processGenericMessage:OCMOCK_ANY];
         } else {
             [[(id)self.mockAPNSConfirmationStatus reject] needsToConfirmMessage:OCMOCK_ANY];
         }

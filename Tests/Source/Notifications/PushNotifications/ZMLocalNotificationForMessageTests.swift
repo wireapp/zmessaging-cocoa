@@ -24,17 +24,6 @@ import ZMTesting;
 // MARK : Text Messages
 class ZMLocalNotificationForMessageTests : ZMLocalNotificationForEventTest {
 
-    var fakeApplication : FakeNotificationScheduler!
-    
-    override func setUp(){
-        super.setUp()
-        fakeApplication = FakeNotificationScheduler()
-    }
-    
-    override func tearDown() {
-        fakeApplication = nil
-        super.tearDown()
-    }
     
     func textNotification(conversation: ZMConversation, sender: ZMUser, text: String? = nil) -> ZMLocalNotificationForMessage? {
         let message = conversation.appendMessageWithText(text ?? "Hello Hello!") as! ZMOTRMessage
@@ -42,7 +31,7 @@ class ZMLocalNotificationForMessageTests : ZMLocalNotificationForEventTest {
         conversation.lastReadServerTimeStamp = NSDate()
         message.serverTimestamp = conversation.lastReadServerTimeStamp.dateByAddingTimeInterval(20)
         
-        return ZMLocalNotificationForMessage(message: message, application: fakeApplication)
+        return ZMLocalNotificationForMessage(message: message, application: self.application)
     }
     
     func alertBodyForNotification(conversation: ZMConversation, sender: ZMUser, text: String? = nil) -> String? {
@@ -97,7 +86,7 @@ class ZMLocalNotificationForMessageTests : ZMLocalNotificationForEventTest {
         let message = oneOnOneConversation.appendMessageWithText("Hello Hello!") as! ZMOTRMessage
         message.sender = sender
         
-        let notification = ZMLocalNotificationForMessage(message: message, application: fakeApplication)!
+        let notification = ZMLocalNotificationForMessage(message: message, application: self.application)!
         let uiNote = notification.uiNotifications.first!
         
         // then
@@ -125,7 +114,7 @@ extension ZMLocalNotificationForMessageTests {
         let message = conversation.appendMessageWithImageData(verySmallJPEGData()) as! ZMAssetClientMessage
         message.sender = sender
         
-        return ZMLocalNotificationForMessage(message: message, application: fakeApplication)
+        return ZMLocalNotificationForMessage(message: message, application: self.application)
     }
     
     func alertBodyForImageNotification(conversation: ZMConversation, sender: ZMUser, text: String? = nil) -> String? {
@@ -207,7 +196,7 @@ extension ZMLocalNotificationForMessageTests {
         msg.sender = sender
         msg.visibleInConversation = conversation
         
-        return ZMLocalNotificationForMessage(message: msg, application: fakeApplication)
+        return ZMLocalNotificationForMessage(message: msg, application: self.application)
     }
     
     func alertBodyForAssetNotification(fileType: FileType, conversation: ZMConversation, sender: ZMUser) -> String? {
@@ -257,7 +246,7 @@ extension ZMLocalNotificationForMessageTests {
         let message = conversation.appendKnock() as! ZMClientMessage
         message.sender = sender
         
-        return ZMLocalNotificationForMessage(message: message, application: fakeApplication)
+        return ZMLocalNotificationForMessage(message: message, application: self.application)
     }
     
     func alertBodyForKnockNotification(conversation: ZMConversation, sender: ZMUser) -> String? {
@@ -316,7 +305,7 @@ extension ZMLocalNotificationForMessageTests {
     func editNotification(message: ZMOTRMessage, sender: ZMUser, text: String) -> ZMLocalNotificationForMessage? {
         let editMessage = ZMOTRMessage.edit(message, newText: text)
         editMessage!.sender = sender
-        return ZMLocalNotificationForMessage(message: editMessage as! ZMClientMessage, application: fakeApplication)
+        return ZMLocalNotificationForMessage(message: editMessage as! ZMClientMessage, application: self.application)
     }
     
     func alertBodyForEditNotification(conversation: ZMConversation, sender: ZMUser, text: String) -> String? {

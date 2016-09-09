@@ -63,12 +63,12 @@ final public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent
         return true
     }
     
-    public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: NotificationScheduler?, sessionTracker: SessionTracker) {
+    public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?, sessionTracker: SessionTracker) {
         self.sessionTracker = sessionTracker
         super.init(events: events, conversation: conversation, managedObjectContext: managedObjectContext, application: application)
     }
     
-    required public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: NotificationScheduler?) {
+    required public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?) {
         fatalError("init(events:conversation:managedObjectContext:application:) has not been implemented")
     }
     

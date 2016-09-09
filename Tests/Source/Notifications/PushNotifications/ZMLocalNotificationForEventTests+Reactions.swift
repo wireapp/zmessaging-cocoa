@@ -19,18 +19,6 @@
 import ZMTesting
 @testable import zmessaging
 
-class FakeNotificationScheduler : NSObject, NotificationScheduler {
-    var didCallCancel = false
-    
-    func scheduleLocalNotification(notification: UILocalNotification) {
-        // no-op
-    }
-    
-    func cancelLocalNotification(notification: UILocalNotification) {
-        didCallCancel = true
-    }
-}
-
 class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventTest {
 
     
@@ -68,7 +56,6 @@ class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventT
         
         guard let localNote = sut?.uiNotifications.first else {return XCTFail()}
         XCTAssertEqual(localNote.alertBody, "Super User liked your message")
-        XCTAssertEqual(localNote.zm_messageNonce, event.messageNonce())
     }
     
     func testThatItDoesNotCreateANotifcationWhenTheConversationIsSilenced(){
@@ -211,8 +198,6 @@ extension ZMLocalNotificationForEventsTests_Reactions {
     
     func testThatItCancelsNotificationWhenUserDeletesLike(){
         // given
-        let fakeNotificationScheduler = FakeNotificationScheduler()
-        
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
         let reaction1 = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
@@ -221,22 +206,20 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         let event2 = createUpdateEvent(NSUUID.createUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction2, senderID: sender.remoteIdentifier!)
         
         // when
-        let sut1 = ZMLocalNotificationForReaction(events: [event1], conversation: oneOnOneConversation, managedObjectContext: syncMOC, application: fakeNotificationScheduler)
+        let sut1 = ZMLocalNotificationForReaction(events: [event1], conversation: oneOnOneConversation, managedObjectContext: syncMOC, application: self.application)
         XCTAssertNotNil(sut1)
-
+        let note = sut1?.uiNotifications.first
         let sut2 = sut1?.copyByAddingEvent(event2, conversation: oneOnOneConversation)
         
         // then
         XCTAssertNotNil(sut1)
-        XCTAssertTrue(fakeNotificationScheduler.didCallCancel)
+        XCTAssertTrue(self.application.cancelledLocalNotifications.contains(note!))
         XCTAssertTrue(sut1!.shouldBeDiscarded)
         XCTAssertNil(sut2)
     }
     
     func testThatItDoesNotCancelNotificationWhenADifferentUserDeletesLike(){
         // given
-        let fakeNotificationScheduler = FakeNotificationScheduler()
-        
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
         let reaction1 = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
@@ -245,13 +228,15 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         let event2 = createUpdateEvent(NSUUID.createUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction2, senderID: otherUser.remoteIdentifier!)
         
         // when
-        let sut1 = ZMLocalNotificationForReaction(events: [event1], conversation: oneOnOneConversation, managedObjectContext: syncMOC, application: nil)
+        let sut1 = ZMLocalNotificationForReaction(events: [event1], conversation: oneOnOneConversation, managedObjectContext: syncMOC, application: self.application)
+        let note = sut1?.uiNotifications.first
+
         let sut2 = sut1?.copyByAddingEvent(event2, conversation: oneOnOneConversation)
         
         // then
         XCTAssertNotNil(sut1)
         XCTAssertFalse(sut1!.shouldBeDiscarded)
-        XCTAssertFalse(fakeNotificationScheduler.didCallCancel)
+        XCTAssertFalse(self.application.cancelledLocalNotifications.contains(note!))
         XCTAssertNil(sut2)
     }
 }

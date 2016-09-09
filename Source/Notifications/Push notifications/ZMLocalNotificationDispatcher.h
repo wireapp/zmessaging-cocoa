@@ -17,8 +17,8 @@
 // 
 
 
-
 @import UIKit;
+
 #import "ZMPushRegistrant.h"
 #import "ZMContextChangeTracker.h"
 #import "ZMObjectSyncStrategy.h"
@@ -30,6 +30,7 @@
 @class ZMLocalNotificationForExpiredMessage;
 @class ZMMessage;
 @class ZMLocalNotificationSet;
+@protocol ZMApplication;
 
 extern NSString * _Null_unspecified const ZMConversationCancelNotificationForIncomingCallNotificationName;
 extern NSString * _Null_unspecified const ZMShouldHideNotificationContentKey;
@@ -40,7 +41,8 @@ extern NSString * _Null_unspecified const ZMShouldHideNotificationContentKey;
 
 @property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *eventsNotifications;
 @property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *messageNotifications;
-@property (nonatomic, readonly, nonnull) id<ZMApplication> *sharedApplication;
+@property (nonatomic, readonly, nonnull) id<ZMApplication> sharedApplication;
+@property (nonatomic, readonly, nonnull) id sharedApplicationForSwift;
 
 - (nullable instancetype)initWithManagedObjectContext:(nonnull NSManagedObjectContext *)moc sharedApplication:(nonnull id<ZMApplication>)sharedApplication;
 
