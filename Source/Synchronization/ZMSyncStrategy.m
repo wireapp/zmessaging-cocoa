@@ -157,6 +157,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.uiMOC = uiMOC;
         self.badge = badge;
         self.eventMOC = [NSManagedObjectContext createEventContextWithAppGroupIdentifier:appGroupIdentifier];
+        [self.eventMOC addGroup:self.syncMOC.dispatchGroup];
         self.apnsConfirmationStatus = [[BackgroundAPNSConfirmationStatus alloc] initWithApplication:application
                                                                                managedObjectContext:self.syncMOC
                                                                           backgroundActivityFactory:[BackgroundActivityFactory sharedInstance]];

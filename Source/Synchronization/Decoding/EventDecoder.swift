@@ -214,6 +214,7 @@ extension NSManagedObjectContext {
     /// Consumes passed in stored events and fetches more events if the last passed in event is not the last event to fetch
     /// Calls itself recursivly if there are multiple batches (of size `EventDecoder.BatchSize`) to fetch. The completion closure is called
     /// when there are no more stored events to fetch (respecting the `lastIndexToFetch`)
+    /// In this method it is __crucial__ to call the completion closure in every possibe termination condition.
     private func consumeStoredEvents(someStoredEvents: [StoredUpdateEvent], someEvents: [ZMUpdateEvent], lastIndexToFetch: Int64, consumeBlock: ConsumeBlock, completion: () -> Void) {
 
         guard someEvents.count > 0 else { return completion() }
