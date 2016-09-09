@@ -50,13 +50,11 @@ public class StoredUpdateEvent: NSManagedObject {
     
     /// Returns stored events sorted by and up until (including) the defined `stopIndex`
     /// Returns a maximum of `batchSize` events at a time
-    public static func nextEvents(context: NSManagedObjectContext, batchSize: Int, stopAtIndex: Int64?) -> [StoredUpdateEvent] {
+    public static func nextEvents(context: NSManagedObjectContext, batchSize: Int) -> [StoredUpdateEvent] {
         let fetchRequest = NSFetchRequest(entityName: self.entityName)
-        if let stopIndex = stopAtIndex {
-            fetchRequest.predicate = NSPredicate(format: "\(StoredUpdateEvent.SortIndexKey) <= \(stopIndex)")
-        }
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: StoredUpdateEvent.SortIndexKey, ascending: true)]
         fetchRequest.fetchLimit = batchSize
+        fetchRequest.returnsObjectsAsFaults = false
         let result = context.executeFetchRequestOrAssert(fetchRequest)
         return result as? [StoredUpdateEvent] ?? []
     }

@@ -134,69 +134,68 @@ extension NSManagedObjectContext {
     /// Recovered events are processed before the passed in events to reflect event history
     public func processEvents(events: [ZMUpdateEvent], block: ConsumeBlock) {
         
-        // fetch first batch of old events
-        let batchSize = EventDecoder.BatchSize
-        let oldStoredEvents = StoredUpdateEvent.nextEvents(eventMOC, batchSize: batchSize, stopAtIndex: nil)
-        let oldUpdateEvents = StoredUpdateEvent.eventsFromStoredEvents(oldStoredEvents)
-        
-        // get highest index of events in DB
-        var lastIndex = oldStoredEvents.last?.sortIndex ?? 0
-        if oldStoredEvents.count == batchSize {
-            lastIndex = StoredUpdateEvent.highestIndex(eventMOC)
+        eventMOC.performGroupedBlock {
+            // Get the highest index of events in the DB
+            let lastIndex = StoredUpdateEvent.highestIndex(self.eventMOC)
+            
+            // Store the new events
+            self.storeEvents(events, startingAtIndex: lastIndex) {
+                // Process all events in the database in batches
+                self.process(block)
+            }
         }
 
-        // decryptEvents and insert counting upwards from highest index in DB
-        var newStoredEvents = [StoredUpdateEvent]()
-        var newUpdateEvents = [ZMUpdateEvent]()
-        
-        
-        // We decrypt the events and store them in the event database
-        encryptionContext?.perform({ [weak self] (sessionsDirectory) in
-            guard let strongSelf = self else { return }
-
-            newUpdateEvents = events.flatMap { sessionsDirectory.decryptUpdateEventAndAddClient($0, managedObjectContext: strongSelf.syncMOC) }
-
-            // This call has to be synchronous to ensure that we close the
-            // encryption context only if we stored all events in the database
-            strongSelf.eventMOC.performGroupedBlockAndWait {
-                // decryptEvents and insert counting upwards from highest index in DB
-                for (idx, event) in newUpdateEvents.enumerate() {
-                    if let storedEvent = StoredUpdateEvent.create(event, managedObjectContext: strongSelf.eventMOC, index: idx + lastIndex + 1) {
-                        newStoredEvents.append(storedEvent)
-                    }
-                }
+    }
+    
+    /// Decrypts and stores the decrypted events as `StoreUpdateEvent` in the event database.
+    /// The encryption context is only closed after the events have been stored, which ensures 
+    /// they can be decrypted again in case of a crash.
+    /// - parameter events The new events that should be decrypted and stored in the database.
+    /// - parameter completion The startIndex to be used for the incrementing sortIndex of the stored events.
+    /// - parameter completion The completion closure to be called after the events have been stored and decrypted, called on the eventMOC queue.
+    private func storeEvents(events: [ZMUpdateEvent], startingAtIndex startIndex: Int64, completion: () -> Void) {
+        syncMOC.performGroupedBlock {
+            self.encryptionContext?.perform { [weak self] (sessionsDirectory) in
+                guard let strongSelf = self else { return }
                 
-                strongSelf.eventMOC.saveOrRollback()
+                let newUpdateEvents = events.flatMap { sessionsDirectory.decryptUpdateEventAndAddClient($0, managedObjectContext: strongSelf.syncMOC) }
+                
+                // This call has to be synchronous to ensure that we close the
+                // encryption context only if we stored all events in the database
+                strongSelf.eventMOC.performGroupedBlockAndWait {
+                    
+                    // Decrypt the events and insert them counting upwards from the highest index in the DB
+                    for (idx, event) in newUpdateEvents.enumerate() {
+                        _ = StoredUpdateEvent.create(event, managedObjectContext: strongSelf.eventMOC, index: idx + startIndex + 1)
+                    }
+                    
+                    strongSelf.eventMOC.saveOrRollback()
+                }
             }
-        })
-        
-        process(
-            oldEvents: (storedEvents: oldStoredEvents, updateEvents: oldUpdateEvents),
-            newEvents: (storedEvents: newStoredEvents, updateEvents: newUpdateEvents),
-            lastIndexToFetch: lastIndex,
-            consumeBlock: block
-        )
+            
+            self.eventMOC.performGroupedBlock {
+                completion()
+            }
+        }
     }
 
-    // Processes first the old, then the new events subsequently
-    private func process(oldEvents oldEvents: EventsWithStoredEvents, newEvents: EventsWithStoredEvents, lastIndexToFetch: Int64, consumeBlock: ConsumeBlock) {
-        eventMOC.performGroupedBlock {
-            // process old events
-            self.consumeStoredEvents(oldEvents.storedEvents, someEvents: oldEvents.updateEvents, lastIndexToFetch: lastIndexToFetch, consumeBlock: consumeBlock) {
-                // process new events
-                if newEvents.updateEvents.count > 0 {
-                    self.processBatch(newEvents.updateEvents, storedEvents: newEvents.storedEvents, block: consumeBlock, completion: nil)
-                } else {
-                    consumeBlock([])
-                }
+    // Processes the stored events in the database in batches of size EventDecoder.BatchSize` and calls the `consumeBlock` for each batch.
+    // After the `consumeBlock` has been called the stored events are deleted from the database.
+    // This method terminates when no more events are in the database.
+    private func process(consumeBlock: ConsumeBlock) {
+        fetchNextEventsBatch { events in
+            guard events.storedEvents.count > 0 else { return }
+
+            self.processBatch(events.updateEvents, storedEvents: events.storedEvents, block: consumeBlock) {
+                self.process(consumeBlock)
             }
         }
     }
     
     /// Calls the `ComsumeBlock` and deletes the respective stored events subsequently,
     /// The consume block is guaranteed to be called on the syncMOC's queue.
-    /// The completion closure is invokes after the `StoredEvent`'s have been deleted on the eventMOC.
-    private func processBatch(events:[ZMUpdateEvent], storedEvents:[NSManagedObject], block: ConsumeBlock, completion: (() -> Void)?) {
+    /// The completion closure is invoked after the `StoredEvent`'s have been deleted on the eventMOC.
+    private func processBatch(events: [ZMUpdateEvent], storedEvents: [NSManagedObject], block: ConsumeBlock, completion: () -> Void) {
         let strongEventMOC = eventMOC
 
         // switch to the sync queue to call the passed in block with the update events
@@ -206,38 +205,18 @@ extension NSManagedObjectContext {
             strongEventMOC.performGroupedBlock {
                 storedEvents.forEach(strongEventMOC.deleteObject)
                 strongEventMOC.saveOrRollback()
-                completion?()
+                completion()
             }
         }
     }
     
-    /// Consumes passed in stored events and fetches more events if the last passed in event is not the last event to fetch
-    /// Calls itself recursivly if there are multiple batches (of size `EventDecoder.BatchSize`) to fetch. The completion closure is called
-    /// when there are no more stored events to fetch (respecting the `lastIndexToFetch`)
-    /// In this method it is __crucial__ to call the completion closure in every possibe termination condition.
-    private func consumeStoredEvents(someStoredEvents: [StoredUpdateEvent], someEvents: [ZMUpdateEvent], lastIndexToFetch: Int64, consumeBlock: ConsumeBlock, completion: () -> Void) {
-
-        guard someEvents.count > 0 else { return completion() }
-        
-        var (storedEvents, events) = (someStoredEvents, someEvents)
-        let hasMore = storedEvents.last?.sortIndex != lastIndexToFetch
-
-        processBatch(events, storedEvents: storedEvents, block: consumeBlock) {
-            (storedEvents, events) = ([], [])
-            guard hasMore else { return completion() }
-            
-            self.eventMOC.performGroupedBlock {
-                storedEvents = StoredUpdateEvent.nextEvents(self.eventMOC, batchSize: EventDecoder.BatchSize, stopAtIndex: lastIndexToFetch)
-                
-                if storedEvents.count > 0 {
-                    events = StoredUpdateEvent.eventsFromStoredEvents(storedEvents)
-                    self.syncMOC.performGroupedBlock {
-                        self.consumeStoredEvents(storedEvents, someEvents: events, lastIndexToFetch: lastIndexToFetch, consumeBlock: consumeBlock, completion: completion)
-                    }
-                } else {
-                    return completion()
-                }
-            }
+    /// Fetches the next batch of of size `EventDecoder.BatchSize` and calls the completion handler
+    /// with the `StoredEvents` and `ZMUpdateEvent`'s in a `EventsWithStoredEvents` tuple.
+    private func fetchNextEventsBatch(completion: (EventsWithStoredEvents) -> Void) {
+        self.eventMOC.performGroupedBlock {
+            let storedEvents = StoredUpdateEvent.nextEvents(self.eventMOC, batchSize: EventDecoder.BatchSize)
+            let updateEvents = StoredUpdateEvent.eventsFromStoredEvents(storedEvents)
+            return completion((storedEvents: storedEvents, updateEvents: updateEvents))
         }
     }
     
