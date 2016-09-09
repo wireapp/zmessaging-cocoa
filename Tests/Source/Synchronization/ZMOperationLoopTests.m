@@ -56,8 +56,6 @@
     [super setUp];
     self.pushChannelNotifications = [NSMutableArray array];
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
-    [[self.transportSession stub] openPushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
-    [[self.transportSession stub] closePushChannelAndRemoveConsumer];
     self.syncStrategy = [OCMockObject niceMockForClass:[ZMSyncStrategy class]];
     
     [self verifyMockLater:self.syncStrategy];
