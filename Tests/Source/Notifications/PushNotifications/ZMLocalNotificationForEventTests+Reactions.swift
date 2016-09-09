@@ -170,13 +170,16 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         let event2 = createUpdateEvent(NSUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction2, senderID: otherUser.remoteIdentifier!)
         
         // when
-        let sut1 = ZMLocalNotificationForReaction(events: [event1], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: self.application)
-        let sut2 = sut1!.copyByAddingEvent(event2)
+        guard let sut1 = ZMLocalNotificationForReaction(events: [event1], conversation: oneOnOneConversation, managedObjectContext: message.managedObjectContext!, application: self.application) else {
+            XCTFail()
+            return
+        }
+        let sut2 = sut1.copyByAddingEvent(event2)
         
         // then
         XCTAssertEqual(self.application.cancelledLocalNotifications.count, 1)
         XCTAssertNotNil(sut1)
-        XCTAssertTrue(sut1!.shouldBeDiscarded)
+        XCTAssertTrue(sut1.shouldBeDiscarded)
         XCTAssertNil(sut2)
     }
     
