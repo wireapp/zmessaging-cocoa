@@ -22,6 +22,7 @@
 #import "ZMLocalNotificationForEventTest.h"
 #import "UILocalNotification+UserInfo.h"
 #import <zmessaging/zmessaging-Swift.h>
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @implementation ZMLocalNotificationForEventTest
 
@@ -110,7 +111,7 @@
                       fromUserID:fromUser.remoteIdentifier
                   inConversation:conversation
                             type:type
-                     application:nil];
+                     application:self.application];
 }
 
 - (NSMutableDictionary *)payloadForEventInConversation:(ZMConversation *)conversation type:(NSString *)type data:(NSDictionary *)data fromUserID:(NSUUID *)fromUserID;
@@ -288,8 +289,7 @@
     NSString *expectedAlertText = @"Someone created a group conversation with you";
     
     XCTAssertNotNil(note1);
-    
-    XCTAssertNotNil(note1.uiNotifications);
+        XCTAssertNotNil(note1.uiNotifications);
     UILocalNotification *notification = note1.uiNotifications.lastObject;
     XCTAssertEqualObjects(notification.alertBody, expectedAlertText);
 }

@@ -39,9 +39,6 @@ NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShou
 @property (nonatomic) ZMLocalNotificationSet *failedMessageNotifications;
 @property (nonatomic) ZMLocalNotificationSet *eventsNotifications;
 @property (nonatomic) ZMLocalNotificationSet *messageNotifications;
-
-@property (nonatomic) BOOL isTornDown;
-@property (nonatomic) id<ZMApplication> sharedApplication;
 @property (nonatomic) SessionTracker *sessionTracker;
 
 @end

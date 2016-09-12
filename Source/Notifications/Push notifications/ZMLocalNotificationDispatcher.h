@@ -36,7 +36,6 @@ extern NSString * _Null_unspecified const ZMConversationCancelNotificationForInc
 extern NSString * _Null_unspecified const ZMShouldHideNotificationContentKey;
 
 
-
 @interface ZMLocalNotificationDispatcher : NSObject
 
 @property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *eventsNotifications;

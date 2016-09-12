@@ -209,6 +209,7 @@
     
     // expect
     [self.sut didReceiveUpdateEvents:@[callEvent] conversationMap:nil notificationID:NSUUID.createUUID];
+
     WaitForAllGroupsToBeEmpty(0.5);
     
     [[self.conversation2 mutableOrderedSetValueForKey:@"callParticipants"] addObject:self.user1];
@@ -334,7 +335,6 @@
              };
 }
 
-
 - (void)testThatItCancelsReadNotificationsIfTheLastReadChanges
 {
     // given
@@ -355,7 +355,6 @@
     [self.syncMOC setPersistentStoreMetadata:@(YES) forKey:ZMShouldHideNotificationContentKey];
     [self.syncMOC saveOrRollback];
     // given
-    
     ZMClientMessage *message = (id)[self.conversation1 appendMessageWithText:@"foo"];
     message.sender = self.user1;
 
@@ -402,12 +401,14 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+
     XCTAssertEqual(localNotificationSet.notifications.count, 1u);
     XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1u);
 }
 
 - (void)testThatItDoesNotCreateNotificationForFileUploadEventsWithTheSameNonce
 {
+    // given
     ZMLocalNotificationSet *localNotificationSet = [[ZMLocalNotificationSet alloc] initWithApplication:self.application
                                                                                           archivingKey:@"ZMLocalNotificationDispatcherEventNotificationsKey"
                                                                                          keyValueStore:[OCMockObject niceMockForProtocol:@protocol(ZMSynchonizableKeyValueStore)]];

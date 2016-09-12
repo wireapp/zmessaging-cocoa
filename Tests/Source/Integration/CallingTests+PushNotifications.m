@@ -52,7 +52,6 @@
     
     ZMUser *user2 = [self userForMockUser:self.user2];
     NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest joinedUsers:@[user2] videoSendingUsers:@[] sequence:@1 session:@"session1"];
-    
     UILocalNotification *notification;
     // (1) when we recieve a push notification
     {
@@ -103,7 +102,6 @@
     
 
     [self.application setBackground];
-
     ZMUser *user2 = [self userForMockUser:self.user2];
     NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest joinedUsers:@[user2] videoSendingUsers:@[user2] sequence:@1 session:@"session1"];
     
