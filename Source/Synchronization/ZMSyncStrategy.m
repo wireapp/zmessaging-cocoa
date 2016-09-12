@@ -622,6 +622,7 @@ ZM_EMPTY_ASSERTING_INIT()
         }
         [self.localNotificationDispatcher processEvents:decryptedEvents liveEvents:YES prefetchResult:nil];
         [self.syncMOC saveIfTooManyChanges];
+        [self.syncMOC enqueueDelayedSave];
     }];
 }
 
