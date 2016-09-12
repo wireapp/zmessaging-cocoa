@@ -66,15 +66,6 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
             syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
               uiManagedObjectContext:(NSManagedObjectContext *)uiManagedObjectContext
-{
-    return [self initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager syncManagedObjectContext:syncManagedObjectContext uiManagedObjectContext:uiManagedObjectContext application:nil];
-}
-
-
-- (instancetype)initWithMediaManager:(id)mediaManager
-                 onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-            syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
-              uiManagedObjectContext:(NSManagedObjectContext *)uiManagedObjectContext
                          application:(id<ZMApplication>)application
 {
     self = [super initWithManagedObjectContext:syncManagedObjectContext];
