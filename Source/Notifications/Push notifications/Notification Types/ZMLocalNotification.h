@@ -29,28 +29,6 @@ extern  NSString * _Null_unspecified const ZMLocalNotificationConversationObject
 extern NSString * _Null_unspecified const ZMLocalNotificationUserInfoSenderKey;
 extern NSString * _Null_unspecified const ZMLocalNotificationUserInfoNonceKey;
 
-typedef NS_ENUM(int, ZMLocalNotificationType) {
-    ZMLocalNotificationTypeInvalid = 0,
-    ZMLocalNotificationTypeEvent,
-    ZMLocalNotificationTypeExpiredMessage,
-};
-
-
-typedef NS_ENUM(int, ZMLocalNotificationForEventType) {
-    ZMLocalNotificationForEventTypeInvalid = 0,
-    ZMLocalNotificationForEventTypePostInConversation,
-    ZMLocalNotificationForEventTypeKnock,
-    ZMLocalNotificationForEventTypeCall,
-    ZMLocalNotificationForEventTypeConversationCreate,
-    ZMLocalNotificationForEventTypeMemberJoin,
-    ZMLocalNotificationForEventTypeMemberLeave,
-    ZMLocalNotificationForEventTypeConversationRename,
-    ZMLocalNotificationForEventTypeConnectionRequest,
-    ZMLocalNotificationForEventTypeConnectionAccepted,
-    ZMLocalNotificationForEventTypeNewConnection,
-    ZMLocalNotificationForEventTypeReaction
-};
-
 
 extern NSString * _Null_unspecified const ZMPushStringDefault;
 
@@ -86,11 +64,10 @@ extern NSString *_Null_unspecified const ZMPushStringNewConnection;
 
 @interface ZMLocalNotification : NSObject
 
-@property (nonatomic, readonly) ZMLocalNotificationType type;
+- (nonnull instancetype)initWithConversationID:(nullable NSUUID *)conversationID;
+
 @property (nonatomic, readonly, nullable) NSUUID *conversationID;
 @property (nonatomic, readonly, nonnull) NSArray<UILocalNotification*> *uiNotifications;
-@property (nonatomic, nullable) ZMConversation *conversation;
-@property (nonatomic, readonly) ZMLocalNotificationForEventType eventType;
 
 @end
 
@@ -99,9 +76,8 @@ extern NSString *_Null_unspecified const ZMPushStringNewConnection;
 
 @interface ZMLocalNotificationForExpiredMessage : ZMLocalNotification
 
-@property (nonatomic, readonly, nonnull) ZMMessage *message;
 @property (nonatomic, readonly, nonnull) UILocalNotification *uiNotification;
-
+@property (nonatomic, readonly, nullable) ZMMessage *message;
 - (nonnull instancetype)initWithExpiredMessage:(nonnull ZMMessage *)message;
 - (nonnull instancetype)initWithConversation:(nonnull ZMConversation *)conversation;
 

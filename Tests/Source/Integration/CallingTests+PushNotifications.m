@@ -50,7 +50,8 @@
     [self.application setBackground];
     XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 0u);
     
-    NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest othersAreJoined:YES selfIsJoined:NO otherIsSendingVideo:NO selfIsSendingVideo:NO sequence:nil];
+    ZMUser *user2 = [self userForMockUser:self.user2];
+    NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest joinedUsers:@[user2] videoSendingUsers:@[] sequence:@1 session:@"session1"];
     UILocalNotification *notification;
     // (1) when we recieve a push notification
     {
@@ -99,8 +100,10 @@
     XCTAssert([self logIn]);
     WaitForAllGroupsToBeEmpty(0.5);
     
+
     [self.application setBackground];
-    NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest othersAreJoined:YES selfIsJoined:NO otherIsSendingVideo:YES selfIsSendingVideo:NO sequence:nil];
+    ZMUser *user2 = [self userForMockUser:self.user2];
+    NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest joinedUsers:@[user2] videoSendingUsers:@[user2] sequence:@1 session:@"session1"];
     
     // (1) when we recieve a push notification
     UILocalNotification *notification;
@@ -177,6 +180,10 @@
     
     XCTAssert([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
+    
+    ZMUser *user2 = [self userForMockUser:self.user2];
+    NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest joinedUsers:@[user2] videoSendingUsers:@[user2] sequence:@1 session:@"session2"];
+    
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session simulatePushChannelClosed];
     }];
@@ -187,7 +194,6 @@
     UILocalNotification *notification;    
     [self.application setBackground];
     XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 0u);
-    NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest othersAreJoined:YES selfIsJoined:NO otherIsSendingVideo:YES selfIsSendingVideo:NO sequence:nil];
     
     // (1) when we recieve a push notification
     {
