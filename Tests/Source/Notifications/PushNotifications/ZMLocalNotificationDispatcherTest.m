@@ -173,7 +173,7 @@
     // then
     XCTAssertEqual(self.application.scheduledLocalNotifications.count, 2u);
     UILocalNotification *notification1 = self.application.scheduledLocalNotifications.firstObject;
-    UILocalNotification *notification2 = self.application.scheduledLocalNotifications.firstObject;
+    UILocalNotification *notification2 = self.application.scheduledLocalNotifications.lastObject;
     XCTAssertNotNil(notification1);
     XCTAssertNotNil(notification2);
     XCTAssertEqualObjects([notification1 conversationInManagedObjectContext:self.syncMOC], self.conversation1);
