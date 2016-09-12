@@ -100,4 +100,27 @@ static NSString * const EventTimeKey = @"eventTime";
     self.userInfo = [info copy];
 }
 
+- (void)setupUserInfo:(ZMMessage *)message
+{
+    NSMutableDictionary *info = [NSMutableDictionary dictionary];
+    NSString *conversationIDString = message.conversation.remoteIdentifier.transportString;
+    if (conversationIDString != nil) {
+        info[ConversationIDStringKey] = conversationIDString;
+    }
+    
+    NSString *senderUUIDString = message.sender.remoteIdentifier.transportString;
+    NSString *mesageNonceString = message.nonce.transportString;
+    NSDate *eventTime = message.serverTimestamp;
+    if (senderUUIDString != nil) {
+        info[SenderIDStringKey] = senderUUIDString;
+    }
+    if (mesageNonceString != nil) {
+        info[MessageNonceIDStringKey] = mesageNonceString;
+    }
+    if (eventTime != nil) {
+        info[EventTimeKey] = eventTime;
+    }
+    self.userInfo = [info copy];
+}
+
 @end

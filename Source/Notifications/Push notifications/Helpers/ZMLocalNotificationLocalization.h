@@ -27,7 +27,6 @@
 
 - (NSString *)localizedStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation otherUser:(ZMUser *)otherUser;
 
-- (NSString *)localizedStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation count:(NSNumber *)count formattedCount:(NSString *)formattedCount;
 - (NSString *)localizedStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation count:(NSNumber *)count;
 
 

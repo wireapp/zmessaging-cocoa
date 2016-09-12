@@ -102,8 +102,7 @@
     NSDictionary *eventPayload = [self dataPayLoadForMessageAddEvent];
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventPayload];
     NSString *textInput = @"Text";
-    
-    ZMLocalNotificationForEvent *note = [[ZMLocalNotificationForEvent alloc] initWithEvent:events.firstObject managedObjectContext:self.uiMOC application:self.application];
+    ZMLocalNotificationForEvent *note = [[ZMLocalNotificationForEvent alloc] initWithEvents:@[events.firstObject] conversation:self.conversation managedObjectContext:self.uiMOC application:self.application];
     XCTAssertNotNil(note);
     
     // when
