@@ -43,7 +43,7 @@ extension ZMLocalNotificationForEventsTests_Reactions {
     func testThatItCreatesANotifcationForAReaction_SelfUserIsSenderOfOriginalMessage_OtherUserSendsLike(){
         // given
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
-        let reaction = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
+        let reaction = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         let event = createUpdateEvent(NSUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction, senderID: otherUser.remoteIdentifier!)
         XCTAssertNotNil(event)
         
@@ -54,14 +54,14 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         XCTAssertNotNil(sut)
         
         guard let localNote = sut?.uiNotifications.first else {return XCTFail()}
-        XCTAssertEqual(localNote.alertBody, "Other User liked your message")
+        XCTAssertEqual(localNote.alertBody, "Other User ❤️ your message")
         XCTAssertEqual(localNote.zm_messageNonce, event.messageNonce())
     }
     
     func alertBody(conversation: ZMConversation, sender: ZMUser) -> String? {
         // given
         let message = conversation.appendMessageWithText("text") as! ZMClientMessage
-        let reaction = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
+        let reaction = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         let event = createUpdateEvent(NSUUID(), conversationID: conversation.remoteIdentifier, genericMessage: reaction, senderID: sender.remoteIdentifier!)
         
         // when
@@ -74,36 +74,36 @@ extension ZMLocalNotificationForEventsTests_Reactions {
     
     func testThatItCreatesTheCorrectAlertBody_ConvWithoutName(){
         guard let alertBody = alertBody(groupConversationWithoutName, sender: otherUser) else { return XCTFail()}
-        XCTAssertEqual(alertBody, "Other User liked your message in a conversation")
+        XCTAssertEqual(alertBody, "Other User ❤️ your message in a conversation")
     }
     
     func testThatItCreatesTheCorrectAlertBody(){
         guard let alertBody = alertBody(groupConversation, sender: otherUser) else { return XCTFail()}
-        XCTAssertEqual(alertBody, "Other User liked your message in Super Conversation")
+        XCTAssertEqual(alertBody, "Other User ❤️ your message in Super Conversation")
     }
     
     func testThatItCreatesTheCorrectAlertBody_UnknownUser(){
         otherUser.name = ""
         guard let alertBody = alertBody(groupConversation, sender: otherUser) else { return XCTFail()}
-        XCTAssertEqual(alertBody, "Someone liked your message in Super Conversation")
+        XCTAssertEqual(alertBody, "Someone ❤️ your message in Super Conversation")
     }
     
     func testThatItCreatesTheCorrectAlertBody_UnknownUser_UnknownConversationName(){
         otherUser.name = ""
         guard let alertBody = alertBody(groupConversationWithoutName, sender: otherUser) else { return XCTFail()}
-        XCTAssertEqual(alertBody, "Someone liked your message in a conversation")
+        XCTAssertEqual(alertBody, "Someone ❤️ your message in a conversation")
     }
     
     func testThatItCreatesTheCorrectAlertBody_UnknownUser_OneOnOneConv(){
         otherUser.name = ""
         guard let alertBody = alertBody(oneOnOneConversation, sender: otherUser) else { return XCTFail()}
-        XCTAssertEqual(alertBody, "Someone liked your message")
+        XCTAssertEqual(alertBody, "Someone ❤️ your message")
     }
     
     func testThatItCreatesANotifcationForAReaction_CallingSuperFunction(){
         // given
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
-        let reaction = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
+        let reaction = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         let event = createUpdateEvent(NSUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction, senderID: otherUser.remoteIdentifier!)
         XCTAssertNotNil(event)
         
@@ -114,7 +114,7 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         XCTAssertNotNil(sut)
         
         guard let localNote = sut?.uiNotifications.first else {return XCTFail()}
-        XCTAssertEqual(localNote.alertBody, "Other User liked your message")
+        XCTAssertEqual(localNote.alertBody, "Other User ❤️ your message")
         XCTAssertEqual(localNote.zm_messageNonce, event.messageNonce())
     }
     
@@ -135,7 +135,7 @@ extension ZMLocalNotificationForEventsTests_Reactions {
     func testThatItDoesNotCreateANotificationForAReaction_SelfUserIsSenderOfOriginalMessage_SelfUserSendsLike(){
         // given
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
-        let reaction = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
+        let reaction = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         let event = createUpdateEvent(NSUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction, senderID: selfUser.remoteIdentifier!)
         
         // when
@@ -150,7 +150,7 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
         message.sender = otherUser
         
-        let reaction = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
+        let reaction = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         let event = createUpdateEvent(NSUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction, senderID: otherUser.remoteIdentifier!)
         
         // when
@@ -163,7 +163,7 @@ extension ZMLocalNotificationForEventsTests_Reactions {
     func testThatItCancelsNotificationWhenUserDeletesLike(){
         // given
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
-        let reaction1 = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
+        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         
         let event1 = createUpdateEvent(NSUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction1, senderID: otherUser.remoteIdentifier!)
@@ -186,7 +186,7 @@ extension ZMLocalNotificationForEventsTests_Reactions {
     func testThatItDoesNotCancelNotificationWhenADifferentUserDeletesLike(){
         // given
         let message = oneOnOneConversation.appendMessageWithText("text") as! ZMClientMessage
-        let reaction1 = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
+        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: NSUUID.createUUID().transportString())
         
         let event1 = createUpdateEvent(NSUUID(), conversationID: oneOnOneConversation.remoteIdentifier, genericMessage: reaction1, senderID: otherUser.remoteIdentifier!)
