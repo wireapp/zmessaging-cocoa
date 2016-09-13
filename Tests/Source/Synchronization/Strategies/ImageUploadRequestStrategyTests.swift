@@ -257,7 +257,7 @@ class ImageUploadRequestStrategyTests: MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
     }
     
-    func testKeysAreReset_whenRequestFailsBaecauseSelfClientWasDeleted() {
+    func testKeysAreReset_whenRequestFailsBecauseSelfClientWasDeleted() {
         self.syncMOC.performGroupedBlock { 
             // given
             let keys = Set(arrayLiteral: ZMAssetClientMessageUploadedStateKey)
