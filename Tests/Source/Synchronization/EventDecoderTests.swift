@@ -123,5 +123,36 @@ class EventDecoderTest: MessagingTest {
         // then
         XCTAssertEqual(callCount, 2)
     }
+    
+    func testThatItDoesNotProcessTheSameEventsTwiceWhenCalledSuccessively() {
+        // given
+        EventDecoder.testingBatchSize = 2
+        
+        let event1 = dummyEvent()
+        let event2 = dummyEvent()
+        let event3 = dummyEvent()
+        let event4 = dummyEvent()
+        
+        let _ = StoredUpdateEvent.create(event1, managedObjectContext: eventMOC, index: 0)
+        eventMOC.saveOrRollback()
 
+        sut.processEvents([event2]) { (events) in
+            XCTAssert(events.contains(event1))
+            XCTAssert(events.contains(event2))
+        }
+
+        let _ = StoredUpdateEvent.create(event3, managedObjectContext: eventMOC, index: 1)
+        eventMOC.saveOrRollback()
+
+        // when
+        sut.processEvents([event4]) { (events) in
+            XCTAssertFalse(events.contains(event1))
+            XCTAssertFalse(events.contains(event2))
+            XCTAssertTrue(events.contains(event3))
+            XCTAssertTrue(events.contains(event4))
+        }
+        
+        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+    }
+    
 }
