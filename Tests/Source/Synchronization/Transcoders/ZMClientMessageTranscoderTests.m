@@ -61,7 +61,6 @@
 @end
 
 
-
 @implementation ZMClientMessageTranscoderTests
 
 - (void)setUp
@@ -1086,12 +1085,12 @@
     [self checkThatItCallsConfirmationStatus:NO whenReceivingAnEventThroughSource:ZMUpdateEventSourceDownload];
 }
 
-// TODO MARCO
-- (void)DISABLED_testThatItCallsConfirmationStatusWhenConfirmationMessageIsSentSuccessfully
+- (void)testThatItCallsConfirmationStatusWhenConfirmationMessageIsSentSuccessfully
 {
     if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
         
         // given
+        [self createSelfClient];
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMTConversationTypeOneOnOne;
         conversation.remoteIdentifier = [NSUUID createUUID];
@@ -1116,12 +1115,12 @@
     }
 }
 
-// TODO MARCO
-- (void)DISABLED_testThatItDeletesTheConfirmationMessageWhenSentSuccessfully
+- (void)testThatItDeletesTheConfirmationMessageWhenSentSuccessfully
 {
     if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
         
         // given
+        [self createSelfClient];
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMTConversationTypeOneOnOne;
         conversation.remoteIdentifier = [NSUUID createUUID];
