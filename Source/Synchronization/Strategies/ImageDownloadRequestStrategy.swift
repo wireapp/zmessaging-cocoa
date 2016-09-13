@@ -21,7 +21,7 @@ import UIKit
 public class ImageDownloadRequestStrategy : ZMObjectSyncStrategy, RequestStrategy {
     
     private let authenticationStatus : AuthenticationStatusProvider
-    private var downStreamSync : ZMDownstreamObjectSyncWithWhitelist!
+    private var downstreamSync : ZMDownstreamObjectSyncWithWhitelist!
     private let requestFactory : ClientMessageRequestFactory = ClientMessageRequestFactory()
     
     public init(authenticationStatus: AuthenticationStatusProvider, managedObjectContext: NSManagedObjectContext) {
@@ -36,7 +36,7 @@ public class ImageDownloadRequestStrategy : ZMObjectSyncStrategy, RequestStrateg
             return missingMediumImage || missingVideoThumbnail
         }
         
-        downStreamSync = ZMDownstreamObjectSyncWithWhitelist(transcoder: self,
+        downstreamSync = ZMDownstreamObjectSyncWithWhitelist(transcoder: self,
                                                              entityName: ZMAssetClientMessage.entityName(),
                                                              predicateForObjectsToDownload: downloadPredicate,
                                                              managedObjectContext: managedObjectContext)
@@ -63,14 +63,14 @@ public class ImageDownloadRequestStrategy : ZMObjectSyncStrategy, RequestStrateg
             guard let objectID = note.object as? NSManagedObjectID else { return }
             guard let object = try? self.managedObjectContext.existingObjectWithID(objectID) else { return }
             guard let message = object as? ZMAssetClientMessage else { return }
-            self.downStreamSync.whiteListObject(message)
+            self.downstreamSync.whiteListObject(message)
             ZMOperationLoop.notifyNewRequestsAvailable(self)
         }
     }
     
     func nextRequest() -> ZMTransportRequest? {
         guard authenticationStatus.currentPhase == .Authenticated else { return nil }
-        return downStreamSync.nextRequest()
+        return downstreamSync.nextRequest()
     }
 
 }
