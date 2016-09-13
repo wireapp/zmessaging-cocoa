@@ -75,12 +75,24 @@ extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
         return nil // no-op
     }
     
+    private func update(message: ZMAssetClientMessage, withResponse response: ZMTransportResponse, updatedKeys keys: Set<NSObject>) {
+        message.markAsSent()
+        message.updateWithPostPayload(response.payload.asDictionary(), updatedKeys: keys)
+        
+        if let clientRegistrationStatus = self.clientRegistrationStatus {
+            message.parseUploadResponse(response, clientDeletionDelegate: clientRegistrationStatus)
+        }
+    }
+    
     public func updateInsertedObject(managedObject: ZMManagedObject, request upstreamRequest: ZMUpstreamRequest, response: ZMTransportResponse) {
-        // no-op
+        guard let message = managedObject as? ZMAssetClientMessage else { return }
+        update(message, withResponse: response, updatedKeys: Set())
     }
     
     public func updateUpdatedObject(managedObject: ZMManagedObject, requestUserInfo: [NSObject : AnyObject]?, response: ZMTransportResponse, keysToParse: Set<NSObject>) -> Bool {
         guard let message = managedObject as? ZMAssetClientMessage else { return false }
+        
+        update(message, withResponse: response, updatedKeys: keysToParse)
         
         var needsMoreRequests = false
         
@@ -101,10 +113,6 @@ extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
             default:
                 break
             }
-        }
-        
-        if let clientRegistrationStatus = self.clientRegistrationStatus {
-            message.parseUploadResponse(response, clientDeletionDelegate: clientRegistrationStatus)
         }
         
         return needsMoreRequests
