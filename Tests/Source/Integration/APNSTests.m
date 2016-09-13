@@ -22,6 +22,8 @@
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Background+Testing.h"
+#import "zmessaging_iOS_Tests-Swift.h"
+
 
 @interface APNSTests : IntegrationTestBase
 
@@ -89,8 +91,7 @@
                               @"type" : @"conversation.create"
                               };
     
-    // expect
-    [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
+    [self.application setBackground];
     
     // when
     if(useAPNS) {
@@ -163,13 +164,11 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-    id mockApplication = self.userSession.application;
-    [[[mockApplication expect] andDo:^(NSInvocation *inv) {
-        NOT_USED(inv);
+    self.application.registerForRemoteNotificationsCallback = ^{
         [self.userSession performChanges:^{
-            [self.userSession application:self.userSession.application didRegisterForRemoteNotificationsWithDeviceToken:newToken];
+            [self.userSession application:self.application didRegisterForRemoteNotificationsWithDeviceToken:newToken];
         }];
-    }] registerForRemoteNotifications];
+    };
     
     // when
     [self.userSession start];
@@ -181,6 +180,7 @@
 
     // then
     XCTAssertTrue([self lastRequestsContainedTokenRequests], @"Did receive: %@", self.mockTransportSession.receivedRequests);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
 }
 
 - (void)testThatItReregistersPushTokensOnDemand
@@ -203,13 +203,11 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-    id mockApplication = self.userSession.application;
-    [[[mockApplication expect] andDo:^(NSInvocation *inv) {
-        NOT_USED(inv);
+    self.application.registerForRemoteNotificationsCallback = ^{
         [self.userSession performChanges:^{
             [self.userSession application:self.userSession.application didRegisterForRemoteNotificationsWithDeviceToken:newToken];
         }];
-    }] registerForRemoteNotifications];
+    };
     
     // when
     [self.userSession resetPushTokens];
@@ -225,8 +223,8 @@
     }
     XCTAssertTrue(didContainSignalingKeyRequest);
     XCTAssertTrue([self lastRequestsContainedTokenRequests]);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
     [mockPushRegistrant verify];
-    [mockApplication verify];
 }
 
 - (void)testThatItReregistersPushTokensOnDemandEvenIfItDidNotChange
@@ -244,13 +242,11 @@
     // expect
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:token] pushToken];
-    id mockApplication = self.userSession.application;
-    [[[mockApplication expect] andDo:^(NSInvocation *inv) {
-        NOT_USED(inv);
+    self.application.registerForRemoteNotificationsCallback = ^{
         [self.userSession performChanges:^{
             [self.userSession application:self.userSession.application didRegisterForRemoteNotificationsWithDeviceToken:token];
         }];
-    }] registerForRemoteNotifications];
+    };
     
     // when
     [self.userSession performChanges:^{
@@ -268,9 +264,8 @@
     }
     XCTAssertTrue(didContainSignalingKeyRequest);
     XCTAssertTrue([self lastRequestsContainedTokenRequests]);
-
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
     [mockPushRegistrant verify];
-    [mockApplication verify];
 }
 
 - (void)testThatItPingsBackToTheBackendWhenReceivingAVoIPNotificationToCancelTheAPNSNotification
@@ -296,9 +291,7 @@
                               @"time" : @"2015-03-11T09:34:00.436Z",
                               @"type" : @"conversation.create"
                               };
-    
-    // expect
-    [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
+    [self.application setBackground];
     
     // when
     [self.mockTransportSession resetReceivedRequests];
@@ -342,8 +335,9 @@
                               @"type" : @"conversation.create"
                               };
     
+    [self.application setBackground];
+
     // expect
-    [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
     
     __block NSUInteger callCount = 0;
@@ -404,9 +398,7 @@
                                                                      transportData:conversationTransportData
                                                                           senderID:self.user1.identifier];
     NSDictionary *noticePayload = [self noticePayloadWithIdentifier:notificationID];
-    
-    // expect
-    [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
+    [self.application setBackground];
     
     // when
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
@@ -457,9 +449,7 @@
                                                                      transportData:conversationTransportData
                                                                           senderID:self.user1.identifier];
     NSDictionary *noticePayload = [self noticePayloadWithIdentifier:notificationID];
-    
-    // expect
-    [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
+    [self.application setBackground];
     
     // when
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
@@ -497,6 +487,7 @@
         XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
         WaitForAllGroupsToBeEmpty(0.2);
         
+
         ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Hello" nonce:[NSUUID createUUID].transportString];
         
         [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
@@ -513,11 +504,9 @@
         
         NSDictionary *payload = [event.transportData asDictionary];
         
-        [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
+        [self.application setBackground];
+        [self.application simulateApplicationDidEnterBackground];
         WaitForAllGroupsToBeEmpty(0.2);
-        
-        // expect
-        [[[(id)self.userSession.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateBackground)] applicationState];
         
         XCTestExpectation *confirmationExpectation = [self expectationWithDescription:@"Did send confirmation"];
         XCTestExpectation *missingClientsExpectation = [self expectationWithDescription:@"Did fetch missing client"];

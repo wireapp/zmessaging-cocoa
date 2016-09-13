@@ -29,7 +29,6 @@
 
 
 
-
 @interface ZMLocalNotificationForEventTest : MessagingTest
 @property (nonatomic) ZMUser *sender;
 @property (nonatomic) ZMConversation *oneOnOneConversation;
@@ -38,5 +37,5 @@
 @property (nonatomic) ZMUser *selfUser;
 @property (nonatomic) ZMUser *otherUser;
 @property (nonatomic) ZMUser *otherUser2;
-
+@property (nonatomic) id mockSessionTracker;
 @end

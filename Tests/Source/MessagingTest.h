@@ -32,6 +32,7 @@
 @class ZMConversation;
 @class ZMConnection;
 @protocol ZMObjectStrategyDirectory;
+@class ApplicationMock;
 @class ZMAssetClientMessage;
 
 @import Cryptobox;
@@ -61,6 +62,7 @@
 @property (nonatomic, readonly) NSManagedObjectContext *testMOC;
 @property (nonatomic, readonly) NSManagedObjectContext *alternativeTestMOC;
 @property (nonatomic, readonly) NSManagedObjectContext *searchMOC;
+@property (nonatomic, readonly) ApplicationMock *application;
 
 @property (nonatomic, readonly) MockTransportSession *mockTransportSession;
 

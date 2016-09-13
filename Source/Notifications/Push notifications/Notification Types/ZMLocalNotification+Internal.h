@@ -17,13 +17,16 @@
 // 
 
 
-#import "ZMBadge.h"
 
-@class UIApplication;
+#import "ZMLocalNotification.h"
+@class ZMConversation;
+@protocol ZMApplication;
 
+@interface ZMLocalNotificationForEvent (Internal)
 
-@interface ZMBadge ()
-
-@property (nonatomic, weak) UIApplication *application;
+- (instancetype)initWithEvents:(NSArray *)events
+                  conversation:(ZMConversation *)conversation
+          managedObjectContext:(NSManagedObjectContext *)moc
+                   application:(id<ZMApplication>)application;
 
 @end

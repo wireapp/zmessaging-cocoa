@@ -65,7 +65,7 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 
 - (void)processNotification:(EventsWithIdentifier*)eventsWithID fetchCompletionHandler:(ZMPushResultHandler)completionHandler
 {
-    [APNSPerformanceTracker trackVOIPNotificationInOperationLoop:eventsWithID analytics:self.syncMOC.analytics];
+    [APNSPerformanceTracker trackVOIPNotificationInOperationLoop:eventsWithID analytics:self.syncMOC.analytics application:self.application];
     ZM_WEAK(self);
     [self.backgroundAPNSPingBackStatus didReceiveVoIPNotification:eventsWithID handler:^(ZMPushPayloadResult result, NSArray<ZMUpdateEvent *> *receivedEvents) {
         ZM_STRONG(self);

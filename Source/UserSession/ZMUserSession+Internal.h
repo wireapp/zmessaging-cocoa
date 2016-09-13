@@ -60,7 +60,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic) BOOL isPerformingSync;
 @property (nonatomic) BOOL didStartInitialSync;
 @property (nonatomic) BOOL didNotifyThirdPartyServices;
-@property (nonatomic, readonly) ZMApplication *application;
+@property (nonatomic, readonly) id<ZMApplication> application;
 
 - (void)notifyThirdPartyServices;
 - (void)start;
@@ -89,7 +89,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
                             mediaManager:(id<AVSMediaManager>)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
-                             application:(ZMApplication *)application
+                             application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
                       appGroupIdentifier:(NSString *)appGroupIdentifier;
 

@@ -71,6 +71,7 @@
 @property (nonatomic, weak) NSManagedObjectContext *uiMOC;
 
 @property (nonatomic) ZMBadge *badge;
+@property (nonatomic) id<ZMApplication> application;
 
 @property (nonatomic) ZMConnectionTranscoder *connectionTranscoder;
 @property (nonatomic) ZMUserTranscoder *userTranscoder;
@@ -149,16 +150,18 @@ ZM_EMPTY_ASSERTING_INIT()
                     taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
                           appGroupIdentifier:(NSString *)appGroupIdentifier
                                        badge:(ZMBadge *)badge
-                                 application:(ZMApplication *)application;
+                                 application:(id<ZMApplication>)application;
 
 {
     self = [super init];
     if (self) {
+        self.application = application;
         self.localNotificationDispatcher = localNotificationsDispatcher;
         self.syncMOC = syncMOC;
         self.uiMOC = uiMOC;
         self.badge = badge;
         self.eventMOC = [NSManagedObjectContext createEventContextWithAppGroupIdentifier:appGroupIdentifier];
+        [self.eventMOC addGroup:self.syncMOC.dispatchGroup];
         self.apnsConfirmationStatus = [[BackgroundAPNSConfirmationStatus alloc] initWithApplication:application
                                                                                managedObjectContext:self.syncMOC
                                                                           backgroundActivityFactory:[BackgroundActivityFactory sharedInstance]];
@@ -177,7 +180,9 @@ ZM_EMPTY_ASSERTING_INIT()
                                                             clientRegistrationStatus:clientRegistrationStatus
                                                              objectStrategyDirectory:self
                                                                    syncStateDelegate:syncStateDelegate
-                                                               backgroundableSession:backgroundableSession];
+                                                               backgroundableSession:backgroundableSession
+                                                                         application:application
+                             ];
 
         self.eventsBuffer = [[ZMUpdateEventsBuffer alloc] initWithUpdateEventConsumer:self];
         self.userClientRequestStrategy = [[UserClientRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus
@@ -212,9 +217,9 @@ ZM_EMPTY_ASSERTING_INIT()
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:self.syncMOC];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:uiMOC];
 
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appTerminated:) name:UIApplicationWillTerminateNotification object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
+        [application registerObserverForDidEnterBackground:self selector:@selector(appDidEnterBackground:)];
+        [application registerObserverForWillEnterForeground:self selector:@selector(appWillEnterForeground:)];
+        [application registerObserverForApplicationWillTerminate:self selector:@selector(appTerminated:)];
     }
     return self;
 }
@@ -244,7 +249,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.registrationTranscoder = [[ZMRegistrationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
     self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC objectDirectory:self];
-    self.flowTranscoder = [[ZMFlowSync alloc] initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC];
+    self.flowTranscoder = [[ZMFlowSync alloc] initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC application:self.application];
     self.pushTokenTranscoder = [[ZMPushTokenTranscoder alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationStatus:clientRegistrationStatus];
     self.callStateTranscoder = [[ZMCallStateTranscoder alloc] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC objectStrategyDirectory:self];
     self.assetTranscoder = [[ZMAssetTranscoder alloc] initWithManagedObjectContext:self.syncMOC];
@@ -292,6 +297,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)appTerminated:(NSNotification *)note
 {
     NOT_USED(note);
+    [self.application unregisterObserverForStateChange:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -318,6 +324,7 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.eventMOC tearDown];
     self.eventMOC = nil;
     [self.stateMachine tearDown];
+    [self.application unregisterObserverForStateChange:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self appTerminated:nil];
     
@@ -534,7 +541,6 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     if(ignoreBuffer) {
         [self consumeUpdateEvents:events];
-        [self.syncMOC enqueueDelayedSave]; // make sure we save at least once
         return;
     }
     
@@ -571,7 +577,6 @@ ZM_EMPTY_ASSERTING_INIT()
             break;
         }
     }
-    [self.syncMOC enqueueDelayedSave]; // make sure we save at least once
 }
 
 - (ZMFetchRequestBatch *)fetchRequestBatchForEvents:(NSArray<ZMUpdateEvent *> *)events
@@ -620,7 +625,7 @@ ZM_EMPTY_ASSERTING_INIT()
             }
         }
         [self.localNotificationDispatcher processEvents:decryptedEvents liveEvents:YES prefetchResult:nil];
-        [self.syncMOC saveIfTooManyChanges];
+        [self.syncMOC enqueueDelayedSave];
     }];
 }
 

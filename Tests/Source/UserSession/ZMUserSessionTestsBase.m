@@ -19,6 +19,7 @@
 
 #import <Foundation/Foundation.h>
 #include "ZMUserSessionTestsBase.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @implementation ThirdPartyServices
 
@@ -49,10 +50,7 @@
     self.thirdPartyServices = [[ThirdPartyServices alloc] init];
     self.dataChangeNotificationsCount = 0;
     self.baseURL = [NSURL URLWithString:@"http://bar.example.com"];
-    self.transportSession = [OCMockObject mockForClass:[ZMTransportSession class]];
-    [[self.transportSession stub] openPushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
-    [[self.transportSession stub] closePushChannelAndRemoveConsumer];
-    [[self.transportSession stub] setClientID:OCMOCK_ANY];
+    self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
     self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com"];
     [[[self.transportSession stub] andReturn:self.cookieStorage] cookieStorage];
     [[self.transportSession stub] setAccessTokenRenewalFailureHandler:[OCMArg checkWithBlock:^BOOL(ZMCompletionHandlerBlock obj) {
@@ -64,19 +62,12 @@
         self.tokenSuccessHandler = obj;
         return YES;
     }]];
-    [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
-    self.mediaManager = [OCMockObject niceMockForClass:NSObject.class];
     self.operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
     [[self.operationLoop stub] tearDown];
     self.apnsEnvironment = [OCMockObject niceMockForClass:[ZMAPNSEnvironment class]];
     [[[self.apnsEnvironment stub] andReturn:@"com.wire.ent"] appIdentifier];
     [[[self.apnsEnvironment stub] andReturn:@"APNS"] transportTypeForTokenType:ZMAPNSTypeNormal];
     [[[self.apnsEnvironment stub] andReturn:@"APNS_VOIP"] transportTypeForTokenType:ZMAPNSTypeVoIP];
-    
-    self.backgroundFetchInterval = UIApplicationBackgroundFetchIntervalNever;
-    self.application = [OCMockObject niceMockForClass:UIApplication.class];
-    UIApplication *a = [[[self.application stub] ignoringNonObjectArgs] andCall:@selector(setBackgroundFetchInterval:) onObject:self];
-    [a setMinimumBackgroundFetchInterval:0];
     
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                           userInterfaceContext:self.uiMOC
@@ -133,11 +124,6 @@
     [tempSut tearDown];
     
     [super tearDown];
-}
-
-- (void)setBackgroundFetchInterval:(NSTimeInterval)backgroundFetchInterval;
-{
-    _backgroundFetchInterval = backgroundFetchInterval;
 }
 
 - (void)didChangeAuthenticationData

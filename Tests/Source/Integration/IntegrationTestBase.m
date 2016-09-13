@@ -36,6 +36,7 @@
 #import "ZMSyncStrategy.h"
 #import "ZMCallStateTranscoder.h"
 #import "MockLinkPreviewDetector.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 
 NSString * const SelfUserEmail = @"myself@user.example.com";
@@ -62,6 +63,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 @property (nonatomic) NSArray *nonConnectedUsers;
 @property (nonatomic) MockFlowManager *mockFlowManager;
 @property (nonatomic) MockLinkPreviewDetector *mockLinkPreviewDetector;
+
 
 @end
 
@@ -102,7 +104,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.conversationChangeObserver = [[ConversationChangeObserver alloc] init];
     self.userChangeObserver = [[UserChangeObserver alloc] init];
     self.messageChangeObserver = [[MessageChangeObserver alloc] init];
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self.application simulateApplicationDidBecomeActive];
     WaitForEverythingToBeDoneWithTimeout(0.5);
 }
 
@@ -321,9 +323,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     // which will be triggered for every test and log an error caused by the pushRegistrant
     // being nil and no pushToken being present in the NSManagedObjectContext
     [self disableHotfixes];
-    
-    UIApplication *application = [OCMockObject niceMockForClass:UIApplication.class];
-    
+        
     id mockAPNSEnrvironment = [OCMockObject niceMockForClass:[ZMAPNSEnvironment class]];
     [[[mockAPNSEnrvironment stub] andReturn:@"com.wire.production"] appIdentifier];
     [[[mockAPNSEnrvironment stub] andReturn:@"APNS"] transportTypeForTokenType:ZMAPNSTypeNormal];
@@ -347,7 +347,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
                         mediaManager:nil
                         apnsEnvironment:mockAPNSEnrvironment
                         operationLoop:nil
-                        application:application
+                        application:self.application
                         appVersion:@"00000"
                         appGroupIdentifier:self.groupIdentifier];
     WaitForEverythingToBeDone();

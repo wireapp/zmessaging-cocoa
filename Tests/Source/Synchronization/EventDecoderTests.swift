@@ -24,10 +24,11 @@ class EventDecoderTest: MessagingTest {
     
     var eventMOC = NSManagedObjectContext.createEventContext(withAppGroupIdentifier: nil)
     var sut : EventDecoder!
-    
+
     override func setUp() {
         super.setUp()
         sut = EventDecoder(eventMOC: eventMOC, syncMOC: syncMOC)
+        eventMOC.addGroup(self.dispatchGroup)
     }
     
     override func tearDown() {
@@ -53,14 +54,18 @@ class EventDecoderTest: MessagingTest {
             XCTAssertTrue(events.contains(event))
             didCallBlock = true
         }
+
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
         XCTAssertTrue(didCallBlock)
     }
     
-    func testThatItProcessesPreviouslyStoredEventsFirst(){
+    func testThatItProcessesPreviouslyStoredEventsFirst() {
         // given
+        
+        EventDecoder.testingBatchSize = 1
+        
         let event1 = dummyEvent()
         let event2 = dummyEvent()
         let _ = StoredUpdateEvent.create(event1, managedObjectContext: eventMOC, index: 0)
@@ -76,7 +81,7 @@ class EventDecoderTest: MessagingTest {
             } else {
                 XCTFail("called too often")
             }
-            callCount = callCount+1
+            callCount += 1
         }
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
@@ -84,7 +89,7 @@ class EventDecoderTest: MessagingTest {
         XCTAssertEqual(callCount, 2)
     }
     
-    func testThatItProcessesInBatches(){
+    func testThatItProcessesInBatches() {
         // given
         EventDecoder.testingBatchSize = 2
         
@@ -106,18 +111,17 @@ class EventDecoderTest: MessagingTest {
                 XCTAssertTrue(events.contains(event2))
             } else if callCount == 1 {
                 XCTAssertTrue(events.contains(event3))
-            } else if callCount == 2 {
                 XCTAssertTrue(events.contains(event4))
             }
             else {
                 XCTFail("called too often")
             }
-            callCount = callCount+1
+            callCount += 1
         }
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
-        XCTAssertEqual(callCount, 3)
+        XCTAssertEqual(callCount, 2)
     }
 
 }

@@ -52,7 +52,7 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 
 @property (nonatomic) ZMTimer* loginFailureTimer;
 @property (nonatomic) NSDate* lastTimerStart;
-@property (nonatomic, weak) ZMApplication *application;
+@property (nonatomic, weak) id<ZMApplication>application;
 @property (nonatomic) BOOL didLaunchInForeground;
 
 @end
@@ -73,20 +73,8 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
                         stateMachineDelegate:(id<ZMStateMachineDelegate>)stateMachineDelegate
+                                 application:(id<ZMApplication>)application;
 {
-    return [self initWithAuthenticationCenter:authenticationStatus
-                     clientRegistrationStatus:clientRegistrationStatus
-                      objectStrategyDirectory:objectStrategyDirectory
-                         stateMachineDelegate:stateMachineDelegate application:nil];
-}
-
-- (instancetype)initWithAuthenticationCenter:(ZMAuthenticationStatus *)authenticationStatus
-                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
-                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
-                        stateMachineDelegate:(id<ZMStateMachineDelegate>)stateMachineDelegate
-                                 application:(ZMApplication *)application;
-{
-    application = application ?: [UIApplication sharedApplication];
     self = [super initWithAuthenticationCenter:authenticationStatus
                       clientRegistrationStatus:clientRegistrationStatus
                        objectStrategyDirectory:objectStrategyDirectory
@@ -295,8 +283,7 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     
     if ([self isDoneWithLogin]) {
         ZMTraceAuthLoginStateEnter(2);
-        BOOL const isBackgrounded = self.application.applicationState == UIApplicationStateBackground;
-        if (isBackgrounded) {
+        if (self.application.applicationState == UIApplicationStateBackground) {
             ZMLogDebug(@"%@ is already logged in on enter. Launched suspended. Entering background state.", self.class);
             [stateMachine goToState:stateMachine.backgroundState];
         } else {

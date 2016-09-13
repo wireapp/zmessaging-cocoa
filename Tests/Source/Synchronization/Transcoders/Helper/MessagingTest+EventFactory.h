@@ -58,6 +58,12 @@ extern NSString * const EventNewConnection;
                                        videoSendingUsers:(NSArray *)videoSendingUsers
                                                 sequence:(NSNumber *)sequence;
 
+- (NSDictionary *)payloadForCallStateEventInConversation:(ZMConversation *)conversation
+                                             joinedUsers:(NSArray *)joinedUsers
+                                       videoSendingUsers:(NSArray *)videoSendingUsers
+                                                sequence:(NSNumber *)sequence
+                                                 session:(NSString *)sessionID;
+
 - (ZMUpdateEvent *)callStateEventInConversation:(ZMConversation *)conversation
                                 othersAreJoined:(BOOL)othersAreJoined
                                    selfIsJoined:(BOOL)selfIsJoined

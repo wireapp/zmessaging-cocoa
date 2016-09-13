@@ -31,7 +31,6 @@
 #import "ZMUpstreamModifiedObjectSync.h"
 #import "ZMUpstreamInsertedObjectSync.h"
 #import "ZMSyncStrategy.h"
-#import "BadgeApplication.h"
 #import "ZMUpstreamTranscoder.h"
 #import "ZMSimpleListRequestPaginator.h"
 #import "ZMRemoteIdentifierObjectSync.h"

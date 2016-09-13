@@ -410,7 +410,7 @@ _Pragma("clang diagnostic pop")
     NSDictionary *payloadData = [payload asDictionary];
     NSNumber *sequence = [payloadData optionalNumberForKey:@"sequence"];
     NSNumber *storedSequence = self.convToSequenceMap[conversation.remoteIdentifier];
-    if ([storedSequence compare:sequence] == NSOrderedDescending) {
+    if (sequence != nil && [storedSequence compare:sequence] == NSOrderedDescending) {
         return;
     }
     if (sequence != nil) {

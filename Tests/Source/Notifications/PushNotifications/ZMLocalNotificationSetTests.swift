@@ -22,21 +22,6 @@ import ZMCDataModel;
 
 @testable import zmessaging;
 
-
-class MockApplication: NSObject, NotificationScheduler {
-    
-    var scheduledNotifications = [UILocalNotification]()
-    var cancelledNotifications = [UILocalNotification]()
-    
-    @objc func scheduleLocalNotification(notification: UILocalNotification){
-        scheduledNotifications.append(notification)
-    }
-    
-    @objc func cancelLocalNotification(notification: UILocalNotification){
-        cancelledNotifications.append(notification)
-    }
-}
-
 public class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
     
     var keysAndValues = [String : AnyObject]()
@@ -56,7 +41,8 @@ public class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
 
 class MockLocalNotification : ZMLocalNotification {
 
-    var eventTypeUnderTest: ZMLocalNotificationForEventType = .PostInConversation
+    var eventTypeUnderTest : ZMUpdateEventType?
+    
     internal var notifications = [UILocalNotification]()
     
     func add(notification: UILocalNotification){
@@ -66,28 +52,21 @@ class MockLocalNotification : ZMLocalNotification {
     override var uiNotifications : [UILocalNotification] {
         return notifications
     }
-    
-    override var eventType: ZMLocalNotificationForEventType {
-        return eventTypeUnderTest
-    }
 }
 
 class ZMLocalNotificationSetTests : MessagingTest {
 
     var sut : ZMLocalNotificationSet!
-    var mockApplication : MockApplication!
     var keyValueStore : MockKVStore!
     let archivingKey = "archivingKey"
     
     override func setUp(){
         super.setUp()
-        mockApplication = MockApplication()
         keyValueStore = MockKVStore()
-        sut = ZMLocalNotificationSet(application: mockApplication, archivingKey: archivingKey, keyValueStore: keyValueStore)
+        sut = ZMLocalNotificationSet(application: self.application, archivingKey: archivingKey, keyValueStore: keyValueStore)
     }
     
     override func tearDown(){
-        mockApplication = nil
         keyValueStore = nil
         sut = nil
         super.tearDown()
@@ -116,17 +95,15 @@ class ZMLocalNotificationSetTests : MessagingTest {
         conversation1.remoteIdentifier = NSUUID()
         let localNote1 = UILocalNotification()
         localNote1.alertBody = "note1"
-        let note1 = MockLocalNotification()
+        let note1 = MockLocalNotification(conversationID: conversation1.remoteIdentifier)
         note1.add(localNote1)
-        note1.conversation = conversation1
         
         let conversation2 = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
         conversation2.remoteIdentifier = NSUUID()
         let localNote2 = UILocalNotification()
         localNote2.alertBody = "note2"
-        let note2 = MockLocalNotification()
+        let note2 = MockLocalNotification(conversationID: conversation2.remoteIdentifier)
         note2.add(localNote2)
-        note2.conversation = conversation2
         
         // when
         sut.addObject(note1)
@@ -135,10 +112,10 @@ class ZMLocalNotificationSetTests : MessagingTest {
         
         // then
         XCTAssertFalse(sut.notifications.contains(note1))
-        XCTAssertTrue(mockApplication.cancelledNotifications.contains(localNote1))
+        XCTAssertTrue(self.application.cancelledLocalNotifications.contains(localNote1))
 
         XCTAssertTrue(sut.notifications.contains(note2))
-        XCTAssertFalse(mockApplication.cancelledNotifications.contains(localNote2))
+        XCTAssertFalse(self.application.cancelledLocalNotifications.contains(localNote2))
     }
     
     func testThatItOnlyCancelsCallNotificationsIfSpecified(){
@@ -147,16 +124,14 @@ class ZMLocalNotificationSetTests : MessagingTest {
         conversation1.remoteIdentifier = NSUUID()
         let localNote1 = UILocalNotification()
         localNote1.alertBody = "note1"
-        let note1 = MockLocalNotification()
+        let note1 = MockLocalNotification(conversationID: conversation1.remoteIdentifier)
         note1.add(localNote1)
-        note1.conversation = conversation1
-        note1.eventTypeUnderTest = .Call
+        note1.eventTypeUnderTest = .CallState
         
         let localNote2 = UILocalNotification()
         localNote1.alertBody = "note2"
-        let note2 = MockLocalNotification()
+        let note2 = MockLocalNotification(conversationID: conversation1.remoteIdentifier)
         note2.add(localNote2)
-        note2.conversation = conversation1
         
         sut.addObject(note1)
         sut.addObject(note2)
@@ -166,10 +141,10 @@ class ZMLocalNotificationSetTests : MessagingTest {
         
         // then
         XCTAssertFalse(sut.notifications.contains(note1))
-        XCTAssertTrue(mockApplication.cancelledNotifications.contains(localNote1))
+        XCTAssertTrue(self.application.cancelledLocalNotifications.contains(localNote1))
         
         XCTAssertTrue(sut.notifications.contains(note2))
-        XCTAssertFalse(mockApplication.cancelledNotifications.contains(localNote2))
+        XCTAssertFalse(self.application.cancelledLocalNotifications.contains(localNote2))
     }
     
     func testThatItPersistsNotifications() {
@@ -180,7 +155,7 @@ class ZMLocalNotificationSetTests : MessagingTest {
         sut.addObject(note1)
         
         // when recreate sut to release non-persisted objects
-        sut = ZMLocalNotificationSet(application: mockApplication, archivingKey: archivingKey, keyValueStore: keyValueStore)
+        sut = ZMLocalNotificationSet(application: self.application, archivingKey: archivingKey, keyValueStore: keyValueStore)
         
         // then
         XCTAssertTrue(sut.oldNotifications.contains(localNote1))

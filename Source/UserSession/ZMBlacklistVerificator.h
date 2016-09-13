@@ -20,12 +20,14 @@
 #import <Foundation/Foundation.h>
 
 @class ZMBlacklistDownloader;
+@protocol ZMApplication;
 
 @interface ZMBlacklistVerificator : NSObject
 
 - (instancetype)initWithCheckInterval:(NSTimeInterval)checkInterval
                               version:(NSString *)version
                          workingGroup:(ZMSDispatchGroup *)workingGroup
+                          application:(id<ZMApplication>)application
                     blacklistCallback:(void (^)(BOOL))blacklistCallback;
 
 - (void)teardown;

@@ -23,6 +23,7 @@
 #import "ZMPushToken.h"
 #import "UILocalNotification+UserInfo.h"
 #import "ZMUserSession+UserNotificationCategories.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @interface ZMUserSessionTests : ZMUserSessionTestsBase
 
@@ -77,68 +78,10 @@
     XCTAssertEqualObjects(staging.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/staging/ios"]);
 }
 
-- (void)testThatItPassesTheMediaManagerToTheOperationLoop;
-{
-    // given
-    id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
-
-    id backendEnvironment = [OCMockObject niceMockForClass:ZMBackendEnvironment.class];
-    [[[[(id) backendEnvironment expect] classMethod] andReturn:backendEnvironment] alloc];
-    (void)[[[(id) backendEnvironment expect] andReturn:backendEnvironment] init];
-    (void)[[(id) backendEnvironment expect] backendURL];
-    (void)[[(id) backendEnvironment expect] backendWSURL];
-    
-    id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
-    [[[[transportSession expect] classMethod] andReturn:transportSession] alloc];
-    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY mainGroupQueue:OCMOCK_ANY];
-    
-    id cookieStorage = [OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]];
-    (void) [[[transportSession stub] andReturn:cookieStorage] cookieStorage];
-
-    // expect
-    id operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
-    [[[[operationLoop expect] classMethod] andReturn:operationLoop] alloc];
-    
-    (void) [[[operationLoop expect] andReturn:operationLoop]
-            initWithTransportSession:transportSession
-            authenticationStatus:OCMOCK_ANY
-            userProfileUpdateStatus:OCMOCK_ANY
-            clientRegistrationStatus:OCMOCK_ANY
-            clientUpdateStatus:OCMOCK_ANY
-            proxiedRequestStatus:OCMOCK_ANY
-            accountStatus:OCMOCK_ANY
-            backgroundAPNSPingBackStatus:OCMOCK_ANY
-            localNotificationdispatcher:OCMOCK_ANY
-            mediaManager:mediaManager
-            onDemandFlowManager:OCMOCK_ANY
-            uiMOC:OCMOCK_ANY
-            syncMOC:OCMOCK_ANY
-            syncStateDelegate:OCMOCK_ANY
-            appGroupIdentifier:OCMOCK_ANY
-            application:OCMOCK_ANY];
-
-    [[operationLoop expect] tearDown];
-
-    // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager
-                                                               analytics:nil
-                                                              appVersion:@"000000"
-                                                      appGroupIdentifier:self.groupIdentifier];
-    XCTAssertNotNil(session);
-
-    // then
-    [session tearDown];
-    [operationLoop verify];
-    
-    [transportSession stopMocking];
-    [operationLoop stopMocking];
-}
-
 - (void)testThatItSetsTheUserAgentOnStart;
 {
     // given
     NSString *version = @"The-version-123";
-    id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     [[[[transportSession stub] classMethod] andReturn:transportSession] alloc];
     (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY mainGroupQueue:OCMOCK_ANY];
@@ -149,7 +92,7 @@
     [[[userAgent expect] classMethod] setWireAppVersion:version];
     
     // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:mediaManager
+    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
                                                                analytics:nil
                                                               appVersion:version
                                                       appGroupIdentifier:self.groupIdentifier];
@@ -1041,7 +984,7 @@
                                                          isRegistered:YES];
     // expect
     id mockRemoteRegistrant = [OCMockObject partialMockForObject:self.sut.applicationRemoteNotification];
-    [[[mockRemoteRegistrant expect] andForwardToRealObject] application:OCMOCK_ANY didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
+    [(ZMApplicationRemoteNotification *)[[mockRemoteRegistrant expect] andForwardToRealObject] application:OCMOCK_ANY didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
     
     // when
     [self.sut application:OCMOCK_ANY didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
@@ -1080,9 +1023,6 @@
     XCTAssertNil(self.uiMOC.pushToken);
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:[NSData data]] pushToken];
-
-    // expect
-    [[self.application expect] registerForRemoteNotifications];
     
     // when
     [self performIgnoringZMLogError:^{
@@ -1091,7 +1031,7 @@
     }];
 
     // then
-    [self.application verify];
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
 }
 
 - (void)testThatItCallsRegisterForPushNotificationsAgainIfNoPushTokenIsSet
@@ -1101,10 +1041,6 @@
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:[NSData data]] pushToken];
     
-    // expect
-    [[self.application expect] registerForRemoteNotifications];
-    [[self.application expect] registerForRemoteNotifications];
-    
     // when
     [self performIgnoringZMLogError:^{
         [self.sut resetPushTokens];
@@ -1113,7 +1049,7 @@
     }];
     
     // then
-    [self.application verify];
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
 }
 
 - (void)testThatItMarksPushTokenAsNotRegisteredWhenResettingEvenIfItHasSameData
@@ -1128,7 +1064,6 @@
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:deviceToken] pushToken];
     self.uiMOC.pushKitToken = pushToken;
-    [[self.application stub] registerForRemoteNotifications];
     
     // when
     [self performIgnoringZMLogError:^{
@@ -1137,7 +1072,7 @@
     }];
     
     // then
-    [self.application verify];
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
     XCTAssertFalse(self.uiMOC.pushKitToken.isRegistered);
 }
 
@@ -1202,7 +1137,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [mockDelegate verify];
-    [self.application verify];
     XCTAssertTrue(didCallCompletionHandler);
 }
 
@@ -1234,7 +1168,7 @@
     note.category = ZMConversationCategory;
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversationList];
@@ -1250,7 +1184,7 @@
     note.category = ZMConversationCategory;
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
     
     [self checkThatItCallsOnLaunchTheDelegateForNotification:note withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversationList];
@@ -1279,7 +1213,7 @@
     UILocalNotification *note = [self notificationWithConversationForCategory:ZMConversationCategory];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:OCMOCK_ANY];
@@ -1297,7 +1231,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
     
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMConversationMuteAction withBlock:^(id mockDelegate) {
         [[mockDelegate reject] showConversation:OCMOCK_ANY];
@@ -1317,7 +1251,7 @@
     UILocalNotification *note = [self notificationWithConversationForCategory:ZMConversationCategory];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsOnLaunchTheDelegateForNotification:note withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:OCMOCK_ANY];
@@ -1339,7 +1273,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
 
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:conversation];
@@ -1365,7 +1299,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMConnectAcceptAction withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:conversation];
@@ -1390,7 +1324,7 @@
     [self.uiMOC saveOrRollback];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:conversation];
@@ -1411,7 +1345,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
     
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:conversation];
@@ -1432,7 +1366,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
     
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMCallIgnoreAction withBlock:^(id mockDelegate) {
         [[mockDelegate reject] showConversation:conversation];
@@ -1456,7 +1390,7 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
     
     // expect
-    [[[self.application stub] andReturnValue:OCMOCK_VALUE(UIApplicationStateInactive)] applicationState];
+    [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMCallAcceptAction withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:conversation];
@@ -1543,9 +1477,9 @@
 
 - (void)testThatItSetsTheMinimumBackgroundFetchInterval;
 {
-    XCTAssertNotEqual(self.backgroundFetchInterval, UIApplicationBackgroundFetchIntervalNever);
-    XCTAssertGreaterThanOrEqual(self.backgroundFetchInterval, UIApplicationBackgroundFetchIntervalMinimum);
-    XCTAssertLessThanOrEqual(self.backgroundFetchInterval, (NSTimeInterval) (20 * 60));
+    XCTAssertNotEqual(self.application.minimumBackgroundFetchInverval, UIApplicationBackgroundFetchIntervalNever);
+    XCTAssertGreaterThanOrEqual(self.application.minimumBackgroundFetchInverval, UIApplicationBackgroundFetchIntervalMinimum);
+    XCTAssertLessThanOrEqual(self.application.minimumBackgroundFetchInverval, (NSTimeInterval) (20 * 60));
 }
 
 - (void)testThatItForwardsTheBackgroundFetchRequestToTheOperationLoop
@@ -1561,7 +1495,7 @@
     [(ZMOperationLoop *)[[(id) self.operationLoop expect] andCall:@selector(forward_startBackgroundFetchWithCompletionHandler:) onObject:self] startBackgroundFetchWithCompletionHandler:OCMOCK_ANY];
     
     // when
-    [self.sut application:nil performFetchWithCompletionHandler:handler];
+    [self.sut application:self.application performFetchWithCompletionHandler:handler];
     
     // then
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);

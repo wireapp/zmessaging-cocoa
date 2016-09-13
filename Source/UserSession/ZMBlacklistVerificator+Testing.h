@@ -24,7 +24,9 @@
 - (instancetype)initWithCheckInterval:(NSTimeInterval)checkInterval
                               version:(NSString *)version
                          workingGroup:(ZMSDispatchGroup *)workingGroup
-                    blacklistCallback:(void (^)(BOOL))blacklistCallback blacklistClass:(Class)blacklistClass;
+                          application:(id<ZMApplication>)application
+                    blacklistCallback:(void (^)(BOOL))blacklistCallback
+                       blacklistClass:(Class)blacklistClass;
 
 
 @end
