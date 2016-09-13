@@ -887,8 +887,6 @@
         selfConversation.conversationType = ZMConversationTypeSelf;
         [self createSelfClient];
         
-        [self createSelfClient];
-        
         NSDate *lastRead = [NSDate date];
         ZMConversation *updatedConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         updatedConversation.remoteIdentifier = [NSUUID createUUID];
@@ -922,7 +920,6 @@
         selfUser.remoteIdentifier = [NSUUID createUUID];
         ZMConversation *selfConversation = [ZMConversation conversationWithRemoteID:selfUser.remoteIdentifier createIfNeeded:YES inContext:self.syncMOC];
         selfConversation.conversationType = ZMConversationTypeSelf;
-        
         [self createSelfClient];
 
         NSDate *lastRead = [NSDate date];
