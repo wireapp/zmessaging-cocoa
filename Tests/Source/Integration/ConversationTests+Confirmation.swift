@@ -30,7 +30,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             let textMessage = ZMGenericMessage(text: "Hello", nonce: NSUUID.createUUID().transportString())
             let conversation = conversationForMockConversation(selfToUser1Conversation)
             
-            let requestPath = "/conversations/\(conversation.remoteIdentifier.transportString())/otr/messages"
+            let requestPath = "/conversations/\(conversation.remoteIdentifier.transportString())/otr/messages?report_missing=\(user1.identifier)"
             
             // expect
             mockTransportSession.responseGeneratorBlock = { request in
