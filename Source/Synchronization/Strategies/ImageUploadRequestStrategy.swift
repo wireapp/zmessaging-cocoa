@@ -66,13 +66,17 @@ public class ImageUploadRequestStrategy: ZMObjectSyncStrategy, RequestStrategy, 
         guard self.authenticationStatus.currentPhase == .Authenticated else { return nil }
         return self.upstreamSync.nextRequest()
     }
-    
 }
 
 extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
     
     public func requestForInsertingObject(managedObject: ZMManagedObject, forKeys keys: Set<NSObject>?) -> ZMUpstreamRequest? {
         return nil // no-op
+    }
+    
+    public func dependentObjectNeedingUpdateBeforeProcessingObject(dependant: ZMManagedObject) -> ZMManagedObject? {
+        guard let message = dependant as? ZMMessage else { return nil }
+        return message.dependendObjectNeedingUpdateBeforeProcessing()
     }
     
     private func update(message: ZMAssetClientMessage, withResponse response: ZMTransportResponse, updatedKeys keys: Set<NSObject>) {
