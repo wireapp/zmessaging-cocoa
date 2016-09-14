@@ -2308,7 +2308,6 @@
     id<ZMConversationMessage> lastMessage = conversation.messages.lastObject;
     XCTAssertNotNil(lastMessage.systemMessageData);
     XCTAssertEqual(lastMessage.systemMessageData.systemMessageType, ZMSystemMessageTypeDecryptionFailed);
-    
 }
 
 - (void)testThatItNotifiesWhenInsertingCannotDecryptMessage {
@@ -2318,21 +2317,24 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:10 establishSessionWithSelfUser:YES];
     
+    __block BOOL observerCalled = NO;
     [[NSNotificationCenter defaultCenter] addObserverForName:ZMConversationFailedToDecryptMessageNotificationName object:conversation queue:[NSOperationQueue currentQueue] usingBlock:^(NSNotification * _Nonnull note) {
         XCTAssertEqual(conversation, note.object);
         XCTAssertNotNil(note.userInfo[@"cause"]);
         XCTAssertNotNil(note.userInfo[@"deviceClass"]);
+
+        observerCalled = YES;
     }];
     
     // when
     [self performIgnoringZMLogError:^{
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
-            
             [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:[@"💣" dataUsingEncoding:NSUTF8StringEncoding]];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
     
+    XCTAssertTrue(observerCalled);
 }
 
 - (void)testThatItDoesNotInsertsASystemMessageWhenItDecryptsADuplicatedMessage {
