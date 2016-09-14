@@ -25,6 +25,7 @@
 @class ZMConversation;
 @class ZMUser;
 @class ZMOnDemandFlowManager;
+@protocol ZMApplication;
 
 typedef NS_ENUM(int16_t, ZMFlowManagerCategory) {
     ZMFlowManagerCategoryIdle = 0,
@@ -39,7 +40,8 @@ extern id ZMFlowSyncInternalDeploymentEnvironmentOverride;
 - (instancetype)initWithMediaManager:(id)mediaManager
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
             syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
-              uiManagedObjectContext:(NSManagedObjectContext *)uiManagedObjectContext;
+              uiManagedObjectContext:(NSManagedObjectContext *)uiManagedObjectContext
+                         application:(id<ZMApplication>)application;
 
 
 - (void)acquireFlowsForConversation:(ZMConversation *)conversation;

@@ -28,7 +28,6 @@
 #import "ZMPushRegistrant.h"
 #import <zmessaging/zmessaging-Swift.h>
 
-NSString * ZMLocalNotificationDispatcherUIApplicationClass = @"UIApplication";
 NSString * const ZMConversationCancelNotificationForIncomingCallNotificationName = @"ZMConversationCancelNotificationForIncomingCallNotification";
 
 NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShouldHideNotificationContentKey";
@@ -39,9 +38,10 @@ NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShou
 @property (nonatomic) NSManagedObjectContext *syncMOC;
 @property (nonatomic) ZMLocalNotificationSet *failedMessageNotifications;
 @property (nonatomic) ZMLocalNotificationSet *eventsNotifications;
+@property (nonatomic) ZMLocalNotificationSet *messageNotifications;
+@property (nonatomic) SessionTracker *sessionTracker;
+@property (nonatomic) id<ZMApplication> sharedApplication;
 @property (nonatomic) BOOL isTornDown;
-@property (nonatomic) ZMApplication *sharedApplication;
-
 
 @end
 
@@ -54,25 +54,28 @@ NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShou
 ZM_EMPTY_ASSERTING_INIT();
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                           sharedApplication:(ZMApplication *)sharedApplication
+                           sharedApplication:(id<ZMApplication>)sharedApplication
 {
-    return [self initWithManagedObjectContext:moc sharedApplication:sharedApplication eventNotificationSet:nil failedNotificationSet:nil];
+    return [self initWithManagedObjectContext:moc sharedApplication:sharedApplication eventNotificationSet:nil failedNotificationSet:nil messageNotifications:nil];
 }
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                           sharedApplication:(ZMApplication *)sharedApplication
+                           sharedApplication:(id<ZMApplication>)sharedApplication
                         eventNotificationSet:(ZMLocalNotificationSet *)eventNotificationSet
                        failedNotificationSet:(ZMLocalNotificationSet *)failedNotificationSet
+                        messageNotifications:(ZMLocalNotificationSet *)messageNotifications
 {
     self = [super init];
     if (self) {
         self.syncMOC = moc;
         self.eventsNotifications = eventNotificationSet ?:  [[ZMLocalNotificationSet alloc] initWithApplication:sharedApplication archivingKey:@"ZMLocalNotificationDispatcherEventNotificationsKey" keyValueStore:moc];
+        self.messageNotifications = messageNotifications ?:  [[ZMLocalNotificationSet alloc] initWithApplication:sharedApplication archivingKey:@"ZMLocalNotificationDispatcherMessageNotificationsKey" keyValueStore:moc];
         self.failedMessageNotifications = failedNotificationSet ?: [[ZMLocalNotificationSet alloc] initWithApplication:sharedApplication archivingKey:@"ZMLocalNotificationDispatcherFailedNotificationsKey" keyValueStore:moc];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(cancelNotificationForIncomingCallInConversation:) name:ZMConversationCancelNotificationForIncomingCallNotificationName object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(cancelNotificationForLastReadChangedNotification:) name:ZMConversationLastReadDidChangeNotificationName object:nil];
         
         self.sharedApplication = sharedApplication;
+        self.sessionTracker = [[SessionTracker alloc] initWithManagedObjectContext:self.syncMOC];
     }
     return self;
 }
@@ -80,6 +83,7 @@ ZM_EMPTY_ASSERTING_INIT();
 - (void)tearDown;
 {
     self.isTornDown = YES;
+    [self.sessionTracker tearDown];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self cancelAllNotifications];
 }
@@ -87,6 +91,11 @@ ZM_EMPTY_ASSERTING_INIT();
 - (void)dealloc
 {
     Require(self.isTornDown);
+}
+
+- (id)sharedApplicationForSwift
+{
+    return self.sharedApplication;
 }
 
 - (void)cancelNotificationForLastReadChangedNotification:(NSNotification *)note
@@ -124,17 +133,28 @@ ZM_EMPTY_ASSERTING_INIT();
 {
     [self.eventsNotifications cancelAllNotifications];
     [self.failedMessageNotifications cancelAllNotifications];
+    [self.messageNotifications cancelAllNotifications];
 }
 
 - (void)cancelNotificationForConversation:(ZMConversation *)conversation
 {
+    [self.sessionTracker clearSessions:conversation];
     [self.eventsNotifications cancelNotifications:conversation];
     [self.failedMessageNotifications cancelNotifications:conversation];
+    [self.messageNotifications cancelNotifications:conversation];
 }
+
+@end
+
+
+
+
+@implementation ZMLocalNotificationDispatcher (EventProcessing)
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> *)events liveEvents:(BOOL)liveEvents prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult;
 {
     NOT_USED(liveEvents);
+    NOT_USED(prefetchResult);
     
     if (self.sharedApplication.applicationState != UIApplicationStateBackground) {
         return;
@@ -145,34 +165,21 @@ ZM_EMPTY_ASSERTING_INIT();
         if (event.source != ZMUpdateEventSourcePushNotification) {
             return NO;
         }
-        // if the event is not a message, we want to process it in any case
-        if (event.messageNonce == nil) {
-            return YES;
-        }
-        // if the event is a message, we only want to process it if it does not have a preexisting message
-        // TODO Sabine: Can this lead to multipart messages not being shown at all?
-        // e.g. when we receive an asset message, we receive a preview and medium image message
-        // However, we only process the preview. If under bad network, the medium image part arrives before the preview,
-        // we would not display any notification at all, would we?
-        NSSet <ZMMessage *>* prefetchedMessages = prefetchResult.messagesByNonce[event.messageNonce];
-        if (nil != prefetchedMessages) {
-            for (ZMMessage *prefetchedMessage in prefetchedMessages) {
-                if ([prefetchedMessage isKindOfClass:[self class]]) {
-                    return NO;
-                }
-            }
-        }
+        // TODO Sabine : Can we maybe filter message events here already for Reactions?
         return YES;
     }];
-    
-    [self didReceiveUpdateEvents:eventsToForward notificationID:[events.firstObject uuid]];
+    [self didReceiveUpdateEvents:eventsToForward conversationMap:prefetchResult.conversationsByRemoteIdentifier notificationID:[events.firstObject uuid]];
 }
 
-- (void)didReceiveUpdateEvents:(NSArray <ZMUpdateEvent *>*)events notificationID:(NSUUID *)notificationID
+- (void)didReceiveUpdateEvents:(NSArray <ZMUpdateEvent *>*)events conversationMap:(ZMConversationMapping *)conversationMap notificationID:(NSUUID *)notificationID
 {
     ZMLogPushKit(@"Processing push events (a) %p (count = %u)", events, (unsigned) events.count);
     for (ZMUpdateEvent *event in events) {
-        ZMLocalNotificationForEvent *note = [self notificationForEvent:event];
+        // Forward events to the session tracker which keeps track if the selfUser joined or not
+        [self.sessionTracker addEvent:event];
+        
+        // The create the notification
+        ZMLocalNotificationForEvent *note = [self notificationForEvent:event conversationMap:conversationMap];
         if (note != nil && note.uiNotifications.count > 0) {
             UILocalNotification *localNote = note.uiNotifications.lastObject;
             ZMLogPushKit(@"Scheduling local notification <%@: %p> '%@'", localNote.class, localNote, localNote.alertBody);
@@ -183,6 +190,55 @@ ZM_EMPTY_ASSERTING_INIT();
         }
     }
 }
+
+- (ZMLocalNotificationForEvent *)notificationForEvent:(ZMUpdateEvent *)event conversationMap:(ZMConversationMapping *)conversationMap
+{
+    switch (event.type) {
+        case ZMUpdateEventConversationCreate:
+        case ZMUpdateEventUserConnection:
+        case ZMUpdateEventConversationOtrMessageAdd: // Only for reactions
+        case ZMUpdateEventUserContactJoin:
+        case ZMUpdateEventCallState:
+            return [self localNotificationForEvent:event conversationMap:conversationMap];
+        default:
+            return nil;
+    }
+}
+
+- (ZMLocalNotificationForEvent *)localNotificationForEvent:(ZMUpdateEvent *)event conversationMap:(ZMConversationMapping *)conversationMap
+{
+    for (ZMLocalNotificationForEvent *note in self.eventsNotifications.notifications) {
+        if ([note containsIdenticalEvent:event]) {
+            return nil;
+        }
+    }
+    
+    ZMConversation *conversation;
+    if (event.conversationUUID != nil) {
+        // Fetch the conversation here to avoid refetching every time we try to create a notification
+        conversation = conversationMap[event.conversationUUID] ?: [ZMConversation fetchObjectWithRemoteIdentifier:event.conversationUUID inManagedObjectContext: self.syncMOC];
+    }
+    if (conversation != nil) {
+        ZMLocalNotificationForEvent *newNote = [self.eventsNotifications copyExistingEventNotification:event conversation:conversation];
+        if (newNote != nil) {
+            return newNote;
+        }
+    }
+ 
+    ZMLocalNotificationForEvent *newNote = [ZMLocalNotificationForEvent notificationForEvent:event conversation:conversation managedObjectContext:self.syncMOC application:self.sharedApplication sessionTracker:self.sessionTracker];
+    if (newNote != nil) {
+        [self.eventsNotifications addObject:newNote];
+    }
+    return newNote;
+}
+
+
+@end
+
+
+
+
+@implementation ZMLocalNotificationDispatcher (FailedMessages)
 
 - (void)didFailToSentMessage:(ZMMessage *)message;
 {
@@ -201,69 +257,10 @@ ZM_EMPTY_ASSERTING_INIT();
     [self.failedMessageNotifications addObject:note];
 }
 
-
-- (ZMLocalNotificationForEvent *)notificationForEvent:(ZMUpdateEvent *)event
-{
-    switch (event.type) {
-        case ZMUpdateEventConversationAssetAdd:
-        case ZMUpdateEventConversationConnectRequest:
-        case ZMUpdateEventConversationKnock:
-        case ZMUpdateEventConversationMessageAdd:
-        case ZMUpdateEventConversationMemberJoin:
-        case ZMUpdateEventConversationMemberLeave:
-        case ZMUpdateEventConversationRename:
-        case ZMUpdateEventUserConnection:
-        case ZMUpdateEventConversationCreate:
-        case ZMUpdateEventConversationOtrMessageAdd:
-        case ZMUpdateEventConversationOtrAssetAdd:
-        case ZMUpdateEventUserContactJoin:
-        case ZMUpdateEventCallState:
-            return [self localNotificationForEvent:event];
-            
-        case ZMUpdateEventConversationVoiceChannel:
-        case ZMUpdateEventCallCandidatesAdd:
-        case ZMUpdateEventCallCandidatesUpdate:
-        case ZMUpdateEventCallDeviceInfo:
-        case ZMUpdateEventCallFlowActive:
-        case ZMUpdateEventCallFlowAdd:
-        case ZMUpdateEventCallFlowDelete:
-        case ZMUpdateEventCallParticipants:
-        case ZMUpdateEventCallRemoteSDP:
-        case ZMUpdateEventConversationMemberUpdate:
-        case ZMUpdateEventConversationTyping:
-        case ZMUpdateEventUnknown:
-        case ZMUpdateEventUserNew:
-        case ZMUpdateEventUserUpdate:
-        case ZMUpdateEvent_LAST:
-            return nil;
-            
-        default:
-            return nil;
-    }
-}
-
-- (ZMLocalNotificationForEvent *)localNotificationForEvent:(ZMUpdateEvent *)event
-{
-    for (ZMLocalNotificationForEvent *note in self.eventsNotifications.notifications) {
-        if ([note containsIdenticalEvent:event]) {
-            return nil;
-        }
-    }
-    
-    ZMLocalNotificationForEvent *newNote = [self.eventsNotifications copyExistingNotification:event];
-    if (newNote != nil) {
-        return newNote;
-    }
- 
-    newNote = [ZMLocalNotificationForEvent notificationForEvent:event managedObjectContext:self.syncMOC application:self.sharedApplication];
-    if (newNote != nil) {
-        [self.eventsNotifications addObject:newNote];
-    }
-    return newNote;
-}
-
-
 @end
+
+
+
 
 
 

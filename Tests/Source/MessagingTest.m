@@ -60,6 +60,7 @@
 #import "ZMMessageTranscoder+Internal.h"
 #import "ZMClientMessageTranscoder.h"
 #import <zmessaging/zmessaging-Swift.h>
+#import "zmessaging_iOS_Tests-Swift.h"
 
 static const int32_t Mersenne1 = 524287;
 static const int32_t Mersenne2 = 131071;
@@ -121,7 +122,8 @@ static const int32_t Mersenne3 = 8191;
     NSFileManager *fm = NSFileManager.defaultManager;
     self.groupIdentifier = [@"group." stringByAppendingString:[NSBundle bundleForClass:self.class].bundleIdentifier];
     self.databaseDirectory = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
-
+    _application = [[ApplicationMock alloc] init];
+    
     self.originalConversationLastReadEventIDTimerValue = ZMConversationDefaultLastReadEventIDSaveDelay;
     ZMConversationDefaultLastReadEventIDSaveDelay = 0.02;
     

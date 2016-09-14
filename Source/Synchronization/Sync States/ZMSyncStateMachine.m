@@ -91,6 +91,7 @@ static void traceLeaveState(ZMSyncState * const state);
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
                            syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                             backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
+                                 application:(id<ZMApplication>)application
 {
     self = [super init];
     if(self) {
@@ -98,7 +99,12 @@ static void traceLeaveState(ZMSyncState * const state);
         self.authenticationStatus = authenticationStatus;
         self.clientRegistrationStatus = clientRegistrationStatus;
         
-        self.unauthenticatedState = [[ZMUnauthenticatedState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
+        self.unauthenticatedState = [[ZMUnauthenticatedState alloc] initWithAuthenticationCenter:authenticationStatus
+                                                                        clientRegistrationStatus:clientRegistrationStatus
+                                                                         objectStrategyDirectory:objectStrategyDirectory
+                                                                            stateMachineDelegate:self
+                                                                                     application:application
+                                     ];
         self.unauthenticatedBackgroundState = [[ZMUnauthenticatedBackgroundState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
         self.slowSyncPhaseOneState = [[ZMSlowSyncPhaseOneState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
         self.slowSyncPhaseTwoState = [[ZMSlowSyncPhaseTwoState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];

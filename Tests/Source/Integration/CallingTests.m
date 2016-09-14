@@ -110,7 +110,7 @@
 
 - (void)tearDownVoiceChannelForConversation:(ZMConversation *)conversation
 {
-    ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:conversation.objectID];
+    ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext existingObjectWithID:conversation.objectID error:nil];
     [syncConv.voiceChannel tearDown];
 }
 
@@ -1656,14 +1656,14 @@
         [mockConversation addUserToCall:self.user1];
         [mockConversation addUserToCall:self.user2];
     }];
-    
-    id<ZMVoiceChannelStateObserver> callObserver = [OCMockObject mockForProtocol:@protocol(ZMVoiceChannelStateObserver)];
-    id<ZMConversationListObserver> listObserver = [OCMockObject mockForProtocol:@protocol(ZMConversationListObserver)];
+    id<ZMVoiceChannelStateObserver> callObserver = [OCMockObject niceMockForProtocol:@protocol(ZMVoiceChannelStateObserver)];
+    id<ZMConversationListObserver> listObserver = [OCMockObject niceMockForProtocol:@protocol(ZMConversationListObserver)];
     
     // Make sure we observe the conversation as soon as we figure out that a new conversation is available
     __block ZMConversation *conversationToObserve;
     __block id<ZMVoiceChannelStateObserverOpaqueToken> voiceChannelStateToken;
     __block ZMVoiceChannelState voiceChannelState = ZMVoiceChannelStateInvalid;
+    XCTestExpectation *conversationListChangedExpectation = [self expectationWithDescription:@"Conversation list inserted"];
     
     [[(id) listObserver stub] conversationListDidChange:[OCMArg checkWithBlock:^BOOL(ConversationListChangeInfo* changeInfo) {
         ZMConversationList *innerList = changeInfo.conversationList;
@@ -1671,14 +1671,13 @@
             conversationToObserve = innerList[changeInfo.insertedIndexes.firstIndex];
             voiceChannelStateToken = [conversationToObserve.voiceChannel addVoiceChannelStateObserver:callObserver];
             voiceChannelState = conversationToObserve.voiceChannel.state;
+            [conversationListChangedExpectation fulfill];
         }
         return YES;
     }]];
-    [[(id) listObserver stub] conversationInsideList:OCMOCK_ANY didChange:OCMOCK_ANY];
     
     ZMConversationList* list = [ZMConversationList conversationsInUserSession:self.userSession];
     id<ZMConversationListObserverOpaqueToken> listToken = [list addConversationListObserver:listObserver];
-    
     
     // collect voice channel participant changes
     [[(id) callObserver stub] voiceChannelStateDidChange:[OCMArg checkWithBlock:^BOOL(VoiceChannelStateChangeInfo* changeInfo) {
@@ -1692,6 +1691,7 @@
         NOT_USED(session);
         [mockConversation addUsersByUser:self.user1 addedUsers:@[self.selfUser]];
     }];
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

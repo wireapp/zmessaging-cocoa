@@ -54,6 +54,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @property (atomic) BOOL shouldStopEnqueueing;
 @property (nonatomic) BOOL ownsSyncStrategy;
 @property (nonatomic) BOOL tornDown;
+@property (nonatomic) id<ZMApplication> application;
 
 @end
 
@@ -85,9 +86,9 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                                  syncMOC:(NSManagedObjectContext *)syncMOC
                        syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                       appGroupIdentifier:(NSString *)appGroupIdentifier
-                             application:(ZMApplication *)application;
+                             application:(id<ZMApplication>)application;
 {
-    ZMBadge *badge = [[ZMBadge alloc] init];
+    ZMBadge *badge = [[ZMBadge alloc] initWithApplication:application];
 
     ZMSyncStrategy *syncStrategy = [[ZMSyncStrategy alloc] initWithAuthenticationCenter:authenticationStatus
                                                                 userProfileUpdateStatus:userProfileUpdateStatus
@@ -113,7 +114,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                                     uiMOC:uiMOC
                                   syncMOC:syncMOC
              backgroundAPNSPingBackStatus:backgroundAPNSPingBackStatus];
-    
+    self.application = application;
     self.ownsSyncStrategy = YES;
     return self;
 }

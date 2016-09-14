@@ -21,11 +21,14 @@ import zmessaging
 import XCTest
 
 class HistorySynchronizationStatusTests: MessagingTest {
+}
+
+extension HistorySynchronizationStatusTests {
 
     func testThatItShouldNotDownloadHistoryWhenItStarts() {
         
         // given
-        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC)
+        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC, application: self.application)
         
         // then
         XCTAssertFalse(sut.shouldDownloadFullHistory)
@@ -34,7 +37,7 @@ class HistorySynchronizationStatusTests: MessagingTest {
     func testThatItShouldDownloadWhenDidCompleteSync() {
         
         // given
-        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC)
+        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC, application: self.application)
         
         // when
         sut.didCompleteSync()
@@ -46,7 +49,7 @@ class HistorySynchronizationStatusTests: MessagingTest {
     func testThatItShouldNotDownloadWhenDidCompleteSyncAndThenStartSyncAgain() {
         
         // given
-        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC)
+        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC, application: self.application)
         
         // when
         sut.didCompleteSync()
@@ -59,11 +62,11 @@ class HistorySynchronizationStatusTests: MessagingTest {
     func testThatItShouldNotDownloadWhenDidCompleteSyncAndWillResignActive() {
         
         // given
-        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC)
+        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC, application: self.application)
         
         // when
         sut.didCompleteSync()
-        NSNotificationCenter.defaultCenter().postNotificationName(UIApplicationWillResignActiveNotification, object: nil)
+        self.application.simulateApplicationWillResignActive()
         XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
@@ -73,12 +76,12 @@ class HistorySynchronizationStatusTests: MessagingTest {
     func testThatItShouldDownloadWhenBecomingActive() {
         
         // given
-        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC)
+        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC, application: self.application)
         
         // when
         sut.didCompleteSync()
-        NSNotificationCenter.defaultCenter().postNotificationName(UIApplicationWillResignActiveNotification, object: nil)
-        NSNotificationCenter.defaultCenter().postNotificationName(UIApplicationDidBecomeActiveNotification, object: nil)
+        self.application.simulateApplicationWillResignActive()
+        self.application.simulateApplicationDidBecomeActive()
         XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
@@ -88,11 +91,11 @@ class HistorySynchronizationStatusTests: MessagingTest {
     func testThatItShouldNotDownloadAfterBecomingActiveIfItIsNotDoneSyncing() {
         
         // given
-        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC)
+        let sut = ForegroundOnlyHistorySynchronizationStatus(managedObjectContext: self.uiMOC, application: self.application)
         
         // when
-        NSNotificationCenter.defaultCenter().postNotificationName(UIApplicationWillResignActiveNotification, object: nil)
-        NSNotificationCenter.defaultCenter().postNotificationName(UIApplicationDidBecomeActiveNotification, object: nil)
+        self.application.simulateApplicationWillResignActive()
+        self.application.simulateApplicationDidBecomeActive()
         XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then

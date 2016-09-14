@@ -18,12 +18,12 @@
 
 
 @import UIKit;
-
-#import "ZMBadge+Testing.h"
-
+#import "ZMBadge.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 @interface ZMBadge ()
 
+@property (nonatomic) id<ZMApplication> application;
 
 @end
 
@@ -31,10 +31,10 @@
 
 @implementation ZMBadge
 
-- (instancetype)init{
+- (instancetype)initWithApplication:(id<ZMApplication>)application {
     self = [super init];
     if (self) {
-        self.application = [UIApplication sharedApplication];
+        self.application = application;
     }
     return self;
 }

@@ -38,7 +38,9 @@ public class ClientMessageRequestFactory: NSObject {
     
     private func upstreamRequestForEncryptedClientMessage(message: ZMClientMessage, forConversationWithId conversationId: NSUUID) -> ZMTransportRequest? {
         let path = "/" + ["conversations", conversationId.transportString(), "otr", "messages"].joinWithSeparator("/")
-        let dataAndMissingClientStrategy = message.encryptedMessagePayloadData()!
+        guard let dataAndMissingClientStrategy = message.encryptedMessagePayloadData() else {
+            return nil
+        }
         let pathWithStrategy = self.pathWithMissingClientStrategy(path, strategy: dataAndMissingClientStrategy.strategy)
         let request = ZMTransportRequest(path: pathWithStrategy, method: .MethodPOST, binaryData: dataAndMissingClientStrategy.data, type: protobufContentType, contentDisposition: nil)
         var debugInfo = "\(message.genericMessage)"

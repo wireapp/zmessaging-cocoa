@@ -379,20 +379,19 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     XCTAssertNil(secondRequest);
 }
 
-
 - (void)testThatANewImageMessageIsCreatedFromAPushEventOfTheRightType
 {
     // given
     ZMUpdateEvent *event = [OCMockObject mockForClass:ZMUpdateEvent.class];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationAssetAdd)] type];
 
-    ZMImageMessage *mockImageMessage = [OCMockObject mockForClass:ZMImageMessage.class];
     __block ZMImageMessage *imageMessage;
     [self.syncMOC performGroupedBlockAndWait:^{
         imageMessage = [ZMImageMessage insertNewObjectInManagedObjectContext:self.syncMOC];
     }];
     
     // expect
+    ZMImageMessage *mockImageMessage = [OCMockObject mockForClass:ZMImageMessage.class];
     [[[(id)mockImageMessage expect] andReturn:imageMessage] createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
     
     // when
@@ -400,6 +399,7 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    [(id)event stopMocking];
     [(id)mockImageMessage verify];
     [(id)mockImageMessage stopMocking];
 }
@@ -410,13 +410,13 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     ZMUpdateEvent *event = [OCMockObject mockForClass:ZMUpdateEvent.class];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationAssetAdd)] type];
     
-    ZMImageMessage *mockImageMessage = [OCMockObject mockForClass:ZMImageMessage.class];
     __block ZMImageMessage *imageMessage;
     [self.syncMOC performGroupedBlockAndWait:^{
         imageMessage = [ZMImageMessage insertNewObjectInManagedObjectContext:self.syncMOC];
     }];
     
     // expect
+    ZMImageMessage *mockImageMessage = [OCMockObject mockForClass:ZMImageMessage.class];
     [[[(id)mockImageMessage expect] andReturn:imageMessage] createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
     
     // when
@@ -424,6 +424,7 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    [(id)event stopMocking];
     [(id)mockImageMessage verify];
     [(id)mockImageMessage stopMocking];
 }

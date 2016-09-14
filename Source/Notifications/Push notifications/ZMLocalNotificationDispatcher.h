@@ -17,8 +17,8 @@
 // 
 
 
-
 @import UIKit;
+
 #import "ZMPushRegistrant.h"
 #import "ZMContextChangeTracker.h"
 #import "ZMObjectSyncStrategy.h"
@@ -30,24 +30,21 @@
 @class ZMLocalNotificationForExpiredMessage;
 @class ZMMessage;
 @class ZMLocalNotificationSet;
+@protocol ZMApplication;
 
 extern NSString * _Null_unspecified const ZMConversationCancelNotificationForIncomingCallNotificationName;
 extern NSString * _Null_unspecified const ZMShouldHideNotificationContentKey;
 
-@interface ZMLocalNotificationDispatcher : NSObject <ZMEventConsumer>
-
-- (nullable instancetype)initWithManagedObjectContext:(nonnull NSManagedObjectContext *)moc sharedApplication:(nonnull UIApplication *)sharedApplication;
-
-- (void)tearDown;
+@interface ZMLocalNotificationDispatcher : NSObject
 
 @property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *eventsNotifications;
+@property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *messageNotifications;
+@property (nonatomic, readonly, nonnull) id<ZMApplication> sharedApplication;
+@property (nonatomic, readonly, nonnull) id sharedApplicationForSwift;
 
-- (void)didFailToSentMessage:(nonnull ZMMessage *)message;
-- (void)didFailToSendMessageInConversation:(nonnull ZMConversation *)conversation;
+- (nullable instancetype)initWithManagedObjectContext:(nonnull NSManagedObjectContext *)moc sharedApplication:(nonnull id<ZMApplication>)sharedApplication;
 
-- (void)didReceiveUpdateEvents:(nullable NSArray <ZMUpdateEvent *>*)events notificationID:(nonnull NSUUID *)notificationID;
-- (nullable ZMLocalNotificationForEvent *)notificationForEvent:(nullable ZMUpdateEvent *)event;
-
+- (void)tearDown;
 
 // Can be used for cancelling all conversations if need
 // Notifications for a specific conversation are otherwise deleted automatically when the message window changes and
@@ -56,4 +53,19 @@ extern NSString * _Null_unspecified const ZMShouldHideNotificationContentKey;
 - (void)cancelNotificationForConversation:(nonnull ZMConversation *)conversation;
 
 @end
+
+
+
+@interface ZMLocalNotificationDispatcher (EventProcessing) <ZMEventConsumer>
+@end
+
+
+
+@interface ZMLocalNotificationDispatcher (FailedMessages)
+
+- (void)didFailToSentMessage:(nonnull ZMMessage *)message;
+- (void)didFailToSendMessageInConversation:(nonnull ZMConversation *)conversation;
+
+@end
+
 

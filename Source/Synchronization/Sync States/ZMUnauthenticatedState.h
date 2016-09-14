@@ -22,6 +22,7 @@
 #import "ZMSyncState.h"
 #import "ZMUserSession.h"
 #import "ZMAuthenticationStatus.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 @class ZMTimer;
 
@@ -31,14 +32,19 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
 @interface ZMUnauthenticatedState : ZMSyncState <ZMTimerClient, ZMAuthenticationStatusObserver>
 
-@property (nonatomic, readonly) ZMTimer* loginFailureTimer;
+@property (nonatomic, readonly) ZMTimer*  _Nonnull loginFailureTimer;
 
 + (NSTimeInterval)loginTimeout;
 
-- (instancetype)initWithAuthenticationCenter:(ZMAuthenticationStatus *)authenticationStatus
-                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
-                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
-                        stateMachineDelegate:(id<ZMStateMachineDelegate>)stateMachineDelegate
-                                 application:(ZMApplication *)application NS_DESIGNATED_INITIALIZER;
+- (instancetype _Nonnull)initWithAuthenticationCenter:(ZMAuthenticationStatus * _Nonnull)authenticationStatus
+                    clientRegistrationStatus:(ZMClientRegistrationStatus * _Nonnull)clientRegistrationStatus
+                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory> _Nonnull)objectStrategyDirectory
+                        stateMachineDelegate:(id<ZMStateMachineDelegate> _Nonnull)stateMachineDelegate NS_UNAVAILABLE;
+
+- (instancetype _Nonnull)initWithAuthenticationCenter:(ZMAuthenticationStatus * _Nonnull)authenticationStatus
+                    clientRegistrationStatus:(ZMClientRegistrationStatus * _Nonnull)clientRegistrationStatus
+                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory> _Nonnull)objectStrategyDirectory
+                        stateMachineDelegate:(id<ZMStateMachineDelegate> _Nonnull)stateMachineDelegate
+                                 application:(id<ZMApplication> _Nonnull)application NS_DESIGNATED_INITIALIZER;
 
 @end

@@ -20,16 +20,12 @@
 @import ZMCDataModel;
 
 #import "MessagingTest.h"
-#import "ZMBadge+Testing.h"
-#import "BadgeApplication.h"
-
-
-
+#import "ZMBadge.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @interface ZMBadgeTest : MessagingTest
 
 @property (nonatomic) ZMBadge *sut;
-@property (nonatomic) BadgeApplication *badgeApplication;
 
 @end
 
@@ -40,15 +36,12 @@
 - (void)setUp
 {
     [super setUp];
-    self.sut = [[ZMBadge alloc] init];
-    self.badgeApplication = [[BadgeApplication alloc] init];
-    self.sut.application = (id) self.badgeApplication;
+    self.sut = [[ZMBadge alloc] initWithApplication:self.application];
 }
 
 - (void)tearDown
 {
     self.sut = nil;
-    self.badgeApplication = nil;
     [super tearDown];
 }
 
@@ -72,7 +65,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    NSInteger badgeCount = self.badgeApplication.applicationIconBadgeNumber;
+    NSInteger badgeCount = self.application.applicationIconBadgeNumber;
     XCTAssertEqual(badgeCount, 2);
 }
 

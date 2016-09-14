@@ -23,11 +23,11 @@
 @import zmessaging;
 
 #import "MessagingTest.h"
-#import "ZMFlowSync+Internal.h"
 #import "AVSFlowManager.h"
 #import "ZMOperationLoop.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMOnDemandFlowManager.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 static NSString * const FlowEventName1 = @"conversation.message-add";
 static NSString * const FlowEventName2 = @"conversation.member-join";
@@ -39,11 +39,9 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 @property (nonatomic) ZMFlowSync<AVSFlowManagerDelegate, ZMRequestGenerator> *sut;
 @property (nonatomic) id internalFlowManager;
-@property (nonatomic) id mediaManager;
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
 @property (nonatomic) id deploymentEnvironment;
 @property (nonatomic) NSMutableArray *voiceChannelGainNotifications;
-@property (nonatomic) id mockApplication;
 @end
 
 
@@ -53,12 +51,10 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 - (void)setUp
 {
     [super setUp];
-    self.mediaManager = [OCMockObject mockForClass:NSObject.class];
-    [self verifyMockLater:self.mediaManager];
         
     self.internalFlowManager = [OCMockObject mockForClass:AVSFlowManager.class];
     ZMFlowSyncInternalFlowManagerOverride = self.internalFlowManager;
-    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:self.mediaManager];
+    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:nil];
     NSArray *events = @[FlowEventName1, FlowEventName2];
     [(AVSFlowManager *)[[self.internalFlowManager stub] andReturn:events] events];
     [[self.internalFlowManager stub] setValue:OCMOCK_ANY forKey:@"delegate"];
@@ -66,8 +62,6 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     self.deploymentEnvironment = [OCMockObject niceMockForClass:ZMDeploymentEnvironment.class];
     ZMFlowSyncInternalDeploymentEnvironmentOverride = self.deploymentEnvironment;
     [[[self.deploymentEnvironment stub] andReturnValue:OCMOCK_VALUE(ZMDeploymentEnvironmentTypeInternal)] environmentType];
-    self.mockApplication = [OCMockObject niceMockForClass:[ZMApplication class]];
-    [[[self.mockApplication stub] andReturnValue:@(UIApplicationStateActive)] applicationState];
 
     [self recreateSUT];
     self.voiceChannelGainNotifications = [NSMutableArray array];
@@ -97,7 +91,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 - (void)recreateSUT;
 {
     [self.sut tearDown];
-    self.sut = (id) [[ZMFlowSync alloc] initWithMediaManager:self.mediaManager onDemandFlowManager:self.onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.mockApplication];
+    self.sut = (id) [[ZMFlowSync alloc] initWithMediaManager:nil onDemandFlowManager:self.onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -140,7 +134,6 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         [conv.voiceChannel tearDown];
     }];
 }
-
 
 - (void)testThatItAcquiresTheFlowForCallDeviceIsActive_YES
 {
@@ -932,7 +925,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [[self.internalFlowManager expect] addUser:conv.remoteIdentifier.transportString userId:user.remoteIdentifier.transportString name:user.name];
     
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self.application simulateApplicationDidBecomeActive];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -966,7 +959,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [[self.internalFlowManager expect] releaseFlows:conv.remoteIdentifier.transportString];
 
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self.application simulateApplicationDidBecomeActive];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -1008,7 +1001,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [[self.internalFlowManager expect] processEventWithMediaType:@"application/json" content:innerPayloadData];
     
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self.application simulateApplicationDidBecomeActive];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -1024,11 +1017,10 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 - (void)testThatItSetsUpTheFlowManagerOnApplicationDidBecomeActive
 {
     // given
-    self.mockApplication = [OCMockObject niceMockForClass:[ZMApplication class]];
-    [[[self.mockApplication expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    [self.application setBackground];
     
     // when
-    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:self.mediaManager];
+    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:nil];
     NSArray *events = @[FlowEventName1, FlowEventName2];
     [(AVSFlowManager *)[[self.internalFlowManager stub] andReturn:events] events];
     [self recreateSUT];
@@ -1038,7 +1030,8 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     
     
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self.application simulateApplicationDidBecomeActive];
+
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -1048,12 +1041,11 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 - (void)testThatItSetsUpTheFlowManagerWhenApplicationStateChanged
 {
     // given
-    self.mockApplication = [OCMockObject niceMockForClass:[ZMApplication class]];
-    [[[self.mockApplication expect] andReturnValue:@(UIApplicationStateBackground)] applicationState];
+    [self.application setBackground];
     [[[self.internalFlowManager expect] andReturnValue:@NO] isReady];
 
     // when
-    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:self.mediaManager];
+    self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:nil];
     NSArray *events = @[FlowEventName1, FlowEventName2];
     [(AVSFlowManager *)[[self.internalFlowManager stub] andReturn:events] events];
     [self recreateSUT];
@@ -1064,7 +1056,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     
     
     // and when
-    [[[self.mockApplication expect] andReturnValue:@(UIApplicationStateActive)] applicationState];
+    [self.application setActive];
     [self.sut nextRequest];
     WaitForAllGroupsToBeEmpty(0.5);
     

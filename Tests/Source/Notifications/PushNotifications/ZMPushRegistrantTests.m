@@ -219,7 +219,7 @@
     
     // when
     [self createSUT];
-    [self.sut application:[UIApplication sharedApplication] didRegisterForRemoteNotificationsWithDeviceToken:token];
+    [self.sut application:self.application didRegisterForRemoteNotificationsWithDeviceToken:token];
     
     // expect
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.1]);
@@ -252,7 +252,7 @@
     // when
     [self createSUT];
     XCTestExpectation *e2 = [self expectationWithDescription:@"fetch complete"];
-    [self.sut application:[UIApplication sharedApplication] didReceiveRemoteNotification:payload fetchCompletionHandler:^(UIBackgroundFetchResult r) {
+    [self.sut application:self.application didReceiveRemoteNotification:payload fetchCompletionHandler:^(UIBackgroundFetchResult r) {
         XCTAssertEqual(r, UIBackgroundFetchResultNewData);
         [e2 fulfill];
     }];

@@ -22,6 +22,7 @@
 #import <zmessaging/zmessaging-Swift.h>
 #import "MessagingTest.h"
 #import "ZMLocalNotificationForEventTest.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 
 @implementation ZMLocalNotificationForEventTest (MessageEvents)
@@ -52,7 +53,7 @@
         // when
         __block ZMLocalNotificationForEvent * note;
         [self performIgnoringZMLogError:^{
-            note = [ZMLocalNotificationForEvent notificationForEvent:updateEvent managedObjectContext:self.syncMOC application:nil];
+            note = [ZMLocalNotificationForEvent notificationForEvent:updateEvent managedObjectContext:self.syncMOC application:self.application];
         }];
         
         // then

@@ -21,7 +21,7 @@
 @import ZMUtilities;
 @import ZMCDataModel;
 
-#import "ZMFlowSync+Internal.h"
+#import "ZMFlowSync.h"
 #import "ZMTracing.h"
 #import "ZMOperationLoop.h"
 #import "ZMAVSBridge.h"
@@ -49,7 +49,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
 @property (nonatomic) NSMutableSet <ZMConversation*> *conversationsNeedingUpdate;
 @property (nonatomic) NSMutableDictionary <NSString *, NSMutableSet<ZMUser*>*> *usersNeedingToBeAdded;
 @property (nonatomic) NSMutableSet <ZMUpdateEvent *> *eventsNeedingToBeForwarded;
-@property (nonatomic, readonly, weak) ZMApplication *application;
+@property (nonatomic, readonly, weak) id<ZMApplication> application;
 
 @end
 
@@ -66,35 +66,26 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
             syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
               uiManagedObjectContext:(NSManagedObjectContext *)uiManagedObjectContext
-{
-    return [self initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager syncManagedObjectContext:syncManagedObjectContext uiManagedObjectContext:uiManagedObjectContext application:nil];
-}
-
-
-- (instancetype)initWithMediaManager:(id)mediaManager
-                 onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-            syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
-              uiManagedObjectContext:(NSManagedObjectContext *)uiManagedObjectContext
-                         application:(ZMApplication *)application
+                         application:(id<ZMApplication>)application
 {
     self = [super initWithManagedObjectContext:syncManagedObjectContext];
     if(self != nil) {
         _uiManagedObjectContext = uiManagedObjectContext;
         _mediaManager = mediaManager;
         _requestStack = [NSMutableArray array];
-        _application = application ?: [UIApplication sharedApplication];
+        _application = application;
         self.conversationsNeedingUpdate = [NSMutableSet set];
         self.eventsNeedingToBeForwarded = [NSMutableSet set];
         self.usersNeedingToBeAdded = [NSMutableDictionary dictionary];
         self.voiceGainNotificationQueue = [[NSNotificationQueue alloc] initWithNotificationCenter:[NSNotificationCenter defaultCenter]];
 
         self.onDemandFlowManager = onDemandFlowManager;
-        if (self.application.applicationState == UIApplicationStateActive) {
+        if (self.application.applicationState != UIApplicationStateBackground) {
             [self setUpFlowManagerIfNeeded];
         }
         
+        [application registerObserverForDidBecomeActive:self selector:@selector(appDidBecomeActive:)];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
         ZM_WEAK(self);
         self.authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note){
             ZM_STRONG(self);
@@ -128,6 +119,7 @@ static char* const ZMLogTag ZM_UNUSED = "Calling";
 - (void)tearDown;
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [self.application unregisterObserverForStateChange:self];
     [ZMUserSessionAuthenticationNotification removeObserver:self.authenticationObserverToken];
     [super tearDown];
 }
