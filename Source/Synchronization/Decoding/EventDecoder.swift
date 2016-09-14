@@ -23,9 +23,9 @@ import ZMCDataModel
 private let zmLog = ZMSLog(tag: "EventDecoder")
 
 extension NSManagedObjectContext {
-
+    
     private static var eventPersistentStoreCoordinator: NSPersistentStoreCoordinator?
-
+    
     /// Creates and returns the `ManagedObjectContext` used for storing update events, ee `ZMEventModel`, `StorUpdateEvent` and `EventDecoder`.
     /// - parameter appGroupIdentifier: Optional identifier for a shared container group to be used to store the database,
     /// if `nil` is passed a default of `group. + bundleIdentifier` will be used (e.g. when testing)
@@ -38,7 +38,7 @@ extension NSManagedObjectContext {
         addPersistentStore(eventPersistentStoreCoordinator!, appGroupIdentifier: appGroupIdentifier)
         return managedObjectContext
     }
-
+    
     public func tearDown() {
         if let store = persistentStoreCoordinator?.persistentStores.first {
             try! persistentStoreCoordinator?.removePersistentStore(store)
@@ -46,7 +46,7 @@ extension NSManagedObjectContext {
         
         self.dynamicType.eventPersistentStoreCoordinator = nil
     }
-
+    
     private static func createPersistentStoreCoordinator() -> NSPersistentStoreCoordinator {
         guard let modelURL = NSBundle(forClass: StoredUpdateEvent.self).URLForResource("ZMEventModel", withExtension:"momd") else {
             fatalError("Error loading model from bundle")
@@ -56,7 +56,7 @@ extension NSManagedObjectContext {
         }
         return NSPersistentStoreCoordinator(managedObjectModel: mom)
     }
-
+    
     private static func addPersistentStore(psc: NSPersistentStoreCoordinator, appGroupIdentifier: String?, isSecondTry: Bool = false) {
         guard let storeURL = storeURL(forAppGroupIdentifier: appGroupIdentifier) else { return }
         do {
@@ -72,7 +72,7 @@ extension NSManagedObjectContext {
             }
         }
     }
-
+    
     private static func storeURL(forAppGroupIdentifier appGroupdIdentifier: String?) -> NSURL? {
         let fileManager = NSFileManager.defaultManager()
         
@@ -112,7 +112,7 @@ extension NSManagedObjectContext {
         return 500
     }
     
-    /// set this for testing purposes only
+    /// Set this for testing purposes only
     static var testingBatchSize : Int?
     
     let eventMOC : NSManagedObjectContext
@@ -134,90 +134,76 @@ extension NSManagedObjectContext {
     /// Recovered events are processed before the passed in events to reflect event history
     public func processEvents(events: [ZMUpdateEvent], block: ConsumeBlock) {
         
-        eventMOC.performGroupedBlock {
+        var lastIndex: Int64?
+        
+        eventMOC.performGroupedBlockAndWait {
             // Get the highest index of events in the DB
-            let lastIndex = StoredUpdateEvent.highestIndex(self.eventMOC)
-            
-            // Store the new events
-            self.storeEvents(events, startingAtIndex: lastIndex) {
-                // Process all events in the database in batches
-                self.process(block)
-            }
+            lastIndex = StoredUpdateEvent.highestIndex(self.eventMOC)
         }
+        
+        guard let index = lastIndex else { return }
 
+        storeEvents(events, startingAtIndex: index)
+        process(block)
     }
     
     /// Decrypts and stores the decrypted events as `StoreUpdateEvent` in the event database.
-    /// The encryption context is only closed after the events have been stored, which ensures 
+    /// The encryption context is only closed after the events have been stored, which ensures
     /// they can be decrypted again in case of a crash.
     /// - parameter events The new events that should be decrypted and stored in the database.
-    /// - parameter completion The startIndex to be used for the incrementing sortIndex of the stored events.
-    /// - parameter completion The completion closure to be called after the events have been stored and decrypted, called on the eventMOC queue.
-    private func storeEvents(events: [ZMUpdateEvent], startingAtIndex startIndex: Int64, completion: () -> Void) {
-        syncMOC.performGroupedBlock {
-            self.encryptionContext?.perform { [weak self] (sessionsDirectory) in
-                guard let strongSelf = self else { return }
-                
-                let newUpdateEvents = events.flatMap { sessionsDirectory.decryptUpdateEventAndAddClient($0, managedObjectContext: strongSelf.syncMOC) }
-                
-                // This call has to be synchronous to ensure that we close the
-                // encryption context only if we stored all events in the database
-                strongSelf.eventMOC.performGroupedBlockAndWait {
-                    
-                    // Decrypt the events and insert them counting upwards from the highest index in the DB
-                    for (idx, event) in newUpdateEvents.enumerate() {
-                        _ = StoredUpdateEvent.create(event, managedObjectContext: strongSelf.eventMOC, index: idx + startIndex + 1)
-                    }
-                    
-                    strongSelf.eventMOC.saveOrRollback()
-                }
-            }
+    /// - parameter startingAtIndex The startIndex to be used for the incrementing sortIndex of the stored events.
+    private func storeEvents(events: [ZMUpdateEvent], startingAtIndex startIndex: Int64) {
+        encryptionContext?.perform { [weak self] (sessionsDirectory) in
+            guard let `self` = self else { return }
             
-            self.eventMOC.performGroupedBlock {
-                completion()
+            let newUpdateEvents = events.flatMap { sessionsDirectory.decryptUpdateEventAndAddClient($0, managedObjectContext: self.syncMOC) }
+            
+            // This call has to be synchronous to ensure that we close the
+            // encryption context only if we stored all events in the database
+            self.eventMOC.performGroupedBlockAndWait {
+                
+                // Decrypt the events and insert them counting upwards from the highest index in the DB
+                for (idx, event) in newUpdateEvents.enumerate() {
+                    _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: idx + startIndex + 1)
+                }
+                
+                self.eventMOC.saveOrRollback()
             }
         }
     }
-
+    
     // Processes the stored events in the database in batches of size EventDecoder.BatchSize` and calls the `consumeBlock` for each batch.
     // After the `consumeBlock` has been called the stored events are deleted from the database.
     // This method terminates when no more events are in the database.
     private func process(consumeBlock: ConsumeBlock) {
-        fetchNextEventsBatch { events in
-            guard events.storedEvents.count > 0 else { return }
+        let events = fetchNextEventsBatch()
+        guard events.storedEvents.count > 0 else { return }
 
-            self.processBatch(events.updateEvents, storedEvents: events.storedEvents, block: consumeBlock) {
-                self.process(consumeBlock)
-            }
+        processBatch(events.updateEvents, storedEvents: events.storedEvents, block: consumeBlock)
+        process(consumeBlock)
+    }
+    
+    /// Calls the `ComsumeBlock` and deletes the respective stored events subsequently.
+    private func processBatch(events: [ZMUpdateEvent], storedEvents: [NSManagedObject], block: ConsumeBlock) {
+        block(events)
+        
+        eventMOC.performGroupedBlockAndWait {
+            storedEvents.forEach(self.eventMOC.deleteObject)
+            self.eventMOC.saveOrRollback()
         }
     }
     
-    /// Calls the `ComsumeBlock` and deletes the respective stored events subsequently,
-    /// The consume block is guaranteed to be called on the syncMOC's queue.
-    /// The completion closure is invoked after the `StoredEvent`'s have been deleted on the eventMOC.
-    private func processBatch(events: [ZMUpdateEvent], storedEvents: [NSManagedObject], block: ConsumeBlock, completion: () -> Void) {
-        let strongEventMOC = eventMOC
+    /// Fetches and returns the next batch of size `EventDecoder.BatchSize` 
+    /// of `StoredEvents` and `ZMUpdateEvent`'s in a `EventsWithStoredEvents` tuple.
+    private func fetchNextEventsBatch() -> EventsWithStoredEvents {
+        var (storedEvents, updateEvents)  = ([StoredUpdateEvent](), [ZMUpdateEvent]())
 
-        // switch to the sync queue to call the passed in block with the update events
-        syncMOC.performGroupedBlock { 
-            block(events)
-
-            strongEventMOC.performGroupedBlock {
-                storedEvents.forEach(strongEventMOC.deleteObject)
-                strongEventMOC.saveOrRollback()
-                completion()
-            }
+        eventMOC.performGroupedBlockAndWait {
+            storedEvents = StoredUpdateEvent.nextEvents(self.eventMOC, batchSize: EventDecoder.BatchSize)
+            updateEvents = StoredUpdateEvent.eventsFromStoredEvents(storedEvents)
         }
-    }
-    
-    /// Fetches the next batch of of size `EventDecoder.BatchSize` and calls the completion handler
-    /// with the `StoredEvents` and `ZMUpdateEvent`'s in a `EventsWithStoredEvents` tuple.
-    private func fetchNextEventsBatch(completion: (EventsWithStoredEvents) -> Void) {
-        self.eventMOC.performGroupedBlock {
-            let storedEvents = StoredUpdateEvent.nextEvents(self.eventMOC, batchSize: EventDecoder.BatchSize)
-            let updateEvents = StoredUpdateEvent.eventsFromStoredEvents(storedEvents)
-            return completion((storedEvents: storedEvents, updateEvents: updateEvents))
-        }
+        
+        return (storedEvents: storedEvents, updateEvents: updateEvents)
     }
     
 }
