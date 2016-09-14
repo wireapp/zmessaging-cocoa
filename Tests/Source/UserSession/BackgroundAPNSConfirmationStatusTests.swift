@@ -48,9 +48,10 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
 
     override func setUp() {
         super.setUp()
+        application.setBackground()
         fakeBGActivityFactory = FakeBackgroundActivityFactory()
         fakeBGActivityFactory.mainGroupQueue = uiMOC // this mimics the real BackgroundActivityFactory
-        sut = BackgroundAPNSConfirmationStatus(application: self.application, managedObjectContext: syncMOC, backgroundActivityFactory: fakeBGActivityFactory)
+        sut = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: syncMOC, backgroundActivityFactory: fakeBGActivityFactory)
     }
     
     override func tearDown() {
