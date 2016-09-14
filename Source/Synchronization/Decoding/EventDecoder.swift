@@ -162,7 +162,8 @@ extension NSManagedObjectContext {
             // encryption context only if we stored all events in the database
             self.eventMOC.performGroupedBlockAndWait {
                 
-                // Decrypt the events and insert them counting upwards from the highest index in the DB
+                // Insert the decryted events in the event database using a `storeIndex`
+                // incrementing from the highest index currently stored in the database
                 for (idx, event) in newUpdateEvents.enumerate() {
                     _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: idx + startIndex + 1)
                 }
