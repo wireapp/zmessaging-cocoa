@@ -23,7 +23,7 @@ public class BackgroundAPNSConfirmationStatus : NSObject {
     
     /// Switch for sending delivery receipts
     public static let sendDeliveryReceipts : Bool = true
-    static let backgroundNameBase : String = "Sending confirmation message with nonce "
+    static let backgroundNameBase : String = "Sending confirmation message with nonce"
     
     let backgroundTime : NSTimeInterval = 25
     private var tornDown = false
