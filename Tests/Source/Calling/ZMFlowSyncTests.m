@@ -135,9 +135,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     }];
 }
 
-
-// TODO MARCO
-- (void)DISABLED_testThatItAcquiresTheFlowForCallDeviceIsActive_YES
+- (void)testThatItAcquiresTheFlowForCallDeviceIsActive_YES
 {
     [self.syncMOC performBlockAndWait:^{
         // given
