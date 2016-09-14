@@ -37,6 +37,7 @@
     
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.clientUpdateStatus deleteClientsWithCredentials:self.clientRegistrationStatus.emailCredentials];
+        [ZMOperationLoop notifyNewRequestsAvailable: self];
     }];
 }
 
@@ -58,6 +59,7 @@
     
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.clientUpdateStatus deleteClientsWithCredentials:emailCredentials];
+        [ZMOperationLoop notifyNewRequestsAvailable: self];
     }];
 }
 
