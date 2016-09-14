@@ -316,7 +316,7 @@
                                        @"conversation": conversation.remoteIdentifier.transportString,
                                        @"time":         [NSDate dateWithTimeIntervalSince1970:555555].transportString
                                        };
-        ZMUpdateEvent *updateEvent = [ZMUpdateEvent decryptedUpdateEventFromEventStreamPayload:eventPayload uuid:[NSUUID createUUID] source:ZMUpdateEventSourceWebSocket];
+        ZMUpdateEvent *updateEvent = [ZMUpdateEvent decryptedUpdateEventFromEventStreamPayload:eventPayload uuid:[NSUUID createUUID] transient:NO source:ZMUpdateEventSourceWebSocket];
         
         // when
         [self.sut processEvents:@[updateEvent] liveEvents:NO prefetchResult:nil];

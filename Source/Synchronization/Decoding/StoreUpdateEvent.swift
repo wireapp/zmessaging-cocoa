@@ -75,7 +75,7 @@ public class StoredUpdateEvent: NSManagedObject {
             if let uuid = $0.uuidString {
                 eventUUID = NSUUID(UUIDString: uuid)
             }
-            let decryptedEvent = ZMUpdateEvent.decryptedUpdateEventFromEventStreamPayload($0.payload, uuid:eventUUID, source: ZMUpdateEventSource(rawValue:Int($0.source))!)
+            let decryptedEvent = ZMUpdateEvent.decryptedUpdateEventFromEventStreamPayload($0.payload, uuid:eventUUID, transient: $0.isTransient, source: ZMUpdateEventSource(rawValue:Int($0.source))!)
             if let debugInfo = $0.debugInformation {
                 decryptedEvent?.appendDebugInformation(debugInfo)
             }

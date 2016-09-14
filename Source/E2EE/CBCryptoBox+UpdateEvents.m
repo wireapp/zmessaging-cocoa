@@ -125,7 +125,7 @@ NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
     eventData[@"text"] = decryptedData.base64String;
     payload[@"data"] = eventData;
 
-    return [ZMUpdateEvent decryptedUpdateEventFromEventStreamPayload:payload uuid:event.uuid source:event.source];
+    return [ZMUpdateEvent decryptedUpdateEventFromEventStreamPayload:payload uuid:event.uuid transient:NO source:event.source];
 }
 
 - (ZMUpdateEvent *)decryptOTRAssetUpdateEvent:(ZMUpdateEvent *)event newSessionId:(NSString *__autoreleasing *)newSessionId error:(NSError **)error
@@ -138,7 +138,7 @@ NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
     eventData[@"info"] = [decryptedData base64EncodedStringWithOptions:0];
     payload[@"data"] = eventData;
 
-    return [ZMUpdateEvent decryptedUpdateEventFromEventStreamPayload:payload uuid:event.uuid source:event.source];
+    return [ZMUpdateEvent decryptedUpdateEventFromEventStreamPayload:payload uuid:event.uuid transient:NO source:event.source];
 }
 
 - (NSData *)decryptOTRMessageUpdateEvent:(ZMUpdateEvent *)event valueForKey:(NSString *)dataKey newSessionId:(NSString *__autoreleasing *)newSessionId error:(NSError **)error
