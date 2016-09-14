@@ -23,7 +23,8 @@ public class BackgroundAPNSConfirmationStatus : NSObject {
     
     /// Switch for sending delivery receipts
     public static let sendDeliveryReceipts : Bool = true
-
+    static let backgroundNameBase : String = "Sending confirmation message with nonce "
+    
     let backgroundTime : NSTimeInterval = 25
     private var tornDown = false
     private var messageNonces : [NSUUID : ZMBackgroundActivity] = [:]
@@ -57,7 +58,7 @@ public class BackgroundAPNSConfirmationStatus : NSObject {
     
     // Called after a confirmation message has been created from an event received via APNS
     public func needsToConfirmMessage(messageNonce: NSUUID) {
-        let backgroundTask = backgroundActivityFactory.backgroundActivity(withName: "Sending confirmation message with nonce \(messageNonce.transportString())") { [weak self] in
+        let backgroundTask = backgroundActivityFactory.backgroundActivity(withName: "\(BackgroundAPNSConfirmationStatus.backgroundNameBase) \(messageNonce.transportString())") { [weak self] in
             guard let strongSelf = self else { return }
             // The message failed to send in time. We won't continue trying.
             strongSelf.managedObjectContext.performGroupedBlock{

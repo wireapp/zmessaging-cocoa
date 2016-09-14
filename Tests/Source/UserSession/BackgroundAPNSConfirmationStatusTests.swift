@@ -30,7 +30,7 @@ class FakeBackgroundActivityFactory : BackgroundActivityFactory {
     
     // simulates the expirationHandler being called
     func callHandler(messageNonce: NSUUID){
-        guard let handler = nameToHandler.removeValueForKey(messageNonce.transportString()) else { return }
+        guard let handler = nameToHandler.removeValueForKey("\(BackgroundAPNSConfirmationStatus.backgroundNameBase) \(messageNonce.transportString())") else { return }
         mainGroupQueue?.performGroupedBlock({ 
             handler()
         })
