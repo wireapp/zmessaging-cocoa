@@ -19,7 +19,10 @@ branches:
 install:
   - bundle install
   - curl -O https://raw.githubusercontent.com/wireapp/wire-ios-shared-resources/master/Dangerfile
+  - carthage bootstrap --platform iOS
 
 script:
+  - open -b com.apple.iphonesimulator
   - set -o pipefail
+  - xcodebuild build test -scheme zmessaging-ios -destination 'platform=iOS Simulator,name=iPhone 6s,OS=9.3' | xcpretty
   - bundle exec danger
