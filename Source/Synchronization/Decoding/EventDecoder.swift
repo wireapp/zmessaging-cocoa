@@ -168,7 +168,7 @@ extension NSManagedObjectContext {
         guard let index = lastIndex else { return }
 
         storeEvents(events, startingAtIndex: index)
-        process(block)
+        process(block, firstCall: true)
     }
     
     /// Decrypts and stores the decrypted events as `StoreUpdateEvent` in the event database.
@@ -200,12 +200,17 @@ extension NSManagedObjectContext {
     // Processes the stored events in the database in batches of size EventDecoder.BatchSize` and calls the `consumeBlock` for each batch.
     // After the `consumeBlock` has been called the stored events are deleted from the database.
     // This method terminates when no more events are in the database.
-    private func process(consumeBlock: ConsumeBlock) {
+    private func process(consumeBlock: ConsumeBlock, firstCall: Bool) {
         let events = fetchNextEventsBatch()
-        guard events.storedEvents.count > 0 else { return }
+        guard events.storedEvents.count > 0 else {
+            if firstCall {
+                consumeBlock([])
+            }
+            return
+        }
 
         processBatch(events.updateEvents, storedEvents: events.storedEvents, block: consumeBlock)
-        process(consumeBlock)
+        process(consumeBlock, firstCall: false)
     }
     
     /// Calls the `ComsumeBlock` and deletes the respective stored events subsequently.
