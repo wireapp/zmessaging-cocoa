@@ -2298,14 +2298,17 @@
     // when
     [self performIgnoringZMLogError:^{
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
-            
-            [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:[@"💣" dataUsingEncoding:NSUTF8StringEncoding]];
+            [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject
+                                                            toClient:self.selfUser.clients.anyObject
+                                                                data:[@"😱" dataUsingEncoding:NSUTF8StringEncoding]];
         }];
-        WaitForAllGroupsToBeEmpty(0.5);
+
+        WaitForAllGroupsToBeEmpty(5);
     }];
     
     // then
     id<ZMConversationMessage> lastMessage = conversation.messages.lastObject;
+    XCTAssertEqual(conversation.messages.count, 2lu);
     XCTAssertNotNil(lastMessage.systemMessageData);
     XCTAssertEqual(lastMessage.systemMessageData.systemMessageType, ZMSystemMessageTypeDecryptionFailed);
 }
@@ -2316,25 +2319,27 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:10 establishSessionWithSelfUser:YES];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"It should call the observer"];
     
-    __block BOOL observerCalled = NO;
-    [[NSNotificationCenter defaultCenter] addObserverForName:ZMConversationFailedToDecryptMessageNotificationName object:conversation queue:[NSOperationQueue currentQueue] usingBlock:^(NSNotification * _Nonnull note) {
-        XCTAssertEqual(conversation, note.object);
+    [[NSNotificationCenter defaultCenter] addObserverForName:ZMConversationFailedToDecryptMessageNotificationName object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification * _Nonnull note) {
+        XCTAssertEqualObjects(conversation.remoteIdentifier, [(ZMConversation *)note.object remoteIdentifier]);
         XCTAssertNotNil(note.userInfo[@"cause"]);
-        XCTAssertNotNil(note.userInfo[@"deviceClass"]);
-
-        observerCalled = YES;
+        XCTAssertEqualObjects(note.userInfo[@"cause"], @"CBErrorCodeDecodeError");
+        [expectation fulfill];
     }];
     
     // when
     [self performIgnoringZMLogError:^{
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
-            [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:[@"💣" dataUsingEncoding:NSUTF8StringEncoding]];
+            [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject
+                                                            toClient:self.selfUser.clients.anyObject
+                                                                data:[@"😱" dataUsingEncoding:NSUTF8StringEncoding]];
         }];
+
         WaitForAllGroupsToBeEmpty(0.5);
     }];
     
-    XCTAssertTrue(observerCalled);
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:5]);
 }
 
 - (void)testThatItDoesNotInsertsASystemMessageWhenItDecryptsADuplicatedMessage {

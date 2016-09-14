@@ -85,15 +85,17 @@ NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
     && (error.code == CryptoboxErrorCryptoboxOutdatedMessage || error.code == CryptoboxErrorCryptoboxDuplicateMessage);
     
     // do not notify user if it's just a duplicated one
-    if(didFailBecauseDuplicated) {
+    if (didFailBecauseDuplicated) {
         return;
     }
     NSMutableDictionary *userInfoDictionary = [NSMutableDictionary dictionaryWithDictionary:@{@"cause" : CBErrorCodeToString((CryptoboxError)error.code)}];
     
     NSString *senderClientID = [[event.payload.asDictionary optionalDictionaryForKey:@"data"] optionalStringForKey:@"sender"];
     
+    ZMConversation *conversation;
+    
     if (event.conversationUUID != nil && event.senderUUID != nil && senderClientID != nil) {
-        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:event.conversationUUID createIfNeeded:NO inContext:managedObjectContext];
+        conversation = [ZMConversation conversationWithRemoteID:event.conversationUUID createIfNeeded:NO inContext:managedObjectContext];
         ZMUser *sender = [ZMUser userWithRemoteID:event.senderUUID createIfNeeded:NO inContext:managedObjectContext];
         UserClient *client = [UserClient fetchUserClientWithRemoteId:senderClientID forUser:sender createIfNeeded:NO];
         if (client != nil) {
@@ -104,9 +106,11 @@ NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
         }
         if (conversation != nil && sender != nil) {
             [conversation appendDecryptionFailedSystemMessageAtTime:event.timeStamp sender:sender client:client errorCode:error.code];
+            
         }
     }
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMConversationFailedToDecryptMessageNotificationName object:self userInfo:userInfoDictionary];
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:ZMConversationFailedToDecryptMessageNotificationName object:conversation userInfo:userInfoDictionary];
 }
 
 - (ZMUpdateEvent *)decryptOTRClientMessageUpdateEvent:(ZMUpdateEvent *)event newSessionId:(NSString *__autoreleasing *)newSessionId error:(NSError **)error

@@ -609,7 +609,7 @@ ZM_EMPTY_ASSERTING_INIT()
     ZM_WEAK(self);
     [self.eventDecoder processEvents:events block:^(NSArray<ZMUpdateEvent *> * decryptedEvents) {
         ZM_STRONG(self);
-        if (self  == nil){
+        if (self == nil){
             return;
         }
         
