@@ -150,7 +150,7 @@ public extension ZMLocalNotificationSet {
         var toRemove = Set<ZMLocalNotification>()
         self.notifications.forEach{
             guard ($0.conversationID == conversation.remoteIdentifier),
-                  let note = $0 as? ZMLocalNotificationForCallEvent where note.eventType == .CallState
+                  let note = $0 as? EventNotification where note.eventType == .CallState
             else { return }
             toRemove.insert($0)
             $0.uiNotifications.forEach{ application?.cancelLocalNotification($0) }

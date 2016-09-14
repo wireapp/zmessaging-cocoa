@@ -40,8 +40,6 @@ public class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
 }
 
 class MockLocalNotification : ZMLocalNotification {
-
-    var eventTypeUnderTest : ZMUpdateEventType?
     
     internal var notifications = [UILocalNotification]()
     
@@ -51,6 +49,19 @@ class MockLocalNotification : ZMLocalNotification {
     
     override var uiNotifications : [UILocalNotification] {
         return notifications
+    }
+}
+
+class MockEventNotification : MockLocalNotification, EventNotification {
+    var eventTypeUnderTest : ZMUpdateEventType?
+    var ignoresSilencedState : Bool { return false }
+    var eventType : ZMUpdateEventType { return eventTypeUnderTest ?? .Unknown }
+    unowned var application: Application
+    unowned var managedObjectContext: NSManagedObjectContext
+    required init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?) {
+        self.managedObjectContext = managedObjectContext
+        self.application = application!
+        super.init(conversationID: conversation?.remoteIdentifier)
     }
 }
 
@@ -124,14 +135,16 @@ class ZMLocalNotificationSetTests : MessagingTest {
         conversation1.remoteIdentifier = NSUUID()
         let localNote1 = UILocalNotification()
         localNote1.alertBody = "note1"
-        let note1 = MockLocalNotification(conversationID: conversation1.remoteIdentifier)
+        let note1 = MockEventNotification(events: [], conversation: conversation1, managedObjectContext: uiMOC, application: application)!
         note1.add(localNote1)
         note1.eventTypeUnderTest = .CallState
-        
+        XCTAssertEqual(note1.conversationID, conversation1.remoteIdentifier)
+
         let localNote2 = UILocalNotification()
         localNote1.alertBody = "note2"
-        let note2 = MockLocalNotification(conversationID: conversation1.remoteIdentifier)
+        let note2 = MockEventNotification(events: [], conversation: conversation1, managedObjectContext: uiMOC, application: application)!
         note2.add(localNote2)
+        XCTAssertEqual(note2.conversationID, conversation1.remoteIdentifier)
         
         sut.addObject(note1)
         sut.addObject(note2)
