@@ -117,14 +117,12 @@ extension NSManagedObjectContext {
     
     let eventMOC : NSManagedObjectContext
     let syncMOC: NSManagedObjectContext
-    weak var encryptionContext : EncryptionContext?
     
     private typealias EventsWithStoredEvents = (storedEvents: [StoredUpdateEvent], updateEvents: [ZMUpdateEvent])
     
     public init(eventMOC: NSManagedObjectContext, syncMOC: NSManagedObjectContext) {
         self.eventMOC = eventMOC
         self.syncMOC = syncMOC
-        self.encryptionContext = syncMOC.zm_cryptKeyStore.encryptionContext
         super.init()
     }
     
@@ -153,7 +151,7 @@ extension NSManagedObjectContext {
     /// - parameter events The new events that should be decrypted and stored in the database.
     /// - parameter startingAtIndex The startIndex to be used for the incrementing sortIndex of the stored events.
     private func storeEvents(events: [ZMUpdateEvent], startingAtIndex startIndex: Int64) {
-        encryptionContext?.perform { [weak self] (sessionsDirectory) in
+        syncMOC.zm_cryptKeyStore.encryptionContext.perform { [weak self] (sessionsDirectory) in
             guard let `self` = self else { return }
             
             let newUpdateEvents = events.flatMap { sessionsDirectory.decryptUpdateEventAndAddClient($0, managedObjectContext: self.syncMOC) }

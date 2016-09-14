@@ -24,7 +24,7 @@ class EventDecoderTest: MessagingTest {
     
     var eventMOC = NSManagedObjectContext.createEventContext(withAppGroupIdentifier: nil)
     var sut : EventDecoder!
-
+    
     override func setUp() {
         super.setUp()
         sut = EventDecoder(eventMOC: eventMOC, syncMOC: syncMOC)
@@ -37,24 +37,38 @@ class EventDecoderTest: MessagingTest {
     }
     
     func dummyEvent() -> ZMUpdateEvent {
-        let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let conversation = ZMConversation.insertNewObjectInManagedObjectContext(syncMOC)
         conversation.remoteIdentifier = NSUUID.createUUID()
         let payload = payloadForMessageInConversation(conversation, type: EventConversationAdd, data: ["foo": "bar"])
         let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: NSUUID.createUUID())
         return event
     }
     
-    func testThatItProcessesEvents() {
-        // given
-        let event = dummyEvent()
-        
-        // when
-        var didCallBlock = false
-        sut.processEvents([event]) { (events) in
-            XCTAssertTrue(events.contains(event))
-            didCallBlock = true
+    func insert(events events: [ZMUpdateEvent], startIndex: Int64 = 0) {
+        eventMOC.performGroupedBlockAndWait {
+            events.enumerate().forEach { index, event  in
+                let _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: startIndex + index)
+            }
+            
+            XCTAssert(self.eventMOC.saveOrRollback())
         }
-
+    }
+    
+    func testThatItProcessesEvents() {
+        
+        var didCallBlock = false
+        
+        syncMOC.performGroupedBlock {
+            // given
+            let event = self.dummyEvent()
+            
+            // when
+            self.sut.processEvents([event]) { (events) in
+                XCTAssertTrue(events.contains(event))
+                didCallBlock = true
+            }
+        }
+        
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
@@ -62,27 +76,30 @@ class EventDecoderTest: MessagingTest {
     }
     
     func testThatItProcessesPreviouslyStoredEventsFirst() {
-        // given
         
         EventDecoder.testingBatchSize = 1
-        
-        let event1 = dummyEvent()
-        let event2 = dummyEvent()
-        let _ = StoredUpdateEvent.create(event1, managedObjectContext: eventMOC, index: 0)
-        eventMOC.saveOrRollback()
-        
-        // when
         var callCount = 0
-        sut.processEvents([event2]) { (events) in
-            if callCount == 0 {
-                XCTAssertTrue(events.contains(event1))
-            } else if callCount == 1 {
-                XCTAssertTrue(events.contains(event2))
-            } else {
-                XCTFail("called too often")
+        
+        syncMOC.performGroupedBlock {
+            // given
+            let event1 = self.dummyEvent()
+            let event2 = self.dummyEvent()
+            self.insert(events: [event1])
+            
+            // when
+            
+            self.sut.processEvents([event2]) { (events) in
+                if callCount == 0 {
+                    XCTAssertTrue(events.contains(event1))
+                } else if callCount == 1 {
+                    XCTAssertTrue(events.contains(event2))
+                } else {
+                    XCTFail("called too often")
+                }
+                callCount += 1
             }
-            callCount += 1
         }
+        
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
@@ -90,34 +107,36 @@ class EventDecoderTest: MessagingTest {
     }
     
     func testThatItProcessesInBatches() {
-        // given
+        
         EventDecoder.testingBatchSize = 2
-        
-        let event1 = dummyEvent()
-        let event2 = dummyEvent()
-        let event3 = dummyEvent()
-        let event4 = dummyEvent()
-        
-        let _ = StoredUpdateEvent.create(event1, managedObjectContext: eventMOC, index: 0)
-        let _ = StoredUpdateEvent.create(event2, managedObjectContext: eventMOC, index: 1)
-        let _ = StoredUpdateEvent.create(event3, managedObjectContext: eventMOC, index: 2)
-        eventMOC.saveOrRollback()
-        
-        // when
         var callCount = 0
-        sut.processEvents([event4]) { (events) in
-            if callCount == 0 {
-                XCTAssertTrue(events.contains(event1))
-                XCTAssertTrue(events.contains(event2))
-            } else if callCount == 1 {
-                XCTAssertTrue(events.contains(event3))
-                XCTAssertTrue(events.contains(event4))
+        
+        syncMOC.performGroupedBlock {
+            
+            // given
+            let event1 = self.dummyEvent()
+            let event2 = self.dummyEvent()
+            let event3 = self.dummyEvent()
+            let event4 = self.dummyEvent()
+            
+            self.insert(events: [event1, event2, event3])
+            
+            // when
+            self.sut.processEvents([event4]) { (events) in
+                if callCount == 0 {
+                    XCTAssertTrue(events.contains(event1))
+                    XCTAssertTrue(events.contains(event2))
+                } else if callCount == 1 {
+                    XCTAssertTrue(events.contains(event3))
+                    XCTAssertTrue(events.contains(event4))
+                }
+                else {
+                    XCTFail("called too often")
+                }
+                callCount += 1
             }
-            else {
-                XCTFail("called too often")
-            }
-            callCount += 1
         }
+        
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
         
         // then
@@ -125,31 +144,33 @@ class EventDecoderTest: MessagingTest {
     }
     
     func testThatItDoesNotProcessTheSameEventsTwiceWhenCalledSuccessively() {
-        // given
+        
         EventDecoder.testingBatchSize = 2
         
-        let event1 = dummyEvent()
-        let event2 = dummyEvent()
-        let event3 = dummyEvent()
-        let event4 = dummyEvent()
-        
-        let _ = StoredUpdateEvent.create(event1, managedObjectContext: eventMOC, index: 0)
-        eventMOC.saveOrRollback()
-
-        sut.processEvents([event2]) { (events) in
-            XCTAssert(events.contains(event1))
-            XCTAssert(events.contains(event2))
-        }
-
-        let _ = StoredUpdateEvent.create(event3, managedObjectContext: eventMOC, index: 1)
-        eventMOC.saveOrRollback()
-
-        // when
-        sut.processEvents([event4]) { (events) in
-            XCTAssertFalse(events.contains(event1))
-            XCTAssertFalse(events.contains(event2))
-            XCTAssertTrue(events.contains(event3))
-            XCTAssertTrue(events.contains(event4))
+        syncMOC.performGroupedBlock {
+            
+            // given
+            let event1 = self.dummyEvent()
+            let event2 = self.dummyEvent()
+            let event3 = self.dummyEvent()
+            let event4 = self.dummyEvent()
+            
+            self.insert(events: [event1])
+            
+            self.sut.processEvents([event2]) { (events) in
+                XCTAssert(events.contains(event1))
+                XCTAssert(events.contains(event2))
+            }
+            
+            self.insert(events: [event3], startIndex: 1)
+            
+            // when
+            self.sut.processEvents([event4]) { (events) in
+                XCTAssertFalse(events.contains(event1))
+                XCTAssertFalse(events.contains(event2))
+                XCTAssertTrue(events.contains(event3))
+                XCTAssertTrue(events.contains(event4))
+            }
         }
         
         XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
