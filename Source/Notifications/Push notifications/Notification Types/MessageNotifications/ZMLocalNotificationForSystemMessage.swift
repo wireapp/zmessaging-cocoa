@@ -65,9 +65,9 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
     func alertBodyForParticipantEvents(_ message: ZMSystemMessage) -> String {
         let isLeaveEvent = (message.systemMessageType == .participantsRemoved)
         let isCopy = (userCount != 0)
-        let users = isLeaveEvent ? message.removedUsers : message.addedUsers
+        let users = (isLeaveEvent ? message.removedUsers : message.addedUsers) ?? Set()
         
-        userCount = userCount + (users?.count)! // TODO jacob
+        userCount = userCount + users.count
         if isCopy {
             let key = isLeaveEvent ? ZMPushStringMemberLeaveMany : ZMPushStringMemberJoinMany
             return key.localizedString(with: nil, conversation: message.conversation, otherUser: nil)
@@ -76,10 +76,10 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
         var user: ZMUser?
         var key : NSString = (isLeaveEvent ? ZMPushStringMemberLeaveMany : ZMPushStringMemberJoinMany) as NSString
         if userCount == 1 {
-            if (users?.first == message.sender) {
+            if (users.first == message.sender) {
                 key = ZMPushStringMemberLeaveSender as NSString
             } else {
-                user = users?.first
+                user = users.first
                 key = (isLeaveEvent ? ZMPushStringMemberLeave : ZMPushStringMemberJoin) as NSString
             }
         }
