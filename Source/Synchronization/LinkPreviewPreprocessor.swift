@@ -76,8 +76,8 @@ import ZMCLinkPreview
     func didProcessMessage(_ message: ZMClientMessage, linkPreviews: [LinkPreview]) {
         objectsBeingProcessed.remove(message)
         
-        if let preview = linkPreviews.first {
-            let updatedMessage = ZMGenericMessage(text: (message.textMessageData?.messageText)!, linkPreview: preview.protocolBuffer, nonce: message.nonce.transportString()) /// TODO jacob
+        if let preview = linkPreviews.first, let messsageText = message.textMessageData?.messageText {
+            let updatedMessage = ZMGenericMessage(text: messsageText, linkPreview: preview.protocolBuffer, nonce: message.nonce.transportString())
             message.add(updatedMessage.data())
             
             if let imageData = preview.imageData.first {
