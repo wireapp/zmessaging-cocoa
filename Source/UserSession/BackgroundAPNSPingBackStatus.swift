@@ -117,7 +117,7 @@ extension EventsWithIdentifier {
         return hasNoticeNotificationIDs ? notificationIDs.removeFirst() : .none
     }
     
-    public func didReceiveVoIPNotification(_ eventsWithID: EventsWithIdentifier, handler: PingBackResultHandler) {
+    public func didReceiveVoIPNotification(_ eventsWithID: EventsWithIdentifier, handler: @escaping PingBackResultHandler) {
         APNSPerformanceTracker.sharedTracker.trackNotification(
             eventsWithID.identifier,
             state: .pingBackStatus,
@@ -128,7 +128,7 @@ extension EventsWithIdentifier {
         if !eventsWithID.isNotice {
             notificationIDToEventsMap[eventsWithID.identifier] = eventsWithID.events
         }
-        //eventsWithHandlerByNotificationID[eventsWithID.identifier] = (eventsWithID.events, handler) // TODO jacob
+        eventsWithHandlerByNotificationID[eventsWithID.identifier] = (eventsWithID.events, handler)
         
         if authenticationStatusProvider?.currentPhase == .authenticated {
             backgroundActivity = backgroundActivity ?? BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Ping back to BE")
