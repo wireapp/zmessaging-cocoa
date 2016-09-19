@@ -18,8 +18,7 @@
 
 import UIKit
 
-@objc
-public final class BackgroundAPNSConfirmationStatus : NSObject {
+@objc open class BackgroundAPNSConfirmationStatus : NSObject {
     
     /// Switch for sending delivery receipts
     public static let sendDeliveryReceipts : Bool = true
@@ -32,7 +31,7 @@ public final class BackgroundAPNSConfirmationStatus : NSObject {
     private unowned var managedObjectContext : NSManagedObjectContext
     private unowned var backgroundActivityFactory : BackgroundActivityFactory
 
-    public var needsToSyncMessages : Bool {
+    open var needsToSyncMessages : Bool {
         return messageNonces.count > 0 && application.applicationState == .background
     }
     

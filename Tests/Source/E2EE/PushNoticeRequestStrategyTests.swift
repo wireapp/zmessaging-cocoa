@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -35,7 +35,7 @@ class PushNoticeRequestStrategyTests: MessagingTest {
         super.setUp()
         selfClient = createSelfClient()
         
-        authenticationStatus = MockAuthenticationStatus(phase: .Authenticated)
+        authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
         
         pingBackStatus = MockBackgroundAPNSPingBackStatus(
             syncManagedObjectContext: syncMOC,
@@ -53,14 +53,14 @@ class PushNoticeRequestStrategyTests: MessagingTest {
         // given
         let notificationID = UUID.create()
         pingBackStatus.mockNextNotificationID = notificationID
-        pingBackStatus.mockStatus = .FetchingNotice
+        pingBackStatus.mockStatus = .fetchingNotice
         XCTAssertTrue(pingBackStatus.hasNoticeNotificationIDs)
         
         // when
         let request = sut.nextRequest()
         
         // then
-        XCTAssertEqual(request?.method, .MethodGET)
+        XCTAssertEqual(request?.method, .methodGET)
         XCTAssertTrue(request!.shouldUseVoipSession)
         XCTAssertEqual(request?.path, "/notifications/\(notificationID.transportString())?client=\(selfClient.remoteIdentifier)&cancel_fallback=true")
         XCTAssertNil(request?.payload)
@@ -70,7 +70,7 @@ class PushNoticeRequestStrategyTests: MessagingTest {
         // given
         let notificationID = UUID.create()
         pingBackStatus.mockNextNotificationID = notificationID
-        pingBackStatus.mockStatus = .Pinging
+        pingBackStatus.mockStatus = .pinging
         XCTAssertTrue(pingBackStatus.hasNoticeNotificationIDs)
         
         // when
@@ -82,7 +82,7 @@ class PushNoticeRequestStrategyTests: MessagingTest {
     
     func testThatItDoesNotGenerateARequestWhenThePingBackStatusReturnsANotificationIDButTheStateIsUnauthenticated() {
         // given
-        authenticationStatus.mockPhase = .Unauthenticated
+        authenticationStatus.mockPhase = .unauthenticated
         pingBackStatus.mockNextNotificationID = UUID.create()
         XCTAssertTrue(pingBackStatus.hasNoticeNotificationIDs)
         
@@ -95,7 +95,7 @@ class PushNoticeRequestStrategyTests: MessagingTest {
     
     func testThatItDoesNotGenerateARequestWhenThePingBackStatusReturnsNoNotificationIDButTheStateIsAuthenticated() {
         // given
-        authenticationStatus.mockPhase = .Authenticated
+        authenticationStatus.mockPhase = .authenticated
         XCTAssertFalse(pingBackStatus.hasNoticeNotificationIDs)
         
         // when
@@ -109,12 +109,12 @@ class PushNoticeRequestStrategyTests: MessagingTest {
         // given
         let nextUUID = UUID.create()
         var didPerformPingBackCalled = false
-        var receivedFinalEvents = []
+        var receivedFinalEvents = [ZMUpdateEvent]()
         var receivedEventsWithID: EventsWithIdentifier?
         var receivedStatus: ZMTransportResponseStatus?
         
         pingBackStatus.mockNextNotificationID = nextUUID
-        pingBackStatus.mockStatus = .FetchingNotice
+        pingBackStatus.mockStatus = .fetchingNotice
         pingBackStatus.didFetchNoticeNotification = { eventsWithID, status, events in
             didPerformPingBackCalled = true
             receivedStatus = status
@@ -124,15 +124,15 @@ class PushNoticeRequestStrategyTests: MessagingTest {
         
         XCTAssertTrue(pingBackStatus.hasNoticeNotificationIDs)
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
-        conversation.remoteIdentifier = NSUUID()
-        let eventPayload = self.payloadForMessageInConversation(conversation, type: EventConversationAdd, data: [])
-        let event = ZMUpdateEvent(fromEventStreamPayload:eventPayload, uuid: nextUUID)
+        conversation.remoteIdentifier = UUID()
+        let eventPayload = self.payloadForMessage(in: conversation, type: EventConversationAdd, data: [])
+        let event = ZMUpdateEvent(fromEventStreamPayload:eventPayload!, uuid: nextUUID)!
         
         // when
-        let response = ZMTransportResponse(payload: ["payload": [eventPayload], "id": nextUUID.transportString()], HTTPstatus: 200, transportSessionError: nil)
+        let response = ZMTransportResponse(payload: ["payload": [eventPayload], "id": nextUUID.transportString()] as ZMTransportData, httpStatus: 200, transportSessionError: nil)
         let request = sut.nextRequest()
-        request?.completeWithResponse(response)
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        request?.complete(with: response)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertTrue(didPerformPingBackCalled)
@@ -145,12 +145,12 @@ class PushNoticeRequestStrategyTests: MessagingTest {
         // given
         let nextUUID = UUID.create()
         var didPerformPingBackCalled = false
-        var receivedFinalEvents = []
+        var receivedFinalEvents = [ZMUpdateEvent]()
         var receivedEventsWithID: EventsWithIdentifier?
         var receivedStatus: ZMTransportResponseStatus?
 
         pingBackStatus.mockNextNotificationID = nextUUID
-        pingBackStatus.mockStatus = .FetchingNotice
+        pingBackStatus.mockStatus = .fetchingNotice
         pingBackStatus.didFetchNoticeNotification = { eventsWithID, status, events in
             didPerformPingBackCalled = true
             receivedStatus = status
@@ -161,10 +161,10 @@ class PushNoticeRequestStrategyTests: MessagingTest {
         XCTAssertTrue(pingBackStatus.hasNoticeNotificationIDs)
         
         // when
-        let response = ZMTransportResponse(payload: nil, HTTPstatus: 401, transportSessionError: .tryAgainLaterError())
+        let response = ZMTransportResponse(payload: nil, httpStatus: 401, transportSessionError: NSError.tryAgainLaterError())
         let request = sut.nextRequest()
-        request?.completeWithResponse(response)
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        request?.complete(with: response)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertTrue(didPerformPingBackCalled)

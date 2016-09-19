@@ -51,16 +51,16 @@ class RequestStrategyTestBase : MessagingTest {
         
         self.mockTransportSession.performRemoteChanges { (session) -> Void in
             if let session = session as? MockTransportSessionObjectCreation {
-                mockUser = session.insertUserWithName("foo")
+                mockUser = session.insertUser(withName: "foo")
                 if let preKeys = preKeys, let lastKey = lastKey {
-                    mockClient = session.registerClientForUser(mockUser, label: mockUser.name, type: "permanent", preKeys: preKeys, lastPreKey: lastKey)
+                    mockClient = session.registerClient(for: mockUser, label: mockUser.name, type: "permanent", preKeys: preKeys, lastPreKey: lastKey)
                 }
                 else {
-                    mockClient = session.registerClientForUser(mockUser, label: mockUser.name, type: "permanent")
+                    mockClient = session.registerClient(for: mockUser, label: mockUser.name, type: "permanent")
                 }
             }
         }
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         let client = UserClient.insertNewObject(in: syncMOC)
         client.remoteIdentifier = mockClient.identifier

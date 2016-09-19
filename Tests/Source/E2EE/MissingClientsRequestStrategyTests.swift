@@ -42,14 +42,14 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
         let newKeyStore = FakeKeysStore()
-        self.syncMOC.userInfo.setObject(newKeyStore, forKey: "ZMUserClientKeysStore")
+        self.syncMOC.userInfo.setObject(newKeyStore, forKey: "ZMUserClientKeysStore" as NSCopying)
         cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer")
         let cookie = ZMCookie(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage)
         loginProvider = FakeCredentialProvider()
         updateProvider = FakeCredentialProvider()
         confirmationStatus = FakeConfirmationStatus(application: self.application, managedObjectContext: self.syncMOC, backgroundActivityFactory: FakeBackgroundActivityFactory())
         
-        clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, loginCredentialProvider:loginProvider, updateCredentialProvider:updateProvider, cookie:cookie, registrationStatusDelegate: nil)
+        clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, loginCredentialProvider:loginProvider, update:updateProvider, cookie:cookie, registrationStatusDelegate: nil)
         
         sut = MissingClientsRequestStrategy(clientRegistrationStatus: clientRegistrationStatus, apnsConfirmationStatus: confirmationStatus, managedObjectContext: self.syncMOC)
     }
@@ -74,11 +74,11 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         missingUser.remoteIdentifier = UUID.create()
         
         let firstMissingClient = UserClient.insertNewObject(in: self.syncMOC)
-        firstMissingClient.remoteIdentifier = NSString.createAlphanumericalString()
+        firstMissingClient.remoteIdentifier = NSString.createAlphanumerical()
         firstMissingClient.user = missingUser
         
         let secondMissingClient = UserClient.insertNewObject(in: self.syncMOC)
-        secondMissingClient.remoteIdentifier = NSString.createAlphanumericalString()
+        secondMissingClient.remoteIdentifier = NSString.createAlphanumerical()
         secondMissingClient.user = missingUser
         
         // when
@@ -89,25 +89,25 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         _ = [missingUser.remoteIdentifier!.transportString(): [firstMissingClient.remoteIdentifier, secondMissingClient.remoteIdentifier]]
         
         // then
-        AssertOptionalNotNil(request, "Should create request to fetch clients' keys") {request in
-            XCTAssertEqual(request.transportRequest.method, ZMTransportRequestMethod.MethodPOST)
+        AssertOptionalNotNil(request, "Should create request to fetch clients' keys") { request in
+            XCTAssertEqual(request.transportRequest.method, ZMTransportRequestMethod.methodPOST)
             XCTAssertEqual(request.transportRequest.path, "/users/prekeys")
-            let userPayload = request.transportRequest.payload.asDictionary()[missingUser.remoteIdentifier!.transportString()] as? NSArray
+            let userPayload = request.transportRequest.payload?.asDictionary()?[missingUser.remoteIdentifier!.transportString()] as? NSArray
             AssertOptionalNotNil(userPayload, "Clients map should contain missid user id") {userPayload in
-                XCTAssertTrue(userPayload.containsObject(firstMissingClient.remoteIdentifier), "Clients map should contain all missed clients id for each user")
-                XCTAssertTrue(userPayload.containsObject(secondMissingClient.remoteIdentifier), "Clients map should contain all missed clients id for each user")
+                XCTAssertTrue(userPayload.contains(firstMissingClient.remoteIdentifier), "Clients map should contain all missed clients id for each user")
+                XCTAssertTrue(userPayload.contains(secondMissingClient.remoteIdentifier), "Clients map should contain all missed clients id for each user")
             }
         }
     }
     
     func testThatItCreatesARequestToFetchMissedKeysIfClientHasMissingClientsAndMissingKeyIsModified() {
         // given
-        clientRegistrationStatus.mockPhase = .Registered
+        clientRegistrationStatus.mockPhase = .registered
         
         let client = createSelfClient()
         
         let missingClient = UserClient.insertNewObject(in: self.sut.managedObjectContext)
-        missingClient.remoteIdentifier = NSString.createAlphanumericalString()
+        missingClient.remoteIdentifier = NSString.createAlphanumerical()
         let missingUser = ZMUser.insertNewObject(in: self.sut.managedObjectContext)
         missingUser.remoteIdentifier = UUID.create()
         missingClient.user = missingUser
@@ -127,7 +127,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let client = createSelfClient()
         let missingClient = createRemoteClient(nil, lastKey: nil)
         
-        client.mutableSetValueForKey(ZMUserClientMissingKey).addObject(missingClient)
+        client.mutableSetValue(forKey: ZMUserClientMissingKey).add(missingClient)
         sut.notifyChangeTrackers(client)
         
         // when
@@ -140,7 +140,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
     func testThatItDoesNotCreateARequestToFetchMissedKeysIfClientDoesNotHaveMissingClientsAndMissingKeyIsNotModified() {
         // given
         let client = createSelfClient()
-        createRemoteClient(nil, lastKey: nil)
+        let _ = createRemoteClient(nil, lastKey: nil)
         
         client.missingClients = nil
         sut.notifyChangeTrackers(client)
@@ -155,7 +155,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
     func testThatItDoesNotCreateARequestToFetchMissedKeysIfClientDoesNotHaveMissingClientsAndMissingKeyIsModified() {
         // given
         let client = createSelfClient()
-        createRemoteClient(nil, lastKey: nil)
+        let _ = createRemoteClient(nil, lastKey: nil)
         
         client.missingClients = nil
         client.setLocallyModifiedKeys(Set(arrayLiteral: ZMUserClientMissingKey))
@@ -170,7 +170,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
     
     func testThatItPaginatesMissedClientsRequest() {
         
-        clientRegistrationStatus.mockPhase = .Registered
+        clientRegistrationStatus.mockPhase = .registered
         self.sut.requestsFactory = MissingClientsRequestFactory(pageSize: 1)
         
         // given
@@ -191,14 +191,14 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         
         // then
         assertRequestEqualsExpectedRequest(firstRequest)
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // and when
         let secondRequest = self.sut.nextRequest()
         
         // then
         assertRequestEqualsExpectedRequest(secondRequest)
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // and when
         let thirdRequest = self.sut.nextRequest()
@@ -213,7 +213,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient])
         
         //when
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertEqual(selfClient.missingClients!.count, 0)
@@ -225,7 +225,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let (request, response) = self.missingClientsRequestAndResponse(selfClient, missingClients: [otherClient], payload: [String: [String: AnyObject]]())
         
         //when
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertEqual(selfClient.missingClients!.count, 0)
@@ -235,7 +235,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         //given
         let (selfClient, otherClient) = createClients()
         let lastKey = try! selfClient.keysStore.lastPreKey()
-        let payload : [ String : [String : AnyObject]] = [
+        let payload : [ String : [String : Any]] = [
             otherClient.user!.remoteIdentifier!.transportString() :
                 [
                     otherClient.remoteIdentifier: [
@@ -247,7 +247,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient], payload: payload)
         
         //when
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertEqual(selfClient.missingClients!.count, 0)
@@ -266,7 +266,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient1, otherClient2], payload: payload)
         
         //when
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertEqual(selfClient.missingClients!.count, 0)
@@ -277,7 +277,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         //given
         let (selfClient, otherClient1) = createClients()
         
-        let payload = [otherClient1.user!.remoteIdentifier!.transportString() : [otherClient1.remoteIdentifier: ""]] as [String: [String : AnyObject]]
+        let payload = [otherClient1.user!.remoteIdentifier!.transportString() : [otherClient1.remoteIdentifier: ""]] as [String: [String : Any]]
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient1], payload: payload)
         
         //when
@@ -296,7 +296,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let lastKey = try! selfClient.keysStore.lastPreKey()
         let otherClient2 = self.createRemoteClient(generateValidPrekeysStrings(selfClient, howMany: 1), lastKey: lastKey)
         
-        let payload : [ String : [String : AnyObject]] = [
+        let payload : [ String : [String : Any]] = [
             otherClient1.user!.remoteIdentifier!.transportString() :
                 [
                     otherClient1.remoteIdentifier: [
@@ -308,7 +308,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         
         //when
         
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertEqual(selfClient.missingClients, Set(arrayLiteral: otherClient2))
@@ -330,7 +330,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         //when
         let otherClient3 = self.createRemoteClient(generateValidPrekeysStrings(selfClient, howMany: 2), lastKey: lastKey)
         selfClient.missesClient(otherClient3)
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertEqual(selfClient.missingClients, Set(arrayLiteral: otherClient3))
@@ -344,7 +344,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient])
         
         //when
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertEqual(message.missingRecipients.count, 0)
@@ -358,7 +358,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient])
         
         //when
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertFalse(message.isExpired)
@@ -369,11 +369,11 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let (selfClient, otherClient) = createClients()
         let message = messageThatMissesRecipient(otherClient)
         
-        let payload: [String: [String: AnyObject]] = [otherClient.user!.remoteIdentifier!.transportString(): [otherClient.remoteIdentifier: ["key": "a2V5"]]]
+        let payload: [String: [String: Any]] = [otherClient.user!.remoteIdentifier!.transportString(): [otherClient.remoteIdentifier: ["key": "a2V5"]]]
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient], payload: payload)
         
         //when
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertFalse(message.isExpired)
@@ -385,11 +385,11 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let (selfClient, otherClient) = createClients()
         let message = messageThatMissesRecipient(otherClient)
         
-        let payload: [String: [String: AnyObject]] = [otherClient.user!.remoteIdentifier!.transportString(): [otherClient.remoteIdentifier: ["key": "a2V5"]]]
+        let payload: [String: [String: Any]] = [otherClient.user!.remoteIdentifier!.transportString(): [otherClient.remoteIdentifier: ["key": "a2V5"]]]
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient], payload: payload)
         
         //when
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertEqual(message.missingRecipients.count, 0)
@@ -402,7 +402,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient], payload: [String: [String: AnyObject]]())
         
         //when
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertEqual(message.missingRecipients.count, 0)
@@ -415,7 +415,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         let (request, response) = missingClientsRequestAndResponse(selfClient, missingClients: [otherClient], payload: [String: [String: AnyObject]]())
         
         //when
-        self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
+        let _ = self.sut.updateUpdatedObject(selfClient, requestUserInfo: request.userInfo, response: response, keysToParse: request.keys)
         
         //then
         XCTAssertFalse(message.isExpired)
@@ -425,7 +425,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
     func generateValidPrekeysStrings(_ selfClient: UserClient, howMany: UInt16) -> [String] {
         var prekeys : [String] = []
         selfClient.keysStore.encryptionContext.perform { (sessionsDirectory) in
-            let keysAndIds = try! sessionsDirectory.generatePrekeys(Range<UInt16>(0..<howMany))
+            let keysAndIds = try! sessionsDirectory.generatePrekeys((0..<howMany))
             prekeys = keysAndIds.map { $0.prekey }
         }
         return prekeys
@@ -433,19 +433,19 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
     
     func assertRequestEqualsExpectedRequest(_ request: ZMTransportRequest?) {
         let client = ZMUser.selfUser(in: self.sut.managedObjectContext).selfClient()
-        let expectedRequest = sut.requestsFactory.fetchMissingClientKeysRequest(client!.missingClients!).transportRequest
+        let expectedRequest = sut.requestsFactory.fetchMissingClientKeysRequest(client!.missingClients!).transportRequest!
         
         AssertOptionalNotNil(request, "Should return request if there is inserted UserClient object") { request in
             XCTAssertNotNil(request.payload, "Request should contain payload")
             XCTAssertEqual(request.method, expectedRequest.method)
             XCTAssertEqual(request.path, expectedRequest.path)
-            XCTAssertTrue(request.payload.isEqual(expectedRequest.payload))
+            XCTAssertTrue(request.payload!.isEqual(expectedRequest.payload))
             
             self.mockTransportSession.completePreviouslySuspendendRequest(request)
         }
     }
     
-    func missingClientsRequestAndResponse(_ selfClient: UserClient, missingClients: [UserClient], payload: [String: [String: AnyObject]]? = nil)
+    func missingClientsRequestAndResponse(_ selfClient: UserClient, missingClients: [UserClient], payload: [String: [String: Any]]? = nil)
         -> (request: ZMUpstreamRequest, response: ZMTransportResponse)
     {
         let lastKey = try! selfClient.keysStore.lastPreKey()
@@ -456,7 +456,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         }
         
         // generate payload
-        var autoGeneratedPayload : [String: [String: AnyObject]] = [:]
+        var autoGeneratedPayload : [String: [String: Any]] = [:]
         for missingClient in missingClients {
             autoGeneratedPayload[missingClient.user!.remoteIdentifier!.transportString()] = [
                 missingClient.remoteIdentifier : [
@@ -466,16 +466,16 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
             ]
         }
         let payload = payload ?? autoGeneratedPayload
-        let response = ZMTransportResponse(payload: payload, HTTPstatus: 200, transportSessionError: nil)
+        let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
         let request = sut.requestsFactory.fetchMissingClientKeysRequest(selfClient.missingClients!)
         
-        return (request, response)
+        return (request!, response)
     }
     
     func messageThatMissesRecipient(_ missingRecipient: UserClient) -> ZMClientMessage {
         let message = ZMClientMessage.insertNewObject(in: self.syncMOC)
-        let data = ZMGenericMessage(text: self.name, nonce: UUID.create().transportString()).data()
-        message.addData(data)
+        let data = ZMGenericMessage(text: self.name!, nonce: UUID.create().transportString()).data()!
+        message.add(data)
         message.missesRecipient(missingRecipient)
         XCTAssertEqual(message.missingRecipients.count, 1)
         return message
@@ -483,14 +483,15 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
     
     func testThatItCreatesMissingClientsRequestAfterRemoteSelfClientIsFetched() {
         
-        clientRegistrationStatus.mockPhase = .Registered
+        clientRegistrationStatus.mockPhase = .registered
         
         let selfClient = createSelfClient()
         
         let remoteClientIdentifier = String.createAlphanumerical()
         
         // when
-        let newSelfClient = UserClient.createOrUpdateClient(["id": remoteClientIdentifier , "type": "permanent", "time": Date().transportString()], context: self.syncMOC)!
+        let payload: [String: Any] = ["id": remoteClientIdentifier as NSString! , "type": "permanent", "time": Date().transportString()]
+        let newSelfClient = UserClient.createOrUpdateClient(payload, context: self.syncMOC)!
         newSelfClient.user = selfClient.user
         sut.notifyChangeTrackers(selfClient)
         
@@ -499,12 +500,12 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         
         // then
         AssertOptionalNotNil(request, "Should create request to fetch clients' keys") {request in
-            XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodPOST)
+            XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST)
             XCTAssertEqual(request.path, "/users/prekeys")
-            let payloadDictionary = request.payload.asDictionary()
+            let payloadDictionary = request.payload!.asDictionary()!
             let userPayload = payloadDictionary[payloadDictionary.keys.first!] as? NSArray
             AssertOptionalNotNil(userPayload, "Clients map should contain missid user id") {userPayload in
-                XCTAssertTrue(userPayload.containsObject(remoteClientIdentifier), "Clients map should contain all missed clients id for each user")
+                XCTAssertTrue(userPayload.contains(remoteClientIdentifier), "Clients map should contain all missed clients id for each user")
             }
         }
     }
@@ -516,7 +517,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         XCTAssertTrue(client.keysThatHaveLocalModifications.contains(ZMUserClientMissingKey))
         
         // when
-        let shouldCreateRequest = sut.shouldCreateRequestToSyncObject(client, forKeys: Set(arrayLiteral: ZMUserClientMissingKey), withSync: sut.modifiedSync)
+        let shouldCreateRequest = sut.shouldCreateRequest(toSyncObject: client, forKeys: Set(arrayLiteral: ZMUserClientMissingKey), withSync: sut.modifiedSync)
         
         // then
         XCTAssertFalse(shouldCreateRequest)
@@ -532,7 +533,7 @@ class MissingClientsRequestStrategyTests: RequestStrategyTestBase {
         XCTAssertTrue(client.keysThatHaveLocalModifications.contains(ZMUserClientMissingKey))
         
         // when
-        let shouldCreateRequest = sut.shouldCreateRequestToSyncObject(client, forKeys: Set(arrayLiteral: ZMUserClientMissingKey), withSync: sut.modifiedSync)
+        let shouldCreateRequest = sut.shouldCreateRequest(toSyncObject: client, forKeys: Set(arrayLiteral: ZMUserClientMissingKey), withSync: sut.modifiedSync)
         
         // then
         XCTAssertTrue(shouldCreateRequest)

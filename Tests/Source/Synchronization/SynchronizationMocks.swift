@@ -24,7 +24,7 @@ class MockAuthenticationStatus: ZMAuthenticationStatus {
     
     var mockPhase: ZMAuthenticationPhase
     
-    init(phase: ZMAuthenticationPhase = .Authenticated, cookieString: String = "label", cookie: ZMCookie? = nil) {
+    init(phase: ZMAuthenticationPhase = .authenticated, cookieString: String = "label", cookie: ZMCookie? = nil) {
         self.mockPhase = phase
         self.cookieString = cookieString
         super.init(managedObjectContext: nil, cookie: cookie)
@@ -63,7 +63,7 @@ class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus {
 
 class ZMMockClientUpdateStatus: ClientUpdateStatus {
     var fetchedClients : [UserClient?] = []
-    var mockPhase : ClientUpdatePhase = .Done
+    var mockPhase : ClientUpdatePhase = .done
     var deleteCallCount : Int = 0
     var fetchCallCount : Int = 0
     var mockCredentials: ZMEmailCredentials = ZMEmailCredentials(email: "bla@example.com", password: "secret")
@@ -117,7 +117,7 @@ open class FakeKeysStore: UserClientKeysStore {
     override open func generateMoreKeys(_ count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
 
         if self.failToGeneratePreKeys {
-            let error = Error(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
+            let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
             throw error
         }
         else {
@@ -129,7 +129,7 @@ open class FakeKeysStore: UserClientKeysStore {
     
     override open func lastPreKey() throws -> String {
         if self.failToGenerateLastPreKey {
-            let error = Error(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
+            let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
             throw error
         }
         else {

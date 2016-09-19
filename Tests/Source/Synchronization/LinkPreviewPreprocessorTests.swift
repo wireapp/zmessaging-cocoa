@@ -24,9 +24,9 @@ import ZMCLinkPreview
 final class MockLinkDetector: LinkPreviewDetectorType {
     
     var nextResult = [LinkPreview]()
-    var downloadLinkPreviewsCallCount = 0
+    var downloadLinkPreviewsCallCount: Int = 0
     
-    @objc func downloadLinkPreviews(inText text: String, completion: ([LinkPreview]) -> Void) {
+    @objc func downloadLinkPreviews(inText text: String, completion: @escaping ([LinkPreview]) -> Void) {
         downloadLinkPreviewsCallCount += 1
         completion(nextResult)
     }
@@ -45,8 +45,8 @@ class LinkPreviewPreprocessorTests: MessagingTest {
     }
     
     func testThatItOnlyProcessesMessagesWithLinkPreviewState_WaitingToBeProcessed() {
-        [ZMLinkPreviewState.Done, .Downloaded, .Processed, .Uploaded, .WaitingToBeProcessed].forEach {
-            assertThatItProcessesMessageWithLinkPreviewState($0, shouldProcess: $0 == .WaitingToBeProcessed)
+        [ZMLinkPreviewState.done, .downloaded, .processed, .uploaded, .waitingToBeProcessed].forEach {
+            assertThatItProcessesMessageWithLinkPreviewState($0, shouldProcess: $0 == .waitingToBeProcessed)
         }
     }
     
@@ -54,19 +54,19 @@ class LinkPreviewPreprocessorTests: MessagingTest {
         // given 
         let URL = "http://www.example.com"
         let preview = LinkPreview(originalURLString: "example.com", permamentURLString: URL, offset: 0)
-        preview.imageData = [.secureRandomDataOfLength(256)]
+        preview.imageData = [.secureRandomData(ofLength: 256)]
         preview.imageURLs = [Foundation.URL(string: "http://www.example.com/image")!]
         mockDetector.nextResult = [preview]
         let message = createMessage()
         
         // when
         sut.objectsDidChange([message])
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(mockDetector.downloadLinkPreviewsCallCount, 1)
-        XCTAssertEqual(message.linkPreviewState, ZMLinkPreviewState.Downloaded)
-        let data = syncMOC.zm_imageAssetCache.assetData(message.nonce, format: .Original, encrypted: false)
+        XCTAssertEqual(message.linkPreviewState, ZMLinkPreviewState.downloaded)
+        let data = syncMOC.zm_imageAssetCache.assetData(message.nonce, format: .original, encrypted: false)
         XCTAssertEqual(data, preview.imageData.first!)
         guard let genericMessage = message.genericMessage else { return XCTFail("No generic message") }
         XCTAssertFalse(genericMessage.text.linkPreview.isEmpty)
@@ -80,12 +80,12 @@ class LinkPreviewPreprocessorTests: MessagingTest {
         
         // when
         sut.objectsDidChange([message])
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(mockDetector.downloadLinkPreviewsCallCount, 1)
-        XCTAssertEqual(message.linkPreviewState, ZMLinkPreviewState.Uploaded)
-        let data = syncMOC.zm_imageAssetCache.assetData(message.nonce, format: .Original, encrypted: false)
+        XCTAssertEqual(message.linkPreviewState, ZMLinkPreviewState.uploaded)
+        let data = syncMOC.zm_imageAssetCache.assetData(message.nonce, format: .original, encrypted: false)
         XCTAssertNil(data)
         guard let genericMessage = message.genericMessage else { return XCTFail("No generic message") }
         XCTAssertFalse(genericMessage.text.linkPreview.isEmpty)
@@ -97,11 +97,11 @@ class LinkPreviewPreprocessorTests: MessagingTest {
         
         // when
         sut.objectsDidChange([message])
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(mockDetector.downloadLinkPreviewsCallCount, 1)
-        XCTAssertEqual(message.linkPreviewState, ZMLinkPreviewState.Done)
+        XCTAssertEqual(message.linkPreviewState, ZMLinkPreviewState.done)
     }
     
     func testThatItSetsTheStateToDoneIfTheMessageDoesNotHaceTextMessageData() {
@@ -114,15 +114,15 @@ class LinkPreviewPreprocessorTests: MessagingTest {
         sut.objectsDidChange([message])
         
         // then
-        XCTAssertEqual(message.linkPreviewState, ZMLinkPreviewState.Done)
+        XCTAssertEqual(message.linkPreviewState, ZMLinkPreviewState.done)
     }
     
     // MARK: - Helper
     
-    func createMessage(_ state: ZMLinkPreviewState = .WaitingToBeProcessed) -> ZMClientMessage {
+    func createMessage(_ state: ZMLinkPreviewState = .waitingToBeProcessed) -> ZMClientMessage {
         let conversation = ZMConversation.insertNewObject(in: syncMOC)
         conversation.remoteIdentifier = UUID.create()
-        let message = conversation.appendMessageWithText(name!) as! ZMClientMessage
+        let message = conversation.appendMessage(withText: name!) as! ZMClientMessage
         message.linkPreviewState = state
         return message
     }
@@ -133,8 +133,9 @@ class LinkPreviewPreprocessorTests: MessagingTest {
         
         // when
         sut.objectsDidChange([message])
+        let callCount: Int = shouldProcess ? 1 : 0
         
         // then
-        XCTAssertEqual(mockDetector.downloadLinkPreviewsCallCount, shouldProcess ? 1 : 0, line: line, "Failure processing state \(state.rawValue)")
+        XCTAssertEqual(mockDetector.downloadLinkPreviewsCallCount, callCount, "Failure processing state \(state.rawValue)", line: line)
     }
 }

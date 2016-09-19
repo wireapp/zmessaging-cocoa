@@ -37,9 +37,9 @@ class ImageUploadRequestStrategyTests: MessagingTest {
     override func setUp() {
         super.setUp()
         
-        self.authenticationStatus = MockAuthenticationStatus(phase: .Authenticated)
+        self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
         self.clientRegistrationStatus = ImageUploadMockClientRegistrationStatus()
-        self.clientRegistrationStatus.mockPhase = .Registered
+        self.clientRegistrationStatus.mockPhase = .registered
         self.sut = ImageUploadRequestStrategy(authenticationStatus: authenticationStatus, clientRegistrationStatus: clientRegistrationStatus, managedObjectContext: self.syncMOC)
         
         createSelfClient()
@@ -49,60 +49,60 @@ class ImageUploadRequestStrategyTests: MessagingTest {
     
     func createImageMessage() -> ZMAssetClientMessage {
         let conversation = ZMConversation.insertNewObject(in: syncMOC)
-        conversation!.remoteIdentifier = UUID.create()
+        conversation.remoteIdentifier = UUID.create()
         
-        let message = conversation.appendOTRMessageWithImageData(verySmallJPEGData(), nonce: UUID.create())
+        let message = conversation.appendOTRMessage(withImageData: verySmallJPEGData(), nonce: UUID.create())
         syncMOC.saveOrRollback()
         
         return message
     }
     
     func prepare(_ message: ZMAssetClientMessage, forUploadingFormat format: ZMImageFormat) {
-        let otherFormat : ZMImageFormat = format == .Medium ? .Preview : .Medium
+        let otherFormat : ZMImageFormat = format == .medium ? .preview : .medium
         
         let properties = ZMIImageProperties(size: message.imageAssetStorage!.originalImageSize(), length: 1000, mimeType: "image/jpg")
-        message.imageAssetStorage?.setImageData(message.imageAssetStorage?.originalImageData(), forFormat:format, properties: properties)
-        message.imageAssetStorage?.setImageData(message.imageAssetStorage?.originalImageData(), forFormat:otherFormat, properties: properties)
-        message.uploadState = format == .Medium ? .UploadingFullAsset : .UploadingPlaceholder
+        message.imageAssetStorage?.setImageData(message.imageAssetStorage?.originalImageData(), for:format, properties: properties)
+        message.imageAssetStorage?.setImageData(message.imageAssetStorage?.originalImageData(), for:otherFormat, properties: properties)
+        message.uploadState = format == .medium ? .uploadingFullAsset : .uploadingPlaceholder
         
         syncMOC.saveOrRollback()
     }
         
-    func assertRequestIsGeneratedToSendOTRAssetWhenAMessageIsInserted(withFormat format: ZMImageFormat, block: (_ message: ZMMessage) -> Void) {
+    func assertRequestIsGeneratedToSendOTRAssetWhenAMessageIsInserted(withFormat format: ZMImageFormat, block: @escaping (_ message: ZMMessage) -> Void) {
         
         syncMOC.performGroupedBlock { 
             let message = self.createImageMessage()
-            let conversationId = message.conversation!.remoteIdentifier.transportString()
+            let conversationId = message.conversation!.remoteIdentifier!.transportString()
             
             self.prepare(message, forUploadingFormat: format)
             
             // when
-            block(message: message)
+            block(message)
             let request = self.sut.nextRequest()
             
             // then
             let expectedPath = "/conversations/\(conversationId)/otr/assets"
             XCTAssertEqual(expectedPath, request?.path)
             
-            let metadataItem = request?.multipartBodyItems().first as! ZMMultipartBodyItem
-            let messageFromSync = self.sut.managedObjectContext.objectWithID(message.objectID) as! ZMAssetClientMessage
+            let metadataItem = request?.multipartBodyItems()?.first as! ZMMultipartBodyItem
+            let messageFromSync = self.sut.managedObjectContext.object(with: message.objectID) as! ZMAssetClientMessage
             let messageDataFromSync = messageFromSync.encryptedMessagePayloadForImageFormat(format)?.data()
             
             XCTAssertEqual(metadataItem.data, messageDataFromSync)
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
  
     func testRequestIsGeneratedToSendAsset_whenOTRAssetIsInsertedOnInitialization() {
-        assertRequestIsGeneratedToSendOTRAssetWhenAMessageIsInserted(withFormat: .Medium) { (message) in
-            ZMChangeTrackerBootstrap.bootStrapChangeTrackers(self.sut.contextChangeTrackers, onContext: self.syncMOC)
+        assertRequestIsGeneratedToSendOTRAssetWhenAMessageIsInserted(withFormat: .medium) { (message) in
+            ZMChangeTrackerBootstrap.bootStrapChangeTrackers(self.sut.contextChangeTrackers, on: self.syncMOC)
         }
     }
     
     func testRequestIsGeneratedToSendAsset_whenOTRAssetIsInsertedOnObjectsDidChange() {
-        assertRequestIsGeneratedToSendOTRAssetWhenAMessageIsInserted(withFormat: .Medium) { (message) in
-            let messageFromSyncMoc = self.sut.managedObjectContext .objectWithID(message.objectID)
+        assertRequestIsGeneratedToSendOTRAssetWhenAMessageIsInserted(withFormat: .medium) { (message) in
+            let messageFromSyncMoc = self.sut.managedObjectContext .object(with: message.objectID)
             
             for changeTracker in self.sut.contextChangeTrackers {
                 changeTracker.objectsDidChange(Set(arrayLiteral: messageFromSyncMoc))
@@ -114,9 +114,9 @@ class ImageUploadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlock {
             //given
             let message = self.createImageMessage()
-            let properties = ZMIImageProperties(size: CGSizeMake(100, 100), length: UInt(100), mimeType: "")
+            let properties = ZMIImageProperties(size: CGSize(width: 100, height: 100), length: UInt(100), mimeType: "")
             
-            message.addGenericMessage(ZMGenericMessage(
+            message.add(ZMGenericMessage(
                 mediumImageProperties: properties,
                 processedImageProperties: properties,
                 encryptionKeys: nil,
@@ -125,50 +125,50 @@ class ImageUploadRequestStrategyTests: MessagingTest {
             
             // when
             switch format {
-            case .Preview:
-                message.uploadState = .UploadingPlaceholder
-            case .Medium:
-                message.uploadState = .UploadingFullAsset
+            case .preview:
+                message.uploadState = .uploadingPlaceholder
+            case .medium:
+                message.uploadState = .uploadingFullAsset
             default:
                 break
             }
             
-            self.sut.requestForUpdatingObject(message, forKeys: Set(arrayLiteral: ZMAssetClientMessageUploadedStateKey))
+            _ = self.sut.request(forUpdating: message, forKeys: Set(arrayLiteral: ZMAssetClientMessageUploadedStateKey))
             
             // then
             XCTAssertTrue(message.isZombieObject)
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func testMessageIsDeleted_whenFailedToCreatedUpdateRequestForMediumFormatAndNoOriginalDataStored() {
-        assertMessageIsDeleted_whenFailedToCreatedUpdateRequestAndNoOriginalDataStored(.Medium)
+        assertMessageIsDeleted_whenFailedToCreatedUpdateRequestAndNoOriginalDataStored(.medium)
     }
     
     func testMessageIsDeleted_whenFailedToCreatedUpdateRequestForPreviewFormatAndNoOriginalDataStored() {
-        assertMessageIsDeleted_whenFailedToCreatedUpdateRequestAndNoOriginalDataStored(.Preview)
+        assertMessageIsDeleted_whenFailedToCreatedUpdateRequestAndNoOriginalDataStored(.preview)
     }
     
     func testNoRequestIsGenerated_whenProcessingIsNeeded() {
         syncMOC.performGroupedBlock {
             // given
             let message = self.createImageMessage()
-            self.prepare(message, forUploadingFormat: .Medium)
+            self.prepare(message, forUploadingFormat: .medium)
             
             for changeTracker in self.sut.contextChangeTrackers {
                 changeTracker.objectsDidChange(Set(arrayLiteral: message))
             }
             
             // when
-            message.managedObjectContext?.zm_imageAssetCache.deleteAssetData(message.nonce, format: .Medium, encrypted: true)
+            message.managedObjectContext?.zm_imageAssetCache.deleteAssetData(message.nonce, format: .medium, encrypted: true)
             let request = self.sut.nextRequest()
             
             // then
             XCTAssertNil(request)
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func testNeedsToUploadMediumKeyIsReset_whenParsingTheResponseForPreviewImage() {
@@ -176,40 +176,40 @@ class ImageUploadRequestStrategyTests: MessagingTest {
             // given
             let key = ZMAssetClientMessageUploadedStateKey
             let message = self.createImageMessage()
-            message.uploadState = .UploadingPlaceholder
-            XCTAssertTrue(message.hasLocalModificationsForKey(key))
+            message.uploadState = .uploadingPlaceholder
+            XCTAssertTrue(message.hasLocalModifications(forKey: key))
             
-            let responsePayload = ["time" : Date().transportString()]
-            let response = ZMTransportResponse(payload: responsePayload, HTTPstatus: 200, transportSessionError: nil)
+            let responsePayload = ["time" : Date().transportString()] as ZMTransportData
+            let response = ZMTransportResponse(payload: responsePayload, httpStatus: 200, transportSessionError: nil)
             
             // when
-            self.sut.updateUpdatedObject(message, requestUserInfo: nil, response: response, keysToParse: Set(arrayLiteral: key))
+            _ = self.sut.updateUpdatedObject(message, requestUserInfo: nil, response: response, keysToParse: Set(arrayLiteral: key))
             
             // then
-            XCTAssertTrue(message.hasLocalModificationsForKey(key))
-            XCTAssertEqual(message.uploadState, ZMAssetUploadState.UploadingFullAsset)
+            XCTAssertTrue(message.hasLocalModifications(forKey: key))
+            XCTAssertEqual(message.uploadState, ZMAssetUploadState.uploadingFullAsset)
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func testAssetIdIsNotSet_whenParsingTheResponseForPreviewImage() {
         syncMOC.performGroupedBlock {
             // given
             let message = self.createImageMessage()
-            message.uploadState = .UploadingPlaceholder
+            message.uploadState = .uploadingPlaceholder
             
-            let responsePayload = ["time" : Date().transportString()]
-            let response = ZMTransportResponse(payload: responsePayload, HTTPstatus: 200, transportSessionError: nil)
+            let responsePayload = ["time" : Date().transportString()] as ZMTransportData
+            let response = ZMTransportResponse(payload: responsePayload, httpStatus: 200, transportSessionError: nil)
             
             // when
-            self.sut.updateUpdatedObject(message, requestUserInfo: nil, response: response, keysToParse: Set(arrayLiteral: ZMAssetClientMessageUploadedStateKey))
+            _ = self.sut.updateUpdatedObject(message, requestUserInfo: nil, response: response, keysToParse: Set(arrayLiteral: ZMAssetClientMessageUploadedStateKey))
             
             // then
             XCTAssertNil(message.assetId)
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func testNeedsToUploadMediumKeyIsReset_whenParsingTheResponseForMediumImage() {
@@ -218,22 +218,22 @@ class ImageUploadRequestStrategyTests: MessagingTest {
             let key = ZMAssetClientMessageUploadedStateKey
             let message = self.createImageMessage()
             let assetId = UUID.create()
-            message.uploadState = .UploadingFullAsset
-            XCTAssertTrue(message.hasLocalModificationsForKey(key))
+            message.uploadState = .uploadingFullAsset
+            XCTAssertTrue(message.hasLocalModifications(forKey: key))
             
-            let responsePayload = ["time" : Date().transportString()]
+            let responsePayload = ["time" : Date().transportString()] as ZMTransportData
             let responseHeader = ["Location" : assetId.transportString()]
-            let response = ZMTransportResponse(payload: responsePayload, HTTPstatus: 200, transportSessionError: nil, headers: responseHeader)
+            let response = ZMTransportResponse(payload: responsePayload, httpStatus: 200, transportSessionError: nil, headers: responseHeader)
             
             //when
-            self.sut.updateUpdatedObject(message, requestUserInfo: nil, response: response, keysToParse: Set(arrayLiteral: key))
+            _ = self.sut.updateUpdatedObject(message, requestUserInfo: nil, response: response, keysToParse: Set(arrayLiteral: key))
             
             // then
-            XCTAssertFalse(message.hasLocalModificationsForKey(key))
-            XCTAssertEqual(message.uploadState, ZMAssetUploadState.Done)
+            XCTAssertFalse(message.hasLocalModifications(forKey: key))
+            XCTAssertEqual(message.uploadState, ZMAssetUploadState.done)
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func testAssetIdIsSet_whenParsingTheResponseForMediumImage() {
@@ -241,20 +241,20 @@ class ImageUploadRequestStrategyTests: MessagingTest {
             // given
             let message = self.createImageMessage()
             let assetId = UUID.create()
-            message.uploadState = .UploadingFullAsset
+            message.uploadState = .uploadingFullAsset
             
-            let responsePayload = ["time" : Date().transportString()]
+            let responsePayload = ["time" : Date().transportString()] as ZMTransportData
             let responseHeader = ["Location" : assetId.transportString()]
-            let response = ZMTransportResponse(payload: responsePayload, HTTPstatus: 200, transportSessionError: nil, headers: responseHeader)
+            let response = ZMTransportResponse(payload: responsePayload, httpStatus: 200, transportSessionError: nil, headers: responseHeader)
             
             //when
-            self.sut.updateUpdatedObject(message, requestUserInfo: nil, response: response, keysToParse: Set(arrayLiteral: ZMAssetClientMessageUploadedStateKey))
+            _ = self.sut.updateUpdatedObject(message, requestUserInfo: nil, response: response, keysToParse: Set(arrayLiteral: ZMAssetClientMessageUploadedStateKey))
             
             // then
             XCTAssertEqual(message.assetId, assetId)
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func testKeysAreReset_whenRequestFailsBecauseSelfClientWasDeleted() {
@@ -264,19 +264,19 @@ class ImageUploadRequestStrategyTests: MessagingTest {
             let message = self.createImageMessage()
             
             message.setLocallyModifiedKeys(keys)
-            let request = ZMUpstreamRequest(transportRequest: ZMTransportRequest(getFromPath: "foo"))
+            let request = ZMUpstreamRequest(transportRequest: ZMTransportRequest(getFromPath: "foo"))!
             
             // when
-            let response = ZMTransportResponse(payload: ["label" : "unknown-client"], HTTPstatus: 403, transportSessionError: nil)
-            self.sut.shouldRetryToSyncAfterFailedToUpdateObject(message, request: request, response: response, keysToParse: keys)
+            let response = ZMTransportResponse(payload: ["label" : "unknown-client"] as ZMTransportData, httpStatus: 403, transportSessionError: nil)
+            self.sut.shouldRetryToSyncAfterFailed(toUpdate: message, request: request, response: response, keysToParse: keys)
             
             // then
-            XCTAssertEqual(message.uploadState, ZMAssetUploadState.UploadingFailed);
-            XCTAssertTrue(message.hasLocalModificationsForKeys(keys))
+            XCTAssertEqual(message.uploadState, ZMAssetUploadState.uploadingFailed);
+            XCTAssertTrue(message.hasLocalModifications(forKeys: keys))
             XCTAssertFalse(message.conversation!.needsToBeUpdatedFromBackend)
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
 }

@@ -26,12 +26,12 @@ import ZMCMockTransport
 
 class OperationLoopNewRequestObserver {
     
-    var notifications = [NSNotification]()
+    var notifications = [Notification]()
     fileprivate var notificationCenter = NotificationCenter.default
     fileprivate var newRequestNotification = "ZMOperationLoopNewRequestAvailable"
     
     init() {
-        notificationCenter.addObserverForName(NSNotification.Name(rawValue: newRequestNotification), object: nil, queue: .mainQueue()) { [weak self] note in
+        notificationCenter.addObserverForName(Notification.Name(rawValue: newRequestNotification), object: nil, queue: .main) { [weak self] note in
          self?.notifications.append(note)
         }
     }
@@ -43,7 +43,7 @@ class OperationLoopNewRequestObserver {
 
 
 @objc class MockAuthenticationProvider: NSObject, AuthenticationStatusProvider {
-    var mockAuthenticationPhase: ZMAuthenticationPhase = .Authenticated
+    var mockAuthenticationPhase: ZMAuthenticationPhase = .authenticated
     
     var currentPhase: ZMAuthenticationPhase {
         return mockAuthenticationPhase
@@ -56,8 +56,7 @@ class OperationLoopNewRequestObserver {
         return nil
     }
     
-    func performGroupedBlock(_ block : dispatch_block_t)
-    {
+    func performGroupedBlock(_ block : @escaping () -> Void) {
         block()
     }
     
@@ -93,7 +92,7 @@ class EventsWithIdentifierTests: ZMTBaseTest {
             "payload": [messageAddPayload(), messageAddPayload()]
         ]
         
-        events = ZMUpdateEvent.eventsArray(fromPushChannelData: pushChannelData)
+        events = ZMUpdateEvent.eventsArray(fromPushChannelData: pushChannelData as ZMTransportData)
         sut = EventsWithIdentifier(events: events, identifier: identifier, isNotice:true)
     }
     
@@ -191,7 +190,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertFalse(sut.hasNotificationIDs)
         
         // when
-        sut.didPerfomPingBackRequest(notificationEventsWithIDToPing, responseStatus: .TryAgainLater)
+        sut.didPerfomPingBackRequest(notificationEventsWithIDToPing, responseStatus: .tryAgainLater)
         
         // then
         XCTAssertTrue(sut.hasNotificationIDs)
@@ -203,7 +202,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertEqual(notificationID, nextEventsWithID?.identifier)
         
         // when
-        sut.didPerfomPingBackRequest(notificationEventsWithIDToPing, responseStatus: .Success)
+        sut.didPerfomPingBackRequest(notificationEventsWithIDToPing, responseStatus: .success)
         XCTAssertEqual(callcount, 1)
         XCTAssertNil(sut.nextNotificationEventsWithID())
     }
@@ -230,7 +229,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertFalse(sut.hasNotificationIDs)
         
         // when
-        sut.didPerfomPingBackRequest(notificationEventsWithIDToPing, responseStatus: .PermanentError)
+        sut.didPerfomPingBackRequest(notificationEventsWithIDToPing, responseStatus: .permanentError)
         
         // then
         XCTAssertFalse(sut.hasNotificationIDs)
@@ -248,25 +247,25 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     func testThatItDoesNotCallTheHandlerAfterPingBackRequestCompletedUnsuccessfully_TryAgain_Until_Sucess() {
         // given
         let eventsWithID = createEventsWithID()
-        let expectation = expectationWithDescription("It doesn't call the completion handler")
+        let expectation = self.expectation(description: "It doesn't call the completion handler")
         
         // expect
         var callcount = 0
         sut.didReceiveVoIPNotification(eventsWithID) {
             callcount += 1
-            XCTAssertEqual($0.0, ZMPushPayloadResult.Success)
+            XCTAssertEqual($0.0, ZMPushPayloadResult.success)
             expectation.fulfill()
         }
         
         // when
-        sut.didPerfomPingBackRequest(eventsWithID, responseStatus: .TryAgainLater)
+        sut.didPerfomPingBackRequest(eventsWithID, responseStatus: .tryAgainLater)
         
         // then
         XCTAssertEqual(callcount, 0)
         
         // when
-        sut.didPerfomPingBackRequest(eventsWithID, responseStatus: .Success)
-        XCTAssertTrue(waitForCustomExpectationsWithTimeout(0.5))
+        sut.didPerfomPingBackRequest(eventsWithID, responseStatus: .success)
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(callcount, 1)
@@ -283,11 +282,11 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     func checkThatItCallsTheHandlerAfterPingBackRequestCompleted(_ status: ZMTransportResponseStatus) {
         // given
         let eventsWithID = createEventsWithID()
-        let expectation = expectationWithDescription("It calls the completion handler")
+        let expectation = self.expectation(description: "It calls the completion handler")
         
         // expect
         sut.didReceiveVoIPNotification(eventsWithID) { result in
-            let expectedResult : ZMPushPayloadResult = (status == .Success) ? .Success : .Failure
+            let expectedResult : ZMPushPayloadResult = (status == .success) ? .success : .failure
             XCTAssertEqual(result.0, expectedResult)
             XCTAssertEqual(result.1, eventsWithID.events!)
             expectation.fulfill()
@@ -297,7 +296,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         sut.didPerfomPingBackRequest(eventsWithID, responseStatus: status)
         
         // then
-        XCTAssertTrue(waitForCustomExpectationsWithTimeout(0.5))
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
     func testThatItDoesSetTheStatusToDoneIfThereAreNoMoreNotifactionIDs() {
@@ -312,7 +311,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         _ = sut.nextNotificationEventsWithID()
         XCTAssertFalse(sut.hasNotificationIDs)
 
-        sut.didPerfomPingBackRequest(eventsWithID, responseStatus: .Success)
+        sut.didPerfomPingBackRequest(eventsWithID, responseStatus: .success)
         
         // then
         XCTAssertFalse(sut.hasNotificationIDs)
@@ -332,7 +331,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertEqual(currentEvents, eventsWithIDs.events!)
         
         // when
-        sut.didPerfomPingBackRequest(eventsWithIDs, responseStatus: .Success)
+        sut.didPerfomPingBackRequest(eventsWithIDs, responseStatus: .success)
         
         // then
         XCTAssertNil(sut.eventsWithHandlerByNotificationID[eventsWithIDs.identifier])
@@ -352,7 +351,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertEqual(currentEventsWithHandler.events!, eventsWithIDs.events!)
         
         // when
-        sut.didPerfomPingBackRequest(eventsWithIDs, responseStatus: .TemporaryError)
+        sut.didPerfomPingBackRequest(eventsWithIDs, responseStatus: .temporaryError)
         
         // then
         XCTAssertNil(sut.eventsWithHandlerByNotificationID[expectedIdentifier])
@@ -375,8 +374,8 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertEqual(currentEvents, firstEventsWithIDs.events!)
         
         // when
-        sut.didPerfomPingBackRequest(secondEventsWithIDs, responseStatus: .Success)
-        sut.didPerfomPingBackRequest(thirdEventsWithIDs, responseStatus: .TemporaryError)
+        sut.didPerfomPingBackRequest(secondEventsWithIDs, responseStatus: .success)
+        sut.didPerfomPingBackRequest(thirdEventsWithIDs, responseStatus: .temporaryError)
         
         // then
         guard let finalEvents = sut.eventsWithHandlerByNotificationID[expectedIdentifier]?.events else { return XCTFail() }
@@ -394,7 +393,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     
     func testThatItDoesNotStartABackgroundActivityWhenTheStatusIsNotAuthenticated() {
         // given
-        authenticationProvider.mockAuthenticationPhase = .Unauthenticated
+        authenticationProvider.mockAuthenticationPhase = .unauthenticated
         
         // when
         sut.didReceiveVoIPNotification(createEventsWithID())
@@ -422,7 +421,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         // when
         let nextEventsWithID = sut.nextNotificationEventsWithID()!
         XCTAssertEqual(nextEventsWithID.identifier, eventsWithID.identifier)
-        sut.didPerfomPingBackRequest(nextEventsWithID, responseStatus: successfully ? .Success : .TemporaryError)
+        sut.didPerfomPingBackRequest(nextEventsWithID, responseStatus: successfully ? .success : .temporaryError)
         
         // then
         XCTAssertNil(sut.backgroundActivity)
@@ -441,7 +440,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         // when
         let nextNoticeEventsWithID = sut.nextNoticeNotificationEventsWithID()!
         
-        sut.didFetchNoticeNotification(nextNoticeEventsWithID, responseStatus: fetchSuccess ? .Success : .TemporaryError, events:[])
+        sut.didFetchNoticeNotification(nextNoticeEventsWithID, responseStatus: fetchSuccess ? .success : .temporaryError, events:[])
         XCTAssertEqual(sut.status, PingBackStatus.Done)
         
         // and when
@@ -463,13 +462,13 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
 
     func simulateFetchNoticeAndPingback() {
         let nextNoticeEventsWithID = sut.nextNoticeNotificationEventsWithID()!
-        sut.didFetchNoticeNotification(nextNoticeEventsWithID, responseStatus: .Success, events:[])
+        sut.didFetchNoticeNotification(nextNoticeEventsWithID, responseStatus: .success, events:[])
         
     }
     
     func simulatePingBack() -> UUID {
         let nextEventsWithID = sut.nextNotificationEventsWithID()!
-        sut.didPerfomPingBackRequest(nextEventsWithID, responseStatus: .Success)
+        sut.didPerfomPingBackRequest(nextEventsWithID, responseStatus: .success)
         return nextEventsWithID.identifier
     }
     

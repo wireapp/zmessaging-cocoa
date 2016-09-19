@@ -21,7 +21,7 @@ import Foundation
 import ZMTesting
 
 
-func AssertKeyPathDictionaryHasOptionalValue<T: NSObject>(@autoclosure _ dictionary: () -> [KeyPath: T?], @autoclosure key: () -> KeyPath, expected: @autoclosure () -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+func AssertKeyPathDictionaryHasOptionalValue<T: NSObject>(_ dictionary: @autoclosure () -> [KeyPath: T?], key: @autoclosure () -> KeyPath, expected: @autoclosure () -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
     if let v = dictionary()[key()] {
         AssertOptionalEqual(v, expression2: expected(), message, file: file, line: line)
     } else {
@@ -30,7 +30,7 @@ func AssertKeyPathDictionaryHasOptionalValue<T: NSObject>(@autoclosure _ diction
 }
 
 
-func AssertKeyPathDictionaryHasOptionalNilValue<T: NSObject>(@autoclosure _ dictionary: () -> [KeyPath: T?], @autoclosure key: () -> KeyPath, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+func AssertKeyPathDictionaryHasOptionalNilValue<T: NSObject>(_ dictionary: @autoclosure () -> [KeyPath: T?], key: @autoclosure () -> KeyPath, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
     if let v = dictionary()[key()] {
         AssertOptionalNil(v, message , file: file, line: line)
     } else {

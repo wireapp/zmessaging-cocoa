@@ -55,7 +55,7 @@ class ZMAccountStatusTests : MessagingTest {
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
         
         // then
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.OldDeviceDeactivatedAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceDeactivatedAccount)
         
     }
     
@@ -68,7 +68,7 @@ class ZMAccountStatusTests : MessagingTest {
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
         
         // then
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.NewDeviceNewAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceNewAccount)
     }
     
     func testThatIfItLaunchesWithCookieAndHistoryItSetsAccountStateToExistingAccount(){
@@ -83,7 +83,7 @@ class ZMAccountStatusTests : MessagingTest {
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
         
         // then
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.OldDeviceActiveAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceActiveAccount)
     }
 
     
@@ -99,7 +99,7 @@ class ZMAccountStatusTests : MessagingTest {
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
         
         // then
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.OldDeviceActiveAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceActiveAccount)
     }
     
     func testThatWhenLoginSucceedsWithoutRegistrationItSwitchesToNewDeviceExistingAccount() {
@@ -107,14 +107,14 @@ class ZMAccountStatusTests : MessagingTest {
         let cookieStorage = MockCookieStorage()
         cookieStorage.shouldReturnCookie = false
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.NewDeviceNewAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceNewAccount)
         
         // when
         ZMUserSessionAuthenticationNotification.notifyAuthenticationDidSucceed()
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.NewDeviceExistingAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceExistingAccount)
     }
     
     func testThatWhenAuthenticationSucceedsOnOldAccountItDoesNotSwitchToNewDeviceExistingAccount() {
@@ -126,14 +126,14 @@ class ZMAccountStatusTests : MessagingTest {
         cookieStorage.shouldReturnCookie = true
         
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.OldDeviceActiveAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceActiveAccount)
         
         // when
         ZMUserSessionAuthenticationNotification.notifyAuthenticationDidSucceed()
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.OldDeviceActiveAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceActiveAccount)
     }
     
     func testThatWhenLoginSucceedsWithRegistrationItDoesNotSwitchToNewDeviceExistingAccount() {
@@ -141,16 +141,16 @@ class ZMAccountStatusTests : MessagingTest {
         let cookieStorage = MockCookieStorage()
         cookieStorage.shouldReturnCookie = false
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.NewDeviceNewAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceNewAccount)
         
         // when
         ZMUserSessionRegistrationNotification.notifyEmailVerificationDidSucceed()
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         ZMUserSessionAuthenticationNotification.notifyAuthenticationDidSucceed()
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.NewDeviceNewAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceNewAccount)
     }
     
     
@@ -161,38 +161,38 @@ class ZMAccountStatusTests : MessagingTest {
         let cookieStorage = MockCookieStorage()
         cookieStorage.shouldReturnCookie = false
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.NewDeviceNewAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceNewAccount)
 
         ZMUserSessionAuthenticationNotification.notifyAuthenticationDidSucceed()
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         let oneOnOne = ZMConversation.insertNewObject(in: self.uiMOC)
         oneOnOne.conversationType = .oneOnOne
         let group = ZMConversation.insertNewObject(in: self.uiMOC)
         group.conversationType = .group
         let connection = ZMConversation.insertNewObject(in: self.uiMOC)
-        connection.conversationType = .Connection
+        connection.conversationType = .connection
         let selfConv = ZMConversation.insertNewObject(in: self.uiMOC)
-        selfConv.conversationType = .Self
+        selfConv.conversationType = .self
         
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.NewDeviceExistingAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceExistingAccount)
 
         // when
-        NotificationCenter.default.post(name: "ZMInitialSyncCompletedNotification", object: nil)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "ZMInitialSyncCompletedNotification"), object: nil)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
         XCTAssertEqual(oneOnOne.messages.count, 1)
         XCTAssertEqual(group.messages.count, 1)
         XCTAssertEqual(connection.messages.count, 0)
         if let oneOnOneMsg = oneOnOne.messages.lastObject as? ZMSystemMessage, let groupMsg = oneOnOne.messages.lastObject as? ZMSystemMessage {
-            XCTAssertEqual(oneOnOneMsg.systemMessageType, ZMSystemMessageType.UsingNewDevice)
-            XCTAssertEqual(groupMsg.systemMessageType, ZMSystemMessageType.UsingNewDevice)
+            XCTAssertEqual(oneOnOneMsg.systemMessageType, ZMSystemMessageType.usingNewDevice)
+            XCTAssertEqual(groupMsg.systemMessageType, ZMSystemMessageType.usingNewDevice)
         } else {
             XCTFail()
         }
         
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.OldDeviceActiveAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceActiveAccount)
     }
     
     func testThatItAppendsAReactivedDeviceMessageWhenSyncCompletes_ReactivatedDevice() {
@@ -207,29 +207,29 @@ class ZMAccountStatusTests : MessagingTest {
         let group = ZMConversation.insertNewObject(in: self.uiMOC)
         group.conversationType = .group
         let connection = ZMConversation.insertNewObject(in: self.uiMOC)
-        connection.conversationType = .Connection
+        connection.conversationType = .connection
         let selfConv = ZMConversation.insertNewObject(in: self.uiMOC)
-        selfConv.conversationType = .Self
+        selfConv.conversationType = .self
         
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.OldDeviceDeactivatedAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceDeactivatedAccount)
         
         // when
-        NotificationCenter.default.post(name: "ZMInitialSyncCompletedNotification", object: nil)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "ZMInitialSyncCompletedNotification"), object: nil)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(oneOnOne.messages.count, 1)
         XCTAssertEqual(group.messages.count, 1)
         XCTAssertEqual(connection.messages.count, 0)
         if let oneOnOneMsg = oneOnOne.messages.lastObject as? ZMSystemMessage, let groupMsg = oneOnOne.messages.lastObject as? ZMSystemMessage {
-            XCTAssertEqual(oneOnOneMsg.systemMessageType, ZMSystemMessageType.ReactivatedDevice)
-            XCTAssertEqual(groupMsg.systemMessageType, ZMSystemMessageType.ReactivatedDevice)
+            XCTAssertEqual(oneOnOneMsg.systemMessageType, ZMSystemMessageType.reactivatedDevice)
+            XCTAssertEqual(groupMsg.systemMessageType, ZMSystemMessageType.reactivatedDevice)
         } else {
             XCTFail()
         }
         
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.OldDeviceActiveAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceActiveAccount)
     }
     
     func testThatWhenSyncCompletesItSwitchesToOldDeviceActiveAccount_NewAccountNewDevice(){
@@ -237,14 +237,14 @@ class ZMAccountStatusTests : MessagingTest {
         let cookieStorage = MockCookieStorage()
         cookieStorage.shouldReturnCookie = false
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.NewDeviceNewAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceNewAccount)
         
         // when
-        NotificationCenter.default.post(name: "ZMInitialSyncCompletedNotification", object: nil)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "ZMInitialSyncCompletedNotification"), object: nil)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.OldDeviceActiveAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceActiveAccount)
     }
     
     func testThatItSwitchesToOldDeviceDeactivatedAccountWhneAuthenticationFails() {
@@ -257,14 +257,14 @@ class ZMAccountStatusTests : MessagingTest {
         cookieStorage.shouldReturnCookie = true
         
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.OldDeviceActiveAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceActiveAccount)
         
         // when
-        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(Error(domain:"UserSession", code:0, userInfo: nil))
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError(domain:"UserSession", code:0, userInfo: nil))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.sut.currentAccountState, AccountState.OldDeviceActiveAccount)
+        XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceActiveAccount)
     
     }
     

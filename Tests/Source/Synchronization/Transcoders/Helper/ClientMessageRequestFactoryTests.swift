@@ -41,7 +41,7 @@ extension ClientMessageRequestFactoryTests {
         let request = ClientMessageRequestFactory().upstreamRequestForMessage(message, forConversationWithId: conversationId)
         
         //then
-        XCTAssertEqual(request?.method, ZMTransportRequestMethod.MethodPOST)
+        XCTAssertEqual(request?.method, ZMTransportRequestMethod.methodPOST)
         XCTAssertEqual(request?.path, "/conversations/\(conversationId.transportString())/otr/messages")
         XCTAssertEqual(message.encryptedMessagePayloadDataOnly, request?.binaryData)
     }
@@ -66,10 +66,10 @@ extension ClientMessageRequestFactoryTests {
         let confirmationMessage = message.confirmReception()
         
         //when
-        let request = ClientMessageRequestFactory().upstreamRequestForMessage(confirmationMessage, forConversationWithId: conversationId)
+        let request = ClientMessageRequestFactory().upstreamRequestForMessage(confirmationMessage!, forConversationWithId: conversationId)
         
         //then
-        XCTAssertEqual(request?.method, ZMTransportRequestMethod.MethodPOST)
+        XCTAssertEqual(request?.method, ZMTransportRequestMethod.methodPOST)
         XCTAssertEqual(request?.path, "/conversations/\(conversationId.transportString())/otr/messages?report_missing=\(user.remoteIdentifier!.transportString())")
         XCTAssertEqual(message.encryptedMessagePayloadData()?.data, request?.binaryData)
     }
@@ -85,7 +85,7 @@ extension ClientMessageRequestFactoryTests {
             let imageData = self.verySmallJPEGData()
             let format = ZMImageFormat.medium
             let conversationId = UUID.create()
-            let message = self.createImageMessageWithImageData(imageData, format: format, processed: true, stored: false, encrypted: true, moc: self.syncMOC)
+            let message = self.createImageMessage(withImageData: imageData, format: format, processed: true, stored: false, encrypted: true, moc: self.syncMOC)
             message.visibleInConversation = ZMConversation.insertNewObject(in: self.syncMOC)
             message.visibleInConversation?.remoteIdentifier = conversationId
             
@@ -96,7 +96,7 @@ extension ClientMessageRequestFactoryTests {
             let expectedPath = "/conversations/\(conversationId.transportString())/otr/assets"
 
             assertRequest(request, forImageMessage: message, conversationId: conversationId, encrypted: true, expectedPath: expectedPath, expectedPayload: nil, format: format)
-            XCTAssertEqual(request?.multipartBodyItems().count, 2)
+            XCTAssertEqual(request?.multipartBodyItems()?.count, 2)
         }
     }
     
@@ -109,7 +109,7 @@ extension ClientMessageRequestFactoryTests {
             let imageData = self.verySmallJPEGData()
             let format = ZMImageFormat.medium
             let conversationId = UUID.create()
-            let message = self.createImageMessageWithImageData(imageData, format: format, processed: false, stored: false, encrypted: true, moc: self.syncMOC)
+            let message = self.createImageMessage(withImageData: imageData, format: format, processed: false, stored: false, encrypted: true, moc: self.syncMOC)
             message.assetId = UUID.create()
             message.visibleInConversation = ZMConversation.insertNewObject(in: self.syncMOC)
             message.visibleInConversation?.remoteIdentifier = conversationId
@@ -120,7 +120,7 @@ extension ClientMessageRequestFactoryTests {
             //then
             let expectedPath = "/conversations/\(conversationId.transportString())/otr/assets/\(message.assetId!.transportString())"
 
-            XCTAssertEqual(request?.method, ZMTransportRequestMethod.MethodPOST)
+            XCTAssertEqual(request?.method, ZMTransportRequestMethod.methodPOST)
             XCTAssertEqual(request?.path, expectedPath)
             XCTAssertNotNil(request?.binaryData)
             XCTAssertEqual(request?.shouldUseOnlyBackgroundSession, true)
@@ -142,12 +142,12 @@ extension ClientMessageRequestFactoryTests {
         
         // when
         let sut = ClientMessageRequestFactory()
-        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.Placeholder, message: message, forConversationWithId: conversationID)
+        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.placeholder, message: message, forConversationWithId: conversationID)
         
         // then
         guard let request = uploadRequest else { return XCTFail() }
         XCTAssertEqual(request.path, "/conversations/\(conversationID.transportString())/otr/messages")
-        XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodPOST)
+        XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST)
         XCTAssertEqual(request.binaryDataType, "application/x-protobuf")
         XCTAssertNotNil(request.binaryData)
     }
@@ -162,12 +162,12 @@ extension ClientMessageRequestFactoryTests {
         
         // when
         let sut = ClientMessageRequestFactory()
-        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.Placeholder, message: message, forConversationWithId: conversationID)
+        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.placeholder, message: message, forConversationWithId: conversationID)
         
         // then
         guard let request = uploadRequest else { return XCTFail() }
         XCTAssertEqual(request.path, "/conversations/\(conversationID.transportString())/otr/messages")
-        XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodPOST)
+        XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST)
         XCTAssertEqual(request.binaryDataType, "application/x-protobuf")
         XCTAssertNotNil(request.binaryData)
     }
@@ -182,12 +182,12 @@ extension ClientMessageRequestFactoryTests {
         
         // when
         let sut = ClientMessageRequestFactory()
-        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.FullAsset, message: message, forConversationWithId: conversationID)
+        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.fullAsset, message: message, forConversationWithId: conversationID)
         
         // then
         guard let request = uploadRequest else { return XCTFail() }
         XCTAssertEqual(request.path, "/conversations/\(conversationID.transportString())/otr/assets")
-        XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodPOST)
+        XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST)
     }
     
     func testThatItCreatesRequestToReuploadFileMessageMetaData_WhenAssetIdIsPresent() {
@@ -201,12 +201,12 @@ extension ClientMessageRequestFactoryTests {
         
         // when
         let sut = ClientMessageRequestFactory()
-        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.FullAsset, message: message, forConversationWithId: conversationID)
+        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.fullAsset, message: message, forConversationWithId: conversationID)
         
         // then
         guard let request = uploadRequest else { return XCTFail() }
         XCTAssertEqual(request.path, "/conversations/\(conversationID.transportString())/otr/assets/\(message.assetId!.transportString())")
-        XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodPOST)
+        XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST)
         XCTAssertNotNil(request.binaryData)
         XCTAssertEqual(request.binaryDataType, "application/x-protobuf")
     }
@@ -222,7 +222,7 @@ extension ClientMessageRequestFactoryTests {
         
         // when
         let sut = ClientMessageRequestFactory()
-        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.FullAsset, message: message, forConversationWithId: conversationID)
+        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.fullAsset, message: message, forConversationWithId: conversationID)
         
         // then
         guard let request = uploadRequest else { return XCTFail() }
@@ -242,12 +242,12 @@ extension ClientMessageRequestFactoryTests {
         
         // when
         let sut = ClientMessageRequestFactory()
-        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.Placeholder, message: message, forConversationWithId: conversationID)
+        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.placeholder, message: message, forConversationWithId: conversationID)
         
         // then
         guard let request = uploadRequest else { return XCTFail() }
         XCTAssertFalse(request.path.containsString(message.assetId!.transportString()))
-        XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodPOST)
+        XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST)
         XCTAssertEqual(request.path, "/conversations/\(conversationID.transportString())/otr/messages")
     }
     
@@ -261,7 +261,7 @@ extension ClientMessageRequestFactoryTests {
         
         // when
         let sut = ClientMessageRequestFactory()
-        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.FullAsset, message:message, forConversationWithId: conversationID)
+        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.fullAsset, message:message, forConversationWithId: conversationID)
         XCTAssertNotNil(uploadRequest)
         
         // then
@@ -283,7 +283,7 @@ extension ClientMessageRequestFactoryTests {
         
         // when
         let sut = ClientMessageRequestFactory()
-        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.FullAsset, message: message, forConversationWithId: conversationID)
+        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.fullAsset, message: message, forConversationWithId: conversationID)
         XCTAssertNotNil(uploadRequest)
         
         // then
@@ -300,13 +300,13 @@ extension ClientMessageRequestFactoryTests {
         createSelfClient()
         let imageData = verySmallJPEGData()
         let conversationID = UUID.create()
-        let message = createImageMessageWithImageData(imageData, format: .Medium, processed: true, stored: false, encrypted: true, moc: syncMOC)
+        let message = createImageMessage(withImageData: imageData, format: .medium, processed: true, stored: false, encrypted: true, moc: syncMOC)
         message.visibleInConversation = ZMConversation.insertNewObject(in: self.syncMOC)
         message.visibleInConversation?.remoteIdentifier = conversationID
         
         // when
         let sut = ClientMessageRequestFactory()
-        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.FullAsset, message: message, forConversationWithId: conversationID)
+        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.fullAsset, message: message, forConversationWithId: conversationID)
         
         // then
         XCTAssertNil(uploadRequest)
@@ -322,7 +322,7 @@ extension ClientMessageRequestFactoryTests {
         
         // when
         let sut = ClientMessageRequestFactory()
-        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.FullAsset, message: message, forConversationWithId: conversationID)
+        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.fullAsset, message: message, forConversationWithId: conversationID)
         
         // then
         XCTAssertNil(uploadRequest)
@@ -338,7 +338,7 @@ extension ClientMessageRequestFactoryTests {
         
         // when
         let sut = ClientMessageRequestFactory()
-        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.FullAsset, message: message, forConversationWithId: conversationID)
+        let uploadRequest = sut.upstreamRequestForEncryptedFileMessage(.fullAsset, message: message, forConversationWithId: conversationID)
         
         // then
         XCTAssertNotNil(uploadRequest)
@@ -395,9 +395,9 @@ extension ClientMessageRequestFactoryTests {
         if withUploaded {
             let otrKey = Data.randomEncryptionKey()
             let sha256 = Data.randomEncryptionKey()
-            let uploadedMessage = ZMGenericMessage.genericMessage(withUploadedOTRKey: otrKey, sha256: sha256, messageID: nonce.transportString()!)
+            let uploadedMessage = ZMGenericMessage.genericMessage(withUploadedOTRKey: otrKey, sha256: sha256, messageID: nonce.transportString())
             XCTAssertNotNil(uploadedMessage)
-            message.addGenericMessage(uploadedMessage)
+            message.add(uploadedMessage)
         }
         
         if encryptedDataOnDisk {
@@ -408,7 +408,7 @@ extension ClientMessageRequestFactoryTests {
     }
     
     func createTestFile(_ url: URL) -> Data {
-        let data: Data! = name!.dataUsingEncoding(String.Encoding.utf8)
+        let data: Data! = name!.data(using: String.Encoding.utf8)
         try! data.write(to: url, options: [])
         return data
     }
@@ -418,7 +418,7 @@ extension ClientMessageRequestFactoryTests {
         let imageData = message.imageAssetStorage!.imageData(for: format, encrypted: encrypted)!
         
         AssertOptionalNotNil(request, "ClientRequestFactory should create requet to post medium asset message") { request in
-            XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodPOST)
+            XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST)
             XCTAssertEqual(request.path, expectedPath)
             
             AssertOptionalNotNil(request.multipartBodyItems(), "Request should be multipart data request") { multipartItems in
@@ -429,7 +429,7 @@ extension ClientMessageRequestFactoryTests {
                 AssertOptionalNotNil(multipartItems.first, "Request should contain metadata multipart data") { metaDataItem in
                     let metaData : [String: NSObject]
                     do {
-                        metaData = try NSJSONSerialization.JSONObjectWithData(metaDataItem.data, options: NSJSONReadingOptions()) as! [String : NSObject]
+                        metaData = try JSONSerialization.jsonObject(with: metaDataItem.data, options: JSONSerialization.ReadingOptions()) as! [String : NSObject]
                     }
                     catch {
                         metaData = [:]

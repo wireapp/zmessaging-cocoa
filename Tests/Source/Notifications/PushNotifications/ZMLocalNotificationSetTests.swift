@@ -24,19 +24,20 @@ import ZMCDataModel;
 
 public final class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
     
-    var keysAndValues = [String : AnyObject]()
+    var keysAndValues = [String : Any]()
     
-    @objc public override func setValue(_ value: AnyObject!, forKey key: String) {
+    @objc public override func setValue(_ value: Any?, forKey key: String) {
         keysAndValues[key] = value
     }
     
-    @objc public override func valueForKey(_ key: String) -> AnyObject? {
+    @objc public override func value(forKey key: String) -> Any? {
         return keysAndValues[key]
     }
     
     @objc public func enqueueDelayedSave() {
-    
+        // no op
     }
+
 }
 
 class MockLocalNotification : ZMLocalNotification {
@@ -94,7 +95,7 @@ class ZMLocalNotificationSetTests : MessagingTest {
         XCTAssertEqual(sut.notifications.count, 1)
         
         // and when
-        sut.remove(note)
+        let _ = sut.remove(note)
         
         // then
         XCTAssertEqual(sut.notifications.count, 0)
@@ -103,14 +104,14 @@ class ZMLocalNotificationSetTests : MessagingTest {
     func testThatItCancelsNotificationsOnlyForSpecificConversations(){
         // given
         let conversation1 = ZMConversation.insertNewObject(in: self.uiMOC)
-        conversation1.remoteIdentifier = NSUUID()
+        conversation1.remoteIdentifier = UUID()
         let localNote1 = UILocalNotification()
         localNote1.alertBody = "note1"
         let note1 = MockLocalNotification(conversationID: conversation1.remoteIdentifier)
         note1.add(localNote1)
         
         let conversation2 = ZMConversation.insertNewObject(in: self.uiMOC)
-        conversation2.remoteIdentifier = NSUUID()
+        conversation2.remoteIdentifier = UUID()
         let localNote2 = UILocalNotification()
         localNote2.alertBody = "note2"
         let note2 = MockLocalNotification(conversationID: conversation2.remoteIdentifier)
@@ -132,12 +133,12 @@ class ZMLocalNotificationSetTests : MessagingTest {
     func testThatItOnlyCancelsCallNotificationsIfSpecified(){
         // given
         let conversation1 = ZMConversation.insertNewObject(in: self.uiMOC)
-        conversation1.remoteIdentifier = NSUUID()
+        conversation1.remoteIdentifier = UUID()
         let localNote1 = UILocalNotification()
         localNote1.alertBody = "note1"
         let note1 = MockEventNotification(events: [], conversation: conversation1, managedObjectContext: uiMOC, application: application)!
         note1.add(localNote1)
-        note1.eventTypeUnderTest = .CallState
+        note1.eventTypeUnderTest = .callState
         XCTAssertEqual(note1.conversationID, conversation1.remoteIdentifier)
 
         let localNote2 = UILocalNotification()

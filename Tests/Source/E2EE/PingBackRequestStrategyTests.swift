@@ -26,7 +26,7 @@ import ZMCMockTransport
 
 class MockBackgroundAPNSPingBackStatus: BackgroundAPNSPingBackStatus {
     
-    var mockNextNotificationID: NSUUID?
+    var mockNextNotificationID: UUID?
     var mockNextNotificationEvents: [ZMUpdateEvent] = []
     
     var mockStatus : PingBackStatus = .Done {
@@ -79,7 +79,7 @@ class PingBackRequestStrategyTests: MessagingTest {
     
     override func setUp() {
         super.setUp()
-        authenticationStatus = MockAuthenticationStatus(phase: .Authenticated)
+        authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
         
         pingBackStatus = MockBackgroundAPNSPingBackStatus(
             syncManagedObjectContext: syncMOC,
@@ -104,7 +104,7 @@ class PingBackRequestStrategyTests: MessagingTest {
         let request = sut.nextRequest()
         
         // then
-        XCTAssertEqual(request?.method, .MethodPOST)
+        XCTAssertEqual(request?.method, .methodPOST)
         XCTAssertTrue(request!.shouldUseVoipSession)
         XCTAssertEqual(request?.path, "/push/fallback/\(notificationID.transportString())/cancel")
         XCTAssertNil(request?.payload)
@@ -126,7 +126,7 @@ class PingBackRequestStrategyTests: MessagingTest {
     
     func testThatItDoesNotGenerateARequestWhenThePingBackStatusReturnsANotificationIDButTheStateIsUnauthenticated() {
         // given
-        authenticationStatus.mockPhase = .Unauthenticated
+        authenticationStatus.mockPhase = .unauthenticated
         pingBackStatus.mockNextNotificationID = UUID.create()
         XCTAssertTrue(pingBackStatus.hasNotificationIDs)
         
@@ -139,7 +139,7 @@ class PingBackRequestStrategyTests: MessagingTest {
     
     func testThatItDoesNotGenerateARequestWhenThePingBackStatusReturnsNoNotificationIDButTheStateIsAuthenticated() {
         // given
-        authenticationStatus.mockPhase = .Authenticated
+        authenticationStatus.mockPhase = .authenticated
         XCTAssertFalse(pingBackStatus.hasNotificationIDs)
         
         // when
@@ -170,7 +170,7 @@ class PingBackRequestStrategyTests: MessagingTest {
         let response = ZMTransportResponse(payload: nil, HTTPstatus: 200, transportSessionError: nil)
         let request = sut.nextRequest()
         request?.completeWithResponse(response)
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertTrue(didPerformPingBackCalled)
@@ -198,7 +198,7 @@ class PingBackRequestStrategyTests: MessagingTest {
         // when
         let request = sut.nextRequest()
         request?.completeWithResponse(ZMTransportResponse(payload: nil, HTTPstatus: 401, transportSessionError: .tryAgainLaterError()))
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(didPerformPingBackCallCount, 1)
@@ -209,7 +209,7 @@ class PingBackRequestStrategyTests: MessagingTest {
         let nextRequest = sut.nextRequest()
         XCTAssertNotNil(nextRequest)
         nextRequest?.completeWithResponse(ZMTransportResponse(payload: nil, HTTPstatus: 200, transportSessionError: nil))
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         XCTAssertEqual(didPerformPingBackCallCount, 2)
         XCTAssertEqual(receivedStatus, .success)
@@ -237,7 +237,7 @@ class PingBackRequestStrategyTests: MessagingTest {
         let response = ZMTransportResponse(payload: nil, HTTPstatus: 400, transportSessionError: nil)
         let request = sut.nextRequest()
         request?.completeWithResponse(response)
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertTrue(didPerformPingBackCalled)

@@ -44,14 +44,14 @@ class ProxiedRequestStrategyTests: MessagingTest {
     func testThatItGeneratesAGiphyRequest() {
         
         // given
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar", method:.MethodGET, callback: { (_,_,_) -> Void in return})
+        requestsStatus.addRequest(.giphy, path: "/foo/bar", method:.methodGET, callback: { (_,_,_) -> Void in return})
         
         // when
         let request : ZMTransportRequest? = self.sut.nextRequest()
         
         // then
         if let request = request {
-            XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodGET)
+            XCTAssertEqual(request.method, ZMTransportRequestMethod.methodGET)
             XCTAssertEqual(request.path, "/proxy/giphy/foo/bar")
             XCTAssertTrue(request.needsAuthentication)
         } else {
@@ -62,14 +62,14 @@ class ProxiedRequestStrategyTests: MessagingTest {
     func testThatItGeneratesASoundcloudRequest() {
         
         // given
-        requestsStatus.addRequest(.Soundcloud, path: "/foo/bar", method:.MethodGET, callback: { (_,_,_) -> Void in return})
+        requestsStatus.addRequest(.soundcloud, path: "/foo/bar", method:.methodGET, callback: { (_,_,_) -> Void in return})
         
         // when
         let request : ZMTransportRequest? = self.sut.nextRequest()
         
         // then
         if let request = request {
-            XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodGET)
+            XCTAssertEqual(request.method, ZMTransportRequestMethod.methodGET)
             XCTAssertEqual(request.path, "/proxy/soundcloud/foo/bar")
             XCTAssertTrue(request.needsAuthentication)
             XCTAssertTrue(request.doesNotFollowRedirects)
@@ -81,8 +81,8 @@ class ProxiedRequestStrategyTests: MessagingTest {
     func testThatItGeneratesTwoRequestsInOrder() {
         
         // given
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar1", callback: {_,_,_ in return})
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar2", callback: {_,_,_ in return})
+        requestsStatus.addRequest(.giphy, path: "/foo/bar1", callback: {_,_,_ in return})
+        requestsStatus.addRequest(.giphy, path: "/foo/bar2", callback: {_,_,_ in return})
         
         // when
         let request1 : ZMTransportRequest? = self.sut.nextRequest()
@@ -106,7 +106,7 @@ class ProxiedRequestStrategyTests: MessagingTest {
     func testThatItGeneratesARequestOnlyOnce() {
         
         // given
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar1", method:.MethodGET, callback: {_,_,_ in return})
+        requestsStatus.addRequest(.giphy, path: "/foo/bar1", method:.methodGET, callback: {_,_,_ in return})
         
         // when
         let request1 : ZMTransportRequest? = self.sut.nextRequest()
@@ -130,9 +130,9 @@ class ProxiedRequestStrategyTests: MessagingTest {
         )!
         
         let response = ZMTransportResponse(HTTPURLResponse: HTTPResponse, data: data, error: error)
-        let expectation = self.expectationWithDescription("Callback invoked")
+        let expectation = self.expectation(description: "Callback invoked")
 
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar1", method:.MethodGET, callback: {
+        requestsStatus.addRequest(.giphy, path: "/foo/bar1", method:.methodGET, callback: {
             responseData,responseURLResponse,responseError in
             XCTAssertEqual(data, responseData)
             XCTAssertEqual(error, responseError)
@@ -150,15 +150,15 @@ class ProxiedRequestStrategyTests: MessagingTest {
         }
         
         // then
-        self.spinMainQueueWithTimeout(0.2)
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        self.spinMainQueue(withTimeout: 0.2)
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
     
     func testThatItMakesTheRequestExpireAfter20Seconds() {
         
         // given
         let ExpectedDelay : TimeInterval = 20
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar1", method:.MethodGET, callback: {_,_,_ in return})
+        requestsStatus.addRequest(.giphy, path: "/foo/bar1", method:.methodGET, callback: {_,_,_ in return})
         
         // when
         let request : ZMTransportRequest? = self.sut.nextRequest()
@@ -166,7 +166,7 @@ class ProxiedRequestStrategyTests: MessagingTest {
         // then
         if let request = request {
             XCTAssertNotNil(request.expirationDate)
-            let delay = request.expirationDate.timeIntervalSinceNow
+            let delay = request.expirationDate!.timeIntervalSinceNow
             XCTAssertLessThanOrEqual(delay, ExpectedDelay)
             XCTAssertGreaterThanOrEqual(delay, ExpectedDelay - 3)
             

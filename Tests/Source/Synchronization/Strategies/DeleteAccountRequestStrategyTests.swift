@@ -45,14 +45,14 @@ class DeleteAccountRequestStrategyTests: MessagingTest {
     func testThatItGeneratesARequest() {
         
         // given
-        self.uiMOC.setPersistentStoreMetadata(NSNumber(bool: true), forKey: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
+        self.uiMOC.setPersistentStoreMetadata(NSNumber(value: true), forKey: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
         
         // when
         let request : ZMTransportRequest? = self.sut.nextRequest()
         
         // then
         if let request = request {
-            XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodDELETE)
+            XCTAssertEqual(request.method, ZMTransportRequestMethod.methodDELETE)
             XCTAssertEqual(request.path, "/self")
             XCTAssertTrue(request.needsAuthentication)
         } else {
@@ -63,7 +63,7 @@ class DeleteAccountRequestStrategyTests: MessagingTest {
     func testThatItGeneratesARequestOnlyOnce() {
         
         // given
-        self.uiMOC.setPersistentStoreMetadata(NSNumber(bool: true), forKey: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
+        self.uiMOC.setPersistentStoreMetadata(NSNumber(value: true), forKey: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
         
         // when
         let request1 : ZMTransportRequest? = self.sut.nextRequest()
@@ -77,10 +77,10 @@ class DeleteAccountRequestStrategyTests: MessagingTest {
     
     func testThatItSignsUserOutWhenSuccessful() {
         // given
-        self.uiMOC.setPersistentStoreMetadata(NSNumber(bool: true), forKey: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
-        let notificationExpectation = self.expectationWithDescription("Notification fired")
+        self.uiMOC.setPersistentStoreMetadata(NSNumber(value: true), forKey: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
+        let notificationExpectation = self.expectation(description: "Notification fired")
         
-        let _ = NotificationCenter.default.addObserverForName("ZMUserSessionAuthenticationNotificationName", object: nil, queue: .mainQueue()) { _ in
+        let _ = NotificationCenter.default.addObserverForName(NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil, queue: .mainQueue()) { _ in
             notificationExpectation.fulfill()
         }
         
@@ -89,6 +89,6 @@ class DeleteAccountRequestStrategyTests: MessagingTest {
         request1.complete(with: ZMTransportResponse(payload: [], httPstatus: 201, transportSessionError: nil))
         
         // then
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
 }

@@ -30,9 +30,9 @@ class AddressBookUploadRequestStrategyTest : MessagingTest {
     
     override func setUp() {
         super.setUp()
-        self.authenticationStatus = MockAuthenticationStatus(phase: .Authenticated)
+        self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
         self.clientRegistrationStatus = ZMMockClientRegistrationStatus()
-        self.clientRegistrationStatus.mockPhase = .Registered
+        self.clientRegistrationStatus.mockPhase = .registered
         self.addressBook = AddressBookFake()
         self.trackerFake = AddressBookTrackerFake()
         
@@ -68,7 +68,7 @@ extension AddressBookUploadRequestStrategyTest {
         let request = sut.nextRequest() // this will return nil and start async processing
         
         // then
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNil(request)
     }
     
@@ -82,15 +82,15 @@ extension AddressBookUploadRequestStrategyTest {
         
         // then
         XCTAssertNil(nilRequest)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
         XCTAssertNotNil(request)
         if let request = request {
             XCTAssertEqual(request.path, "/onboarding/v3")
-            XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodPOST)
+            XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST)
             let expectedCards = self.addressBook.contactHashes.enumerated().map { (index, hashes) in ContactCard(id: "\(index)", hashes: hashes)}
             
-            if let parsedCards = request.payload.parsedCards {
+            if let parsedCards = request.payload?.parsedCards {
                 XCTAssertEqual(parsedCards, expectedCards)
             } else {
                 XCTFail("No parsed cards")
@@ -107,14 +107,14 @@ extension AddressBookUploadRequestStrategyTest {
         // given
         zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
-        request?.completeWithResponse(ZMTransportResponse(payload: [], HTTPstatus: 200, transportSessionError: nil))
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        request?.complete(with: ZMTransportResponse(payload: [] as ZMTransportData, httpStatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
         XCTAssertNil(sut.nextRequest())
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertNil(sut.nextRequest())
@@ -132,7 +132,7 @@ extension AddressBookUploadRequestStrategyTest {
         
         // then
         XCTAssertNil(nilRequest)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
         XCTAssertNil(request)
     }
@@ -155,7 +155,7 @@ extension AddressBookUploadRequestStrategyTest {
             Thread.sleep(forTimeInterval: 0.05)
             requests.append(sut.nextRequest())
         }
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         requests.append(sut.nextRequest())
         
         // then
@@ -167,21 +167,21 @@ extension AddressBookUploadRequestStrategyTest {
         // given
         zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request1 = sut.nextRequest()
-        request1?.completeWithResponse(ZMTransportResponse(payload: nil, HTTPstatus: 200, transportSessionError: nil))
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        request1?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
         zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request2 = sut.nextRequest()
         
         // then
         XCTAssertNotNil(request1)
         XCTAssertNotNil(request2)
-        guard let cards1 = request1?.payload.parsedCards, let cards2 = request2?.payload.parsedCards else {
+        guard let cards1 = request1?.payload?.parsedCards, let cards2 = request2?.payload?.parsedCards else {
             XCTFail()
             return
         }
@@ -351,15 +351,15 @@ extension AddressBookUploadRequestStrategyTest {
         // given
         zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
         let request = sut.nextRequest()
         XCTAssertNotNil(request)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [self.addressBook.contactHashes.count])
+        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.contactHashes.count)])
         XCTAssertEqual(self.trackerFake.taggedEndEventCount, 0)
     }
     
@@ -368,17 +368,17 @@ extension AddressBookUploadRequestStrategyTest {
         // given
         zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
         
         XCTAssertNotNil(request)
         
         // when
-        request?.completeWithResponse(ZMTransportResponse(payload: nil, HTTPstatus: 200, transportSessionError: nil))
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        request?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [self.addressBook.contactHashes.count])
+        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.contactHashes.count)])
         XCTAssertEqual(self.trackerFake.taggedEndEventCount, 1)
     }
     
@@ -387,17 +387,17 @@ extension AddressBookUploadRequestStrategyTest {
         // given
         zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
         
         XCTAssertNotNil(request)
         
         // when
-        request?.completeWithResponse(ZMTransportResponse(payload: nil, HTTPstatus: 400, transportSessionError: nil))
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        request?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [self.addressBook.contactHashes.count])
+        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.contactHashes.count)])
         XCTAssertEqual(self.trackerFake.taggedEndEventCount, 0)
     }
 }
@@ -445,12 +445,12 @@ extension AddressBookUploadRequestStrategyTest {
         ]
         zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
         
         // when
-        request?.completeWithResponse(ZMTransportResponse(payload: payload, HTTPstatus: 200, transportSessionError: nil))
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(self.syncMOC.suggestedUsersForUser.set, Set([id1, id2]))
@@ -468,12 +468,12 @@ extension AddressBookUploadRequestStrategyTest {
 
         zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
         
         // when
-        request?.completeWithResponse(ZMTransportResponse(payload: payload, HTTPstatus: 200, transportSessionError: nil))
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(self.syncMOC.suggestedUsersForUser.count, 0)
@@ -491,13 +491,13 @@ extension AddressBookUploadRequestStrategyTest {
 
         zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
         XCTAssertNotNil(request)
         
         // when
-        request?.completeWithResponse(ZMTransportResponse(payload: payload, HTTPstatus: 200, transportSessionError: nil))
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(self.syncMOC.suggestedUsersForUser.set, Set([id1, id2]))
@@ -513,10 +513,10 @@ extension AddressBookUploadRequestStrategyTest {
     func getNextUploadingRequest() -> ZMTransportRequest? {
         zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
-        request?.completeWithResponse(ZMTransportResponse(payload: nil, HTTPstatus: 200, transportSessionError: nil))
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        request?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         return request
     }
     
@@ -549,11 +549,11 @@ class AddressBookFake : zmessaging.AddressBookAccessor {
     /// Hashes to upload
     var contactHashes : [[String]] = []
     
-    func iterate() -> LazySequence<AnyGenerator<ZMAddressBookContact>> {
-        return AnyGenerator([].generate()).lazy
+    func iterate() -> LazySequence<AnyIterator<ZMAddressBookContact>> {
+        return AnyIterator([].makeIterator()).lazy
     }
     
-    func encodeWithCompletionHandler(_ groupQueue: ZMSGroupQueue, startingContactIndex: UInt, maxNumberOfContacts: UInt, completion: (zmessaging.EncodedAddressBookChunk?) -> ()) {
+    func encodeWithCompletionHandler(_ groupQueue: ZMSGroupQueue, startingContactIndex: UInt, maxNumberOfContacts: UInt, completion: @escaping (zmessaging.EncodedAddressBookChunk?) -> ()) {
         guard self.contactHashes.count > 0 else {
             groupQueue.performGroupedBlock({ 
                 completion(nil)
@@ -618,7 +618,7 @@ extension ZMTransportData {
         do {
             return try cards.map { card in
                 guard let id = card["card_id"] as? String, let hashes = card["contact"] as? [String] else {
-                    throw TestErrors.FailedToParse
+                    throw TestErrors.failedToParse
                 }
                 return ContactCard(id: id, hashes: hashes)
             }

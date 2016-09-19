@@ -21,7 +21,7 @@ import XCTest
 
 class ProxiedRequestsStatusTests: MessagingTest {
     
-    private var sut: ProxiedRequestsStatus!
+    fileprivate var sut: ProxiedRequestsStatus!
     
     override func setUp() {
         super.setUp()
@@ -34,7 +34,7 @@ class ProxiedRequestsStatusTests: MessagingTest {
     
     func testThatRequestIsAddedToPendingRequest() {
 
-        let exp = self.expectationWithDescription("expected callback")
+        let exp = self.expectation(description: "expected callback")
 
         //given
         let path = "foo/bar"
@@ -45,7 +45,7 @@ class ProxiedRequestsStatusTests: MessagingTest {
         }
         
         //when
-        self.sut.addRequest(.Giphy, path:url.relativeString!, method:.MethodGET, callback: callback)
+        self.sut.addRequest(.giphy, path:url.relativeString, method:.methodGET, callback: callback)
         
         //then
         let request = self.sut.pendingRequests.last
@@ -58,7 +58,7 @@ class ProxiedRequestsStatusTests: MessagingTest {
         else {
             XCTFail("No callback")
         }
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
     
 }

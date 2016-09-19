@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -67,7 +67,7 @@ extension HistorySynchronizationStatusTests {
         // when
         sut.didCompleteSync()
         self.application.simulateApplicationWillResignActive()
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertFalse(sut.shouldDownloadFullHistory)
@@ -82,7 +82,7 @@ extension HistorySynchronizationStatusTests {
         sut.didCompleteSync()
         self.application.simulateApplicationWillResignActive()
         self.application.simulateApplicationDidBecomeActive()
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertTrue(sut.shouldDownloadFullHistory)
@@ -96,7 +96,7 @@ extension HistorySynchronizationStatusTests {
         // when
         self.application.simulateApplicationWillResignActive()
         self.application.simulateApplicationDidBecomeActive()
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertFalse(sut.shouldDownloadFullHistory)

@@ -41,53 +41,53 @@ class LinkPreviewAssetDownloadRequestStrategyTests: MessagingTest {
     func testThatItGeneratesARequestForAWhitelistedMessageWithNoImageInCache() {
         // given
         let message = ZMClientMessage.insertNewObject(in: syncMOC)
-        let assetID = UUID.create().transportString()!
+        let assetID = UUID.create().transportString()
         let linkPreview = createLinkPreviewAndKeys(assetID).preview
         let nonce = UUID.create()
-        let genericMessage = ZMGenericMessage(text: name!, linkPreview: linkPreview, nonce: nonce.transportString()!)
-        message.addData(genericMessage.data())
-        _ = try? syncMOC.obtainPermanentIDsForObjects([message])
+        let genericMessage = ZMGenericMessage(text: name!, linkPreview: linkPreview, nonce: nonce.transportString())
+        message.add(genericMessage.data())
+        _ = try? syncMOC.obtainPermanentIDs(for: [message])
         
         // when
         message.requestImageDownload()
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
         XCTAssertEqual(request.path, "/assets/v3/\(assetID)")
-        XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodGET)
+        XCTAssertEqual(request.method, ZMTransportRequestMethod.methodGET)
         XCTAssertNil(sut.nextRequest())
     }
     
     func testThatItDoesNotGenerateARequestForAMessageWithoutALinkPreview() {
         let message = ZMClientMessage.insertNewObject(in: syncMOC)
-        let genericMessage = ZMGenericMessage(text: name!, nonce: UUID.create().transportString()!)
-        message.addData(genericMessage.data())
-        _ = try? syncMOC.obtainPermanentIDsForObjects([message])
+        let genericMessage = ZMGenericMessage(text: name!, nonce: UUID.create().transportString())
+        message.add(genericMessage.data())
+        _ = try? syncMOC.obtainPermanentIDs(for: [message])
         
         // when
         message.requestImageDownload()
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNil(sut.nextRequest())
     }
     
     func testThatItDoesNotGenerateARequestForAMessageWithImageInCache() {
         // given
         let message = ZMClientMessage.insertNewObject(in: syncMOC)
-        let assetID = UUID.create().transportString()!
+        let assetID = UUID.create().transportString()
         let linkPreview = createLinkPreviewAndKeys(assetID).preview
         let nonce = UUID.create()
-        let genericMessage = ZMGenericMessage(text: name!, linkPreview: linkPreview, nonce: nonce.transportString()!)
-        message.addData(genericMessage.data())
-        _ = try? syncMOC.obtainPermanentIDsForObjects([message])
+        let genericMessage = ZMGenericMessage(text: name!, linkPreview: linkPreview, nonce: nonce.transportString())
+        message.add(genericMessage.data())
+        _ = try? syncMOC.obtainPermanentIDs(for: [message])
         syncMOC.zm_imageAssetCache.storeAssetData(nonce, format: .Medium, encrypted: false, data: .secureRandomDataOfLength(256))
         
         // when
         message.requestImageDownload()
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertNil(sut.nextRequest())
@@ -96,17 +96,17 @@ class LinkPreviewAssetDownloadRequestStrategyTests: MessagingTest {
     func testThatItDoesNotGenerateARequestForAMessageWithoutArticleLinkPreview() {
         // given
         let message = ZMClientMessage.insertNewObject(in: syncMOC)
-        let assetID = UUID.create().transportString()!
+        let assetID = UUID.create().transportString()
         let linkPreview = createLinkPreviewAndKeys(assetID, article: false).preview
         let nonce = UUID.create()
-        let genericMessage = ZMGenericMessage(text: name!, linkPreview: linkPreview, nonce: nonce.transportString()!)
-        message.addData(genericMessage.data())
-        _ = try? syncMOC.obtainPermanentIDsForObjects([message])
+        let genericMessage = ZMGenericMessage(text: name!, linkPreview: linkPreview, nonce: nonce.transportString())
+        message.add(genericMessage.data())
+        _ = try? syncMOC.obtainPermanentIDs(for: [message])
         syncMOC.zm_imageAssetCache.storeAssetData(nonce, format: .Medium, encrypted: false, data: .secureRandomDataOfLength(256))
         
         // when
         message.requestImageDownload()
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertNil(sut.nextRequest())
@@ -116,19 +116,19 @@ class LinkPreviewAssetDownloadRequestStrategyTests: MessagingTest {
     
     func testThatItDecryptsTheImageDataInTheRequestResponseAndDeletesTheEncryptedVersion() {
         let message = ZMClientMessage.insertNewObject(in: syncMOC)
-        let assetID = UUID.create().transportString()!
+        let assetID = UUID.create().transportString()
         let data = Data.secureRandomData(ofLength: 256)
         let otrKey = Data.randomEncryptionKey()
         let encrypted = data.zmEncryptPrefixingPlainTextIV(key: otrKey)
         let (linkPreview, _, _) = createLinkPreviewAndKeys(assetID, otrKey: otrKey, sha256: encrypted.zmSHA256Digest())
         let nonce = UUID.create()
-        let genericMessage = ZMGenericMessage(text: name!, linkPreview: linkPreview, nonce: nonce.transportString()!)
-        message.addData(genericMessage.data())
-        _ = try? syncMOC.obtainPermanentIDsForObjects([message])
+        let genericMessage = ZMGenericMessage(text: name!, linkPreview: linkPreview, nonce: nonce.transportString())
+        message.add(genericMessage.data())
+        _ = try? syncMOC.obtainPermanentIDs(for: [message])
         
         // when
         message.requestImageDownload()
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
@@ -136,27 +136,27 @@ class LinkPreviewAssetDownloadRequestStrategyTests: MessagingTest {
         
         // when
         request.completeWithResponse(response)
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        let actual = syncMOC.zm_imageAssetCache.assetData(nonce, format: .Medium, encrypted: false)
+        let actual = syncMOC.zm_imageAssetCache.assetData(nonce, format: .medium, encrypted: false)
         XCTAssertNotNil(actual)
         XCTAssertEqual(actual, data)
-        XCTAssertNil(syncMOC.zm_imageAssetCache.assetData(nonce, format: .Medium, encrypted: true))
+        XCTAssertNil(syncMOC.zm_imageAssetCache.assetData(nonce, format: .medium, encrypted: true))
     }
     
     func testThatItDoesNotDecyptTheImageDataInTheRequestResponseWhenTheResponseIsNotSuccesful() {
         let message = ZMClientMessage.insertNewObject(in: syncMOC)
-        let assetID = UUID.create().transportString()!
+        let assetID = UUID.create().transportString()
         let (linkPreview, _, _) = createLinkPreviewAndKeys(assetID)
         let nonce = UUID.create()
-        let genericMessage = ZMGenericMessage(text: name!, linkPreview: linkPreview, nonce: nonce.transportString()!)
-        message.addData(genericMessage.data())
-        _ = try? syncMOC.obtainPermanentIDsForObjects([message])
+        let genericMessage = ZMGenericMessage(text: name!, linkPreview: linkPreview, nonce: nonce.transportString())
+        message.add(genericMessage.data())
+        _ = try? syncMOC.obtainPermanentIDs(for: [message])
         
         // when
         message.requestImageDownload()
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
@@ -164,43 +164,43 @@ class LinkPreviewAssetDownloadRequestStrategyTests: MessagingTest {
         
         // when
         request.completeWithResponse(response)
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertNil(syncMOC.zm_imageAssetCache.assetData(nonce, format: .Medium, encrypted: false))
-        XCTAssertNil(syncMOC.zm_imageAssetCache.assetData(nonce, format: .Medium, encrypted: true))
+        XCTAssertNil(syncMOC.zm_imageAssetCache.assetData(nonce, format: .medium, encrypted: false))
+        XCTAssertNil(syncMOC.zm_imageAssetCache.assetData(nonce, format: .medium, encrypted: true))
     }
     
     func testThatItNotifiesTheObserversWhenTheImageHasBeenDownloaded() {
         // given
         fireSyncCompletedNotification()
         let conversation = ZMConversation.insertNewObject(in: uiMOC)
-        let message = conversation.appendMessageWithText("Foo") as! ZMClientMessage
+        let message = conversation.appendMessage(withText: "Foo") as! ZMClientMessage
         let observer = MessageChangeObserver(message: message)
-        defer { observer.tearDown() }
-        let assetID = UUID.create().transportString()!
+        defer { observer?.tearDown() }
+        let assetID = UUID.create().transportString()
         let data = Data.secureRandomData(ofLength: 256)
         let otrKey = Data.randomEncryptionKey()
         let encrypted = data.zmEncryptPrefixingPlainTextIV(key: otrKey)
         let (linkPreview, _, _) = createLinkPreviewAndKeys(assetID, otrKey: otrKey, sha256: encrypted.zmSHA256Digest())
         let nonce = UUID.create()
-        let genericMessage = ZMGenericMessage(text: "Link preview", linkPreview: linkPreview, nonce: nonce.transportString()!)
-        message.addData(genericMessage.data())
+        let genericMessage = ZMGenericMessage(text: "Link preview", linkPreview: linkPreview, nonce: nonce.transportString())
+        message.add(genericMessage.data())
         uiMOC.saveOrRollback()
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
         message.requestImageDownload()
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
         let response = ZMTransportResponse(imageData: encrypted, HTTPstatus: 200, transportSessionError: nil, headers: nil)
         request.completeWithResponse(response)
         uiMOC.saveOrRollback()
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(observer.notifications.count, 1)
-        guard let changeInfo = observer.notifications.firstObject as? MessageChangeInfo else { return XCTFail("No change info") }
+        XCTAssertEqual(observer?.notifications.count, 1)
+        guard let changeInfo = observer?.notifications.firstObject as? MessageChangeInfo else { return XCTFail("No change info") }
         XCTAssertTrue(changeInfo.imageChanged)
     }
     
@@ -210,8 +210,8 @@ class LinkPreviewAssetDownloadRequestStrategyTests: MessagingTest {
         let URL = "http://www.example.com"
         
         if article {
-            let assetBuilder = ZMAsset.builder()
-            let remoteBuilder = ZMAssetRemoteData.builder()
+            let assetBuilder = ZMAsset.builder()!
+            let remoteBuilder = ZMAssetRemoteData.builder()!
             let (otr, sha) = (otrKey ?? Data.randomEncryptionKey(), sha256 ?? Data.zmRandomSHA256Key())
             remoteBuilder.setAssetId(assetID)
             remoteBuilder.setOtrKey(otr)

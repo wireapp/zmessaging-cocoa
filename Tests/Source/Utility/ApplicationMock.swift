@@ -22,7 +22,7 @@ import zmessaging
 /// A mock of Application that records the calls
 @objc public final class ApplicationMock : NSObject {
     
-    public var applicationState: UIApplicationState = .Active
+    public var applicationState: UIApplicationState = .active
     
     public var alertNotificationsEnabled: Bool = false
     
@@ -77,31 +77,31 @@ extension ApplicationMock : Application {
 extension ApplicationMock {
     
     @objc public func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector) {
-        NotificationCenter.default.addObserver(object, selector: selector, name: UIApplicationDidBecomeActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
     }
     
     @objc public func registerObserverForWillResignActive(_ object: NSObject, selector: Selector) {
-        NotificationCenter.default.addObserver(object, selector: selector, name: UIApplicationWillResignActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
     }
     
     @objc public func registerObserverForWillEnterForeground(_ object: NSObject, selector: Selector) {
-        NotificationCenter.default.addObserver(object, selector: selector, name: UIApplicationWillEnterForegroundNotification, object: nil)
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
     }
     
     @objc public func registerObserverForDidEnterBackground(_ object: NSObject, selector: Selector) {
-        NotificationCenter.default.addObserver(object, selector: selector, name: UIApplicationDidEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
     }
     
     @objc public func registerObserverForApplicationWillTerminate(_ object: NSObject, selector: Selector) {
-        NotificationCenter.default.addObserver(object, selector: selector, name: UIApplicationWillTerminateNotification, object: nil)
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
     }
     
     @objc public func unregisterObserverForStateChange(_ object: NSObject) {
-        NotificationCenter.default.removeObserver(object, name: UIApplicationWillResignActiveNotification, object: nil)
-        NotificationCenter.default.removeObserver(object, name: UIApplicationDidBecomeActiveNotification, object: nil)
-        NotificationCenter.default.removeObserver(object, name: UIApplicationWillEnterForegroundNotification, object: nil)
-        NotificationCenter.default.removeObserver(object, name: UIApplicationDidEnterBackgroundNotification, object: nil)
-        NotificationCenter.default.removeObserver(object, name: UIApplicationWillTerminateNotification, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
     }
 }
 
@@ -109,47 +109,47 @@ extension ApplicationMock {
 extension ApplicationMock {
     
     @objc public func simulateApplicationDidBecomeActive() {
-        NotificationCenter.default.post(name: UIApplicationDidBecomeActiveNotification, object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
     }
     
     @objc public func simulateApplicationWillResignActive() {
-        NotificationCenter.default.post(name: UIApplicationWillResignActiveNotification, object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
     }
     
     @objc public func simulateApplicationWillEnterForeground() {
-        NotificationCenter.default.post(name: UIApplicationWillEnterForegroundNotification, object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
     }
     
     @objc public func simulateApplicationDidEnterBackground() {
-        NotificationCenter.default.post(name: UIApplicationDidEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
     }
     
     @objc public func simulateApplicationWillTerminate() {
-        NotificationCenter.default.post(name: UIApplicationWillTerminateNotification, object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
     }
     
     var isInBackground : Bool {
-        return self.applicationState == .Background
+        return self.applicationState == .background
     }
     
     @objc func setBackground() {
-        self.applicationState = .Background
+        self.applicationState = .background
     }
     
     var isInactive : Bool {
-        return self.applicationState == .Inactive
+        return self.applicationState == .inactive
     }
     
     @objc func setInactive() {
-        self.applicationState = .Inactive
+        self.applicationState = .inactive
     }
     
     var isActive : Bool {
-        return self.applicationState == .Active
+        return self.applicationState == .active
     }
     
     @objc func setActive() {
-        self.applicationState = .Active
+        self.applicationState = .active
     }
 
 }

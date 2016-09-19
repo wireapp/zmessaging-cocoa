@@ -28,7 +28,7 @@ class InvitationsTests : IntegrationTestBase {
     override func setUp() {
         super.setUp()
         self.addressBook = AddressBookContactsFake()
-        self.updateDisplayNameGeneratorWithUsers(self.allUsers)
+        self.updateDisplayNameGenerator(withUsers: self.allUsers)
         self.searchDirectory = ZMSearchDirectory(userSession: self.userSession)
         self.addressBook = AddressBookContactsFake()
         zmessaging.debug_searchResultAddressBookOverride = self.addressBook.addressBook()
@@ -49,7 +49,7 @@ extension InvitationsTests {
         // given
         XCTAssertTrue(self.logInAndWaitForSyncToBeComplete())
         
-        let expectation = self.expectationWithDescription("Observer called")
+        let expectation = self.expectation(description: "Observer called")
         let request = ZMSearchRequest()
         request.query = ""
         request.includeContacts = true
@@ -61,15 +61,15 @@ extension InvitationsTests {
             expectation.fulfill()
         })
         
-        self.searchDirectory.addSearchResultObserver(observer)
-        defer { self.searchDirectory.removeSearchResultObserver(observer) }
+        self.searchDirectory.add(observer)
+        defer { self.searchDirectory.remove(observer) }
         
         // when
-        let token = self.searchDirectory.performRequest(request)
+        let token = self.searchDirectory.perform(request)
         
         // then
         XCTAssertNotNil(token)
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
     
     func testThatWeAreFetchingUsersContactAndAddressBook() {
@@ -79,7 +79,7 @@ extension InvitationsTests {
         self.addressBook.contacts = [
             AddressBookContactsFake.Contact(firstName: "Mario", emailAddresses: ["mm@example.com"], phoneNumbers: [])
         ]
-        let expectation = self.expectationWithDescription("Observer called")
+        let expectation = self.expectation(description: "Observer called")
         let request = ZMSearchRequest()
         request.query = ""
         request.includeContacts = true
@@ -92,15 +92,15 @@ extension InvitationsTests {
             expectation.fulfill()
         })
         
-        self.searchDirectory.addSearchResultObserver(observer)
-        defer { self.searchDirectory.removeSearchResultObserver(observer) }
+        self.searchDirectory.add(observer)
+        defer { self.searchDirectory.remove(observer) }
         
         // when
-        let token = self.searchDirectory.performRequest(request)
+        let token = self.searchDirectory.perform(request)
         
         // then
         XCTAssertNotNil(token)
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
     
     func testThatFetchingContactDoesntDuplicateWireAndAddressBookContact() {
@@ -112,7 +112,7 @@ extension InvitationsTests {
             AddressBookContactsFake.Contact(firstName: "Mario", emailAddresses: ["mm@example.com"], phoneNumbers: [])
         ]
         
-        let expectation = self.expectationWithDescription("Observer called")
+        let expectation = self.expectation(description: "Observer called")
         let request = ZMSearchRequest()
         request.query = ""
         request.includeContacts = true
@@ -125,15 +125,15 @@ extension InvitationsTests {
             expectation.fulfill()
         })
         
-        self.searchDirectory.addSearchResultObserver(observer)
-        defer { self.searchDirectory.removeSearchResultObserver(observer) }
+        self.searchDirectory.add(observer)
+        defer { self.searchDirectory.remove(observer) }
         
         // when
-        let token = self.searchDirectory.performRequest(request)
+        let token = self.searchDirectory.perform(request)
         
         // then
         XCTAssertNotNil(token)
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
 }
 
@@ -144,12 +144,12 @@ extension InvitationsTests {
     
     fileprivate let callback: ObserverCallback
     
-    fileprivate init(callback: ObserverCallback) {
+    fileprivate init(callback: @escaping ObserverCallback) {
         self.callback = callback
     }
     
-    func didReceiveSearchResult(_ result: ZMSearchResult!, forToken searchToken: ZMSearchToken!) {
-        self.callback(result: result, searchToken: searchToken)
+    func didReceive(_ result: ZMSearchResult!, for searchToken: ZMSearchToken!) {
+        self.callback(result, searchToken)
     }
     
 }

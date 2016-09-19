@@ -41,8 +41,7 @@ public enum ClientUpdateError : NSInteger {
     }
 }
 
-@objc
-public final class ClientUpdateStatus: NSObject {
+@objc open class ClientUpdateStatus: NSObject {
     
     var syncManagedObjectContext: NSManagedObjectContext
 
@@ -55,7 +54,8 @@ public final class ClientUpdateStatus: NSObject {
     
     fileprivate var authenticationToken : ZMAuthenticationObserverToken?
     fileprivate var internalCredentials : ZMEmailCredentials?
-    public var credentials : ZMEmailCredentials? {
+
+    open var credentials : ZMEmailCredentials? {
         return internalCredentials
     }
 
@@ -94,7 +94,7 @@ public final class ClientUpdateStatus: NSObject {
         needsToFetchClients(andVerifySelfClient: needsToVerifySelfClientOnAuthenticationDidSucceed)
     }
     
-    public var currentPhase : ClientUpdatePhase {
+    open var currentPhase : ClientUpdatePhase {
         if isFetchingClients {
             return .fetchingClients
         }
@@ -115,7 +115,7 @@ public final class ClientUpdateStatus: NSObject {
         needsToVerifySelfClient = verifySelfClient
     }
     
-    public func didFetchClients(_ clients: Array<UserClient>) {
+    open func didFetchClients(_ clients: Array<UserClient>) {
         if isFetchingClients {
             isFetchingClients = false
             var excludingSelfClient = clients
@@ -200,7 +200,7 @@ public final class ClientUpdateStatus: NSObject {
         }
     }
     
-    public func didDeleteClient() {
+    open func didDeleteClient() {
         if isWaitingToDeleteClients && !hasClientsToDelete {
             isWaitingToDeleteClients = false
             internalCredentials = nil;

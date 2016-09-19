@@ -70,9 +70,9 @@ class ConversationStatusStrategyTests: MessagingTest {
             conversation.lastReadServerTimeStamp = Date()
             conversation.remoteIdentifier = UUID.create()
             conversation.setLocallyModifiedKeys(Set(arrayLiteral: "lastReadServerTimeStamp"))
-            conversation.appendMessageWithText("hey")
+            conversation.appendMessage(withText: "hey")
 
-            conversation.didUpdateConversationWhileFetchingUnreadMessages()
+            conversation.didUpdateWhileFetchingUnreadMessages()
             conversation.lastUnreadMissedCallDate = conversation.lastReadServerTimeStamp.dateByAddingTimeInterval(-10)
             conversation.lastUnreadKnockDate = conversation.lastReadServerTimeStamp.dateByAddingTimeInterval(-15)
             
@@ -125,13 +125,13 @@ class ConversationStatusStrategyTests: MessagingTest {
             message.serverTimestamp = conversation.clearedTimeStamp
             message.visibleInConversation = conversation
             
-            XCTAssertFalse((conversation.messages.array.first as! NSManagedObject).deleted)
+            XCTAssertFalse((conversation.messages.array.first as! NSManagedObject).isDeleted)
 
             // when
             self.sut.objectsDidChange(Set(arrayLiteral: conversation))
             
             // then
-            XCTAssertTrue((conversation.messages.array.first as! NSManagedObject).deleted)
+            XCTAssertTrue((conversation.messages.array.first as! NSManagedObject).isDeleted)
         }
     }
     

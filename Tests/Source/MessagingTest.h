@@ -124,8 +124,11 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 
 @end
 
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MessagingTest (OTR)
+
+
 
 - (NSData *)encryptedMessage:(ZMGenericMessage *)message recipient:(UserClient *)recipient;
 
@@ -146,6 +149,7 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 @end
 
 
+
 @interface MessagingTest (SwiftBridgeConversation)
 
 - (void)simulateUnreadCount:(NSUInteger)unreadCount forConversation:(ZMConversation *)conversation;
@@ -153,3 +157,5 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 - (void)simulateUnreadMissedKnockInConversation:(ZMConversation *)conversation;
 
 @end
+
+NS_ASSUME_NONNULL_END

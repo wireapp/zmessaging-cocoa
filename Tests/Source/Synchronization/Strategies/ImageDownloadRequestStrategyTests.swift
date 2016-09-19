@@ -29,40 +29,39 @@ class ImageDownloadRequestStrategyTests: MessagingTest {
     override func setUp() {
         super.setUp()
         
-        self.authenticationStatus = MockAuthenticationStatus(phase: .Authenticated)
+        self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
         self.sut = ImageDownloadRequestStrategy(authenticationStatus: authenticationStatus , managedObjectContext: self.syncMOC)
         
         createSelfClient()
     }
     
-    func createImageMessage(withAssetId assetId: NSUUID?) -> ZMAssetClientMessage {
+    func createImageMessage(withAssetId assetId: UUID?) -> ZMAssetClientMessage {
         let conversation = ZMConversation.insertNewObject(in: syncMOC)
-        conversation!.remoteIdentifier = UUID.create()
+        conversation.remoteIdentifier = UUID.create()
         
-        let message = conversation.appendOTRMessageWithImageData(verySmallJPEGData(), nonce: UUID.create())
+        let message = conversation.appendOTRMessage(withImageData: verySmallJPEGData(), nonce: UUID.create())
         
         let imageData = message.imageAssetStorage?.originalImageData()
-        let imageSize = ZMImagePreprocessor.sizeOfPrerotatedImageWithData(imageData)
-        let properties = ZMIImageProperties(size: imageSize, length: UInt(imageData!.length), mimeType: "image/jpeg")
+        let imageSize = ZMImagePreprocessor.sizeOfPrerotatedImage(with: imageData)
+        let properties = ZMIImageProperties(size: imageSize, length: UInt(imageData!.count), mimeType: "image/jpeg")
         let keys = ZMImageAssetEncryptionKeys(otrKey: Data.randomEncryptionKey(), macKey: Data.zmRandomSHA256Key(), mac: Data.zmRandomSHA256Key())
         
-        message.addGenericMessage(ZMGenericMessage(
+        message.add(ZMGenericMessage(
             mediumImageProperties: properties,
             processedImageProperties: properties,
             encryptionKeys: keys,
             nonce: message.nonce.transportString(),
-            format: .Medium))
+            format: .medium))
         
-        message.addGenericMessage(ZMGenericMessage(
+        message.add(ZMGenericMessage(
             mediumImageProperties: properties,
             processedImageProperties: properties,
             encryptionKeys: keys,
             nonce: message.nonce.transportString(),
-            format: .Preview))
+            format: .preview))
     
         message.resetLocallyModifiedKeys(Set(arrayLiteral: ZMAssetClientMessageUploadedStateKey))
         message.assetId = assetId
-        
         syncMOC.saveOrRollback()
         
         return message
@@ -70,12 +69,12 @@ class ImageDownloadRequestStrategyTests: MessagingTest {
     
     func createFileMessage() -> ZMAssetClientMessage {
         let conversation = ZMConversation.insertNewObject(in: syncMOC)
-        conversation!.remoteIdentifier = UUID.create()
+        conversation.remoteIdentifier = UUID.create()
         
         let nonce = UUID.create()
         let fileURL = Bundle(for: ImageDownloadRequestStrategyTests.self).url(forResource: "Lorem Ipsum", withExtension: "txt")!
         let metadata = ZMFileMetadata(fileURL: fileURL)
-        let message = conversation!.appendOTRMessageWithFileMetadata(metadata, nonce: nonce)
+        let message = conversation.appendOTRMessage(with: metadata, nonce: nonce)
         
         syncMOC.saveOrRollback()
         
@@ -84,7 +83,7 @@ class ImageDownloadRequestStrategyTests: MessagingTest {
     
     func requestToDownloadAsset(withMessage message: ZMAssetClientMessage) -> ZMTransportRequest {
         // remove image data or it won't be downloaded
-        self.syncMOC.zm_imageAssetCache.deleteAssetData(message.nonce, format: .Original, encrypted: false)
+        self.syncMOC.zm_imageAssetCache.deleteAssetData(message.nonce, format: .original, encrypted: false)
         
         message.requestImageDownload()
         
@@ -106,7 +105,7 @@ class ImageDownloadRequestStrategyTests: MessagingTest {
             message.requestImageDownload()
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
         guard let request = self.sut.nextRequest() else { XCTFail(); return }
@@ -122,11 +121,11 @@ class ImageDownloadRequestStrategyTests: MessagingTest {
             let message = self.createImageMessage(withAssetId: nil)
             
             // remove image data or it won't be downloaded
-            self.syncMOC.zm_imageAssetCache.deleteAssetData(message.nonce, format: .Original, encrypted: false)
+            self.syncMOC.zm_imageAssetCache.deleteAssetData(message.nonce, format: .original, encrypted: false)
             message.requestImageDownload()
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
         let request = self.sut.nextRequest()
@@ -139,7 +138,7 @@ class ImageDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlock {
             // given
             let message = self.createFileMessage()
-            message.transferState = .Uploaded
+            message.transferState = .uploaded
             message.delivered = true
             message.assetId = UUID.create()
             
@@ -150,7 +149,7 @@ class ImageDownloadRequestStrategyTests: MessagingTest {
             XCTAssertNil(request)
         }
         
-         XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func testMessageImageDataIsUpdated_whenParsingAssetDownloadResponse() {
@@ -170,7 +169,7 @@ class ImageDownloadRequestStrategyTests: MessagingTest {
             
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func testMessageIsDeleted_whenDownloadRequestFail() {
@@ -185,7 +184,7 @@ class ImageDownloadRequestStrategyTests: MessagingTest {
             XCTAssertTrue(message.deleted)
         }
         
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
 }
