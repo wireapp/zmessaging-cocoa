@@ -132,14 +132,13 @@ extension AddressBook : AddressBookAccessor {
     internal func encodeWithCompletionHandler(_ groupQueue: ZMSGroupQueue,
                                               startingContactIndex: UInt,
                                               maxNumberOfContacts: UInt,
-                                              completion: @escaping (EncodedAddressBookChunk?)->()
+                                              completion: @escaping (EncodedAddressBookChunk?) -> ()
         ) {
         // here we are explicitly capturing self, this is executed on a queue that is
         // never blocked indefinitely as this is the only function using it
         groupQueue.dispatchGroup.async(on: addressBookProcessingQueue) {
             
-//            let range = startingContactIndex..<(startingContactIndex+maxNumberOfContacts)
-            let range = Range(uncheckedBounds: (startingContactIndex, startingContactIndex+maxNumberOfContacts)) // TODO jacob
+            let range: Range<UInt> = startingContactIndex..<(startingContactIndex+maxNumberOfContacts)
             let cards = self.generateContactCards(range)
             
             guard cards.count > 0 || startingContactIndex > 0 else {
