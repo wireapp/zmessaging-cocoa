@@ -27,7 +27,7 @@ public final class StoredUpdateEvent: NSManagedObject {
     @NSManaged var uuidString: String?
     @NSManaged var debugInformation: String?
     @NSManaged var isTransient: Bool
-    @NSManaged var payload: NSDictionary // TODO check if it can be Dictionary
+    @NSManaged var payload: NSDictionary
     @NSManaged var source: Int16
     @NSManaged var sortIndex: Int64
     
