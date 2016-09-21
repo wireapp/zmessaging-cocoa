@@ -104,17 +104,7 @@ protocol AddressBookAccessor {
 }
 
 extension AddressBook : AddressBookAccessor {
-    /// Encodes an arbitraty part the address book asynchronously. Will invoke the completion handler when done.
-    /// - parameter groupQueue: group queue to enter while executing, and where to invoke callback
-    /// - parameter completion: closure invoked when the address book encoding ended. It will receive nil parameter
-    ///     if there are no contacts to upload
-    /// - parameter maxNumberOfContacts: do not include more than this number of contacts
-    /// - parameter startingContactIndex: include contacts starting from this index in the address book
-//    internal func encodeWithCompletionHandler(_ groupQueue: ZMSGroupQueue, startingContactIndex: UInt, maxNumberOfContacts: UInt, completion: (EncodedAddressBookChunk?) -> ()) {
-//        <#code#>
-//    }
 
-    
     /// Number of contacts in the address book
     var numberOfContacts : UInt {
         return UInt(self.numberOfPeopleClosure(self.ref))
