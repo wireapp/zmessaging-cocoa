@@ -1805,8 +1805,9 @@
         UserClient *trusted = [user1.clients.allObjects firstObjectMatchingWithBlock:^BOOL(UserClient *obj) {
             return [obj.trustedByClients containsObject:selfClient];
         }];
-        
-        [selfClient ignoreClient:trusted];
+        if (nil != trusted) {
+            [selfClient ignoreClient:trusted];
+        }
     }
 
     WaitForAllGroupsToBeEmpty(0.5);
