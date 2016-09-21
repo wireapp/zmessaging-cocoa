@@ -187,7 +187,7 @@
     __block ZMAssetClientMessage *message;
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForEverythingToBeDone();
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
 
@@ -195,7 +195,7 @@
     [self.userSession performChanges:^{
         message = [conversation appendOTRMessageWithImageData:[self verySmallJPEGData] nonce:[NSUUID createUUID]];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForEverythingToBeDone();
     
     // then
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
