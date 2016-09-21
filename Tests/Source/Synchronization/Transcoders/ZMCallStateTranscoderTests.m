@@ -364,7 +364,7 @@
         // when
         block(conversation);
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     }];
         WaitForAllGroupsToBeEmpty(0.5);
     
@@ -402,7 +402,7 @@
         // when
         block(conversation);
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:HTTPStatus transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:HTTPStatus transportSessionError:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -467,7 +467,7 @@
                                   @"self":@{@"state":@"joined"},
                                   @"participants":@{}
                                   };
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         
         // when
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
@@ -493,7 +493,7 @@
                                   @"self":@{@"state":@"idle"},
                                   @"participants":@{}
                                   };
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         
         // when
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
@@ -513,7 +513,7 @@
                               @"self":@{@"state":@"idle"},
                               @"participants":@{}
                               };
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *syncConversation = (id)[self.syncMOC objectWithID:uiConversation.objectID];
@@ -651,7 +651,7 @@
                                   @"self":@{@"state":@"joined"},
                                   @"participants":@{}
                                   };
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         
         // expect
         [[self.flowTranscoder expect] setSessionIdentifier:sessionID forConversationIdentifier:conversationID];
@@ -688,7 +688,7 @@
                                   @"self":@{@"state":@"joined"},
                                   @"participants":@{}
                                   };
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         
         // expect
         [[self.flowTranscoder stub] setSessionIdentifier:OCMOCK_ANY forConversationIdentifier:OCMOCK_ANY];
@@ -787,7 +787,7 @@
                                                   },
                                           
                                   }};
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         
         // when
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
@@ -1168,7 +1168,7 @@
                                                   }
                                           }
                                   };
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateObject:incomingCallConversation withResponse:response downstreamSync:nil];
         
         // then
@@ -1216,7 +1216,7 @@
 {
     [self checkThatItSetsIsIgnoringCallTo:NO whenTheCallEndsWithBlock:^(ZMConversation *conv) {
         NSDictionary *payload = [self payloadForConversation:conv othersAreJoined:NO selfIsJoined:NO];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateObject:conv withResponse:response downstreamSync:nil];
     }];
 }
@@ -1225,7 +1225,7 @@
 {
     [self checkThatItSetsIsIgnoringCallTo:YES whenTheCallEndsWithBlock:^(ZMConversation *conv) {
         NSDictionary *payload = [self payloadForConversation:conv othersAreJoined:YES selfIsJoined:NO];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateObject:conv withResponse:response downstreamSync:nil];
     }];
 }
@@ -1234,7 +1234,7 @@
 {
     [self checkThatItSetsIsIgnoringCallTo:NO whenTheCallEndsWithBlock:^(ZMConversation *conv) {
         NSDictionary *payload = [self payloadForConversation:conv othersAreJoined:NO selfIsJoined:NO];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateUpdatedObject:conv requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:ZMConversationCallDeviceIsActiveKey]];
     }];
 }
@@ -1243,7 +1243,7 @@
 {
     [self checkThatItSetsIsIgnoringCallTo:YES whenTheCallEndsWithBlock:^(ZMConversation *conv) {
         NSDictionary *payload = [self payloadForConversation:conv othersAreJoined:YES selfIsJoined:NO];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateUpdatedObject:conv requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:ZMConversationCallDeviceIsActiveKey]];
     }];
 }
@@ -1270,7 +1270,7 @@
     [self checkThatIgnoringCallIsResetOnLeavingConversationWithBlock:^(ZMConversation *conv) {
         //leaves call on another device
         NSDictionary *payload = [self payloadForConversation:conv othersAreJoined:YES selfIsJoined:NO];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateObject:conv withResponse:response downstreamSync:nil];
     }];
 }
@@ -1280,7 +1280,7 @@
     [self checkThatIgnoringCallIsResetOnLeavingConversationWithBlock:^(ZMConversation *conv) {
         //leaves call on another device
         NSDictionary *payload = [self payloadForConversation:conv othersAreJoined:YES selfIsJoined:NO];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateUpdatedObject:conv requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:ZMConversationCallDeviceIsActiveKey]];
     }];
 }
@@ -1313,7 +1313,7 @@
                                           self.syncSelfUser.remoteIdentifier.transportString: @{@"state":@"idle"},
                                           }
                                   };
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         // when
         block(conv, response);
     }];
@@ -1543,7 +1543,7 @@
                                                                                            @"quality": @1
                                                                                         }
                                                                                    }
-                                                                      HTTPstatus:200 transportSessionError:nil];
+                                                                      HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1577,7 +1577,7 @@
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"self": @{ @"state": @"idle",
                                                                                                @"quality": @1 }
                                                                                    }
-                                                                      HTTPstatus:200
+                                                                      HTTPStatus:200
                                                            transportSessionError:nil];
         [request completeWithResponse:response];
     }];
@@ -1619,7 +1619,7 @@
                                                                                                                  @"quality": @1 }
                                                                                                       }
                                                                                    }
-                                                                      HTTPstatus:200
+                                                                      HTTPStatus:200
                                                            transportSessionError:nil];
         [request completeWithResponse:response];
     }];
@@ -1663,7 +1663,7 @@
     
     //2. process call state sync response
     [self.syncMOC performGroupedBlockAndWait:^{
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateUpdatedObject:syncConv requestUserInfo:nil response:response keysToParse:self.keys];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1698,7 +1698,7 @@
             return [conversation isEqual:conv] && !conv.callDeviceIsActive;
         }]];
         
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         
         // when
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
@@ -1719,7 +1719,7 @@
                                   @"self":@{@"state":@"joined"},
                                   @"participants":@{}
                                   };
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
@@ -1979,7 +1979,7 @@
         ZMConversation *syncConversation = (id)[self.syncMOC objectWithID:uiConversation.objectID];
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"self":@{
                                                                                            @"state": @"joined",
-                                                                                           @"quality": @1}} HTTPstatus:200 transportSessionError:nil];
+                                                                                           @"quality": @1}} HTTPStatus:200 transportSessionError:nil];
         
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
@@ -2043,7 +2043,7 @@
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"self":@{
                                                                                        @"state": @"idle",
-                                                                                       @"quality": @1}} HTTPstatus:200 transportSessionError:nil];
+                                                                                       @"quality": @1}} HTTPStatus:200 transportSessionError:nil];
 
     [self.syncMOC performGroupedBlockAndWait:^{
         // expect
@@ -2084,7 +2084,7 @@
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"self": @{ @"state": @"joined",
                                                                                            @"quality": @1 }}
-                                                                  HTTPstatus:200
+                                                                  HTTPStatus:200
                                                        transportSessionError:nil];
     [self.syncMOC performGroupedBlockAndWait:^{
         // expect
@@ -2147,7 +2147,7 @@
                                                                                            @"state":@"idle",
                                                                                            },
                                                                                    @"participants":@{},
-                                                                                   } HTTPstatus:200 transportSessionError:nil];
+                                                                                   } HTTPStatus:200 transportSessionError:nil];
         
         // when
         [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
@@ -2173,7 +2173,7 @@
         // given
         conversation = self.syncGroupConversation;
         conversation.callDeviceIsActive = YES;
-        conversation.reasonToLeave = ZMCallStateReasonToLeaveAVSError;
+        conversation.reasonToLeave = ZMCallStateReasonToLeaveAvsError;
         
         // expect
         [[observer expect] didEndCall:[OCMArg checkWithBlock:^BOOL(ZMCallEndedNotification *note) {
@@ -2189,7 +2189,7 @@
                                                                                            @"state":@"idle",
                                                                                            },
                                                                                    @"participants":@{},
-                                                                                   } HTTPstatus:200 transportSessionError:nil];
+                                                                                   } HTTPStatus:200 transportSessionError:nil];
         
         // when
         [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
@@ -2640,7 +2640,7 @@
     NSNumber *sequenceNumber = @1;
     ZMConversation *conversation = self.syncSelfToUser1Conversation;
     NSDictionary *payload = [self payloadForCallStateEventInConversation:conversation othersAreJoined:YES selfIsJoined:YES sequence:sequenceNumber];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
 
     // when
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -2719,7 +2719,7 @@
 - (void)testThatItDoesNotSaveALowerSequenceNumberAndRejectsThePayload_Downstream
 {
     [self checkThatItDoesNotSaveALowerSequenceNumberAndRejectsThePayloadWithBlock:^(ZMConversation *conversation, NSDictionary *payload) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
     }];
 }
@@ -2727,7 +2727,7 @@
 - (void)testThatItDoesNotSaveALowerSequenceNumberAndRejectsThePayload_Upstream
 {
     [self checkThatItDoesNotSaveALowerSequenceNumberAndRejectsThePayloadWithBlock:^(ZMConversation *conversation, NSDictionary *payload) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
     }];
 }
@@ -2772,7 +2772,7 @@
 - (void)testThatItSavesAHigherSequenceNumberAndProcessesThePayload_Downstream
 {
     [self checkThatItSavesAHigherSequenceNumberAndProcessesThePayloadWithBlock:^(ZMConversation *conversation, NSDictionary *payload) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
     }];
 }
@@ -2780,7 +2780,7 @@
 - (void)testThatItSavesAHigherSequenceNumberAndProcessesThePayload_Upstream
 {
     [self checkThatItSavesAHigherSequenceNumberAndProcessesThePayloadWithBlock:^(ZMConversation *conversation, NSDictionary *payload) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
     }];
 }
@@ -2825,7 +2825,7 @@
 - (void)testThatItSavesASameSequenceNumberAndProcessesThePayload_Downstream
 {
     [self checkThatItSavesASameSequenceNumberAndProcessesThePayloadWithBlock:^(ZMConversation *conversation, NSDictionary *payload) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
     }];
 }
@@ -2833,7 +2833,7 @@
 - (void)testThatItSavesASameSequenceNumberAndProcessesThePayload_Upstream
 {
     [self checkThatItSavesASameSequenceNumberAndProcessesThePayloadWithBlock:^(ZMConversation *conversation, NSDictionary *payload) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
     }];
 }
@@ -2935,7 +2935,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *syncConv = (id)[self.syncMOC objectWithID:conversation.objectID];
         XCTAssertTrue(syncConv.hasLocalModificationsForCallDeviceIsActive);
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
 
         // when
         [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
@@ -2959,7 +2959,7 @@
         
         [self.upstreamSync objectsDidChange:[NSSet setWithObject:conversation]];
         ZMTransportRequest *request = [self.upstreamSync nextRequest];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:0 transportSessionError:[NSError requestExpiredError]];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:0 transportSessionError:[NSError requestExpiredError]];
         XCTAssertNotNil(request);
         
         // expect
@@ -3002,7 +3002,7 @@
         
         [self.upstreamSync objectsDidChange:[NSSet setWithObject:conversation]];
         ZMTransportRequest *request = [self.upstreamSync nextRequest];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:0 transportSessionError:[NSError requestExpiredError]];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:0 transportSessionError:[NSError requestExpiredError]];
         XCTAssertNotNil(request);
         
         // expect
@@ -3046,7 +3046,7 @@
         XCTAssertTrue([self.upstreamSync hasOutstandingItems]);
         
         // when
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:0 transportSessionError:[NSError tryAgainLaterError]];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:0 transportSessionError:[NSError tryAgainLaterError]];
         
         ZMTransportRequest *receivedRequest = [self.upstreamSync nextRequest];
         [receivedRequest completeWithResponse:response];
@@ -3063,7 +3063,7 @@
     // and when you try again
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
         
         ZMTransportRequest *receivedRequest = [self.upstreamSync nextRequest];
         [receivedRequest completeWithResponse:response];
@@ -3086,7 +3086,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         conversation = (id)[self.syncMOC objectWithID:uiConv.objectID];
         XCTAssertTrue(conversation.hasLocalModificationsForCallDeviceIsActive);
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:400 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil];
         
         // when
         ZMUpstreamRequest *request = [self.sut requestForUpdatingObject:conversation forKeys:self.keys];
@@ -3126,7 +3126,7 @@
         conversation.isIgnoringCall = YES;
         XCTAssertTrue(conversation.hasLocalModificationsForCallDeviceIsActive);
         
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:400 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil];
         
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:conversation];
@@ -3165,7 +3165,7 @@
         errorNotificationPosted = YES;
     }];
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:400 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil];
     
     // when
     
@@ -3195,7 +3195,7 @@
         errorNotificationPosted = YES;
     }];
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:400 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil];
     
     // when
     [self performPretendingUiMocIsSyncMoc:^{
@@ -3305,7 +3305,7 @@
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
         XCTAssertNotNil(request);
         
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }];
 }
@@ -3318,7 +3318,7 @@
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
         XCTAssertNotNil(request);
         
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }];
 }
@@ -3336,7 +3336,7 @@
 {
     [self checkThatItCallsAddJoinedUsers:NO selfUserJoined:YES withBlock:^(NSDictionary * payload, ZMConversation *syncConversation) {
         NOT_USED(syncConversation);
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateObject:syncConversation withResponse:response downstreamSync:nil];
     }];
 }
@@ -3433,7 +3433,7 @@
     ZMConversation *conversation1 = self.syncGroupConversation;
     
     NSDictionary *payload1 = [self payloadForCallStateEventInConversation:conversation1 othersAreJoined:YES selfIsJoined:NO sequence:nil];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload1 HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload1 HTTPStatus:200 transportSessionError:nil];
 
     // then
     [[self.flowTranscoder expect] appendLogForConversationID:conversation1.remoteIdentifier message:[OCMArg checkWithBlock:^BOOL(NSString *message) {
@@ -3594,7 +3594,7 @@
     [[self.gsmCallHandler expect] setActiveCallSyncConversation:conversation];
     
     // then
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
     [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
 }
 
@@ -3608,7 +3608,7 @@
     [[self.gsmCallHandler expect] setActiveCallSyncConversation:nil];
     
     // then
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
     [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
 }
 
@@ -3623,7 +3623,7 @@
     [[self.flowTranscoder reject] updateFlowsForConversation:OCMOCK_ANY];
 
     // when
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
     [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
     
     [self.flowTranscoder verify];
@@ -3643,7 +3643,7 @@
     }]];
     
     // when
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
     [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
     
     [self.flowTranscoder verify];
@@ -3734,7 +3734,7 @@
 
     // when
     NSDictionary *payload = [self payloadForConversation:conversation othersAreJoined:YES selfIsJoined:YES];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -3755,7 +3755,7 @@
     
     // when
     NSDictionary *payload = [self payloadForConversation:conversation othersAreJoined:YES selfIsJoined:YES];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     

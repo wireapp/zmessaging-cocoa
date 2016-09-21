@@ -237,7 +237,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     }
     [self.sut objectsDidChange:[NSSet setWithArray:allUsers]];
     
-    ZMTransportResponse *failingResponse = [ZMTransportResponse responseWithPayload:nil HTTPstatus:500 transportSessionError:nil];
+    ZMTransportResponse *failingResponse = [ZMTransportResponse responseWithPayload:nil HTTPStatus:500 transportSessionError:nil];
 
     // 1st request:
     ZMTransportRequest *req1 = [self.sut.requestGenerators nextRequest];
@@ -279,7 +279,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         userRequest = [self.sut.requestGenerators nextRequest];
     }];
     XCTAssertEqualObjects(userRequest.path, [USER_PATH_WITH_QUERY stringByAppendingString:[user.remoteIdentifier transportString]]);
-    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
@@ -306,7 +306,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     ZMTransportRequest *userRequest = [self.sut.requestGenerators nextRequest];
     
     // when
-    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -324,7 +324,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     ZMTransportRequest *userRequest = [self.sut.requestGenerators nextRequest];
     
     // when
-    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:400 transportSessionError:nil]];
+    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:400 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -339,7 +339,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     ZMTransportRequest *userRequest = [self.sut.requestGenerators nextRequest];
     
     // when
-    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:500 transportSessionError:nil]];
+    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:500 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -684,7 +684,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         user.remoteIdentifier = [NSUUID createUUID];
         user.needsToBeUpdatedFromBackend = YES;
         [self.sut objectsDidChange:[NSSet setWithObject:user]];
-        ZMTransportResponse *dummyResponse = [ZMTransportResponse responseWithPayload:@[] HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *dummyResponse = [ZMTransportResponse responseWithPayload:@[] HTTPStatus:200 transportSessionError:nil];
         
         // when
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
@@ -840,7 +840,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
                                    };
         [payload addObject:userData];
     }
-    return [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    return [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
 }
 
 @end

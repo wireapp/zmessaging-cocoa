@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -46,14 +46,14 @@ extension ZMOTRMessage {
     /// Checks if the response for uploading this message contains a list of missing, deleted and reduntant clients
     /// If it does, updated the corresponding clients as needed (add/remove clients)
     /// - returns: whether the request needs to be retried (after missing messages are fetched)
-    public func parseUploadResponse(response: ZMTransportResponse, clientDeletionDelegate: ZMClientClientRegistrationStatusProvider) -> Bool {
+    public func parseUploadResponse(_ response: ZMTransportResponse, clientDeletionDelegate: ZMClientClientRegistrationStatusProvider) -> Bool {
         
         // In case the self client got deleted remotely we will receive an event through the push channel and log out.
         // If we for some reason miss the push the BE will repond with a 403 and 'unknown-client' label to our
         // next sending attempt and we will logout and delete the current selfClient then
-        if response.HTTPStatus == ClientNotAuthorizedResponseStatus,
+        if response.httpStatus == ClientNotAuthorizedResponseStatus,
             let payload = response.payload as? [String:AnyObject],
-            let label = payload[ErrorLabel] as? String where
+            let label = payload[ErrorLabel] as? String ,
             label == UnknownClientLabel
         {
             clientDeletionDelegate.didDetectCurrentClientDeletion()
@@ -75,13 +75,13 @@ extension ZMOTRMessage {
     
     /// Parses the "missing" clients and creates the corresponding UserClients, then set them as missing
     /// - returns: true if there were any missing clients
-    private func processMissingClients(missingMap: [String:AnyObject]) -> Bool {
+    fileprivate func processMissingClients(_ missingMap: [String:AnyObject]) -> Bool {
         
         let allMissingClients = Set(missingMap.flatMap { pair -> [UserClient] in
             
             // user
-            let userID = NSUUID.uuidWithTransportString(pair.0)
-            let user = ZMUser(remoteID: userID, createIfNeeded: true, inContext: self.managedObjectContext!)!
+            guard let userID = UUID(uuidString: pair.0) else { return []}
+            let user = ZMUser(remoteID: userID, createIfNeeded: true, in: self.managedObjectContext!)!
             
             // client
             guard let clientIDs = pair.1 as? [String] else { fatal("Missing client ID is not parsed properly") }
@@ -98,10 +98,10 @@ extension ZMOTRMessage {
     }
     
     /// Adds clients to those missing for this message
-    private func registersNewMissingClients(missingClients: Set<UserClient>) {
+    fileprivate func registersNewMissingClients(_ missingClients: Set<UserClient>) {
         guard missingClients.count > 0 else { return }
         
-        let selfClient = ZMUser.selfUserInContext(self.managedObjectContext!).selfClient()!
+        let selfClient = ZMUser.selfUser(in: self.managedObjectContext!).selfClient()!
         selfClient.missesClients(missingClients)
         self.missesRecipients(missingClients)
         
@@ -110,19 +110,20 @@ extension ZMOTRMessage {
     }
     
     /// Parses the "deleted" clients and removes them
-    private func processDeletedClients(deletedMap: [String:AnyObject]) {
+    fileprivate func processDeletedClients(_ deletedMap: [String:AnyObject]) {
         
         let allDeletedClients = Set(deletedMap.flatMap { pair -> [UserClient] in
             
             // user
-            let userID = NSUUID.uuidWithTransportString(pair.0)
-            guard let user = ZMUser(remoteID: userID, createIfNeeded: false, inContext: self.managedObjectContext!) else { return [] }
+            guard let userID = UUID(uuidString: pair.0) else { return [] }
+            guard let user = ZMUser(remoteID: userID, createIfNeeded: false, in: self.managedObjectContext!) else { return [] }
             
             // clients
             guard let clientIDs = pair.1 as? [String] else { fatal("Deleted client ID is not parsed properly") }
             let clientIDsSet = Set(clientIDs)
             return user.clients.filter {
-                clientIDsSet.contains($0.remoteIdentifier)
+                guard let remoteIdentifier = $0.remoteIdentifier else { return false }
+                return clientIDsSet.contains(remoteIdentifier)
             }
         })
         
@@ -137,15 +138,15 @@ extension ZMConversation {
     
     /// If a missing client is not in this conversation, then we are out of sync with the BE
     /// and we should refetch
-    private func checkIfMissingActiveParticipant(user: ZMUser) {
+    fileprivate func checkIfMissingActiveParticipant(_ user: ZMUser) {
         // are we out of sync?
-        guard !self.activeParticipants.containsObject(user) else { return }
+        guard !self.activeParticipants.contains(user) else { return }
         
         self.needsToBeUpdatedFromBackend = true
-        if(self.conversationType == .OneOnOne || self.conversationType == .Connection) {
+        if(self.conversationType == .oneOnOne || self.conversationType == .connection) {
             if(user.connection == nil) {
                 if(self.connection == nil) {
-                    user.connection = ZMConnection.insertNewObjectInManagedObjectContext(self.managedObjectContext)
+                    user.connection = ZMConnection.insertNewObject(in: self.managedObjectContext!)
                     self.connection = user.connection
                 } else {
                     user.connection = self.connection

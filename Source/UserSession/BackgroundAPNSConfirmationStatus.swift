@@ -18,21 +18,21 @@
 
 import UIKit
 
-@objc
-public class BackgroundAPNSConfirmationStatus : NSObject {
+@objc open class BackgroundAPNSConfirmationStatus : NSObject {
     
     /// Switch for sending delivery receipts
     public static let sendDeliveryReceipts : Bool = true
-
-    let backgroundTime : NSTimeInterval = 25
+    static let backgroundNameBase : String = "Sending confirmation message with nonce"
+    
+    let backgroundTime : TimeInterval = 25
     private var tornDown = false
-    private var messageNonces : [NSUUID : ZMBackgroundActivity] = [:]
+    private var messageNonces : [UUID : ZMBackgroundActivity] = [:]
     private unowned var application : Application
     private unowned var managedObjectContext : NSManagedObjectContext
     private unowned var backgroundActivityFactory : BackgroundActivityFactory
 
-    public var needsToSyncMessages : Bool {
-        return messageNonces.count > 0 && application.applicationState == .Background
+    open var needsToSyncMessages : Bool {
+        return messageNonces.count > 0 && application.applicationState == .background
     }
     
     @objc public init(application: Application,
@@ -46,7 +46,7 @@ public class BackgroundAPNSConfirmationStatus : NSObject {
     }
 
     public func tearDown(){
-        messageNonces.values.forEach{$0.endActivity()}
+        messageNonces.values.forEach{$0.end()}
         messageNonces.removeAll()
         tornDown = true
     }
@@ -56,12 +56,12 @@ public class BackgroundAPNSConfirmationStatus : NSObject {
     }
     
     // Called after a confirmation message has been created from an event received via APNS
-    public func needsToConfirmMessage(messageNonce: NSUUID) {
-        let backgroundTask = backgroundActivityFactory.backgroundActivity(withName: "Sending confirmation message with nonce \(messageNonce.transportString())") { [weak self] in
+    public func needsToConfirmMessage(_ messageNonce: UUID) {
+        let backgroundTask = backgroundActivityFactory.backgroundActivity(withName: "\(BackgroundAPNSConfirmationStatus.backgroundNameBase) \(messageNonce.transportString())") { [weak self] in
             guard let strongSelf = self else { return }
             // The message failed to send in time. We won't continue trying.
             strongSelf.managedObjectContext.performGroupedBlock{
-                strongSelf.messageNonces.removeValueForKey(messageNonce)
+                strongSelf.messageNonces.removeValue(forKey: messageNonce)
             }
         }
         managedObjectContext.performGroupedBlock{
@@ -70,10 +70,10 @@ public class BackgroundAPNSConfirmationStatus : NSObject {
     }
     
     // Called after a confirmation message has made the round-trip to the backend and was successfully sent
-    public func didConfirmMessage(messageNonce: NSUUID) {
+    public func didConfirmMessage(_ messageNonce: UUID) {
         managedObjectContext.performGroupedBlock{
-            guard let task = self.messageNonces.removeValueForKey(messageNonce) else { return }
-            task.endActivity()
+            guard let task = self.messageNonces.removeValue(forKey: messageNonce) else { return }
+            task.end()
         }
     }
 }

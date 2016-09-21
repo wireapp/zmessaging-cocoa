@@ -22,11 +22,11 @@ import Foundation
 
 extension NSManagedObjectContext {
     
-    private static var lastAddressBookUploadDateKey: String { return "lastAddressBookUploadDate" }
+    fileprivate static var lastAddressBookUploadDateKey: String { return "lastAddressBookUploadDate" }
 
-    var lastAddressBookUploadDate: NSDate? {
+    var lastAddressBookUploadDate: Date? {
         set { self.setPersistentStoreMetadata(newValue, forKey: NSManagedObjectContext.lastAddressBookUploadDateKey) }
-        get { return self.persistentStoreMetadataForKey(NSManagedObjectContext.lastAddressBookUploadDateKey) as? NSDate }
+        get { return self.persistentStoreMetadata(forKey: NSManagedObjectContext.lastAddressBookUploadDateKey) as? Date }
     }
 }
 
@@ -36,30 +36,30 @@ protocol AddressBookTracker {
     func tagAddressBookUploadSuccess()
     
     /// Tracks the beginning of processing an AB batch
-    func tagAddressBookUploadStarted(entireABsize: UInt)
+    func tagAddressBookUploadStarted(_ entireABsize: UInt)
 }
 
 final class AddressBookAnalytics: AddressBookTracker {
     
     let managedObjectContext : NSManagedObjectContext
     
-    private enum Attribute: String {
+    fileprivate enum Attribute: String {
         case Size = "size"
         case Interval = "interval"
     }
     
-    private let startEventName = "connect.started_addressbook_search"
-    private let endEventName = "connect.completed_addressbook_search"
-    private let analytics: AnalyticsType?
+    fileprivate let startEventName = "connect.started_addressbook_search"
+    fileprivate let endEventName = "connect.completed_addressbook_search"
+    fileprivate let analytics: AnalyticsType?
 
     init(analytics: AnalyticsType?, managedObjectContext: NSManagedObjectContext) {
         self.analytics = analytics
         self.managedObjectContext = managedObjectContext
     }
     
-    func tagAddressBookUploadStarted(entireABsize: UInt) {
+    func tagAddressBookUploadStarted(_ entireABsize: UInt) {
         let attributes: [String: NSObject] = [
-            Attribute.Size.rawValue: entireABsize
+            Attribute.Size.rawValue: entireABsize as NSObject
         ]
 
         analytics?.tagEvent(startEventName, attributes: attributes)
@@ -68,22 +68,22 @@ final class AddressBookAnalytics: AddressBookTracker {
     func tagAddressBookUploadSuccess() {
         var attributes: [String: NSObject] = [:]
         if let interval = lastUploadInterval() {
-            attributes[Attribute.Interval.rawValue] = interval
+            attributes[Attribute.Interval.rawValue] = interval as NSObject?
         }
         resetUploadInterval()
         analytics?.tagEvent(endEventName, attributes: attributes)
     }
 
     /// Returns the interval since the last address book upload in hours
-    private func lastUploadInterval() -> UInt? {
+    fileprivate func lastUploadInterval() -> UInt? {
         guard let lastDate = self.managedObjectContext.lastAddressBookUploadDate else { return nil }
         let seconds = -round(lastDate.timeIntervalSinceNow)
-        guard !seconds.isSignMinus else { return nil }
+        guard !(seconds.sign == .minus) else { return nil }
         return UInt(seconds / 3600)
     }
 
-    private func resetUploadInterval() {
-        self.managedObjectContext.lastAddressBookUploadDate = NSDate()
+    fileprivate func resetUploadInterval() {
+        self.managedObjectContext.lastAddressBookUploadDate = Date()
     }
 
 }

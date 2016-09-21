@@ -83,6 +83,8 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 /// Application
 @property (nonatomic) id<ZMApplication> application;
 
+@property (nonatomic) BOOL tornDown;
+
 @end
 
 
@@ -128,7 +130,7 @@ static NSString * const ExcludeVersionsKey = @"exclude";
               failureCheckInterval:(NSTimeInterval)failureCheckInterval
                       userDefaults:(NSUserDefaults *)userDefaults
                        application:(id<ZMApplication>)application
-                      workingGroup:(__unused ZMSDispatchGroup *)workingGroup
+                      workingGroup:(ZMSDispatchGroup *)workingGroup
                  completionHandler:(void (^)(NSString *, NSArray *))completionHandler
 {
     self = [super init];
@@ -160,21 +162,29 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 
 - (void)teardown
 {
+    if (self.tornDown) {
+        return;
+    }
+    self.tornDown = YES;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.application unregisterObserverForStateChange:self];
     self.inBackground = YES;
+
+    [self.workingGroup enter];
     dispatch_sync(self.queue, ^{
         [self.currentTimer invalidate];
         self.currentTimer = nil;
     });
+    [self.workingGroup leave];
+
     self.queue = nil;
-    self.workingGroup = nil;
     self.completionHandler = nil;
+    // self.workingGroup = nil; --> NOTE! Do not nil out workingGroup otherwise we might not leave all groups when an async dispatch is performed
 }
 
 - (void)dealloc
 {
-    [self teardown];
+    RequireString(self.tornDown, "ZMBlacklistDownloader needs to be torn down before deallocating.");
 }
 
 - (NSURLSession *)defaultSession
@@ -186,10 +196,17 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 
 - (void)willResignActive:(NSNotification * __unused)note
 {
+    if (self.tornDown) {
+        return;
+    }
     ZM_WEAK(self);
     [self.workingGroup enter];
     dispatch_async(self.queue, ^{
         ZM_STRONG(self);
+        if (self == nil || self.tornDown) {
+            [self.workingGroup leave];
+            return;
+        }
         self.inBackground = YES;
         [self.currentTimer invalidate];
         self.currentTimer = nil;
@@ -199,10 +216,17 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 
 - (void)didBecomeActive:(NSNotification * __unused)note
 {
+    if (self.tornDown) {
+        return;
+    }
     ZM_WEAK(self);
     [self.workingGroup enter];
     dispatch_async(self.queue, ^{
         ZM_STRONG(self);
+        if (self == nil || self.tornDown) {
+            [self.workingGroup leave];
+            return;
+        }
         self.inBackground = NO;
         [self startTimerIfNeeded];
         [self.workingGroup leave];
@@ -211,7 +235,7 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 
 - (void)startTimerIfNeeded
 {
-    if(self.inBackground || self.currentTimer != nil) {
+    if (self.tornDown || self.inBackground || self.currentTimer != nil) {
         return;
     }
     
@@ -219,7 +243,7 @@ static NSString * const ExcludeVersionsKey = @"exclude";
     [self.workingGroup enter];
     dispatch_async(self.queue, ^{
         ZM_STRONG(self);
-        if (self == nil) {
+        if (self == nil || self.tornDown) {
             [self.workingGroup leave];
             return;
         }
@@ -234,6 +258,10 @@ static NSString * const ExcludeVersionsKey = @"exclude";
             [self.workingGroup enter];
             dispatch_async(dispatch_get_main_queue(), ^{
                 ZM_STRONG(self);
+                if (self == nil || self.tornDown) {
+                    [self.workingGroup leave];
+                    return;
+                }
                 if(self) {
                     [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
                 }
@@ -241,16 +269,24 @@ static NSString * const ExcludeVersionsKey = @"exclude";
             });
         }
         [self.workingGroup leave];
-    });
     
+    });
 }
 
 - (void)timerDidFire
 {
+    if (self.tornDown) {
+        return;
+    }
+    
     ZM_WEAK(self);
     [self.workingGroup enter];
     dispatch_async(self.queue, ^{
         ZM_STRONG(self);
+        if (self == nil || self.tornDown) {
+            [self.workingGroup leave];
+            return;
+        }
         self.currentTimer = nil;
         if(!self.inBackground) {
             [self fetchBlackList];
@@ -296,6 +332,9 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 
 - (void)didReceiveResponseForBlacklistWithData:(NSData *)data response:(NSURLResponse * __unused)response error:(NSError *)error {
     
+    if (self.tornDown) {
+        return;
+    }
     BOOL isSuccess = NO;
     NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
     if (error != nil) {
@@ -334,7 +373,9 @@ static NSString * const ExcludeVersionsKey = @"exclude";
         if (self.completionHandler) {
             void(^completionHandler)(NSString *, NSArray *) = self.completionHandler;
             [self.workingGroup enter];
+            ZM_WEAK(self);
             dispatch_async(dispatch_get_main_queue(), ^ void () {
+                ZM_STRONG(self);
                 completionHandler(minVersion, exclude);
                 [self.workingGroup leave];
             });

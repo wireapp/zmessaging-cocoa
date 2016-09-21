@@ -27,18 +27,18 @@ class SessionBaseTest : MessagingTest {
     
     override func setUp() {
         super.setUp()
-        let convID = NSUUID.createUUID()
-        let senderID = NSUUID.createUUID()
-        sender = ZMUser.insertNewObjectInManagedObjectContext(uiMOC)
+        let convID = UUID.create()
+        let senderID = UUID.create()
+        sender = ZMUser.insertNewObject(in: uiMOC)
         sender.remoteIdentifier = senderID
-        otherUser = ZMUser.insertNewObjectInManagedObjectContext(uiMOC)
-        otherUser.remoteIdentifier = NSUUID.createUUID()
+        otherUser = ZMUser.insertNewObject(in: uiMOC)
+        otherUser.remoteIdentifier = UUID.create()
         
-        conversation = ZMConversation.insertGroupConversationIntoManagedObjectContext(uiMOC, withParticipants: [sender, otherUser])
+        conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [sender, otherUser])
         conversation.remoteIdentifier = convID
         
-        selfUser = ZMUser.selfUserInContext(uiMOC)
-        selfUser.remoteIdentifier = NSUUID.createUUID()
+        selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.remoteIdentifier = UUID.create()
         
     }
 }
@@ -59,84 +59,84 @@ class SessionTests : SessionBaseTest {
     
     func testThatItSetsStateToIncoming(){
         // given
-        let event = callStateEventInConversation(conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
+        let event = callStateEvent(in: conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
         
         // when
-        let newState = sut.changeState(event, managedObjectContext:uiMOC)
+        let newState = sut.changeState(event!, managedObjectContext:uiMOC)
         
         // then
-        XCTAssertEqual(newState, Session.State.Incoming)
+        XCTAssertEqual(newState, Session.State.incoming)
     }
     
     func testThatItSetsStateToOngoing(){
         // given
-        let event1 = callStateEventInConversation(conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
-        sut.changeState(event1, managedObjectContext:uiMOC)
-        let event2 = callStateEventInConversation(conversation, joinedUsers: [sender, otherUser], videoSendingUsers: [], sequence: 1)
+        let event1 = callStateEvent(in: conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
+        _ = sut.changeState(event1!, managedObjectContext:uiMOC)
+        let event2 = callStateEvent(in: conversation, joinedUsers: [sender, otherUser], videoSendingUsers: [], sequence: 1)
         
         // when
-        let newState = sut.changeState(event2, managedObjectContext:uiMOC)
+        let newState = sut.changeState(event2!, managedObjectContext:uiMOC)
         
         // then
-        XCTAssertEqual(newState, Session.State.Ongoing)
+        XCTAssertEqual(newState, Session.State.ongoing)
     }
     
     func testThatItSetsStateToEnded(){
         // given
-        let event1 = callStateEventInConversation(conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
-        sut.changeState(event1, managedObjectContext:uiMOC)
-        let event2 = callStateEventInConversation(conversation, joinedUsers: [], videoSendingUsers: [], sequence: 1)
+        let event1 = callStateEvent(in: conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
+        _ = sut.changeState(event1!, managedObjectContext:uiMOC)
+        let event2 = callStateEvent(in: conversation, joinedUsers: [], videoSendingUsers: [], sequence: 1)
 
         // when
-        let newState = sut.changeState(event2, managedObjectContext:uiMOC)
+        let newState = sut.changeState(event2!, managedObjectContext:uiMOC)
         
         // then
-        XCTAssertEqual(newState, Session.State.SessionEnded)
+        XCTAssertEqual(newState, Session.State.sessionEnded)
     }
     
     func testThatItSetsStateToSelfUserJoined(){
         // given
-        let event1 = callStateEventInConversation(conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
-        sut.changeState(event1, managedObjectContext:uiMOC)
-        let event2 = callStateEventInConversation(conversation, joinedUsers: [sender, selfUser], videoSendingUsers: [], sequence: 1)
+        let event1 = callStateEvent(in: conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
+        _ = sut.changeState(event1!, managedObjectContext:uiMOC)
+        let event2 = callStateEvent(in: conversation, joinedUsers: [sender, selfUser], videoSendingUsers: [], sequence: 1)
 
         // when
-        let newState = sut.changeState(event2, managedObjectContext:uiMOC)
+        let newState = sut.changeState(event2!, managedObjectContext:uiMOC)
         
         // then
-        XCTAssertEqual(newState, Session.State.SelfUserJoined)
+        XCTAssertEqual(newState, Session.State.selfUserJoined)
     }
     
     func testThatItSetsStateToSelfUserEnded(){
         // given
-        let event1 = callStateEventInConversation(conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
-        sut.changeState(event1, managedObjectContext:uiMOC)
-        let event2 = callStateEventInConversation(conversation, joinedUsers: [sender, selfUser], videoSendingUsers: [], sequence: 1)
-        sut.changeState(event2, managedObjectContext:uiMOC)
-        let event3 = callStateEventInConversation(conversation, joinedUsers: [], videoSendingUsers: [], sequence: 1)
+        let event1 = callStateEvent(in: conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
+        _ = sut.changeState(event1!, managedObjectContext:uiMOC)
+        let event2 = callStateEvent(in: conversation, joinedUsers: [sender, selfUser], videoSendingUsers: [], sequence: 1)
+        _ = sut.changeState(event2!, managedObjectContext:uiMOC)
+        let event3 = callStateEvent(in: conversation, joinedUsers: [], videoSendingUsers: [], sequence: 1)
         
         // when
-        let newState = sut.changeState(event3, managedObjectContext:uiMOC)
+        let newState = sut.changeState(event3!, managedObjectContext:uiMOC)
         
         // then
-        XCTAssertEqual(newState, Session.State.SessionEndedSelfJoined)
+        XCTAssertEqual(newState, Session.State.sessionEndedSelfJoined)
     }
     
     func testThatItDoesNotAddEventsWithOlderSequence(){
         // given
-        let event1 = callStateEventInConversation(conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
-        sut.changeState(event1, managedObjectContext:uiMOC)
+        let event1 = callStateEvent(in: conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1)
+        _ = sut.changeState(event1!, managedObjectContext:uiMOC)
         
-        let event2 = callStateEventInConversation(conversation, joinedUsers: [], videoSendingUsers: [], sequence: 3)
-        sut.changeState(event2, managedObjectContext:uiMOC)
+        let event2 = callStateEvent(in: conversation, joinedUsers: [], videoSendingUsers: [], sequence: 3)
+        _ = sut.changeState(event2!, managedObjectContext:uiMOC)
         
-        let event3 = callStateEventInConversation(conversation, joinedUsers: [selfUser], videoSendingUsers: [], sequence: 2)
+        let event3 = callStateEvent(in: conversation, joinedUsers: [selfUser], videoSendingUsers: [], sequence: 2)
         
         // when
-        let newState = sut.changeState(event3, managedObjectContext:uiMOC)
+        let newState = sut.changeState(event3!, managedObjectContext:uiMOC)
         
         // then
-        XCTAssertEqual(newState, Session.State.SessionEnded)
+        XCTAssertEqual(newState, Session.State.sessionEnded)
     }
 }
 
@@ -158,41 +158,41 @@ class SessionTrackerTest : SessionBaseTest {
     
     func testThatItAddsOneSessionPerSessionID(){
         // given
-        let event1 = callStateEventInConversation(conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1, session: "session1")
-        let event2 = callStateEventInConversation(conversation, joinedUsers: [sender, otherUser], videoSendingUsers: [], sequence: 2, session: "session1")
-        let event3 = callStateEventInConversation(conversation, joinedUsers: [sender, otherUser], videoSendingUsers: [], sequence: 3, session: "session2")
+        let event1 = callStateEvent(in: conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1, session: "session1")
+        let event2 = callStateEvent(in: conversation, joinedUsers: [sender, otherUser], videoSendingUsers: [], sequence: 2, session: "session1")
+        let event3 = callStateEvent(in: conversation, joinedUsers: [sender, otherUser], videoSendingUsers: [], sequence: 3, session: "session2")
         
         // when
-        sut.addEvent(event1)
+        sut.addEvent(event1!)
         XCTAssertEqual(sut.sessions.count, 1)
 
-        sut.addEvent(event2)
+        sut.addEvent(event2!)
         XCTAssertEqual(sut.sessions.count, 1)
         
-        sut.addEvent(event3)
+        sut.addEvent(event3!)
         XCTAssertEqual(sut.sessions.count, 2)
         
         // then
-        let missedSessions = sut.missedSessionsFor(conversation.remoteIdentifier)
+        let missedSessions = sut.missedSessionsFor(conversation.remoteIdentifier!)
         XCTAssertEqual(missedSessions.count, 1)
         XCTAssertEqual(missedSessions.first?.sessionID, "session1")
     }
     
     func testThatItReturnsACopyOfASession(){
         // given
-        let event1 = callStateEventInConversation(conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1, session: "session1")
-        let event2 = callStateEventInConversation(conversation, joinedUsers: [], videoSendingUsers: [], sequence: 2, session: "session1")
-        sut.addEvent(event1)
+        let event1 = callStateEvent(in: conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1, session: "session1")
+        let event2 = callStateEvent(in: conversation, joinedUsers: [], videoSendingUsers: [], sequence: 2, session: "session1")
+        sut.addEvent(event1!)
         
         // when
-        let session1 = sut.sessionForEvent(event1)
-        sut.addEvent(event2)
-        let session2 = sut.sessionForEvent(event1)
+        let session1 = sut.sessionForEvent(event1!)
+        sut.addEvent(event2!)
+        let session2 = sut.sessionForEvent(event1!)
 
         // then
         XCTAssertNotEqual(session1?.currentState, session2?.currentState)
-        XCTAssertEqual(session1?.currentState, Session.State.Incoming)
-        XCTAssertEqual(session2?.currentState, Session.State.SessionEnded)
+        XCTAssertEqual(session1?.currentState, Session.State.incoming)
+        XCTAssertEqual(session2?.currentState, Session.State.sessionEnded)
     }
 }
 

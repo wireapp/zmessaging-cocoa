@@ -23,21 +23,21 @@ import ZMUtilities
 
 
 public struct SignalingKeys {
-    let verificationKey : NSData
-    let decryptionKey : NSData
+    let verificationKey : Data
+    let decryptionKey : Data
     
-    init(verificationKey: NSData? = nil, decryptionKey: NSData? = nil) {
-        self.verificationKey = verificationKey ?? NSData.secureRandomDataOfLength(APSSignalingKeysStore.defaultKeyLengthBytes)
-        self.decryptionKey = decryptionKey ?? NSData.secureRandomDataOfLength(APSSignalingKeysStore.defaultKeyLengthBytes)
+    init(verificationKey: Data? = nil, decryptionKey: Data? = nil) {
+        self.verificationKey = verificationKey ?? NSData.secureRandomData(ofLength: APSSignalingKeysStore.defaultKeyLengthBytes)
+        self.decryptionKey = decryptionKey ?? NSData.secureRandomData(ofLength: APSSignalingKeysStore.defaultKeyLengthBytes)
     }
 }
 
 
 @objc
-public class APSSignalingKeysStore: NSObject {
+public final class APSSignalingKeysStore: NSObject {
     public var apsDecoder: ZMAPSMessageDecoder!
-    internal var verificationKey : NSData!
-    internal var decryptionKey : NSData!
+    internal var verificationKey : Data!
+    internal var decryptionKey : Data!
 
     internal static let verificationKeyAccountName = "APSVerificationKey"
     internal static let decryptionKeyAccountName = "APSDecryptionKey"
@@ -45,7 +45,7 @@ public class APSSignalingKeysStore: NSObject {
     
     public init?(userClient: UserClient) {
         super.init()
-        if let verificationKey = userClient.apsVerificationKey, decryptionKey = userClient.apsDecryptionKey {
+        if let verificationKey = userClient.apsVerificationKey, let decryptionKey = userClient.apsDecryptionKey {
             self.verificationKey = verificationKey
             self.decryptionKey = decryptionKey
             self.apsDecoder = ZMAPSMessageDecoder(encryptionKey: decryptionKey, macKey: verificationKey)
@@ -62,20 +62,20 @@ public class APSSignalingKeysStore: NSObject {
     
     /// we previously stored keys in the key chain. use this method to retreive the previously stored values to move them into the selfClient
     static func keysStoredInKeyChain() -> SignalingKeys? {
-        guard let verificationKey = ZMKeychain.dataForAccount(self.verificationKeyAccountName),
-              let decryptionKey = ZMKeychain.dataForAccount(self.decryptionKeyAccountName)
+        guard let verificationKey = ZMKeychain.data(forAccount: self.verificationKeyAccountName),
+              let decryptionKey = ZMKeychain.data(forAccount: self.decryptionKeyAccountName)
         else { return nil }
         
         return SignalingKeys(verificationKey: verificationKey, decryptionKey: decryptionKey)
     }
     
     static func clearSignalingKeysInKeyChain(){
-        ZMKeychain.deleteAllKeychainItemsWithAccountName(self.verificationKeyAccountName)
-        ZMKeychain.deleteAllKeychainItemsWithAccountName(self.decryptionKeyAccountName)
+        ZMKeychain.deleteAllKeychainItems(withAccountName: self.verificationKeyAccountName)
+        ZMKeychain.deleteAllKeychainItems(withAccountName: self.decryptionKeyAccountName)
     }
     
-    public func decryptDataDictionary(payload: NSDictionary) -> NSDictionary? {
-        return self.apsDecoder.decodeAPSPayload(payload as [NSObject : AnyObject])
+    public func decryptDataDictionary(_ payload: [AnyHashable : Any]!) -> [AnyHashable : Any]! {
+        return self.apsDecoder.decodeAPSPayload(payload)
     }
 }
 

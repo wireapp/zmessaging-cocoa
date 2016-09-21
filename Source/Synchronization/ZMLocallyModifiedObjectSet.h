@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ZMLocallyModifiedObjectSet : NSObject <ZMOutstandingItems>
 
-@property (nonatomic, readonly) NSSet *trackedKeys;
+@property (nonatomic, readonly, nullable) NSSet *trackedKeys;
 
 // Init with all keys tracked
 - (instancetype)init;

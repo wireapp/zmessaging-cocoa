@@ -20,7 +20,7 @@
 import Foundation
 
 public protocol LocalNotification {
-    var conversationID : NSUUID? { get }
+    var conversationID : UUID? { get }
     var application : Application {get}
     var notifications : [UILocalNotification] {get set}
     func cancelNotifications()
@@ -45,18 +45,18 @@ public protocol EventNotification : LocalNotification {
 public extension ZMLocalNotificationForEvent {
     public static func notification(forEvent event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?, sessionTracker: SessionTracker) -> ZMLocalNotificationForEvent? {
         switch event.type {
-        case .ConversationOtrMessageAdd:
+        case .conversationOtrMessageAdd:
             if let note = ZMLocalNotificationForReaction(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application: application) {
                 return note
             }
             return nil
-        case .ConversationCreate:
+        case .conversationCreate:
             return ZMLocalNotificationForConverstionCreateEvent(events: [event], conversation: conversation,  managedObjectContext: managedObjectContext, application: application)
-        case .UserConnection:
+        case .userConnection:
             return ZMLocalNotificationForUserConnectionEvent(events: [event], conversation: conversation,  managedObjectContext: managedObjectContext, application: application)
-        case .UserContactJoin:
+        case .userContactJoin:
             return ZMLocalNotificationForNewUserEvent(events: [event], conversation: conversation,  managedObjectContext: managedObjectContext, application: application)
-        case .CallState:
+        case .callState:
             return ZMLocalNotificationForCallEvent(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application: application, sessionTracker: sessionTracker)
         default:
             return nil
@@ -65,25 +65,25 @@ public extension ZMLocalNotificationForEvent {
 }
 
 
-public class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification {
+open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification {
     
-    public var shouldBeDiscarded : Bool = false
-    public let sender : ZMUser?
+    open var shouldBeDiscarded : Bool = false
+    open let sender : ZMUser?
 
-    public var eventType : ZMUpdateEventType {
-        return .Unknown
+    open var eventType : ZMUpdateEventType {
+        return .unknown
     }
     
-    public var notifications : [UILocalNotification] = []
+    open var notifications : [UILocalNotification] = []
     
-    public override var uiNotifications: [UILocalNotification] {
+    open override var uiNotifications: [UILocalNotification] {
         return notifications
     }
     
-    public let application : Application
-    public let managedObjectContext : NSManagedObjectContext
+    open let application : Application
+    open let managedObjectContext : NSManagedObjectContext
     
-    public var events : [ZMUpdateEvent] = []
+    open var events : [ZMUpdateEvent] = []
 
     var lastEvent : ZMUpdateEvent? {
         return events.last
@@ -97,10 +97,10 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotificatio
     }
     
     required public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?) {
-        self.application = application ?? UIApplication.sharedApplication()
+        self.application = application ?? UIApplication.shared
         self.events = events
         if let senderUUID = events.last?.senderUUID() {
-            self.sender = ZMUser(remoteID: senderUUID, createIfNeeded: false, inContext: managedObjectContext)
+            self.sender = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext)
         } else {
             self.sender = nil
         }
@@ -112,22 +112,22 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotificatio
         notifications.append(notification)
     }
     
-    func configureNotification(conversation: ZMConversation?) -> UILocalNotification {
+    func configureNotification(_ conversation: ZMConversation?) -> UILocalNotification {
         let notification = UILocalNotification()
-        let shouldHideContent = managedObjectContext.valueForKey(ZMShouldHideNotificationContentKey)
-        if let shouldHideContent = shouldHideContent as? NSNumber where shouldHideContent.boolValue == true {
-            notification.alertBody = ZMPushStringDefault.localizedString()
+        let shouldHideContent = managedObjectContext.value(forKey: ZMShouldHideNotificationContentKey)
+        if let shouldHideContent = shouldHideContent as? NSNumber , shouldHideContent.boolValue == true {
+            notification.alertBody = ZMPushStringDefault.localized()
             notification.soundName = ZMLocalNotificationNewMessageSoundName()
         } else {
-            notification.alertBody = configureAlertBody(conversation).stringByEscapingPercentageSymbols()
+            notification.alertBody = configureAlertBody(conversation).escapingPercentageSymbols()
             notification.soundName = soundName
             notification.category = category
         }
-        notification.setupUserInfo(conversation, forEvent: lastEvent)
+        notification.setupUserInfo(conversation, for: lastEvent)
         return notification
     }
     
-    public func containsIdenticalEvent(event: ZMUpdateEvent) -> Bool {
+    open func containsIdenticalEvent(_ event: ZMUpdateEvent) -> Bool {
         guard (eventType == event.type || event.messageNonce() != nil) && conversationID == event.conversationUUID()
         else { return false }
         
@@ -137,7 +137,7 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotificatio
     
     
     /// You HAVE To override configureAlertBody() to configure the alert body
-    func configureAlertBody(conversation: ZMConversation?) -> String { return "" }
+    func configureAlertBody(_ conversation: ZMConversation?) -> String { return "" }
     
     // MARK: Override these if needed
     
@@ -145,7 +145,7 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotificatio
     /// set to true if notification depends / refers to a specific conversation
     var requiresConversation : Bool { return false }
     /// create a notification even if conversation is silenced
-    public var ignoresSilencedState : Bool { return false }
+    open var ignoresSilencedState : Bool { return false }
     
     /// if empty, it does not copy events
     var soundName : String { return ZMLocalNotificationNewMessageSoundName() }
@@ -153,7 +153,7 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotificatio
     
     
     
-    func canCreateNotification(conversation: ZMConversation?) -> Bool {
+    func canCreateNotification(_ conversation: ZMConversation?) -> Bool {
         // The notification either has a conversation or does not require one
         guard (conversation != nil || !requiresConversation) else {return false}
         
@@ -161,17 +161,17 @@ public class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotificatio
         guard let lastEvent = lastEvent else {return false}
         
         // The eventType is the same as the expected eventType
-        guard eventType == lastEvent.type && eventType != .Unknown else {return false}
+        guard eventType == lastEvent.type && eventType != .unknown else {return false}
         
         // The sender is not the selfUser or it is a call event (we want to keep track of which calls we joined and cancel notifications if we joined)
-        if let sender = sender where (sender.isSelfUser && lastEvent.type != .CallState) { return false }
+        if let sender = sender , (sender.isSelfUser && lastEvent.type != .callState) { return false }
 
         if let conversation = conversation {
             if conversation.isSilenced && !ignoresSilencedState {
                 return false
             }
             if let timeStamp = lastEvent.timeStamp(),
-               let lastRead = conversation.lastReadServerTimeStamp where lastRead.compare(timeStamp) != .OrderedAscending {
+               let lastRead = conversation.lastReadServerTimeStamp , lastRead.compare(timeStamp) != .orderedAscending {
                 // don't show notifications that have already been read
                 return false
             }

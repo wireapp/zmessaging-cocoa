@@ -24,7 +24,7 @@ class MockAuthenticationStatus: ZMAuthenticationStatus {
     
     var mockPhase: ZMAuthenticationPhase
     
-    init(phase: ZMAuthenticationPhase = .Authenticated, cookieString: String = "label", cookie: ZMCookie? = nil) {
+    init(phase: ZMAuthenticationPhase = .authenticated, cookieString: String = "label", cookie: ZMCookie? = nil) {
         self.mockPhase = phase
         self.cookieString = cookieString
         super.init(managedObjectContext: nil, cookie: cookie)
@@ -62,8 +62,8 @@ class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus {
 }
 
 class ZMMockClientUpdateStatus: ClientUpdateStatus {
-    var fetchedClients : [UserClient!] = []
-    var mockPhase : ClientUpdatePhase = .Done
+    var fetchedClients : [UserClient?] = []
+    var mockPhase : ClientUpdatePhase = .done
     var deleteCallCount : Int = 0
     var fetchCallCount : Int = 0
     var mockCredentials: ZMEmailCredentials = ZMEmailCredentials(email: "bla@example.com", password: "secret")
@@ -72,7 +72,7 @@ class ZMMockClientUpdateStatus: ClientUpdateStatus {
         return mockCredentials
     }
     
-    override func didFetchClients(clients: [UserClient]) {
+    override func didFetchClients(_ clients: [UserClient]) {
         fetchedClients = clients
         fetchCallCount += 1
     }
@@ -106,7 +106,7 @@ class FakeCookieStorage: ZMPersistentCookieStorage {
 
 
 // used by tests to fake errors on genrating pre keys
-public class FakeKeysStore: UserClientKeysStore {
+open class FakeKeysStore: UserClientKeysStore {
     
     var failToGeneratePreKeys: Bool = false
     var failToGenerateLastPreKey: Bool = false
@@ -114,7 +114,7 @@ public class FakeKeysStore: UserClientKeysStore {
     var lastGeneratedKeys : [(id: UInt16, prekey: String)] = []
     var lastGeneratedLastPrekey : String?
 
-    override public func generateMoreKeys(count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
+    override open func generateMoreKeys(_ count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
 
         if self.failToGeneratePreKeys {
             let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
@@ -127,7 +127,7 @@ public class FakeKeysStore: UserClientKeysStore {
         }
     }
     
-    override public func lastPreKey() throws -> String {
+    override open func lastPreKey() throws -> String {
         if self.failToGenerateLastPreKey {
             let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
             throw error
@@ -161,27 +161,27 @@ class AddressBookContactsFake {
     
     var createInfiniteContacts: Bool = false
     
-    var peopleGenerator : AnyGenerator<ABRecordRef> {
+    var peopleGenerator : AnyIterator<ABRecord> {
         
         guard !self.createInfiniteContacts else {
-            return AnyGenerator {
-                let record: ABRecordRef = ABPersonCreate().takeRetainedValue()
-                ABRecordSetValue(record, kABPersonFirstNameProperty, "Johnny Infinite", nil)
+            return AnyIterator {
+                let record: ABRecord = ABPersonCreate().takeRetainedValue()
+                ABRecordSetValue(record, kABPersonFirstNameProperty, "Johnny Infinite" as CFTypeRef!, nil)
                 let values: ABMutableMultiValue = ABMultiValueCreateMutable(ABPropertyType(kABMultiStringPropertyType)).takeRetainedValue()
-                ABMultiValueAddValueAndLabel(values, "neverending@example.com", kABHomeLabel, nil)
+                ABMultiValueAddValueAndLabel(values, "neverending@example.com" as CFTypeRef!, kABHomeLabel, nil)
                 ABRecordSetValue(record, kABPersonEmailProperty, values, nil)
                 return record
             }
         }
         
-        return AnyGenerator(self.contacts.map { contact in
-            let record: ABRecordRef = ABPersonCreate().takeRetainedValue()
-            ABRecordSetValue(record, kABPersonFirstNameProperty, contact.firstName, nil)
+        return AnyIterator(self.contacts.map { contact in
+            let record: ABRecord = ABPersonCreate().takeRetainedValue()
+            ABRecordSetValue(record, kABPersonFirstNameProperty, contact.firstName as CFTypeRef!, nil)
             if !contact.emailAddresses.isEmpty {
                 let values: ABMutableMultiValue =
                     ABMultiValueCreateMutable(ABPropertyType(kABMultiStringPropertyType)).takeRetainedValue()
                 contact.emailAddresses.forEach {
-                    ABMultiValueAddValueAndLabel(values, $0, kABHomeLabel, nil)
+                    ABMultiValueAddValueAndLabel(values, $0 as CFTypeRef!, kABHomeLabel, nil)
                 }
                 ABRecordSetValue(record, kABPersonEmailProperty, values, nil)
             }
@@ -189,12 +189,12 @@ class AddressBookContactsFake {
                 let values: ABMutableMultiValue =
                     ABMultiValueCreateMutable(ABPropertyType(kABMultiStringPropertyType)).takeRetainedValue()
                 contact.phoneNumbers.forEach {
-                    ABMultiValueAddValueAndLabel(values, $0, kABPersonPhoneMainLabel, nil)
+                    ABMultiValueAddValueAndLabel(values, $0 as CFTypeRef!, kABPersonPhoneMainLabel, nil)
                 }
                 ABRecordSetValue(record, kABPersonPhoneProperty, values, nil)
             }
             return record
-        }.generate())
+        }.makeIterator())
     }
     
     /// Return an address book that will return contacts extracted from self

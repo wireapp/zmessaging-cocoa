@@ -287,7 +287,7 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     NSDictionary *eventPayload = [self createAssetMediumEventPayloadForAssetID:assetID conversationID:conversation.remoteIdentifier];
     ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:eventPayload uuid:nil];
     NSData *imageData = [@"image-data-0q39eijdkslfm" dataUsingEncoding:NSUTF8StringEncoding];
-    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPstatus:200 transportSessionError:nil headers:nil];
+    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPStatus:200 transportSessionError:nil headers:nil];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
@@ -322,7 +322,7 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     NSDictionary *eventPayload = [self createAssetMediumEventPayloadForAssetID:assetID conversationID:conversation.remoteIdentifier];
     ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:eventPayload uuid:nil];
     NSData *imageData = [@"image-data-0q39eijdkslfm" dataUsingEncoding:NSUTF8StringEncoding];
-    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPstatus:404 transportSessionError:nil headers:nil];
+    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPStatus:404 transportSessionError:nil headers:nil];
 
     [self.syncMOC performGroupedBlockAndWait:^{
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];

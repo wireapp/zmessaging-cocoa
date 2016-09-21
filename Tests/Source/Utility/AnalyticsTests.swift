@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -29,9 +29,9 @@ class AnalyticsTests: XCTestCase {
     var analytics: MockAnalytics!
     
     func createSyncMOC() -> NSManagedObjectContext {
-        let fm = NSFileManager.defaultManager()
-        let url = try! fm.URLForDirectory(.DocumentDirectory, inDomain: .UserDomainMask, appropriateForURL: nil, create:true)
-        return .createSyncContextWithStoreDirectory(url)
+        let fm = FileManager.default
+        let url = try! fm.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create:true)
+        return .createSyncContext(withStoreDirectory: url)
     }
     
     override func setUp() {
@@ -60,17 +60,17 @@ extension AnalyticsTests {
     
     func testVOIPTimeDifferenceTracking() {
         // given
-        let notificationID = NSUUID.createUUID()
-        let serverTime = NSDate(timeIntervalSince1970: 1234567890)
-        let currentTime = serverTime.dateByAddingTimeInterval(4.5) // Simulate VoIP arriving in OperationLoop after 4.5 sec
-        let referenceDate = currentTime.dateByAddingTimeInterval(0.25) // Simulate VoIP arriving in PingBackStatus after 250 ms
+        let notificationID = UUID.create()
+        let serverTime = Date(timeIntervalSince1970: 1234567890)
+        let currentTime = serverTime.addingTimeInterval(4.5) // Simulate VoIP arriving in OperationLoop after 4.5 sec
+        let referenceDate = currentTime.addingTimeInterval(0.25) // Simulate VoIP arriving in PingBackStatus after 250 ms
 
         // when
         let tracker = APNSPerformanceTracker()
 
-        let operationLoopState = NotificationFunnelState.OperationLoop(serverTimestamp: serverTime, notificationsEnabled: true, background: true, currentDate: currentTime)
+        let operationLoopState = NotificationFunnelState.operationLoop(serverTimestamp: serverTime, notificationsEnabled: true, background: true, currentDate: currentTime)
         tracker.trackNotification(notificationID, state: operationLoopState, analytics: analytics, currentDate: currentTime)
-        tracker.trackNotification(notificationID, state: .PingBackStatus, analytics: analytics, currentDate: referenceDate)
+        tracker.trackNotification(notificationID, state: .pingBackStatus, analytics: analytics, currentDate: referenceDate)
 
         // then
         XCTAssertTrue(analytics.taggedEvents.isEmpty)
@@ -79,21 +79,21 @@ extension AnalyticsTests {
         let secondEventWithAttribute = analytics.taggedEventsWithAttributes.last
 
         let firstExpected = EventWithAttributes(event: "apns_performance", attributes: [
-            "server_timestamp_difference": "4000-5000",
-            "notification_identifier": notificationID.transportString(),
-            "state_description": "OperationLoop",
-            "state_index": 0,
-            "allowed_notifications": true,
-            "background": true
+            "server_timestamp_difference": "4000-5000" as NSObject,
+            "notification_identifier": notificationID.transportString() as NSObject,
+            "state_description": "OperationLoop" as NSObject,
+            "state_index": 0 as NSObject,
+            "allowed_notifications": NSNumber(value:true),
+            "background": NSNumber(value:true)
         ])
 
         XCTAssertEqual(firstEventWithAttribute, firstExpected)
 
         let secondExpected = EventWithAttributes(event: "apns_performance", attributes: [
-            "notification_identifier": notificationID.transportString(),
-            "state_description": "PingBackStatus",
-            "state_index": 1,
-            "time_since_last": "200-500"
+            "notification_identifier": notificationID.transportString() as NSObject,
+            "state_description": "PingBackStatus" as NSObject,
+            "state_index": 1 as NSObject,
+            "time_since_last": "200-500" as NSObject
         ])
         
         XCTAssertEqual(secondEventWithAttribute, secondExpected)
@@ -148,17 +148,17 @@ extension AnalyticsTests {
         XCTAssertEqual(analytics.taggedEventsWithAttributes.count, 1)
         let eventWithAtributes = analytics.taggedEventsWithAttributes.first!
         XCTAssertEqual(eventWithAtributes.event, "connect.started_addressbook_search")
-        XCTAssertEqual(eventWithAtributes.attributes, ["size": size])
+        XCTAssertEqual(eventWithAtributes.attributes, ["size": NSNumber(value: size)])
     }
 }
 
 extension AnalyticsTests {
     
-    func assertThatItTracksAddresBookUploadEnded(hoursSinceLastUpload: Int? = nil, shouldTrackInterval: Bool = true, line: UInt = #line) {
+    func assertThatItTracksAddresBookUploadEnded(_ hoursSinceLastUpload: Int? = nil, shouldTrackInterval: Bool = true, line: UInt = #line) {
         // given
         let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
-        if let hours = hoursSinceLastUpload.map(NSTimeInterval.init) {
-            let lastDate = NSDate(timeIntervalSinceNow: -hours * 3600)
+        if let hours = hoursSinceLastUpload.map(TimeInterval.init) {
+            let lastDate = Date(timeIntervalSinceNow: -hours * 3600)
             tracker.managedObjectContext.lastAddressBookUploadDate = lastDate
         }
 
@@ -173,8 +173,8 @@ extension AnalyticsTests {
         
         var attributes: [String: NSObject] = [:]
         
-        if let hours = hoursSinceLastUpload where shouldTrackInterval {
-            attributes["interval"] = hours
+        if let hours = hoursSinceLastUpload, shouldTrackInterval {
+            attributes["interval"] = NSNumber(value: hours)
         }
         XCTAssertEqual(eventWithAtributes.attributes, attributes, line: line)
     }
@@ -192,11 +192,11 @@ func ==(lhs: EventWithAttributes, rhs: EventWithAttributes) -> Bool {
 
 final class MockAnalytics: NSObject, AnalyticsType {
     
-    @objc func tagEvent(event: String) {
+    @objc func tagEvent(_ event: String) {
         taggedEvents.append(event)
     }
     
-    @objc func tagEvent(event: String, attributes: [String : NSObject]) {
+    @objc func tagEvent(_ event: String, attributes: [String : NSObject]) {
         taggedEventsWithAttributes.append(EventWithAttributes(event: event, attributes: attributes))
     }
     

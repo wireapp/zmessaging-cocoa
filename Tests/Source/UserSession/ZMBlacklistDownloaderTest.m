@@ -64,12 +64,13 @@
 
 - (void)stopTimers
 {
-    self.sut = nil;
+    [self.sut teardown];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)tearDown
 {
-    [self stopTimers];
+    self.sut = nil;
     [[NSUserDefaults standardUserDefaults] setObject:nil forKey:@"min_version"];
     [[NSUserDefaults standardUserDefaults] setObject:nil forKey:@"exclude"];
     [[NSUserDefaults standardUserDefaults] synchronize];
@@ -276,7 +277,9 @@
         //expect that method will be called for second time after check interval
         XCTestExpectation *exp = [self expectationWithDescription:@"download called again"];
         __block NSUInteger timesCalled = 0;
+        ZM_WEAK(self);
         dispatch_block_t didDownload = ^{
+            ZM_STRONG(self);
             [self stubRequestWithSuccessfulResponseObject:blackList];
             ++timesCalled;
             if (timesCalled == 3) {
@@ -304,7 +307,6 @@ typedef NS_ENUM(int, TestPhase) {
 - (void)testThatItSuspendsWhenInTheBackgroundThenResumes
 {
     [self performIgnoringZMLogError:^{
-        
         // given
         __block TestPhase phase = WaitForFirstCall;
         self.successCheckTimeInterval = 0.1f;
@@ -343,11 +345,10 @@ typedef NS_ENUM(int, TestPhase) {
                 if(downloadWhileResumedCount > 2) {
                     [doneExp fulfill];
                     self.successCheckTimeInterval = 1.0f;
-                    [self stopTimers];
                 }
             }
         };
-        
+    
         // when
         [self createSUTWithCompletionHandler:^(__unused NSString *minVersion, __unused NSArray *excludeVersions) {
             didDownload();
@@ -356,7 +357,6 @@ typedef NS_ENUM(int, TestPhase) {
         // then
         XCTAssert([self waitForCustomExpectationsWithTimeout:1]);
         [self stopTimers];
-        WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
 

@@ -51,8 +51,6 @@
 
 @end
 
-
-
 @interface ZMUserSessionTestsBase : MessagingTest <ZMAuthenticationStatusObserver>
 
 @property (nonatomic) id transportSession;

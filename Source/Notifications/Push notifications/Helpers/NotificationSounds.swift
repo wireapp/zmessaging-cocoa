@@ -23,8 +23,8 @@ let ZMLocalNotificationRingingDefaultSoundName = "ringing_from_them_long.caf"
 let ZMLocalNotificationPingDefaultSoundName = "ping_from_them.caf"
 let ZMLocalNotificationNewMessageDefaultSoundName = "new_message_apns.caf"
 
-func ZMCustomSoundName(key: String) -> String? {
-    guard let soundName = NSUserDefaults.standardUserDefaults().objectForKey(key) as? String else { return nil }
+func ZMCustomSoundName(_ key: String) -> String? {
+    guard let soundName = UserDefaults.standard.object(forKey: key) as? String else { return nil }
     return ZMSound(rawValue: soundName)?.filename()
 }
 
@@ -41,8 +41,8 @@ func ZMLocalNotificationNewMessageSoundName() -> String {
 }
 
 
-public func findIndex<S: SequenceType>(sequence: S, predicate: (S.Generator.Element) -> Bool) -> Int? {
-    for (index, element) in sequence.enumerate() {
+public func findIndex<S: Sequence>(_ sequence: S, predicate: (S.Iterator.Element) -> Bool) -> Int? {
+    for (index, element) in sequence.enumerated() {
         if predicate(element) {
             return index
         }

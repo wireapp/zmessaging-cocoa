@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -24,15 +24,15 @@ import ZMCSystem
 
 private let zmLog = ZMSLog(tag: "Calling")
 
-private let ZMVoiceChannelTimerTimeOutGroup : NSTimeInterval = 30;
-private let ZMVoiceChannelTimerTimeOutOneOnOne : NSTimeInterval = 60;
-private var ZMVoiceChannelTimerTestTimeout : NSTimeInterval = 0;
+private let ZMVoiceChannelTimerTimeOutGroup : TimeInterval = 30;
+private let ZMVoiceChannelTimerTimeOutOneOnOne : TimeInterval = 60;
+private var ZMVoiceChannelTimerTestTimeout : TimeInterval = 0;
 
 private let UserInfoCallTimerKey = "ZMCallTimer"
 
 extension NSManagedObjectContext {
     
-    private var zm_callTimer: ZMCallTimer {
+    fileprivate var zm_callTimer: ZMCallTimer {
         if self.zm_isUserInterfaceContext {
             zmLog.warn("CallTimer should only be set on syncContext")
         }
@@ -45,14 +45,14 @@ extension NSManagedObjectContext {
             }()
     }
     
-    public func zm_addAndStartCallTimer(conversation: ZMConversation) {
+    public func zm_addAndStartCallTimer(_ conversation: ZMConversation) {
         if self.zm_isUserInterfaceContext {
             zmLog.warn("CallTimer should not be initiated on uiContext")
         }
         self.zm_callTimer.addAndStartTimer(conversation)
     }
     
-    public func zm_resetCallTimer(conversation: ZMConversation) {
+    public func zm_resetCallTimer(_ conversation: ZMConversation) {
         if self.zm_isUserInterfaceContext {
             zmLog.warn("CallTimer can not be cancelled on uiContext")
         }
@@ -65,23 +65,23 @@ extension NSManagedObjectContext {
         }
     }
     
-    public func zm_hasTimerForConversation(conversation: ZMConversation) -> Bool {
+    public func zm_hasTimerForConversation(_ conversation: ZMConversation) -> Bool {
         return self.zm_callTimer.conversationIDToTimerMap[conversation.objectID] != nil
     }
 }
 
 public protocol ZMCallTimerClient {
 
-    func callTimerDidFire(timer: ZMCallTimer)
+    func callTimerDidFire(_ timer: ZMCallTimer)
 }
 
-public class ZMCallTimer : NSObject, ZMTimerClient {
+public final class ZMCallTimer : NSObject, ZMTimerClient {
 
     public var conversationIDToTimerMap: [NSManagedObjectID: ZMTimer] = [:]
-    private weak var managedObjectContext: NSManagedObjectContext?
+    fileprivate weak var managedObjectContext: NSManagedObjectContext?
     
     public var testDelegate: ZMCallTimerClient?
-    private var testTimeout : NSTimeInterval {
+    fileprivate var testTimeout : TimeInterval {
         return ZMVoiceChannelTimerTestTimeout
     }
     
@@ -89,7 +89,7 @@ public class ZMCallTimer : NSObject, ZMTimerClient {
         self.managedObjectContext = managedObjectContext
     }
     
-    public class func setTestCallTimeout(timeout: NSTimeInterval) {
+    public class func setTestCallTimeout(_ timeout: TimeInterval) {
         ZMVoiceChannelTimerTestTimeout = timeout
     }
     
@@ -97,29 +97,29 @@ public class ZMCallTimer : NSObject, ZMTimerClient {
         ZMVoiceChannelTimerTestTimeout = 0
     }
     
-    public func addAndStartTimer(conversation: ZMConversation) {
+    public func addAndStartTimer(_ conversation: ZMConversation) {
         let objectID = conversation.objectID
         if conversationIDToTimerMap[objectID] == nil && !conversation.callTimedOut {
-            let timeOut = (testTimeout > 0) ? testTimeout : conversation.conversationType == .Group ? ZMVoiceChannelTimerTimeOutGroup : ZMVoiceChannelTimerTimeOutOneOnOne
+            let timeOut = (testTimeout > 0) ? testTimeout : conversation.conversationType == .group ? ZMVoiceChannelTimerTimeOutGroup : ZMVoiceChannelTimerTimeOutOneOnOne
             let timer = ZMTimer(target: self)
-            timer.fireAtDate(NSDate().dateByAddingTimeInterval(timeOut))
+            timer?.fire(at: Date().addingTimeInterval(timeOut))
             conversationIDToTimerMap[objectID] = timer
         }
     }
     
-    public func resetTimer(conversation: ZMConversation) {
+    public func resetTimer(_ conversation: ZMConversation) {
         cancelAndRemoveTimer(conversation.objectID)
     }
     
-    private func cancelAndRemoveTimer(conversationID: NSManagedObjectID) {
+    fileprivate func cancelAndRemoveTimer(_ conversationID: NSManagedObjectID) {
         let timer = conversationIDToTimerMap[conversationID]
         if let timer = timer {
             timer.cancel()
         }
-        conversationIDToTimerMap.removeValueForKey(conversationID)
+        conversationIDToTimerMap.removeValue(forKey: conversationID)
     }
     
-    public func timerDidFire(aTimer: ZMTimer) {
+    public func timerDidFire(_ aTimer: ZMTimer) {
         for (conversationID, timer) in conversationIDToTimerMap {
             if timer != aTimer {
                 return
@@ -128,7 +128,7 @@ public class ZMCallTimer : NSObject, ZMTimerClient {
             if let testDelegate = self.testDelegate {
                 testDelegate.callTimerDidFire(self)
             }
-            guard let conversation = self.managedObjectContext?.objectWithID(conversationID) as? ZMConversation where !conversation.isZombieObject
+            guard let conversation = self.managedObjectContext?.object(with: conversationID) as? ZMConversation , !conversation.isZombieObject
             else { return }
             conversation.voiceChannel?.callTimerDidFire(self)
             

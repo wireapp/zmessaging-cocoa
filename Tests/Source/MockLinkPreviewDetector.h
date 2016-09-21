@@ -18,6 +18,7 @@
 
 
 @import zmessaging;
+@import ZMCLinkPreview;
 
 extern NSString * const ZMTestURLArticleWithoutPictureString;
 extern NSString * const ZMTestURLArticleWithPictureString;

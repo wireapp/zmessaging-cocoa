@@ -1592,7 +1592,7 @@
     // and we go to slow sync
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path containsString:@"/notifications"]) {
-            ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:404 transportSessionError:nil];
+            ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
             return response;
         }
         return nil;
@@ -1621,7 +1621,7 @@
     // and we go to slow sync
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path containsString:@"/notifications"]) {
-            ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:404 transportSessionError:nil];
+            ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
             return response;
         }
         return nil;

@@ -25,8 +25,8 @@ public let ZMNeedsToUpdateUserClientsNotificationUserObjectIDKey = "userObjectID
 public extension ZMUser {
     
     func fetchUserClients() {
-        NSNotificationCenter.defaultCenter().postNotificationName(
-            ZMNeedsToUpdateUserClientsNotificationName,
+        NotificationCenter.default.post(
+            name: Notification.Name(rawValue: ZMNeedsToUpdateUserClientsNotificationName),
             object: nil,
             userInfo: [ZMNeedsToUpdateUserClientsNotificationUserObjectIDKey: objectID])
     }

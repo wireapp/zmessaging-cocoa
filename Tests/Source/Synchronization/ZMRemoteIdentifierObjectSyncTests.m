@@ -267,7 +267,7 @@ typedef ZMTransportRequest * (^stubbedRequestForObjectSync_t)(id self, ZMRemoteI
     [[[self.transcoder stub] andReturnValue:OCMOCK_VALUE((NSUInteger) 10)] maximumRemoteIdentifiersPerRequestForObjectSync:OCMOCK_ANY];
     [[[self.transcoder expect] andReturn:request] requestForObjectSync:self.sut remoteIdentifiers:remoteIDs];
     NSDictionary *payload = @{@"a": @"b"};
-    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPstatus:200 transportSessionError:nil headers:nil];
+    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPStatus:200 transportSessionError:nil headers:nil];
     [[self.transcoder stub] didReceiveResponse:OCMOCK_ANY remoteIdentifierObjectSync:OCMOCK_ANY forRemoteIdentifiers:OCMOCK_ANY];
     
     [self.sut setRemoteIdentifiersAsNeedingDownload:remoteIDs];
@@ -313,13 +313,13 @@ typedef ZMTransportRequest * (^stubbedRequestForObjectSync_t)(id self, ZMRemoteI
 
     
     NSDictionary *payload1 = @{@"a": @"b"};
-    ZMTransportResponse *response1 = [[ZMTransportResponse alloc] initWithPayload:payload1 HTTPstatus:200 transportSessionError:nil headers:nil];
+    ZMTransportResponse *response1 = [[ZMTransportResponse alloc] initWithPayload:payload1 HTTPStatus:200 transportSessionError:nil headers:nil];
     [[self.transcoder expect] didReceiveResponse:response1 remoteIdentifierObjectSync:self.sut forRemoteIdentifiers:[OCMArg checkWithBlock:^BOOL(NSSet *set) {
         return [set isEqualToSet:requestedIDsRequest1];
     }]];
     
     NSDictionary *payload2 = @{@"a": @"c"};
-    ZMTransportResponse *response2 = [[ZMTransportResponse alloc] initWithPayload:payload2 HTTPstatus:200 transportSessionError:nil headers:nil];
+    ZMTransportResponse *response2 = [[ZMTransportResponse alloc] initWithPayload:payload2 HTTPStatus:200 transportSessionError:nil headers:nil];
     [[self.transcoder expect] didReceiveResponse:response2 remoteIdentifierObjectSync:self.sut forRemoteIdentifiers:[OCMArg checkWithBlock:^BOOL(NSSet *set) {
         return [set isEqualToSet:requestedIDsRequest2];
     }]];
@@ -406,7 +406,7 @@ typedef ZMTransportRequest * (^stubbedRequestForObjectSync_t)(id self, ZMRemoteI
 
     // then
     ZMTransportRequest *request1 = [self.sut nextRequest];
-    [request1 completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPstatus:200 transportSessionError:nil]];
+    [request1 completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertNil([self.sut nextRequest]);
     

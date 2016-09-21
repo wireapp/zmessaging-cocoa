@@ -482,7 +482,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               @"type": @3,
                               @"last_event_time": lastEventDate.transportString,
                               @"last_event": lastEventID.transportString};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
@@ -693,7 +693,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertNotNil(request.expirationDate);
         
         // and when
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -729,7 +729,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         NSMutableDictionary *responsePayload = [self responsePayloadForRenameOfConversationID:conversation.remoteIdentifier name:@"foo"];
         responsePayload[@"id"] = newEvent.transportString;
         
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -761,7 +761,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         NSMutableDictionary *responsePayload = [self responsePayloadForRenameOfConversationID:conversation.remoteIdentifier name:@"foo"];
         responsePayload[@"id"] = oldEvent.transportString;
         
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1000,7 +1000,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
 - (void)setUpSyncWithConversationIDs:(NSArray *)conversationIDs
 {
-    ZMTransportResponse *idResponse = [ZMTransportResponse responseWithPayload:@{@"conversations" : conversationIDs } HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *idResponse = [ZMTransportResponse responseWithPayload:@{@"conversations" : conversationIDs } HTTPStatus:200 transportSessionError:nil];
     [self generateRequestAndCompleteWithResponse:idResponse];
 }
 
@@ -1051,7 +1051,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (ZMTransportResponse *)createConversationResponseForRawConversations:(NSArray *)rawConversations
 {
     NSDictionary *responsePayload = @{@"conversations" : rawConversations};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
     return response;
 }
 
@@ -1431,7 +1431,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertEqual(ZMMethodGET, request1.method);
         
         
-        [request1 completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil]];
+        [request1 completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -1770,7 +1770,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         
         request = [self.sut.requestGenerators nextRequest];
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
 
     }];
     
@@ -1875,7 +1875,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         
         request = [self.sut.requestGenerators nextRequest];
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1958,7 +1958,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         
         request = [self.sut.requestGenerators nextRequest];
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1993,7 +1993,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:430 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:430 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.syncMOC performGroupedBlockAndWaitWithReasonableTimeout:^{
@@ -2093,7 +2093,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
         XCTAssertNotNil(request);
         
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
         
     }];
@@ -2162,7 +2162,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
         XCTAssertNotNil(request);
         
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
         
     }];
@@ -2437,7 +2437,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
     // when
     NSDictionary *responsePayload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[user3ID] eventType:@"conversation.member-leave"];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2500,9 +2500,9 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }
     
     NSDictionary *responsePayload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[user2ID] eventType:@"conversation.member-leave"];
-    ZMTransportResponse *response1 = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response1 = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
     responsePayload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[user3ID] eventType:@"conversation.member-leave"];
-    ZMTransportResponse *response2 = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response2 = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
     
     // when
     ZMTransportRequest *request1 = [self.sut.requestGenerators nextRequest];
@@ -2567,7 +2567,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         NSDictionary *responsePayload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[self.selfUserID] eventType:@"conversation.member-leave"];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         
         // when
         request = [self.sut.requestGenerators nextRequest];
@@ -2624,7 +2624,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         NSDictionary *responsePayload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[self.selfUserID] eventType:@"conversation.member-leave"];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         
         newLastReadIDString = responsePayload[@"id"];
         lastReadTimeStamp = [responsePayload dateForKey:@"time"];
@@ -2662,7 +2662,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertTrue([conversation hasLocalModificationsForKeys:keys]);
 
     NSDictionary *responsePayload = [self responsePayloadForUserEventInConversationID:conversation.remoteIdentifier userIDs:@[self.selfUserID] eventType:@"conversation.member-leave"];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
     (void)[self requestToSyncConversation:conversation andCompleteWithResponse:response];
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -2709,10 +2709,10 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.isSelfAnActiveMember = NO;
         [conversation setLocallyModifiedKeys:keys];
         
-        ZMMessage *message1 = [conversation appendMessageWithText:@"message 1"];
+        ZMMessage *message1 = (id)[conversation appendMessageWithText:@"message 1"];
         message1.eventID = [self createEventID];
         
-        ZMMessage *message2 = [conversation appendMessageWithText:@"message 2"];
+        ZMMessage *message2 = (id)[conversation appendMessageWithText:@"message 2"];
         message2.eventID = [self createEventID];
         
         conversation.clearedEventID = message1.eventID;
@@ -2725,7 +2725,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         NSDictionary *responsePayload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[self.selfUserID] eventType:@"conversation.member-leave"];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         lastEventIDString = responsePayload[@"id"];
         
         XCTAssertFalse([conversation.keysThatHaveLocalModifications containsObject:ZMConversationClearedEventIDDataKey]);
@@ -2789,7 +2789,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         // when
         responsePayload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[user3ID] eventType:@"conversation.member-join"];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2895,7 +2895,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         NSDictionary *responsePayload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[user4ID, user4ID] eventType:@"conversation.member-join"];
-        response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         
         // when
         request = [self.sut.requestGenerators nextRequest];
@@ -3016,7 +3016,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
             [tracker objectsDidChange:[NSSet setWithObject:conversation]];
         }
         
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:403 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:403 transportSessionError:nil];
         
         // when
         request1 = [self.sut.requestGenerators nextRequest];
@@ -3035,7 +3035,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertEqual(request.method, ZMMethodGET);
         
         NSDictionary *metaData = [self conversationMetaDataForConversation:conversation.remoteIdentifier selfID:[NSUUID createUUID] otherUserID:[NSUUID createUUID] isArchived:NO lastEventID:[self createEventID] isSelfAnActiveMember:NO];
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:metaData HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:metaData HTTPStatus:200 transportSessionError:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -3175,7 +3175,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertNotNil(request);
         
         // when
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3221,7 +3221,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     conversation.silencedChangedTimestamp = nil;
     [self.uiMOC saveOrRollback];
 
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
     ZMTransportRequest *request = [self requestToSyncConversation:conversation andCompleteWithResponse:response];
     
     [self.uiMOC refreshObject:conversation mergeChanges:NO];
@@ -3250,7 +3250,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertEqualObjects(conversation.keysThatHaveLocalModifications, keys);
     [self.uiMOC saveOrRollback];
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
     ZMTransportRequest *request = [self requestToSyncConversation:conversation andCompleteWithResponse:response];
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3294,7 +3294,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.uiMOC saveOrRollback];
     
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
     ZMTransportRequest *request = [self requestToSyncConversation:conversation andCompleteWithResponse:response];
     
     [self.uiMOC refreshObject:conversation mergeChanges:NO];
@@ -3328,7 +3328,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
     XCTAssertEqualObjects(conversation.keysThatHaveLocalModifications, keys);
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
     ZMTransportRequest *request = [self requestToSyncConversation:conversation andCompleteWithResponse:response];
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3382,7 +3382,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         request2 = [self.sut.requestGenerators nextRequest];
         
         // when
-        response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+        response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }];
     
@@ -4191,7 +4191,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                               @"last_event_time": @"2014-10-06T14:27:17.945Z",
                                               @"last_event": @"2f.800122000a5281dc"
                                               };
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:conversationPayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:conversationPayload HTTPStatus:200 transportSessionError:nil];
         
         // when
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
@@ -4953,7 +4953,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         // when
         ZM_ALLOW_MISSING_SELECTOR(ZMTransportRequest *request = [self.sut.requestGenerators firstNonNilReturnedFromSelector:@selector(nextRequest)];)
         XCTAssertNotNil(request);
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:404 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:404 transportSessionError:nil]];
         
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -4971,7 +4971,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertEqual(request.method, ZMMethodGET);
         
         NSDictionary *metaData = [self conversationMetaDataForConversation:conversation.remoteIdentifier selfID:[NSUUID createUUID] otherUserID:[NSUUID createUUID] isArchived:NO lastEventID:[self createEventID] isSelfAnActiveMember:NO];
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:metaData HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:metaData HTTPStatus:200 transportSessionError:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -5017,7 +5017,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         // when
         ZM_ALLOW_MISSING_SELECTOR(ZMTransportRequest *request = [self.sut.requestGenerators firstNonNilReturnedFromSelector:@selector(nextRequest)];)
         XCTAssertNotNil(request);
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:404 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:404 transportSessionError:nil]];
         
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -5037,7 +5037,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         // the update changes the local isSelfAnActiveMember state to true - if we don't reset all keys, the transcoder will crash when asked for the next request
         NSDictionary *metaData = [self conversationMetaDataForConversation:conversation.remoteIdentifier selfID:[NSUUID createUUID] otherUserID:otherUser.remoteIdentifier isArchived:NO lastEventID:[self createEventID] isSelfAnActiveMember:YES];
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:metaData HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:metaData HTTPStatus:200 transportSessionError:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

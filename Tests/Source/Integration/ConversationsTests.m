@@ -807,7 +807,7 @@
     // when
     __block ZMMessage *newMessage;
     [self.userSession performChanges:^{
-        newMessage = [observer.window.conversation appendMessageWithText:expectedText];
+        newMessage = (id)[observer.window.conversation appendMessageWithText:expectedText];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1773,8 +1773,8 @@
 
     // when
     [self.userSession performChanges:^{
-        textMsg = [conv appendMessageWithText:@"bla bla"];
-        imageMsg = [conv appendMessageWithImageData:self.verySmallJPEGData];
+        textMsg = (id)[conv appendMessageWithText:@"bla bla"];
+        imageMsg = (id)[conv appendMessageWithImageData:self.verySmallJPEGData];
         [conv setVisibleWindowFromMessage:nil toMessage:imageMsg];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2359,7 +2359,7 @@
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     [self.userSession performChanges:^{
-        ZMMessage *message = [conversation appendMessageWithText:@"lalala"];
+        ZMMessage *message = (id)[conversation appendMessageWithText:@"lalala"];
         conversation.lastReadServerTimeStamp = message.serverTimestamp;
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2393,11 +2393,11 @@
         [self spinMainQueueWithTimeout:0.1]; // this is needed so the timeStamps are at least a millisecond appart
         [conversation appendMessageWithText:@"boohoohoo"];
         [self spinMainQueueWithTimeout:0.1]; // this is needed so the timeStamps are at least a millisecond appart
-        message1 = [conversation appendMessageWithText:@"hehehe"];
+        message1 = (id)[conversation appendMessageWithText:@"hehehe"];
         [NSThread sleepForTimeInterval:0.2]; // this is needed so the timeStamps are at least a millisecond appart
-        message2 = [conversation appendMessageWithText:@"I will not go away"];
+        message2 = (id)[conversation appendMessageWithText:@"I will not go away"];
         [self spinMainQueueWithTimeout:0.1]; // this is needed so the timeStamps are at least a millisecond appart
-        message3 = [conversation appendMessageWithText:@"I will stay for sure"];
+        message3 = (id)[conversation appendMessageWithText:@"I will stay for sure"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2428,7 +2428,7 @@
         if([request.path isEqualToString:path]) {
             XCTAssertEqual(callCount, 0u);
             callCount++;
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:404 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
         }
         return nil;
     };
@@ -2474,7 +2474,7 @@
         if([request.path isEqualToString:path] && request.method == ZMMethodPOST) {
             XCTAssertEqual(callCount, 0u);
             callCount++;
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:403 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:403 transportSessionError:nil];
         }
         return nil;
     };

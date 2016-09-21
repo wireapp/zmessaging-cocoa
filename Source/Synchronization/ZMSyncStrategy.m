@@ -59,6 +59,7 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMOnDemandFlowManager.h"
 #import "ZMLocalNotificationDispatcher.h"
+#import "ZMObjectSyncStrategy.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 
@@ -117,7 +118,7 @@
 
 @property (nonatomic) NSArray *allChangeTrackers;
 
-@property (nonatomic) NSArray *requestStrategies;
+@property (nonatomic) NSArray<ZMObjectSyncStrategy *> *requestStrategies;
 
 @property (atomic) BOOL tornDown;
 @property (nonatomic) BOOL contextMergingDisabled;
@@ -329,7 +330,7 @@ ZM_EMPTY_ASSERTING_INIT()
     [self appTerminated:nil];
     
     for (ZMObjectSyncStrategy *s in [self.allTranscoders arrayByAddingObjectsFromArray:self.requestStrategies]) {
-        if ([s respondsToSelector:@selector(tearDown)]) {
+        if ([s respondsToSelector:@selector((tearDown))]) {
             [s tearDown];
         }
     }
@@ -460,7 +461,7 @@ ZM_EMPTY_ASSERTING_INIT()
     return NO;
 }
 
-- (NSArray *)allTranscoders;
+- (NSArray<ZMObjectSyncStrategy *> *)allTranscoders;
 {
     return @[
              self.connectionTranscoder,

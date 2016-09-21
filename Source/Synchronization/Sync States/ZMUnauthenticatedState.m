@@ -91,7 +91,6 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 {
     [self.loginFailureTimer cancel];
     self.loginFailureTimer = nil;
-    [self.authenticationStatus removeAuthenticationCenterObserver:self];
     [super tearDown];
 }
 

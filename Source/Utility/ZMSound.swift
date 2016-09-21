@@ -66,57 +66,57 @@ public enum ZMSound: String, CustomStringConvertible {
         Opening]
     
     public func isRingtone() -> Bool {
-        return self.dynamicType.ringtones.contains(self)
+        return type(of: self).ringtones.contains(self)
     }
     
-    private static var playingPreviewID: SystemSoundID?
-    private static var playingPreviewURL: NSURL?
+    fileprivate static var playingPreviewID: SystemSoundID?
+    fileprivate static var playingPreviewURL: URL?
     
-    private static func stopPlayingPreview() {
+    fileprivate static func stopPlayingPreview() {
         if let _ = self.playingPreviewURL,
             let soundId = self.playingPreviewID {
             AudioServicesDisposeSystemSoundID(soundId)
-            self.playingPreviewID = .None
-            self.playingPreviewURL = .None
+            self.playingPreviewID = .none
+            self.playingPreviewURL = .none
         }
     }
     
-    public static func playPreviewForURL(mediaURL: NSURL) {
+    public static func playPreviewForURL(_ mediaURL: URL) {
         self.stopPlayingPreview()
         
         self.playingPreviewURL = mediaURL
         var soundId: SystemSoundID = 0
         
-        if AudioServicesCreateSystemSoundID(mediaURL, &soundId) == kAudioServicesNoError {
+        if AudioServicesCreateSystemSoundID(mediaURL as CFURL, &soundId) == kAudioServicesNoError {
             self.playingPreviewID = soundId
         }
     
         AudioServicesPlaySystemSound(soundId)
         
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(4 * NSEC_PER_SEC)), dispatch_get_main_queue()) {
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(Int64(4 * NSEC_PER_SEC)) / Double(NSEC_PER_SEC)) {
             if self.playingPreviewID == soundId {
                 self.stopPlayingPreview()
             }
         }
     }
     
-    public func fileURL() -> NSURL {
-        return NSURL(fileURLWithPath: NSBundle.mainBundle().pathForResource(self.rawValue, ofType: self.dynamicType.fileExtension)!)
+    public func fileURL() -> URL {
+        return URL(fileURLWithPath: Bundle.main.path(forResource: self.rawValue, ofType: type(of: self).fileExtension)!)
     }
     
-    private static let fileExtension = "m4a"
+    fileprivate static let fileExtension = "m4a"
 
     public func filename() -> String {
-        return (self.rawValue as NSString).stringByAppendingPathExtension(self.dynamicType.fileExtension)!
+        return (self.rawValue as NSString).appendingPathExtension(type(of: self).fileExtension)!
     }
     
     public var description: String {
         get {
-            return self.rawValue.capitalizedString
+            return self.rawValue.capitalized
         }
     }
     
     public func playPreview() {
-        self.dynamicType.playPreviewForURL(self.fileURL())
+        type(of: self).playPreviewForURL(self.fileURL())
     }
 }

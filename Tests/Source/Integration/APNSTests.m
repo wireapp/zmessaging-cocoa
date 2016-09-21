@@ -348,7 +348,7 @@
                 return [ZMTransportResponse responseWithTransportSessionError:NSError.tryAgainLaterError];
             } else {
                 [fetchingExpectation fulfill];
-                return [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
             }
         };
         return nil;
@@ -407,7 +407,7 @@
         NSString *path = [NSString stringWithFormat:@"/notifications/%@?client=%@&cancel_fallback=true", notificationID.transportString,selfUser.selfClient.remoteIdentifier];
         if ([request.path isEqualToString:path] && request.method == ZMMethodGET) {
             [fetchingExpectation fulfill];
-            return [ZMTransportResponse responseWithPayload:eventPayload HTTPstatus:200 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:eventPayload HTTPStatus:200 transportSessionError:nil];
         };
         return nil;
     };
@@ -460,7 +460,7 @@
         if ([request.path isEqualToString:path] && request.method == ZMMethodGET) {
             if (++requestCount == 2) {
                 [fetchingExpectation fulfill];
-                return [ZMTransportResponse responseWithPayload:eventPayload HTTPstatus:200 transportSessionError:nil];
+                return [ZMTransportResponse responseWithPayload:eventPayload HTTPStatus:200 transportSessionError:nil];
             } else {
                 return [ZMTransportResponse responseWithTransportSessionError:NSError.tryAgainLaterError];
             }
@@ -531,10 +531,8 @@
         
         // when
         [self.userSession receivedPushNotificationWithPayload:[self APNSPayloadForNotificationPayload:payload] completionHandler:nil source:ZMPushNotficationTypeVoIP];
-        WaitForAllGroupsToBeEmpty(0.2);
-        
-        
         XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
+        WaitForAllGroupsToBeEmpty(0.2);
     }
 }
 

@@ -64,7 +64,7 @@
 
 - (void)sendRequestAndReplyWithStatus:(NSInteger)status
 {
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:status transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:status transportSessionError:nil];
     [self sendRequestAndReplyWithResponse:response];
 }
 
@@ -175,7 +175,7 @@
 {
     
     // given
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
     
     // expect
     [[self.transcoder expect] didReceiveResponse:response forSingleRequest:self.sut];
@@ -318,8 +318,8 @@
     ZMTransportRequest *requestThatShouldNotComplete = [ZMTransportRequest requestGetFromPath:@"req-nope"];
     ZMTransportRequest *requestThatShouldComplete = [ZMTransportRequest requestGetFromPath:@"req-yep"];
     
-    ZMTransportResponse *responseThatShouldNotProcess = [ZMTransportResponse responseWithPayload:@[@"resp-nope"] HTTPstatus:200 transportSessionError:nil];
-    ZMTransportResponse *responseThatShouldProcess = [ZMTransportResponse responseWithPayload:@[@"resp-yep"] HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *responseThatShouldNotProcess = [ZMTransportResponse responseWithPayload:@[@"resp-nope"] HTTPStatus:200 transportSessionError:nil];
+    ZMTransportResponse *responseThatShouldProcess = [ZMTransportResponse responseWithPayload:@[@"resp-yep"] HTTPStatus:200 transportSessionError:nil];
     
     [[[self.transcoder expect] andReturn:requestThatShouldNotComplete] requestForSingleRequestSync:self.sut];
     [[[self.transcoder expect] andReturn:requestThatShouldComplete] requestForSingleRequestSync:self.sut];

@@ -105,7 +105,7 @@
 - (void)testThatItRemovesIdentifiersOnceTheyHaveBeenSentToTheBackend_1;
 {
     // given
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
     [self.syncMOC performGroupedBlockAndWait:^{
         // expect
         [self expectationForNotification:@"ZMOperationLoopNewRequestAvailable" object:self.sut handler:nil];
@@ -129,7 +129,7 @@
 - (void)testThatItRemovesIdentifiersOnceTheyHaveBeenSentToTheBackend_2;
 {
     // given
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
     [self.syncMOC performGroupedBlockAndWait:^{
         // expect
         [self expectationForNotification:@"ZMOperationLoopNewRequestAvailable" object:self.sut handler:nil];
@@ -156,7 +156,7 @@
 - (void)testThatItDoesNotRemoveAnIdentifierWhenTheResponseIs_TryAgain;
 {
     // given
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:0 transportSessionError:[NSError tryAgainLaterError]];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:[NSError tryAgainLaterError]];
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
         self.syncMOC.removedSuggestedContactRemoteIdentifiers = @[self.remoteIdentifierA, self.remoteIdentifierB];

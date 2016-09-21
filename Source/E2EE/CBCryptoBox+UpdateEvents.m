@@ -82,7 +82,7 @@ NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
                         managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
     BOOL didFailBecauseDuplicated = error != nil
-    && (error.code == CryptoboxErrorCryptoboxOutdatedMessage || error.code == CryptoboxErrorCryptoboxDuplicateMessage);
+    && (error.code == CryptoboxErrorOutdatedMessage || error.code == CryptoboxErrorDuplicateMessage);
     
     // do not notify user if it's just a duplicated one
     if (didFailBecauseDuplicated) {
@@ -202,35 +202,35 @@ NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
 NSString * CBErrorCodeToString(CryptoboxError errorCode)
 {
     switch (errorCode) {
-        case CryptoboxErrorCryptoboxStorageError:
+        case CryptoboxErrorStorageError:
             return @"CBErrorCodeStorageError";
-        case CryptoboxErrorCryptoboxSessionNotFound:
+        case CryptoboxErrorSessionNotFound:
             return @"CBErrorCodeNoSession";
-        case CryptoboxErrorCryptoboxPrekeyNotFound:
+        case CryptoboxErrorPrekeyNotFound:
             return @"CBErrorCodeNoPreKey";
-        case CryptoboxErrorCryptoboxDecodeError:
+        case CryptoboxErrorDecodeError:
             return @"CBErrorCodeDecodeError";
-        case CryptoboxErrorCryptoboxRemoteIdentityChanged:
+        case CryptoboxErrorRemoteIdentityChanged:
             return @"CBErrorCodeRemoteIdentityChanged";
-        case CryptoboxErrorCryptoboxIdentityError:
+        case CryptoboxErrorIdentityError:
             return @"CBErrorCodeInvalidIdentity";
-        case CryptoboxErrorCryptoboxInvalidSignature:
+        case CryptoboxErrorInvalidSignature:
             return @"CBErrorCodeInvalidSignature";
-        case CryptoboxErrorCryptoboxInvalidMessage:
+        case CryptoboxErrorInvalidMessage:
             return @"CBErrorCodeInvalidMessage";
-        case CryptoboxErrorCryptoboxDuplicateMessage:
+        case CryptoboxErrorDuplicateMessage:
             return @"CBErrorCodeDuplicateMessage";
-        case CryptoboxErrorCryptoboxTooDistantFuture:
+        case CryptoboxErrorTooDistantFuture:
             return @"CBErrorCodeTooDistantFuture";
-        case CryptoboxErrorCryptoboxOutdatedMessage:
+        case CryptoboxErrorOutdatedMessage:
             return @"CBErrorCodeOutdatedMessage";
-        case CryptoboxErrorCryptoboxUTF8Error:
+        case CryptoboxErrorUTF8Error:
             return @"CBErrorCodeUTF8Error";
-        case CryptoboxErrorCryptoboxNulError:
+        case CryptoboxErrorNulError:
             return @"CBErrorCodeNULError";
-        case CryptoboxErrorCryptoboxEncodeError:
+        case CryptoboxErrorEncodeError:
             return @"CBErrorCodeEncodeError";
-        case CryptoboxErrorCryptoboxPanic:
+        case CryptoboxErrorPanic:
             return @"CBErrorCodePanic";
         default:
             return [NSString stringWithFormat:@"Unknown error code: %lu", (long)errorCode];

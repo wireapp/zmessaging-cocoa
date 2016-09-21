@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -30,20 +30,20 @@ class IncompleteConversationsDownstreamSyncTests: MessagingTest {
     
     class RequestEncoderMock : NSObject, ConversationEventsRequestEncoder {
         
-        var requestForFetchingRange_Mock : ((range: ZMEventIDRange, conversation: ZMConversation)->ZMTransportRequest)?
+        var requestForFetchingRange_Mock : ((_ range: ZMEventIDRange, _ conversation: ZMConversation)->ZMTransportRequest)?
         
-        func requestForFetchingRange(range: ZMEventIDRange, conversation: ZMConversation) -> ZMTransportRequest {
-            return requestForFetchingRange_Mock!(range: range, conversation: conversation)
+        func requestForFetchingRange(_ range: ZMEventIDRange, conversation: ZMConversation) -> ZMTransportRequest {
+            return requestForFetchingRange_Mock!(range, conversation)
         }
         
     }
     
     class EventsParserMock : NSObject, DownloadedConversationEventsParser {
         
-        var updateRangeInvocation_Mock : ((range: ZMEventIDRange, conversation: ZMConversation, response: ZMTransportResponse)->())?
+        var updateRangeInvocation_Mock : ((_ range: ZMEventIDRange, _ conversation: ZMConversation, _ response: ZMTransportResponse)->())?
         
-        func updateRange(range: ZMEventIDRange, conversation: ZMConversation, response: ZMTransportResponse) {
-            self.updateRangeInvocation_Mock!(range: range, conversation: conversation, response: response)
+        func updateRange(_ range: ZMEventIDRange, conversation: ZMConversation, response: ZMTransportResponse) {
+            self.updateRangeInvocation_Mock!(range, conversation, response)
         }
     }
     
@@ -58,7 +58,7 @@ class IncompleteConversationsDownstreamSyncTests: MessagingTest {
         }
         override var incompleteNonWhitelistedConversations: NSOrderedSet { return self.incompleteNonWhitelistedConversations_Stub
         }
-        override func gapForConversation(conversation: ZMConversation) -> ZMEventIDRange? {
+        override func gap(for conversation: ZMConversation) -> ZMEventIDRange? {
             return gapForConversation_Stub[conversation]!
         }
     }
@@ -76,7 +76,7 @@ class IncompleteConversationsDownstreamSyncTests: MessagingTest {
         self.conversationCache = IncompleteConversationsCacheStub(context: self.uiMOC)
     }
     
-    func createSut(cooldownInterval : NSTimeInterval = 0) -> IncompleteConversationsDownstreamSync {
+    func createSut(_ cooldownInterval : TimeInterval = 0) -> IncompleteConversationsDownstreamSync {
         return IncompleteConversationsDownstreamSync(
             requestEncoder: self.requestEncoderMock,
             responseParser: self.eventsParserMock,
@@ -117,10 +117,10 @@ extension IncompleteConversationsDownstreamSyncTests {
     func testThatWhenCallingNextRequestItAsksForAConversationToTheHighPriorityIncompleteConvCache() {
     
         // given
-        let conv1 = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
-        let conv2 = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
-        let range1 = ZMEventIDRange(eventIDs: [ZMEventID(major: 15, minor: 100)])
-        let range2 = ZMEventIDRange(eventIDs: [ZMEventID(major: 10, minor: 100)])
+        let conv1 = ZMConversation.insertNewObject(in: self.uiMOC)
+        let conv2 = ZMConversation.insertNewObject(in: self.uiMOC)
+        let range1 = ZMEventIDRange(eventIDs: [ZMEventID(major: 15, minor: 100)])!
+        let range2 = ZMEventIDRange(eventIDs: [ZMEventID(major: 10, minor: 100)])!
         let dummyRequest = ZMTransportRequest(getFromPath: "Dummy")
         let sut = createSut()
         
@@ -163,7 +163,7 @@ extension IncompleteConversationsDownstreamSyncTests {
         }
         
         // given
-        let conv = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let conv = ZMConversation.insertNewObject(in: self.uiMOC)
         let range = ZMEventIDRange()
         let dummyRequest = ZMTransportRequest(getFromPath: "Dummy")
         self.historySynchronizationStatusStub.shouldDownloadFullHistory = true
@@ -189,7 +189,7 @@ extension IncompleteConversationsDownstreamSyncTests {
     func testThatItDoesNotReturnARequestForTheSameConversationIfOneIsStillRunning() {
         
         // given
-        let conv = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let conv = ZMConversation.insertNewObject(in: self.uiMOC)
         let range = ZMEventIDRange()
         let dummyRequest = ZMTransportRequest(getFromPath: "Dummy")
         let sut = createSut()
@@ -219,7 +219,7 @@ extension IncompleteConversationsDownstreamSyncTests {
     func testThatItDoesReturnARequestForTheSameConversationIfTheLastRequestWasSuccessful() {
         
         // given
-        let conv = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let conv = ZMConversation.insertNewObject(in: self.uiMOC)
         let range1 = ZMEventIDRange(eventIDs: [ZMEventID(major: 15, minor: 100)])
         let range2 = ZMEventIDRange(eventIDs: [ZMEventID(major: 10, minor: 100)])
         let dummyRequest1 = ZMTransportRequest(getFromPath: "dummy1")
@@ -228,7 +228,7 @@ extension IncompleteConversationsDownstreamSyncTests {
         self.eventsParserMock.updateRangeInvocation_Mock = {_,_,_ in }
         
         self.conversationCache.incompleteWhitelistedConversations_Stub = NSOrderedSet(object: conv)
-        self.conversationCache.gapForConversation_Stub = [conv : range1]
+        self.conversationCache.gapForConversation_Stub = [conv : range1!]
         
         // expect (first request)
         self.requestEncoderMock.requestForFetchingRange_Mock = { (_range, _conversation) in
@@ -239,14 +239,14 @@ extension IncompleteConversationsDownstreamSyncTests {
         
         // when
         let request1 = sut.nextRequest()
-        request1?.completeWithResponse(ZMTransportResponse(payload: [], HTTPstatus: 200, transportSessionError: nil))
+        request1?.complete(with: ZMTransportResponse(payload: [] as ZMTransportData, httpStatus: 200, transportSessionError: nil))
         
         // then
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(request1, dummyRequest1)
         
         // and expect (second request)
-        self.conversationCache.gapForConversation_Stub = [conv : range2] // modify the range so that we can test it picks the new one
+        self.conversationCache.gapForConversation_Stub = [conv : range2!] // modify the range so that we can test it picks the new one
         self.requestEncoderMock.requestForFetchingRange_Mock = { (_range, _conversation) in
             XCTAssertEqual(range2, _range)
             XCTAssertEqual(conv, _conversation)
@@ -263,12 +263,12 @@ extension IncompleteConversationsDownstreamSyncTests {
     func testThatConversationIsStillIsTheListOfBeingFetchedIfServerRespondToBackoff() {
         
         // given
-        let conv = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let conv = ZMConversation.insertNewObject(in: self.uiMOC)
         let range = ZMEventIDRange()
         let dummyRequest = ZMTransportRequest(getFromPath: "Dummy")
         let sut = createSut()
         
-        let expectation = self.expectationWithDescription("requestCalled")
+        let expectation = self.expectation(description: "requestCalled")
         
         self.conversationCache.incompleteWhitelistedConversations_Stub = NSOrderedSet(object: conv)
         self.conversationCache.gapForConversation_Stub = [conv : range]
@@ -282,9 +282,9 @@ extension IncompleteConversationsDownstreamSyncTests {
         
         // when
         let failedRequest = sut.nextRequest()
-        failedRequest?.completeWithResponse(ZMTransportResponse(payload: [], HTTPstatus : 429, transportSessionError: nil))
+        failedRequest?.complete(with: ZMTransportResponse(payload: [] as ZMTransportData, httpStatus : 429, transportSessionError: nil))
 
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
         let request = sut.nextRequest()
         
@@ -302,10 +302,10 @@ extension IncompleteConversationsDownstreamSyncTests {
     func testThatItCallsTheTranscoderWithTheTransportResult() {
         
         // given
-        let conv = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let conv = ZMConversation.insertNewObject(in: self.uiMOC)
         let range = ZMEventIDRange()
         let dummyRequest = ZMTransportRequest(getFromPath: "Dummy")
-        let response = ZMTransportResponse(payload: ["Foo"], HTTPstatus: 205, transportSessionError: nil)
+        let response = ZMTransportResponse(payload: ["Foo"] as ZMTransportData, httpStatus: 205, transportSessionError: nil)
         let sut = createSut()
         
         self.conversationCache.incompleteWhitelistedConversations_Stub = NSOrderedSet(object: conv)
@@ -316,7 +316,7 @@ extension IncompleteConversationsDownstreamSyncTests {
         }
         
         // expect
-        let expectation = self.expectationWithDescription("update range invoked")
+        let expectation = self.expectation(description: "update range invoked")
         self.eventsParserMock.updateRangeInvocation_Mock = { (_range, _conversation, _response) in
             XCTAssertEqual(range, _range)
             XCTAssertEqual(conv, _conversation)
@@ -326,10 +326,10 @@ extension IncompleteConversationsDownstreamSyncTests {
         
         // when
         let request = sut.nextRequest()
-        request?.completeWithResponse(response)
+        request?.complete(with: response)
         
         // then
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
 
 }
@@ -346,9 +346,9 @@ extension IncompleteConversationsDownstreamSyncTests {
 
         
         // given
-        let conv1 = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
-        let conv2 = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
-        let range = ZMEventIDRange(eventIDs: [ZMEventID(major: 15, minor: 100)])
+        let conv1 = ZMConversation.insertNewObject(in: self.uiMOC)
+        let conv2 = ZMConversation.insertNewObject(in: self.uiMOC)
+        let range = ZMEventIDRange(eventIDs: [ZMEventID(major: 15, minor: 100)])!
         self.historySynchronizationStatusStub.shouldDownloadFullHistory = true
         
         let dummyRequest = ZMTransportRequest(getFromPath: "dummy")
@@ -382,9 +382,9 @@ extension IncompleteConversationsDownstreamSyncTests {
         }
         
         // given
-        let conv1 = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
-        let conv2 = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
-        let range = ZMEventIDRange(eventIDs: [ZMEventID(major: 15, minor: 100)])
+        let conv1 = ZMConversation.insertNewObject(in: self.uiMOC)
+        let conv2 = ZMConversation.insertNewObject(in: self.uiMOC)
+        let range = ZMEventIDRange(eventIDs: [ZMEventID(major: 15, minor: 100)])!
         self.historySynchronizationStatusStub.shouldDownloadFullHistory = true
         
         let dummyRequest = ZMTransportRequest(getFromPath: "dummy")
@@ -415,10 +415,10 @@ extension IncompleteConversationsDownstreamSyncTests {
         }
         
         // given
-        let startDate = NSDate()
-        let conv1 = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
-        let conv2 = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
-        let range = ZMEventIDRange(eventIDs: [ZMEventID(major: 15, minor: 100)])
+        let startDate = Date()
+        let conv1 = ZMConversation.insertNewObject(in: self.uiMOC)
+        let conv2 = ZMConversation.insertNewObject(in: self.uiMOC)
+        let range = ZMEventIDRange(eventIDs: [ZMEventID(major: 15, minor: 100)])!
         self.historySynchronizationStatusStub.shouldDownloadFullHistory = true
         
         let dummyRequest = ZMTransportRequest(getFromPath: "dummy")
@@ -442,9 +442,10 @@ extension IncompleteConversationsDownstreamSyncTests {
         
         // and when
         var lastRequest : ZMTransportRequest? = nil
-        while(lastRequest == nil && NSDate().timeIntervalSinceDate(startDate) < 5) { // eventually this will return
+        
+        while lastRequest == nil && Date().timeIntervalSince(startDate) < 5 { // eventually this will return
             lastRequest = sut.nextRequest()
-            self.spinMainQueueWithTimeout(0.1)
+            self.spinMainQueue(withTimeout: 0.1)
         }
         
         // then

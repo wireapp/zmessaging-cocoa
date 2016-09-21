@@ -20,7 +20,7 @@ import Foundation
 import CoreData
 
 @objc(StoredUpdateEvent)
-public class StoredUpdateEvent: NSManagedObject {
+public final class StoredUpdateEvent: NSManagedObject {
     
     static let entityName =  "StoredUpdateEvent"
     static let SortIndexKey = "sortIndex"
@@ -31,51 +31,51 @@ public class StoredUpdateEvent: NSManagedObject {
     @NSManaged var source: Int16
     @NSManaged var sortIndex: Int64
     
-    static func insertNewObject(context: NSManagedObjectContext) -> StoredUpdateEvent? {
-        return NSEntityDescription.insertNewObjectForEntityForName(self.entityName, inManagedObjectContext: context) as? StoredUpdateEvent
+    static func insertNewObject(_ context: NSManagedObjectContext) -> StoredUpdateEvent? {
+        return NSEntityDescription.insertNewObject(forEntityName: self.entityName, into: context) as? StoredUpdateEvent
     }
     
     /// Maps a passed in `ZMUpdateEvent` to a `StoredUpdateEvent` which is persisted in a database
     /// The passed in `index` is used to enumerate events to be able to fetch and sort them later on in the order they were received
-    public static func create(event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, index: Int64) -> StoredUpdateEvent? {
+    public static func create(_ event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, index: Int64) -> StoredUpdateEvent? {
         guard let storedEvent = StoredUpdateEvent.insertNewObject(managedObjectContext) else { return nil }
         storedEvent.debugInformation = event.debugInformation
         storedEvent.isTransient = event.isTransient
-        storedEvent.payload = event.payload
+        storedEvent.payload = event.payload as NSDictionary
         storedEvent.source = Int16(event.source.rawValue)
         storedEvent.sortIndex = index
-        storedEvent.uuidString = event.uuid.transportString()
+        storedEvent.uuidString = event.uuid?.transportString()
         return storedEvent
     }
     
     /// Returns stored events sorted by and up until (including) the defined `stopIndex`
     /// Returns a maximum of `batchSize` events at a time
-    public static func nextEvents(context: NSManagedObjectContext, batchSize: Int) -> [StoredUpdateEvent] {
-        let fetchRequest = NSFetchRequest(entityName: self.entityName)
+    public static func nextEvents(_ context: NSManagedObjectContext, batchSize: Int) -> [StoredUpdateEvent] {
+        let fetchRequest = NSFetchRequest<StoredUpdateEvent>(entityName: self.entityName)
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: StoredUpdateEvent.SortIndexKey, ascending: true)]
         fetchRequest.fetchLimit = batchSize
         fetchRequest.returnsObjectsAsFaults = false
-        let result = context.executeFetchRequestOrAssert(fetchRequest)
-        return result as? [StoredUpdateEvent] ?? []
+        let result = context.fetchOrAssert(request: fetchRequest)
+        return result
     }
     
     /// Returns the highest index of all stored events
-    public static func highestIndex(context: NSManagedObjectContext) -> Int64 {
-        let fetchRequest = NSFetchRequest(entityName: self.entityName)
+    public static func highestIndex(_ context: NSManagedObjectContext) -> Int64 {
+        let fetchRequest = NSFetchRequest<StoredUpdateEvent>(entityName: self.entityName)
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: StoredUpdateEvent.SortIndexKey, ascending: false)]
         fetchRequest.fetchBatchSize = 1
-        let result = context.executeFetchRequestOrAssert(fetchRequest)
+        let result = context.fetchOrAssert(request: fetchRequest)
         return result.first?.sortIndex ?? 0
     }
     
     /// Maps passed in objects of type `StoredUpdateEvent` to `ZMUpdateEvent`
-    public static func eventsFromStoredEvents(storedEvents: [StoredUpdateEvent]) -> [ZMUpdateEvent] {
+    public static func eventsFromStoredEvents(_ storedEvents: [StoredUpdateEvent]) -> [ZMUpdateEvent] {
         let events : [ZMUpdateEvent] = storedEvents.flatMap{
-            var eventUUID : NSUUID?
+            var eventUUID : UUID?
             if let uuid = $0.uuidString {
-                eventUUID = NSUUID(UUIDString: uuid)
+                eventUUID = UUID(uuidString: uuid)
             }
-            let decryptedEvent = ZMUpdateEvent.decryptedUpdateEventFromEventStreamPayload($0.payload, uuid:eventUUID, transient: $0.isTransient, source: ZMUpdateEventSource(rawValue:Int($0.source))!)
+            let decryptedEvent = ZMUpdateEvent.decryptedUpdateEvent(fromEventStreamPayload: $0.payload, uuid:eventUUID, transient: $0.isTransient, source: ZMUpdateEventSource(rawValue:Int($0.source))!)
             if let debugInfo = $0.debugInformation {
                 decryptedEvent?.appendDebugInformation(debugInfo)
             }

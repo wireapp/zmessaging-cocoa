@@ -22,13 +22,13 @@ import ZMCDataModel
 
 
 public protocol CopyableEventNotification : EventNotification {
-    func copyByAddingEvent(event: ZMUpdateEvent, conversation: ZMConversation) -> Self?
-    func canAddEvent(event: ZMUpdateEvent, conversation: ZMConversation) -> Bool
+    func copyByAddingEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) -> Self?
+    func canAddEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) -> Bool
 }
 
 extension CopyableEventNotification {
     
-    public func canAddEvent(event: ZMUpdateEvent, conversation: ZMConversation) -> Bool {
+    public func canAddEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) -> Bool {
         guard eventType == event.type &&
             conversationID == conversation.remoteIdentifier && (!conversation.isSilenced || ignoresSilencedState)
             else {
@@ -42,7 +42,7 @@ extension CopyableEventNotification {
 final public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent, CopyableEventNotification {
     
     public override var eventType : ZMUpdateEventType {
-        return .CallState
+        return .callState
     }
     override public var ignoresSilencedState : Bool { return true }
     override var requiresConversation : Bool { return true }
@@ -51,12 +51,12 @@ final public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent
     var session : Session?
     var completedSessions : [SessionTracker] = []
     
-    override public func containsIdenticalEvent(event: ZMUpdateEvent) -> Bool {
+    override public func containsIdenticalEvent(_ event: ZMUpdateEvent) -> Bool {
         guard super.containsIdenticalEvent(event) else { return false }
         
         guard let lastSequence = lastEvent?.callingSequence,
               let currentSequence = event.callingSequence
-            where lastSequence == currentSequence else {
+            , lastSequence == currentSequence else {
                 return false
         }
         
@@ -72,7 +72,7 @@ final public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent
         fatalError("init(events:conversation:managedObjectContext:application:) has not been implemented")
     }
     
-    override func canCreateNotification(conversation: ZMConversation?) -> Bool {
+    override func canCreateNotification(_ conversation: ZMConversation?) -> Bool {
         if (!super.canCreateNotification(conversation)) { return false }
         let lastEvent = self.lastEvent!
         session = sessionTracker.sessionForEvent(lastEvent)
@@ -82,16 +82,16 @@ final public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent
         return false
     }
     
-    func shouldCreateNotificationForSession(session: Session) -> Bool {
+    func shouldCreateNotificationForSession(_ session: Session) -> Bool {
         switch session.currentState {
-        case .Incoming, .SessionEnded:
+        case .incoming, .sessionEnded:
             return true
-        case .Ongoing, .SessionEndedSelfJoined, .SelfUserJoined:
+        case .ongoing, .sessionEndedSelfJoined, .selfUserJoined:
             return false
         }
     }
     
-    public func copyByAddingEvent(event: ZMUpdateEvent, conversation: ZMConversation) -> ZMLocalNotificationForCallEvent? {
+    public func copyByAddingEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) -> ZMLocalNotificationForCallEvent? {
         guard canAddEvent(event, conversation: conversation) &&
               super.canCreateNotification(conversation),
               let newSession = sessionTracker.sessionForEvent(event)
@@ -112,7 +112,7 @@ final public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent
             let uiNote = configureNotification(conversation)
             notifications.append(uiNote)
             return self
-        } else if newSession.currentState == .SelfUserJoined {
+        } else if newSession.currentState == .selfUserJoined {
             // cancel previous notifications because self user joined
             cancelNotifications()
             notifications.removeAll()
@@ -122,31 +122,31 @@ final public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent
     }
     
     
-    override func configureAlertBody(conversation: ZMConversation?) -> String {
+    override func configureAlertBody(_ conversation: ZMConversation?) -> String {
         guard let session = session else {return ""}
         switch (session.currentState) {
-        case .Incoming:
+        case .incoming:
             let baseString = session.isVideo ? ZMPushStringVideoCallStarts : ZMPushStringCallStarts
-            return baseString.localizedStringWithUser(sender, conversation: conversation, count: nil)
-        case .SessionEnded:
-            let sessions = sessionTracker.missedSessionsFor(conversation!.remoteIdentifier)
+            return baseString.localizedString(with: sender, conversation: conversation, count: nil)
+        case .sessionEnded:
+            let sessions = sessionTracker.missedSessionsFor(conversation!.remoteIdentifier!)
             let missedSessionsInConversation = sessions.count
             
-            var sender = ZMUser(remoteID: session.initiatorID, createIfNeeded: false, inContext: managedObjectContext)
-            if conversation!.conversationType == .Group {
+            var sender = ZMUser(remoteID: session.initiatorID, createIfNeeded: false, in: managedObjectContext)
+            if conversation!.conversationType == .group {
                 let missedSessionsFromSender = sessions.filter{$0.initiatorID == session.initiatorID}.count
                 if missedSessionsInConversation != missedSessionsFromSender {
                     sender = nil
                 }
             }
-            return ZMPushStringCallMissed.localizedStringWithUser(sender, conversation: conversation, count: missedSessionsInConversation)
+            return ZMPushStringCallMissed.localizedString(with: sender, conversation: conversation, count: NSNumber(value: missedSessionsInConversation))
         default :
             return ""
         }
     }
     
     override var soundName : String {
-        if let session = session where session.currentState == .Incoming {
+        if let session = session , session.currentState == .incoming {
             return ZMLocalNotificationRingingSoundName()
         }
         return super.soundName
@@ -154,9 +154,9 @@ final public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent
     
     override var category : String {
         switch session?.currentState {
-        case .Some(let state) where state == .Incoming:
+        case .some(let state) where state == .incoming:
             return ZMIncomingCallCategory
-        case .Some(let state) where state == .SessionEnded:
+        case .some(let state) where state == .sessionEnded:
             return ZMMissedCallCategory
         default:
             return ZMConversationCategory

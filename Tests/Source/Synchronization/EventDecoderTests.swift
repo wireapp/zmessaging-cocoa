@@ -28,7 +28,7 @@ class EventDecoderTest: MessagingTest {
     override func setUp() {
         super.setUp()
         sut = EventDecoder(eventMOC: eventMOC, syncMOC: syncMOC)
-        eventMOC.addGroup(self.dispatchGroup)
+        eventMOC.add(dispatchGroup)
     }
     
     override func tearDown() {
@@ -37,16 +37,15 @@ class EventDecoderTest: MessagingTest {
     }
     
     func dummyEvent() -> ZMUpdateEvent {
-        let conversation = ZMConversation.insertNewObjectInManagedObjectContext(syncMOC)
-        conversation.remoteIdentifier = NSUUID.createUUID()
-        let payload = payloadForMessageInConversation(conversation, type: EventConversationAdd, data: ["foo": "bar"])
-        let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: NSUUID.createUUID())
-        return event
+        let conversation = ZMConversation.insertNewObject(in: syncMOC)
+        conversation.remoteIdentifier = UUID.create()
+        let payload = payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
+        return ZMUpdateEvent(fromEventStreamPayload: payload, uuid: UUID.create())!
     }
     
-    func insert(events events: [ZMUpdateEvent], startIndex: Int64 = 0) {
+    func insert(_ events: [ZMUpdateEvent], startIndex: Int64 = 0) {
         eventMOC.performGroupedBlockAndWait {
-            events.enumerate().forEach { index, event  in
+            events.enumerated().forEach { index, event  in
                 let _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: startIndex + index)
             }
             
@@ -69,7 +68,7 @@ class EventDecoderTest: MessagingTest {
             }
         }
         
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertTrue(didCallBlock)
@@ -84,7 +83,7 @@ class EventDecoderTest: MessagingTest {
             // given
             let event1 = self.dummyEvent()
             let event2 = self.dummyEvent()
-            self.insert(events: [event1])
+            self.insert([event1])
             
             // when
             
@@ -100,7 +99,7 @@ class EventDecoderTest: MessagingTest {
             }
         }
         
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(callCount, 2)
@@ -119,7 +118,7 @@ class EventDecoderTest: MessagingTest {
             let event3 = self.dummyEvent()
             let event4 = self.dummyEvent()
             
-            self.insert(events: [event1, event2, event3])
+            self.insert([event1, event2, event3])
             
             // when
             self.sut.processEvents([event4]) { (events) in
@@ -137,7 +136,7 @@ class EventDecoderTest: MessagingTest {
             }
         }
         
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(callCount, 2)
@@ -155,14 +154,14 @@ class EventDecoderTest: MessagingTest {
             let event3 = self.dummyEvent()
             let event4 = self.dummyEvent()
             
-            self.insert(events: [event1])
+            self.insert([event1])
             
             self.sut.processEvents([event2]) { (events) in
                 XCTAssert(events.contains(event1))
                 XCTAssert(events.contains(event2))
             }
             
-            self.insert(events: [event3], startIndex: 1)
+            self.insert([event3], startIndex: 1)
             
             // when
             self.sut.processEvents([event4]) { (events) in
@@ -173,7 +172,7 @@ class EventDecoderTest: MessagingTest {
             }
         }
         
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
 }

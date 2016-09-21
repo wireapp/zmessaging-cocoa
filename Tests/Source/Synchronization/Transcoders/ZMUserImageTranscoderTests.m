@@ -419,7 +419,7 @@
         self.user1.imageMediumData = nil;
         NSData *imageData = [self verySmallJPEGData];
         
-        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPstatus:200 transportSessionError:nil headers:@{}];
+        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPStatus:200 transportSessionError:nil headers:@{}];
     
         // when
         [self.sut updateObject:self.user1 withResponse:response downstreamSync:self.sut.mediumDownstreamSync];
@@ -447,7 +447,7 @@
         self.user1.smallProfileRemoteIdentifier = imageID;
         self.user1.imageSmallProfileData = nil;
         NSData *imageData = [self verySmallJPEGData];
-        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPstatus:200 transportSessionError:nil headers:@{}];
+        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPStatus:200 transportSessionError:nil headers:@{}];
         
         // when
         [self.sut updateObject:self.user1 withResponse:response downstreamSync:self.sut.smallProfileDownstreamSync];
@@ -624,7 +624,7 @@
     
     // expect
     ZMTransportRequest *expectedSmallProfileRequest = [ZMTransportRequest requestGetFromPath:@"/small-profile-upload-request"];
-    ZMTransportResponse *smallProfileResponse = [ZMTransportResponse responseWithPayload:@{@"data": smallProfileAsset} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *smallProfileResponse = [ZMTransportResponse responseWithPayload:@{@"data": smallProfileAsset} HTTPStatus:200 transportSessionError:nil];
     [self expectRequest:expectedSmallProfileRequest forSelfUser:selfUser format:ZMImageFormatProfile convID:selfUserAndSelfConversationID handler:^(ZMTransportRequest *request) {
         XCTAssertNotNil(request);
         XCTAssertEqual(request, expectedSmallProfileRequest);
@@ -661,7 +661,7 @@
     
     // expect
     ZMTransportRequest *expectedMediumRequest = [ZMTransportRequest requestGetFromPath:@"/medium-upload-request"];
-    ZMTransportResponse *mediumResponse = [ZMTransportResponse responseWithPayload:@{@"data": mediumAsset} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *mediumResponse = [ZMTransportResponse responseWithPayload:@{@"data": mediumAsset} HTTPStatus:200 transportSessionError:nil];
     [self expectRequest:expectedMediumRequest forSelfUser:selfUser format:ZMImageFormatMedium convID:selfUserAndSelfConversationID handler:^(ZMTransportRequest *request) {
         XCTAssertNotNil(request);
         XCTAssertEqual(request, expectedMediumRequest);
@@ -690,27 +690,30 @@
            withRemoteID:selfUserAndSelfConversationID
                 formats:@[@(ZMImageFormatProfile), @(ZMImageFormatMedium)]
     locallyModifiedKeys:modifiedKeys.allObjects];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
+    
     selfUser.imageMediumData = nil;
     selfUser.imageSmallProfileData = nil;
     
     XCTAssertTrue([selfUser hasLocalModificationsForKeys:modifiedKeys]);
+    XCTAssertNil(selfUser.imageSmallProfileData);
+    XCTAssertNil(selfUser.imageMediumData);
 
     // when
-    
     ZMUserImageTranscoder __block *localSUT = [[ZMUserImageTranscoder alloc] initWithManagedObjectContext:self.syncMOC
                                                                                      imageProcessingQueue:self.queue];
     
     XCTAssertTrue([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
     
     // then
-    
-    [self.syncMOC performBlockAndWait:^{
-        
+    [self.syncMOC performGroupedBlock:^{
         XCTAssertFalse([selfUser hasLocalModificationsForKeys:modifiedKeys]);
         [localSUT tearDown];
         localSUT = nil;
     }];
     
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItDoesNotUpdateTheImageIfTheCorrelationIDFromTheBackendResponseDiffersFromTheUserImageCorrelationID
@@ -736,7 +739,7 @@
     ZMTransportRequest *expectedSmallProfileRequest = [ZMTransportRequest requestGetFromPath:@"/upload-request"];
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"data": smallProfileAsset,
                                                                                @"id" : NSUUID.createUUID.transportString}
-                                                                  HTTPstatus:200
+                                                                  HTTPStatus:200
                                                        transportSessionError:nil];
     
     [self expectRequest:expectedSmallProfileRequest
@@ -776,7 +779,7 @@
     
     // expect
     ZMTransportRequest *expectedSmallProfileRequest = [ZMTransportRequest requestGetFromPath:@"/small-profile-upload-request"];
-    ZMTransportResponse *smallProfileResponse = [ZMTransportResponse responseWithPayload:@{@"data": smallProfileAsset} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *smallProfileResponse = [ZMTransportResponse responseWithPayload:@{@"data": smallProfileAsset} HTTPStatus:200 transportSessionError:nil];
     [self expectRequest:expectedSmallProfileRequest forSelfUser:selfUser format:ZMImageFormatProfile convID:selfUserAndSelfConversationID handler:^(ZMTransportRequest *request) {
         XCTAssertNotNil(request);
         

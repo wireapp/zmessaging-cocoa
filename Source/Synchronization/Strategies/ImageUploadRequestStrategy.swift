@@ -18,13 +18,13 @@
 
 import Foundation
 
-public class ImageUploadRequestStrategy: ZMObjectSyncStrategy, RequestStrategy, ZMContextChangeTrackerSource {
+public final class ImageUploadRequestStrategy: ZMObjectSyncStrategy, RequestStrategy, ZMContextChangeTrackerSource {
     
-    private let imagePreprocessor : ZMImagePreprocessingTracker
-    private let authenticationStatus : AuthenticationStatusProvider
-    private let requestFactory : ClientMessageRequestFactory = ClientMessageRequestFactory()
-    private weak var clientRegistrationStatus : ZMClientRegistrationStatus?
-    private var upstreamSync : ZMUpstreamModifiedObjectSync!
+    fileprivate let imagePreprocessor : ZMImagePreprocessingTracker
+    fileprivate let authenticationStatus : AuthenticationStatusProvider
+    fileprivate let requestFactory : ClientMessageRequestFactory = ClientMessageRequestFactory()
+    fileprivate weak var clientRegistrationStatus : ZMClientRegistrationStatus?
+    fileprivate var upstreamSync : ZMUpstreamModifiedObjectSync!
     
     
     public init(authenticationStatus: AuthenticationStatusProvider, clientRegistrationStatus: ZMClientRegistrationStatus, managedObjectContext: NSManagedObjectContext) {
@@ -34,25 +34,25 @@ public class ImageUploadRequestStrategy: ZMObjectSyncStrategy, RequestStrategy, 
         let fetchPredicate = NSPredicate(format: "delivered == NO")
         let needsProcessingPredicate = NSPredicate(format: "(mediumGenericMessage.image.width == 0 || previewGenericMessage.image.width == 0) && delivered == NO")
         self.imagePreprocessor = ZMImagePreprocessingTracker(managedObjectContext: managedObjectContext,
-                                                             imageProcessingQueue: NSOperationQueue(),
-                                                             fetchPredicate: fetchPredicate,
+                                                             imageProcessingQueue: OperationQueue(),
+                                                             fetch: fetchPredicate,
                                                              needsProcessingPredicate: needsProcessingPredicate,
                                                              entityClass: ZMAssetClientMessage.self)
         
         super.init(managedObjectContext: managedObjectContext)
         
-        let insertPredicate = NSPredicate(format: "\(ZMAssetClientMessageUploadedStateKey) != \(ZMAssetUploadState.Done.rawValue)")
-        let uploadFilter = NSPredicate { (object : AnyObject, _) -> Bool in
+        let insertPredicate = NSPredicate(format: "\(ZMAssetClientMessageUploadedStateKey) != \(ZMAssetUploadState.done.rawValue)")
+        let uploadFilter = NSPredicate { (object : Any, _) -> Bool in
             guard let message = object as? ZMAssetClientMessage else { return false }
             return message.imageMessageData != nil &&
-                (message.uploadState == .UploadingPlaceholder || message.uploadState == .UploadingFullAsset) &&
+                (message.uploadState == .uploadingPlaceholder || message.uploadState == .uploadingFullAsset) &&
                 message.imageAssetStorage?.mediumGenericMessage?.image.width != 0 &&
                 message.imageAssetStorage?.previewGenericMessage?.image.width != 0
         }
         
         upstreamSync = ZMUpstreamModifiedObjectSync(transcoder: self,
                                                     entityName: ZMAssetClientMessage.entityName(),
-                                                    updatePredicate:insertPredicate,
+                                                    update:insertPredicate,
                                                     filter: uploadFilter,
                                                     keysToSync: nil,
                                                     managedObjectContext: managedObjectContext)
@@ -63,37 +63,37 @@ public class ImageUploadRequestStrategy: ZMObjectSyncStrategy, RequestStrategy, 
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        guard self.authenticationStatus.currentPhase == .Authenticated else { return nil }
+        guard self.authenticationStatus.currentPhase == .authenticated else { return nil }
         return self.upstreamSync.nextRequest()
     }
 }
 
 extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
     
-    public func requestForInsertingObject(managedObject: ZMManagedObject, forKeys keys: Set<NSObject>?) -> ZMUpstreamRequest? {
+    public func request(forInserting managedObject: ZMManagedObject, forKeys keys: Set<String>?) -> ZMUpstreamRequest? {
         return nil // no-op
     }
     
-    public func dependentObjectNeedingUpdateBeforeProcessingObject(dependant: ZMManagedObject) -> ZMManagedObject? {
+    public func dependentObjectNeedingUpdate(beforeProcessingObject dependant: ZMManagedObject) -> ZMManagedObject? {
         guard let message = dependant as? ZMMessage else { return nil }
         return message.dependendObjectNeedingUpdateBeforeProcessing()
     }
     
-    private func update(message: ZMAssetClientMessage, withResponse response: ZMTransportResponse, updatedKeys keys: Set<NSObject>) {
+    fileprivate func update(_ message: ZMAssetClientMessage, withResponse response: ZMTransportResponse, updatedKeys keys: Set<String>) {
         message.markAsSent()
-        message.updateWithPostPayload(response.payload.asDictionary(), updatedKeys: keys)
+        message.update(withPostPayload: response.payload?.asDictionary(), updatedKeys: keys)
         
         if let clientRegistrationStatus = self.clientRegistrationStatus {
-            message.parseUploadResponse(response, clientDeletionDelegate: clientRegistrationStatus)
+            let _ = message.parseUploadResponse(response, clientDeletionDelegate: clientRegistrationStatus)
         }
     }
     
-    public func updateInsertedObject(managedObject: ZMManagedObject, request upstreamRequest: ZMUpstreamRequest, response: ZMTransportResponse) {
+    public func updateInsertedObject(_ managedObject: ZMManagedObject, request upstreamRequest: ZMUpstreamRequest, response: ZMTransportResponse) {
         guard let message = managedObject as? ZMAssetClientMessage else { return }
         update(message, withResponse: response, updatedKeys: Set())
     }
     
-    public func updateUpdatedObject(managedObject: ZMManagedObject, requestUserInfo: [NSObject : AnyObject]?, response: ZMTransportResponse, keysToParse: Set<NSObject>) -> Bool {
+    public func updateUpdatedObject(_ managedObject: ZMManagedObject, requestUserInfo: [AnyHashable : Any]? = nil, response: ZMTransportResponse, keysToParse: Set<String>) -> Bool {
         guard let message = managedObject as? ZMAssetClientMessage else { return false }
         
         update(message, withResponse: response, updatedKeys: keysToParse)
@@ -102,17 +102,17 @@ extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
         
         if keysToParse.contains(ZMAssetClientMessageUploadedStateKey) {
             switch message.uploadState {
-            case .UploadingPlaceholder:
-                message.uploadState = .UploadingFullAsset
-                managedObjectContext.zm_imageAssetCache.deleteAssetData(message.nonce, format: .Preview, encrypted: false)
-                managedObjectContext.zm_imageAssetCache.deleteAssetData(message.nonce, format: .Preview, encrypted: true)
+            case .uploadingPlaceholder:
+                message.uploadState = .uploadingFullAsset
+                managedObjectContext.zm_imageAssetCache.deleteAssetData(message.nonce, format: .preview, encrypted: false)
+                managedObjectContext.zm_imageAssetCache.deleteAssetData(message.nonce, format: .preview, encrypted: true)
                 needsMoreRequests = true // want to upload full asset
-            case .UploadingFullAsset:
-                message.uploadState = .Done
-                if let assetId = response.headers["Location"] as? String {
-                    message.assetId = NSUUID.uuidWithTransportString(assetId)
+            case .uploadingFullAsset:
+                message.uploadState = .done
+                if let assetId = response.headers?["Location"] as? String {
+                    message.assetId = UUID(uuidString: assetId)
                 }
-                message.managedObjectContext?.zm_imageAssetCache.deleteAssetData(message.nonce, format: .Medium, encrypted: true)
+                message.managedObjectContext?.zm_imageAssetCache.deleteAssetData(message.nonce, format: .medium, encrypted: true)
                 message.resetLocallyModifiedKeys(Set(arrayLiteral: ZMAssetClientMessageUploadedStateKey))
             default:
                 break
@@ -122,25 +122,25 @@ extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
         return needsMoreRequests
     }
     
-    public func requestForUpdatingObject(managedObject: ZMManagedObject, forKeys keys: Set<NSObject>) -> ZMUpstreamRequest? {
+    public func request(forUpdating managedObject: ZMManagedObject, forKeys keys: Set<String>) -> ZMUpstreamRequest? {
         guard let message = managedObject as? ZMAssetClientMessage, let conversation = message.conversation else { return nil }
         
         let format = imageFormatForKeys(keys, message: message)
         
-        if format == .Invalid {
+        if format == .invalid {
             ZMTrapUnableToGenerateRequest(keys, self)
             return nil
         }
         
-        guard let request = requestFactory.upstreamRequestForAssetMessage(format, message: message, forConversationWithId: conversation.remoteIdentifier) else {
+        guard let request = requestFactory.upstreamRequestForAssetMessage(format, message: message, forConversationWithId: conversation.remoteIdentifier!) else {
             // We will crash, but we should still delete the image
-            message.managedObjectContext?.deleteObject(message)
+            message.managedObjectContext?.delete(message)
             managedObjectContext.saveOrRollback()
             return nil
         }
         
-        request.addCompletionHandler(ZMCompletionHandler(onGroupQueue: managedObjectContext, block: { [weak self] (response) in
-            if response.result == .Success {
+        request.add(ZMCompletionHandler(on: managedObjectContext, block: { [weak self] (response) in
+            if response.result == .success {
                 message.markAsSent()
                 ZMOperationLoop.notifyNewRequestsAvailable(self)
             }
@@ -149,16 +149,16 @@ extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
         return ZMUpstreamRequest(keys: Set(arrayLiteral: ZMAssetClientMessageUploadedStateKey), transportRequest: request)        
     }
     
-    public func shouldCreateRequestToSyncObject(managedObject: ZMManagedObject, forKeys keys: Set<String>, withSync sync: AnyObject) -> Bool {
+    public func shouldCreateRequest(toSyncObject managedObject: ZMManagedObject, forKeys keys: Set<String>, withSync sync: Any) -> Bool {
         guard let message = managedObject as? ZMAssetClientMessage, let imageAssetStorage = message.imageAssetStorage  else { return false }
         
         let format = imageFormatForKeys(keys, message: message)
         
-        if format == .Invalid {
+        if format == .invalid {
             return true // We will ultimately crash here when trying to create the request
         }
         
-        if imageAssetStorage.shouldReprocessForFormat(format) {
+        if imageAssetStorage.shouldReprocess(for: format) {
             // before we create an upstream request we should check if we can (and should) process image data again
             // if we can we reschedule processing
             // this might cause a loop if the message can not be processed whatsoever
@@ -170,17 +170,17 @@ extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
         return true
     }
     
-    public func shouldRetryToSyncAfterFailedToUpdateObject(managedObject: ZMManagedObject, request upstreamRequest: ZMUpstreamRequest, response: ZMTransportResponse, keysToParse keys: Set<NSObject>) -> Bool {
-        guard let message = managedObject as? ZMAssetClientMessage, clientRegistrationStatus = self.clientRegistrationStatus else { return false }
+    public func shouldRetryToSyncAfterFailed(toUpdate managedObject: ZMManagedObject, request upstreamRequest: ZMUpstreamRequest, response: ZMTransportResponse, keysToParse keys: Set<String>) -> Bool {
+        guard let message = managedObject as? ZMAssetClientMessage, let clientRegistrationStatus = self.clientRegistrationStatus else { return false }
      
         let shouldRetry = message.parseUploadResponse(response, clientDeletionDelegate: clientRegistrationStatus)
         if !shouldRetry {
-            message.uploadState = .UploadingFailed
+            message.uploadState = .uploadingFailed
         }
         return shouldRetry
     }
     
-    public func objectToRefetchForFailedUpdateOfObject(managedObject: ZMManagedObject) -> ZMManagedObject? {
+    public func objectToRefetchForFailedUpdate(of managedObject: ZMManagedObject) -> ZMManagedObject? {
         return nil
     }
     
@@ -188,16 +188,16 @@ extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
         return false
     }
     
-    func imageFormatForKeys(keys: Set<NSObject>, message: ZMAssetClientMessage) -> ZMImageFormat {
-        var format : ZMImageFormat = .Invalid
+    func imageFormatForKeys(_ keys: Set<String>, message: ZMAssetClientMessage) -> ZMImageFormat {
+        var format : ZMImageFormat = .invalid
         
         if keys.contains(ZMAssetClientMessageUploadedStateKey) {
             switch message.uploadState {
-            case .UploadingPlaceholder:
-                format = .Preview
+            case .uploadingPlaceholder:
+                format = .preview
                 
-            case .UploadingFullAsset:
-                format = .Medium
+            case .uploadingFullAsset:
+                format = .medium
             default:
                 break
             }
@@ -208,7 +208,7 @@ extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
     
     func scheduleImageProcessing(forMessage message: ZMAssetClientMessage, format : ZMImageFormat) {
         let genericMessage = ZMGenericMessage(mediumImageProperties: nil, processedImageProperties: nil, encryptionKeys: nil, nonce: message.nonce.transportString(), format: format)
-        message.addGenericMessage(genericMessage)
+        message.add(genericMessage)
         ZMOperationLoop.notifyNewRequestsAvailable(self)
     }
     

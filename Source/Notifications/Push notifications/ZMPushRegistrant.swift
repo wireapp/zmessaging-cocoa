@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -29,18 +29,18 @@ import ZMTransport
 @objc(ZMPushNotificationSource)
 protocol PushNotificationSource {
     /// The current push token (i.e. credentials)
-    var pushToken: NSData? { get }
+    var pushToken: Data? { get }
     
     /// All callbacks could happen on any queue. Make sure to switch to the right queue when they get called.
     ///
     /// - parameter didUpdateCredentials: will be called with the device token
     /// - parameter didReceivePayload: will be called with the push notification data. The block needs to be called when processing the data is complete and indicate if data was fetched
     /// - parameter didInvalidateToken: will be called when the device token becomes invalid
-    init(didUpdateCredentials: (NSData) -> Void, didReceivePayload: (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: () -> Void)
+    init(didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: @escaping () -> Void)
 }
 
 
-private func ZMLogPushKit_swift(@autoclosure text:  () -> String) -> Void {
+private func ZMLogPushKit_swift( _ text:  @autoclosure () -> String) -> Void {
     if (ZMLogPushKit_enabled()) {
         ZMLogPushKit_s(text())
     }
@@ -54,61 +54,61 @@ private func ZMLogPushKit_swift(@autoclosure text:  () -> String) -> Void {
 @objc(ZMPushRegistrant)
 public final class PushKitRegistrant : NSObject, PushNotificationSource {
     
-    public var pushToken: NSData? {
+    public var pushToken: Data? {
         get {
-            return registry.pushTokenForType(PKPushTypeVoIP)
+            return registry.pushToken(forType: PKPushType.voIP)
         }
     }
     
     public var analytics: AnalyticsType?
     
-    public convenience required init(didUpdateCredentials: (NSData) -> Void, didReceivePayload: (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: () -> Void) {
+    public convenience required init(didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: @escaping () -> Void) {
         self.init(fakeRegistry: nil, didUpdateCredentials: didUpdateCredentials, didReceivePayload: didReceivePayload, didInvalidateToken: didInvalidateToken)
     }
     
-    let queue: dispatch_queue_t
+    let queue: DispatchQueue
     let registry: PKPushRegistry
-    let didUpdateCredentials: (NSData) -> Void
+    let didUpdateCredentials: (Data) -> Void
     let didReceivePayload: (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void
     let didInvalidateToken: () -> Void
     
-    public init(fakeRegistry: PKPushRegistry?, didUpdateCredentials: (NSData) -> Void, didReceivePayload: (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: () -> Void) {
-        let q = dispatch_queue_create("PushRegistrant", DISPATCH_QUEUE_SERIAL)
+    public init(fakeRegistry: PKPushRegistry?, didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: @escaping () -> Void) {
+        let q = DispatchQueue(label: "PushRegistrant", target: .global())
         self.queue = q
         self.registry = fakeRegistry ?? PKPushRegistry(queue: q)
         self.didUpdateCredentials = didUpdateCredentials
         self.didReceivePayload = didReceivePayload
         self.didInvalidateToken = didInvalidateToken
         super.init()
-        dispatch_set_target_queue(queue, dispatch_get_global_queue(0, 0))
+        
         self.registry.delegate = self
-        self.registry.desiredPushTypes = Set(arrayLiteral: PKPushTypeVoIP)
+        self.registry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
         ZMLogPushKit_swift("Created registrant. Registry = \(self.registry.description)")
     }
 }
 
 extension PushKitRegistrant : PKPushRegistryDelegate {
-    public func pushRegistry(registry: PKPushRegistry!, didUpdatePushCredentials credentials: PKPushCredentials!, forType type: String!) {
+    public func pushRegistry(_ registry: PKPushRegistry, didUpdate credentials: PKPushCredentials, forType type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) updated credentials for type '\(type)'.")
-        if type != PKPushTypeVoIP {
+        if type != PKPushType.voIP {
             return
         }
         didUpdateCredentials(credentials.token)
     }
     
-    public func pushRegistry(registry: PKPushRegistry!, didReceiveIncomingPushWithPayload payload: PKPushPayload!, forType type: String!) {
+    public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, forType type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) did receive '\(payload.type)' payload: \(payload.dictionaryPayload)")
-        if let a = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Process PushKit payload") {
+        if let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Process PushKit payload") {
             APNSPerformanceTracker.trackReceivedNotification(analytics)
             
-            didReceivePayload(payload.dictionaryPayload, .VoIP) {
+            didReceivePayload(payload.dictionaryPayload as NSDictionary, .voIP) {
                 result in
                 ZMLogPushKit_swift("Registry \(self.registry.description) did finish background task")
-                a.endActivity()
+                activity.end()
             }
         }
     }
-    public func pushRegistry(registry: PKPushRegistry!, didInvalidatePushTokenForType type: String!) {
+    public func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenForType type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) did invalide push token for type '\(type)'.")
         didInvalidateToken()
     }
@@ -119,43 +119,43 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
 ///
 /// The UIApplicationDelegate messages need to be forwarded to this class.
 @objc(ZMApplicationRemoteNotification)
-public class ApplicationRemoteNotification : NSObject, PushNotificationSource {
+public final class ApplicationRemoteNotification : NSObject, PushNotificationSource {
     
-    var pushToken: NSData?
-    public required init(didUpdateCredentials: (NSData) -> Void, didReceivePayload: (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: () -> Void) {
+    var pushToken: Data?
+    public required init(didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: @escaping () -> Void) {
         self.didUpdateCredentials = didUpdateCredentials
         self.didReceivePayload = didReceivePayload
     }
     
-    let didUpdateCredentials: (NSData) -> Void
+    let didUpdateCredentials: (Data) -> Void
     let didReceivePayload: (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void
     
 }
 
 
 extension ApplicationRemoteNotification {
-    public func application(application: Application, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData) {
+    public func application(_ application: Application, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         pushToken = deviceToken
         didUpdateCredentials(deviceToken)
     }
     
-    public func application(application: Application, didReceiveRemoteNotification userInfo: [NSObject : AnyObject], fetchCompletionHandler completionHandler: (UIBackgroundFetchResult) -> Void) {
-        if let a = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process remote notification payload") {
-            didReceivePayload(userInfo, .Alert) { result in
+    public func application(_ application: Application, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        if let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process remote notification payload") {
+            didReceivePayload(userInfo as NSDictionary, .alert) { result in
                 completionHandler(self.fetchResult(result))
-                a.endActivity()
+                activity.end()
             }
         }
     }
     
-    private func fetchResult(result: ZMPushPayloadResult) -> UIBackgroundFetchResult {
+    fileprivate func fetchResult(_ result: ZMPushPayloadResult) -> UIBackgroundFetchResult {
         switch (result) {
-        case .Success:
-            return .NewData
-        case .Failure:
-            return .Failed
-        case .NoData:
-            return .NoData
+        case .success:
+            return .newData
+        case .failure:
+            return .failed
+        case .noData:
+            return .noData
         }
     }
 }

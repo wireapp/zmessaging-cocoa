@@ -22,8 +22,8 @@ import zmessaging
 
 class ProxiedRequestStrategyTests: MessagingTest {
 
-    private var sut : ProxiedRequestStrategy!
-    private var requestsStatus : ProxiedRequestsStatus!
+    fileprivate var sut : ProxiedRequestStrategy!
+    fileprivate var requestsStatus : ProxiedRequestsStatus!
     
     override func setUp() {
         super.setUp()
@@ -44,14 +44,14 @@ class ProxiedRequestStrategyTests: MessagingTest {
     func testThatItGeneratesAGiphyRequest() {
         
         // given
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar", method:.MethodGET, callback: { (_,_,_) -> Void in return})
+        requestsStatus.addRequest(.giphy, path: "/foo/bar", method:.methodGET, callback: { (_,_,_) -> Void in return})
         
         // when
         let request : ZMTransportRequest? = self.sut.nextRequest()
         
         // then
         if let request = request {
-            XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodGET)
+            XCTAssertEqual(request.method, ZMTransportRequestMethod.methodGET)
             XCTAssertEqual(request.path, "/proxy/giphy/foo/bar")
             XCTAssertTrue(request.needsAuthentication)
         } else {
@@ -62,14 +62,14 @@ class ProxiedRequestStrategyTests: MessagingTest {
     func testThatItGeneratesASoundcloudRequest() {
         
         // given
-        requestsStatus.addRequest(.Soundcloud, path: "/foo/bar", method:.MethodGET, callback: { (_,_,_) -> Void in return})
+        requestsStatus.addRequest(.soundcloud, path: "/foo/bar", method:.methodGET, callback: { (_,_,_) -> Void in return})
         
         // when
         let request : ZMTransportRequest? = self.sut.nextRequest()
         
         // then
         if let request = request {
-            XCTAssertEqual(request.method, ZMTransportRequestMethod.MethodGET)
+            XCTAssertEqual(request.method, ZMTransportRequestMethod.methodGET)
             XCTAssertEqual(request.path, "/proxy/soundcloud/foo/bar")
             XCTAssertTrue(request.needsAuthentication)
             XCTAssertTrue(request.doesNotFollowRedirects)
@@ -81,8 +81,8 @@ class ProxiedRequestStrategyTests: MessagingTest {
     func testThatItGeneratesTwoRequestsInOrder() {
         
         // given
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar1", callback: {_,_,_ in return})
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar2", callback: {_,_,_ in return})
+        requestsStatus.addRequest(.giphy, path: "/foo/bar1", callback: {_,_,_ in return})
+        requestsStatus.addRequest(.giphy, path: "/foo/bar2", callback: {_,_,_ in return})
         
         // when
         let request1 : ZMTransportRequest? = self.sut.nextRequest()
@@ -106,7 +106,7 @@ class ProxiedRequestStrategyTests: MessagingTest {
     func testThatItGeneratesARequestOnlyOnce() {
         
         // given
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar1", method:.MethodGET, callback: {_,_,_ in return})
+        requestsStatus.addRequest(.giphy, path: "/foo/bar1", method:.methodGET, callback: {_,_,_ in return})
         
         // when
         let request1 : ZMTransportRequest? = self.sut.nextRequest()
@@ -122,17 +122,17 @@ class ProxiedRequestStrategyTests: MessagingTest {
         
         // given
         let error = NSError(domain: "ZMTransportSession", code: 10, userInfo: nil)
-        let data = "Foobar".dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true)!
-        let HTTPResponse = NSHTTPURLResponse(URL: NSURL(string: "http://www.example.com/")!, statusCode:200, HTTPVersion:"HTTP/1.1", headerFields:[
-                "Content-Length": "\(data.length)",
+        let data = "Foobar".data(using: String.Encoding.utf8, allowLossyConversion: true)!
+        let HTTPResponse = HTTPURLResponse(url: URL(string: "http://www.example.com/")!, statusCode:200, httpVersion:"HTTP/1.1", headerFields:[
+                "Content-Length": "\(data.count)",
                 "Server": "nginx"
             ]
         )!
         
-        let response = ZMTransportResponse(HTTPURLResponse: HTTPResponse, data: data, error: error)
-        let expectation = self.expectationWithDescription("Callback invoked")
+        let response = ZMTransportResponse(httpurlResponse: HTTPResponse, data: data, error: error)
+        let expectation = self.expectation(description: "Callback invoked")
 
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar1", method:.MethodGET, callback: {
+        requestsStatus.addRequest(.giphy, path: "/foo/bar1", method:.methodGET, callback: {
             responseData,responseURLResponse,responseError in
             XCTAssertEqual(data, responseData)
             XCTAssertEqual(error, responseError)
@@ -146,19 +146,19 @@ class ProxiedRequestStrategyTests: MessagingTest {
         // when
         let request : ZMTransportRequest? = self.sut.nextRequest()
         if let request = request {
-            request.completeWithResponse(response)
+            request.complete(with: response)
         }
         
         // then
-        self.spinMainQueueWithTimeout(0.2)
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        self.spinMainQueue(withTimeout: 0.2)
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
     
     func testThatItMakesTheRequestExpireAfter20Seconds() {
         
         // given
-        let ExpectedDelay : NSTimeInterval = 20
-        requestsStatus.addRequest(.Giphy, path: "/foo/bar1", method:.MethodGET, callback: {_,_,_ in return})
+        let ExpectedDelay : TimeInterval = 20
+        requestsStatus.addRequest(.giphy, path: "/foo/bar1", method:.methodGET, callback: {_,_,_ in return})
         
         // when
         let request : ZMTransportRequest? = self.sut.nextRequest()
@@ -166,7 +166,7 @@ class ProxiedRequestStrategyTests: MessagingTest {
         // then
         if let request = request {
             XCTAssertNotNil(request.expirationDate)
-            let delay = request.expirationDate.timeIntervalSinceNow
+            let delay = request.expirationDate!.timeIntervalSinceNow
             XCTAssertLessThanOrEqual(delay, ExpectedDelay)
             XCTAssertGreaterThanOrEqual(delay, ExpectedDelay - 3)
             

@@ -296,7 +296,7 @@
     entity.needsToBeUpdatedFromBackend = YES;
     NSDictionary *payload = @{@"3":@4};
     id keys = @435;
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // expect
     [[[(id)self.transcoder expect] andReturn:self.dummyRequest] requestForFetchingObject:entity downstreamSync:self.sut];
@@ -334,7 +334,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:404 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:404 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -361,7 +361,7 @@
     [(ZMSyncOperationSet *)[(id)self.operationSet expect] removeObject:entity];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:404 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:404 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -437,7 +437,7 @@
     [self.testMOC deleteObject:entity];
     [self.testMOC saveOrRollback];
     
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

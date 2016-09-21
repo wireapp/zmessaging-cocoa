@@ -26,10 +26,10 @@ import UIKit
     var applicationState : UIApplicationState { get }
 
     /// Schedules a local notification
-    func scheduleLocalNotification(notification: UILocalNotification)
+    func scheduleLocalNotification(_ notification: UILocalNotification)
     
     /// Cancels a local notification
-    func cancelLocalNotification(notification: UILocalNotification)
+    func cancelLocalNotification(_ notification: UILocalNotification)
     
     /// Register for remote notification
     func registerForRemoteNotifications()
@@ -41,62 +41,62 @@ import UIKit
     var applicationIconBadgeNumber : Int { get set }
     
     /// Register for change in application state: didBecomeActive
-    @objc func registerObserverForDidBecomeActive(object: NSObject, selector: Selector)
+    @objc func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector)
 
     /// Register for change in application state: willResignActive
-    @objc func registerObserverForWillResignActive(object: NSObject, selector: Selector)
+    @objc func registerObserverForWillResignActive(_ object: NSObject, selector: Selector)
     
     /// Register for change in application state: didBecomeActive
-    @objc func registerObserverForWillEnterForeground(object: NSObject, selector: Selector)
+    @objc func registerObserverForWillEnterForeground(_ object: NSObject, selector: Selector)
     
     /// Register for change in application state: willResignActive
-    @objc func registerObserverForDidEnterBackground(object: NSObject, selector: Selector)
+    @objc func registerObserverForDidEnterBackground(_ object: NSObject, selector: Selector)
     
     /// Register for application will terminate
-    @objc func registerObserverForApplicationWillTerminate(object: NSObject, selector: Selector)
+    @objc func registerObserverForApplicationWillTerminate(_ object: NSObject, selector: Selector)
     
     /// Unregister for change in application state
-    @objc func unregisterObserverForStateChange(object: NSObject)
+    @objc func unregisterObserverForStateChange(_ object: NSObject)
     
     /// Register user notification settings
-    @objc func registerUserNotificationSettings(settings: UIUserNotificationSettings)
+    @objc func registerUserNotificationSettings(_ settings: UIUserNotificationSettings)
     
     /// Sets minimum interval for background fetch
-    @objc func setMinimumBackgroundFetchInterval(minimumBackgroundFetchInterval: NSTimeInterval)
+    @objc func setMinimumBackgroundFetchInterval(_ minimumBackgroundFetchInterval: TimeInterval)
 }
 
 
 extension UIApplication : Application {
     
     public var alertNotificationsEnabled : Bool {
-        return self.currentUserNotificationSettings()?.types.contains(.Alert) ?? false
+        return self.currentUserNotificationSettings?.types.contains(.alert) ?? false
     }
     
-    @objc public func registerObserverForDidBecomeActive(object: NSObject, selector: Selector) {
-        NSNotificationCenter.defaultCenter().addObserver(object, selector: selector, name: UIApplicationDidBecomeActiveNotification, object: nil)
+    @objc public func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector) {
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
     }
     
-    @objc public func registerObserverForWillResignActive(object: NSObject, selector: Selector) {
-        NSNotificationCenter.defaultCenter().addObserver(object, selector: selector, name: UIApplicationWillResignActiveNotification, object: nil)
+    @objc public func registerObserverForWillResignActive(_ object: NSObject, selector: Selector) {
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
     }
     
-    @objc public func registerObserverForWillEnterForeground(object: NSObject, selector: Selector) {
-        NSNotificationCenter.defaultCenter().addObserver(object, selector: selector, name: UIApplicationWillEnterForegroundNotification, object: nil)
+    @objc public func registerObserverForWillEnterForeground(_ object: NSObject, selector: Selector) {
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
     }
     
-    @objc public func registerObserverForDidEnterBackground(object: NSObject, selector: Selector) {
-        NSNotificationCenter.defaultCenter().addObserver(object, selector: selector, name: UIApplicationDidEnterBackgroundNotification, object: nil)
+    @objc public func registerObserverForDidEnterBackground(_ object: NSObject, selector: Selector) {
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
     }
     
-    @objc public func registerObserverForApplicationWillTerminate(object: NSObject, selector: Selector) {
-        NSNotificationCenter.defaultCenter().addObserver(object, selector: selector, name: UIApplicationWillTerminateNotification, object: nil)
+    @objc public func registerObserverForApplicationWillTerminate(_ object: NSObject, selector: Selector) {
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
     }
     
-    @objc public func unregisterObserverForStateChange(object: NSObject) {
-        NSNotificationCenter.defaultCenter().removeObserver(object, name: UIApplicationWillResignActiveNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(object, name: UIApplicationDidBecomeActiveNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(object, name: UIApplicationWillEnterForegroundNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(object, name: UIApplicationDidEnterBackgroundNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(object, name: UIApplicationWillTerminateNotification, object: nil)
+    @objc public func unregisterObserverForStateChange(_ object: NSObject) {
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
     }
 }

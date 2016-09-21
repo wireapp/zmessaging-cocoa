@@ -24,8 +24,8 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
     
     func testThatItCreatesANotificationForConversationRename(){
         // given
-        let systemMessage = ZMSystemMessage.insertNewObjectInManagedObjectContext(syncMOC)
-        systemMessage.systemMessageType = .ConversationNameChanged
+        let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
+        systemMessage.systemMessageType = .conversationNameChanged
         systemMessage.text = "New Name"
         systemMessage.sender = sender
         systemMessage.visibleInConversation = groupConversation
@@ -39,10 +39,10 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         XCTAssertEqual(uiNote.alertBody, "Super User renamed a conversation to New Name")
     }
     
-    func alertBodyForParticipantAdded(conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> String?{
+    func alertBodyForParticipantAdded(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> String?{
         // given
-        let systemMessage = ZMSystemMessage.insertNewObjectInManagedObjectContext(syncMOC)
-        systemMessage.systemMessageType = .ParticipantsAdded
+        let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
+        systemMessage.systemMessageType = .participantsAdded
         systemMessage.addedUsers = otherUsers
         systemMessage.sender = aSender
         systemMessage.visibleInConversation = conversation
@@ -78,10 +78,10 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         XCTAssertEqual(alertBodyForParticipantAdded(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: otherUser, otherUser2)), "Super User added people to a conversation")
     }
     
-    func alertBodyForParticipantRemoved(conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> String?{
+    func alertBodyForParticipantRemoved(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> String?{
         // given
-        let systemMessage = ZMSystemMessage.insertNewObjectInManagedObjectContext(syncMOC)
-        systemMessage.systemMessageType = .ParticipantsRemoved
+        let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
+        systemMessage.systemMessageType = .participantsRemoved
         systemMessage.removedUsers = otherUsers
         systemMessage.sender = aSender
         systemMessage.visibleInConversation = conversation
@@ -126,8 +126,8 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
     func testThatItCreatesANotificationForConnectionRequest(){
         
         // given
-        let systemMessage = ZMSystemMessage.insertNewObjectInManagedObjectContext(syncMOC)
-        systemMessage.systemMessageType = .ConnectionRequest
+        let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
+        systemMessage.systemMessageType = .connectionRequest
         systemMessage.sender = sender
         systemMessage.text = "Special User"
         

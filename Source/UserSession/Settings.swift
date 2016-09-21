@@ -18,31 +18,31 @@
 
 
 enum SettingsKeys {
-    case ShouldSendOnlyEncrypted
+    case shouldSendOnlyEncrypted
 }
 
 @objc
-public class ZMSettings: NSObject {
+public final class ZMSettings: NSObject {
     
     /// Shared settings
     public static let sharedSettings : ZMSettings = ZMSettings()
     
     /// Isolation queue to change settings
-    private let isolationQueue : dispatch_queue_t
+    fileprivate let isolationQueue : DispatchQueue
     
     /// Internal settings storage
-    private var settingsStorage : [SettingsKeys:Bool]
+    fileprivate var settingsStorage : [SettingsKeys:Bool]
     
     override init() {
-        isolationQueue = dispatch_queue_create("ZMSettings", DISPATCH_QUEUE_CONCURRENT)
+        isolationQueue = DispatchQueue(label: "ZMSettings", attributes: DispatchQueue.Attributes.concurrent)
         settingsStorage = [:]
         super.init()
     }
     
     /// Gets the boolean value of a key with a sync barrier
-    private func getBoolValue(key: SettingsKeys) -> Bool {
+    fileprivate func getBoolValue(_ key: SettingsKeys) -> Bool {
         var value : Bool?
-        dispatch_sync(isolationQueue) {
+        isolationQueue.sync {
             value = self.settingsStorage[key]
         }
         if let value = value {
@@ -52,9 +52,9 @@ public class ZMSettings: NSObject {
     }
     
     /// Sets the boolean value of a key with an async barrier
-    private func setBoolValue(key: SettingsKeys, value: Bool) {
-        dispatch_barrier_async(isolationQueue) {
+    fileprivate func setBoolValue(_ key: SettingsKeys, value: Bool) {
+        isolationQueue.async(flags: .barrier, execute: {
             self.settingsStorage[key] = value
-        }
+        }) 
     }
 }

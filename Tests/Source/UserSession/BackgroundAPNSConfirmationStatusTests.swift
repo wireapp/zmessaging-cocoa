@@ -21,16 +21,16 @@ import ZMTesting
 import ZMCMockTransport
 
 class FakeBackgroundActivityFactory : BackgroundActivityFactory {
-    var nameToHandler : [String : (Void -> Void)] = [:]
+    var nameToHandler : [String : ((Void) -> Void)] = [:]
     
-    override func backgroundActivity(withName name: String, expirationHandler handler: (Void -> Void)) -> ZMBackgroundActivity? {
+    override func backgroundActivity(withName name: String, expirationHandler handler: @escaping ((Void) -> Void)) -> ZMBackgroundActivity? {
         nameToHandler[name] = handler
         return ZMBackgroundActivity()
     }
     
     // simulates the expirationHandler being called
-    func callHandler(messageNonce: NSUUID){
-        guard let handler = nameToHandler.removeValueForKey(messageNonce.transportString()) else { return }
+    func callHandler(_ messageNonce: UUID){
+        guard let handler = nameToHandler.removeValue(forKey: "\(BackgroundAPNSConfirmationStatus.backgroundNameBase) \(messageNonce.transportString())") else { return }
         mainGroupQueue?.performGroupedBlock({ 
             handler()
         })
@@ -65,11 +65,11 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
     
     func testThat_CanSendMessage_IsSetToTrue_NewMessage() {
         // given
-        let uuid = NSUUID.createUUID()
+        let uuid = UUID.create()
         
         // when
         sut.needsToConfirmMessage(uuid)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertTrue(sut.needsToSyncMessages)
@@ -77,13 +77,13 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
     
     func testThat_CanSendMessage_IsSetToFalse_MessageConfirmed() {
         // given
-        let uuid = NSUUID.createUUID()
+        let uuid = UUID.create()
         sut.needsToConfirmMessage(uuid)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // when
         sut.didConfirmMessage(uuid)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
         XCTAssertFalse(sut.needsToSyncMessages)
@@ -91,16 +91,16 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
     
     func testThat_CanSendMessage_IsSetToTrue_OneMessageConfirmed_OneMessageNew() {
         // given
-        let uuid1 = NSUUID.createUUID()
-        let uuid2 = NSUUID.createUUID()
+        let uuid1 = UUID.create()
+        let uuid2 = UUID.create()
 
         sut.needsToConfirmMessage(uuid1)
         sut.needsToConfirmMessage(uuid2)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // when
         sut.didConfirmMessage(uuid1)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
         XCTAssertTrue(sut.needsToSyncMessages)
@@ -108,14 +108,14 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
     
     func testThat_CanSendMessage_IsSetToFalse_MessageTimedOut() {
         // given
-        let uuid1 = NSUUID.createUUID()
+        let uuid1 = UUID.create()
         
         sut.needsToConfirmMessage(uuid1)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // when
         fakeBGActivityFactory.callHandler(uuid1)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertFalse(sut.needsToSyncMessages)
@@ -123,16 +123,16 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
     
     func testThat_CanSendMessage_IsSetToTrue_OneMessageTimedOut_OneMessageNew() {
         // given
-        let uuid1 = NSUUID.createUUID()
-        let uuid2 = NSUUID.createUUID()
+        let uuid1 = UUID.create()
+        let uuid2 = UUID.create()
         
         sut.needsToConfirmMessage(uuid1)
         sut.needsToConfirmMessage(uuid2)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // when
         fakeBGActivityFactory.callHandler(uuid1)
-        XCTAssert(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertTrue(sut.needsToSyncMessages)

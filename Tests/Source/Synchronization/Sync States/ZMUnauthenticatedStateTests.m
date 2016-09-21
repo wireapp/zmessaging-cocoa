@@ -661,7 +661,7 @@
                                                                       clientRegistrationStatus:mockClientRegStatus
                                                                        objectStrategyDirectory:self.objectDirectory
                                                                           stateMachineDelegate:self.stateMachine
-                                                                                   application:self.self.application];
+                                                                                   application:self.application];
     if (launchInForeground) {
         [self.application setActive];
         [self.application simulateApplicationWillEnterForeground];

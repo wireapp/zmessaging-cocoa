@@ -414,7 +414,7 @@
     
     NSURL *url = [[NSBundle bundleForClass:self.class] URLForResource:@"video" withExtension:@"mp4"];
     ZMAudioMetadata *audioMetadata = [[ZMAudioMetadata alloc] initWithFileURL:url duration:100 normalizedLoudness:@[] thumbnail:nil];
-    ZMAssetClientMessage *message = [self.conversation1 appendMessageWithFileMetadata:audioMetadata];
+    ZMAssetClientMessage *message = (id)[self.conversation1 appendMessageWithFileMetadata:audioMetadata];
     message.sender = self.user1;
     
     // Replace the default sut since we need a real ZMLocalNotificationSet

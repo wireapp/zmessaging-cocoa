@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -23,16 +23,16 @@ import Foundation
 Prepares file to be uploaded
 It creates an encrypted version from the plain text version
 */
-@objc public class FilePreprocessor : NSObject, ZMContextChangeTracker {
+@objc public final class FilePreprocessor : NSObject, ZMContextChangeTracker {
     
     /// Queue to use for processing files
-    private let processingQueue : dispatch_queue_t
+    fileprivate let processingQueue : DispatchQueue
     
     /// Group to track preprocessing operations
-    private let processingGroup : ZMSDispatchGroup
+    fileprivate let processingGroup : ZMSDispatchGroup
     
     /// List of objects currently being processed
-    private var objectsBeingProcessed = Set<ZMAssetClientMessage>()
+    fileprivate var objectsBeingProcessed = Set<ZMAssetClientMessage>()
     
     /// Managed object context. Is is assumed that all methods of this class
     /// are called from the thread of this managed object context
@@ -42,29 +42,29 @@ It creates an encrypted version from the plain text version
     /// - note: All methods of this object should be called from the thread associated with the passed managedObjectContext
     public init(managedObjectContext: NSManagedObjectContext) {
         self.processingGroup = managedObjectContext.dispatchGroup
-        self.processingQueue = dispatch_queue_create("File processor", DISPATCH_QUEUE_SERIAL)
+        self.processingQueue = DispatchQueue(label: "File processor")
         self.managedObjectContext = managedObjectContext
     }
     
-    public func objectsDidChange(object: Set<NSObject>) {
+    public func objectsDidChange(_ object: Set<NSManagedObject>) {
         object.flatMap(fileAssetToPreprocess)
             .filter {!self.objectsBeingProcessed.contains($0)}
             .forEach { self.startProcessing($0)}
     }
     
-    public func fetchRequestForTrackedObjects() -> NSFetchRequest? {
-        let predicate = NSPredicate(format: "%K == NO && %K == %d", DeliveredKey, ZMAssetClientMessageTransferStateKey, ZMFileTransferState.Uploading.rawValue)
-        return ZMAssetClientMessage.sortedFetchRequestWithPredicate(predicate)
+    public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
+        let predicate = NSPredicate(format: "%K == NO && %K == %d", DeliveredKey, ZMAssetClientMessageTransferStateKey, ZMFileTransferState.uploading.rawValue)
+        return ZMAssetClientMessage.sortedFetchRequest(with: predicate)
     }
     
-    public func addTrackedObjects(objects: Set<NSObject>) {
+    public func addTrackedObjects(_ objects: Set<NSManagedObject>) {
         objects.flatMap(fileAssetToPreprocess)
             .filter {!self.objectsBeingProcessed.contains($0)}
             .forEach { self.startProcessing($0)}
     }
     
     /// Starts processing the asset client message
-    private func startProcessing(message: ZMAssetClientMessage) {
+    fileprivate func startProcessing(_ message: ZMAssetClientMessage) {
         objectsBeingProcessed.insert(message)
         if let encryptionKeys = message.encryptFile() {
             completeProcessing(message, keys: encryptionKeys)
@@ -72,7 +72,7 @@ It creates an encrypted version from the plain text version
     }
     
     /// Removes the message from the list of messages being processed and update its values
-    private func completeProcessing(message: ZMAssetClientMessage, keys: ZMImageAssetEncryptionKeys) {
+    fileprivate func completeProcessing(_ message: ZMAssetClientMessage, keys: ZMImageAssetEncryptionKeys) {
         objectsBeingProcessed.remove(message)
 
         message.addUploadedGenericMessage(keys)
@@ -83,14 +83,14 @@ It creates an encrypted version from the plain text version
 extension ZMAssetClientMessage {
     
     /// Encrypts the plain text version of the file to the asset cache
-    private func encryptFile() -> ZMImageAssetEncryptionKeys? {
+    fileprivate func encryptFile() -> ZMImageAssetEncryptionKeys? {
         return self.managedObjectContext?.zm_fileAssetCache.encryptFileAndComputeSHA256Digest(self.nonce, fileName: self.filename!)
     }
     
     /// Returns whether the message needs an encrypted version of the file that is not there yet
     var needsEncryptedFile : Bool {
         return self.filename != nil
-            && self.transferState == .Uploading
+            && self.transferState == .uploading
             && self.imageMessageData == nil
             && !self.delivered
             && self.managedObjectContext != nil
@@ -98,14 +98,14 @@ extension ZMAssetClientMessage {
     }
     
     /// Adds Uploaded generic message
-    private func addUploadedGenericMessage(keys: ZMImageAssetEncryptionKeys) {
-        let msg = ZMGenericMessage.genericMessage(withUploadedOTRKey: keys.otrKey, sha256: keys.sha256, messageID: self.nonce.transportString())
-        self.addGenericMessage(msg)
+    fileprivate func addUploadedGenericMessage(_ keys: ZMImageAssetEncryptionKeys) {
+        let msg = ZMGenericMessage.genericMessage(withUploadedOTRKey: keys.otrKey, sha256: keys.sha256!, messageID: self.nonce.transportString())
+        self.add(msg)
     }
 }
 
 /// Returns the object as a ZMAssetClientMessage if it is asset that needs preprocessing
-private func fileAssetToPreprocess(obj: NSObject) -> ZMAssetClientMessage? {
+private func fileAssetToPreprocess(_ obj: NSObject) -> ZMAssetClientMessage? {
     guard let message = obj as? ZMAssetClientMessage else { return nil }
     return message.needsEncryptedFile ? message : nil
 }

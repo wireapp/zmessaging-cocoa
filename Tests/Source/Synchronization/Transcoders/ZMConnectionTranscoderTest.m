@@ -152,7 +152,7 @@
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
@@ -167,7 +167,7 @@
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
@@ -182,7 +182,7 @@
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     // We need to complete the request to switch hard sync to done
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // when
@@ -200,7 +200,7 @@
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPstatus:500 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPStatus:500 transportSessionError:nil]];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
@@ -213,7 +213,7 @@
     // given
     [self.sut setNeedsSlowSync];
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPstatus:500 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPStatus:500 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
@@ -244,7 +244,7 @@
     [self.sut setNeedsSlowSync];
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     NSDictionary *payload = [self validPayloadWithHasMore:NO];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
 
     [self.sut setNeedsSlowSync];
@@ -263,7 +263,7 @@
     [self.sut setNeedsSlowSync];
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
 
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPstatus:403 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPStatus:403 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // when
@@ -282,7 +282,7 @@
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPstatus:403 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPStatus:403 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -305,7 +305,7 @@
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
@@ -825,7 +825,7 @@
         NSMutableDictionary *payload = [self connectionPayloadForConversationID:conversationID fromID:selfUser.remoteIdentifier toID:self.user.remoteIdentifier status:@"accepted"];
         payload[@"message"] = newMessage;
         payload[@"last_update"] = update.transportString;
-        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPstatus:200 transportSessionError:nil headers:nil];
+        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPStatus:200 transportSessionError:nil headers:nil];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -926,7 +926,7 @@
         
         NSMutableDictionary *payload = [self connectionPayloadForConversationID:[NSUUID createUUID] fromID:selfUser.remoteIdentifier toID:user.remoteIdentifier status:@"accepted"];
 
-        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPstatus:201 transportSessionError:nil headers:nil];
+        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPStatus:201 transportSessionError:nil headers:nil];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -957,7 +957,7 @@
         XCTAssert([self.uiMOC saveOrRollback]);
         
         NSMutableDictionary *payload = [self connectionPayloadForConversationID:[NSUUID createUUID] fromID:selfUser.remoteIdentifier toID:user.remoteIdentifier status:@"accepted"];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
         
         // when
@@ -1017,7 +1017,7 @@
         NSMutableDictionary *payload = [self connectionPayloadForConversationID:connectionID fromID:selfUserID toID:user.remoteIdentifier status:@"accepted"];
         payload[@"message"] = messageText;
         
-        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPstatus:200 transportSessionError:nil headers:nil];
+        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPStatus:200 transportSessionError:nil headers:nil];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1050,7 +1050,7 @@
         
         // when
         NSDictionary *payload = [self connectionPayloadForConversationID:conversation.remoteIdentifier fromID:selfUser.remoteIdentifier toID:user.remoteIdentifier status:@"accepted"];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         [self.sut updateUpdatedObject:connection requestUserInfo:nil response:response keysToParse:[NSSet setWithArray:conversation.keysTrackedForLocalModifications]];
         
         // then
@@ -1094,7 +1094,7 @@
         XCTAssertNotNil(request);
         NSDictionary *payload = @{@"label": @"connection-limit"};
         
-        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPstatus:403 transportSessionError:nil headers:nil];
+        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPStatus:403 transportSessionError:nil headers:nil];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1189,7 +1189,7 @@
                                                               fromID:selfUser.remoteIdentifier
                                                                 toID:user.remoteIdentifier
                                                               status:@"pending"];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // when
     [self.sut updateUpdatedObject:connection requestUserInfo:nil response:response keysToParse:[NSSet set]];
@@ -1215,7 +1215,7 @@
                                                               fromID:selfUser.remoteIdentifier
                                                                 toID:user.remoteIdentifier
                                                               status:@"accepted"];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // when
     [self.sut updateUpdatedObject:connection requestUserInfo:nil response:response keysToParse:[NSSet set]];
@@ -1241,7 +1241,7 @@
                               @"from": @"f23aea6d-b7c6-4cfc-8df4-61905f5b71dc",
                               @"last_update": lastUpdateDate.transportString,
                               @"message": @"Hi Sabine, Let's connect. tiago test account web"};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];

@@ -17,7 +17,7 @@
 // 
 
 
-import Cocoa
+import Foundation
 import XCTest
 
 class StartupPerformanceTests: MessagingTest {

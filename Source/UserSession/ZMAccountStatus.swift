@@ -21,21 +21,21 @@ import ZMTransport
 import ZMCDataModel
 
 @objc public enum AccountState : UInt {
-    case NewDeviceNewAccount // we don't want to show any system message
-    case NewDeviceExistingAccount // we want to show "you are using a new device"
-    case OldDeviceDeactivatedAccount // we want to show "you are using this device again"
-    case OldDeviceActiveAccount // we don't want to show any system message
+    case newDeviceNewAccount // we don't want to show any system message
+    case newDeviceExistingAccount // we want to show "you are using a new device"
+    case oldDeviceDeactivatedAccount // we want to show "you are using this device again"
+    case oldDeviceActiveAccount // we don't want to show any system message
 }
 
 
 @objc public protocol ZMCookieProvider : NSObjectProtocol {
-    var authenticationCookieData : NSData! { get }
+    var authenticationCookieData : Data! { get }
 }
 
 extension ZMPersistentCookieStorage : ZMCookieProvider {
 }
 
-public class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, ZMAuthenticationObserver, ZMRegistrationObserver {
+public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, ZMAuthenticationObserver, ZMRegistrationObserver {
 
     let managedObjectContext: NSManagedObjectContext
     let cookieStorage : ZMCookieProvider
@@ -43,11 +43,11 @@ public class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, ZMAuth
     var registrationToken : ZMRegistrationObserverToken!
     
     var didRegister: Bool = false
-    public private (set) var currentAccountState : AccountState = .NewDeviceNewAccount
+    public fileprivate (set) var currentAccountState : AccountState = .newDeviceNewAccount
     
     public lazy var hadHistoryBeforeLogin : Bool = {
-        let convRequest = NSFetchRequest.init(entityName:ZMConversation.entityName())
-        let convCount = self.managedObjectContext.countForFetchRequest(convRequest, error: nil)
+        let convRequest = NSFetchRequest<ZMConversation>(entityName:ZMConversation.entityName())
+        guard let convCount = try? self.managedObjectContext.count(for: convRequest) else { return false }
         let hasHistory = convCount > 1
         return hasHistory
     }()
@@ -56,43 +56,42 @@ public class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, ZMAuth
         return cookieStorage.authenticationCookieData != nil
     }
     
-    @objc public func initialSyncCompleted(note: NSNotification){
+    @objc public func initialSyncCompleted(_ note: Notification){
         self.managedObjectContext.performGroupedBlock { 
-            if self.currentAccountState == .OldDeviceDeactivatedAccount || self.currentAccountState == .NewDeviceExistingAccount {
+            if self.currentAccountState == .oldDeviceDeactivatedAccount || self.currentAccountState == .newDeviceExistingAccount {
                 self.appendMessage(self.currentAccountState)
                 self.managedObjectContext.saveOrRollback()
             }
-            self.currentAccountState = .OldDeviceActiveAccount
+            self.currentAccountState = .oldDeviceActiveAccount
         }
     }
     
     func didAuthenticate() {
         self.managedObjectContext.performGroupedBlock {
-            if self.currentAccountState == .NewDeviceNewAccount && !self.didRegister {
-                self.currentAccountState = .NewDeviceExistingAccount
+            if self.currentAccountState == .newDeviceNewAccount && !self.didRegister {
+                self.currentAccountState = .newDeviceExistingAccount
             }
         }
     }
     
     func failedToAuthenticate() {
         self.managedObjectContext.performGroupedBlock {
-            if self.currentAccountState == .OldDeviceActiveAccount && !self.hasCookie {
-                self.currentAccountState = .OldDeviceDeactivatedAccount
+            if self.currentAccountState == .oldDeviceActiveAccount && !self.hasCookie {
+                self.currentAccountState = .oldDeviceDeactivatedAccount
             }
         }
     }
     
-    func appendMessage(state: AccountState){
-        let convRequest = NSFetchRequest.init(entityName:ZMConversation.entityName())
-        guard let conversations = managedObjectContext.executeFetchRequestOrAssert(convRequest) as? [ZMConversation]
-            else { return }
+    func appendMessage(_ state: AccountState){
+        let convRequest = NSFetchRequest<ZMConversation>(entityName:ZMConversation.entityName())
+        let conversations = managedObjectContext.fetchOrAssert(request: convRequest)
         
         conversations.forEach{
-            guard $0.conversationType == .OneOnOne || $0.conversationType == .Group else { return }
+            guard $0.conversationType == .oneOnOne || $0.conversationType == .group else { return }
             switch state {
-            case .OldDeviceDeactivatedAccount:
+            case .oldDeviceDeactivatedAccount:
                 $0.appendContinuedUsingThisDeviceMessage()
-            case .NewDeviceExistingAccount:
+            case .newDeviceExistingAccount:
                 $0.appendStartedUsingThisDeviceMessage()
             default:
                 return
@@ -108,30 +107,30 @@ public class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, ZMAuth
         
         switch (hasCookie, hadHistoryBeforeLogin) {
         case (true, true):
-            currentAccountState = .OldDeviceActiveAccount
+            currentAccountState = .oldDeviceActiveAccount
         case (false, true):
-            currentAccountState = .OldDeviceDeactivatedAccount
+            currentAccountState = .oldDeviceDeactivatedAccount
         case (false, false):
-            currentAccountState = .NewDeviceNewAccount
+            currentAccountState = .newDeviceNewAccount
         case (true, false):
-            currentAccountState = .NewDeviceNewAccount 
+            currentAccountState = .newDeviceNewAccount 
         }
         
         ZMUserSession.addInitalSyncCompletionObserver(self)
-        self.authenticationToken = ZMUserSessionAuthenticationNotification.addObserverWithBlock({ [weak self] (note) in
-            switch note.type {
-            case .AuthenticationNotificationAuthenticationDidSuceeded:
+        self.authenticationToken = ZMUserSessionAuthenticationNotification.addObserver({ [weak self] (note) in
+            switch note?.type {
+            case .some(let type) where type == .authenticationNotificationAuthenticationDidSuceeded:
                 self?.didAuthenticate()
-            case .AuthenticationNotificationAuthenticationDidFail:
+            case .some(let type) where type == .authenticationNotificationAuthenticationDidFail:
                 self?.failedToAuthenticate()
             default:
                 return
             }
         })
         
-        self.registrationToken = ZMUserSessionRegistrationNotification.addObserverWithBlock({ [weak self] (note) in
-            guard note.type == .RegistrationNotificationPhoneNumberVerificationDidSucceed ||
-                  note.type == .RegistrationNotificationEmailVerificationDidSucceed,
+        self.registrationToken = ZMUserSessionRegistrationNotification.addObserver({ [weak self] (note) in
+            guard note?.type == .registrationNotificationPhoneNumberVerificationDidSucceed ||
+                  note?.type == .registrationNotificationEmailVerificationDidSucceed,
                   let strongSelf = self
             else { return }
             

@@ -41,7 +41,7 @@
     
     __block ZMMessage *message;
     [self.userSession performChanges:^{
-        message = [conversation appendMessageWithText:@"Foo"];
+        message = (id)[conversation appendMessageWithText:@"Foo"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -76,7 +76,7 @@
     
     __block ZMMessage *message;
     [self.userSession performChanges:^{
-        message = [conversation appendMessageWithText:@"Foo"];
+        message = (id)[conversation appendMessageWithText:@"Foo"];
         [self spinMainQueueWithTimeout:0.1];
         [conversation appendMessageWithText:@"Fa"];
         [self spinMainQueueWithTimeout:0.1];
@@ -145,7 +145,7 @@
     
     __block ZMMessage *message;
     [self.userSession performChanges:^{
-        message = [conversation appendMessageWithText:@"Foo"];
+        message = (id)[conversation appendMessageWithText:@"Foo"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -185,7 +185,7 @@
     
     __block ZMMessage *message;
     [self.userSession performChanges:^{
-        message = [conversation appendMessageWithText:@"Foo"];
+        message = (id)[conversation appendMessageWithText:@"Foo"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -227,7 +227,7 @@
     
     __block ZMMessage *message;
     [self.userSession performChanges:^{
-        message = [conversation appendMessageWithText:@"Foo"];
+        message = (id)[conversation appendMessageWithText:@"Foo"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

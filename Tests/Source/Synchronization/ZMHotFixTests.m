@@ -582,7 +582,7 @@
     XCTAssertTrue(notUploadedImageMessage.hasDownloadedImage);
     XCTAssertEqual(notUploadedImageMessage.uploadState, ZMAssetUploadStateUploadingFullAsset);
     
-    ZMAssetClientMessage *uploadedFileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
+    ZMAssetClientMessage *uploadedFileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
     [uploadedFileMessage markAsSent];
     uploadedFileMessage.uploadState = ZMAssetUploadStateDone;
     uploadedFileMessage.assetId = NSUUID.createUUID;
@@ -590,7 +590,7 @@
     XCTAssertTrue(uploadedFileMessage.hasDownloadedImage);
     XCTAssertEqual(uploadedFileMessage.uploadState, ZMAssetUploadStateDone);
     
-    ZMAssetClientMessage *notUploadedFileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
+    ZMAssetClientMessage *notUploadedFileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
     [notUploadedFileMessage markAsSent];
     notUploadedFileMessage.uploadState = ZMAssetUploadStateDone;
     XCTAssertTrue(notUploadedFileMessage.delivered);

@@ -160,7 +160,7 @@
     
     // when
     XCTAssertEqual([self.sut nextRequest], request);
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:404 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.sut dataDidChange]; // need to call to switch state

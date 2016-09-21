@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -34,21 +34,21 @@ extension ZMOTRMessage {
             return conversation
         }
         
-        if (conversation.conversationType == .OneOnOne || conversation.conversationType == .Connection)
+        if (conversation.conversationType == .oneOnOne || conversation.conversationType == .connection)
             && conversation.connection?.needsToBeUpdatedFromBackend == true {
                 return conversation.connection
         }
         
         // If we are missing clients, we need to refetch the clients before retrying
-        if let selfClient = ZMUser.selfUserInContext(self.managedObjectContext!).selfClient(),
-            let missingClients = selfClient.missingClients where missingClients.count > 0
+        if let selfClient = ZMUser.selfUser(in: self.managedObjectContext!).selfClient(),
+            let missingClients = selfClient.missingClients , missingClients.count > 0
         {
             let activeParticipants = conversation.activeParticipants.array as! [ZMUser]
             let activeClients = activeParticipants.flatMap {
                 return Array($0.clients)
             }
             // Don't block sending of messages in conversations that are not affected by missing clients
-            if !missingClients.intersect(activeClients).isEmpty {
+            if !missingClients.intersection(Set(activeClients)).isEmpty {
                 // make sure that we fetch those clients, even if we somehow gave up on fetching them
                 selfClient.setLocallyModifiedKeys(Set(arrayLiteral: ZMUserClientMissingKey))
                 return selfClient
@@ -99,16 +99,16 @@ extension ZMMessage {
         var selfMessageFound = false
 
         conversation.messages
-            .enumerateObjectsWithOptions(NSEnumerationOptions.Reverse) { (obj, _, stop) in
+            .enumerateObjects(options: NSEnumerationOptions.reverse) { (obj, _, stop) in
                 guard let previousMessage = obj as? ZMMessage else { return }
                 
                 if let currentTimestamp = self.serverTimestamp,
                     let previousTimestamp = previousMessage.serverTimestamp {
                     
                     // to old?
-                    let tooOld = currentTimestamp.timeIntervalSinceDate(previousTimestamp) > MaxDelayToConsiderForBlockingObject
+                    let tooOld = currentTimestamp.timeIntervalSince(previousTimestamp) > MaxDelayToConsiderForBlockingObject
                     if tooOld {
-                        stop.memory = true
+                        stop.pointee = true
                         return
                     }
                 }
@@ -120,7 +120,7 @@ extension ZMMessage {
                 
                 if selfMessageFound && !sameMessage && previousMessage.shouldBlockFurtherMessages {
                     blockingMessage = previousMessage
-                    stop.memory = true
+                    stop.pointee = true
                 }
         }
         return blockingMessage
@@ -131,7 +131,7 @@ extension ZMMessage {
 extension ZMMessage : BlockingMessage {
     
     var shouldBlockFurtherMessages : Bool {
-        return self.deliveryState == .Pending && !self.isExpired
+        return self.deliveryState == .pending && !self.isExpired
     }
 }
 
@@ -139,6 +139,6 @@ extension ZMAssetClientMessage {
     
     override var shouldBlockFurtherMessages : Bool {
         // only block until preview is uploaded
-        return self.uploadState == .UploadingPlaceholder && self.deliveryState == .Pending && !self.isExpired
+        return self.uploadState == .uploadingPlaceholder && self.deliveryState == .pending && !self.isExpired
     }
 }

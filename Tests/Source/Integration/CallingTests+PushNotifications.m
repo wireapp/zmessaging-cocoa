@@ -35,7 +35,8 @@
     PKPushPayload *pkPayload = [OCMockObject niceMockForClass:[PKPushPayload class]];
     [(PKPushPayload *)[[(id)pkPayload stub] andReturn:payload] dictionaryPayload];
     [(PKPushPayload *)[[(id)pkPayload stub] andReturn:PKPushTypeVoIP] type];
-    [self.userSession.pushRegistrant pushRegistry:nil didReceiveIncomingPushWithPayload:pkPayload forType:pkPayload.type];
+    PKPushRegistry *mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
+    [self.userSession.pushRegistrant pushRegistry:mockPushRegistry didReceiveIncomingPushWithPayload:pkPayload forType:pkPayload.type];
 }
 
 - (void)testThatItJoinsACallFromPushNotifications

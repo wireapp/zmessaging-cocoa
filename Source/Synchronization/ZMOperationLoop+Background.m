@@ -48,7 +48,7 @@ static NSString * const PushNotificationTypeNotice = @"notice";
     [self.syncMOC performGroupedBlock:^{
         
         EventsWithIdentifier *eventsWithID = [self eventsFromPushChannelData:payload];
-        BOOL isValidNotification = (nil != eventsWithID.identifier) && (eventsWithID.isNotice || eventsWithID.events.count > 0);
+        BOOL isValidNotification = (nil != eventsWithID) && (eventsWithID.isNotice || eventsWithID.events.count > 0);
         
         if ((source == ZMPushNotficationTypeVoIP) && isValidNotification) {
             [self processNotification:eventsWithID fetchCompletionHandler:completionHandler];
@@ -157,7 +157,8 @@ static NSString * const PushNotificationTypeNotice = @"notice";
     NSDictionary *dataPayload = [decodedData optionalDictionaryForKey:PushChannelDataKey];
     NSUUID *identifier = [dataPayload optionalUuidForKey:PushChannelIdentifierKey];
     NSArray *events = [ZMUpdateEvent eventsArrayFromTransportData:dataPayload source:ZMUpdateEventSourcePushNotification];
-    
+    VerifyReturnNil(identifier);
+
     return [[EventsWithIdentifier alloc] initWithEvents:events identifier:identifier isNotice:NO];
 }
 

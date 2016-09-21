@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -37,13 +37,14 @@ class APSSignalingKeyStoreTests: MessagingTest {
 
         // then
         XCTAssertNotNil(keyStore)
-        XCTAssertEqual(keyStore?.verificationKey.length, keySize)
-        XCTAssertEqual(keyStore?.decryptionKey.length, keySize)
+        XCTAssertEqual(keyStore?.verificationKey.count, keySize)
+        XCTAssertEqual(keyStore?.decryptionKey.count, keySize)
     }
     
     func testThatItReturnsNilKeyStoreFromUserClientWithoutKeys() {
         // given
         let client = self.createSelfClient()
+        
         
         // when
         let keyStore = APSSignalingKeysStore(userClient: client)
@@ -70,8 +71,8 @@ class APSSignalingKeyStoreTests: MessagingTest {
     
     func testThatItReturnsKeysStoredInKeyChain() {
         // given
-        let data1 = NSData.randomEncryptionKey()
-        let data2 = NSData.randomEncryptionKey()
+        let data1 = Data.randomEncryptionKey()
+        let data2 = Data.randomEncryptionKey()
         
         ZMKeychain.setData(data1, forAccount: APSSignalingKeysStore.verificationKeyAccountName)
         ZMKeychain.setData(data2, forAccount: APSSignalingKeysStore.decryptionKeyAccountName)
@@ -82,8 +83,8 @@ class APSSignalingKeyStoreTests: MessagingTest {
         // then
         XCTAssertNotNil(keys)
         
-        ZMKeychain.deleteAllKeychainItemsWithAccountName(APSSignalingKeysStore.verificationKeyAccountName)
-        ZMKeychain.deleteAllKeychainItemsWithAccountName(APSSignalingKeysStore.decryptionKeyAccountName)
+        ZMKeychain.deleteAllKeychainItems(withAccountName: APSSignalingKeysStore.verificationKeyAccountName)
+        ZMKeychain.deleteAllKeychainItems(withAccountName: APSSignalingKeysStore.decryptionKeyAccountName)
     }
 
 }

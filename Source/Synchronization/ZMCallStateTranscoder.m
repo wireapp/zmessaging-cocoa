@@ -493,7 +493,7 @@ _Pragma("clang diagnostic pop")
                 endReason = ZMVoiceChannelCallEndReasonRequestedSelf;
                 break;
                 
-            case ZMCallStateReasonToLeaveAVSError:
+            case ZMCallStateReasonToLeaveAvsError:
                 endReason = ZMVoiceChannelCallEndReasonRequestedAVS;
                 break;
                 

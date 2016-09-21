@@ -20,14 +20,14 @@
 import Foundation
 
 /// Keeps track of which requests to send to the backend
-public class ProxiedRequestsStatus: NSObject {
+public final class ProxiedRequestsStatus: NSObject {
     
-    public typealias Request = (type:ProxiedRequestType, path: String, method: ZMTransportRequestMethod, callback: ((NSData!, NSHTTPURLResponse!, NSError!) -> Void)?)
+    public typealias Request = (type:ProxiedRequestType, path: String, method: ZMTransportRequestMethod, callback: ((Data?, HTTPURLResponse?, NSError?) -> Void)?)
 
     /// List of requests to be sent to backend
     public var pendingRequests : [Request] = []
     
-    public func addRequest(type:ProxiedRequestType, path: String, method: ZMTransportRequestMethod = .MethodGET, callback: ((NSData!, NSHTTPURLResponse!, NSError!) -> Void)?) {
+    public func addRequest(_ type:ProxiedRequestType, path: String, method: ZMTransportRequestMethod = .methodGET, callback: ((Data?, HTTPURLResponse?, NSError?) -> Void)?) {
         pendingRequests.append(Request(type, path, method, callback))
     }
 }

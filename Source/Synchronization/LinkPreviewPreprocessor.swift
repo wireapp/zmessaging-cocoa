@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -20,17 +20,12 @@
 import Foundation
 import ZMCLinkPreview
 
-@objc public protocol LinkPreviewDetectorType {
-    func downloadLinkPreviews(inText text: String, completion: [LinkPreview] -> Void)
-}
 
-extension LinkPreviewDetector: LinkPreviewDetectorType {}
-
-@objc public class LinkPreviewPreprocessor : NSObject, ZMContextChangeTracker {
+@objc public final class LinkPreviewPreprocessor : NSObject, ZMContextChangeTracker {
         
     /// List of objects currently being processed
-    private var objectsBeingProcessed = Set<ZMClientMessage>()
-    private let linkPreviewDetector: LinkPreviewDetectorType
+    fileprivate var objectsBeingProcessed = Set<ZMClientMessage>()
+    fileprivate let linkPreviewDetector: LinkPreviewDetectorType
 
     let managedObjectContext : NSManagedObjectContext
     
@@ -40,35 +35,35 @@ extension LinkPreviewDetector: LinkPreviewDetectorType {}
         super.init()
     }
 
-    public func objectsDidChange(objects: Set<NSObject>) {
+    public func objectsDidChange(_ objects: Set<NSManagedObject>) {
         processObjects(objects)
     }
     
-    public func fetchRequestForTrackedObjects() -> NSFetchRequest? {
-        let predicate = NSPredicate(format: "%K == %d", ZMClientMessageLinkPreviewStateKey, ZMLinkPreviewState.WaitingToBeProcessed.rawValue)
-        return ZMClientMessage.sortedFetchRequestWithPredicate(predicate)
+    public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
+        let predicate = NSPredicate(format: "%K == %d", ZMClientMessageLinkPreviewStateKey, ZMLinkPreviewState.waitingToBeProcessed.rawValue)
+        return ZMClientMessage.sortedFetchRequest(with: predicate)
     }
     
-    public func addTrackedObjects(objects: Set<NSObject>) {
+    public func addTrackedObjects(_ objects: Set<NSManagedObject>) {
         processObjects(objects)
     }
     
-    func processObjects(objects: Set<NSObject>) {
+    func processObjects(_ objects: Set<NSObject>) {
         objects.flatMap(linkPreviewsToPreprocess)
             .filter { !self.objectsBeingProcessed.contains($0) }
             .forEach(processMessage)
     }
     
-    func linkPreviewsToPreprocess(object: NSObject) -> ZMClientMessage? {
+    func linkPreviewsToPreprocess(_ object: NSObject) -> ZMClientMessage? {
         guard let message = object as? ZMClientMessage else { return nil }
-        return message.linkPreviewState == .WaitingToBeProcessed ? message : nil
+        return message.linkPreviewState == .waitingToBeProcessed ? message : nil
     }
     
-    func processMessage(message: ZMClientMessage) {
+    func processMessage(_ message: ZMClientMessage) {
         objectsBeingProcessed.insert(message)
         
         if let messageText = (message as ZMConversationMessage).textMessageData?.messageText {
-            linkPreviewDetector.downloadLinkPreviews(inText: messageText) { [weak self] linkPreviews in
+            linkPreviewDetector.downloadLinkPreviews?(inText: messageText) { [weak self] linkPreviews in
                 self?.managedObjectContext.performGroupedBlock({
                     self?.didProcessMessage(message, linkPreviews: linkPreviews)
                 })
@@ -78,21 +73,21 @@ extension LinkPreviewDetector: LinkPreviewDetectorType {}
         }
     }
     
-    func didProcessMessage(message: ZMClientMessage, linkPreviews: [LinkPreview]) {
+    func didProcessMessage(_ message: ZMClientMessage, linkPreviews: [LinkPreview]) {
         objectsBeingProcessed.remove(message)
         
-        if let preview = linkPreviews.first {
-            let updatedMessage = ZMGenericMessage(text: message.textMessageData?.messageText, linkPreview: preview.protocolBuffer, nonce: message.nonce.transportString())
-            message.addData(updatedMessage.data())
+        if let preview = linkPreviews.first, let messsageText = message.textMessageData?.messageText {
+            let updatedMessage = ZMGenericMessage(text: messsageText, linkPreview: preview.protocolBuffer, nonce: message.nonce.transportString())
+            message.add(updatedMessage.data())
             
             if let imageData = preview.imageData.first {
-                managedObjectContext.zm_imageAssetCache.storeAssetData(message.nonce, format:.Original, encrypted: false, data: imageData)
-                message.linkPreviewState = .Downloaded
+                managedObjectContext.zm_imageAssetCache.storeAssetData(message.nonce, format:.original, encrypted: false, data: imageData)
+                message.linkPreviewState = .downloaded
             } else {
-                message.linkPreviewState = .Uploaded
+                message.linkPreviewState = .uploaded
             }
         } else {
-            message.linkPreviewState = .Done
+            message.linkPreviewState = .done
         }
         
         // The change processor is called as a response to a context save, 

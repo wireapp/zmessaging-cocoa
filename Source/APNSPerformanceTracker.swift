@@ -19,23 +19,23 @@
 
 import Foundation
 
-public typealias Timestamp = NSDate
+public typealias Timestamp = Date
 
 public enum NotificationFunnelState {
-    case OperationLoop(serverTimestamp: Timestamp, notificationsEnabled: Bool, background: Bool, currentDate: NSDate)
-    case PingBackStatus
-    case PingBackStrategy(notice: Bool)
-    case NotificationDispatcher
+    case operationLoop(serverTimestamp: Timestamp, notificationsEnabled: Bool, background: Bool, currentDate: Date)
+    case pingBackStatus
+    case pingBackStrategy(notice: Bool)
+    case notificationDispatcher
     
     var attributes: [String: NSObject] {
         var attributes = customTrackingAttributes
-        attributes["state_description"] = stateDescription
-        attributes["state_index"] = stateIndex
+        attributes["state_description"] = stateDescription as NSObject?
+        attributes["state_index"] = stateIndex as NSObject?
         return attributes
     }
     
     var isInitialState: Bool {
-        if case .OperationLoop = self {
+        if case .operationLoop = self {
             return true
         }
         
@@ -43,41 +43,41 @@ public enum NotificationFunnelState {
     }
     
     var isLastState: Bool {
-        if case .NotificationDispatcher = self {
+        if case .notificationDispatcher = self {
             return true
         }
         
         return false
     }
     
-    private var customTrackingAttributes: [String: NSObject] {
+    fileprivate var customTrackingAttributes: [String: NSObject] {
         switch self {
-        case .OperationLoop(serverTimestamp: let timestamp, notificationsEnabled: let enabled, background: let background, currentDate: let date):
-            let difference = Int(round(date.timeIntervalSinceDate(timestamp) * NSTimeInterval.millisecondsPerSecond)) // In milliseconds
+        case .operationLoop(serverTimestamp: let timestamp, notificationsEnabled: let enabled, background: let background, currentDate: let date):
+            let difference = Int(round(date.timeIntervalSince(timestamp) * TimeInterval.millisecondsPerSecond)) // In milliseconds
             let clusterized = IntegerClusterizer.voipTimeDifferenceClusterizer.clusterize(difference)
-            return ["server_timestamp_difference": clusterized, "background": background, "allowed_notifications": enabled]
-        case .PingBackStrategy(notice: let notice):
-            return ["notice": notice]
+            return ["server_timestamp_difference": clusterized as NSObject, "background": background as NSObject, "allowed_notifications": enabled as NSObject]
+        case .pingBackStrategy(notice: let notice):
+            return ["notice": notice as NSObject]
         default:
             return [:]
         }
     }
     
-    private var stateDescription: String {
+    fileprivate var stateDescription: String {
         switch self {
-        case .OperationLoop: return "OperationLoop"
-        case .PingBackStatus: return "PingBackStatus"
-        case .PingBackStrategy: return "PingBackStrategy"
-        case .NotificationDispatcher: return "NotificationDispatcher"
+        case .operationLoop: return "OperationLoop"
+        case .pingBackStatus: return "PingBackStatus"
+        case .pingBackStrategy: return "PingBackStrategy"
+        case .notificationDispatcher: return "NotificationDispatcher"
         }
     }
     
-    private var stateIndex: Int {
+    fileprivate var stateIndex: Int {
         switch self {
-        case .OperationLoop: return 0
-        case .PingBackStatus: return 1
-        case .PingBackStrategy: return 2
-        case .NotificationDispatcher: return 3
+        case .operationLoop: return 0
+        case .pingBackStatus: return 1
+        case .pingBackStrategy: return 2
+        case .notificationDispatcher: return 3
         }
     }
 }
@@ -88,31 +88,31 @@ private let notificationReceivedEventName = "apns_received"
 private let notificationUserSessionEventName = "apns_user_session"
 private let notificationDecryptionFailedEventName = "apns_decryption_failed"
 
-extension NSTimeInterval {
-    static var millisecondsPerSecond: NSTimeInterval { return 1000.0 }
+extension TimeInterval {
+    static var millisecondsPerSecond: TimeInterval { return 1000.0 }
 }
 
 @objc public final class APNSPerformanceTracker: NSObject {
     @objc public static let sharedTracker = APNSPerformanceTracker()
     
     /// Map from notification ID to the last timestamp
-    var timestampsByNotificationID = [NSUUID: Timestamp]()
+    var timestampsByNotificationID = [UUID: Timestamp]()
     
     /// Tracks a step in the notification funnel, `currentDate` can be injected for testing
-    func trackNotification(identifier: NSUUID, state: NotificationFunnelState, analytics: AnalyticsType?, currentDate: NSDate? = nil) {
+    func trackNotification(_ identifier: UUID, state: NotificationFunnelState, analytics: AnalyticsType?, currentDate: Date? = nil) {
         guard let analytics = analytics else { return }
         var attributes = state.attributes
         
         if !state.isInitialState, let lastTimestamp = timestampsByNotificationID[identifier] {
-            let date = currentDate ?? NSDate()
-            print(date.timeIntervalSinceDate(lastTimestamp))
-            let difference = round(date.timeIntervalSinceDate(lastTimestamp) * NSTimeInterval.millisecondsPerSecond) // In milliseconds
+            let date = currentDate ?? Date()
+            print(date.timeIntervalSince(lastTimestamp))
+            let difference = round(date.timeIntervalSince(lastTimestamp) * TimeInterval.millisecondsPerSecond) // In milliseconds
             let clusterized = IntegerClusterizer.apnsPerformanceClusterizer.clusterize(Int(difference))
-            attributes["time_since_last"] = clusterized
+            attributes["time_since_last"] = clusterized as NSObject?
         }
 
-        attributes["notification_identifier"] = identifier.transportString()
-        timestampsByNotificationID[identifier] = currentDate ?? NSDate()
+        attributes["notification_identifier"] = identifier.transportString() as NSObject?
+        timestampsByNotificationID[identifier] = currentDate ?? Date()
         analytics.tagEvent(notificationEventName, attributes: attributes)
         
         if state.isLastState {
@@ -120,7 +120,7 @@ extension NSTimeInterval {
         }
     }
     
-    @objc public func removeTrackedNotification(identifier: NSUUID) {
+    @objc public func removeTrackedNotification(_ identifier: UUID) {
         timestampsByNotificationID[identifier] = nil
     }
     
@@ -134,37 +134,38 @@ extension NSTimeInterval {
 
 public extension APNSPerformanceTracker {
 
-    @objc static func trackVOIPNotificationInOperationLoop(eventsWithIdentifier: EventsWithIdentifier, analytics: AnalyticsType?, application: Application) {
-        guard analytics != nil, let payload = eventsWithIdentifier.events?.first?.payload, timestamp = (payload as NSDictionary).dateForKey("time") else { return }
-        let background = application.applicationState == .Background
+    @objc static func trackVOIPNotificationInOperationLoop(_ eventsWithIdentifier: EventsWithIdentifier, analytics: AnalyticsType?, application: Application) {
+        guard analytics != nil, let payload = eventsWithIdentifier.events?.first?.payload, let timestamp = (payload as NSDictionary).date(forKey: "time") else { return }
+        let background = application.applicationState == .background
         APNSPerformanceTracker.sharedTracker.trackNotification(
             eventsWithIdentifier.identifier,
-            state: .OperationLoop(serverTimestamp: timestamp, notificationsEnabled: application.alertNotificationsEnabled, background: background, currentDate: NSDate()),
+            state: .operationLoop(serverTimestamp: timestamp, notificationsEnabled: application.alertNotificationsEnabled, background: background, currentDate: Date()),
             analytics: analytics
         )
     }
     
-    @objc static func trackVOIPNotificationInOperationLoopNotCreatingNotification(analytics: AnalyticsType?) {
+    @objc static func trackVOIPNotificationInOperationLoopNotCreatingNotification(_ analytics: AnalyticsType?) {
         analytics?.tagEvent(notificationNotCreatedEventName)
     }
 
-    @objc static func trackVOIPNotificationInNotificationDispatcher(identifier: NSUUID, analytics: AnalyticsType) {
+    @objc static func trackVOIPNotificationInNotificationDispatcher(_ identifier: UUID, analytics: AnalyticsType) {
         APNSPerformanceTracker.sharedTracker.trackNotification(
             identifier,
-            state: .NotificationDispatcher,
+            state: .notificationDispatcher,
             analytics: analytics
         )
     }
     
-    @objc static func trackAPNSPayloadDecryptionFailure(analytics: AnalyticsType?) {
+    @objc static func trackAPNSPayloadDecryptionFailure(_ analytics: AnalyticsType?) {
         analytics?.tagEvent(notificationDecryptionFailedEventName)
     }
     
-    @objc static func trackAPNSInUserSession(analytics: AnalyticsType?, authenticated: Bool, isInBackground: Bool) {
-        analytics?.tagEvent(notificationUserSessionEventName, attributes: ["authenticated": authenticated, "background": isInBackground ? "background" : "active"])
+    @objc static func trackAPNSInUserSession(_ analytics: AnalyticsType?, authenticated: Bool, isInBackground: Bool) {
+        analytics?.tagEvent(notificationUserSessionEventName, attributes: ["authenticated": NSNumber(value: authenticated),
+                                                                           "background": (isInBackground ? "background" : "active") as NSString])
     }
     
-    @objc static func trackReceivedNotification(analytics: AnalyticsType?) {
+    @objc static func trackReceivedNotification(_ analytics: AnalyticsType?) {
         analytics?.tagEvent(notificationReceivedEventName)
     }
 

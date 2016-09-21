@@ -323,7 +323,7 @@
     [self.forwardedRequests addObject:request];
     [[[(id) self.objectDirectory.assetTranscoder stub] andReturn:@[]] requestGenerators];
     NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeAuthenticationFailed userInfo:nil];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:0 transportSessionError:error];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:error];
     
     (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andCall:@selector(missingUpdateEventsTranscoderIsDownloadingMissingNotifications) onObject:self] isDownloadingMissingNotifications];
     self.missingUpdateEventsTranscoderIsDownloadingMissingNotifications = YES;

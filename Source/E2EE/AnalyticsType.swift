@@ -21,8 +21,8 @@ import Foundation
 
 @objc public protocol AnalyticsType: NSObjectProtocol {
     
-    func tagEvent(event: String)
-    func tagEvent(event: String, attributes: [String: NSObject])
+    func tagEvent(_ event: String)
+    func tagEvent(_ event: String, attributes: [String: NSObject])
     func upload()
     
 }
@@ -30,15 +30,15 @@ import Foundation
 // Used for debugging only
 @objc public final class DebugAnalytics: NSObject, AnalyticsType {
     
-    public func tagEvent(event: String) {
-        print(NSDate(), "[ANALYTICS]", #function, event)
+    public func tagEvent(_ event: String) {
+        print(Date(), "[ANALYTICS]", #function, event)
     }
     
-    public func tagEvent(event: String, attributes: [String : NSObject]) {
-        print(NSDate(), "[ANALYTICS]", #function, event, attributes)
+    public func tagEvent(_ event: String, attributes: [String : NSObject]) {
+        print(Date(), "[ANALYTICS]", #function, event, attributes)
     }
     
     public func upload() {
-        print(NSDate(), "[ANALYTICS]", #function)
+        print(Date(), "[ANALYTICS]", #function)
     }
 }

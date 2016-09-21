@@ -187,7 +187,7 @@
     __block ZMAssetClientMessage *message;
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForEverythingToBeDone();
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
 
@@ -195,7 +195,7 @@
     [self.userSession performChanges:^{
         message = [conversation appendOTRMessageWithImageData:[self verySmallJPEGData] nonce:[NSUUID createUUID]];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForEverythingToBeDone();
     
     // then
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
@@ -272,7 +272,7 @@
                                                                               @"key": [@"invalid key" dataUsingEncoding:NSUTF8StringEncoding].base64String
                                                                               }
                                                                       }
-                                                              } HTTPstatus:201 transportSessionError:nil];
+                                                              } HTTPStatus:201 transportSessionError:nil];
         }
         return nil;
     }];
@@ -384,7 +384,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = ^ ZMTransportResponse *(ZMTransportRequest *__unused request) {
         if ([request.path.pathComponents containsObject:@"assets"]) {
-            return [ZMTransportResponse responseWithPayload:@{ @"label" : @"unknown-client"} HTTPstatus:403 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:@{ @"label" : @"unknown-client"} HTTPStatus:403 transportSessionError:nil];
         }
         return nil;
     };
@@ -497,7 +497,7 @@
                                                                               @"key": [@"invalid key" dataUsingEncoding:NSUTF8StringEncoding].base64String
                                                                               }
                                                                       }
-                                                              } HTTPstatus:201 transportSessionError:nil];
+                                                              } HTTPStatus:201 transportSessionError:nil];
         }
         return nil;
     }];
@@ -1805,8 +1805,9 @@
         UserClient *trusted = [user1.clients.allObjects firstObjectMatchingWithBlock:^BOOL(UserClient *obj) {
             return [obj.trustedByClients containsObject:selfClient];
         }];
-        
-        [selfClient ignoreClient:trusted];
+        if (nil != trusted) {
+            [selfClient ignoreClient:trusted];
+        }
     }
 
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2059,7 +2060,7 @@
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         NSString *path = [NSString stringWithFormat:@"users/%@/clients", userID.transportString];
         if ([request.path isEqualToString:path]) {
-            return [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         }
         return nil;
     };

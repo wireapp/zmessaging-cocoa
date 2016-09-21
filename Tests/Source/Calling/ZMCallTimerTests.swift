@@ -26,7 +26,7 @@ class ZMCallTimerTests : MessagingTest {
     
     @objc class TestClient: NSObject, ZMCallTimerClient {
         var didTimeOut : Bool = false
-        @objc func callTimerDidFire(timer: ZMCallTimer) {
+        @objc func callTimerDidFire(_ timer: ZMCallTimer) {
             didTimeOut = true
         }
     }
@@ -42,9 +42,9 @@ class ZMCallTimerTests : MessagingTest {
     }
     
     func testThatItAddsACallTimer() {
-        self.syncMOC.performBlockAndWait { () -> Void in
+        self.syncMOC.performAndWait { () -> Void in
             // given
-            let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             self.syncMOC.saveOrRollback()
             let sut = ZMCallTimer(managedObjectContext: self.syncMOC)
             
@@ -58,9 +58,9 @@ class ZMCallTimerTests : MessagingTest {
     }
     
     func testThatItAddsOnlyOneCallTimerPerConversation() {
-        self.syncMOC.performBlockAndWait { () -> Void in
+        self.syncMOC.performAndWait { () -> Void in
             // given
-            let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             self.syncMOC.saveOrRollback()
             let sut = ZMCallTimer(managedObjectContext: self.syncMOC)
             
@@ -74,10 +74,10 @@ class ZMCallTimerTests : MessagingTest {
     }
     
     func testThatItCanAddMoreThanOneCallTimer() {
-        self.syncMOC.performBlockAndWait { () -> Void in
+        self.syncMOC.performAndWait { () -> Void in
             // given
-            let conversation1 = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
-            let conversation2 = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
+            let conversation1 = ZMConversation.insertNewObject(in: self.syncMOC)
+            let conversation2 = ZMConversation.insertNewObject(in: self.syncMOC)
             self.syncMOC.saveOrRollback()
             let sut = ZMCallTimer(managedObjectContext: self.syncMOC)
             
@@ -92,9 +92,9 @@ class ZMCallTimerTests : MessagingTest {
     
     
     func testThatItTearsDownACallTimer() {
-        self.syncMOC.performBlockAndWait { () -> Void in
+        self.syncMOC.performAndWait { () -> Void in
             // given
-            let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             self.syncMOC.saveOrRollback()
             let testClient = TestClient()
             
@@ -105,7 +105,7 @@ class ZMCallTimerTests : MessagingTest {
 
             // when
             sut.tearDown()
-            self.spinMainQueueWithTimeout(0.5);
+            self.spinMainQueue(withTimeout: 0.5);
             
             // then
             XCTAssertFalse(testClient.didTimeOut)
@@ -116,15 +116,15 @@ class ZMCallTimerTests : MessagingTest {
     
     
     func testThatItRemovesTheCallTimerAfterItFired() {
-        self.syncMOC.performBlockAndWait { () -> Void in
+        self.syncMOC.performAndWait { () -> Void in
             // given
-            let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             self.syncMOC.saveOrRollback()
             let sut = ZMCallTimer(managedObjectContext: self.syncMOC)
             
             // when
             sut.addAndStartTimer(conversation)
-            self.spinMainQueueWithTimeout(0.5)
+            self.spinMainQueue(withTimeout: 0.5)
             
             // then
             XCTAssertNil(sut.conversationIDToTimerMap[conversation.objectID])
@@ -133,9 +133,9 @@ class ZMCallTimerTests : MessagingTest {
     }
 
     func testThatCallsTimerDidFireOnVoiceChannel() {
-        self.syncMOC.performBlockAndWait { () -> Void in
+        self.syncMOC.performAndWait { () -> Void in
             // given
-            let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             self.syncMOC.saveOrRollback()
 
             let testClient = TestClient()
@@ -146,7 +146,7 @@ class ZMCallTimerTests : MessagingTest {
             
             // when
             sut.addAndStartTimer(conversation)
-            self.spinMainQueueWithTimeout(0.5)
+            self.spinMainQueue(withTimeout: 0.5)
             
             // then
             XCTAssertNil(sut.conversationIDToTimerMap[conversation.objectID])
@@ -157,9 +157,9 @@ class ZMCallTimerTests : MessagingTest {
 
     
     func testThatItCancelsAndRemovesTheTimer() {
-        self.syncMOC.performBlockAndWait { () -> Void in
+        self.syncMOC.performAndWait { () -> Void in
             // given
-            let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             self.syncMOC.saveOrRollback()
 
             let testClient = TestClient()
@@ -176,7 +176,7 @@ class ZMCallTimerTests : MessagingTest {
             XCTAssertNil(sut.conversationIDToTimerMap[conversation.objectID])
             
             // when
-            self.spinMainQueueWithTimeout(0.5)
+            self.spinMainQueue(withTimeout: 0.5)
             
             // then
             XCTAssertFalse(testClient.didTimeOut)
@@ -185,9 +185,9 @@ class ZMCallTimerTests : MessagingTest {
     }
     
     func testThatItDoesNotRemovesAndCancelsATimerWhenDeletingAConversation() {
-        self.syncMOC.performBlockAndWait { () -> Void in
+        self.syncMOC.performAndWait { () -> Void in
             // given
-            let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             self.syncMOC.saveOrRollback()
             let objectID = conversation.objectID
             
@@ -200,7 +200,7 @@ class ZMCallTimerTests : MessagingTest {
 
             // when
             sut.addAndStartTimer(conversation)
-            self.syncMOC.deleteObject(conversation);
+            self.syncMOC.delete(conversation);
             self.syncMOC.saveOrRollback()
             
             XCTAssertTrue(conversation.isZombieObject)
@@ -209,7 +209,7 @@ class ZMCallTimerTests : MessagingTest {
             XCTAssertNil(sut.conversationIDToTimerMap[objectID])
             
             // when
-            self.spinMainQueueWithTimeout(0.5)
+            self.spinMainQueue(withTimeout: 0.5)
             
             // then
             XCTAssertFalse(testClient.didTimeOut)
@@ -218,9 +218,9 @@ class ZMCallTimerTests : MessagingTest {
     }
     
     func testThatItDoesNotCancelAndRemovesTheTimerWhenRefreshingAConversation() {
-        self.syncMOC.performBlockAndWait { () -> Void in
+        self.syncMOC.performAndWait { () -> Void in
             // given
-            let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             self.syncMOC.saveOrRollback()
             let objectID = conversation.objectID
             
@@ -232,14 +232,14 @@ class ZMCallTimerTests : MessagingTest {
             
             // when
             sut.addAndStartTimer(conversation)
-            self.syncMOC.refreshObject(conversation, mergeChanges: false);
+            self.syncMOC.refresh(conversation, mergeChanges: false);
             self.syncMOC.saveOrRollback()
             
             // then
             XCTAssertNotNil(sut.conversationIDToTimerMap[objectID])
             
             // when
-            self.spinMainQueueWithTimeout(0.5)
+            self.spinMainQueue(withTimeout: 0.5)
             
             // then
             XCTAssertTrue(testClient.didTimeOut)

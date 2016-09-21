@@ -209,7 +209,7 @@
 {
     FHAssertTrue(failureRecorder, request != nil);
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
 }
@@ -994,7 +994,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
 
     XCTAssertNotNil(request);
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
@@ -1031,7 +1031,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     XCTAssertNotNil(request);
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
@@ -1076,7 +1076,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     NSDictionary *responseData = [self responseDataForUsers:searchUsers];
     
     // expect
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
     [[self.transportSession expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(ZMTransportRequest *request) {
         [request completeWithResponse:response];
         return YES;
@@ -1125,7 +1125,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     XCTAssertNotNil(request);
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
@@ -1170,7 +1170,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     XCTAssertNotNil(request);
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
@@ -1208,7 +1208,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     XCTAssertNotNil(request);
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
@@ -1358,7 +1358,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     // Finish request after gathering search results, not before
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:[self genericResponseData] HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:[self genericResponseData] HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     
@@ -1404,7 +1404,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     // Finish request after gathering search results, not before
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:[self genericResponseData] HTTPstatus:420 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:[self genericResponseData] HTTPStatus:420 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     
@@ -1459,7 +1459,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     // Finish request after gathering search results, not before
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:[self genericResponseData] HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:[self genericResponseData] HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     
@@ -1553,7 +1553,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     XCTAssertNotNil(request);
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:initialResponseData HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:initialResponseData HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     request = nil;
@@ -1690,7 +1690,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     XCTAssertNotNil(request1);
     if (request1) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
         [request1 completeWithResponse:response];
     }
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
@@ -1707,7 +1707,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     XCTAssertNotNil(request2);
     if (request2) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
         [request2 completeWithResponse:response];
     }
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
@@ -1959,7 +1959,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     // given
     NSArray *users = [self create9Users];
     ZMTransportResponse *successResponse = [self transportResponseForUsers:users];
-    ZMTransportResponse *failureResponse = [ZMTransportResponse responseWithPayload:nil HTTPstatus:0 transportSessionError:[NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeTryAgainLater userInfo:nil]];
+    ZMTransportResponse *failureResponse = [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:[NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeTryAgainLater userInfo:nil]];
     
     // expect
     [self expectSearchRequestAndCompleteWithResponse:successResponse expectation:self.searchResultExpectation];
@@ -2066,7 +2066,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
         [searchUsers addObject:userData];
     }
     NSDictionary *responsePayload = [self responseDataForUsers:searchUsers];
-    return [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+    return [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
 }
 
 - (void)expectSearchRequestAndCompleteWithResponse:(ZMTransportResponse *)response expectation:(XCTestExpectation *)expectation;
@@ -2207,7 +2207,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     // expect
     [[self.transportSession expect] enqueueSearchRequest:OCMOCK_ANY];
         
-    ZMTransportResponse *response2 = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response2 = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
     NSString *expectedPath2 = [NSString stringWithFormat:@"/users?ids=%@,%@,%@",
                               [remoteIDs[0] transportString],
                               [remoteIDs[2] transportString],
@@ -2248,7 +2248,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     // expect (1)
     [[self.transportSession expect] enqueueSearchRequest:OCMOCK_ANY];
     
-    ZMTransportResponse *response2 = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response2 = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
     NSString *expectedPath2 = [NSString stringWithFormat:@"/users?ids=%@,%@,%@",
                                [remoteIDs[0] transportString],
                                [remoteIDs[2] transportString],
@@ -2301,7 +2301,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     // expect (1)
     [[self.transportSession expect] enqueueSearchRequest:OCMOCK_ANY];
     
-    ZMTransportResponse *response2 = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response2 = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
     NSString *expectedPath2 = [NSString stringWithFormat:@"/users?ids=%@,%@,%@",
                                [remoteIDs[0] transportString],
                                [remoteIDs[2] transportString],
@@ -2388,7 +2388,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
                                  ];
     
     // expect
-    ZMTransportResponse *response1 = [ZMTransportResponse responseWithPayload:@{@"documents": responsePayload} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response1 = [ZMTransportResponse responseWithPayload:@{@"documents": responsePayload} HTTPStatus:200 transportSessionError:nil];
     NSString *expectedPath1 = @"/search/suggestions?size=30";
     [[self.transportSession expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(ZMTransportRequest *req) {
         XCTAssertEqualObjects(req.path, expectedPath1);
@@ -2491,7 +2491,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
                                    @"name": @"Maria",
                                    @"id": ((NSUUID *)remoteIDs[0]).transportString},
                                  ];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
     
     // expect
     [[self.transportSession expect] enqueueSearchRequest:OCMOCK_ANY];
@@ -2544,7 +2544,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
                                        @"name": @"Maria",
                                        @"id": ((NSUUID *)originalRemoteIDs[0]).transportString},
                                      ];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         
         // expect
         [[self.transportSession expect] enqueueSearchRequest:OCMOCK_ANY];
@@ -2581,7 +2581,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
                                        @"name": @"Maria",
                                        @"id": ((NSUUID *)newRemoteIDs[0]).transportString},
                                      ];
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         
         // expect
         NSString *expectedPath = [@"/users?ids=" stringByAppendingString:[newRemoteIDs[0] transportString]];
@@ -2612,7 +2612,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     NSOrderedSet *originalRemoteIDs = nil;
     self.uiMOC.suggestedUsersForUser = originalRemoteIDs;
     XCTAssert([self.uiMOC save:nil]);
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"documents":@[]} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"documents":@[]} HTTPStatus:200 transportSessionError:nil];
     
     // expect
     [[self.transportSession expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(ZMTransportRequest *request) {
@@ -2675,7 +2675,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     XCTAssertNotNil(request);
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
@@ -2711,7 +2711,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     XCTAssertNotNil(request);
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
@@ -2747,7 +2747,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     XCTAssertNotNil(request);
     if (request) {
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
         [request completeWithResponse:response];
     }
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];

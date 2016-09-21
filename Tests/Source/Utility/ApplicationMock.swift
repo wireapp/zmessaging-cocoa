@@ -20,9 +20,9 @@ import Foundation
 import zmessaging
 
 /// A mock of Application that records the calls
-@objc public class ApplicationMock : NSObject {
+@objc public final class ApplicationMock : NSObject {
     
-    public var applicationState: UIApplicationState = .Active
+    public var applicationState: UIApplicationState = .active
     
     public var alertNotificationsEnabled: Bool = false
     
@@ -42,7 +42,7 @@ import zmessaging
     public var registeredUserNotificationSettings : [UIUserNotificationSettings] = []
     
     /// Records calls to `setMinimumBackgroundFetchInterval`
-    public var minimumBackgroundFetchInverval : NSTimeInterval = UIApplicationBackgroundFetchIntervalNever
+    public var minimumBackgroundFetchInverval : TimeInterval = UIApplicationBackgroundFetchIntervalNever
     
     /// Callback invoked when `registerUserNotificationSettings` is invoked
     public var registerForRemoteNotificationsCallback : ()->() = { _ in }
@@ -51,11 +51,11 @@ import zmessaging
 // MARK: - Application protocol
 extension ApplicationMock : Application {
     
-    public func scheduleLocalNotification(notification: UILocalNotification) {
+    public func scheduleLocalNotification(_ notification: UILocalNotification) {
         self.scheduledLocalNotifications.append(notification)
     }
     
-    public func cancelLocalNotification(notification: UILocalNotification) {
+    public func cancelLocalNotification(_ notification: UILocalNotification) {
         self.cancelledLocalNotifications.append(notification)
     }
     
@@ -64,11 +64,11 @@ extension ApplicationMock : Application {
         self.registerForRemoteNotificationsCallback()
     }
     
-    public func registerUserNotificationSettings(settings: UIUserNotificationSettings) {
+    public func registerUserNotificationSettings(_ settings: UIUserNotificationSettings) {
         self.registeredUserNotificationSettings.append(settings)
     }
     
-    public func setMinimumBackgroundFetchInterval(minimumBackgroundFetchInterval: NSTimeInterval) {
+    public func setMinimumBackgroundFetchInterval(_ minimumBackgroundFetchInterval: TimeInterval) {
         self.minimumBackgroundFetchInverval = minimumBackgroundFetchInterval
     }
 }
@@ -76,32 +76,32 @@ extension ApplicationMock : Application {
 // MARK: - Observers
 extension ApplicationMock {
     
-    @objc public func registerObserverForDidBecomeActive(object: NSObject, selector: Selector) {
-        NSNotificationCenter.defaultCenter().addObserver(object, selector: selector, name: UIApplicationDidBecomeActiveNotification, object: nil)
+    @objc public func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector) {
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
     }
     
-    @objc public func registerObserverForWillResignActive(object: NSObject, selector: Selector) {
-        NSNotificationCenter.defaultCenter().addObserver(object, selector: selector, name: UIApplicationWillResignActiveNotification, object: nil)
+    @objc public func registerObserverForWillResignActive(_ object: NSObject, selector: Selector) {
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
     }
     
-    @objc public func registerObserverForWillEnterForeground(object: NSObject, selector: Selector) {
-        NSNotificationCenter.defaultCenter().addObserver(object, selector: selector, name: UIApplicationWillEnterForegroundNotification, object: nil)
+    @objc public func registerObserverForWillEnterForeground(_ object: NSObject, selector: Selector) {
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
     }
     
-    @objc public func registerObserverForDidEnterBackground(object: NSObject, selector: Selector) {
-        NSNotificationCenter.defaultCenter().addObserver(object, selector: selector, name: UIApplicationDidEnterBackgroundNotification, object: nil)
+    @objc public func registerObserverForDidEnterBackground(_ object: NSObject, selector: Selector) {
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
     }
     
-    @objc public func registerObserverForApplicationWillTerminate(object: NSObject, selector: Selector) {
-        NSNotificationCenter.defaultCenter().addObserver(object, selector: selector, name: UIApplicationWillTerminateNotification, object: nil)
+    @objc public func registerObserverForApplicationWillTerminate(_ object: NSObject, selector: Selector) {
+        NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
     }
     
-    @objc public func unregisterObserverForStateChange(object: NSObject) {
-        NSNotificationCenter.defaultCenter().removeObserver(object, name: UIApplicationWillResignActiveNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(object, name: UIApplicationDidBecomeActiveNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(object, name: UIApplicationWillEnterForegroundNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(object, name: UIApplicationDidEnterBackgroundNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(object, name: UIApplicationWillTerminateNotification, object: nil)
+    @objc public func unregisterObserverForStateChange(_ object: NSObject) {
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
+        NotificationCenter.default.removeObserver(object, name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
     }
 }
 
@@ -109,47 +109,47 @@ extension ApplicationMock {
 extension ApplicationMock {
     
     @objc public func simulateApplicationDidBecomeActive() {
-        NSNotificationCenter.defaultCenter().postNotificationName(UIApplicationDidBecomeActiveNotification, object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
     }
     
     @objc public func simulateApplicationWillResignActive() {
-        NSNotificationCenter.defaultCenter().postNotificationName(UIApplicationWillResignActiveNotification, object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
     }
     
     @objc public func simulateApplicationWillEnterForeground() {
-        NSNotificationCenter.defaultCenter().postNotificationName(UIApplicationWillEnterForegroundNotification, object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
     }
     
     @objc public func simulateApplicationDidEnterBackground() {
-        NSNotificationCenter.defaultCenter().postNotificationName(UIApplicationDidEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
     }
     
     @objc public func simulateApplicationWillTerminate() {
-        NSNotificationCenter.defaultCenter().postNotificationName(UIApplicationWillTerminateNotification, object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
     }
     
     var isInBackground : Bool {
-        return self.applicationState == .Background
+        return self.applicationState == .background
     }
     
     @objc func setBackground() {
-        self.applicationState = .Background
+        self.applicationState = .background
     }
     
     var isInactive : Bool {
-        return self.applicationState == .Inactive
+        return self.applicationState == .inactive
     }
     
     @objc func setInactive() {
-        self.applicationState = .Inactive
+        self.applicationState = .inactive
     }
     
     var isActive : Bool {
-        return self.applicationState == .Active
+        return self.applicationState == .active
     }
     
     @objc func setActive() {
-        self.applicationState = .Active
+        self.applicationState = .active
     }
 
 }

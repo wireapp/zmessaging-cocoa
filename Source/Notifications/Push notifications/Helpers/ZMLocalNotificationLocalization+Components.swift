@@ -26,7 +26,7 @@ let NoUserNameKey = "nousername"
 let NoOtherUserNameKey = "nootherusername"
 
 
-public class LocalizationInfo : NSObject {
+public final class LocalizationInfo : NSObject {
     
     public let localizationString : String
     public let arguments : [String]
@@ -46,18 +46,17 @@ public extension NSString {
         var arguments = [String]()
         var keyComponents = [String]()
         
-        let convTypeKey = (conversation.conversationType != .OneOnOne) ? GroupKey : OneOnOneKey
+        let convTypeKey = (conversation.conversationType != .oneOnOne) ? GroupKey : OneOnOneKey
         keyComponents.append(convTypeKey)
 
         
-        if userName == nil || userName.isEmpty {
+        if let userName = userName, !userName.isEmpty {
+            arguments.append(userName)
+        } else {
             keyComponents.append(NoUserNameKey)
         }
-        else {
-            arguments.append(userName)
-        }
         
-        if (conversation.conversationType != .OneOnOne) {
+        if (conversation.conversationType != .oneOnOne) {
             if convName == nil || convName!.isEmpty {
                 keyComponents.append(NoConversationNameKey)
             }
@@ -65,7 +64,7 @@ public extension NSString {
                 arguments.append(convName!)
             }
         }
-        let localizationString = keyComponents.reduce(self){$0.0.stringByAppendingPathExtension($0.1)!}
+        let localizationString = (self as String) + "." + keyComponents.joined(separator: ".")
         return LocalizationInfo(localizationString: localizationString as String, arguments: arguments)
     }
 }

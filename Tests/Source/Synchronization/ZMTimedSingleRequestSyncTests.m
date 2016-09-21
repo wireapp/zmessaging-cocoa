@@ -52,7 +52,7 @@
     [super setUp];
     
     self.dummyRequest = [ZMTransportRequest requestGetFromPath:self.name];
-    self.dummyResponse = [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+    self.dummyResponse = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
     self.transcoderCallsToRequest = 0;
     self.trancoderResponses = [NSMutableArray array];
 }

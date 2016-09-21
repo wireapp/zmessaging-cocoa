@@ -42,6 +42,7 @@
 @class MockUser;
 @class ZMClientMessage;
 
+NS_ASSUME_NONNULL_BEGIN
 
 /// This is a base test class with utility stuff for all tests.
 @interface MessagingTest : ZMTBaseTest
@@ -127,6 +128,8 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 
 @interface MessagingTest (OTR)
 
+
+
 - (NSData *)encryptedMessage:(ZMGenericMessage *)message recipient:(UserClient *)recipient;
 
 - (UserClient *)createSelfClient;
@@ -146,6 +149,7 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 @end
 
 
+
 @interface MessagingTest (SwiftBridgeConversation)
 
 - (void)simulateUnreadCount:(NSUInteger)unreadCount forConversation:(ZMConversation *)conversation;
@@ -153,3 +157,5 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 - (void)simulateUnreadMissedKnockInConversation:(ZMConversation *)conversation;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -83,7 +83,7 @@
               ],
       @"time" : @"1437654971",
       };
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     [self.sut didReceiveResponse:response forSingleRequest:nil];
 }
 
@@ -250,7 +250,7 @@
 - (void)testThatTheLastUpdateEventIDIsNotPersistedIfTheResponseIsAPermanentError
 {
     // given
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
     [self.sut didReceiveResponse:response forSingleRequest:nil];
     
     // expect

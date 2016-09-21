@@ -22,7 +22,7 @@ import AddressBook
 
 class AddressBookTests : XCTestCase {
     
-    private var addressBookFake : AddressBookContactsFake!
+    fileprivate var addressBookFake : AddressBookContactsFake!
     
     override func setUp() {
         self.addressBookFake = AddressBookContactsFake()
@@ -259,10 +259,10 @@ extension AddressBookTests {
             AddressBookContactsFake.Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
             
         ]
-        let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
+        let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         queue.createDispatchGroups()
         let sut = self.addressBookFake.addressBook()
-        let expectation = self.expectationWithDescription("Callback invoked")
+        let expectation = self.expectation(description: "Callback invoked")
         
         // when
         sut.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
@@ -271,19 +271,21 @@ extension AddressBookTests {
             if let chunk = chunk {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 3)
                 XCTAssertEqual(chunk.includedContacts, UInt(0)..<UInt(3))
-                XCTAssertEqual(chunk.otherContactsHashes, [
-                        ["BSdmiT9F5EtQrsfcGm+VC7Ofb0ZRREtCGCFw4TCimqk=",
-                            "f9KRVqKI/n1886fb6FnP4oIORkG5S2HO0BoCYOxLFaA="],
-                        ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
-                        ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
-                    ])
+                let expected = [
+                    ["BSdmiT9F5EtQrsfcGm+VC7Ofb0ZRREtCGCFw4TCimqk=",
+                     "f9KRVqKI/n1886fb6FnP4oIORkG5S2HO0BoCYOxLFaA="],
+                    ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
+                    ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
+                ]
+                
+                zip(chunk.otherContactsHashes, expected).forEach  { XCTAssertEqual($0.0, $0.1) }
             } else {
                 XCTFail()
             }
             expectation.fulfill()
         }
         
-        self.waitForExpectationsWithTimeout(0.5) { error in
+        self.waitForExpectations(timeout: 0.5) { error in
             XCTAssertNil(error)
         }
     }
@@ -292,10 +294,10 @@ extension AddressBookTests {
         
         // given
         self.addressBookFake.contacts = []
-        let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
+        let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         queue.createDispatchGroups()
         let sut = self.addressBookFake.addressBook()
-        let expectation = self.expectationWithDescription("Callback invoked")
+        let expectation = self.expectation(description: "Callback invoked")
         
         // when
         sut.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
@@ -305,7 +307,7 @@ extension AddressBookTests {
             expectation.fulfill()
         }
         
-        self.waitForExpectationsWithTimeout(0.5) { error in
+        self.waitForExpectations(timeout: 0.5) { error in
             XCTAssertNil(error)
         }
     }
@@ -319,10 +321,10 @@ extension AddressBookTests {
             AddressBookContactsFake.Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
             
         ]
-        let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
+        let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         queue.createDispatchGroups()
         let sut = self.addressBookFake.addressBook()
-        let expectation = self.expectationWithDescription("Callback invoked")
+        let expectation = self.expectation(description: "Callback invoked")
         
         // when
         sut.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 2) { chunk in
@@ -331,18 +333,19 @@ extension AddressBookTests {
             if let chunk = chunk {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 3)
                 XCTAssertEqual(chunk.includedContacts, UInt(0)..<UInt(2))
-                XCTAssertEqual(chunk.otherContactsHashes, [
+                let expected = [
                     ["BSdmiT9F5EtQrsfcGm+VC7Ofb0ZRREtCGCFw4TCimqk=",
                         "f9KRVqKI/n1886fb6FnP4oIORkG5S2HO0BoCYOxLFaA="],
                     ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="]
-                    ])
+                    ]
+                zip(chunk.otherContactsHashes, expected).forEach  { XCTAssertEqual($0.0, $0.1) }
             } else {
                 XCTFail()
             }
             expectation.fulfill()
         }
         
-        self.waitForExpectationsWithTimeout(0.5) { error in
+        self.waitForExpectations(timeout: 0.5) { error in
             XCTAssertNil(error)
         }
     }
@@ -357,10 +360,10 @@ extension AddressBookTests {
             AddressBookContactsFake.Contact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: [])
         ]
         
-        let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
+        let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         queue.createDispatchGroups()
         let sut = self.addressBookFake.addressBook()
-        let expectation = self.expectationWithDescription("Callback invoked")
+        let expectation = self.expectation(description: "Callback invoked")
         
         // when
         sut.encodeWithCompletionHandler(queue, startingContactIndex: 1, maxNumberOfContacts: 2) { chunk in
@@ -369,17 +372,18 @@ extension AddressBookTests {
             if let chunk = chunk {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 4)
                 XCTAssertEqual(chunk.includedContacts, UInt(1)..<UInt(3))
-                XCTAssertEqual(chunk.otherContactsHashes, [
+                let expected = [
                     ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
                     ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
-                    ])
+                    ]
+                zip(chunk.otherContactsHashes, expected).forEach  { XCTAssertEqual($0.0, $0.1) }
             } else {
                 XCTFail()
             }
             expectation.fulfill()
         }
         
-        self.waitForExpectationsWithTimeout(0.5) { error in
+        self.waitForExpectations(timeout: 0.5) { error in
             XCTAssertNil(error)
         }
     }
@@ -394,10 +398,10 @@ extension AddressBookTests {
             AddressBookContactsFake.Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
         ]
         
-        let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
+        let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         queue.createDispatchGroups()
         let sut = self.addressBookFake.addressBook()
-        let expectation = self.expectationWithDescription("Callback invoked")
+        let expectation = self.expectation(description: "Callback invoked")
         
         // when
         sut.encodeWithCompletionHandler(queue, startingContactIndex: 2, maxNumberOfContacts: 20) { chunk in
@@ -406,17 +410,18 @@ extension AddressBookTests {
             if let chunk = chunk {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 4)
                 XCTAssertEqual(chunk.includedContacts, UInt(2)..<UInt(4))
-                XCTAssertEqual(chunk.otherContactsHashes, [
+                let expected =  [
                     ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
                     ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
-                    ])
+                    ]
+                zip(chunk.otherContactsHashes, expected).forEach  { XCTAssertEqual($0.0, $0.1) }
             } else {
                 XCTFail()
             }
             expectation.fulfill()
         }
         
-        self.waitForExpectationsWithTimeout(0.5) { error in
+        self.waitForExpectations(timeout: 0.5) { error in
             XCTAssertNil(error)
         }
     }
@@ -430,10 +435,10 @@ extension AddressBookTests {
             AddressBookContactsFake.Contact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
         ]
         
-        let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
+        let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         queue.createDispatchGroups()
         let sut = self.addressBookFake.addressBook()
-        let expectation = self.expectationWithDescription("Callback invoked")
+        let expectation = self.expectation(description: "Callback invoked")
         
         // when
         sut.encodeWithCompletionHandler(queue, startingContactIndex: 20, maxNumberOfContacts: 20) { chunk in
@@ -442,14 +447,14 @@ extension AddressBookTests {
             if let chunk = chunk {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 3)
                 XCTAssertEqual(chunk.includedContacts, UInt(20)..<UInt(20))
-                XCTAssertEqual(chunk.otherContactsHashes, [])
+                XCTAssertEqual(chunk.otherContactsHashes.count, 0)
             } else {
                 XCTFail()
             }
             expectation.fulfill()
         }
         
-        self.waitForExpectationsWithTimeout(0.5) { error in
+        self.waitForExpectations(timeout: 0.5) { error in
             XCTAssertNil(error)
         }
     }
@@ -463,10 +468,10 @@ extension AddressBookTests {
             AddressBookContactsFake.Contact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
             
         ]
-        let queue = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
+        let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         queue.createDispatchGroups()
         let sut = self.addressBookFake.addressBook()
-        let expectation1 = self.expectationWithDescription("Callback invoked once")
+        let expectation1 = self.expectation(description: "Callback invoked once")
         
         var chunk1 : [[String]]? = nil
         var chunk2 : [[String]]? = nil
@@ -478,24 +483,24 @@ extension AddressBookTests {
             expectation1.fulfill()
         }
         
-        self.waitForExpectationsWithTimeout(0.5) { error in
+        self.waitForExpectations(timeout: 0.5) { error in
             XCTAssertNil(error)
         }
         
-        let expectation2 = self.expectationWithDescription("Callback invoked twice")
+        let expectation2 = self.expectation(description: "Callback invoked twice")
         sut.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
             
             chunk2 = chunk?.otherContactsHashes
             expectation2.fulfill()
         }
         
-        self.waitForExpectationsWithTimeout(0.5) { error in
+        self.waitForExpectations(timeout: 0.5) { error in
             XCTAssertNil(error)
         }
         
         // then
         XCTAssertNotNil(chunk1)
         XCTAssertNotNil(chunk2)
-        XCTAssertEqual(chunk1!, chunk2!)
+        zip(chunk1!, chunk2!).forEach { XCTAssertEqual($0.0, $0.1) }
     }
 }

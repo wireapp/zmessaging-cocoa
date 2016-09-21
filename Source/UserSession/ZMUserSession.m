@@ -366,6 +366,7 @@ ZM_EMPTY_ASSERTING_INIT()
         }];
     }
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    self.blackList = nil;
 }
 
 - (BOOL)isNotificationContentHidden;

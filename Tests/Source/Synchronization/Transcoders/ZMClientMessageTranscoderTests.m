@@ -243,12 +243,12 @@
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.remoteIdentifier = [NSUUID createUUID];
         
-        ZMMessage *message = [conversation appendMessageWithText:@"message a1"];
+        ZMMessage *message = (id)[conversation appendMessageWithText:@"message a1"];
         message.nonce = [NSUUID createUUID];
         message.serverTimestamp = zeroTime;
         message.eventID = [self createEventID]; // already delivered message
         
-        ZMMessage *nextMessage = [conversation appendMessageWithText:@"message a2"];
+        ZMMessage *nextMessage = (id)[conversation appendMessageWithText:@"message a2"];
         nextMessage.serverTimestamp = [NSDate dateWithTimeInterval:100 sinceDate:zeroTime];
         nextMessage.nonce = [NSUUID createUUID]; // undelivered
         
@@ -592,7 +592,7 @@
         
         NSString *missingClientId = [NSString createAlphanumericalString];
         NSDictionary *payload = @{@"missing": @{[NSUUID createUUID].transportString : @[missingClientId]}};
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:412 transportSessionError:nil];
         ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
         
         // when
@@ -614,7 +614,7 @@
         // given
         ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
         id <ZMTransportData> payload = @{ @"label": @"unknown-client" };
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:403 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:403 transportSessionError:nil];
         ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
         
         // expect
@@ -636,7 +636,7 @@
             
             // given
             ZMAssetClientMessage *message = [self bootstrapAndCreateOTRAssetMessageInConversationWithId:[NSUUID createUUID]];
-            ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@[] HTTPstatus:403 transportSessionError:nil];
+            ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@[] HTTPStatus:403 transportSessionError:nil];
             ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
             
             // reject
@@ -662,7 +662,7 @@
         
         NSString *missingClientId = [NSString createAlphanumericalString];
         NSDictionary *payload = @{@"missing": @{[NSUUID createUUID].transportString : @[missingClientId]}};
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:412 transportSessionError:nil];
         ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
         
         // when
@@ -691,7 +691,7 @@
         
         NSString *missingClientId = [NSString createAlphanumericalString];
         NSDictionary *payload = @{@"missing": @{user.remoteIdentifier.transportString : @[missingClientId]}};
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:412 transportSessionError:nil];
         ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
         
         
@@ -724,7 +724,7 @@
         
         NSString *missingClientId = [NSString createAlphanumericalString];
         NSDictionary *payload = @{@"missing": @{user.remoteIdentifier.transportString : @[missingClientId]}};
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:412 transportSessionError:nil];
         ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
         
         // when
@@ -755,7 +755,7 @@
         user.remoteIdentifier = [NSUUID createUUID];
         
         NSDictionary *payload = @{@"deleted": @{user.remoteIdentifier.transportString : @[client.remoteIdentifier]}};
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:412 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:412 transportSessionError:nil];
         ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
 
         // when
@@ -786,7 +786,7 @@
         user.remoteIdentifier = [NSUUID createUUID];
         
         NSDictionary *payload = @{@"deleted": @{user.remoteIdentifier.transportString : @[client.remoteIdentifier]}};
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         ZMUpstreamRequest *request = [[ZMUpstreamRequest alloc] initWithTransportRequest:[ZMTransportRequest requestGetFromPath:@"foo"]];
 
         // when
@@ -821,7 +821,7 @@
                                   @"time" : [NSDate date].transportString,
                                   @"deleted": @{user.remoteIdentifier.transportString : @[client.remoteIdentifier]}
                                   };
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
 
         // when
         [self.sut updateUpdatedObject:message requestUserInfo:[NSDictionary dictionary] response:response keysToParse:[NSSet set]];
@@ -982,7 +982,6 @@
     NSDictionary *payload = @{@"recipient": client.remoteIdentifier, @"sender": senderClient.remoteIdentifier, @"text": message.data.base64String};
     
     NSDictionary *eventPayload = @{
-                                   @"id": NSUUID.createUUID.transportString,
                                    @"sender": senderClient.user.remoteIdentifier.transportString,
                                    @"type":@"conversation.otr-message-add",
                                    @"data":payload,
@@ -1095,7 +1094,7 @@
         conversation.conversationType = ZMTConversationTypeOneOnOne;
         conversation.remoteIdentifier = [NSUUID createUUID];
         
-        ZMMessage *message = [conversation appendMessageWithText:@"text"];
+        ZMMessage *message = (id)[conversation appendMessageWithText:@"text"];
         ZMClientMessage *confirmationMessage = [(id)message confirmReception];
         NSUUID *confirmationUUID = confirmationMessage.nonce;
         [self.sut.upstreamObjectSync objectsDidChange:[NSSet setWithObject:confirmationMessage]];
@@ -1107,7 +1106,7 @@
         
         // when
         ZMTransportRequest *request = [self.sut.upstreamObjectSync nextRequest];
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil]];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
@@ -1125,13 +1124,13 @@
         conversation.conversationType = ZMTConversationTypeOneOnOne;
         conversation.remoteIdentifier = [NSUUID createUUID];
         
-        ZMMessage *message = [conversation appendMessageWithText:@"text"];
+        ZMMessage *message = (id)[conversation appendMessageWithText:@"text"];
         ZMClientMessage *confirmationMessage = [(id)message confirmReception];
         [self.sut.upstreamObjectSync objectsDidChange:[NSSet setWithObject:confirmationMessage]];
         
         // when
         ZMTransportRequest *request = [self.sut.upstreamObjectSync nextRequest];
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil]];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then

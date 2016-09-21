@@ -22,7 +22,7 @@ import Foundation
 public extension ZMLocalNotificationDispatcher {
 
     // Processes ZMOTRMessages and ZMSystemMessages
-    public func processMessage(message: ZMMessage) {
+    public func processMessage(_ message: ZMMessage) {
         if let message = message as? ZMOTRMessage {
             if let note = localNotificationForMessage(message), let uiNote = note.uiNotifications.last {
                 (sharedApplicationForSwift as! Application).scheduleLocalNotification(uiNote)
@@ -36,7 +36,7 @@ public extension ZMLocalNotificationDispatcher {
     }
     
     // Process ZMGenericMessage that have "invisible" as in they don't create a message themselves
-    public func processGenericMessage(genericMessage: ZMGenericMessage) {
+    public func processGenericMessage(_ genericMessage: ZMGenericMessage) {
         // hidden, deleted and reaction do not create messages on their own
         if genericMessage.hasEdited() || genericMessage.hasHidden() || genericMessage.hasDeleted() {
             // Cancel notification for message that was edited, deleted or hidden
@@ -48,7 +48,7 @@ public extension ZMLocalNotificationDispatcher {
 // MARK: ZMOTRMessage
 extension ZMLocalNotificationDispatcher {
 
-    private func localNotificationForMessage(message : ZMOTRMessage) -> ZMLocalNotificationForMessage? {
+    fileprivate func localNotificationForMessage(_ message : ZMOTRMessage) -> ZMLocalNotificationForMessage? {
         // We don't want to create duplicate notifications (e.g. for images)
         for note in messageNotifications.notifications where note is ZMLocalNotificationForMessage {
             if (note as! ZMLocalNotificationForMessage).isNotificationFor(message.nonce) {
@@ -67,17 +67,17 @@ extension ZMLocalNotificationDispatcher {
         return nil
     }
     
-    private func cancelMessageForEditingMessage(genericMessage: ZMGenericMessage) {
-        var idToDelete : NSUUID?
+    fileprivate func cancelMessageForEditingMessage(_ genericMessage: ZMGenericMessage) {
+        var idToDelete : UUID?
         
         if genericMessage.hasEdited(), let replacingID = genericMessage.edited.replacingMessageId {
-            idToDelete = NSUUID(UUIDString: replacingID)
+            idToDelete = UUID(uuidString: replacingID)
         }
         else if genericMessage.hasDeleted(), let deleted = genericMessage.deleted.messageId {
-            idToDelete = NSUUID(UUIDString: deleted)
+            idToDelete = UUID(uuidString: deleted)
         }
         else if genericMessage.hasHidden(), let hidden = genericMessage.hidden.messageId {
-            idToDelete = NSUUID(UUIDString: hidden)
+            idToDelete = UUID(uuidString: hidden)
         }
         
         if let idToDelete = idToDelete {
@@ -85,11 +85,11 @@ extension ZMLocalNotificationDispatcher {
         }
     }
     
-    private func cancelNotificationForMessageID(messageID: NSUUID) {
+    fileprivate func cancelNotificationForMessageID(_ messageID: UUID) {
         for note in messageNotifications.notifications where note is ZMLocalNotificationForMessage {
             if (note as! ZMLocalNotificationForMessage).isNotificationFor(messageID) {
                 note.uiNotifications.forEach{(sharedApplicationForSwift as! Application).cancelLocalNotification($0)}
-                messageNotifications.remove(note);
+                _ = messageNotifications.remove(note);
             }
         }
     }
@@ -99,7 +99,7 @@ extension ZMLocalNotificationDispatcher {
 // MARK: ZMSystemMessage
 extension ZMLocalNotificationDispatcher {
     
-    private func localNotificationForSystemMessage(message : ZMSystemMessage) -> ZMLocalNotificationForSystemMessage? {
+    fileprivate func localNotificationForSystemMessage(_ message : ZMSystemMessage) -> ZMLocalNotificationForSystemMessage? {
         
         // We might want to "bundle" notifications, e.g. member join / leave events
         if let newNote: ZMLocalNotificationForSystemMessage = messageNotifications.copyExistingMessageNotification(message) {

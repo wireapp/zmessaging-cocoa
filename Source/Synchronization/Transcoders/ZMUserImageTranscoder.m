@@ -121,8 +121,10 @@ static NSString * const RequestUserProfileSmallAssetNotificationName = @"ZMReque
 {
     [self.managedObjectContext performGroupedBlock:^{
         NSSet *imageMediumKeys = [NSSet setWithArray:@[ImageMediumDataKey,ImageSmallProfileDataKey]];
+        BOOL hasLocalModificationsForImageKeys = [selfUser hasLocalModificationsForKeys:imageMediumKeys];
+        BOOL hasMissingImageData = selfUser.imageMediumData == nil || selfUser.imageSmallProfileData == nil;
         
-        if ([selfUser hasLocalModificationsForKeys:imageMediumKeys] && (selfUser.imageMediumData == nil || selfUser.imageSmallProfileData == nil)) {
+        if (hasLocalModificationsForImageKeys && hasMissingImageData) {
             [selfUser resetLocallyModifiedKeys:imageMediumKeys];
         }
     }];

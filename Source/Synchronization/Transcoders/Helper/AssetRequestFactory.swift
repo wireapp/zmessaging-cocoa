@@ -19,7 +19,7 @@
 
 import Foundation
 
-public class AssetRequestFactory : NSObject {
+public final class AssetRequestFactory : NSObject {
     
     let jsonContentType = "application/json"
     let octetStreamContentType = "application/octet-stream"
@@ -30,18 +30,18 @@ public class AssetRequestFactory : NSObject {
         case Volatile = "volatile"
     }
 
-    public func upstreamRequestForAsset(withData data: NSData, shareable: Bool = true, retention : Retention = .Persistent) -> ZMTransportRequest? {
+    public func upstreamRequestForAsset(withData data: Data, shareable: Bool = true, retention : Retention = .Persistent) -> ZMTransportRequest? {
         let path = "/assets/v3"
         guard let multipartData = try? dataForMultipartAssetUploadRequest(data, shareable: shareable, retention: retention) else { return nil }
-        let request = ZMTransportRequest(path: path, method: .MethodPOST, binaryData: multipartData, type: "multipart/mixed; boundary=frontier", contentDisposition: nil)
+        let request = ZMTransportRequest(path: path, method: .methodPOST, binaryData: multipartData, type: "multipart/mixed; boundary=frontier", contentDisposition: nil)
         return request
     }
     
-    func dataForMultipartAssetUploadRequest(data: NSData, shareable: Bool, retention : Retention) throws -> NSData {
-        let fileDataHeader = ["Content-MD5": data.zmMD5Digest().base64String()]
-        let metaData = try NSJSONSerialization.dataWithJSONObject(["public" : shareable, "retention" : retention.rawValue ], options: [])
+    func dataForMultipartAssetUploadRequest(_ data: Data, shareable: Bool, retention : Retention) throws -> Data {
+        let fileDataHeader = ["Content-MD5": (data as NSData).zmMD5Digest().base64String()]
+        let metaData = try JSONSerialization.data(withJSONObject: ["public" : shareable, "retention" : retention.rawValue ], options: [])
 
-        return .multipartDataWithItems([
+        return NSData.multipartData(withItems: [
             ZMMultipartBodyItem(data: metaData, contentType: jsonContentType, headers: nil),
             ZMMultipartBodyItem(data: data, contentType: octetStreamContentType, headers: fileDataHeader),
             ], boundary: "frontier")

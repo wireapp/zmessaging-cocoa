@@ -20,9 +20,9 @@
 import Foundation
 
 @objc public enum DeviceClass: UInt {
-    case Phone
-    case Tablet
-    case Desktop
+    case phone
+    case tablet
+    case desktop
 }
 
 public enum DeviceClassString: String {
@@ -32,13 +32,13 @@ public enum DeviceClassString: String {
     
     init(deviceClass: DeviceClass) {
         switch deviceClass {
-        case DeviceClass.Phone:
+        case DeviceClass.phone:
             self = .Phone
             break
-        case DeviceClass.Tablet:
+        case DeviceClass.tablet:
             self = .Tablet
             break
-        case DeviceClass.Desktop:
+        case DeviceClass.desktop:
             self = .Desktop
             break
         }
@@ -52,7 +52,7 @@ extension UIDevice {
         
         let machineMirror = Mirror(reflecting: systemInfo.machine)
         let identifier = machineMirror.children.reduce("") { identifier, element in
-            guard let value = element.value as? Int8 where value != 0 else { return identifier }
+            guard let value = element.value as? Int8 , value != 0 else { return identifier }
             return identifier + String(UnicodeScalar(UInt8(value)))
         }
         
@@ -87,11 +87,11 @@ extension UIDevice {
     public func zm_class() -> DeviceClass {
         switch self.model {
         case let model where model.hasPrefix("iPad"):
-            return .Tablet
+            return .tablet
         case let model where model.hasPrefix("iPhone"):
-            return .Phone
+            return .phone
         default:
-            return .Phone
+            return .phone
         }
     }
     
