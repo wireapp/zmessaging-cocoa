@@ -265,7 +265,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
     public func errorFromFailedDeleteResponse(_ response: ZMTransportResponse!) -> NSError {
         var errorCode: ClientUpdateError = .none
         if let response = response , response.result == .permanentError {
-            if let errorLabel = response.payload?.asDictionary()?["label"] as? String { // TODO jacob
+            if let errorLabel = response.payload?.asDictionary()?["label"] as? String {
                 switch errorLabel {
                 case "client-not-found":
                     errorCode = .clientToDeleteNotFound
@@ -285,7 +285,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
         var errorCode: ZMUserSessionErrorCode = .unkownError
         if let response = response , response.result == .permanentError {
 
-            if let errorLabel = response.payload?.asDictionary()?["label"] as? String { // TODO jacob
+            if let errorLabel = response.payload?.asDictionary()?["label"] as? String {
                 switch errorLabel {
                 case "missing-auth":
                     let selfUserHasEmail = (ZMUser.selfUser(in: self.managedObjectContext).emailAddress != nil )
@@ -309,7 +309,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
         
         switch (response.result) {
         case .success:
-            if let payload = response.payload?.asArray() as? [[String: AnyObject]] { // TODO jacob
+            if let payload = response.payload?.asArray() as? [[String: AnyObject]] {
                 func createSelfUserClient(_ clientInfo: [String: AnyObject]) -> UserClient? {
                     let client = UserClient.createOrUpdateClient(clientInfo, context: self.managedObjectContext)
                     client?.user = ZMUser.selfUser(in: self.managedObjectContext)
@@ -436,7 +436,7 @@ extension UserClientRequestStrategy: ZMRemoteIdentifierObjectTranscoder {
         else { return }
         
         // Create clients from the response
-        guard let arrayPayload = response.payload?.asArray() else { return } // TODO jacob
+        guard let arrayPayload = response.payload?.asArray() else { return }
         let clients: [UserClient] = arrayPayload.flatMap {
             guard let dict = $0 as? [String: AnyObject], let identifier = dict["id"] as? String else { return nil }
             let client = UserClient.fetchUserClient(withRemoteId: identifier, forUser:user, createIfNeeded: true)
