@@ -127,7 +127,7 @@
     XCTAssertNotNil(receivedRequest);
     
     // and when
-    [receivedRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil]];
+    [receivedRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
@@ -159,7 +159,7 @@
     
     // and when
     NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeAuthenticationFailed userInfo:nil];
-    [receivedRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:0 transportSessionError:error]];
+    [receivedRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:0 transportSessionError:error]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
@@ -190,7 +190,7 @@
     
     // and when
     NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeAuthenticationFailed userInfo:nil];
-    [receivedRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"missing": @{@"client": @"someID"}} HTTPstatus:0 transportSessionError:error]];
+    [receivedRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"missing": @{@"client": @"someID"}} HTTPStatus:0 transportSessionError:error]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
@@ -220,7 +220,7 @@
     
     // and when
     NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeRequestExpired userInfo:nil];
-    [receivedRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:0 transportSessionError:error]];
+    [receivedRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:0 transportSessionError:error]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect

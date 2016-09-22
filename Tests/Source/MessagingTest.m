@@ -60,6 +60,7 @@
 #import "ZMMessageTranscoder+Internal.h"
 #import "ZMClientMessageTranscoder.h"
 #import <zmessaging/zmessaging-Swift.h>
+#import "zmessaging_iOS_Tests-Swift.h"
 
 static const int32_t Mersenne1 = 524287;
 static const int32_t Mersenne2 = 131071;
@@ -121,7 +122,8 @@ static const int32_t Mersenne3 = 8191;
     NSFileManager *fm = NSFileManager.defaultManager;
     self.groupIdentifier = [@"group." stringByAppendingString:[NSBundle bundleForClass:self.class].bundleIdentifier];
     self.databaseDirectory = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
-
+    _application = [[ApplicationMock alloc] init];
+    
     self.originalConversationLastReadEventIDTimerValue = ZMConversationDefaultLastReadEventIDSaveDelay;
     ZMConversationDefaultLastReadEventIDSaveDelay = 0.02;
     
@@ -177,14 +179,16 @@ static const int32_t Mersenne3 = 8191;
 - (void)resetState
 {
     [self.uiMOC.globalManagedObjectContextObserver tearDown];
-    [self.syncMOC.globalManagedObjectContextObserver tearDown];
-    [self.syncMOC zm_tearDownCallTimer];
     [self.uiMOC zm_tearDownCallTimer];
     [self.testMOC zm_tearDownCallTimer];
     
-    [self.syncMOC zm_tearDownCryptKeyStore];
-    [self.syncMOC.userInfo removeAllObjects];
-    
+    [self.syncMOC performGroupedBlock:^{
+        [self.syncMOC.globalManagedObjectContextObserver tearDown];
+        [self.syncMOC zm_tearDownCallTimer];
+        [self.syncMOC zm_tearDownCryptKeyStore];
+        [self.syncMOC.userInfo removeAllObjects];
+    }];
+
     WaitForAllGroupsToBeEmpty(0.5);
     
     // teardown all mmanagedObjectContexts
@@ -234,7 +238,10 @@ static const int32_t Mersenne3 = 8191;
     }];
     
     [refUiMOC.globalManagedObjectContextObserver tearDown];
-    [refSyncMoc.globalManagedObjectContextObserver tearDown];
+
+    [refSyncMoc performGroupedBlockAndWait:^{
+        [refSyncMoc.globalManagedObjectContextObserver tearDown];
+    }];
 }
 
 - (void)cleanUpAndVerify {
@@ -270,33 +277,36 @@ static const int32_t Mersenne3 = 8191;
     [self performIgnoringZMLogError:^{
         self.uiMOC = [NSManagedObjectContext createUserInterfaceContextWithStoreDirectory:self.databaseDirectory];
     }];
+    
+    ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100];
+    FileAssetCache *fileAssetCache = [[FileAssetCache alloc] init];
+    
     [self.uiMOC addGroup:self.dispatchGroup];
     self.uiMOC.userInfo[@"TestName"] = self.name;
     
     self.syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectory];
     [self.syncMOC performGroupedBlockAndWait:^{
         self.syncMOC.userInfo[@"TestName"] = self.name;
+        [self.syncMOC addGroup:self.dispatchGroup];
+        [self.syncMOC saveOrRollback];
+        
+        [self.syncMOC setZm_userInterfaceContext:self.uiMOC];
+        [self.syncMOC setPersistentStoreMetadata:@(notificationContentVisible) forKey:@"ZMShouldNotificationContentKey"];
+        self.syncMOC.zm_imageAssetCache = imageAssetCache;
+        self.syncMOC.zm_fileAssetCache = fileAssetCache;
     }];
-    [self.syncMOC addGroup:self.dispatchGroup];
-    [self.syncMOC saveOrRollback];
+    
     WaitForAllGroupsToBeEmpty(2);
     
     [self.uiMOC setPersistentStoreMetadata:clientID forKey:ZMPersistedClientIdKey];
     [self.uiMOC saveOrRollback];
     WaitForAllGroupsToBeEmpty(2);
     
-    [self.syncMOC setZm_userInterfaceContext:self.uiMOC];
+    
     [self.uiMOC setZm_syncContext:self.syncMOC];
-    
-    [self.syncMOC setPersistentStoreMetadata:@(notificationContentVisible) forKey:@"ZMShouldNotificationContentKey"];
     [self.uiMOC   setPersistentStoreMetadata:@(notificationContentVisible) forKey:@"ZMShouldNotificationContentKey"];
-    
-    ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100];
-    self.syncMOC.zm_imageAssetCache = imageAssetCache;
+
     self.uiMOC.zm_imageAssetCache = imageAssetCache;
-    
-    FileAssetCache *fileAssetCache = [[FileAssetCache alloc] init];
-    self.syncMOC.zm_fileAssetCache = fileAssetCache;
     self.uiMOC.zm_fileAssetCache = fileAssetCache;
 }
 

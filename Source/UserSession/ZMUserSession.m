@@ -73,7 +73,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMTransportSession *transportSession;
 @property (nonatomic) NSManagedObjectContext *managedObjectContext;
 @property (nonatomic) NSManagedObjectContext *syncManagedObjectContext;
-@property (nonatomic) id<AVSMediaManager> mediaManager;
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
@@ -137,13 +136,33 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     NSFileManager *fm = NSFileManager.defaultManager;
     NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:appGroupIdentifier];
-    RequireString(nil != sharedContainerURL, "Unable to create shared container url using app group identifier: %s", appGroupIdentifier.UTF8String);
+    
+    if (nil == sharedContainerURL) {
+        // Seems like the shared container is not available. This could happen for series of reasons:
+        // 1. The app is compiled with with incorrect provisioning profile (for example with 3rd parties)
+        // 2. App is running on simulator and there is no correct provisioning profile on the system
+        // 3. Bug with signing
+        //
+        // The app should allow not having a shared container in cases 1 and 2; in case 3 the app should crash
+        
+        ZMDeploymentEnvironmentType deploymentEnvironment = [[ZMDeploymentEnvironment alloc] init].environmentType;
+        if (!TARGET_IPHONE_SIMULATOR && (deploymentEnvironment == ZMDeploymentEnvironmentTypeAppStore || deploymentEnvironment == ZMDeploymentEnvironmentTypeInternal)) {
+            RequireString(nil != sharedContainerURL, "Unable to create shared container url using app group identifier: %s", appGroupIdentifier.UTF8String);
+        }
+        else {
+            sharedContainerURL = [[fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask] firstObject];
+            ZMLogError(@"ERROR: self.databaseDirectoryURL == nil and deploymentEnvironment = %d", deploymentEnvironment);
+            ZMLogError(@"================================WARNING================================");
+            ZMLogError(@"Wire is going to use APPLICATION SUPPORT directory to host the database");
+            ZMLogError(@"================================WARNING================================");
+        }
+    }
+    
     return sharedContainerURL;
 }
 
 + (BOOL)needsToPrepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier
 {
-    
     return [NSManagedObjectContext needsToPrepareLocalStoreInDirectory:[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]];
 }
 
@@ -162,7 +181,10 @@ ZM_EMPTY_ASSERTING_INIT()
     return [NSManagedObjectContext storeIsReady];
 }
 
-- (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager analytics:(id<AnalyticsType>)analytics appVersion:(NSString *)appVersion appGroupIdentifier:(NSString *)appGroupIdentifier;
+- (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager
+                           analytics:(id<AnalyticsType>)analytics
+                          appVersion:(NSString *)appVersion
+                  appGroupIdentifier:(NSString *)appGroupIdentifier;
 {
     zmSetupEnvironments();
     ZMBackendEnvironment *environment = [[ZMBackendEnvironment alloc] init];
@@ -171,10 +193,9 @@ ZM_EMPTY_ASSERTING_INIT()
     self.applicationGroupIdentifier = appGroupIdentifier;
 
     ZMAPNSEnvironment *apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
-
-    self.databaseDirectoryURL = [NSFileManager.defaultManager containerURLForSecurityApplicationGroupIdentifier:appGroupIdentifier];
+    
+    self.databaseDirectoryURL = [self.class sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
     RequireString(nil != self.databaseDirectoryURL, "Unable to get a container URL using group identifier: %s", appGroupIdentifier.UTF8String);
-
     NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContextWithStoreDirectory:self.databaseDirectoryURL];
     NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectoryURL];
     syncMOC.analytics = analytics;
@@ -203,7 +224,7 @@ ZM_EMPTY_ASSERTING_INIT()
                             mediaManager:(id<AVSMediaManager>)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
-                             application:(ZMApplication *)application
+                             application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
                       appGroupIdentifier:(NSString *)appGroupIdentifier;
 
@@ -261,7 +282,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.transportSession.networkStateDelegate = self;
         self.mediaManager = mediaManager;
         
-        self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:self.mediaManager];
+        self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
         
         _application = application;
         
@@ -310,6 +331,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)tearDown
 {
+    [self.application unregisterObserverForStateChange:self];
     self.mediaManager = nil;
     [self.operationLoop tearDown];
     [self.localNotificationDispatcher tearDown];
@@ -343,8 +365,8 @@ ZM_EMPTY_ASSERTING_INIT()
             // nop
         }];
     }
-    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    self.blackList = nil;
 }
 
 - (BOOL)isNotificationContentHidden;
@@ -370,8 +392,8 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)registerForBackgroundNotifications;
 {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
+    [self.application registerObserverForDidEnterBackground:self selector:@selector(applicationDidEnterBackground:)];
+    [self.application registerObserverForWillEnterForeground:self selector:@selector(applicationWillEnterForeground:)];
 }
 
 - (void)registerForResetPushTokensNotification
@@ -439,6 +461,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.blackList = [[ZMBlacklistVerificator alloc] initWithCheckInterval:interval
                                                                    version:self.appVersion
                                                               workingGroup:self.syncManagedObjectContext.dispatchGroup
+                                                               application:self.application
                                                          blacklistCallback:^(BOOL isBlackListed) {
         ZM_STRONG(self);
         if (!self.isVersionBlacklisted && isBlackListed && blackListed) {
@@ -686,7 +709,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
     ZMNetworkState const previous = self.networkState;
     self.networkState = state;
-    if(previous != self.networkState && [[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground) {
+    if(previous != self.networkState && self.application.applicationState != UIApplicationStateBackground) {
         [[NSNotificationCenter defaultCenter] postNotification:[ZMNetworkAvailabilityChangeNotification notificationWithNetworkState:self.networkState userSession:self]];
     }
 }

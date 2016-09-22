@@ -23,10 +23,10 @@ class AddressBookSearch {
     
     /// Maximum number of contacts to consider when matching/searching,
     /// for performance reasons
-    private let maximumSearchRange : UInt = 3000
+    fileprivate let maximumSearchRange : UInt = 3000
     
     /// Address book
-    private let addressBook : AddressBookAccessor?
+    fileprivate let addressBook : AddressBookAccessor?
     
     init(addressBook : AddressBookAccessor? = nil) {
         self.addressBook = addressBook ?? AddressBook()
@@ -43,7 +43,7 @@ struct Match {
 extension AddressBookSearch {
 
     /// Returns a contact matching a user based on email address or phone number.
-    func contactForUser(user: ZMUser) -> ZMAddressBookContact? {
+    func contactForUser(_ user: ZMUser) -> ZMAddressBookContact? {
         for contact in self.limitedContactsRange() {
             if contact.matches(user) {
                 return contact
@@ -54,7 +54,7 @@ extension AddressBookSearch {
     
     /// Returns a list of match for users that have a corresponding contact
     /// in the address book
-    func matchInAddressBook(users: [ZMUser]) -> [Match] {
+    func matchInAddressBook(_ users: [ZMUser]) -> [Match] {
         
         var unmatchedUsers = Set(users)
         
@@ -105,25 +105,25 @@ extension AddressBookSearch {
 extension AddressBookSearch {
 
     /// Returns contacts filtered by the query
-    func contactsMatchingQuery(query: String) -> LazySequence<AnyGenerator<ZMAddressBookContact>> {
+    func contactsMatchingQuery(_ query: String) -> LazySequence<AnyIterator<ZMAddressBookContact>> {
         guard !query.isEmpty else {
             return self.limitedContactsRange().lazy
         }
         let predicate = NSPredicate(format: "SELF.name CONTAINS[cd] %@", query)
-        return AnyGenerator(limitedContactsRange().lazy.filter {
-            return predicate.evaluateWithObject($0)
-        }.generate()).lazy
+        return AnyIterator(limitedContactsRange().lazy.filter {
+            return predicate.evaluate(with: $0)
+        }.makeIterator()).lazy
     }
 }
 
 extension AddressBookSearch {
     
     /// Returns an iterator on contacts within the range limit
-    private func limitedContactsRange() -> AnyGenerator<ZMAddressBookContact> {
+    fileprivate func limitedContactsRange() -> AnyIterator<ZMAddressBookContact> {
         guard let addressBook = self.addressBook else {
-            return AnyGenerator(Array<ZMAddressBookContact>().generate())
+            return AnyIterator(Array<ZMAddressBookContact>().makeIterator())
         }
-        return addressBook.iterate().elements(0..<maximumSearchRange).lazy.generate()
+        return addressBook.iterate().elements(0..<maximumSearchRange).lazy.makeIterator()
     }
     
 }
@@ -131,12 +131,12 @@ extension AddressBookSearch {
 extension ZMAddressBookContact {
     
     /// Returns whether the contact shares email or phone with the user
-    private func matches(user: ZMUser) -> Bool {
-        if let email = user.emailAddress where self.emailAddresses.contains(email) {
+    fileprivate func matches(_ user: ZMUser) -> Bool {
+        if let email = user.emailAddress , self.emailAddresses.contains(email) {
             return true
         }
         
-        if let phone = user.phoneNumber where self.phoneNumbers.contains(phone) {
+        if let phone = user.phoneNumber , self.phoneNumbers.contains(phone) {
             return true
         }
         return false

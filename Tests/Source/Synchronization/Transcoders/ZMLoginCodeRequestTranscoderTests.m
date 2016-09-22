@@ -77,7 +77,7 @@
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.2);
     
     // then
@@ -100,7 +100,7 @@
     }];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.2);
     
     // then
@@ -127,7 +127,7 @@
     }];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"label":@"invalid-phone"} HTTPstatus:400 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"label":@"invalid-phone"} HTTPStatus:400 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.2);
     
     // then
@@ -154,7 +154,7 @@
     }];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"label":@"pending-login"} HTTPstatus:403 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"label":@"pending-login"} HTTPStatus:403 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.2);
     
     // then
@@ -181,7 +181,7 @@
     }];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"label":@"unauthorized"} HTTPstatus:403 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"label":@"unauthorized"} HTTPStatus:403 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.2);
     
     // then

@@ -276,7 +276,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     
     // when
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -305,7 +305,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     
     // when
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -325,7 +325,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     
     // when
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -344,7 +344,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     
     // when
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:500 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:500 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // and when
@@ -366,7 +366,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     
     // when
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // and when
@@ -395,7 +395,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     
     // when
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -417,7 +417,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     
     // when
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     
@@ -531,7 +531,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     [self.userIDsTable setSearchUsers:[NSSet setWithObject:user1] forSearchDirectory:fakeSearchDirectory1];
     [self.userIDsTable replaceUserIDToDownload:user1.remoteIdentifier withAssetIDToDownload:assetID1];
     
-    ZMTransportResponse *response = [[ZMTransportResponse alloc ] initWithImageData:imageData HTTPstatus:200 transportSessionError:nil headers:nil];
+    ZMTransportResponse *response = [[ZMTransportResponse alloc ] initWithImageData:imageData HTTPStatus:200 transportSessionError:nil headers:nil];
     
     // when
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
@@ -558,7 +558,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     [self.userIDsTable setSearchUsers:[NSSet setWithObject:user1] forSearchDirectory:fakeSearchDirectory1];
     [self.userIDsTable replaceUserIDToDownload:user1.remoteIdentifier withAssetIDToDownload:assetID1];
     
-    ZMTransportResponse *response = [[ZMTransportResponse alloc ] initWithImageData:imageData HTTPstatus:200 transportSessionError:nil headers:nil];
+    ZMTransportResponse *response = [[ZMTransportResponse alloc ] initWithImageData:imageData HTTPStatus:200 transportSessionError:nil headers:nil];
     
     // when
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
@@ -586,7 +586,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     // when
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     XCTAssertEqualObjects(request.path, [self requestPathForAssetID:assetID1 ofUserID:user1.remoteIdentifier]);
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -609,7 +609,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     
     // when
     ZMTransportRequest *request1 = [self.sut.requestGenerators nextRequest];
-    [request1 completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:500 transportSessionError:nil]];
+    [request1 completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:500 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // and when
@@ -635,7 +635,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     
     // when
     ZMTransportRequest *request1 = [self.sut.requestGenerators nextRequest];
-    [request1 completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:404 transportSessionError:nil]];
+    [request1 completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // and when
@@ -659,7 +659,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     
     [self.userIDsTable setSearchUsers:[NSSet setWithObject:user1] forSearchDirectory:fakeSearchDirectory1];
     [self.userIDsTable replaceUserIDToDownload:user1.remoteIdentifier withAssetIDToDownload:assetID1];
-    ZMTransportResponse *response = [[ZMTransportResponse alloc ] initWithImageData:imageData HTTPstatus:200 transportSessionError:nil headers:nil];
+    ZMTransportResponse *response = [[ZMTransportResponse alloc ] initWithImageData:imageData HTTPStatus:200 transportSessionError:nil headers:nil];
     
     // when
     ZMTransportRequest *request1 = [self.sut.requestGenerators nextRequest];
@@ -686,7 +686,7 @@ static NSString *const UserRequestURL = @"/users?ids=";
     
     [self.userIDsTable setSearchUsers:[NSSet setWithObject:user1] forSearchDirectory:fakeSearchDirectory1];
     [self.userIDsTable replaceUserIDToDownload:user1.remoteIdentifier withAssetIDToDownload:assetID1];
-    ZMTransportResponse *response = [[ZMTransportResponse alloc ] initWithImageData:imageData HTTPstatus:200 transportSessionError:nil headers:nil];
+    ZMTransportResponse *response = [[ZMTransportResponse alloc ] initWithImageData:imageData HTTPStatus:200 transportSessionError:nil headers:nil];
     
     // expect
     id listener = [OCMockObject mockForProtocol:@protocol(ZMUserObserver)];

@@ -255,7 +255,7 @@
     XCTAssertTrue(conversation.hasLocalModificationsForIsSendingVideo);
     
     ZMUpstreamRequest *request = [self.sut requestForUpdatingObject:conversation forKeys:[NSSet setWithObject:ZMConversationIsSendingVideoKey]];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPstatus:0 transportSessionError:[NSError errorWithDomain:ZMTransportSessionErrorDomain code:500 userInfo:nil]];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:0 transportSessionError:[NSError errorWithDomain:ZMTransportSessionErrorDomain code:500 userInfo:nil]];
     XCTAssertNotNil(request);
     
     // expect

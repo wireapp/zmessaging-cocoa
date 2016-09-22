@@ -51,8 +51,6 @@
 
 @end
 
-
-
 @interface ZMUserSessionTestsBase : MessagingTest <ZMAuthenticationStatusObserver>
 
 @property (nonatomic) id transportSession;
@@ -68,9 +66,7 @@
 @property (nonatomic) ThirdPartyServices *thirdPartyServices;
 @property (nonatomic) id requestAvailableNotification;
 @property (nonatomic) id operationLoop;
-@property (nonatomic) id application;
 @property (nonatomic) id apnsEnvironment;
-@property (nonatomic) NSTimeInterval backgroundFetchInterval;
 
 @property (nonatomic) id<ZMAuthenticationObserver> authenticationObserver;
 @property (nonatomic) id<ZMRegistrationObserver> registrationObserver;

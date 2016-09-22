@@ -277,7 +277,7 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     NSDictionary *eventPayload = [self createAssetMediumEventPayloadForAssetID:assetID conversationID:conversation.remoteIdentifier];
     ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:eventPayload uuid:nil];
     NSData *imageData = [@"image-data-0q39eijdkslfm" dataUsingEncoding:NSUTF8StringEncoding];
-    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPstatus:200 transportSessionError:nil headers:nil];
+    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPStatus:200 transportSessionError:nil headers:nil];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
@@ -312,7 +312,7 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     NSDictionary *eventPayload = [self createAssetMediumEventPayloadForAssetID:assetID conversationID:conversation.remoteIdentifier];
     ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:eventPayload uuid:nil];
     NSData *imageData = [@"image-data-0q39eijdkslfm" dataUsingEncoding:NSUTF8StringEncoding];
-    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPstatus:404 transportSessionError:nil headers:nil];
+    ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithImageData:imageData HTTPStatus:404 transportSessionError:nil headers:nil];
 
     [self.syncMOC performGroupedBlockAndWait:^{
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
@@ -369,20 +369,19 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     XCTAssertNil(secondRequest);
 }
 
-
 - (void)testThatANewImageMessageIsCreatedFromAPushEventOfTheRightType
 {
     // given
     ZMUpdateEvent *event = [OCMockObject mockForClass:ZMUpdateEvent.class];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationAssetAdd)] type];
 
-    ZMImageMessage *mockImageMessage = [OCMockObject mockForClass:ZMImageMessage.class];
     __block ZMImageMessage *imageMessage;
     [self.syncMOC performGroupedBlockAndWait:^{
         imageMessage = [ZMImageMessage insertNewObjectInManagedObjectContext:self.syncMOC];
     }];
     
     // expect
+    ZMImageMessage *mockImageMessage = [OCMockObject mockForClass:ZMImageMessage.class];
     [[[(id)mockImageMessage expect] andReturn:imageMessage] createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
     
     // when
@@ -390,6 +389,7 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    [(id)event stopMocking];
     [(id)mockImageMessage verify];
     [(id)mockImageMessage stopMocking];
 }
@@ -400,13 +400,13 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     ZMUpdateEvent *event = [OCMockObject mockForClass:ZMUpdateEvent.class];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationAssetAdd)] type];
     
-    ZMImageMessage *mockImageMessage = [OCMockObject mockForClass:ZMImageMessage.class];
     __block ZMImageMessage *imageMessage;
     [self.syncMOC performGroupedBlockAndWait:^{
         imageMessage = [ZMImageMessage insertNewObjectInManagedObjectContext:self.syncMOC];
     }];
     
     // expect
+    ZMImageMessage *mockImageMessage = [OCMockObject mockForClass:ZMImageMessage.class];
     [[[(id)mockImageMessage expect] andReturn:imageMessage] createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
     
     // when
@@ -414,6 +414,7 @@ static NSString const *EventTypeAssetAdd = @"conversation.asset-add";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    [(id)event stopMocking];
     [(id)mockImageMessage verify];
     [(id)mockImageMessage stopMocking];
 }

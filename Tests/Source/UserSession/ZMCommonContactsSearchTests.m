@@ -197,7 +197,7 @@ static NSString const *SearchAPI = @"/search/common";
     // when
     [ZMCommonContactsSearch startSearchWithTransportSession:self.transportSessionMock userID:searchedID token:token syncMOC:self.syncMOC uiMOC:self.uiMOC searchDelegate:delegate resultsCache:self.cache];
     XCTAssertNotNil(request);
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -225,9 +225,9 @@ static NSString const *SearchAPI = @"/search/common";
     // when
     [ZMCommonContactsSearch startSearchWithTransportSession:self.transportSessionMock userID:searchedID token:token syncMOC:self.syncMOC uiMOC:self.uiMOC searchDelegate:delegate resultsCache:self.cache];
     XCTAssertNotNil(request);
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:404 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:0 transportSessionError:[NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeRequestExpired userInfo:nil]]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:[NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeRequestExpired userInfo:nil]]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -258,7 +258,7 @@ static NSString const *SearchAPI = @"/search/common";
     // when
     [ZMCommonContactsSearch startSearchWithTransportSession:self.transportSessionMock userID:searchedID token:token syncMOC:self.syncMOC uiMOC:self.uiMOC searchDelegate:delegate resultsCache:self.cache];
     XCTAssertNotNil(request);
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -295,7 +295,7 @@ static NSString const *SearchAPI = @"/search/common";
         
         [ZMCommonContactsSearch startSearchWithTransportSession:self.transportSessionMock userID:searchedID token:token syncMOC:self.syncMOC uiMOC:self.uiMOC searchDelegate:delegate resultsCache:self.cache];
         XCTAssertNotNil(request);
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil]];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
@@ -327,7 +327,7 @@ static NSString const *SearchAPI = @"/search/common";
         
         [ZMCommonContactsSearch startSearchWithTransportSession:self.transportSessionMock userID:searchedID token:token syncMOC:self.syncMOC uiMOC:self.uiMOC searchDelegate:delegate resultsCache:self.cache];
         XCTAssertNotNil(request);
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil]];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then

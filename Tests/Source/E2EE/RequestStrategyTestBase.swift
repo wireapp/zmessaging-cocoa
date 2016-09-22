@@ -19,7 +19,7 @@
 import Foundation
 
 extension ZMContextChangeTrackerSource {
-    func notifyChangeTrackers(client : UserClient) {
+    func notifyChangeTrackers(_ client : UserClient) {
         contextChangeTrackers.forEach{$0.objectsDidChange(Set(arrayLiteral:client))}
     }
 }
@@ -27,11 +27,11 @@ extension ZMContextChangeTrackerSource {
 
 class RequestStrategyTestBase : MessagingTest {
     
-    func generatePrekeyAndLastKey(selfClient: UserClient, count: UInt16 = 2) -> (prekeys: [String], lastKey: String) {
+    func generatePrekeyAndLastKey(_ selfClient: UserClient, count: UInt16 = 2) -> (prekeys: [String], lastKey: String) {
         var preKeys : [String] = []
         var lastKey : String = ""
         selfClient.keysStore.encryptionContext.perform { (sessionsDirectory) in
-            preKeys = try! sessionsDirectory.generatePrekeys(Range(0..<count)).map{ $0.prekey }
+            preKeys = try! sessionsDirectory.generatePrekeys(0..<count).map{ $0.prekey }
             lastKey = try! sessionsDirectory.generateLastPrekey()
         }
         return (preKeys, lastKey)
@@ -44,28 +44,28 @@ class RequestStrategyTestBase : MessagingTest {
         return (selfClient, otherClient)
     }
     
-    func createRemoteClient(preKeys: [String]?, lastKey: String?) -> UserClient {
+    func createRemoteClient(_ preKeys: [String]?, lastKey: String?) -> UserClient {
         
         var mockUser: MockUser!
         var mockClient: MockUserClient!
         
         self.mockTransportSession.performRemoteChanges { (session) -> Void in
             if let session = session as? MockTransportSessionObjectCreation {
-                mockUser = session.insertUserWithName("foo")
-                if let preKeys = preKeys, lastKey = lastKey {
-                    mockClient = session.registerClientForUser(mockUser, label: mockUser.name, type: "permanent", preKeys: preKeys, lastPreKey: lastKey)
+                mockUser = session.insertUser(withName: "foo")
+                if let preKeys = preKeys, let lastKey = lastKey {
+                    mockClient = session.registerClient(for: mockUser, label: mockUser.name!, type: "permanent", preKeys: preKeys, lastPreKey: lastKey)
                 }
                 else {
-                    mockClient = session.registerClientForUser(mockUser, label: mockUser.name, type: "permanent")
+                    mockClient = session.registerClient(for: mockUser, label: mockUser.name!, type: "permanent")
                 }
             }
         }
-        XCTAssertTrue(waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        let client = UserClient.insertNewObjectInManagedObjectContext(syncMOC)
+        let client = UserClient.insertNewObject(in: syncMOC)
         client.remoteIdentifier = mockClient.identifier
-        let user = ZMUser.insertNewObjectInManagedObjectContext(syncMOC)
-        user.remoteIdentifier = NSUUID.uuidWithTransportString(mockUser.identifier)
+        let user = ZMUser.insertNewObject(in: syncMOC)
+        user.remoteIdentifier = UUID(uuidString: mockUser.identifier)
         client.user = user
         return client
     }

@@ -18,10 +18,12 @@
 
 
 @import Foundation;
+@protocol ZMApplication;
 
-
-
+/// The badge of the application (number in the home screen)
 @interface ZMBadge : NSObject
+
+- (instancetype)initWithApplication:(id<ZMApplication>)application;
 
 - (void)setBadgeCount:(NSUInteger)count;
 

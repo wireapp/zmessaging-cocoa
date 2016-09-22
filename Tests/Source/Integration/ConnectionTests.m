@@ -1007,7 +1007,7 @@
             return nil;
         }
         NSDictionary *payload = @{@"label": @"connection-limit"};
-        return [[ZMTransportResponse alloc] initWithPayload:payload HTTPstatus:403 transportSessionError:nil headers:nil];
+        return [[ZMTransportResponse alloc] initWithPayload:payload HTTPStatus:403 transportSessionError:nil headers:nil];
     };
 
 }

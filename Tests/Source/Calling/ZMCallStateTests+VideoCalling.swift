@@ -26,20 +26,20 @@ class ZMCallStateTests : MessagingTest {
     
     func testThatItMergesChangesOnIsVideoCallFromMainIntoSync() {
         // given
-        let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
-        conversation.conversationType = .OneOnOne
+        let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.conversationType = .oneOnOne
         self.uiMOC.saveOrRollback()
         
         // when
         try! conversation.voiceChannel.joinVideoCall()
         let callState = self.uiMOC.zm_callState.createCopyAndResetHasChanges()
-        self.syncMOC.mergeCallStateChanges(callState)
+        _ = syncMOC.mergeCallStateChanges(callState)
         
         // then
         XCTAssertTrue(conversation.isVideoCall)
         XCTAssertFalse(conversation.hasLocalModificationsForIsVideoCall)
         
-        let syncConversation = self.syncMOC.objectWithID(conversation.objectID) as? ZMConversation
+        let syncConversation = self.syncMOC.object(with: conversation.objectID) as? ZMConversation
         XCTAssertNotNil(syncConversation)
         if let syncConversation = syncConversation {
             XCTAssertTrue(syncConversation.isVideoCall)
@@ -53,21 +53,21 @@ class ZMCallStateTests : MessagingTest {
         // given
         var conversation : ZMConversation!
         self.syncMOC.performGroupedBlockAndWait{
-            conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
-            conversation.conversationType = .OneOnOne
+            conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation.conversationType = .oneOnOne
             self.syncMOC.saveOrRollback()
             
             // when
             conversation.isVideoCall = true
         }
         let callState = self.syncMOC.zm_callState.createCopyAndResetHasChanges()
-        self.uiMOC.mergeCallStateChanges(callState)
+        _ = uiMOC.mergeCallStateChanges(callState)
         
         // then
         XCTAssertTrue(conversation.isVideoCall)
         XCTAssertFalse(conversation.hasLocalModificationsForIsVideoCall)
         
-        let uiConversation = self.uiMOC.objectWithID(conversation.objectID) as? ZMConversation
+        let uiConversation = self.uiMOC.object(with: conversation.objectID) as? ZMConversation
         XCTAssertNotNil(uiConversation)
         if let uiConversation = uiConversation {
             XCTAssertTrue(uiConversation.isVideoCall)
@@ -81,20 +81,20 @@ class ZMCallStateTests : MessagingTest {
     
     func testThatItMergesChangesOnIsSendingVideoFromMainIntoSync() {
         // given
-        let conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.uiMOC)
-        conversation.conversationType = .OneOnOne
+        let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.conversationType = .oneOnOne
         self.uiMOC.saveOrRollback()
         
         // when
         conversation.isSendingVideo = true
         let callState = self.uiMOC.zm_callState.createCopyAndResetHasChanges()
-        self.syncMOC.mergeCallStateChanges(callState)
+        _ = syncMOC.mergeCallStateChanges(callState)
         
         // then
         XCTAssertTrue(conversation.isSendingVideo)
         XCTAssertFalse(conversation.hasLocalModificationsForIsSendingVideo)
         
-        let syncConversation = self.syncMOC.objectWithID(conversation.objectID) as? ZMConversation
+        let syncConversation = self.syncMOC.object(with: conversation.objectID) as? ZMConversation
         XCTAssertNotNil(syncConversation)
         if let syncConversation = syncConversation {
             XCTAssertTrue(syncConversation.isSendingVideo)
@@ -109,8 +109,8 @@ class ZMCallStateTests : MessagingTest {
         // given
         var conversation : ZMConversation!
         self.syncMOC.performGroupedBlockAndWait{
-            conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
-            conversation.conversationType = .OneOnOne
+            conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation.conversationType = .oneOnOne
             self.syncMOC.saveOrRollback()
             
             // when we force to sync changes made on the syncMOC
@@ -121,13 +121,13 @@ class ZMCallStateTests : MessagingTest {
             XCTAssertTrue(conversation.hasLocalModificationsForIsSendingVideo)
         }
         let callState = self.syncMOC.zm_callState.createCopyAndResetHasChanges()
-        self.uiMOC.mergeCallStateChanges(callState)
+        _ = uiMOC.mergeCallStateChanges(callState)
         
         // then hasLocalModifications on the SyncMoc are preserved
         XCTAssertTrue(conversation.isSendingVideo)
         XCTAssertTrue(conversation.hasLocalModificationsForIsSendingVideo)
         
-        let uiConversation = self.uiMOC.objectWithID(conversation.objectID) as? ZMConversation
+        let uiConversation = self.uiMOC.object(with: conversation.objectID) as? ZMConversation
         XCTAssertNotNil(uiConversation)
         if let uiConversation = uiConversation {
             XCTAssertTrue(uiConversation.isSendingVideo)
@@ -143,7 +143,7 @@ class ZMCallStateTests : MessagingTest {
             XCTAssertFalse(conversation.hasLocalModificationsForIsSendingVideo)
         }
         let callState2 = self.syncMOC.zm_callState.createCopyAndResetHasChanges()
-        self.uiMOC.mergeCallStateChanges(callState2)
+        _ = uiMOC.mergeCallStateChanges(callState2)
         
         // then hasLocalModfications on syncMOC are reset
         XCTAssertTrue(conversation.isSendingVideo)
@@ -163,8 +163,8 @@ class ZMCallStateTests : MessagingTest {
         // given
         var conversation : ZMConversation!
         self.syncMOC.performGroupedBlockAndWait{
-            conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
-            conversation.conversationType = .OneOnOne
+            conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation.conversationType = .oneOnOne
             self.syncMOC.saveOrRollback()
             
             // when we force to sync changes made on the syncMOC
@@ -175,13 +175,13 @@ class ZMCallStateTests : MessagingTest {
             XCTAssertTrue(conversation.hasLocalModificationsForIsSendingVideo)
         }
         let callState = self.syncMOC.zm_callState.createCopyAndResetHasChanges()
-        self.uiMOC.mergeCallStateChanges(callState)
+        _ = uiMOC.mergeCallStateChanges(callState)
         
         // then hasLocalModifications on the SyncMoc are preserved
         XCTAssertTrue(conversation.isSendingVideo)
         XCTAssertTrue(conversation.hasLocalModificationsForIsSendingVideo)
         
-        let uiConversation = self.uiMOC.objectWithID(conversation.objectID) as? ZMConversation
+        let uiConversation = self.uiMOC.object(with: conversation.objectID) as? ZMConversation
         XCTAssertNotNil(uiConversation)
         if let uiConversation = uiConversation {
             XCTAssertTrue(uiConversation.isSendingVideo)
@@ -197,7 +197,7 @@ class ZMCallStateTests : MessagingTest {
         }
         
         let callState2 = self.uiMOC.zm_callState.createCopyAndResetHasChanges()
-        self.syncMOC.mergeCallStateChanges(callState2)
+        _ = syncMOC.mergeCallStateChanges(callState2)
         
         // then hasLocalModfications on syncMOC not reset
         XCTAssertFalse(conversation.isSendingVideo)
@@ -216,9 +216,9 @@ class ZMCallStateTests : MessagingTest {
         // given
         var conversation : ZMConversation!
         self.syncMOC.performGroupedBlockAndWait{
-            conversation = ZMConversation.insertNewObjectInManagedObjectContext(self.syncMOC)
-            conversation.conversationType = .OneOnOne
-            let user = ZMUser.insertNewObjectInManagedObjectContext(self.syncMOC)
+            conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation.conversationType = .oneOnOne
+            let user = ZMUser.insertNewObject(in: self.syncMOC)
             self.syncMOC.saveOrRollback()
             
             // when
@@ -226,12 +226,12 @@ class ZMCallStateTests : MessagingTest {
             conversation.addActiveVideoCallParticipant(user)
         }
         let callState = self.syncMOC.zm_callState.createCopyAndResetHasChanges()
-        self.uiMOC.mergeCallStateChanges(callState)
+        _ = uiMOC.mergeCallStateChanges(callState)
         
         // then
         XCTAssertEqual(conversation.otherActiveVideoCallParticipants.count, 1)
         
-        let uiConversation = self.uiMOC.objectWithID(conversation.objectID) as? ZMConversation
+        let uiConversation = self.uiMOC.object(with: conversation.objectID) as? ZMConversation
         XCTAssertNotNil(uiConversation)
         if let uiConversation = uiConversation {
             XCTAssertEqual(uiConversation.otherActiveVideoCallParticipants.count, 1)

@@ -307,7 +307,7 @@
     // given
     NSString *password = @"foo$$$$";
     NSString *email = @"email@example.com";
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": @"Clara", @"email":email} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": @"Clara", @"email":email} HTTPStatus:200 transportSessionError:nil];
     [self.authenticationStatus prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:email password:password]];
     
     // when
@@ -323,7 +323,7 @@
     // given
     NSString *password = @"foo$$$$";
     NSString *email = @"email@example.com";
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": @"Clara", @"email":email} HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": @"Clara", @"email":email} HTTPStatus:200 transportSessionError:nil];
     [self.authenticationStatus prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:email password:password]];
     
     // when
@@ -347,7 +347,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": name,
                                                                                @"email": emailAddress,
                                                                                @"id": remoteID.transportString}
-                                                                  HTTPstatus:200
+                                                                  HTTPStatus:200
                                                        transportSessionError:nil];
     
     // when
@@ -374,7 +374,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": name,
                                                                                @"email": emailAddress,
                                                                                @"id": remoteID.transportString}
-                                                                  HTTPstatus:200
+                                                                  HTTPStatus:200
                                                        transportSessionError:nil];
     
     [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
@@ -393,7 +393,7 @@
     user.name = name;
     [self.authenticationStatus prepareForRegistrationOfUser:user];
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
     
     // when
     [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
@@ -422,7 +422,7 @@
         [expectation fulfill];
     } ];
 
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
     
     // when
     [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
@@ -449,7 +449,7 @@
         [expectation fulfill];
     } ];
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"label":@"invalid-email"} HTTPstatus:400 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"label":@"invalid-email"} HTTPStatus:400 transportSessionError:nil];
     
     // when
     [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
@@ -474,7 +474,7 @@
         [expectation fulfill];
     } ];
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"label":@"invalid-phone"} HTTPstatus:400 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"label":@"invalid-phone"} HTTPStatus:400 transportSessionError:nil];
     
     // when
     [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
@@ -497,7 +497,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": name,
                                                                                @"email": emailAddress,
                                                                                @"id": remoteID.transportString}
-                                                                  HTTPstatus:400
+                                                                  HTTPStatus:400
                                                        transportSessionError:nil];
     
     // when

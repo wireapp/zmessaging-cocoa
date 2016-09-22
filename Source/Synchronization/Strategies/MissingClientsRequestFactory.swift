@@ -19,16 +19,16 @@
 import Foundation
 
 
-public class MissingClientsRequestFactory {
+public final class MissingClientsRequestFactory {
     
     let pageSize : Int
     public init(pageSize: Int = 128) {
         self.pageSize = pageSize
     }
     
-    public func fetchMissingClientKeysRequest(missingClients: Set<UserClient>) -> ZMUpstreamRequest! {
+    public func fetchMissingClientKeysRequest(_ missingClients: Set<UserClient>) -> ZMUpstreamRequest! {
         let map = MissingClientsMap(Array(missingClients), pageSize: pageSize)
-        let request = ZMTransportRequest(path: "/users/prekeys", method: ZMTransportRequestMethod.MethodPOST, payload: map.payload)
+        let request = ZMTransportRequest(path: "/users/prekeys", method: ZMTransportRequestMethod.methodPOST, payload: map.payload as ZMTransportData?)
         return ZMUpstreamRequest(keys: Set(arrayLiteral: ZMUserClientMissingKey), transportRequest: request, userInfo: map.userInfo)
     }
     
@@ -46,7 +46,7 @@ public struct MissingClientsMap {
         let addClientIdToMap = { (clientsMap: [String : [String]], missingClient: UserClient) -> [String:[String]] in
             var clientsMap = clientsMap
             let missingUserId = missingClient.user!.remoteIdentifier!.transportString()
-            clientsMap[missingUserId] = (clientsMap[missingUserId] ?? []) + [missingClient.remoteIdentifier]
+            clientsMap[missingUserId] = (clientsMap[missingUserId] ?? []) + [missingClient.remoteIdentifier!]
             return clientsMap
         }
         
@@ -57,7 +57,7 @@ public struct MissingClientsMap {
             return users.count <= pageSize
         }
         
-        payload = missing.filter { $0.user?.remoteIdentifier != nil } .reduce([String:[String]](), combine: addClientIdToMap)
-        userInfo = [MissingClientsRequestUserInfoKeys.clients: missing.map { $0.remoteIdentifier }]
+        payload = missing.filter { $0.user?.remoteIdentifier != nil } .reduce([String:[String]](), addClientIdToMap)
+        userInfo = [MissingClientsRequestUserInfoKeys.clients: missing.map { $0.remoteIdentifier! }]
     }
 }

@@ -24,25 +24,25 @@ let failedToAccessAddressBookNotificationName = "ZMUserSessionFailedToAccessAddr
 @objc public protocol AddressBookUploadObserver {
     
     /// This method will get called when the app tries to upload the address book, but does not have access to it.
-    func failedToAccessAddressBook(note: NSNotification)
+    func failedToAccessAddressBook(_ note: Notification)
 }
 
 extension ZMUserSession {
     
     /// Adds and observer for address book upload. Returns the token that need to be used
     /// to unregister the observer
-    public static func addAddressBookUploadObserver(observer: AddressBookUploadObserver) -> NSObjectProtocol {
-        return NSNotificationCenter.defaultCenter()
-            .addObserverForName(failedToAccessAddressBookNotificationName,
+    public static func addAddressBookUploadObserver(_ observer: AddressBookUploadObserver) -> NSObjectProtocol {
+        return NotificationCenter.default
+            .addObserver(forName: NSNotification.Name(rawValue: failedToAccessAddressBookNotificationName),
                                 object: nil,
-                                queue: NSOperationQueue.mainQueue()) {
+                                queue: OperationQueue.main) {
                                     observer.failedToAccessAddressBook($0)
         }
     }
     
     /// Removes and address book upload observer using the token returned from `addAddressBookUploadObserver`
-    public static func removeAddressBookUploadObserverToken(token: NSObjectProtocol) {
-        NSNotificationCenter.defaultCenter().removeObserver(token)
+    public static func removeAddressBookUploadObserverToken(_ token: NSObjectProtocol) {
+        NotificationCenter.default.removeObserver(token)
     }
 }
 

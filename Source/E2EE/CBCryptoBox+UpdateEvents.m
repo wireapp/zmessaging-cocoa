@@ -82,18 +82,20 @@ NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
                         managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
     BOOL didFailBecauseDuplicated = error != nil
-    && (error.code == CryptoboxErrorCryptoboxOutdatedMessage || error.code == CryptoboxErrorCryptoboxDuplicateMessage);
+    && (error.code == CryptoboxErrorOutdatedMessage || error.code == CryptoboxErrorDuplicateMessage);
     
     // do not notify user if it's just a duplicated one
-    if(didFailBecauseDuplicated) {
+    if (didFailBecauseDuplicated) {
         return;
     }
     NSMutableDictionary *userInfoDictionary = [NSMutableDictionary dictionaryWithDictionary:@{@"cause" : CBErrorCodeToString((CryptoboxError)error.code)}];
     
     NSString *senderClientID = [[event.payload.asDictionary optionalDictionaryForKey:@"data"] optionalStringForKey:@"sender"];
     
+    ZMConversation *conversation;
+    
     if (event.conversationUUID != nil && event.senderUUID != nil && senderClientID != nil) {
-        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:event.conversationUUID createIfNeeded:NO inContext:managedObjectContext];
+        conversation = [ZMConversation conversationWithRemoteID:event.conversationUUID createIfNeeded:NO inContext:managedObjectContext];
         ZMUser *sender = [ZMUser userWithRemoteID:event.senderUUID createIfNeeded:NO inContext:managedObjectContext];
         UserClient *client = [UserClient fetchUserClientWithRemoteId:senderClientID forUser:sender createIfNeeded:NO];
         if (client != nil) {
@@ -104,9 +106,11 @@ NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
         }
         if (conversation != nil && sender != nil) {
             [conversation appendDecryptionFailedSystemMessageAtTime:event.timeStamp sender:sender client:client errorCode:error.code];
+            
         }
     }
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMConversationFailedToDecryptMessageNotificationName object:self userInfo:userInfoDictionary];
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:ZMConversationFailedToDecryptMessageNotificationName object:conversation userInfo:userInfoDictionary];
 }
 
 - (ZMUpdateEvent *)decryptOTRClientMessageUpdateEvent:(ZMUpdateEvent *)event newSessionId:(NSString *__autoreleasing *)newSessionId error:(NSError **)error
@@ -125,7 +129,7 @@ NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
     eventData[@"text"] = decryptedData.base64String;
     payload[@"data"] = eventData;
 
-    return [ZMUpdateEvent decryptedUpdateEventFromEventStreamPayload:payload uuid:event.uuid source:event.source];
+    return [ZMUpdateEvent decryptedUpdateEventFromEventStreamPayload:payload uuid:event.uuid transient:NO source:event.source];
 }
 
 - (ZMUpdateEvent *)decryptOTRAssetUpdateEvent:(ZMUpdateEvent *)event newSessionId:(NSString *__autoreleasing *)newSessionId error:(NSError **)error
@@ -138,7 +142,7 @@ NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
     eventData[@"info"] = [decryptedData base64EncodedStringWithOptions:0];
     payload[@"data"] = eventData;
 
-    return [ZMUpdateEvent decryptedUpdateEventFromEventStreamPayload:payload uuid:event.uuid source:event.source];
+    return [ZMUpdateEvent decryptedUpdateEventFromEventStreamPayload:payload uuid:event.uuid transient:NO source:event.source];
 }
 
 - (NSData *)decryptOTRMessageUpdateEvent:(ZMUpdateEvent *)event valueForKey:(NSString *)dataKey newSessionId:(NSString *__autoreleasing *)newSessionId error:(NSError **)error
@@ -198,35 +202,35 @@ NSString * CBErrorCodeToString(CryptoboxError cryptoBoxError);
 NSString * CBErrorCodeToString(CryptoboxError errorCode)
 {
     switch (errorCode) {
-        case CryptoboxErrorCryptoboxStorageError:
+        case CryptoboxErrorStorageError:
             return @"CBErrorCodeStorageError";
-        case CryptoboxErrorCryptoboxSessionNotFound:
+        case CryptoboxErrorSessionNotFound:
             return @"CBErrorCodeNoSession";
-        case CryptoboxErrorCryptoboxPrekeyNotFound:
+        case CryptoboxErrorPrekeyNotFound:
             return @"CBErrorCodeNoPreKey";
-        case CryptoboxErrorCryptoboxDecodeError:
+        case CryptoboxErrorDecodeError:
             return @"CBErrorCodeDecodeError";
-        case CryptoboxErrorCryptoboxRemoteIdentityChanged:
+        case CryptoboxErrorRemoteIdentityChanged:
             return @"CBErrorCodeRemoteIdentityChanged";
-        case CryptoboxErrorCryptoboxIdentityError:
+        case CryptoboxErrorIdentityError:
             return @"CBErrorCodeInvalidIdentity";
-        case CryptoboxErrorCryptoboxInvalidSignature:
+        case CryptoboxErrorInvalidSignature:
             return @"CBErrorCodeInvalidSignature";
-        case CryptoboxErrorCryptoboxInvalidMessage:
+        case CryptoboxErrorInvalidMessage:
             return @"CBErrorCodeInvalidMessage";
-        case CryptoboxErrorCryptoboxDuplicateMessage:
+        case CryptoboxErrorDuplicateMessage:
             return @"CBErrorCodeDuplicateMessage";
-        case CryptoboxErrorCryptoboxTooDistantFuture:
+        case CryptoboxErrorTooDistantFuture:
             return @"CBErrorCodeTooDistantFuture";
-        case CryptoboxErrorCryptoboxOutdatedMessage:
+        case CryptoboxErrorOutdatedMessage:
             return @"CBErrorCodeOutdatedMessage";
-        case CryptoboxErrorCryptoboxUTF8Error:
+        case CryptoboxErrorUTF8Error:
             return @"CBErrorCodeUTF8Error";
-        case CryptoboxErrorCryptoboxNulError:
+        case CryptoboxErrorNulError:
             return @"CBErrorCodeNULError";
-        case CryptoboxErrorCryptoboxEncodeError:
+        case CryptoboxErrorEncodeError:
             return @"CBErrorCodeEncodeError";
-        case CryptoboxErrorCryptoboxPanic:
+        case CryptoboxErrorPanic:
             return @"CBErrorCodePanic";
         default:
             return [NSString stringWithFormat:@"Unknown error code: %lu", (long)errorCode];

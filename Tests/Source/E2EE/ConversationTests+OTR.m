@@ -187,7 +187,7 @@
     __block ZMAssetClientMessage *message;
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForEverythingToBeDone();
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
 
@@ -195,7 +195,7 @@
     [self.userSession performChanges:^{
         message = [conversation appendOTRMessageWithImageData:[self verySmallJPEGData] nonce:[NSUUID createUUID]];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForEverythingToBeDone();
     
     // then
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
@@ -272,7 +272,7 @@
                                                                               @"key": [@"invalid key" dataUsingEncoding:NSUTF8StringEncoding].base64String
                                                                               }
                                                                       }
-                                                              } HTTPstatus:201 transportSessionError:nil];
+                                                              } HTTPStatus:201 transportSessionError:nil];
         }
         return nil;
     }];
@@ -384,7 +384,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = ^ ZMTransportResponse *(ZMTransportRequest *__unused request) {
         if ([request.path.pathComponents containsObject:@"assets"]) {
-            return [ZMTransportResponse responseWithPayload:@{ @"label" : @"unknown-client"} HTTPstatus:403 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:@{ @"label" : @"unknown-client"} HTTPStatus:403 transportSessionError:nil];
         }
         return nil;
     };
@@ -497,7 +497,7 @@
                                                                               @"key": [@"invalid key" dataUsingEncoding:NSUTF8StringEncoding].base64String
                                                                               }
                                                                       }
-                                                              } HTTPstatus:201 transportSessionError:nil];
+                                                              } HTTPStatus:201 transportSessionError:nil];
         }
         return nil;
     }];
@@ -1805,8 +1805,9 @@
         UserClient *trusted = [user1.clients.allObjects firstObjectMatchingWithBlock:^BOOL(UserClient *obj) {
             return [obj.trustedByClients containsObject:selfClient];
         }];
-        
-        [selfClient ignoreClient:trusted];
+        if (nil != trusted) {
+            [selfClient ignoreClient:trusted];
+        }
     }
 
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2059,7 +2060,7 @@
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         NSString *path = [NSString stringWithFormat:@"users/%@/clients", userID.transportString];
         if ([request.path isEqualToString:path]) {
-            return [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         }
         return nil;
     };
@@ -2298,17 +2299,19 @@
     // when
     [self performIgnoringZMLogError:^{
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
-            
-            [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:[@"💣" dataUsingEncoding:NSUTF8StringEncoding]];
+            [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject
+                                                            toClient:self.selfUser.clients.anyObject
+                                                                data:[@"😱" dataUsingEncoding:NSUTF8StringEncoding]];
         }];
-        WaitForAllGroupsToBeEmpty(0.5);
+
+        WaitForAllGroupsToBeEmpty(5);
     }];
     
     // then
     id<ZMConversationMessage> lastMessage = conversation.messages.lastObject;
+    XCTAssertEqual(conversation.messages.count, 2lu);
     XCTAssertNotNil(lastMessage.systemMessageData);
     XCTAssertEqual(lastMessage.systemMessageData.systemMessageType, ZMSystemMessageTypeDecryptionFailed);
-    
 }
 
 - (void)testThatItNotifiesWhenInsertingCannotDecryptMessage {
@@ -2317,22 +2320,27 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:10 establishSessionWithSelfUser:YES];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"It should call the observer"];
     
-    [[NSNotificationCenter defaultCenter] addObserverForName:ZMConversationFailedToDecryptMessageNotificationName object:conversation queue:[NSOperationQueue currentQueue] usingBlock:^(NSNotification * _Nonnull note) {
-        XCTAssertEqual(conversation, note.object);
+    [[NSNotificationCenter defaultCenter] addObserverForName:ZMConversationFailedToDecryptMessageNotificationName object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification * _Nonnull note) {
+        XCTAssertEqualObjects(conversation.remoteIdentifier, [(ZMConversation *)note.object remoteIdentifier]);
         XCTAssertNotNil(note.userInfo[@"cause"]);
-        XCTAssertNotNil(note.userInfo[@"deviceClass"]);
+        XCTAssertEqualObjects(note.userInfo[@"cause"], @"CBErrorCodeDecodeError");
+        [expectation fulfill];
     }];
     
     // when
     [self performIgnoringZMLogError:^{
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
-            
-            [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:[@"💣" dataUsingEncoding:NSUTF8StringEncoding]];
+            [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject
+                                                            toClient:self.selfUser.clients.anyObject
+                                                                data:[@"😱" dataUsingEncoding:NSUTF8StringEncoding]];
         }];
+
         WaitForAllGroupsToBeEmpty(0.5);
     }];
     
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:5]);
 }
 
 - (void)testThatItDoesNotInsertsASystemMessageWhenItDecryptsADuplicatedMessage {

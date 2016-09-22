@@ -231,7 +231,7 @@
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path containsString:clientsPath]) {
             id <ZMTransportData> payload = [self payloadForUserClientsWithIDs:[NSSet setWithObjects:firstIdentifier, secondIdentifier, nil]];
-            return [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         }
         return nil;
     };
@@ -254,7 +254,7 @@
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path containsString:clientsPath]) {
             id <ZMTransportData> payload = [self payloadForUserClientsWithIDs:[NSSet setWithObjects:secondIdentifier, thirdIdentifier, nil]];
-            return [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         }
         return nil;
     };

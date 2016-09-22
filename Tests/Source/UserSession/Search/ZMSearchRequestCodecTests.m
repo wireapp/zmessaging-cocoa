@@ -122,10 +122,10 @@
 {
     // given
     NSDictionary *payload = [self payLoadForRemoteIDs];
-    NSInteger HTTPstatus = 200;
+    NSInteger HTTPStatus = 200;
     NSError *error = nil;
 
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:HTTPstatus transportSessionError:error];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:HTTPStatus transportSessionError:error];
     
     // when
     NSOrderedSet *remoteIDs = [ZMSearchRequestCodec remoteIdentifiersForSuggestedPeopleSearchResponse:response];
@@ -139,10 +139,10 @@
 {
     // given
     NSDictionary *payload = [self payLoadForRemoteIDs];
-    NSInteger HTTPstatus = 400;
+    NSInteger HTTPStatus = 400;
     NSError *error = nil;
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:HTTPstatus transportSessionError:error];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:HTTPStatus transportSessionError:error];
     
     // when
     NSOrderedSet *remoteIDs = [ZMSearchRequestCodec remoteIdentifiersForSuggestedPeopleSearchResponse:response];
@@ -155,10 +155,10 @@
 {
     // given
     NSDictionary *payload = [self payLoadForRemoteIDs];
-    NSInteger HTTPstatus = 200;
+    NSInteger HTTPStatus = 200;
     NSError *error = [NSError errorWithDomain:@"ZMTransportSession" code:ZMTransportSessionErrorCodeTryAgainLater userInfo:nil];
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:HTTPstatus transportSessionError:error];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:HTTPStatus transportSessionError:error];
     
     // when
     NSOrderedSet *remoteIDs = [ZMSearchRequestCodec remoteIdentifiersForSuggestedPeopleSearchResponse:response];
@@ -173,7 +173,7 @@
 
     NSDictionary *payload = [self payloadForUsers:@[self.user1]];
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // when
     ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession];
@@ -196,7 +196,7 @@
                                                 @"name": name,
                                                 @"accent_id": @4}]};
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // when
     ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession];
@@ -215,7 +215,7 @@
     
     NSDictionary *payload = [self payloadForUsers:@[self.selfUser]];
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // when
     ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession];
@@ -231,7 +231,7 @@
     NSArray *ignoredIDs = @[[NSUUID uuidWithTransportString:self.user1.identifier]];
     NSDictionary *payload = [self payloadForUsers:@[self.user1]];
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // when
     ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:ignoredIDs userSession:self.userSession];

@@ -21,7 +21,7 @@ import XCTest
 
 class ProxiedRequestsStatusTests: MessagingTest {
     
-    private var sut: ProxiedRequestsStatus!
+    fileprivate var sut: ProxiedRequestsStatus!
     
     override func setUp() {
         super.setUp()
@@ -34,18 +34,18 @@ class ProxiedRequestsStatusTests: MessagingTest {
     
     func testThatRequestIsAddedToPendingRequest() {
 
-        let exp = self.expectationWithDescription("expected callback")
+        let exp = self.expectation(description: "expected callback")
 
         //given
         let path = "foo/bar"
-        let url = NSURL(string: path, relativeToURL: nil)!
+        let url = URL(string: path, relativeTo: nil)!
         
-        let callback: (NSData!, NSHTTPURLResponse!, NSError!) -> Void = { (_, _, _) -> Void in
+        let callback: (Data?, HTTPURLResponse?, Error?) -> Void = { (_, _, _) -> Void in
             exp.fulfill()
         }
         
         //when
-        self.sut.addRequest(.Giphy, path:url.relativeString!, method:.MethodGET, callback: callback)
+        self.sut.addRequest(.giphy, path:url.relativeString, method:.methodGET, callback: callback)
         
         //then
         let request = self.sut.pendingRequests.last
@@ -53,12 +53,12 @@ class ProxiedRequestsStatusTests: MessagingTest {
         XCTAssertEqual(request!.path, path)
         XCTAssert(request!.callback != nil)
         if let receivedCallback = request!.callback {
-            receivedCallback(nil, NSHTTPURLResponse(), nil)
+            receivedCallback(nil, HTTPURLResponse(), nil)
         }
         else {
             XCTFail("No callback")
         }
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
     
 }

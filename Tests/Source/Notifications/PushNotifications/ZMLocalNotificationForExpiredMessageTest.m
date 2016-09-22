@@ -69,22 +69,6 @@
     [super tearDown];
 }
 
-- (void)testThatTheTypeIsExpiredMessage
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // given
-        ZMMessage *message = [ZMMessage insertNewObjectInManagedObjectContext:self.syncMOC];
-        [self.groupConversation.mutableMessages addObject:message];
-        
-        // when
-        ZMLocalNotificationForExpiredMessage *note = [[ZMLocalNotificationForExpiredMessage alloc] initWithExpiredMessage:message];
-        
-        // then
-        XCTAssertEqual(note.type, ZMLocalNotificationTypeExpiredMessage);
-
-    }];
-}
-
 - (void)testThatItSetsTheConversationOnTheNotification
 {
     [self.syncMOC performGroupedBlockAndWait:^{

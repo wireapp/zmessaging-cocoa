@@ -43,27 +43,27 @@
 @implementation ZMUserProfileUpdateTrancoderTests
 
 - (ZMTransportResponse *)errorResponse {
-    return [ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil];
+    return [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
 }
 
 - (ZMTransportResponse *)badRequestResponse {
-    return [ZMTransportResponse responseWithPayload:@{@"label": @"bad-request"} HTTPstatus:400 transportSessionError:nil];
+    return [ZMTransportResponse responseWithPayload:@{@"label": @"bad-request"} HTTPStatus:400 transportSessionError:nil];
 }
 
 - (ZMTransportResponse *)keyExistsResponse {
-    return [ZMTransportResponse responseWithPayload:@{@"label": @"key-exists"} HTTPstatus:409 transportSessionError:nil];
+    return [ZMTransportResponse responseWithPayload:@{@"label": @"key-exists"} HTTPStatus:409 transportSessionError:nil];
 }
 
 - (ZMTransportResponse *)invalidPhoneNumberResponse {
-    return [ZMTransportResponse responseWithPayload:@{@"label": @"invalid-phone"} HTTPstatus:400 transportSessionError:nil];
+    return [ZMTransportResponse responseWithPayload:@{@"label": @"invalid-phone"} HTTPStatus:400 transportSessionError:nil];
 }
 
 - (ZMTransportResponse *)invalidEmailResponse {
-    return [ZMTransportResponse responseWithPayload:@{@"label": @"invalid-email"} HTTPstatus:400 transportSessionError:nil];
+    return [ZMTransportResponse responseWithPayload:@{@"label": @"invalid-email"} HTTPStatus:400 transportSessionError:nil];
 }
 
 - (ZMTransportResponse *)successResponse {
-    return [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+    return [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
 }
 
 - (void)setUp {
@@ -304,7 +304,7 @@
     
     // when
     ZMTransportRequest *request = [[self.sut requestGenerators] nextRequest];
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"label":@"invalid-credentials"} HTTPstatus:403 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"label":@"invalid-credentials"} HTTPStatus:403 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 

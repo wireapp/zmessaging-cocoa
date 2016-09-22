@@ -19,6 +19,7 @@
 
 @import ZMCSystem;
 @import ZMUtilities;
+@import WireRequestStrategy;
 
 #import "ZMUserSession+OTR.h"
 #import "ZMUserSession+Internal.h"
@@ -37,6 +38,7 @@
     
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.clientUpdateStatus deleteClientsWithCredentials:self.clientRegistrationStatus.emailCredentials];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 
@@ -58,6 +60,7 @@
     
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.clientUpdateStatus deleteClientsWithCredentials:emailCredentials];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 

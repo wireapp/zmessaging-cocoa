@@ -1257,7 +1257,7 @@
         [self.syncOneOnOneConversation.voiceChannel leaveOnAVSError];
         
         // then
-        XCTAssertEqual(self.syncOneOnOneConversation.reasonToLeave, ZMCallStateReasonToLeaveAVSError);
+        XCTAssertEqual(self.syncOneOnOneConversation.reasonToLeave, ZMCallStateReasonToLeaveAvsError);
     }];
 }
 

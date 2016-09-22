@@ -142,7 +142,7 @@
     [self.sut setNeedsSlowSync];
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
 
     
     // simulate hard sync done
@@ -166,7 +166,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         [self.sut setNeedsSlowSync];
 
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
         selfUser = [ZMUser selfUserInContext:self.syncMOC];
         
@@ -205,7 +205,7 @@
     // given
     [self.sut setNeedsSlowSync];
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     
     // simulate hard sync done
@@ -245,7 +245,7 @@
         [self.sut setNeedsSlowSync];
         NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
         
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
         ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
         NOT_USED(selfUser);
@@ -270,7 +270,7 @@
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     
     // complete request and hard sync
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertTrue(self.sut.isSlowSyncDone);
     
@@ -292,7 +292,7 @@
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -310,7 +310,7 @@
 {
     // expect
     NSFetchRequest *request = [OCMockObject niceMockForClass:[NSFetchRequest class]];
-    [[[(OCMockObject *)self.upstreamObjectSync expect] andReturn:request] fetchRequestForTrackedObjects];
+    [(ZMUpstreamModifiedObjectSync *)[[(id)self.upstreamObjectSync expect] andReturn:request] fetchRequestForTrackedObjects];
 
     // when
     NSFetchRequest *fetchRequest = [self.sut fetchRequestForTrackedObjects];
@@ -415,7 +415,7 @@
         ZMUpstreamRequest *request = [(id<ZMUpstreamTranscoder>) self.sut requestForInsertingObject:selfUser forKeys:[NSSet setWithObject:@"name"]];
         
         // when
-        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil];
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
         BOOL needsToUpdateMoreObjects = [(id<ZMUpstreamTranscoder>) self.sut updateUpdatedObject:selfUser requestUserInfo:request.userInfo response:response keysToParse:[NSSet set]];
         
         // then
@@ -477,7 +477,7 @@
 {
     [self.sut setNeedsSlowSync];
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // simulate hard sync done
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
@@ -658,7 +658,7 @@
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     [self.syncMOC performBlockAndWait:^{
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil]];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -708,7 +708,7 @@
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     [self.syncMOC performBlockAndWait:^{
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil]];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -754,7 +754,7 @@
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     [self.syncMOC performBlockAndWait:^{
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil]];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -789,7 +789,7 @@
 {
     // given
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
 
     // when
     [self.sut didReceiveResponse:response forSingleRequest:nil];
@@ -804,7 +804,7 @@
     // given
     NSMutableDictionary *payload = [NSMutableDictionary dictionaryWithDictionary:[self samplePayloadForUserID:[NSUUID createUUID]]];
     [payload removeObjectForKey:@"tracking_id"];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     self.uiMOC.userSessionTrackingIdentifier = self.trackingIdentifier;
     [self.uiMOC saveOrRollback];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -847,7 +847,7 @@
     // when
     NSDictionary *payload = @{@"id": [NSUUID UUID].transportString,
                               @"tracking_id": @"someID"};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     [self.sut didReceiveResponse:response forSingleRequest:nil];
     
     // then
@@ -864,7 +864,7 @@
     // when
     NSDictionary *payload = @{@"email": @"my@example.com",
                               @"tracking_id": @"someID"};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     [self.sut didReceiveResponse:response forSingleRequest:nil];
     
     // then
@@ -881,7 +881,7 @@
     // when
     NSDictionary *payload = @{@"email": @"my@example.com",
                               @"tracking_id": @"someID"};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     [self.sut didReceiveResponse:response forSingleRequest:self.sut.timedDownstreamSync];
     
     // then
@@ -898,7 +898,7 @@
     // when
     NSDictionary *payload = @{@"email": [NSNull null],
                               @"tracking_id": @"someID"};
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     [self.sut didReceiveResponse:response forSingleRequest:self.sut.timedDownstreamSync];
     
     // then

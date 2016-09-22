@@ -631,7 +631,7 @@
     
     
     // then
-    XCTAssertEqual(mockImage, image);
+    XCTAssertEqualObjects(mockImage, image);
 }
 
 - (void)testThatItReturnsRemoteIdentifierAsTheSmallProfileImageIdentifierIfItHasACachedImage
@@ -844,9 +844,8 @@
     // when
     NSData *image = searchUser.imageMediumData;
     
-    
     // then
-    XCTAssertEqual(mockImage, image);
+    XCTAssertEqualObjects(mockImage, image);
 }
 
 - (void)testThatItReturnsRemoteIdentifierAsTheMediumProfileImageIdentifierIfItHasACachedImage

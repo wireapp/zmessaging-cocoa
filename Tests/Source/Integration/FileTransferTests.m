@@ -40,7 +40,6 @@
 
 - (NSArray *)filterOutRequestsForLastRead:(NSArray *)requests
 {
-   
     NSString *conversationPrefix = [NSString stringWithFormat:@"/conversations/%@/otr/messages",  [ZMConversation selfConversationInContext:self.uiMOC].remoteIdentifier.transportString];
     return [requests filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id  obj, NSDictionary __unused *bindings) {
         return ![((ZMTransportRequest *)obj).path hasPrefix:conversationPrefix];
@@ -69,7 +68,7 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -117,7 +116,7 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -159,7 +158,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:[NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString]]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
         }
         return nil;
     };
@@ -167,7 +166,7 @@
     // when
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(1.0);
     
@@ -203,13 +202,13 @@
     // when
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
     __block ZMMessage *textMessage;
     [self.userSession performChanges:^{
-        textMessage = [conversation appendMessageWithText:self.name];
+        textMessage = (id)[conversation appendMessageWithText:self.name];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -236,7 +235,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:expectedMessageAddPath]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:401 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:401 transportSessionError:nil];
         }
         return nil;
     };
@@ -246,7 +245,7 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -280,7 +279,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:expectedAssetAddPath]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:401 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:401 transportSessionError:nil];
         }
         return nil;
     };
@@ -290,7 +289,7 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -332,7 +331,7 @@
     NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeTryAgainLater userInfo:nil];
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:expectedAssetAddPath]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:0 transportSessionError:error];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:error];
         }
         return nil;
     };
@@ -342,7 +341,7 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -393,7 +392,7 @@
     [self.mockTransportSession resetReceivedRequests];
     
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -436,7 +435,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:expectedMessageAddPath]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:401 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:401 transportSessionError:nil];
         }
         return nil;
     };
@@ -445,7 +444,7 @@
     [self.mockTransportSession resetReceivedRequests];
     
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -492,7 +491,7 @@
     
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -531,7 +530,7 @@
     //given
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForEverythingToBeDone();
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -550,16 +549,21 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForEverythingToBeDone();
     
     //then
     XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
     
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
-    XCTAssertEqual(requests.count, 3lu); // Asset.Original, Asset.Preview & Asset.Uploaded
+    
+    // Asset.Original, Asset.Preview & Asset.Uploaded
+    if (3 != requests.count) {
+        return XCTFail(@"Wrong number of requests");
+    }
+    
     XCTAssertEqualObjects(requests.firstObject.path, expectedMessageAddPath);
     
     ZMTransportRequest *thumbnailRequest = requests[1];
@@ -600,7 +604,7 @@
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         // We fail the thumbnail upload
         if ([request.path isEqualToString:[NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString]]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
         }
         return nil;
     };
@@ -608,7 +612,7 @@
     // when
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -655,7 +659,7 @@
             assetUploadCounter++;
             // We fail the second asset endpoint request, which is the full asset upload
             if (assetUploadCounter == 2) {
-                return [ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil];
+                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
             }
         }
         return nil;
@@ -664,7 +668,7 @@
     // when
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -709,7 +713,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:expectedMessageAddPath]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:401 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:401 transportSessionError:nil];
         }
         return nil;
     };
@@ -719,7 +723,7 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -753,7 +757,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:expectedAssetAddPath]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:401 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:401 transportSessionError:nil];
         }
         return nil;
     };
@@ -763,7 +767,7 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -805,7 +809,7 @@
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:expectedAssetAddPath]) {
             if (++assetCallCount == 2) {
-                return [ZMTransportResponse responseWithPayload:nil HTTPstatus:401 transportSessionError:nil];
+                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:401 transportSessionError:nil];
             }
         }
         return nil;
@@ -816,7 +820,7 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -859,7 +863,7 @@
     NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeTryAgainLater userInfo:nil];
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:expectedAssetAddPath]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:0 transportSessionError:error];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:error];
         }
         return nil;
     };
@@ -869,7 +873,7 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -912,7 +916,7 @@
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:expectedAssetAddPath]) {
             if (++assetCallCount == 2) {
-                return [ZMTransportResponse responseWithPayload:nil HTTPstatus:0 transportSessionError:error];
+                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:error];
             }
         }
         return nil;
@@ -923,7 +927,7 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -977,7 +981,7 @@
     [self.mockTransportSession resetReceivedRequests];
     
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1045,7 +1049,7 @@
     [self.mockTransportSession resetReceivedRequests];
     
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1100,7 +1104,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:expectedMessageAddPath]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:401 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:401 transportSessionError:nil];
         }
         return nil;
     };
@@ -1109,7 +1113,7 @@
     [self.mockTransportSession resetReceivedRequests];
     
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1158,7 +1162,7 @@
     
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1215,7 +1219,7 @@
     
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = [conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];  // But no thumbnail
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];  // But no thumbnail
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

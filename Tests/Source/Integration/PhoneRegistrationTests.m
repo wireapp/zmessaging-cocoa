@@ -154,7 +154,7 @@
 
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request){
         if([request.path isEqualToString:@"/activate/send"]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPstatus:400 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
         }
         return nil;
     };

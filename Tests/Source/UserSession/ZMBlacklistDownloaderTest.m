@@ -23,6 +23,7 @@
 
 #import "MessagingTest.h"
 #import "ZMBlacklistDownloader+Testing.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @interface ZMBlacklistDownloaderTest : MessagingTest
 
@@ -55,18 +56,21 @@
                                             successCheckInterval:self.successCheckTimeInterval
                                             failureCheckInterval:self.failureCheckTimeInterval
                                                     userDefaults:[NSUserDefaults standardUserDefaults]
+                                                     application:self.application
                                                     workingGroup:self.syncMOC.dispatchGroup
-                                               completionHandler:completionHandler];
+                                               completionHandler:completionHandler
+                ];
 }
 
 - (void)stopTimers
 {
-    self.sut = nil;
+    [self.sut teardown];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)tearDown
 {
-    [self stopTimers];
+    self.sut = nil;
     [[NSUserDefaults standardUserDefaults] setObject:nil forKey:@"min_version"];
     [[NSUserDefaults standardUserDefaults] setObject:nil forKey:@"exclude"];
     [[NSUserDefaults standardUserDefaults] synchronize];
@@ -273,7 +277,9 @@
         //expect that method will be called for second time after check interval
         XCTestExpectation *exp = [self expectationWithDescription:@"download called again"];
         __block NSUInteger timesCalled = 0;
+        ZM_WEAK(self);
         dispatch_block_t didDownload = ^{
+            ZM_STRONG(self);
             [self stubRequestWithSuccessfulResponseObject:blackList];
             ++timesCalled;
             if (timesCalled == 3) {
@@ -301,7 +307,6 @@ typedef NS_ENUM(int, TestPhase) {
 - (void)testThatItSuspendsWhenInTheBackgroundThenResumes
 {
     [self performIgnoringZMLogError:^{
-        
         // given
         __block TestPhase phase = WaitForFirstCall;
         self.successCheckTimeInterval = 0.1f;
@@ -321,12 +326,12 @@ typedef NS_ENUM(int, TestPhase) {
             // suspend after first call
             if(phase == WaitForFirstCall) {
                 phase = Suspended;
-                [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationWillResignActiveNotification object:nil];
+                [self.application simulateApplicationWillResignActive];
                 
                 // make it restart after a while
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     phase = Resumed;
-                    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+                    [self.application simulateApplicationDidBecomeActive];
                 });
             }
             // because of a race condition, might be called a couple of times even when suspended
@@ -340,11 +345,10 @@ typedef NS_ENUM(int, TestPhase) {
                 if(downloadWhileResumedCount > 2) {
                     [doneExp fulfill];
                     self.successCheckTimeInterval = 1.0f;
-                    [self stopTimers];
                 }
             }
         };
-        
+    
         // when
         [self createSUTWithCompletionHandler:^(__unused NSString *minVersion, __unused NSArray *excludeVersions) {
             didDownload();
@@ -353,7 +357,6 @@ typedef NS_ENUM(int, TestPhase) {
         // then
         XCTAssert([self waitForCustomExpectationsWithTimeout:1]);
         [self stopTimers];
-        WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
 

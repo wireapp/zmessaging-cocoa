@@ -24,6 +24,7 @@
 #import "ZMLocalNotification.h"
 #import "ZMStoredLocalNotification.h"
 #import "ZMUserSession+UserNotificationCategories.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @interface ZMStoredLocalNotificationTests : MessagingTest
 @property (nonatomic) ZMConversation *conversation;
@@ -42,8 +43,6 @@
     self.conversation.remoteIdentifier = NSUUID.createUUID;
     
     [self.uiMOC saveOrRollback];
-    
-    // Put setup code here. This method is called before the invocation of each test method in the class.
 }
 
 - (NSDictionary *)pushPayloadForEventPayload:(NSDictionary *)eventPayload
@@ -54,55 +53,17 @@
              };
 }
 
-- (NSDictionary *)oldStyleAlertPushPayload
-{
-    return @{
-             @"aps": @{@"content-available": @1,
-                       @"alert": @{@"foo": @"bar"},
-                       @"conversation_id": self.conversation.remoteIdentifier.transportString,
-                       @"msg_type": @"conversation.message-add",
-                       },
-             @"data" : @{},
-             };
-}
-
-- (NSDictionary *)newStyleAlertPushPayloadForEventPayload:(NSDictionary *)eventPayload
-{
-    return @{
-             @"aps": @{@"content-available": @1,
-                       @"alert": @{@"foo": @"bar"}
-                       },
-             @"data": @{@"data": eventPayload
-                        }
-             };
-}
-
-
-- (NSDictionary *)dataPayLoadForMessageAddEvent
-{
-    return @{
-             @"id": [[NSUUID createUUID] transportString],
-             @"payload": @[@{
-                     @"conversation": [self.conversation.remoteIdentifier transportString],
-                     @"time": [NSDate date],
-                     @"data": @{
-                             @"content": @"saf",
-                             @"nonce": [[NSUUID createUUID] transportString],
-                             },
-                     @"from": [self.sender.remoteIdentifier transportString],
-                     @"type": @"conversation.message-add"
-                     }]
-             };
-}
-
 - (void)testThatItCreatesAStoredLocalNotificationFromALocalNotification
 {
     // given
-    NSDictionary *eventPayload = [self dataPayLoadForMessageAddEvent];
-    NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventPayload];
-    NSString *textInput = @"Text";
-    
-    ZMLocalNotificationForEvent *note = [[ZMLocalNotificationForEvent alloc] initWithEvent:events.firstObject managedObjectContext:self.uiMOC application:nil];
+    NSString *textInput = @"Foobar";
+    ZMClientMessage *message = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:textInput nonce:[NSUUID createUUID].transportString];
+    [message addData:genericMessage.data];
+    message.sender = self.sender;
+    message.visibleInConversation = self.conversation;
+    [self.uiMOC saveOrRollback];
+    ZMLocalNotificationForMessage *note = [[ZMLocalNotificationForMessage alloc] initWithMessage:message application:self.application];
     XCTAssertNotNil(note);
     
     // when

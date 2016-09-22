@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -21,25 +21,25 @@ import Foundation
 import ZMCDataModel
 
 @objc
-public class ConversationStatusStrategy : ZMObjectSyncStrategy, ZMContextChangeTracker {
+public final class ConversationStatusStrategy : ZMObjectSyncStrategy, ZMContextChangeTracker {
 
     let lastReadKey = "lastReadServerTimeStamp"
     let clearedKey = "clearedTimeStamp"
     
-    public func objectsDidChange(objects: Set<NSObject>) {
+    public func objectsDidChange(_ objects: Set<NSManagedObject>) {
         var didUpdateConversation = false
         objects.forEach{
             if let conv = $0 as? ZMConversation {
-                if conv.hasLocalModificationsForKey(lastReadKey){
+                if conv.hasLocalModifications(forKey: lastReadKey){
                     conv.resetLocallyModifiedKeys(Set(arrayLiteral: lastReadKey))
                     conv.updateUnread()
-                    ZMConversation.appendSelfConversationWithLastReadOfConversation(conv)
+                    ZMConversation.appendSelfConversation(withLastReadOf: conv)
                     didUpdateConversation = true
                 }
-                if conv.hasLocalModificationsForKey(clearedKey) {
+                if conv.hasLocalModifications(forKey: clearedKey) {
                     conv.resetLocallyModifiedKeys(Set(arrayLiteral: clearedKey))
                     conv.deleteOlderMessages()
-                    ZMConversation.appendSelfConversationWithClearedOfConversation(conv)
+                    ZMConversation.appendSelfConversation(withClearedOf: conv)
                     didUpdateConversation = true
                 }
             }
@@ -50,12 +50,13 @@ public class ConversationStatusStrategy : ZMObjectSyncStrategy, ZMContextChangeT
         }
     }
     
-    public func fetchRequestForTrackedObjects() -> NSFetchRequest? {
-        let request = NSFetchRequest(entityName: ZMConversation.entityName())
+    public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: ZMConversation.entityName())
         return request
     }
-
-    public func addTrackedObjects(objects: Set<NSObject>) {
+    
+    public func addTrackedObjects(_ objects: Set<NSManagedObject>) {
         objectsDidChange(objects)
     }
+    
 }

@@ -41,6 +41,7 @@
 - (NSArray<ZMMessage *> *)createMessagesFromEvents:(NSArray<ZMUpdateEvent *>*)events
                                     prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult;
 
+@property (nonatomic, readonly) ZMLocalNotificationDispatcher *localNotificationDispatcher;
 
 @end
 

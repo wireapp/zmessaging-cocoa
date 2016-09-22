@@ -202,7 +202,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(__unused ZMTransportRequest *request) {
-        return [ZMTransportResponse responseWithPayload:@{} HTTPstatus:400 transportSessionError:nil];
+        return [ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil];
     };
     [self.mockTransportSession resetReceivedRequests];
     

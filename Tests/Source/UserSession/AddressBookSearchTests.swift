@@ -44,7 +44,7 @@ extension AddressBookSearchTests {
     func testThatContactForUserMatchesOnPhoneNumber() {
         
         // given
-        let user = ZMUser.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let user = ZMUser.insertNewObject(in: self.uiMOC)
         user.phoneNumber = "+155505144"
         addressBook.contacts = [
             AddressBookContactsFake.Contact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: [user.phoneNumber])
@@ -67,7 +67,7 @@ extension AddressBookSearchTests {
     func testThatContactForUserMatchesOnEmail() {
         
         // given
-        let user = ZMUser.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let user = ZMUser.insertNewObject(in: self.uiMOC)
         user.emailAddress = "oli@example.com"
         addressBook.contacts = [
             AddressBookContactsFake.Contact(firstName: "Olivia", emailAddresses: [user.emailAddress], phoneNumbers: [])
@@ -89,7 +89,7 @@ extension AddressBookSearchTests {
     
     func testThatContactForUserDoesNotMatchIfThereIsNoAddressBookAccess() {
         // given
-        let user = ZMUser.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let user = ZMUser.insertNewObject(in: self.uiMOC)
         user.phoneNumber = "+155505144"
         user.emailAddress = "oli@example.com"
         addressBook.contacts = [
@@ -199,9 +199,9 @@ extension AddressBookSearchTests {
             AddressBookContactsFake.Contact(firstName: "Françoise", emailAddresses: [], phoneNumbers: ["+155505011"])
         ]
        
-        let user1 = ZMUser.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let user1 = ZMUser.insertNewObject(in: self.uiMOC)
         user1.emailAddress = "oli@example.com"
-        let user2 = ZMUser.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let user2 = ZMUser.insertNewObject(in: self.uiMOC)
         user2.phoneNumber = "+155505012"
         
         // when
@@ -231,9 +231,9 @@ extension AddressBookSearchTests {
     func testThatItReturnsNoContactIfUserDidNotMatch() {
         
         // given
-        let user1 = ZMUser.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let user1 = ZMUser.insertNewObject(in: self.uiMOC)
         user1.emailAddress = "oli@example.com"
-        let user2 = ZMUser.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let user2 = ZMUser.insertNewObject(in: self.uiMOC)
         user2.phoneNumber = "+155505012"
 
         // when
@@ -252,9 +252,9 @@ extension AddressBookSearchTests {
         // given
         addressBook.createInfiniteContacts = true
         
-        let user1 = ZMUser.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let user1 = ZMUser.insertNewObject(in: self.uiMOC)
         user1.emailAddress = "oli@example.com"
-        let user2 = ZMUser.insertNewObjectInManagedObjectContext(self.uiMOC)
+        let user2 = ZMUser.insertNewObject(in: self.uiMOC)
         user2.phoneNumber = "+155505012"
         
         // when

@@ -25,7 +25,7 @@
     /// - parameter range: the range of events to fetch. It can return a request to fetch a smaller range
     /// if fetching the full range is not possible
     /// - parameter conversation: the conversation
-    func requestForFetchingRange(range : ZMEventIDRange, conversation: ZMConversation) -> ZMTransportRequest;
+    func requestForFetchingRange(_ range : ZMEventIDRange, conversation: ZMConversation) -> ZMTransportRequest;
 }
 
 @objc public protocol DownloadedConversationEventsParser {
@@ -34,33 +34,33 @@
     /// - parameter range: the range of events that were downloaded
     /// - parameter conversation: the conversation to which the events belong
     /// - parameter response: the transport response to parse
-    func updateRange(range: ZMEventIDRange, conversation: ZMConversation, response: ZMTransportResponse);
+    func updateRange(_ range: ZMEventIDRange, conversation: ZMConversation, response: ZMTransportResponse);
 }
 
 /// A generator of requests to download missing events in conversations.
-@objc public class IncompleteConversationsDownstreamSync: NSObject, ZMRequestGenerator {
+@objc public final class IncompleteConversationsDownstreamSync: NSObject, ZMRequestGenerator {
     
     /// Whether it should download the entire history
     public static let DownloadEntireHistory = true
     
-    private weak var requestEncoder : ConversationEventsRequestEncoder?
+    fileprivate weak var requestEncoder : ConversationEventsRequestEncoder?
     
-    private weak var responseParser : DownloadedConversationEventsParser?
+    fileprivate weak var responseParser : DownloadedConversationEventsParser?
     
-    private let conversationsCache : ZMIncompleteConversationsCache
+    fileprivate let conversationsCache : ZMIncompleteConversationsCache
     
-    private let historySynchronizationStatus : HistorySynchronizationStatus
+    fileprivate let historySynchronizationStatus : HistorySynchronizationStatus
     
     /// Conversations for which we are currently retrieving events from the BE
-    private var conversationsBeingFetched = Set<ZMConversation>()
+    fileprivate var conversationsBeingFetched = Set<ZMConversation>()
     
     /// How long to wait between requests to download conversation events that are needed just to have the full history
-    private let lowPriorityRequestsCooldownInterval : NSTimeInterval
+    fileprivate let lowPriorityRequestsCooldownInterval : TimeInterval
     
-    private let managedObjectContext : NSManagedObjectContext
+    fileprivate let managedObjectContext : NSManagedObjectContext
     
     /// Last time a low priority request was generated
-    private var lastLowPriorityDownloadDate : NSDate = NSDate(timeIntervalSince1970: 0) // long, long time ago
+    fileprivate var lastLowPriorityDownloadDate : Date = Date(timeIntervalSince1970: 0) // long, long time ago
     
     /// Returns an IncompleteConversationDownstreamSync that relies on two incomplete conversations caches: one to be synchronized
     /// with high priority, and one to be synchronized slowly, not to interfere with other requests
@@ -71,7 +71,7 @@
         responseParser: DownloadedConversationEventsParser,
         conversationsCache: ZMIncompleteConversationsCache,
         historySynchronizationStatus: HistorySynchronizationStatus,
-        lowPriorityRequestsCooldownInterval: NSTimeInterval,
+        lowPriorityRequestsCooldownInterval: TimeInterval,
         managedObjectContext:NSManagedObjectContext)
     {
             
@@ -93,9 +93,9 @@
         let request = encoder.requestForFetchingRange(conversationAndGap.gapRange, conversation: conversationAndGap.conversation)
         request.setDebugInformationTranscoder(encoder as! NSObject)
         
-        request.addCompletionHandler(ZMCompletionHandler(onGroupQueue: self.managedObjectContext, block: { [weak self] in
-            guard let strongSelf = self, parser = strongSelf.responseParser else { return }
-            if $0.result != ZMTransportResponseStatus.TryAgainLater {
+        request.add(ZMCompletionHandler(on: self.managedObjectContext, block: { [weak self] in
+            guard let strongSelf = self, let parser = strongSelf.responseParser else { return }
+            if $0.result != ZMTransportResponseStatus.tryAgainLater {
                 parser.updateRange(conversationAndGap.gapRange, conversation: conversationAndGap.conversation, response: $0)
             }
             strongSelf.conversationsBeingFetched.remove(conversationAndGap.conversation)
@@ -106,7 +106,7 @@
     }
     
     /// Finds the next conversation to download and the gap to download
-    private func nextConversationWithGap() -> (conversation: ZMConversation, gapRange: ZMEventIDRange)? {
+    fileprivate func nextConversationWithGap() -> (conversation: ZMConversation, gapRange: ZMEventIDRange)? {
         
         if let highPriorityGap = self.highPriorityConversationAndGap() {
             return highPriorityGap
@@ -114,7 +114,7 @@
         
         if(IncompleteConversationsDownstreamSync.DownloadEntireHistory) {
             let readyToDownloadHistory = self.historySynchronizationStatus.shouldDownloadFullHistory
-            let enoughTimeHasPassedForLowPriority = NSDate().timeIntervalSinceDate(self.lastLowPriorityDownloadDate) > self.lowPriorityRequestsCooldownInterval
+            let enoughTimeHasPassedForLowPriority = Date().timeIntervalSince(self.lastLowPriorityDownloadDate) > self.lowPriorityRequestsCooldownInterval
             
             if readyToDownloadHistory && enoughTimeHasPassedForLowPriority {
                 if let lowPriorityGap = self.lowPriorityConversationAndGap() {
@@ -126,10 +126,10 @@
         return nil
     }
     
-    private func resetCooldown() {
-        self.lastLowPriorityDownloadDate = NSDate()
+    fileprivate func resetCooldown() {
+        self.lastLowPriorityDownloadDate = Date()
         // This timer is needed to make sure that once the cooldown has passed, a new request is triggered
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(UInt64(lowPriorityRequestsCooldownInterval) * NSEC_PER_SEC)), dispatch_get_global_queue(0, 0)) {
+        DispatchQueue.global(qos: .background).asyncAfter(deadline: DispatchTime.now() + Double(Int64(UInt64(lowPriorityRequestsCooldownInterval) * NSEC_PER_SEC)) / Double(NSEC_PER_SEC)) {
                 [weak self] in
                 self?.managedObjectContext.performGroupedBlock {
                     RequestAvailableNotification.notifyNewRequestsAvailable(self)
@@ -138,19 +138,19 @@
     }
     
     /// Finds a conversation in the given cache that is not currently being downloaded and gets the first gap in that conversation
-    private func highPriorityConversationAndGap() -> (conversation: ZMConversation, gapRange: ZMEventIDRange)? {
-        if  let firstObject = conversationsCache.incompleteWhitelistedConversations.firstObjectNotInSet(self.conversationsBeingFetched),
+    fileprivate func highPriorityConversationAndGap() -> (conversation: ZMConversation, gapRange: ZMEventIDRange)? {
+        if  let firstObject = conversationsCache.incompleteWhitelistedConversations.firstObjectNot(in: self.conversationsBeingFetched),
             let conversation = firstObject as? ZMConversation,
-            let gap = conversationsCache.gapForConversation(conversation) {
+            let gap = conversationsCache.gap(for: conversation) {
             return (conversation, gap)
         }
         return nil
     }
         
-     private func lowPriorityConversationAndGap() -> (conversation: ZMConversation, gapRange: ZMEventIDRange)? {
-        if let firstObject = conversationsCache.incompleteNonWhitelistedConversations.firstObjectNotInSet(self.conversationsBeingFetched),
+     fileprivate func lowPriorityConversationAndGap() -> (conversation: ZMConversation, gapRange: ZMEventIDRange)? {
+        if let firstObject = conversationsCache.incompleteNonWhitelistedConversations.firstObjectNot(in: self.conversationsBeingFetched),
             let conversation = firstObject as? ZMConversation,
-            let gap = conversationsCache.gapForConversation(conversation) {
+            let gap = conversationsCache.gap(for: conversation) {
                 return (conversation, gap)
         }
         return nil

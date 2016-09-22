@@ -24,27 +24,27 @@ import ZMTransport
 extension ProxiedRequestType {
     var basePath: String {
         switch self {
-        case .Giphy:
+        case .giphy:
             return "/giphy"
-        case .Soundcloud:
+        case .soundcloud:
             return "/soundcloud"
         }
     }
 }
 
 /// Perform requests to the Giphy search API
-@objc public class ProxiedRequestStrategy : NSObject, RequestStrategy {
+@objc public final class ProxiedRequestStrategy : NSObject, RequestStrategy {
     
-    static private let BasePath = "/proxy"
+    static fileprivate let BasePath = "/proxy"
     
     /// The requests to fulfill
-    private weak var requestsStatus : ProxiedRequestsStatus?
+    fileprivate weak var requestsStatus : ProxiedRequestsStatus?
     
     /// The managed object context to operate on
-    private let managedObjectContext : NSManagedObjectContext
+    fileprivate let managedObjectContext : NSManagedObjectContext
     
     /// Requests fail after this interval if the network is unreachable
-    private static let RequestExpirationTime : NSTimeInterval = 20
+    fileprivate static let RequestExpirationTime : TimeInterval = 20
     
     public init(requestsStatus: ProxiedRequestsStatus, managedObjectContext: NSManagedObjectContext) {
         self.requestsStatus = requestsStatus
@@ -56,16 +56,16 @@ extension ProxiedRequestType {
         guard let status = self.requestsStatus else { return nil }
         
         if(status.pendingRequests.count > 0) {
-            let (type, path, method, callback) = status.pendingRequests.removeAtIndex(0)
+            let (type, path, method, callback) = status.pendingRequests.remove(at: 0)
             let fullPath = ProxiedRequestStrategy.BasePath + type.basePath + path
             let request = ZMTransportRequest(path: fullPath, method: method, payload: nil)
-            if type == .Soundcloud {
+            if type == .soundcloud {
                 request.doesNotFollowRedirects = true
             }
-            request.expireAfterInterval(ProxiedRequestStrategy.RequestExpirationTime)
-            request.addCompletionHandler(ZMCompletionHandler(onGroupQueue: self.managedObjectContext.zm_userInterfaceContext, block: {
+            request.expire(afterInterval: ProxiedRequestStrategy.RequestExpirationTime)
+            request.add(ZMCompletionHandler(on: self.managedObjectContext.zm_userInterface, block: {
                 response in
-                    callback?(response.rawData, response.rawResponse, response.transportSessionError)
+                    callback?(response.rawData, response.rawResponse, response.transportSessionError as NSError?)
             }))
             return request
         }
@@ -78,7 +78,7 @@ extension ProxiedRequestType {
     
     - parameter timeout: If it is not completed in the given interval, the request is completed with error
     */
-    public func scheduleAuthenticatedRequestWithCompletionHandler(relativeUrl: NSURL, completionHandler: ((NSData!, NSURLResponse!, NSError!) -> Void), timeout: NSTimeInterval) {
+    public func scheduleAuthenticatedRequestWithCompletionHandler(_ relativeUrl: URL, completionHandler: ((Data?, URLResponse?, NSError?) -> Void), timeout: TimeInterval) {
         
     }
 }

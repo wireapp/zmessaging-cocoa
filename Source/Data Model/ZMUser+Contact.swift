@@ -20,7 +20,7 @@ import Foundation
 
 extension ZMUser {
     
-    @objc public func matchingContact(userSession: ZMUserSession) -> ZMAddressBookContact? {
+    @objc public func matchingContact(_ userSession: ZMUserSession) -> ZMAddressBookContact? {
         return AddressBookSearch().contactForUser(self)
     }
 }

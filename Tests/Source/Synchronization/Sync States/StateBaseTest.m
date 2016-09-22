@@ -45,16 +45,13 @@
 #import "ZMBackgroundState.h"
 #import "ZMPreBackgroundState.h"
 #import "ZMCookie.h"
-
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @implementation StateBaseTest
 
 - (void)setUp
 {
     [super setUp];
-    
-    _mockApplication = [OCMockObject niceMockForClass:[ZMApplication class]];
-    
     ZMPersistentCookieStorage *cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"test-test"];
     ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.uiMOC cookieStorage:cookieStorage];
     

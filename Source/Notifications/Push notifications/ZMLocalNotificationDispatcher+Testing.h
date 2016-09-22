@@ -18,13 +18,18 @@
 
 
 #import "ZMLocalNotificationDispatcher.h"
-
-extern NSString * ZMLocalNotificationDispatcherUIApplicationClass;
+#import <zmessaging/zmessaging-Swift.h>
 
 @interface ZMLocalNotificationDispatcher (Testing)
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                           sharedApplication:(ZMApplication *)sharedApplication
+                           sharedApplication:(id<ZMApplication>)sharedApplication
                         eventNotificationSet:(ZMLocalNotificationSet *)eventNotificationSet
-                       failedNotificationSet:(ZMLocalNotificationSet *)failedNotificationSet;
+                       failedNotificationSet:(ZMLocalNotificationSet *)failedNotificationSet
+                        messageNotifications:(ZMLocalNotificationSet *)messageNotifications;
+
+- (void)didReceiveUpdateEvents:(NSArray <ZMUpdateEvent *>*)events conversationMap:(ZMConversationMapping *)conversationMap notificationID:(NSUUID *)notificationID;
+
+- (ZMLocalNotificationForEvent *)notificationForEvent:(ZMUpdateEvent *)event conversationMap:(ZMConversationMapping *)conversationMap;
+
 @end

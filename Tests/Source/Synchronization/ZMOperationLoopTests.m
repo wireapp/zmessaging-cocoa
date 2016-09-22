@@ -45,6 +45,7 @@
 @property (nonatomic) id syncStrategy;
 @property (nonatomic) id badge;
 @property (nonatomic) id pingBackStatus;
+@property (nonatomic) id mockPushChannel;
 @property (nonatomic) NSMutableArray *pushChannelNotifications;
 @end
 
@@ -56,8 +57,6 @@
     [super setUp];
     self.pushChannelNotifications = [NSMutableArray array];
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
-    [[self.transportSession stub] openPushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
-    [[self.transportSession stub] closePushChannelAndRemoveConsumer];
     self.syncStrategy = [OCMockObject niceMockForClass:[ZMSyncStrategy class]];
     
     [self verifyMockLater:self.syncStrategy];
@@ -66,6 +65,7 @@
     self.badge = [[ZMBadge alloc] init];
     
     self.pingBackStatus = [OCMockObject mockForClass:BackgroundAPNSPingBackStatus.class];
+    self.mockPushChannel = [OCMockObject niceMockForClass:[ZMPushChannelConnection class]];
     
     // I expect this to be called, at least until we implement the soft sync
     [[[self.syncStrategy stub] andReturn:self.syncMOC] syncMOC];
@@ -80,6 +80,7 @@
 
 - (void)tearDown;
 {
+    self.mockPushChannel = nil;
     self.transportSession = nil;
     self.syncStrategy = nil;
     [self.sut tearDown];
@@ -96,63 +97,6 @@
 }
 
 
-- (void)testThatItPassesTheMediaManagerDelegateToTheSyncStrategy;
-{
-    // given
-    id mediaManager = [OCMockObject niceMockForClass:NSObject.class];
-    ZMAuthenticationStatus *authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:nil];
-    ZMUserProfileUpdateStatus *userProfileStatus = [[ZMUserProfileUpdateStatus alloc] initWithManagedObjectContext:self.uiMOC];
-    id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
-    
-    // expect
-    id syncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
-    [[[[syncStrategy expect] classMethod] andReturn:syncStrategy] alloc];
-    (void) [[[syncStrategy expect] andReturn:syncStrategy]
-            initWithAuthenticationCenter:authenticationStatus
-            userProfileUpdateStatus:userProfileStatus
-            clientRegistrationStatus:nil
-            clientUpdateStatus:nil
-            proxiedRequestStatus:nil
-            accountStatus:nil
-            backgroundAPNSPingBackStatus:nil
-            mediaManager:mediaManager
-            onDemandFlowManager:nil
-            syncMOC:self.syncMOC
-            uiMOC:self.uiMOC
-            syncStateDelegate:nil
-            backgroundableSession:transportSession
-            localNotificationsDispatcher:OCMOCK_ANY
-            taskCancellationProvider:OCMOCK_ANY
-            appGroupIdentifier:nil
-            badge:OCMOCK_ANY
-            application:nil];
-    
-    // when
-    ZMOperationLoop *ol = [[ZMOperationLoop alloc] initWithTransportSession:transportSession
-                                                       authenticationStatus:authenticationStatus
-                                                    userProfileUpdateStatus:userProfileStatus
-                                                   clientRegistrationStatus:nil
-                                                         clientUpdateStatus:nil
-                                                       proxiedRequestStatus:nil
-                                                              accountStatus:nil
-                                               backgroundAPNSPingBackStatus:nil
-                                                localNotificationdispatcher:nil
-                                                               mediaManager:mediaManager
-                                                        onDemandFlowManager:nil
-                                                                      uiMOC:self.uiMOC
-                                                                    syncMOC:self.syncMOC
-                                                          syncStateDelegate:nil
-                                                         appGroupIdentifier:nil
-                                                                application:nil];
-
-    XCTAssertNotNil(ol);
-    [ol tearDown];
-    
-    [syncStrategy verify];
-    
-    [syncStrategy stopMocking];
-    [transportSession stopMocking];
-}
 
 - (void)testThatItNotifiesTheSyncStrategyWhenThePushChannelIsOpened
 {
@@ -161,7 +105,7 @@
     [[self.syncStrategy stub] dataDidChange];
     
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:nil withResponse:nil];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:self.mockPushChannel withResponse:nil];
     
     // then
     [self.syncStrategy verify];
@@ -174,22 +118,23 @@
     [[self.syncStrategy stub] dataDidChange];
     
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:nil withResponse:nil];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:self.mockPushChannel withResponse:nil];
     
     // then
     [self.syncStrategy verify];
 }
-
 
 - (void)testThatItInitializesThePushChannel
 {
     __block id<ZMPushChannelConsumer> receivedConsumer;
     
     // given
-    self.transportSession = [OCMockObject mockForClass:[ZMTransportSession class]];
+    self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
     [[self.transportSession stub] closePushChannelAndRemoveConsumer];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Open push channel opened"];
     [[self.transportSession expect] openPushChannelWithConsumer:[OCMArg checkWithBlock:^BOOL(id obj) {
         receivedConsumer = obj;
+        [expectation fulfill];
         return YES;
     }] groupQueue:OCMOCK_ANY];
     
@@ -203,7 +148,7 @@
     
     // then
     XCTAssertNotNil(op);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     [op tearDown];
 
     XCTAssertEqual(op, (id)receivedConsumer);
@@ -341,7 +286,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -387,7 +332,7 @@
     }]];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -438,7 +383,7 @@
     }]];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:400 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -750,7 +695,7 @@
     [[self.syncStrategy expect] processUpdateEvents:expectedEvents ignoreBuffer:NO];
     
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannel:nil didReceiveTransportData:eventData];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannel:self.mockPushChannel didReceiveTransportData:eventData];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -771,7 +716,7 @@
     
     // when
     [self performIgnoringZMLogError:^{
-        [(id<ZMPushChannelConsumer>)self.sut pushChannel:nil didReceiveTransportData:eventdata];
+        [(id<ZMPushChannelConsumer>)self.sut pushChannel:self.mockPushChannel didReceiveTransportData:eventdata];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -787,7 +732,7 @@
     
     // when
     [self performIgnoringZMLogError:^{
-        [(id<ZMPushChannelConsumer>)self.sut pushChannel:nil didReceiveTransportData:eventdata];
+        [(id<ZMPushChannelConsumer>)self.sut pushChannel:self.mockPushChannel didReceiveTransportData:eventdata];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -797,7 +742,7 @@
 {
     
     // given
-    ZMTransportSession *transportSession = [OCMockObject mockForClass:[ZMTransportSession class]];
+    ZMTransportSession *transportSession = self.transportSession;
     [[(id) transportSession stub] openPushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
     
     ZMOperationLoop *sut = [[ZMOperationLoop alloc] initWithTransportSession:transportSession
@@ -842,7 +787,7 @@
     [[self.syncStrategy stub] dataDidChange];
     
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:nil withResponse:fakeResponse];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:self.mockPushChannel withResponse:fakeResponse];
     
     // then
     XCTAssertEqual(self.pushChannelNotifications.count, 1u);
@@ -860,7 +805,7 @@
     [[self.syncStrategy stub] dataDidChange];
 
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:nil withResponse:fakeResponse];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:self.mockPushChannel withResponse:fakeResponse];
     
     // then
     XCTAssertEqual(self.pushChannelNotifications.count, 1u);

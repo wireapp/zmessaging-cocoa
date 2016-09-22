@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -32,12 +32,12 @@ public struct ClusterRange<T> {
 protocol ClusterizerType {
     associatedtype ClusterType: Comparable
     var ranges:  [ClusterRange<ClusterType>] { get }
-    func clusterize(value: ClusterType) -> String
+    func clusterize(_ value: ClusterType) -> String
 }
 
 extension ClusterizerType {
-    func clusterize(value: ClusterType) -> String {
-        guard value >= ranges.first?.start else { return String(value) }
+    func clusterize(_ value: ClusterType) -> String {
+        guard let range = ranges.first, value >= range.start else { return String(describing: value) }
         for range in ranges where range.start <= value && value <= range.end {
             return range.stringValue
         }

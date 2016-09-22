@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -35,70 +35,70 @@ class UserSessionGiphyRequestStateTests: ZMUserSessionTestsBase {
         
         //given
         let path = "foo/bar"
-        let url = NSURL(string: path, relativeToURL: nil)!
+        let url = URL(string: path, relativeTo: nil)!
         
-        let exp = self.expectationWithDescription("expected callback")
-        let callback: (NSData!, NSHTTPURLResponse!, NSError!) -> Void = { (_, _, _) -> Void in
+        let exp = self.expectation(description: "expected callback")
+        let callback: (Data?, HTTPURLResponse?, Error?) -> Void = { (_, _, _) -> Void in
             exp.fulfill()
         }
         
         //when
-        self.sut.proxiedRequestWithPath(url.absoluteString, method:.MethodGET, type:.Giphy, callback: callback)
+        self.sut.proxiedRequest(withPath: url.absoluteString, method:.methodGET, type:.giphy, callback: callback)
         
         //then
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = self.sut.proxiedRequestStatus.pendingRequests.last
         XCTAssert(request != nil)
         XCTAssertEqual(request!.path, path)
         XCTAssert(request!.callback != nil)
-        request!.callback!(nil, NSHTTPURLResponse(), nil)
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        request!.callback!(nil, HTTPURLResponse(), nil)
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
 
     func testThatAddingRequestStartsOperationLoop() {
         
         //given
-        let exp = self.expectationWithDescription("new operation loop started")
-        let token = NSNotificationCenter.defaultCenter().addObserverForName("RequestAvailableNotification", object: nil, queue: nil) { (note) -> Void in
+        let exp = self.expectation(description: "new operation loop started")
+        let token = NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "RequestAvailableNotification"), object: nil, queue: nil) { (note) -> Void in
             exp.fulfill()
         }
         
-        let url = NSURL(string: "foo/bar", relativeToURL: nil)!
-        let callback: (NSData!, NSURLResponse!, NSError!) -> Void = { (_, _, _) -> Void in }
+        let url = URL(string: "foo/bar", relativeTo: nil)!
+        let callback: (Data?, URLResponse?, Error?) -> Void = { (_, _, _) -> Void in }
         
         //when
-        self.sut.proxiedRequestWithPath(url.absoluteString, method:.MethodGET, type:.Giphy, callback: callback)
+        self.sut.proxiedRequest(withPath: url.absoluteString, method:.methodGET, type:.giphy, callback: callback)
         
         //then
-        XCTAssertTrue(self.waitForCustomExpectationsWithTimeout(0.5))
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
-        NSNotificationCenter.defaultCenter().removeObserver(token)
+        NotificationCenter.default.removeObserver(token)
     }
 
     func testThatAddingRequestIsMadeOnSyncThread() {
         
         //given
-        let url = NSURL(string: "foo/bar", relativeToURL: nil)!
-        let callback: (NSData!, NSURLResponse!, NSError!) -> Void = { (_, _, _) -> Void in }
+        let url = URL(string: "foo/bar", relativeTo: nil)!
+        let callback: (Data?, URLResponse?, Error?) -> Void = { (_, _, _) -> Void in }
 
         //here we block sync thread and check that right after giphyRequestWithURL call no request is created
         //after we signal semaphore sync thread should be unblocked and pending request should be created
-        let sem = dispatch_semaphore_create(0)
+        let sem = DispatchSemaphore(value: 0)
         self.syncMOC.performGroupedBlock {
-            dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER)
+            _ = sem.wait(timeout: DispatchTime.distantFuture)
         }
 
         //when
-        self.sut.proxiedRequestWithPath(url.absoluteString, method:.MethodGET, type:.Giphy, callback: callback)
+        self.sut.proxiedRequest(withPath: url.absoluteString, method:.methodGET, type:.giphy, callback: callback)
         
         //then
         var request = self.sut.proxiedRequestStatus.pendingRequests.last
         XCTAssertTrue(request == nil)
 
         //when
-        dispatch_semaphore_signal(sem)
+        sem.signal()
         
-        XCTAssertTrue(self.waitForAllGroupsToBeEmptyWithTimeout(0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         //then
         request = self.sut.proxiedRequestStatus.pendingRequests.last

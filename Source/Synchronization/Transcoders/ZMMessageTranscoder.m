@@ -237,6 +237,7 @@ typedef NS_ENUM(int8_t, ZMAssetTag) {
                           ];
         if(msg != nil) {
             [createdMessages addObject:msg];
+            [self.localNotificationDispatcher processMessage:msg];
         }
     }
     return createdMessages;

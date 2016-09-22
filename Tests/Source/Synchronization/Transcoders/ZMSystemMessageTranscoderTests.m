@@ -111,6 +111,9 @@
         ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
         XCTAssertNotNil(updateEvent);
         
+        // expect
+        [[self.notificationDispatcher expect] processMessage: OCMOCK_ANY];
+        
         // when
         [self.sut processEvents:@[updateEvent] liveEvents:NO prefetchResult:nil];
         

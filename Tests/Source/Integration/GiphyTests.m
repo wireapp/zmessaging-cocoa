@@ -45,7 +45,7 @@
             XCTAssertEqual(request.method, ZMMethodGET);
             XCTAssertTrue(request.needsAuthentication);
             
-            return [ZMTransportResponse responseWithPayload:expectedPayload HTTPstatus:202 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:expectedPayload HTTPStatus:202 transportSessionError:nil];
         }
     };
     

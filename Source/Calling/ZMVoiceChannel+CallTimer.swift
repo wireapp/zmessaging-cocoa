@@ -24,38 +24,38 @@ extension ZMVoiceChannel {
 
     public func startTimer(){
         guard let conversation = conversation,
-            let context = conversation.managedObjectContext where context.zm_isSyncContext
+            let context = conversation.managedObjectContext , context.zm_isSyncContext
         else { return }
         context.zm_addAndStartCallTimer(conversation)
     }
     
     public func resetTimer(){
         guard let conversation = conversation,
-            let context = conversation.managedObjectContext where context.zm_isSyncContext
+            let context = conversation.managedObjectContext , context.zm_isSyncContext
         else { return }
         context.zm_resetCallTimer(conversation)
         conversation.callTimedOut = false
     }
     
-    public func callTimerDidFire(timer: ZMCallTimer) {
+    public func callTimerDidFire(_ timer: ZMCallTimer) {
         guard let conversation = conversation,
-              let context = conversation.managedObjectContext where context.zm_isSyncContext
+              let context = conversation.managedObjectContext , context.zm_isSyncContext
         else { return }
-        let uiContext = context.zm_userInterfaceContext
+        let uiContext = context.zm_userInterface
         
-        guard let uiConv = (try? uiContext.existingObjectWithID(conversation.objectID)) as? ZMConversation where !uiConv.isZombieObject
+        guard let uiConv = (try? uiContext?.existingObject(with: conversation.objectID)) as? ZMConversation , !uiConv.isZombieObject
         else { return }
         
-        uiContext.performGroupedBlock { () -> Void in
-            if  uiConv.conversationType == .Group ||
-                (uiConv.conversationType == .OneOnOne && !uiConv.isOutgoingCall)
+        uiContext?.performGroupedBlock { () -> Void in
+            if  uiConv.conversationType == .group ||
+                (uiConv.conversationType == .oneOnOne && !uiConv.isOutgoingCall)
             {
                 uiConv.callTimedOut = true;
             }
-            else if (uiConv.conversationType == .OneOnOne && uiConv.isOutgoingCall) {
+            else if (uiConv.conversationType == .oneOnOne && uiConv.isOutgoingCall) {
                 uiConv.voiceChannel.leave()
             }
-            uiContext.enqueueDelayedSave()
+            uiContext?.enqueueDelayedSave()
         }
     }
 }

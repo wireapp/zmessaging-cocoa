@@ -337,7 +337,7 @@ static NSString const *GetConversationURL = @"/conversations/%@/events?size=%lu&
     XCTAssertNotNil(request1);
     XCTAssertEqualObjects(request1.path, [self requestURLForConversation:conversation oldestEvent:oldestEvent newestEvent:newestEvent]);
     
-    [request1 completeWithResponse:[ZMTransportResponse responseWithPayload:[self payloadToFillGap:gap inConversationID:uuid] HTTPstatus:200 transportSessionError:nil]];
+    [request1 completeWithResponse:[ZMTransportResponse responseWithPayload:[self payloadToFillGap:gap inConversationID:uuid] HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
@@ -412,7 +412,7 @@ static NSString const *GetConversationURL = @"/conversations/%@/events?size=%lu&
     [(ZMSyncStrategy*) [(id)self.syncStrategy expect] processDownloadedEvents:@[event1, event2]];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -446,7 +446,7 @@ static NSString const *GetConversationURL = @"/conversations/%@/events?size=%lu&
     
     // then
     [self performIgnoringZMLogError:^{
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPStatus:200 transportSessionError:nil]];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -475,7 +475,7 @@ static NSString const *GetConversationURL = @"/conversations/%@/events?size=%lu&
     
     // then
     [self performIgnoringZMLogError:^{
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"foo":@"bar"} HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"foo":@"bar"} HTTPStatus:200 transportSessionError:nil]];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
     
@@ -505,7 +505,7 @@ static NSString const *GetConversationURL = @"/conversations/%@/events?size=%lu&
     
     // then
     [self performIgnoringZMLogError:^{
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"events":@22} HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"events":@22} HTTPStatus:200 transportSessionError:nil]];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -534,7 +534,7 @@ static NSString const *GetConversationURL = @"/conversations/%@/events?size=%lu&
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     // then
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"events":@[oldestEvent.transportString, newestEvent.transportString]} HTTPstatus:500 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{@"events":@[oldestEvent.transportString, newestEvent.transportString]} HTTPStatus:500 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -598,7 +598,7 @@ static NSString const *GetConversationURL = @"/conversations/%@/events?size=%lu&
     
     // when
     [self performIgnoringZMLogError:^{
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:eventPayload HTTPstatus:200 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:eventPayload HTTPStatus:200 transportSessionError:nil]];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
     
@@ -634,7 +634,7 @@ static NSString const *GetConversationURL = @"/conversations/%@/events?size=%lu&
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:eventPayload HTTPstatus:200 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:eventPayload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -662,7 +662,7 @@ static NSString const *GetConversationURL = @"/conversations/%@/events?size=%lu&
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     
     // when
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPstatus:404 transportSessionError:nil]];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:404 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -710,7 +710,7 @@ static NSString const *GetConversationURL = @"/conversations/%@/events?size=%lu&
     NSDate *lastReadTimeStamp = [eventData dateForKey:@"time"];
     NSDictionary *payload = @{@"events": @[eventData]};
     
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPstatus:200 transportSessionError:nil];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     ZMEventIDRange *range = [[ZMEventIDRange alloc] initWithEventIDs:@[conversation.lastReadEventID, conversation.lastEventID]];
     XCTAssertTrue([range containsEvent:conversation.lastReadEventID]);

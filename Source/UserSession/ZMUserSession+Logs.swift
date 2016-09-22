@@ -23,9 +23,9 @@ extension ZMUserSession {
 
     @objc public static func enableLogsByEnvironmentVariable()
     {
-        if let tags = NSProcessInfo.processInfo().environment["ZMLOG_TAGS"] {
+        if let tags = ProcessInfo.processInfo.environment["ZMLOG_TAGS"] {
             for tag in (tags.characters.split { $0 == "," }.map { String($0) }) {
-                ZMLogSetLevelForTag(ZMLogLevel_t.Debug, (tag as NSString).UTF8String)
+                ZMLogSetLevelForTag(ZMLogLevel_t.debug, (tag as NSString).utf8String)
             }
         }
     }

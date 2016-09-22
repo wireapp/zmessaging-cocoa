@@ -31,34 +31,37 @@ import Foundation
     var shouldDownloadFullHistory : Bool { get }
 }
 
-@objc public class ForegroundOnlyHistorySynchronizationStatus : NSObject, HistorySynchronizationStatus
+@objc public final class ForegroundOnlyHistorySynchronizationStatus : NSObject, HistorySynchronizationStatus
 {
-    private var isSyncing = false
-    private var isInBackground = false
+    fileprivate var isSyncing = false
+    fileprivate var isInBackground = false
+    fileprivate let application : Application
     
     /// Managed object context used to execute on the right thread
-    private var moc : NSManagedObjectContext
+    fileprivate var moc : NSManagedObjectContext
     
-    public init(managedObjectContext: NSManagedObjectContext) {
-        moc = managedObjectContext
-        isSyncing = true
-        isInBackground = false
+    public init(managedObjectContext: NSManagedObjectContext,
+                application: Application) {
+        self.moc = managedObjectContext
+        self.isSyncing = true
+        self.isInBackground = false
+        self.application = application
         super.init()
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(UIApplicationDelegate.applicationDidBecomeActive(_:)), name: UIApplicationDidBecomeActiveNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(UIApplicationDelegate.applicationWillResignActive(_:)), name: UIApplicationWillResignActiveNotification, object: nil)
+        application.registerObserverForDidBecomeActive(self, selector: #selector(didBecomeActive(_:)))
+        application.registerObserverForWillResignActive(self, selector: #selector(willResignActive(_:)))
     }
     
     deinit {
-        NSNotificationCenter.defaultCenter().removeObserver(self)
+        self.application.unregisterObserverForStateChange(self)
     }
     
-    public func applicationDidBecomeActive(note: NSNotification) {
+    public func didBecomeActive(_ note: Notification) {
         self.moc.performGroupedBlock { () -> Void in
             self.isInBackground = false
         }
     }
 
-    public func applicationWillResignActive(note: NSNotification) {
+    public func willResignActive(_ note: Notification) {
         self.moc.performGroupedBlock { () -> Void in
             self.isInBackground = true
         }
