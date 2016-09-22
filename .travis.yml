@@ -28,7 +28,4 @@ script:
   - set -o pipefail
   - travis_wait 60 ./test.sh
   - bundle exec danger
-
-after_failure:
-  - tail -n 500 build.log
   
