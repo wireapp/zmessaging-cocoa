@@ -17,6 +17,8 @@ branches:
     - master
 
 install:
+  - carthage version
+  - brew upgrade carthage
   - bundle install
   - curl -O https://raw.githubusercontent.com/wireapp/wire-ios-shared-resources/master/Dangerfile
   - carthage bootstrap --platform iOS
