@@ -26,5 +26,5 @@ install:
 script:
   - open -b com.apple.iphonesimulator
   - set -o pipefail
-  - travis_wait 45 ./test.sh
+  - travis_wait 45 (xcodebuild clean build test -scheme zmessaging-ios -destination 'platform=iOS Simulator,name=iPhone 7,OS=10.0' | xcpretty)
   - bundle exec danger
