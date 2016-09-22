@@ -71,7 +71,7 @@
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // expect
-        [self expectationForNotification:@"ZMOperationLoopNewRequestAvailable" object:self.sut handler:nil];
+        [self expectationForNotification:@"RequestAvailableNotification" object:self.sut handler:nil];
         
         // when
         self.syncMOC.removedSuggestedContactRemoteIdentifiers = @[self.remoteIdentifierA, self.remoteIdentifierB];
@@ -108,7 +108,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
     [self.syncMOC performGroupedBlockAndWait:^{
         // expect
-        [self expectationForNotification:@"ZMOperationLoopNewRequestAvailable" object:self.sut handler:nil];
+        [self expectationForNotification:@"RequestAvailableNotification" object:self.sut handler:nil];
         
         // when
         self.syncMOC.removedSuggestedContactRemoteIdentifiers = @[self.remoteIdentifierA, self.remoteIdentifierB];
@@ -132,7 +132,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
     [self.syncMOC performGroupedBlockAndWait:^{
         // expect
-        [self expectationForNotification:@"ZMOperationLoopNewRequestAvailable" object:self.sut handler:nil];
+        [self expectationForNotification:@"RequestAvailableNotification" object:self.sut handler:nil];
         
         // when
         self.syncMOC.removedSuggestedContactRemoteIdentifiers = @[self.remoteIdentifierA, self.remoteIdentifierB];

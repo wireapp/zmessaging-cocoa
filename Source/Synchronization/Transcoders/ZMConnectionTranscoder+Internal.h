@@ -19,10 +19,8 @@
 
 @import CoreData;
 @import Foundation;
+@import WireRequestStrategy;
 #import "ZMConnectionTranscoder.h"
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMUpstreamTranscoder.h"
-#import "ZMDownstreamObjectSync.h"
 
 extern NSUInteger ZMConnectionTranscoderPageSize;
 

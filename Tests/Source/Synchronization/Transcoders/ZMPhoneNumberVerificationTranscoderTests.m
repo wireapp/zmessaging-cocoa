@@ -24,7 +24,6 @@
 #import "MessagingTest.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMAuthenticationStatus.h"
-#import "ZMSingleRequestSync.h"
 #import "ZMCredentials+Internal.h"
 #import "ZMUserSessionRegistrationNotification.h"
 

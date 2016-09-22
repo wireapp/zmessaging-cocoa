@@ -26,15 +26,9 @@
 #import "ZMMessageTranscoderTests.h"
 #import "ZMMessageTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
-#import "ZMUpstreamInsertedObjectSync.h"
 #import "ZMMessageExpirationTimer.h"
-#import "ZMUpstreamTranscoder.h"
-#import "ZMChangeTrackerBootstrap+Testing.h"
-
 #import "ZMLocalNotificationDispatcher.h"
-#import <zmessaging/ZMUpstreamRequest.h>
 #import <zmessaging/zmessaging-Swift.h>
-//#import <zmessaging/ZMAuthenticationStatus+OTR.h>
 
 static NSString const *EventTypeMessageAdd = @"conversation.message-add";
 

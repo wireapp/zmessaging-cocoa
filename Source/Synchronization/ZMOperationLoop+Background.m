@@ -95,7 +95,7 @@ static NSString * const PushNotificationTypeNotice = @"notice";
     [self.syncStrategy consumeUpdateEvents:nonFlowEvents];
     [self.syncMOC saveOrRollback];
     [self.syncStrategy updateBadgeCount];
-    [ZMOperationLoop notifyNewRequestsAvailable:self];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (EventsWithIdentifier *)eventsFromPushChannelData:(NSDictionary *)userInfo

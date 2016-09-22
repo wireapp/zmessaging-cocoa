@@ -28,11 +28,11 @@ class OperationLoopNewRequestObserver {
     
     var notifications = [Notification]()
     fileprivate var notificationCenter = NotificationCenter.default
-    fileprivate var newRequestNotification = "ZMOperationLoopNewRequestAvailable"
+    fileprivate var newRequestNotification = "RequestAvailableNotification"
     
     init() {
         notificationCenter.addObserver(forName: Notification.Name(rawValue: newRequestNotification), object: nil, queue: .main) { [weak self] note in
-         self?.notifications.append(note)
+            self?.notifications.append(note)
         }
     }
     

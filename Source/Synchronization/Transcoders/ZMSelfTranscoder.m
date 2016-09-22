@@ -23,12 +23,8 @@
 
 #import "ZMSelfTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMSingleRequestSync.h"
-#import "ZMUpstreamTranscoder.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMClientRegistrationStatus.h"
-#import "ZMTimedSingleRequestSync.h"
 
 static NSString *SelfPath = @"/self";
 

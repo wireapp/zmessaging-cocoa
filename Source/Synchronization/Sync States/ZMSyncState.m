@@ -20,12 +20,11 @@
 @import ZMCSystem;
 @import ZMUtilities;
 @import ZMTransport;
+@import WireRequestStrategy;
 
 #import "ZMSyncState.h"
 #import "ZMStateMachineDelegate.h"
 #import "ZMObjectStrategyDirectory.h"
-#import "ZMObjectSyncStrategy.h"
-#import "ZMRequestGenerator.h"
 
 
 @implementation ZMSyncState

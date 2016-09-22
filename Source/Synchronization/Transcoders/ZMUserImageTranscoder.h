@@ -19,7 +19,7 @@
 
 @import Foundation;
 @import CoreData;
-#import <zmessaging/ZMObjectSyncStrategy.h>
+@import WireRequestStrategy;
 
 
 

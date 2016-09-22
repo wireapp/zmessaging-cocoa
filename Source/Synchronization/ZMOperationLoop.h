@@ -50,8 +50,6 @@ extern NSString * const ZMPushChannelResponseStatusKey;
 
 @property (nonatomic, readonly) id<ZMApplication> application;
 
-+ (void)notifyNewRequestsAvailable:(id<NSObject>)sender;
-
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                     authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus

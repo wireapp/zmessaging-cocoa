@@ -16,8 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-
-#import <zmessaging/ZMObjectSyncStrategy.h>
+@import WireRequestStrategy;
 
 
 /// This transcoder sends PUT /search/suggestions/{userId}/ignore for suggested people that are supposed to be hidden / ignored.

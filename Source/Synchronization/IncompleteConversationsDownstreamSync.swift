@@ -132,7 +132,7 @@
         DispatchQueue.global(qos: .background).asyncAfter(deadline: DispatchTime.now() + Double(Int64(UInt64(lowPriorityRequestsCooldownInterval) * NSEC_PER_SEC)) / Double(NSEC_PER_SEC)) {
                 [weak self] in
                 self?.managedObjectContext.performGroupedBlock {
-                    ZMOperationLoop.notifyNewRequestsAvailable(self)
+                    RequestAvailableNotification.notifyNewRequestsAvailable(self)
                 }
             }
     }

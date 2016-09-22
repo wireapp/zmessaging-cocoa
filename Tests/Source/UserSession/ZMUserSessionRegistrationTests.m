@@ -66,7 +66,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
 - (void)testThatItSetsTheRegistrationPhoneNumberAndCode
 {
     // expect
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY]; // FIXME
     [[self.transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     
     // when
@@ -78,7 +78,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     XCTAssertEqual(self.sut.authenticationStatus.registrationUser, regUser);
     
     // after
-    [self.operationLoop verify];
+    [self.requestAvailableNotification verify];
 }
 
 - (void)testThatItCopiesThePhoneRegistrationUserDataToTheSelfUser
@@ -140,7 +140,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     NSString *phone = @"+3912345678900";
     
     // expect
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     [[self.transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     
     // when
@@ -154,7 +154,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     XCTAssertEqual(self.sut.authenticationStatus.loginPhoneNumberThatNeedsAValidationCode, phone);
     
     // after
-    [self.operationLoop verify];
+    [self.requestAvailableNotification verify];
 }
 
 - (void)testThatIfItTriesToRequestARegistrationPhoneValidationCodeForAPhoneThatExistsAndDoesALoginInstead_ItNotifiesIfItItFails
@@ -163,7 +163,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     NSString *phone = @"+3912345678900";
     
     // expect
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     [[self.transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     [[(id) self.registrationObserver expect] registrationDidFail:OCMOCK_ANY];
     
@@ -177,7 +177,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     [self.sut.authenticationStatus didFailLoginWithPhone:YES];
     
     // after
-    [self.operationLoop verify];
+    [self.requestAvailableNotification verify];
 }
 
 @end
@@ -188,7 +188,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
 - (void)testThatItSetThePhoneNumberToVerifyAndNotifiesOfANewRequestWhenRequestingAVerificationCode
 {
     // expect
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY]; // FIXME
     
     // when
     [self.sut requestPhoneVerificationCodeForRegistration:ValidPhoneNumber];
@@ -197,12 +197,13 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     // then
     XCTAssertEqualObjects(self.sut.authenticationStatus.registrationPhoneNumberThatNeedsAValidationCode, ValidPhoneNumber);
     XCTAssertEqual(self.sut.authenticationStatus.currentPhase, ZMAuthenticationPhaseRequestPhoneVerificationCodeForRegistration);
+    [self.requestAvailableNotification verify];
 }
 
 - (void)testThatRequestingToVerifyTheCodeStoresPhoneNumberAndPhoneNumberVerificationCodeAndNotifiesOfANewRequest
 {
     // expect
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY]; // FIXME
     
     // when
     [self.sut verifyPhoneNumberForRegistration:ValidPhoneNumber verificationCode:ValidPhoneCode];
@@ -212,6 +213,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     XCTAssertEqualObjects(self.sut.authenticationStatus.registrationPhoneValidationCredentials.phoneNumber, ValidPhoneNumber);
     XCTAssertEqualObjects(self.sut.authenticationStatus.registrationPhoneValidationCredentials.phoneNumberVerificationCode, ValidPhoneCode);
     XCTAssertEqual(self.sut.authenticationStatus.currentPhase, ZMAuthenticationPhaseVerifyPhoneForRegistration);
+    [self.requestAvailableNotification verify];
 }
 
 @end
@@ -222,7 +224,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
 - (void)testThatItSetsTheRegistrationPassword
 {
     // expect
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     [[self.transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     
     // when
@@ -235,7 +237,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     XCTAssertEqual(self.sut.authenticationStatus.currentPhase, ZMAuthenticationPhaseRegisterWithEmail);
     
     // after
-    [self.operationLoop verify];
+    [self.requestAvailableNotification verify];
 }
 
 - (void)testThatItCopiesTheRegistrationUserDataToTheSelfUser
@@ -312,7 +314,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
 - (void)testThatItSetsTheRegistrationPhoneNumberAndCodeAndInvitationCode
 {
     // expect
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     [[self.transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     
     // when
@@ -326,13 +328,13 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     XCTAssertEqual(self.sut.authenticationStatus.currentPhase, ZMAuthenticationPhaseRegisterWithPhone);
     
     // after
-    [self.operationLoop verify];
+    [self.requestAvailableNotification verify];
 }
 
 - (void)testThatItSetsTheRegistrationPasswordAndInvitationCode
 {
     // expect
-    [[self.operationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [[self.requestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     [[self.transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     
     // when
@@ -346,7 +348,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     XCTAssertEqual(self.sut.authenticationStatus.currentPhase, ZMAuthenticationPhaseRegisterWithEmail);
     
     // after
-    [self.operationLoop verify];
+    [self.requestAvailableNotification verify];
 }
 
 - (void)testThatItFiresRegistrationFailForPhoneWithoutInvitationCode

@@ -3413,17 +3413,17 @@
     [self simulateClosingPushChannel];
     
     // expect
-    id mockOperationLoop = [OCMockObject niceMockForClass:ZMOperationLoop.class];
-    [[[mockOperationLoop expect] classMethod] notifyNewRequestsAvailable:OCMOCK_ANY];
+    id mockRequestAvailableNotification = [OCMockObject niceMockForClass:ZMRequestAvailableNotification.class];
+    [[[mockRequestAvailableNotification expect] classMethod] notifyNewRequestsAvailable:OCMOCK_ANY];
     
     // when
     [self simulateOpeningPushChannel];
     
     // then
-    [(OCMockObject *) mockOperationLoop verify];
+    [(OCMockObject *) mockRequestAvailableNotification verify];
     
     // after
-    [(OCMockObject *) mockOperationLoop stopMocking];
+    [(OCMockObject *) mockRequestAvailableNotification stopMocking];
 }
 
 

@@ -24,10 +24,7 @@
 @import ZMCDataModel;
 
 #import "ZMMessageTranscoder+Internal.h"
-#import "ZMUpstreamInsertedObjectSync.h"
 #import "ZMMessageExpirationTimer.h"
-#import "ZMUpstreamTranscoder.h"
-#import "ZMImagePreprocessingTracker.h"
 
 #import "ZMLocalNotificationDispatcher.h"
 

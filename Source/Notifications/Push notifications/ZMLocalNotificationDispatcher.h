@@ -18,10 +18,9 @@
 
 
 @import UIKit;
+@import WireRequestStrategy;
 
 #import "ZMPushRegistrant.h"
-#import "ZMContextChangeTracker.h"
-#import "ZMObjectSyncStrategy.h"
 
 @class ZMUpdateEvent;
 @class ZMConversation;

@@ -20,9 +20,9 @@
 @import ZMUtilities;
 @import ZMTransport;
 @import ZMCDataModel;
+@import WireRequestStrategy;
 
 #import "ZMHotFix.h"
-#import "ZMOperationLoop.h"
 #import "ZMHotFixDirectory.h"
 #import "ZMUserSession.h"
 
@@ -83,7 +83,7 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
         [self applyFixesSinceVersion:lastSavedVersion];
         [self saveNewVersion:currentVersionString];
         [self.syncMOC saveOrRollback];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 

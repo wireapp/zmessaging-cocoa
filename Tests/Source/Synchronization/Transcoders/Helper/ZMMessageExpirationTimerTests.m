@@ -21,7 +21,6 @@
 
 #import "MessagingTest.h"
 #import "ZMMessageExpirationTimer.h"
-#import "ZMChangeTrackerBootstrap+Testing.h"
 
 #if TARGET_OS_IPHONE
 #import "ZMLocalNotificationDispatcher.h"

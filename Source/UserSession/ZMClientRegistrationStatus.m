@@ -244,9 +244,9 @@ static char* const ZMLogTag ZM_UNUSED = "Authentication";
         [self insertNewClientForSelfUser:selfUser];
     } else {
         // there is already an unregistered client in the store
-        // since there is no change in the managedObject, it will not trigger [ZMOperationLoop notifyNewRequestsAvailable:] automatically
+        // since there is no change in the managedObject, it will not trigger [ZMRequestAvailableNotification notifyNewRequestsAvailable:] automatically
         // therefore we need to call it here
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
 }
 
@@ -342,7 +342,7 @@ static char* const ZMLogTag ZM_UNUSED = "Authentication";
     if (error.code == ZMUserSessionCanNotRegisterMoreClients) {
         // Wait and fetch the clients before sending the error
         self.isWaitingForUserClients = YES;
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
     else {
         [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:error];

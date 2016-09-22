@@ -16,8 +16,8 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
+@import WireRequestStrategy;
 
-#import <zmessaging/ZMObjectSyncStrategy.h>
 
 @class ZMTyping;
 @class ZMConversation;

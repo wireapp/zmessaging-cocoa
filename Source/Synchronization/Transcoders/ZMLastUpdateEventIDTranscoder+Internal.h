@@ -17,8 +17,8 @@
 // 
 
 
+@import WireRequestStrategy;
 #import "ZMLastUpdateEventIDTranscoder.h"
-#import "ZMSingleRequestSync.h"
 
 @interface ZMLastUpdateEventIDTranscoder (Internal) <ZMSingleRequestTranscoder>
 

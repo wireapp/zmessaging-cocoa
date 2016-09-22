@@ -22,7 +22,6 @@
 @import ZMCDataModel;
 
 #import "ZMSimpleListRequestPaginator+Internal.h"
-#import "ZMSingleRequestSync.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 @interface ZMSimpleListRequestPaginator () <ZMSingleRequestTranscoder>

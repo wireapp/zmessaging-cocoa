@@ -82,7 +82,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
             self.managedObjectContext.performGroupedBlock {
                 guard let optionalUser = try? objectID.flatMap(self.managedObjectContext.existingObject(with:)), let user = optionalUser as? ZMUser  else { return }
                 self.userClientsSync.setRemoteIdentifiersAsNeedingDownload(Set(arrayLiteral: user.remoteIdentifier!))
-                ZMOperationLoop.notifyNewRequestsAvailable(self)
+                RequestAvailableNotification.notifyNewRequestsAvailable(self)
             }
         }
     }

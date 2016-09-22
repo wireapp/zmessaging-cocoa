@@ -1,4 +1,5 @@
-// 
+
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -19,7 +20,7 @@
 
 @import Foundation;
 @import CoreData;
-#import <zmessaging/ZMObjectSyncStrategy.h>
+@import WireRequestStrategy;
 
 @class ZMLocalNotificationDispatcher;
 @class ZMConversation;

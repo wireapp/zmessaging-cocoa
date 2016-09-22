@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -18,6 +18,7 @@
 
 
 import Foundation
+import WireRequestStrategy
 
 
 @objc public final class LinkPreviewAssetDownloadRequestStrategy: ZMObjectSyncStrategy, RequestStrategy {
@@ -66,11 +67,11 @@ import Foundation
             guard let objectID = note.object as? NSManagedObjectID else { return }
             guard let message = try? self.managedObjectContext.existingObject(with: objectID) as? ZMClientMessage else { return }
             self.assetDownstreamObjectSync.whiteListObject(message)
-            ZMOperationLoop.notifyNewRequestsAvailable(self)
+            RequestAvailableNotification.notifyNewRequestsAvailable(self)
         }
     }
     
-    func nextRequest() -> ZMTransportRequest? {
+    public func nextRequest() -> ZMTransportRequest? {
         guard authStatus.currentPhase == .authenticated else { return nil }
         return assetDownstreamObjectSync.nextRequest()
     }

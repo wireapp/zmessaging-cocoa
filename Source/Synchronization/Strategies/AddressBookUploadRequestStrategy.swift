@@ -94,7 +94,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
 // MARK: - Request generation logic
 extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTranscoder {
     
-    func nextRequest() -> ZMTransportRequest? {
+    public func nextRequest() -> ZMTransportRequest? {
         guard self.authenticationStatus.currentPhase == .authenticated &&
             self.clientRegistrationStatus.currentClientReadyToUse else {
                 return nil
@@ -200,7 +200,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
     /// Start uploading a given chunk
     fileprivate func startUpload(_ encodedChunk: EncodedAddressBookChunk) {
         self.encodedAddressBookChunkToUpload = encodedChunk
-        ZMOperationLoop.notifyNewRequestsAvailable(self)
+        RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
 }
 

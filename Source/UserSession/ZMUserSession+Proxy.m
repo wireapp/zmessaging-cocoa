@@ -27,7 +27,7 @@
 {
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.proxiedRequestStatus addRequest:type path:path method:method callback:callback];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 

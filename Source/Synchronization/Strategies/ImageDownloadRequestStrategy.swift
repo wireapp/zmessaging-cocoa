@@ -64,11 +64,11 @@ public final class ImageDownloadRequestStrategy : ZMObjectSyncStrategy, RequestS
             guard let object = try? self.managedObjectContext.existingObject(with: objectID) else { return }
             guard let message = object as? ZMAssetClientMessage else { return }
             self.downstreamSync.whiteListObject(message)
-            ZMOperationLoop.notifyNewRequestsAvailable(self)
+            RequestAvailableNotification.notifyNewRequestsAvailable(self)
         }
     }
     
-    func nextRequest() -> ZMTransportRequest? {
+    public func nextRequest() -> ZMTransportRequest? {
         guard authenticationStatus.currentPhase == .authenticated else { return nil }
         return downstreamSync.nextRequest()
     }

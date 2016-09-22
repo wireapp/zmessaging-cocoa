@@ -19,7 +19,7 @@
 
 @import Foundation;
 @import CoreData;
-#import <zmessaging/ZMContextChangeTracker.h>
+@import WireRequestStrategy;
 
 @class ZMEventIDRange;
 @class ZMConversation;

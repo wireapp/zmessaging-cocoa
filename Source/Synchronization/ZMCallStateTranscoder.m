@@ -23,14 +23,10 @@
 
 #import "ZMCallStateTranscoder.h"
 #import "ZMVoiceChannel+CallFlow.h"
-#import "ZMDownstreamObjectSync.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMFlowSync.h"
 #import "ZMTracing.h"
-#import "ZMUpstreamTranscoder.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMOperationLoop.h"
 #import "ZMCallStateLogger.h"
 #import "ZMGSMCallHandler.h"
 #import "ZMLocalNotificationDispatcher.h"
@@ -338,7 +334,7 @@ _Pragma("clang diagnostic pop")
     const BOOL oldValue = self.pushChannelIsOpen;
     self.pushChannelIsOpen = newValue;
     if (!oldValue && newValue && [self.upstreamSync hasOutstandingItems]) {
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
     [self.callStateLogger logPushChannelChangesForNotification:note conversation:self.lastConversation];
 }

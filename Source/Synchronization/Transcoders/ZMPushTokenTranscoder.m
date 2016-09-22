@@ -23,8 +23,6 @@
 #import "ZMPushTokenTranscoder.h"
 
 #import "ZMPushToken.h"
-#import "ZMSingleRequestSync.h"
-#import "ZMContextChangeTracker.h"
 #import "ZMClientRegistrationStatus.h"
 #import <zmessaging/zmessaging-Swift.h>
 
@@ -140,12 +138,12 @@ static NSString * const PushTokenPath = @"/push/tokens";
         if (token.isMarkedForDeletion) {
             if (self.pushTokenDeletionSync.status != ZMSingleRequestInProgress) {
                 [self.pushTokenDeletionSync readyForNextRequest];
-                [ZMOperationLoop notifyNewRequestsAvailable:self];
+                [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
             }
         }
         else if(!token.isRegistered && (self.applicationTokenSync.status != ZMSingleRequestInProgress)) {
             [self.applicationTokenSync readyForNextRequest];
-            [ZMOperationLoop notifyNewRequestsAvailable:self];
+            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
         }
     }
     
@@ -154,12 +152,12 @@ static NSString * const PushTokenPath = @"/push/tokens";
         if (token.isMarkedForDeletion){
             if(self.pushKitTokenDeletionSync.status != ZMSingleRequestInProgress) {
                 [self.pushKitTokenDeletionSync readyForNextRequest];
-                [ZMOperationLoop notifyNewRequestsAvailable:self];
+                [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
             }
         }
         else if( (! token.isRegistered) && (self.pushKitTokenSync.status != ZMSingleRequestInProgress)) {
             [self.pushKitTokenSync readyForNextRequest];
-            [ZMOperationLoop notifyNewRequestsAvailable:self];
+            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
         }
     }
 }

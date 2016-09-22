@@ -27,7 +27,7 @@
 
 #import "ZMUserSession+Internal.h"
 #import "ZMSyncStrategy.h"
-#import "ZMOperationLoop.h"
+//#import "ZMOperationLoop.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
 #import "ZMSearchDirectory+Internal.h"
@@ -475,7 +475,7 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     [self didStartApplication];
     [self refreshTokensIfNeeded];
-    [ZMOperationLoop notifyNewRequestsAvailable:self];
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (void)didStartApplication
@@ -548,7 +548,7 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.syncManagedObjectContext setPersistentStoreMetadata:@YES forKey:[DeleteAccountRequestStrategy userDeletionInitiatedKey]];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 

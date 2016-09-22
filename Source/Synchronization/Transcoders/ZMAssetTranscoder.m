@@ -24,16 +24,10 @@
 @import CoreGraphics;
 @import ImageIO;
 @import ZMCDataModel;
+@import WireRequestStrategy;
 
 #import "ZMAssetTranscoder.h"
-#import "ZMOperationLoop.h"
-#import "ZMSyncOperationSet.h"
-#import "ZMDownstreamObjectSync.h"
-#import "ZMDownstreamObjectSyncWithWhitelist.h"
-#import "ZMUpstreamAssetSync.h"
 #import "ZMAssetRequestFactory.h"
-#import "ZMUpstreamTranscoder.h"
-#import "ZMUpstreamRequest.h"
 
 @interface ZMAssetTranscoder ()
 
@@ -85,7 +79,7 @@ ZM_EMPTY_ASSERTING_INIT()
         if(imageMessage != nil) {
             [self.downstreamMediumImageSync whiteListObject:imageMessage];
         }
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 

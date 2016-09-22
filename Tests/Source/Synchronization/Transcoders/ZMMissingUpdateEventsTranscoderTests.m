@@ -24,7 +24,6 @@
 
 #import "MessagingTest.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import "ZMSingleRequestSync.h"
 #import "ZMSyncStrategy.h"
 #import "ZMSimpleListRequestPaginator.h"
 

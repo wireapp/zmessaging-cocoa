@@ -21,8 +21,6 @@
 @import ZMCDataModel;
 
 #import "ZMRemovedSuggestedPeopleTranscoder.h"
-#import "ZMRemoteIdentifierObjectSync.h"
-#import "ZMOperationLoop.h"
 
 
 
@@ -89,7 +87,7 @@
     [self.managedObjectContext performGroupedBlock:^{
         NSArray *identifiers = self.managedObjectContext.removedSuggestedContactRemoteIdentifiers;
         [self.remoteIDSync addRemoteIdentifiersThatNeedDownload:[NSSet setWithArray:identifiers]];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 

@@ -498,8 +498,8 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
-    id mockOperationLoop = [OCMockObject niceMockForClass:ZMOperationLoop.class];
-    [[[mockOperationLoop expect] classMethod] notifyNewRequestsAvailable:OCMOCK_ANY];
+    id mockRequestAvailableNotification = [OCMockObject niceMockForClass:ZMRequestAvailableNotification.class];
+    [[[mockRequestAvailableNotification expect] classMethod] notifyNewRequestsAvailable:OCMOCK_ANY];
     
     // when
     [[self.internalFlowManager stub] networkChanged];
@@ -507,10 +507,10 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    [mockOperationLoop verify];
+    [mockRequestAvailableNotification verify];
     
     // after
-    [mockOperationLoop stopMocking];
+    [mockRequestAvailableNotification stopMocking];
 }
 
 - (void)testThatItNotifiesTheOperationLoopWhenThereIsANewRquest_PushChannelOpen
@@ -520,18 +520,18 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [self simulatePushChannelOpen];
     
     // expect
-    id mockOperationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
-    [[[mockOperationLoop expect] classMethod] notifyNewRequestsAvailable:OCMOCK_ANY];
+    id mockRequestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
+    [[[mockRequestAvailableNotification expect] classMethod] notifyNewRequestsAvailable:OCMOCK_ANY];
     
     // when
     [self simulateAVSRequest];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    [mockOperationLoop verify];
+    [mockRequestAvailableNotification verify];
     
     // after
-    [mockOperationLoop stopMocking];
+    [mockRequestAvailableNotification stopMocking];
 }
 
 - (void)testThatItNotifiesAVSOfNetworkChangeWhenThePushChannelIsOpened

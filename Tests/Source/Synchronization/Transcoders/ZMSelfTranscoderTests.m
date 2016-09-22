@@ -24,12 +24,7 @@
 
 #import "ObjectTranscoderTests.h"
 #import "ZMSelfTranscoder+Internal.h"
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMUpstreamTranscoder.h"
-#import "ZMSingleRequestSync.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMChangeTrackerBootstrap+Testing.h"
-#import "ZMTimedSingleRequestSync.h"
 
 @interface ZMSelfTranscoderTests : ObjectTranscoderTests
 

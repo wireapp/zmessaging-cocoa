@@ -19,6 +19,7 @@
 
 @import ZMCSystem;
 @import ZMUtilities;
+@import WireRequestStrategy;
 
 #import "ZMUserSession+OTR.h"
 #import "ZMUserSession+Internal.h"
@@ -37,7 +38,7 @@
     
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.clientUpdateStatus deleteClientsWithCredentials:self.clientRegistrationStatus.emailCredentials];
-        [ZMOperationLoop notifyNewRequestsAvailable: self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 
@@ -45,7 +46,7 @@
 {
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.clientUpdateStatus needsToFetchClientsWithAndVerifySelfClient:YES];
-        [ZMOperationLoop notifyNewRequestsAvailable:self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 
@@ -59,7 +60,7 @@
     
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.clientUpdateStatus deleteClientsWithCredentials:emailCredentials];
-        [ZMOperationLoop notifyNewRequestsAvailable: self];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 

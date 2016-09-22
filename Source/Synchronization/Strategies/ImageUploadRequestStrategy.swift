@@ -142,7 +142,7 @@ extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
         request.add(ZMCompletionHandler(on: managedObjectContext, block: { [weak self] (response) in
             if response.result == .success {
                 message.markAsSent()
-                ZMOperationLoop.notifyNewRequestsAvailable(self)
+                RequestAvailableNotification.notifyNewRequestsAvailable(self)
             }
         }))
         
@@ -209,7 +209,7 @@ extension ImageUploadRequestStrategy : ZMUpstreamTranscoder {
     func scheduleImageProcessing(forMessage message: ZMAssetClientMessage, format : ZMImageFormat) {
         let genericMessage = ZMGenericMessage(mediumImageProperties: nil, processedImageProperties: nil, encryptionKeys: nil, nonce: message.nonce.transportString(), format: format)
         message.add(genericMessage)
-        ZMOperationLoop.notifyNewRequestsAvailable(self)
+        RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
     
 }

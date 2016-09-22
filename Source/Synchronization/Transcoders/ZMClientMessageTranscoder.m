@@ -20,16 +20,13 @@
 
 #import "ZMClientMessageTranscoder+Internal.h"
 #import "ZMMessageTranscoder+Internal.h"
-#import "ZMUpstreamInsertedObjectSync.h"
 #import "ZMMessageExpirationTimer.h"
-#import "ZMUpstreamTranscoder.h"
 
 #import "ZMClientRegistrationStatus.h"
 #import "ZMLocalNotificationDispatcher.h"
 
 #import "CBCryptoBox+UpdateEvents.h"
 #import <zmessaging/zmessaging-Swift.h>
-#import "ZMOperationLoop.h"
 
 
 @interface ZMClientMessageTranscoder()

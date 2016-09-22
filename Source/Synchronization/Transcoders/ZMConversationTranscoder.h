@@ -19,8 +19,10 @@
 
 @import Foundation;
 @import CoreData;
+@import WireRequestStrategy;
+
 @protocol ZMObjectStrategyDirectory;
-#import "ZMObjectSyncStrategy.h"
+
 @class ZMBadge;
 @class ZMAuthenticationStatus;
 @class ZMAccountStatus;

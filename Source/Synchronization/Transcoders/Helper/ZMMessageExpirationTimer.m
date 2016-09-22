@@ -22,8 +22,6 @@
 @import ZMCDataModel;
 
 #import "ZMMessageExpirationTimer.h"
-#import "ZMOperationLoop.h"
-
 #import "ZMLocalNotificationDispatcher.h"
 
 @interface ZMMessageExpirationTimer () <ZMTimerClient>
@@ -159,7 +157,7 @@ ZM_EMPTY_ASSERTING_INIT()
             [message expire];
             [message.managedObjectContext enqueueDelayedSave];
             [self.localNotificationsDispatcher didFailToSentMessage:message];
-            [ZMOperationLoop notifyNewRequestsAvailable:self];
+            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
         }
     }];
 }

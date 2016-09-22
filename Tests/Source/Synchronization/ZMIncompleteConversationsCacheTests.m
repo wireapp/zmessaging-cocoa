@@ -19,14 +19,13 @@
 @import ZMTransport;
 @import zmessaging;
 @import ZMCDataModel;
+@import WireRequestStrategy;
 
 #import "MessagingTest.h"
 #import "ZMIncompleteConversationsCache.h"
 #import "ZMTimingTests.h"
-#import "ZMOperationLoop.h"
-#import "ZMChangeTrackerBootstrap+Testing.h"
 
-@interface ZMIncompleteConversationsCacheTests : MessagingTest
+@interface ZMIncompleteConversationsCacheTests : MessagingTest <ZMRequestAvailableObserver>
 
 @property (nonatomic) ZMIncompleteConversationsCache<ZMContextChangeTracker> *sut;
 @property (nonatomic) NSUInteger newRequestNotifications;
@@ -40,8 +39,7 @@
 - (void)setUp
 {
     [super setUp];
-    self.operationLoopMock = [OCMockObject mockForClass:ZMOperationLoop.class];
-    [[[[self.operationLoopMock stub] classMethod] andCall:@selector(didReceiveNewRequestNotification:)  onObject:self] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [ZMRequestAvailableNotification addObserver:self];
 }
 
 - (void)setUpIncompleteConversationCache
@@ -54,8 +52,7 @@
 - (void)tearDown
 {
     WaitForAllGroupsToBeEmpty(0.5);
-    [self.operationLoopMock stopMocking];
-    self.operationLoopMock = nil;
+    [ZMRequestAvailableNotification removeObserver:self];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.sut tearDown];
@@ -65,9 +62,9 @@
     [super tearDown];
 }
 
-- (void)didReceiveNewRequestNotification:(id<NSObject>)sender;
+
+- (void)newRequestsAvailable
 {
-    NOT_USED(sender);
     self.newRequestNotifications += 1;
     if (self.notificationValidationBlock) {
         self.notificationValidationBlock();

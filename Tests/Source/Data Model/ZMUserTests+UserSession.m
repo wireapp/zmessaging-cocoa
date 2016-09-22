@@ -48,8 +48,8 @@ static NSString * const InvitationToConnectBaseURL = @"https://www.wire.com/c/";
     ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     user.remoteIdentifier = uuid;
 
-    id mockOperationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
-    [[mockOperationLoop expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    id mockRequestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
+    [[mockRequestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
 
     id mockUserImageTranscoder = [OCMockObject mockForClass:ZMUserImageTranscoder.class];
     [[mockUserImageTranscoder expect] requestAssetForUserWithObjectID:OCMOCK_ANY];
@@ -59,7 +59,7 @@ static NSString * const InvitationToConnectBaseURL = @"https://www.wire.com/c/";
     [user requestMediumProfileImageInUserSession:nil];
 
     // then
-    [mockOperationLoop verify];
+    [mockRequestAvailableNotification verify];
     [mockUserImageTranscoder verify];
 }
 

@@ -59,7 +59,7 @@ class UserSessionGiphyRequestStateTests: ZMUserSessionTestsBase {
         
         //given
         let exp = self.expectation(description: "new operation loop started")
-        let token = NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "ZMOperationLoopNewRequestAvailable"), object: nil, queue: nil) { (note) -> Void in
+        let token = NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "RequestAvailableNotification"), object: nil, queue: nil) { (note) -> Void in
             exp.fulfill()
         }
         

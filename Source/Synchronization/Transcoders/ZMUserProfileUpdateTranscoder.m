@@ -21,7 +21,6 @@
 @import ZMCDataModel;
 
 #import "ZMUserProfileUpdateTranscoder.h"
-#import "ZMSingleRequestSync.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMCredentials+Internal.h"
 #import "ZMUserSessionRegistrationNotification.h"

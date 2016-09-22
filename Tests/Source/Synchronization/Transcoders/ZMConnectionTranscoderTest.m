@@ -22,11 +22,7 @@
 
 #import "ObjectTranscoderTests.h"
 #import "ZMConnectionTranscoder+Internal.h"
-#import "ZMContextChangeTracker.h"
-#import "ZMUpstreamModifiedObjectSync.h"
-#import "ZMUpstreamInsertedObjectSync.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import "ZMDownstreamObjectSync.h"
 
 @interface ZMConnectionTranscoderTest : ObjectTranscoderTests
 
