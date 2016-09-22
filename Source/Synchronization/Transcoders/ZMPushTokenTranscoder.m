@@ -139,12 +139,10 @@ static NSString * const PushTokenPath = @"/push/tokens";
             if (self.pushTokenDeletionSync.status != ZMSingleRequestInProgress) {
                 [self.pushTokenDeletionSync readyForNextRequest];
                 [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-//                [ZMOperationLoop notifyNewRequestsAvailable:self];
             }
         }
         else if(!token.isRegistered && (self.applicationTokenSync.status != ZMSingleRequestInProgress)) {
             [self.applicationTokenSync readyForNextRequest];
-//            [ZMOperationLoop notifyNewRequestsAvailable:self];
             [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
         }
     }
@@ -154,13 +152,11 @@ static NSString * const PushTokenPath = @"/push/tokens";
         if (token.isMarkedForDeletion){
             if(self.pushKitTokenDeletionSync.status != ZMSingleRequestInProgress) {
                 [self.pushKitTokenDeletionSync readyForNextRequest];
-//                [ZMOperationLoop notifyNewRequestsAvailable:self];
                 [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
             }
         }
         else if( (! token.isRegistered) && (self.pushKitTokenSync.status != ZMSingleRequestInProgress)) {
             [self.pushKitTokenSync readyForNextRequest];
-//            [ZMOperationLoop notifyNewRequestsAvailable:self];
             [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
         }
     }

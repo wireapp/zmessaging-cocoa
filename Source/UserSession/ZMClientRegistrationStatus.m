@@ -244,7 +244,7 @@ static char* const ZMLogTag ZM_UNUSED = "Authentication";
         [self insertNewClientForSelfUser:selfUser];
     } else {
         // there is already an unregistered client in the store
-        // since there is no change in the managedObject, it will not trigger [ZMOperationLoop notifyNewRequestsAvailable:] automatically
+        // since there is no change in the managedObject, it will not trigger [ZMRequestAvailableNotification notifyNewRequestsAvailable:] automatically
         // therefore we need to call it here
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
