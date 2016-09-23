@@ -276,6 +276,7 @@ static const int32_t Mersenne3 = 8191;
     }
     [self performIgnoringZMLogError:^{
         self.uiMOC = [NSManagedObjectContext createUserInterfaceContextWithStoreDirectory:self.databaseDirectory];
+        self.uiMOC.globalManagedObjectContextObserver.propagateChanges = YES;
     }];
     
     ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100];

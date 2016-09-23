@@ -200,9 +200,10 @@ ZM_EMPTY_ASSERTING_INIT()
     NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectoryURL];
     syncMOC.analytics = analytics;
 
-    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC mainGroupQueue:userInterfaceContext];
     UIApplication *application = [UIApplication sharedApplication];
-
+    
+    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC mainGroupQueue:userInterfaceContext application:application];
+    
     self = [self initWithTransportSession:session
                      userInterfaceContext:userInterfaceContext
                  syncManagedObjectContext:syncMOC

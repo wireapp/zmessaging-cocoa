@@ -260,12 +260,14 @@ static const char *ZMLogTag = "Push";
 {
     NOT_USED(note);
     [self notifyThirdPartyServices];
+    self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = NO;
 }
 
 - (void)applicationWillEnterForeground:(NSNotification *)note;
 {
     NOT_USED(note);
     self.didNotifyThirdPartyServices = NO;
+    self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = YES;
 }
 
 @end
