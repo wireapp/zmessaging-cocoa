@@ -399,7 +399,7 @@ static char* const ZMLogTag ZM_UNUSED = "Authentication";
     [self.managedObjectContext.zm_cryptKeyStore deleteAndCreateNewBox];
 }
 
-- (BOOL)currentClientReadyToUse {
+- (BOOL)clientIsReadyForRequests {
     return self.currentPhase == ZMClientRegistrationPhaseRegistered;
 }
 

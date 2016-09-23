@@ -21,6 +21,7 @@
 @import ZMTransport;
 @import zmessaging;
 @import ZMCDataModel;
+@import WireMessageStrategy;
 
 
 #import "MessagingTest.h"
@@ -35,7 +36,6 @@
 #import "ZMSlowSyncPhaseTwoState.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
-#import "ZMMessageTranscoder.h"
 #import "ZMConversationEventsTranscoder.h"
 #import "ZMAssetTranscoder.h"
 #import "ZMUserImageTranscoder.h"
@@ -59,8 +59,6 @@
 #import "ZMUserProfileUpdateTranscoder.h"
 #import "ZMUserProfileUpdateStatus.h"
 #import "ZMBadge.h"
-#import "ZMMessageTranscoder+Internal.h"
-#import "ZMClientMessageTranscoder.h"
 #import "MessagingTest+EventFactory.h"
 #import "zmessaging_iOS_Tests-Swift.h"
 
@@ -134,7 +132,7 @@
 
     id selfTranscoder = [OCMockObject mockForClass:ZMSelfTranscoder.class];
     [[[[selfTranscoder expect] andReturn:selfTranscoder] classMethod] alloc];
-    (void) [[[selfTranscoder expect] andReturn:selfTranscoder] initWithClientRegistrationStatus:OCMOCK_ANY managedObjectContext:self.syncMOC];
+    (void) [(ZMSelfTranscoder *)[[selfTranscoder expect] andReturn:selfTranscoder] initWithClientRegistrationStatus:OCMOCK_ANY managedObjectContext:self.syncMOC];
 
     id connectionTranscoder = [OCMockObject mockForClass:ZMConnectionTranscoder.class];
     [[[[connectionTranscoder expect] andReturn:connectionTranscoder] classMethod] alloc];

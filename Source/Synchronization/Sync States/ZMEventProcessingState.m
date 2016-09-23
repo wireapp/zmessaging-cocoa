@@ -18,13 +18,12 @@
 
 
 @import ZMUtilities;
+@import WireRequestStrategy;
 
 #import "ZMEventProcessingState.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMUserTranscoder.h"
 #import "ZMSyncStrategy.h"
-#import "ZMMessageTranscoder.h"
-#import "ZMAssetTranscoder.h"
 #import "ZMConversationEventsTranscoder.h"
 #import "ZMTestNotifications.h"
 #import "ZMSyncStateDelegate.h"

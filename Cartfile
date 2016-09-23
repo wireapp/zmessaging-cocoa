@@ -5,5 +5,4 @@ github "wireapp/wire-ios-system" ~> 15.0
 github "wireapp/wire-ios-protos" ~> 7.0
 github "wireapp/wire-ios-link-preview" ~> 4.0
 github "wireapp/wire-ios-data-model" ~> 19.0
-github "wireapp/wire-ios-request-strategy" ~> 2.0
-
+github "wireapp/wire-ios-message-strategy" ~> 1.0

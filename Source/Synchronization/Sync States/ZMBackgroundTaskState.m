@@ -20,12 +20,12 @@
 @import ZMTransport;
 @import ZMCSystem;
 @import ZMUtilities;
+@import WireMessageStrategy;
 
 #import "ZMBackgroundTaskState.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMSyncStateMachine.h"
 
-#import "ZMClientMessageTranscoder.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 

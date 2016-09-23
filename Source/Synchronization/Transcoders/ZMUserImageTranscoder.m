@@ -20,9 +20,9 @@
 @import ZMCSystem;
 @import ZMTransport;
 @import ZMCDataModel;
+@import WireRequestStrategy;
 
 #import "ZMUserImageTranscoder.h"
-#import "ZMAssetRequestFactory.h"
 
 
 

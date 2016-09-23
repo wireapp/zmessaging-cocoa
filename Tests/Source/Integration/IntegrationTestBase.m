@@ -20,6 +20,7 @@
 @import ZMProtos;
 @import CoreTelephony;
 @import ZMCDataModel;
+@import WireMessageStrategy;
 
 #import "IntegrationTestBase.h"
 #import "ZMHotfix.h"

@@ -27,7 +27,6 @@
 @import WireRequestStrategy;
 
 #import "ZMAssetTranscoder.h"
-#import "ZMAssetRequestFactory.h"
 
 @interface ZMAssetTranscoder ()
 

@@ -18,6 +18,7 @@
 
 
 @import ZMCMockTransport;
+@import WireMessageStrategy;
 
 #import "MessagingTest.h"
 #import <libkern/OSAtomic.h>
@@ -38,7 +39,6 @@
 #import "ZMUserImageTranscoder.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMConversationEventsTranscoder.h"
-#import "ZMMessageTranscoder.h"
 #import "ZMAssetTranscoder.h"
 #import "ZMSelfTranscoder.h"
 #import "ZMConnectionTranscoder.h"
@@ -57,8 +57,6 @@
 #import "ZMKnockTranscoder.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserProfileUpdateTranscoder.h"
-#import "ZMMessageTranscoder+Internal.h"
-#import "ZMClientMessageTranscoder.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "zmessaging_iOS_Tests-Swift.h"
 
