@@ -19,6 +19,7 @@
 import Foundation
 import Cryptobox
 import ZMCDataModel
+import WireMessageStrategy
 
 private let zmLog = ZMSLog(tag: "EventDecoder")
 
