@@ -141,7 +141,10 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
             else {
                 [parsedEvents addObject:event];
             }
-            latestEventId = event.uuid;
+            
+            if (!event.isTransient) {
+                latestEventId = event.uuid;
+            }
         }
     }
     
