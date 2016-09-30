@@ -30,6 +30,7 @@
 @class ZMMessage;
 @class ZMConversation;
 @class UserClient;
+@class ZMProxyRequest;
 
 @protocol AnalyticsType;
 @protocol AVSMediaManager;
@@ -183,7 +184,8 @@ typedef NS_ENUM (NSInteger, ProxiedRequestType){
 
 @interface ZMUserSession (Proxy)
 
-- (void)proxiedRequestWithPath:(NSString *)path method:(ZMTransportRequestMethod)method type:(ProxiedRequestType)type callback:(void (^)(NSData *, NSHTTPURLResponse *, NSError *))callback;
+- (ZMProxyRequest *)proxiedRequestWithPath:(NSString *)path method:(ZMTransportRequestMethod)method type:(ProxiedRequestType)type callback:(void (^)(NSData *, NSHTTPURLResponse *, NSError *))callback;
+- (void)cancelProxiedRequest:(ZMProxyRequest *)proxyRequest;
 
 @end
 
