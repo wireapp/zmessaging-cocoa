@@ -46,7 +46,6 @@
 #import <zmessaging/ZMClientRegistrationStatus.h>
 #import <zmessaging/ZMAuthenticationStatus+Testing.h>
 #import <zmessaging/ZMUserSessionAuthenticationNotification.h>
-#import <zmessaging/CBCryptoBox+UpdateEvents.h>
 #import <zmessaging/ZMAPSMessageDecoder.h>
 #import <zmessaging/ZMUserTranscoder.h>
 #import <zmessaging/NSError+ZMUserSessionInternal.h>

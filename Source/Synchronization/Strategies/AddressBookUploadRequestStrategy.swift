@@ -96,7 +96,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
     
     public func nextRequest() -> ZMTransportRequest? {
         guard self.authenticationStatus.currentPhase == .authenticated &&
-            self.clientRegistrationStatus.currentClientReadyToUse else {
+            self.clientRegistrationStatus.clientIsReadyForRequests else {
                 return nil
         }
         

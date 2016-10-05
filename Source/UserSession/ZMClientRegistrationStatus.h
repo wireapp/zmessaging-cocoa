@@ -65,7 +65,7 @@ extern NSString *const ZMPersistedClientIdKey;
 @protocol ZMClientClientRegistrationStatusProvider <NSObject>
 
 /// Whether the current client is ready to use
-@property (nonatomic, readonly) BOOL currentClientReadyToUse;
+@property (nonatomic, readonly) BOOL clientIsReadyForRequests;
 
 /// Notify that the current client was deleted remotely
 - (void)didDetectCurrentClientDeletion;

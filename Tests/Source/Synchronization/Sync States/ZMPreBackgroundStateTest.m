@@ -20,13 +20,13 @@
 @import ZMTransport;
 @import zmessaging;
 @import ZMCDataModel;
+@import WireMessageStrategy;
 
 #import "MessagingTest.h"
 #import "ZMSyncState.h"
 #import "ZMStateMachineDelegate.h"
 #import "StateBaseTest.h"
 #import "ZMPreBackgroundState.h"
-#import "ZMMessageTranscoder.h"
 
 @interface ZMPreBackgroundStateTest : StateBaseTest
 

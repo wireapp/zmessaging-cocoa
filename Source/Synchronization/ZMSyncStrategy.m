@@ -22,6 +22,8 @@
 @import ZMUtilities;
 @import ZMTransport;
 @import ZMCDataModel;
+@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 #import "ZMBadge.h"
 #import "ZMSyncStrategy+Internal.h"
@@ -31,9 +33,7 @@
 #import "ZMUserTranscoder.h"
 #import "ZMSelfTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMMessageTranscoder.h"
 #import "ZMKnockTranscoder.h"
-#import "ZMAssetTranscoder.h"
 #import "ZMUserImageTranscoder.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMAuthenticationStatus.h"
@@ -52,12 +52,11 @@
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMUserProfileUpdateTranscoder.h"
 #import "ZMessagingLogs.h"
-#import "ZMClientMessageTranscoder.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMOnDemandFlowManager.h"
 #import "ZMLocalNotificationDispatcher.h"
 #import <zmessaging/zmessaging-Swift.h>
-
+#import "ZMAssetTranscoder.h"
 
 @interface ZMSyncStrategy ()
 {
@@ -119,11 +118,20 @@
 @property (atomic) BOOL tornDown;
 @property (nonatomic) BOOL contextMergingDisabled;
 
-
+@property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
+@property (nonatomic, weak) ZMClientRegistrationStatus *clientRegistrationStatus;
 
 @end
 
+@interface ZMLocalNotificationDispatcher (Push) <ZMPushMessageHandler>
+@end
 
+@interface BackgroundAPNSConfirmationStatus (Protocol) <DeliveryConfirmationDelegate>
+@end
+
+@interface ZMClientRegistrationStatus (Protocol) <ClientRegistrationDelegate>
+
+@end
 
 @implementation ZMSyncStrategy
 
@@ -154,6 +162,8 @@ ZM_EMPTY_ASSERTING_INIT()
     if (self) {
         self.application = application;
         self.localNotificationDispatcher = localNotificationsDispatcher;
+        self.authenticationStatus = authenticationStatus;
+        self.clientRegistrationStatus = clientRegistrationStatus;
         self.syncMOC = syncMOC;
         self.uiMOC = uiMOC;
         self.badge = badge;
@@ -194,7 +204,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                      managedObjectContext:self.syncMOC],
                                    [[DeleteAccountRequestStrategy alloc] initWithAuthStatus:authenticationStatus
                                                                        managedObjectContext:self.syncMOC],
-                                   [[AssetDownloadRequestStrategy alloc] initWithAuthStatus:authenticationStatus
+                                   [[AssetDownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus
                                                                    taskCancellationProvider:taskCancellationProvider
                                                                        managedObjectContext:self.syncMOC],
                                    [[AddressBookUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus
@@ -261,11 +271,11 @@ ZM_EMPTY_ASSERTING_INIT()
     self.conversationStatusSync = [[ConversationStatusStrategy alloc] initWithManagedObjectContext:self.syncMOC];
     self.pingBackRequestStrategy = [[PingBackRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC backgroundAPNSPingBackStatus:backgroundAPNSPingBackStatus authenticationStatus:authenticationStatus];
     self.pushNoticeFetchStrategy = [[PushNoticeRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC backgroundAPNSPingBackStatus:backgroundAPNSPingBackStatus authenticationStatus:authenticationStatus];
-    self.fileUploadRequestStrategy = [[FileUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus clientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC taskCancellationProvider:taskCancellationProvider];
-    self.linkPreviewAssetDownloadRequestStrategy = [[LinkPreviewAssetDownloadRequestStrategy alloc] initWithAuthStatus:authenticationStatus managedObjectContext:self.syncMOC];
-    self.linkPreviewAssetUploadRequestStrategy = [[LinkPreviewAssetUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus managedObjectContext:self.syncMOC];
-    self.imageDownloadRequestStrategy = [[ImageDownloadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus  managedObjectContext:self.syncMOC];
-    self.imageUploadRequestStrategy = [[ImageUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus clientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
+    self.fileUploadRequestStrategy = [[FileUploadRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC taskCancellationProvider:taskCancellationProvider];
+    self.linkPreviewAssetDownloadRequestStrategy = [[LinkPreviewAssetDownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
+    self.linkPreviewAssetUploadRequestStrategy = [[LinkPreviewAssetUploadRequestStrategy alloc] initWithClientRegistrationDelegate:clientRegistrationStatus managedObjectContext:self.syncMOC];
+    self.imageDownloadRequestStrategy = [[ImageDownloadRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus  managedObjectContext:self.syncMOC];
+    self.imageUploadRequestStrategy = [[ImageUploadRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
 }
 
 - (void)appDidEnterBackground:(NSNotification *)note

@@ -670,6 +670,40 @@
     XCTAssertEqual(connectionConversation.messages.count, 0u);
 }
 
+- (void)testThatItRemovesPendingConfirmationsForDeletedMessages_54_0_1
+{
+    // given
+    [self.syncMOC setPersistentStoreMetadata:@YES forKey:@"HasHistory"];
+    
+    ZMConversation *oneOnOneConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+    oneOnOneConversation.conversationType = ZMConversationTypeOneOnOne;
+    oneOnOneConversation.remoteIdentifier = [NSUUID UUID];
+    
+    ZMUser *otherUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+    otherUser.remoteIdentifier = [NSUUID UUID];
+    ZMClientMessage* incomingMessage = (ZMClientMessage *)[oneOnOneConversation appendMessageWithText:@"Test"];
+    incomingMessage.sender = otherUser;
+    
+    ZMClientMessage* confirmation = [incomingMessage confirmReception];
+    [self.syncMOC saveOrRollback];
+
+    XCTAssertNotNil(confirmation);
+    XCTAssert(!confirmation.isDeleted);
+    
+    [incomingMessage setVisibleInConversation:nil];
+    [incomingMessage setHiddenInConversation:oneOnOneConversation];
+    
+    // when
+    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+    [self.sut applyPatchesForCurrentVersion:@"54.0.1"];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self.syncMOC saveOrRollback];
+    
+    // then
+    XCTAssertNil(confirmation.managedObjectContext);
+}
+
 - (NSURL *)testVideoFileURL
 {
     NSBundle *bundle = [NSBundle bundleForClass:self.class];

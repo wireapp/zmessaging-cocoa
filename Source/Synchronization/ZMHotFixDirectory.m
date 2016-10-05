@@ -90,6 +90,11 @@ static char* const ZMLogTag ZM_UNUSED = "HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory updateSystemMessages:context];
                      }],
+                    [ZMHotFixPatch
+                     patchWithVersion:@"54.0.1"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory removeDeliveryReceiptsForDeletedMessages:context];
+                     }],
                     ]
                     ;
     });
@@ -159,5 +164,33 @@ static char* const ZMLogTag ZM_UNUSED = "HotFix";
     [[NSFileManager defaultManager] removeItemAtURL:conversationUrl error:nil];
 }
 
++ (void)removeDeliveryReceiptsForDeletedMessages:(NSManagedObjectContext *)context {
+    NSFetchRequest *requestForInsertedMessages = [ZMClientMessage sortedFetchRequestWithPredicate:[ZMClientMessage predicateForObjectsThatNeedToBeInsertedUpstream]];
+    NSArray *possibleMatches = [context executeFetchRequestOrAssert:requestForInsertedMessages];
+    
+    NSArray *confirmationReceiptsForDeletedMessages = [possibleMatches filterWithBlock:^BOOL(ZMClientMessage *candidateConfirmationReceipt) {
+        if (candidateConfirmationReceipt.genericMessage.hasConfirmation &&
+            candidateConfirmationReceipt.genericMessage.confirmation.hasMessageId) {
+            ZMClientMessage *confirmationReceipt = candidateConfirmationReceipt;
+            
+            NSUUID *originalMessageUUID = [NSUUID uuidWithTransportString:confirmationReceipt.genericMessage.confirmation.messageId];
+            
+            ZMMessage *originalConfirmedMessage = [ZMMessage fetchMessageWithNonce:originalMessageUUID
+                                                                   forConversation:confirmationReceipt.conversation
+                                                            inManagedObjectContext:context];
+            
+            if (nil != originalConfirmedMessage && (originalConfirmedMessage.hasBeenDeleted || originalConfirmedMessage.sender == nil)) {
+                return YES;
+            }
+        }
+        return NO;
+    }];
+    
+    for (ZMClientMessage *message in confirmationReceiptsForDeletedMessages) {
+        [context deleteObject:message];
+    }
+    
+    [context saveOrRollback];
+}
 
 @end

@@ -131,6 +131,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         super.setUp()
         
         BackgroundActivityFactory.sharedInstance().mainGroupQueue = FakeGroupQueue()
+        BackgroundActivityFactory.sharedInstance().application = UIApplication.shared
         authenticationProvider = MockAuthenticationProvider()
 
         sut = BackgroundAPNSPingBackStatus(

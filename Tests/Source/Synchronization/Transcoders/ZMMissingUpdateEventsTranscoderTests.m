@@ -375,12 +375,8 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
                               @"has_more" : @(hasMore)
                               };
     
-    NSMutableArray *expectedEvents = [NSMutableArray array];
-    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:innerPayload]];
-    
     return [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
 }
-
 
 - (void)testThatItHasALastUpdateEventIDAfterFetchingNotifications
 {
@@ -624,6 +620,57 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     // when
     
     [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
+    
+    // then
+    NSUUID *lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertEqualObjects(lastUpdateEventID, initialLastUpdateEventID);
+}
+
+- (void)testThatItDoesNotStoreTheLastUpdateEventIDWhenReceivingTransientUpdateEvents_FromNotificationStream
+{
+    // given
+    NSUUID *initialLastUpdateEventID = [NSUUID createUUID];
+    [self setLastUpdateEventID:initialLastUpdateEventID hasMore:NO];
+    NSUUID *expectedLastUpdateEventID = [NSUUID createUUID];
+    NSUUID *lastTransientUpdateEventID = [NSUUID createUUID];
+
+    
+    id <ZMTransportData> payloadExpectedLast = [self updateEventTransportDataWithID:expectedLastUpdateEventID transient:NO];
+    id <ZMTransportData> payloadTransientLast = [self updateEventTransportDataWithID:lastTransientUpdateEventID transient:YES];
+    NSDictionary *payload = @{@"notifications" : @[payloadExpectedLast, payloadTransientLast],
+                              @"has_more" : @(NO)
+                              };
+    
+    ZMTransportResponse* response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
+    
+    // when
+
+    [(id)self.sut.listPaginator didReceiveResponse:response forSingleRequest:nil];
+
+    // then
+    NSUUID *lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];
+    XCTAssertEqualObjects(lastUpdateEventID, expectedLastUpdateEventID);
+}
+
+- (void)testThatItDoesNotStoreTheLastUpdateEventIDWhenReceivingTransientUpdateEvents_FromOnlyTransientNotificationStream
+{
+    // given
+    NSUUID *initialLastUpdateEventID = [NSUUID createUUID];
+    [self setLastUpdateEventID:initialLastUpdateEventID hasMore:NO];
+    NSUUID *firstTransientUpdateEventID = [NSUUID createUUID];
+    NSUUID *lastTransientUpdateEventID = [NSUUID createUUID];
+    
+    id <ZMTransportData> payloadFirstTransient = [self updateEventTransportDataWithID:firstTransientUpdateEventID transient:YES];
+    id <ZMTransportData> payloadLastTransient = [self updateEventTransportDataWithID:lastTransientUpdateEventID transient:YES];
+    NSDictionary *payload = @{@"notifications" : @[payloadFirstTransient, payloadLastTransient],
+                              @"has_more" : @(NO)
+                              };
+    
+    ZMTransportResponse* response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
+    
+    // when
+    
+    [(id)self.sut.listPaginator didReceiveResponse:response forSingleRequest:nil];
     
     // then
     NSUUID *lastUpdateEventID = [[self.uiMOC persistentStoreMetadataForKey:LastUpdateEventIDStoreKey] UUID];

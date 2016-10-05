@@ -19,12 +19,12 @@
 
 @import ZMUtilities;
 @import ZMTransport;
+@import WireMessageStrategy;
 
 #import "ZMPreBackgroundState.h"
 #import "ZMFlowSync.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMStateMachineDelegate.h"
-#import "ZMMessageTranscoder.h"
 
 @interface ZMPreBackgroundState ()
 

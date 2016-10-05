@@ -16,6 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
+@import WireMessageStrategy;
 
 #import <XCTest/XCTest.h>
 #import "MessagingTest.h"
@@ -23,7 +24,6 @@
 #import "ZMUserTranscoder.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMMessageTranscoder.h"
 #import "ZMAssetTranscoder.h"
 #import "ZMConversationEventsTranscoder.h"
 #import "ZMUserImageTranscoder.h"

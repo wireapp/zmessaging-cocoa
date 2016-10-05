@@ -23,10 +23,10 @@
 @import ZMCMockTransport;
 @import zmessaging;
 @import ZMCDataModel;
+@import WireRequestStrategy;
 
 #import "MessagingTest.h"
 #import "ZMUserImageTranscoder.h"
-#import "ZMAssetRequestFactory.h"
 #import "ZMUserImageTranscoder+Testing.h"
 
 

@@ -20,6 +20,7 @@
 @import ZMTransport;
 @import Cryptobox;
 @import ZMCDataModel;
+//@import WireMessageStrategy;
 
 #import "MessagingTest.h"
 #import "ZMSyncStrategy.h"
@@ -31,7 +32,6 @@
 #import "AVSFlowManager.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMUserProfileUpdateStatus.h"
-#import "CBCryptoBox+UpdateEvents.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMLocalNotificationDispatcher.h"

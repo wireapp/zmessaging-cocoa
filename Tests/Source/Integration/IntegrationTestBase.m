@@ -20,6 +20,7 @@
 @import ZMProtos;
 @import CoreTelephony;
 @import ZMCDataModel;
+@import WireMessageStrategy;
 
 #import "IntegrationTestBase.h"
 #import "ZMHotfix.h"
@@ -339,6 +340,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     }
     
     [[BackgroundActivityFactory sharedInstance] setMainGroupQueue:self.uiMOC];
+    [[BackgroundActivityFactory sharedInstance] setApplication:[UIApplication sharedApplication]];
     
     self.userSession = [[ZMUserSession alloc]
                         initWithTransportSession:(id)self.mockTransportSession

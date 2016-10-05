@@ -200,9 +200,10 @@ ZM_EMPTY_ASSERTING_INIT()
     NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectoryURL];
     syncMOC.analytics = analytics;
 
-    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC mainGroupQueue:userInterfaceContext];
     UIApplication *application = [UIApplication sharedApplication];
-
+    
+    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC mainGroupQueue:userInterfaceContext application:application];
+    
     self = [self initWithTransportSession:session
                      userInterfaceContext:userInterfaceContext
                  syncManagedObjectContext:syncMOC
@@ -321,6 +322,8 @@ ZM_EMPTY_ASSERTING_INIT()
         [self registerForRequestToOpenConversationNotification];
         [self enablePushNotifications];
         [self enableBackgroundFetch];
+        
+        self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = self.application.applicationState != UIApplicationStateBackground;
         ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self
                                                                            selector:@selector(didEnterEventProcessingState:)
                                                                                name:ZMApplicationDidEnterEventProcessingStateNotificationName
@@ -500,7 +503,7 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.managedObjectContext performGroupedBlock:^{
         // Refresh the Voip token if needed
         NSData *actualToken = self.pushRegistrant.pushToken;
-        if (actualToken != nil && ![actualToken isEqualToData:self.managedObjectContext.pushKitToken.deviceToken]){
+        if (actualToken != nil && ![actualToken isEqual:self.managedObjectContext.pushKitToken.deviceToken]){
             self.managedObjectContext.pushKitToken = nil;
             [self setPushKitToken:actualToken];
         }

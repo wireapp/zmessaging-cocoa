@@ -18,10 +18,10 @@
 
 
 @import ZMTransport;
+@import WireMessageStrategy;
 
 #import "StateBaseTest.h"
 #import "ZMBackgroundTaskState.h"
-#import "ZMClientMessageTranscoder.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMStateMachineDelegate.h"
 
