@@ -43,14 +43,14 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
         // send new message remotely
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:testMessage1 nonce:NSUUID.createUUID.transportString];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:testMessage1 nonce:NSUUID.createUUID.transportString expiresAfter:nil];
         MockUserClient *fromClient = self.user1.clients.anyObject, *toClient = self.selfUser.clients.anyObject;
         NSData *firstMessageData = [MockUserClient encryptedDataFromClient:fromClient toClient:toClient data:message.data];
         
         [self.groupConversation insertOTRMessageFromClient:fromClient toClient:toClient data:firstMessageData];
         [self spinMainQueueWithTimeout:0.2];
         
-        ZMGenericMessage *secondMessage = [ZMGenericMessage messageWithText:testMessage2 nonce:NSUUID.createUUID.transportString];
+        ZMGenericMessage *secondMessage = [ZMGenericMessage messageWithText:testMessage2 nonce:NSUUID.createUUID.transportString expiresAfter:nil];
         NSData *secondtMessageData = [MockUserClient encryptedDataFromClient:fromClient toClient:toClient data:secondMessage.data];
         [self.groupConversation insertOTRMessageFromClient:fromClient toClient:toClient data:secondtMessageData];
     }];
@@ -82,7 +82,7 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
             NOT_USED(session);
         // will create a notification that is not transient
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Food" nonce:NSUUID.createUUID.transportString];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Food" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);

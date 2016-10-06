@@ -17,7 +17,6 @@
 // 
 
 
-@import ZMProtos;
 @import CoreTelephony;
 @import ZMCDataModel;
 @import WireMessageStrategy;

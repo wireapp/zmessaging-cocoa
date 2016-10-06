@@ -58,7 +58,7 @@
     // given
     NSString *textInput = @"Foobar";
     ZMClientMessage *message = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:textInput nonce:[NSUUID createUUID].transportString];
+    ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:textInput nonce:[NSUUID createUUID].transportString expiresAfter:nil];
     [message addData:genericMessage.data];
     message.sender = self.sender;
     message.visibleInConversation = self.conversation;

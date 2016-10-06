@@ -18,7 +18,6 @@
 
 
 @import ZMTransport;
-@import ZMProtos;
 @import ZMCDataModel;
 
 #import "MessagingTest.h"

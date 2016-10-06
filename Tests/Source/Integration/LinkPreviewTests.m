@@ -210,7 +210,7 @@
     NSString *urlText = ZMTestURLArticleWithoutPictureString;
     __block NSData *encryptedData = nil;
     
-    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString];
+    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
         [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
@@ -226,7 +226,7 @@
     
     //when
     ZMLinkPreview *remoteLinkPreview = [self.mockLinkPreviewDetector linkPreviewFromURLString:urlText includeAsset:NO includingTweet:NO];
-    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString];
+    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
@@ -256,7 +256,7 @@
     NSString *urlText = ZMTestURLArticleWithoutPictureString;
     __block NSData *encryptedData = nil;
     
-    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString];
+    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
         [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
@@ -282,7 +282,7 @@
     
     //when
     ZMLinkPreview *remoteLinkPreview = [builder build];
-    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString];
+    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
@@ -327,7 +327,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     
-    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString];
+    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
         [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
@@ -343,7 +343,7 @@
     
     //when
     ZMLinkPreview *remoteLinkPreview = [self.mockLinkPreviewDetector linkPreviewFromURLString:urlText asset:imageAssetData tweet:nil];
-    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString];
+    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];

@@ -246,7 +246,7 @@
 
 - (NSDictionary *)payloadForEncryptedOTRMessageWithText:(NSString *)text nonce:(NSUUID *)nonce
 {
-    ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:nonce.transportString];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:nonce.transportString expiresAfter:nil];
     NSString *base64EncodedString = message.data.base64String;
     return @{@"data": @{ @"text": base64EncodedString},
              @"conversation" : self.oneOnOneConversation.remoteIdentifier.transportString,

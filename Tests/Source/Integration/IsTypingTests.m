@@ -123,7 +123,7 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"text text" nonce:NSUUID.createUUID.transportString];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"text text" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -153,7 +153,7 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"text text" nonce:NSUUID.createUUID.transportString];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"text text" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);

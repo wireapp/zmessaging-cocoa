@@ -1175,7 +1175,7 @@
 
 - (ZMUpdateEvent *)otrMessageAddPayloadFromClient:(UserClient *)client text:(NSString *)text nonce:(NSUUID *)nonce
 {
-    ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:nonce.transportString];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:nonce.transportString expiresAfter:nil];
     __block NSError *error;
     __block NSData *encryptedData;
     

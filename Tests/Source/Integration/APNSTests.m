@@ -488,7 +488,7 @@
         WaitForAllGroupsToBeEmpty(0.2);
         
 
-        ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Hello" nonce:[NSUUID createUUID].transportString];
+        ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Hello" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
         
         [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
         __block MockEvent *event;

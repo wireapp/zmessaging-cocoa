@@ -311,7 +311,7 @@
 
 - (NSDictionary *)payloadForEncryptedOTRMessageWithText:(NSString *)text nonce:(NSUUID *)nonce
 {
-    ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:nonce.transportString];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:nonce.transportString expiresAfter:nil];
     return [self payloadForOTRMessageWithGenericMessage:message];
 }
 

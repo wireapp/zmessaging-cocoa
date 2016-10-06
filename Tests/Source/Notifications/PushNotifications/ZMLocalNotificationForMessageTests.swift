@@ -17,6 +17,7 @@
 //
 
 import ZMTesting;
+import ZMCDataModel;
 @testable import zmessaging
 
 
@@ -192,7 +193,7 @@ extension ZMLocalNotificationForMessageTests {
     
     func assetNotification(_ fileType: FileType, conversation: ZMConversation, sender: ZMUser) -> ZMLocalNotificationForMessage? {
         let metadata = ZMFileMetadata(fileURL: fileType.testURL)
-        let msg = ZMAssetClientMessage(fileMetadata: metadata, nonce: UUID.create(), managedObjectContext: self.syncMOC)
+        let msg = ZMAssetClientMessage(fileMetadata: metadata, nonce: UUID.create(), managedObjectContext: self.syncMOC, expiresAfter:0.0)
         msg.sender = sender
         msg.visibleInConversation = conversation
         

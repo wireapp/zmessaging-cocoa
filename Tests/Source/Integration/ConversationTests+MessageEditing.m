@@ -286,7 +286,7 @@
     
     MockUserClient *fromClient = self.user1.clients.anyObject;
     MockUserClient *toClient = self.selfUser.clients.anyObject;
-    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Foo" nonce:[NSUUID createUUID].transportString];
+    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Foo" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(id ZM_UNUSED session) {
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:textMessage.data];
@@ -319,7 +319,7 @@
     
     MockUserClient *fromClient = self.user1.clients.anyObject;
     MockUserClient *toClient = self.selfUser.clients.anyObject;
-    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Foo" nonce:[NSUUID createUUID].transportString];
+    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Foo" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(id ZM_UNUSED session) {
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:textMessage.data];
