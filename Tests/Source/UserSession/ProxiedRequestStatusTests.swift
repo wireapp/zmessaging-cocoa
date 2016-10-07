@@ -52,7 +52,7 @@ class ProxiedRequestsStatusTests: MessagingTest {
         self.sut.add(request: request)
         
         //then
-        let pendingRequest = self.sut.pendingRequests.last
+        let pendingRequest = self.sut.pendingRequests.first
         XCTAssertEqual(pendingRequest, request)
     }
     
@@ -72,7 +72,7 @@ class ProxiedRequestsStatusTests: MessagingTest {
         // given
         let request = ProxyRequest(type: .giphy, path: "foo/bar", method: .methodGET, callback: nil)
         let taskIdentifier = ZMTaskIdentifier(identifier: 0, sessionIdentifier: "123")!
-        sut.executedRequests.append((request, taskIdentifier))
+        sut.executedRequests[request] = taskIdentifier
 
         // when
         sut.cancel(request: request)

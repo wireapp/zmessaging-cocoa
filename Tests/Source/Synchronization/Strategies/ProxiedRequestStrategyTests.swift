@@ -80,32 +80,6 @@ class ProxiedRequestStrategyTests: MessagingTest {
         }
     }
     
-    func testThatItGeneratesTwoRequestsInOrder() {
-        
-        // given
-        
-        requestsStatus.add(request: ProxyRequest(type: .giphy, path: "/foo/bar1", method:.methodGET, callback: { (_,_,_) -> Void in return}))
-        requestsStatus.add(request: ProxyRequest(type: .giphy, path: "/foo/bar2", method:.methodGET, callback: { (_,_,_) -> Void in return}))
-        
-        // when
-        let request1 : ZMTransportRequest? = self.sut.nextRequest()
-        
-        // then
-        if let request1 = request1 {
-            XCTAssertEqual(request1.path, "/proxy/giphy/foo/bar1")
-        } else {
-            XCTFail("Empty request")
-        }
-        
-        // and when
-        let request2 : ZMTransportRequest? = self.sut.nextRequest()
-        
-        // then
-        if let request2 = request2 {
-            XCTAssertEqual(request2.path, "/proxy/giphy/foo/bar2")
-        }
-    }
-
     func testThatItGeneratesARequestOnlyOnce() {
         
         // given

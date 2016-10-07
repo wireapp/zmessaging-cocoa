@@ -47,7 +47,7 @@ class UserSessionGiphyRequestStateTests: ZMUserSessionTestsBase {
         
         //then
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        let request = self.sut.proxiedRequestStatus.pendingRequests.last
+        let request = self.sut.proxiedRequestStatus.pendingRequests.first
         XCTAssert(request != nil)
         XCTAssertEqual(request!.path, path)
         XCTAssert(request!.callback != nil)
@@ -92,7 +92,7 @@ class UserSessionGiphyRequestStateTests: ZMUserSessionTestsBase {
         self.sut.proxiedRequest(withPath: url.absoluteString, method:.methodGET, type:.giphy, callback: callback)
         
         //then
-        var request = self.sut.proxiedRequestStatus.pendingRequests.last
+        var request = self.sut.proxiedRequestStatus.pendingRequests.first
         XCTAssertTrue(request == nil)
 
         //when
@@ -101,7 +101,7 @@ class UserSessionGiphyRequestStateTests: ZMUserSessionTestsBase {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         //then
-        request = self.sut.proxiedRequestStatus.pendingRequests.last
+        request = self.sut.proxiedRequestStatus.pendingRequests.first
         XCTAssert(request != nil)
         
     }

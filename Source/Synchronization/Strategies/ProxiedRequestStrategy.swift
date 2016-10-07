@@ -55,8 +55,7 @@ extension ProxiedRequestType {
         
         guard let status = self.requestsStatus else { return nil }
         
-        if(status.pendingRequests.count > 0) {
-            let proxyRequest = status.pendingRequests.remove(at: 0)
+        if let proxyRequest = status.pendingRequests.popFirst() {
             let fullPath = ProxiedRequestStrategy.BasePath + proxyRequest.type.basePath + proxyRequest.path
             let request = ZMTransportRequest(path: fullPath, method: proxyRequest.method, payload: nil)
             if proxyRequest.type == .soundcloud {
@@ -68,7 +67,7 @@ extension ProxiedRequestType {
                     proxyRequest.callback?(response.rawData, response.rawResponse, response.transportSessionError as NSError?)
             }))
             request.add(ZMTaskCreatedHandler(on: self.managedObjectContext, block: { taskIdentifier in
-               self.requestsStatus?.executedRequests.append((proxyRequest, taskIdentifier))
+                self.requestsStatus?.executedRequests[proxyRequest] = taskIdentifier
             }))
             
             return request

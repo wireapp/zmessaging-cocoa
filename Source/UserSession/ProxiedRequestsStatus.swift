@@ -46,8 +46,8 @@ public final class ProxiedRequestsStatus: NSObject {
     private let requestCancellation : ZMRequestCancellation
 
     /// List of requests to be sent to backend
-    public var pendingRequests : [ProxyRequest] = []
-    public var executedRequests : [(ProxyRequest, ZMTaskIdentifier)] = []
+    public var pendingRequests : Set<ProxyRequest> = Set()
+    public var executedRequests : [ProxyRequest : ZMTaskIdentifier] = [:]
     
     public init(requestCancellation: ZMRequestCancellation) {
         self.requestCancellation = requestCancellation
@@ -55,17 +55,14 @@ public final class ProxiedRequestsStatus: NSObject {
     
     @objc(addRequest:)
     public func add(request: ProxyRequest) {
-        pendingRequests.append(request)
+        pendingRequests.insert(request)
     }
     
     @objc(cancelRequest:)
     public func cancel(request: ProxyRequest) {
-        if let index = pendingRequests.index(of: request) {
-            pendingRequests.remove(at: index)
-        }
+        pendingRequests.remove(request)
         
-        if let index = executedRequests.index(where: {$0.0 == request }) {
-            let (_, taskIdentifier) = executedRequests.remove(at: index)
+        if let taskIdentifier = executedRequests[request] {
             requestCancellation.cancelTask(with: taskIdentifier)
         }
     }
