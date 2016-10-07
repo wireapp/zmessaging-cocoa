@@ -160,7 +160,7 @@
 "push.notification.action.message.open" = "Abrir";
 "push.notification.action.message.reply" = "Responder";
 "push.notification.action.message.reply.button.title" = "Enviar";
-"push.notification.action.conversation.mute" = "Sem som";
+"push.notification.action.conversation.mute" = "Silenciar";
 
 "push.notification.action.call.accept" = "Aceitar";
 "push.notification.action.call.ignore" = "Rejeitar";
