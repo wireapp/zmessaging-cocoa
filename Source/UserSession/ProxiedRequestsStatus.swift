@@ -62,8 +62,9 @@ public final class ProxiedRequestsStatus: NSObject {
     public func cancel(request: ProxyRequest) {
         pendingRequests.remove(request)
         
-        if let taskIdentifier = executedRequests[request] {
+        if let taskIdentifier = executedRequests.removeValue(forKey: request) {
             requestCancellation.cancelTask(with: taskIdentifier)
+            
         }
     }
 }
