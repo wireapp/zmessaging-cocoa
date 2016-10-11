@@ -5,7 +5,7 @@
         <key>push.notification.add.message.many.group</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%2$#@new_messages@ in %1$@</string>
+            <string>%1$@'de %2$#@new_messages@ yeni mesaj</string>
             <key>new_messages</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -13,15 +13,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>New message</string>
+                <string>Yeni mesaj</string>
                 <key>other</key>
-                <string>%2$@ messages</string>
+                <string>%2$@ mesaj</string>
             </dict>
         </dict>
         <key>push.notification.add.message.many.group.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$#@new_messages@ in a conversation</string>
+            <string>Bir konuşmada %1$#@new_messages@ mesaj</string>
             <key>new_messages</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -29,15 +29,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>New message</string>
+                <string>Yeni mesaj</string>
                 <key>other</key>
-                <string>%1$@ messages</string>
+                <string>%1$@ mesaj</string>
             </dict>
         </dict>
         <key>push.notification.add.message.many.oneonone</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%2$#@new_messages@ from %1$@</string>
+            <string>%1$@'dan %2$#@new_messages@ mesaj</string>
             <key>new_messages</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -45,15 +45,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>New message</string>
+                <string>Yeni mesaj</string>
                 <key>other</key>
-                <string>%2$@ messages</string>
+                <string>%2$@ mesaj</string>
             </dict>
         </dict>
         <key>push.notification.add.message.many.oneonone.nousername</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$#@new_messages@ in a conversation</string>
+            <string>Bir konuşmada %1$#@new_messages@ mesaj</string>
             <key>new_messages</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -61,15 +61,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>New message</string>
+                <string>Yeni mesaj</string>
                 <key>other</key>
-                <string>%1$@ messages</string>
+                <string>%1$@ mesaj</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.oneonone</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ called%2$#@new_calls@</string>
+            <string>%1$@ %2$#@new_calls@ kez aradı</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -79,13 +79,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %2$@ times</string>
+                <string> %2$@ kez</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.oneonone.nousername</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>Someone called%1$#@new_calls@</string>
+            <string>Someone called %1$#@new_calls@ kez</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -95,13 +95,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %1$@ times</string>
+                <string> %1$@ kez</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.group</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ called%3$#@new_calls@ in %2$@</string>
+            <string>%1$@ %2$@'de %3$#@new_calls@ kez aradı</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -111,13 +111,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %3$@ times</string>
+                <string> %3$@ kez</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.group.nousername</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>Someone called%2$#@new_calls@ in %1$@</string>
+            <string>Birisi %1$@'de %2$#@new_calls@ kez aradı</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -127,13 +127,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %2$@ times</string>
+                <string> %2$@ kez</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.group.nousername.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>Someone called%1$#@new_calls@ in a conversation</string>
+            <string>Birisi, bir konuşmada %1$#@new_calls@ kez aradı</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -143,13 +143,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %1$@ times</string>
+                <string> %1$@ kez</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.group.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ called%2$#@new_calls@ in a conversation</string>
+            <string>%1$@ bir konuşmada %2$#@new_calls@ kez aradı</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -159,13 +159,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %2$@ times</string>
+                <string> %2$@ kez</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.many</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>You have %2$#@new_calls@ in %1@</string>
+            <string>%1@'de %2$#@new_calls@ araman var</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -173,15 +173,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>one missed call</string>
+                <string>bir cevapsız arama</string>
                 <key>other</key>
-                <string>%2@ missed calls</string>
+                <string>%2@ cevapsız arama</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.many.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>You have %1$#@new_calls@ in a conversation</string>
+            <string>Bir konuşmada %1$#@new_calls@ araman var</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -189,15 +189,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>one missed call</string>
+                <string>bir cevapsız arama</string>
                 <key>other</key>
-                <string>%1$@ missed calls</string>
+                <string>%1$@ cevapsız arama</string>
             </dict>
         </dict>
         <key>push.notification.knock.group</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ pinged%3$#@new_knocks@in %2$@</string>
+            <string>%1$@ %2$@'de %3$#@@new_knocks@ kez pingledi</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -207,13 +207,13 @@
                 <key>one</key>
                 <string> </string>
                 <key>other</key>
-                <string> %3$@ times </string>
+                <string> %3$@ kez </string>
             </dict>
         </dict>
         <key>push.notification.knock.group.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ pinged%2$#@new_knocks@in a conversation</string>
+            <string>%1$@ bir konuşmada %2$#@new_knocks@ kez pingledi</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -223,13 +223,13 @@
                 <key>one</key>
                 <string> </string>
                 <key>other</key>
-                <string> %2$@ times </string>
+                <string> %2$@ kez </string>
             </dict>
         </dict>
         <key>push.notification.knock.group.nousername</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%2$#@new_knocks@ in %1$@</string>
+            <string>%1$@'de %2$#@new_knocks@ yeni ping</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -239,13 +239,13 @@
                 <key>one</key>
                 <string>Ping</string>
                 <key>other</key>
-                <string>%2$@ pings</string>
+                <string>%2$@ ping</string>
             </dict>
         </dict>
         <key>push.notification.knock.group.nousername.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$#@new_knocks@ in a conversation</string>
+            <string>Bir konuşmada %1$#@new_knocks@ ping</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -255,13 +255,13 @@
                 <key>one</key>
                 <string>Ping</string>
                 <key>other</key>
-                <string>%1$@ pings</string>
+                <string>%1$@ ping</string>
             </dict>
         </dict>
         <key>push.notification.knock.oneonone</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ pinged%3$#@new_knocks@</string>
+            <string>%1$@ %3$#@new_knocks@ kez pingledi</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -271,7 +271,7 @@
                 <key>one</key>
                 <string> </string>
                 <key>other</key>
-                <string> %3$@ times</string>
+                <string> %3$@ kez</string>
             </dict>
         </dict>
         <key>push.notification.knock.oneonone.nousername</key>
@@ -287,7 +287,7 @@
                 <key>one</key>
                 <string>Ping</string>
                 <key>other</key>
-                <string>%2$@ pings</string>
+                <string>%2$@ ping</string>
             </dict>
         </dict>
     </dict>
