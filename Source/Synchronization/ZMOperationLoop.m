@@ -29,7 +29,6 @@
 #import "ZMUserSession.h"
 #import "ZMTracing.h"
 #import <libkern/OSAtomic.h>
-#import "ZMBadge.h"
 #import <os/activity.h>
 #import "ZMessagingLogs.h"
 #import "ZMLocalNotificationDispatcher.h"
@@ -84,7 +83,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                       appGroupIdentifier:(NSString *)appGroupIdentifier
                              application:(id<ZMApplication>)application;
 {
-    ZMBadge *badge = [[ZMBadge alloc] initWithApplication:application];
 
     ZMSyncStrategy *syncStrategy = [[ZMSyncStrategy alloc] initWithAuthenticationCenter:authenticationStatus
                                                                 userProfileUpdateStatus:userProfileUpdateStatus
@@ -102,7 +100,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                                                            localNotificationsDispatcher:dispatcher
                                                                taskCancellationProvider:transportSession
                                                                      appGroupIdentifier:(NSString *)appGroupIdentifier
-                                                                                  badge:badge
                                                                             application:application];
     
     self = [self initWithTransportSession:transportSession

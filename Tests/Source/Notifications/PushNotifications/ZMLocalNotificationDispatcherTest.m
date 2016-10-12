@@ -23,7 +23,6 @@
 #import "MessagingTest.h"
 #import "ZMLocalNotificationDispatcher+Testing.h"
 #import "ZMLocalNotification.h"
-#import "ZMBadge.h"
 #import "MessagingTest+EventFactory.h"
 #import "UILocalNotification+UserInfo.h"
 #import "zmessaging_iOS_Tests-Swift.h"

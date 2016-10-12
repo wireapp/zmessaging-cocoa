@@ -27,7 +27,6 @@
 @class ZMClientRegistrationStatus;
 @class NSManagedObjectContext;
 @class ZMLocalNotificationDispatcher;
-@class ZMBadge;
 
 @protocol ZMSyncStateDelegate;
 @protocol ZMTransportData;

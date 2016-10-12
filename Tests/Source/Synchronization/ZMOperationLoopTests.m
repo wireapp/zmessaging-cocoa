@@ -36,14 +36,12 @@
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMLocalNotificationDispatcher.h"
 #import "ZMOperationLoop+Background.h"
-#import "ZMBadge.h"
 
 @interface ZMOperationLoopTests : MessagingTest
 
 @property (nonatomic) ZMOperationLoop *sut;
 @property (nonatomic) id transportSession;
 @property (nonatomic) id syncStrategy;
-@property (nonatomic) id badge;
 @property (nonatomic) id pingBackStatus;
 @property (nonatomic) id mockPushChannel;
 @property (nonatomic) NSMutableArray *pushChannelNotifications;
@@ -61,8 +59,6 @@
     
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.transportSession];
-
-    self.badge = [[ZMBadge alloc] init];
     
     self.pingBackStatus = [OCMockObject mockForClass:BackgroundAPNSPingBackStatus.class];
     self.mockPushChannel = [OCMockObject niceMockForClass:[ZMPushChannelConnection class]];
