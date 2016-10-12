@@ -41,12 +41,18 @@ extension NotificationForMessage {
         }
     }
     
-    public func configureNotification(_ message: MessageType) -> UILocalNotification {
+    public func configureNotification(_ message: MessageType, isEphemeral: Bool = false) -> UILocalNotification {
         let notification = UILocalNotification()
-        let shouldHideContent = message.managedObjectContext!.value(forKey: ZMShouldHideNotificationContentKey)
-        if let shouldHideContent = shouldHideContent as? NSNumber , shouldHideContent.boolValue == true {
+        var shouldHideContent = isEphemeral
+        if let hide = message.managedObjectContext!.value(forKey: ZMShouldHideNotificationContentKey) as? NSNumber, hide.boolValue == true {
+            shouldHideContent = true
+        }
+        if shouldHideContent {
             notification.alertBody = ZMPushStringDefault.localized()
             notification.soundName = ZMLocalNotificationNewMessageSoundName()
+            if isEphemeral {
+                notification.category = ZMConversationCategory
+            }
         } else {
             notification.alertBody = configureAlertBody(message).escapingPercentageSymbols()
             notification.soundName = soundName
@@ -102,7 +108,7 @@ final public class ZMLocalNotificationForMessage : ZMLocalNotification, Notifica
         self.application = application ?? UIApplication.shared
         super.init(conversationID: conversation.remoteIdentifier)
         
-        let notification = configureNotification(message)
+        let notification = configureNotification(message, isEphemeral: message.isEphemeral)
         notifications.append(notification)
     }
 
