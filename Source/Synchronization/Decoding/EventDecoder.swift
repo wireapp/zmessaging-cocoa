@@ -23,8 +23,18 @@ import WireMessageStrategy
 
 private let zmLog = ZMSLog(tag: "EventDecoder")
 
+/// Key used in persistent store metadata
 private let previouslyReceivedEventIDsKey = "zm_previouslyReceivedEventIDsKey"
 
+/// Holds a list of received event IDs
+@objc public protocol PreviouslyReceivedEventIDsCollection : NSObjectProtocol {
+    
+    func discardListOfAlreadyReceivedPushEventIDs()
+}
+
+
+
+/// Decodes and stores events from various sources to be processed later
 @objc public final class EventDecoder: NSObject {
     
     public typealias ConsumeBlock = (([ZMUpdateEvent]) -> Void)
@@ -50,7 +60,6 @@ private let previouslyReceivedEventIDsKey = "zm_previouslyReceivedEventIDsKey"
         super.init()
         self.createReceivedPushEventIDsStore()
     }
-
 }
 
 // MARK: - Process events
@@ -165,11 +174,6 @@ extension EventDecoder {
         return Set(self.eventMOC.persistentStoreMetadata(forKey: previouslyReceivedEventIDsKey) as! [String])
     }
     
-    /// Discards the list of already received events
-    public func discardListOfAlreadyReceivedPushEventIDs() {
-        self.eventMOC.setPersistentStoreMetadata(NSArray(), forKey: previouslyReceivedEventIDsKey)
-    }
-    
     /// Store received event IDs 
     fileprivate func storeReceivedPushEventIDs(from: [ZMUpdateEvent]) {
         let uuidToAdd = from
@@ -191,5 +195,13 @@ extension EventDecoder {
                 return event
             }
         }
+    }
+}
+
+extension EventDecoder : PreviouslyReceivedEventIDsCollection {
+    
+    /// Discards the list of already received events
+    public func discardListOfAlreadyReceivedPushEventIDs() {
+        self.eventMOC.setPersistentStoreMetadata(NSArray(), forKey: previouslyReceivedEventIDsKey)
     }
 }
