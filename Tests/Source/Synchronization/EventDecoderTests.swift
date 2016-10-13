@@ -24,34 +24,10 @@ class EventDecoderTest: MessagingTest {
     
     var eventMOC = NSManagedObjectContext.createEventContext(withAppGroupIdentifier: nil)
     var sut : EventDecoder!
-    
-    override func setUp() {
-        super.setUp()
-        sut = EventDecoder(eventMOC: eventMOC, syncMOC: syncMOC)
-        eventMOC.add(dispatchGroup)
-    }
-    
-    override func tearDown() {
-        eventMOC.tearDown()
-        super.tearDown()
-    }
-    
-    func dummyEvent() -> ZMUpdateEvent {
-        let conversation = ZMConversation.insertNewObject(in: syncMOC)
-        conversation.remoteIdentifier = UUID.create()
-        let payload = payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
-        return ZMUpdateEvent(fromEventStreamPayload: payload, uuid: UUID.create())!
-    }
-    
-    func insert(_ events: [ZMUpdateEvent], startIndex: Int64 = 0) {
-        eventMOC.performGroupedBlockAndWait {
-            events.enumerated().forEach { index, event  in
-                let _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: startIndex + index)
-            }
-            
-            XCTAssert(self.eventMOC.saveOrRollback())
-        }
-    }
+}
+
+// MARK: - Processing events
+extension EventDecoderTest {
     
     func testThatItProcessesEvents() {
         
@@ -59,7 +35,7 @@ class EventDecoderTest: MessagingTest {
         
         syncMOC.performGroupedBlock {
             // given
-            let event = self.dummyEvent()
+            let event = self.eventStreamEvent()
             
             // when
             self.sut.processEvents([event]) { (events) in
@@ -81,8 +57,8 @@ class EventDecoderTest: MessagingTest {
         
         syncMOC.performGroupedBlock {
             // given
-            let event1 = self.dummyEvent()
-            let event2 = self.dummyEvent()
+            let event1 = self.eventStreamEvent()
+            let event2 = self.eventStreamEvent()
             self.insert([event1])
             
             // when
@@ -113,10 +89,10 @@ class EventDecoderTest: MessagingTest {
         syncMOC.performGroupedBlock {
             
             // given
-            let event1 = self.dummyEvent()
-            let event2 = self.dummyEvent()
-            let event3 = self.dummyEvent()
-            let event4 = self.dummyEvent()
+            let event1 = self.eventStreamEvent()
+            let event2 = self.eventStreamEvent()
+            let event3 = self.eventStreamEvent()
+            let event4 = self.eventStreamEvent()
             
             self.insert([event1, event2, event3])
             
@@ -149,10 +125,10 @@ class EventDecoderTest: MessagingTest {
         syncMOC.performGroupedBlock {
             
             // given
-            let event1 = self.dummyEvent()
-            let event2 = self.dummyEvent()
-            let event3 = self.dummyEvent()
-            let event4 = self.dummyEvent()
+            let event1 = self.eventStreamEvent()
+            let event2 = self.eventStreamEvent()
+            let event3 = self.eventStreamEvent()
+            let event4 = self.eventStreamEvent()
             
             self.insert([event1])
             
@@ -173,6 +149,152 @@ class EventDecoderTest: MessagingTest {
         }
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+    
+}
+
+// MARK: - Already seen events
+extension EventDecoderTest {
+    
+    func testThatItProcessesEventsWithDifferentUUIDWhenThroughPushEventsFirst() {
+        
+        syncMOC.performGroupedBlockAndWait {
+            
+            // given
+            let pushProcessed = self.expectation(description: "Push event processed")
+            let pushEvent = self.pushNotificationEvent()
+            let streamEvent = self.eventStreamEvent()
+            
+            // when
+            self.sut.processEvents([pushEvent]) { (events) in
+                XCTAssertTrue(events.contains(pushEvent))
+                pushProcessed.fulfill()
+            }
+            
+            // then
+            XCTAssert(self.waitForCustomExpectations(withTimeout: 0.5))
+            
+            // and when
+            let streamProcessed = self.expectation(description: "Push event processed")
+            self.sut.processEvents([streamEvent]) { (events) in
+                XCTAssertTrue(events.contains(streamEvent))
+                streamProcessed.fulfill()
+            }
+            
+            // then
+            XCTAssert(self.waitForCustomExpectations(withTimeout: 0.5))
+        }
+    }
+    
+    func testThatItDoesNotProcessesEventsWithSameUUIDWhenThroughPushEventsFirst() {
+
+        syncMOC.performGroupedBlockAndWait {
+
+            // given
+            let pushProcessed = self.expectation(description: "Push event processed")
+            let uuid = UUID.create()
+            let pushEvent = self.pushNotificationEvent(uuid: uuid)
+            let streamEvent = self.eventStreamEvent(uuid: uuid)
+            
+            // when
+            self.sut.processEvents([pushEvent]) { (events) in
+                XCTAssertTrue(events.contains(pushEvent))
+                pushProcessed.fulfill()
+            }
+            
+            // then
+            XCTAssert(self.waitForCustomExpectations(withTimeout: 0.5))
+            
+            // and when
+            let streamProcessed = self.expectation(description: "Push event processed")
+            self.sut.processEvents([streamEvent]) { (events) in
+                XCTAssertTrue(events.isEmpty)
+                streamProcessed.fulfill()
+            }
+
+            // then
+            XCTAssert(self.waitForCustomExpectations(withTimeout: 0.5))
+        }
+    }
+    
+    func testThatItProcessesEventsWithSameUUIDWhenThroughPushEventsFirstAndDiscarding() {
+        
+        syncMOC.performGroupedBlockAndWait {
+            
+            // given
+            let pushProcessed = self.expectation(description: "Push event processed")
+            let uuid = UUID.create()
+            let pushEvent = self.pushNotificationEvent(uuid: uuid)
+            let streamEvent = self.eventStreamEvent(uuid: uuid)
+            
+            // when
+            self.sut.processEvents([pushEvent]) { (events) in
+                XCTAssertTrue(events.contains(pushEvent))
+                pushProcessed.fulfill()
+            }
+            self.sut.discardListOfAlreadyReceivedPushEventIDs()
+            
+            // then
+            XCTAssert(self.waitForCustomExpectations(withTimeout: 0.5))
+            
+            // and when
+            let streamProcessed = self.expectation(description: "Push event processed")
+            self.sut.processEvents([streamEvent]) { (events) in
+                XCTAssertTrue(events.contains(streamEvent))
+                streamProcessed.fulfill()
+            }
+            
+            // then
+            XCTAssert(self.waitForCustomExpectations(withTimeout: 0.5))
+        }
+    }
+    
+}
+
+
+// MARK: - Helpers
+extension EventDecoderTest {
+    
+    override func setUp() {
+        super.setUp()
+        sut = EventDecoder(eventMOC: eventMOC, syncMOC: syncMOC)
+        eventMOC.add(dispatchGroup)
+    }
+    
+    override func tearDown() {
+        eventMOC.tearDown()
+        super.tearDown()
+    }
+    
+    /// Returns an event from the notification stream
+    func eventStreamEvent(uuid: UUID? = nil) -> ZMUpdateEvent {
+        let conversation = ZMConversation.insertNewObject(in: syncMOC)
+        conversation.remoteIdentifier = UUID.create()
+        let payload = payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
+        return ZMUpdateEvent(fromEventStreamPayload: payload, uuid: uuid ?? UUID.create())!
+    }
+    
+    /// Returns an event from a push notification
+    func pushNotificationEvent(uuid: UUID? = nil) -> ZMUpdateEvent {
+        let conversation = ZMConversation.insertNewObject(in: syncMOC)
+        conversation.remoteIdentifier = UUID.create()
+        let innerPayload = payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
+        let payload = [
+            "id" : (uuid ?? UUID.create()).transportString(),
+            "payload" : [innerPayload],
+        ] as [String : Any]
+        let events = ZMUpdateEvent.eventsArray(from: payload as NSDictionary, source: .pushNotification)
+        return events!.first!
+    }
+    
+    func insert(_ events: [ZMUpdateEvent], startIndex: Int64 = 0) {
+        eventMOC.performGroupedBlockAndWait {
+            events.enumerated().forEach { index, event  in
+                let _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: startIndex + index)
+            }
+            
+            XCTAssert(self.eventMOC.saveOrRollback())
+        }
     }
     
 }
