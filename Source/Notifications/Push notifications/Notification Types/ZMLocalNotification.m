@@ -39,6 +39,7 @@ static NSString * const FailedMessageInGroupConversationText = @"failed.message.
 static NSString * const FailedMessageInOneOnOneConversationText = @"failed.message.oneonone";
 
 NSString * const ZMPushStringDefault = @"default";
+NSString * const ZMPushStringEphemeral = @"ephemeral";
 
 
 // These are the "base" keys for messages. We append to these for the specific case.

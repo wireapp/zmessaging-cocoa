@@ -31,6 +31,7 @@ extern NSString * _Null_unspecified const ZMLocalNotificationUserInfoNonceKey;
 
 
 extern NSString * _Null_unspecified const ZMPushStringDefault;
+extern NSString * _Null_unspecified const ZMPushStringEphemeral;
 
 extern NSString * _Null_unspecified const ZMPushStringMessageAdd;
 extern NSString * _Null_unspecified const ZMPushStringImageAdd;
