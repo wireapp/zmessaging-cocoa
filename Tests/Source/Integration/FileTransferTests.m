@@ -1286,7 +1286,8 @@
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalWithMimeType:@"video/mp4"
                                                                 updateWithMessage:updateMessage
                                                                       insertBlock:insertBlock
-                                                                            nonce:nonce];
+                                                                            nonce:nonce
+                                                                      isEphemeral:NO];
     
     // insert the thumbnail asset remotely
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -1610,13 +1611,14 @@
                                                    insertBlock:(void (^)(NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to))insertBlock
                                                          nonce:(NSUUID *)nonce
 {
-    return [self remotelyInsertAssetOriginalWithMimeType:@"text/plain" updateWithMessage:updateMessage insertBlock:insertBlock nonce:nonce];
+    return [self remotelyInsertAssetOriginalWithMimeType:@"text/plain" updateWithMessage:updateMessage insertBlock:insertBlock nonce:nonce isEphemeral:NO];
 }
 
 - (ZMAssetClientMessage *)remotelyInsertAssetOriginalWithMimeType:(NSString *)mimeType
                                                 updateWithMessage:(ZMGenericMessage *)updateMessage
                                                       insertBlock:(void (^)(NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to))insertBlock
                                                             nonce:(NSUUID *)nonce
+                                                      isEphemeral:(BOOL)isEphemeral
 {
     
     // given
@@ -1632,7 +1634,7 @@
                                                                       mimeType:mimeType
                                                                           name:self.name
                                                                      messageID:nonce.transportString
-                                                                  expiresAfter:nil];
+                                                                  expiresAfter:isEphemeral ? @20 : nil];
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *__unused session) {
@@ -1665,6 +1667,338 @@
     XCTAssertEqualObjects(message.nonce, nonce);
     
     return message;
+}
+
+@end
+
+
+@implementation FileTransferTests (Ephemeral)
+
+- (void)testThatItSendsAFileMessage_WithVideo_Ephemeral
+{
+    //given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForEverythingToBeDone();
+    
+    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+    conversation.messageDestructionTimeout = 10;
+    XCTAssertNotNil(conversation);
+    XCTAssertEqual(conversation.messages.count, 1lu);
+    
+    [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
+    NSUInteger initialMessageCount = conversation.messages.count;
+    
+    NSURL *fileURL = self.testVideoFileURL;
+    NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
+    // Used for uploading the thumbnail and the full asset
+    NSString *expectedAssetAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString];
+    
+    // when
+    [self.mockTransportSession resetReceivedRequests];
+    
+    __block ZMMessage *fileMessage;
+    [self.userSession performChanges:^{
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
+    }];
+    WaitForEverythingToBeDone();
+    
+    //then
+    XCTAssertTrue(fileMessage.isEphemeral);
+    XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
+    XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
+    
+    NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
+    
+    // Asset.Original, Asset.Preview & Asset.Uploaded
+    if (3 != requests.count) {
+        return XCTFail(@"Wrong number of requests");
+    }
+    
+    XCTAssertEqualObjects(requests.firstObject.path, expectedMessageAddPath);
+    
+    ZMTransportRequest *thumbnailRequest = requests[1];
+    XCTAssertEqualObjects(thumbnailRequest.path, expectedAssetAddPath);
+    
+    ZMTransportRequest *fullAssetRequest = requests[2];
+    XCTAssertEqualObjects(fullAssetRequest.path, expectedAssetAddPath);
+    
+    XCTAssertEqual(conversation.messages.count - initialMessageCount, 1lu);
+    
+    ZMMessage *message = conversation.messages.lastObject;
+    
+    XCTAssertNotNil(message.fileMessageData);
+    XCTAssertNil(message.imageMessageData);
+    XCTAssertEqualObjects(message.fileMessageData.filename.stringByDeletingPathExtension, @"video");
+    XCTAssertEqualObjects(message.fileMessageData.filename.pathExtension, @"mp4");
+    
+    NSError *error = nil;
+    NSUInteger size = [NSFileManager.defaultManager attributesOfItemAtPath:fileURL.path error:&error].fileSize;
+    
+    XCTAssertNil(error);
+    XCTAssertEqual(message.fileMessageData.size, size);
+}
+
+- (void)testThatAFileUpload_AssetOriginal_MessageIsReceivedWhenSentRemotely_Ephemeral
+{
+    //given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    
+    NSUUID *nonce = NSUUID.createUUID;
+    ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
+                                                                      mimeType:@"text/plain"
+                                                                          name:self.name
+                                                                     messageID:nonce.transportString
+                                                                  expiresAfter:@20];
+    
+    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
+    __block NSError *error;
+    __block NSString *prekey;
+    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
+        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
+    }];
+    XCTAssertNil(error);
+    
+    // when
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [self inserOTRMessage:original
+               inConversation:self.selfToUser1Conversation
+                     fromUser:self.user1
+                     toClient:self.selfUser.clients.anyObject
+                     usingKey:prekey
+                      session:session];
+    }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+    XCTAssertEqual(conversation.messages.count, 2lu);
+    
+    if (! [conversation.messages.lastObject isKindOfClass:ZMAssetClientMessage.class]) {
+        return XCTFail(@"Unexpected message type, expected ZMAssetClientMessage : %@", [conversation.messages.lastObject class]);
+    }
+    
+    ZMAssetClientMessage *message = (ZMAssetClientMessage *)conversation.messages.lastObject;
+    XCTAssertTrue(message.isEphemeral);
+
+    XCTAssertEqual(message.size, 256lu);
+    XCTAssertEqualObjects(message.mimeType, @"text/plain");
+    XCTAssertEqualObjects(message.filename, self.name);
+    XCTAssertEqualObjects(message.nonce, nonce);
+    XCTAssertNil(message.assetId);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
+}
+
+- (void)testThatAFileUpload_AssetUploaded_MessageIsReceivedAndUpdatesTheOriginalMessageWhenSentRemotely_Ephemeral
+{
+    //given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    NSUUID *nonce = NSUUID.createUUID;
+    NSUUID *assetID = NSUUID.createUUID;
+    NSData *otrKey = NSData.randomEncryptionKey;
+    NSData *sha256 = NSData.zmRandomSHA256Key;
+    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@20];
+    
+    // when
+    ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
+                                     ^(NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to) {
+                                         [conversation insertOTRAssetFromClient:from toClient:to metaData:data imageData:nil assetId:assetID isInline:NO];
+                                     } nonce:nonce];
+    XCTAssertTrue(message.isEphemeral);
+
+    // then
+    XCTAssertEqualObjects(message.assetId, assetID); // We should have received an asset ID to be able to download the file
+    XCTAssertEqualObjects(message.nonce, nonce);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateUploaded);
+    XCTAssertTrue(message.isEphemeral);
+}
+
+- (void)testThatItUpdatesAFileMessageWhenTheUploadIsCancelledRemotely_Ephemeral
+{
+    //given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    NSUUID *nonce = NSUUID.createUUID;
+    ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce.transportString  expiresAfter:@20];
+    
+    // when
+    ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:cancelled insertBlock:
+                                     ^(NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to) {
+                                         [conversation insertOTRMessageFromClient:from toClient:to data:data];
+                                     } nonce:nonce];
+    XCTAssertTrue(message.isEphemeral);
+
+    // then
+    XCTAssertNil(message.assetId);
+    // As soon as we delete the message on cancelation we can remove this check
+    // and assert the absence of the message instead
+    XCTAssertEqual(message.transferState, ZMFileTransferStateCancelledUpload);
+    XCTAssertTrue(message.isEphemeral);
+
+}
+
+- (void)testThatItUpdatesAFileMessageWhenTheUploadFailesRemotlely_Ephemeral
+{
+    //given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    NSUUID *nonce = NSUUID.createUUID;
+    ZMGenericMessage *failed = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedFAILED messageID:nonce.transportString expiresAfter:@20];
+    
+    // when
+    ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:failed insertBlock:
+                                     ^(NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to) {
+                                         [conversation insertOTRMessageFromClient:from toClient:to data:data];
+                                     } nonce:nonce];
+    XCTAssertTrue(message.isEphemeral);
+
+    // then
+    XCTAssertNil(message.assetId);
+    // As soon as we delete the message on cancelation we can remove this check
+    // and assert the absence of the message instead
+    XCTAssertEqual(message.transferState, ZMFileTransferStateFailedUpload);
+    XCTAssertTrue(message.isEphemeral);
+}
+
+- (void)testThatItReceivesAVideoFileMessageThumbnailSentRemotely_Ephemeral
+{
+    // given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    NSUUID *nonce = NSUUID.createUUID;
+    NSUUID *thumbnailAssetID = NSUUID.createUUID;
+    NSString *thumbnailIDString = thumbnailAssetID.transportString;
+    NSData *otrKey = NSData.randomEncryptionKey;
+    NSData *encryptedAsset = [self.mediumJPEGData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
+    NSData *sha256 = encryptedAsset.zmSHA256Digest;
+    
+    ZMAssetRemoteData *remote = [ZMAssetRemoteData remoteDataWithOTRKey:otrKey sha256:sha256 assetId:thumbnailIDString assetToken:nil];
+    ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
+    ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
+    ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:@(20)];
+    
+    
+    // when
+    __block MessageChangeObserver *observer;
+    __block ZMConversation *conversation;
+    
+    id insertBlock = ^(NSData *data, MockConversation *mockConversation, MockUserClient *from, MockUserClient *to) {
+        [mockConversation insertOTRAssetFromClient:from toClient:to metaData:data imageData:nil assetId:thumbnailAssetID isInline:NO];
+        conversation = [self conversationForMockConversation:mockConversation];
+        observer = [[MessageChangeObserver alloc] initWithMessage:conversation.messages.lastObject];
+    };
+    
+    ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalWithMimeType:@"video/mp4"
+                                                                updateWithMessage:updateMessage
+                                                                      insertBlock:insertBlock
+                                                                            nonce:nonce
+                                                                      isEphemeral:YES];
+    XCTAssertTrue(message.isEphemeral);
+    
+    // insert the thumbnail asset remotely
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session createAssetWithData:encryptedAsset
+                          identifier:thumbnailIDString
+                         contentType:@"image/jpeg"
+                     forConversation:conversation.remoteIdentifier.transportString];
+    }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertNotNil(message);
+    XCTAssertNotNil(observer);
+    XCTAssertNotNil(conversation);
+    
+    [self.userSession performChanges:^{
+        [message requestImageDownload];
+    }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    XCTAssertNotNil(message);
+    NSArray *notifications = observer.notifications;
+    XCTAssertEqual(notifications.count, 1lu);
+    MessageChangeInfo *info = notifications.lastObject;
+    XCTAssertTrue(info.imageChanged);
+    
+    // then
+    // We should have received an thumbnail asset ID to be able to download the thumbnail image
+    XCTAssertEqualObjects(message.fileMessageData.thumbnailAssetID, thumbnailIDString);
+    XCTAssertEqualObjects(message.nonce, nonce);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
+    XCTAssertTrue(message.isEphemeral);
+
+    [observer tearDown];
+}
+
+- (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_FailedDownload_AfterFailedDecryption_Ephemeral
+{
+    //given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    NSUUID *nonce = NSUUID.createUUID;
+    NSUUID *assetID = NSUUID.createUUID;
+    NSData *otrKey = NSData.randomEncryptionKey;
+    
+    NSData *assetData = [NSData secureRandomDataOfLength:256];
+    NSData *encryptedAsset = [assetData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
+    NSData *sha256 = encryptedAsset.zmSHA256Digest;
+    
+    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@20];
+    
+    // when
+    ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
+                                     ^(NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to) {
+                                         [conversation insertOTRAssetFromClient:from toClient:to metaData:data imageData:assetData assetId:assetID isInline:NO];
+                                     } nonce:nonce];
+    XCTAssertTrue(message.isEphemeral);
+
+    WaitForAllGroupsToBeEmpty(0.5);
+    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+    
+    // creating a wrong asset (different hash, will fail to decrypt) remotely
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session createAssetWithData:[NSData secureRandomDataOfLength:128]
+                          identifier:assetID.transportString
+                         contentType:@"text/plain"
+                     forConversation:conversation.remoteIdentifier.transportString];
+    }];
+    
+    // then
+    XCTAssertEqualObjects(message.assetId, assetID); // We should have received an asset ID to be able to download the file
+    XCTAssertEqualObjects(message.nonce, nonce);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateUploaded);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // when
+    [self.userSession performChanges:^{
+        [message requestFileDownload];
+    }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    ZMTransportRequest *lastRequest = self.mockTransportSession.receivedRequests.lastObject;
+    NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets/%@", conversation.remoteIdentifier.transportString, message.assetId.transportString];
+    XCTAssertEqualObjects(lastRequest.path, expectedPath);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateFailedDownload);
+    XCTAssertTrue(message.isEphemeral);
 }
 
 @end

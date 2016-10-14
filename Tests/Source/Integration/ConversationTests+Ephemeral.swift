@@ -64,6 +64,34 @@ extension ConversationTests_Ephemeral {
         XCTAssertEqual(deletionTimer.runningTimersCount, 0)
     }
     
+    func testThatItCreatesAndSendsAnEphemeralImageMessage(){
+        // given
+        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        
+        let conversation = self.conversation(for: selfToUser1Conversation)!
+        self.userSession.performChanges{
+            _ = conversation.appendMessage(withText: "Hello") as! ZMClientMessage
+        }
+        XCTAssertTrue(waitForEverythingToBeDone())
+        mockTransportSession.resetReceivedRequests()
+        
+        // when
+        conversation.messageDestructionTimeout = 100
+        var message : ZMAssetClientMessage!
+        self.userSession.performChanges{
+            message = conversation.appendMessage(withImageData: self.verySmallJPEGData()) as! ZMAssetClientMessage
+            XCTAssertTrue(message.isEphemeral)
+        }
+        XCTAssertTrue(waitForEverythingToBeDone())
+        
+        // then
+        XCTAssertEqual(mockTransportSession.receivedRequests().count, 2)
+        XCTAssertEqual(message.deliveryState, ZMDeliveryState.sent)
+        XCTAssertTrue(message.isEphemeral)
+        XCTAssertEqual(obfuscationTimer.runningTimersCount, 1)
+        XCTAssertEqual(deletionTimer.runningTimersCount, 0)
+    }
+    
     func testThatItDeletesAnEphemeralMessage(){
         // given
         XCTAssertTrue(logInAndWaitForSyncToBeComplete())
