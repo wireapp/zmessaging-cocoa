@@ -58,7 +58,7 @@ private let previouslyReceivedEventIDsKey = "zm_previouslyReceivedEventIDsKey"
         self.eventMOC = eventMOC
         self.syncMOC = syncMOC
         super.init()
-        self.createReceivedPushEventIDsStore()
+        self.createReceivedPushEventIDsStoreIfNecessary()
     }
 }
 
@@ -156,7 +156,7 @@ extension EventDecoder {
 extension EventDecoder {
     
     /// create event ID store if needed
-    fileprivate func createReceivedPushEventIDsStore() {
+    fileprivate func createReceivedPushEventIDsStoreIfNecessary() {
         if self.eventMOC.persistentStoreMetadata(forKey: previouslyReceivedEventIDsKey) as? [String] == nil {
             self.eventMOC.setPersistentStoreMetadata(NSArray(), forKey: previouslyReceivedEventIDsKey)
         }
