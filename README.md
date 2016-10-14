@@ -19,7 +19,9 @@ The Wire iOS sync engine is developed in a mix of Objective-C and Swift (and jus
 
 ## How to build
 
-iOS SyncEngine is using [Carthage](https://github.com/Carthage/Carthage) to manage dependencies. To pull the dependencies binaries, run `carthage bootstrap —-platform ios` .
+*iOS SyncEngine* is build with Xcode 8 using Swift 3.
+
+It is using [Carthage](https://github.com/Carthage/Carthage) to manage dependencies. To pull the dependencies binaries, run `carthage bootstrap —-platform ios` .
 
 You can now open the Xcode project and build.
 
@@ -36,3 +38,6 @@ You can now open the Xcode project and build.
 - [wire-ios-data-model](https://github.com/wireapp/wire-ios-data-model): Core Data model and entity classes
 - [cryptobox-ios](https://github.com/wireapp/cryptobox-ios): iOS binaries for cryptobox
 - [wire-ios-link-preview](http://github.com/wireapp/wire-ios-link-preview): OpenGraph processor (fetching and parsing)
+- [wire-ios-message-strategy](http://github.com/wireapp/wire-ios-message-strategy): generates network requests needed to exchange data with the backend (send messages, get list of contacts, etc.)
+- [wire-ios-request-strategy](http://github.com/wireapp/wire-ios-request-strategy): abstraction of network request generators
+

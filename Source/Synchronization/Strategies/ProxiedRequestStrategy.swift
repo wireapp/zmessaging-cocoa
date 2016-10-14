@@ -55,30 +55,25 @@ extension ProxiedRequestType {
         
         guard let status = self.requestsStatus else { return nil }
         
-        if(status.pendingRequests.count > 0) {
-            let (type, path, method, callback) = status.pendingRequests.remove(at: 0)
-            let fullPath = ProxiedRequestStrategy.BasePath + type.basePath + path
-            let request = ZMTransportRequest(path: fullPath, method: method, payload: nil)
-            if type == .soundcloud {
+        if let proxyRequest = status.pendingRequests.popFirst() {
+            let fullPath = ProxiedRequestStrategy.BasePath + proxyRequest.type.basePath + proxyRequest.path
+            let request = ZMTransportRequest(path: fullPath, method: proxyRequest.method, payload: nil)
+            if proxyRequest.type == .soundcloud {
                 request.doesNotFollowRedirects = true
             }
             request.expire(afterInterval: ProxiedRequestStrategy.RequestExpirationTime)
             request.add(ZMCompletionHandler(on: self.managedObjectContext.zm_userInterface, block: {
                 response in
-                    callback?(response.rawData, response.rawResponse, response.transportSessionError as NSError?)
+                    proxyRequest.callback?(response.rawData, response.rawResponse, response.transportSessionError as NSError?)
             }))
+            request.add(ZMTaskCreatedHandler(on: self.managedObjectContext, block: { taskIdentifier in
+                self.requestsStatus?.executedRequests[proxyRequest] = taskIdentifier
+            }))
+            
             return request
         }
         
         return nil
     }
     
-    /**
-    Schedules a request to be sent to the backend.
-    
-    - parameter timeout: If it is not completed in the given interval, the request is completed with error
-    */
-    public func scheduleAuthenticatedRequestWithCompletionHandler(_ relativeUrl: URL, completionHandler: ((Data?, URLResponse?, NSError?) -> Void), timeout: TimeInterval) {
-        
-    }
 }

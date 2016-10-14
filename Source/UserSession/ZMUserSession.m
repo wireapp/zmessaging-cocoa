@@ -270,7 +270,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                               registrationStatusDelegate:self];
         self.accountStatus = [[ZMAccountStatus alloc] initWithManagedObjectContext: syncManagedObjectContext cookieStorage: session.cookieStorage];
         
-        self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] init];
+        
 
         self.localNotificationDispatcher =
         [[ZMLocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext sharedApplication:application];
@@ -284,6 +284,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.mediaManager = mediaManager;
         
         self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
+        self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
         
         _application = application;
         

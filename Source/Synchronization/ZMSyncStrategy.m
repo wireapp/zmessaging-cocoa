@@ -25,7 +25,6 @@
 @import WireMessageStrategy;
 @import WireRequestStrategy;
 
-#import "ZMBadge.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
@@ -66,7 +65,6 @@
 @property (nonatomic) NSManagedObjectContext *syncMOC;
 @property (nonatomic, weak) NSManagedObjectContext *uiMOC;
 
-@property (nonatomic) ZMBadge *badge;
 @property (nonatomic) id<ZMApplication> application;
 
 @property (nonatomic) ZMConnectionTranscoder *connectionTranscoder;
@@ -154,7 +152,6 @@ ZM_EMPTY_ASSERTING_INIT()
                 localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
                     taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
                           appGroupIdentifier:(NSString *)appGroupIdentifier
-                                       badge:(ZMBadge *)badge
                                  application:(id<ZMApplication>)application;
 
 {
@@ -166,7 +163,6 @@ ZM_EMPTY_ASSERTING_INIT()
         self.clientRegistrationStatus = clientRegistrationStatus;
         self.syncMOC = syncMOC;
         self.uiMOC = uiMOC;
-        self.badge = badge;
         self.eventMOC = [NSManagedObjectContext createEventContextWithAppGroupIdentifier:appGroupIdentifier];
         [self.eventMOC addGroup:self.syncMOC.dispatchGroup];
         self.apnsConfirmationStatus = [[BackgroundAPNSConfirmationStatus alloc] initWithApplication:application
@@ -254,7 +250,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.clientMessageTranscoder = [[ZMClientMessageTranscoder alloc ] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher clientRegistrationStatus:clientRegistrationStatus apnsConfirmationStatus: self.apnsConfirmationStatus];
     self.knockTranscoder = [[ZMKnockTranscoder alloc] initWithManagedObjectContext:self.syncMOC];
     self.registrationTranscoder = [[ZMRegistrationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
-    self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self];
+    self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self previouslyReceivedEventIDsCollection:self.eventDecoder];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC objectDirectory:self];
     self.flowTranscoder = [[ZMFlowSync alloc] initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC application:self.application];
     self.pushTokenTranscoder = [[ZMPushTokenTranscoder alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationStatus:clientRegistrationStatus];
@@ -680,7 +676,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)updateBadgeCount;
 {
-    [self.badge setBadgeCount:[ZMConversation unreadConversationCountInContext:self.syncMOC]];
+    self.application.applicationIconBadgeNumber = (NSInteger)[ZMConversation unreadConversationCountInContext:self.syncMOC];
 }
 
 @end

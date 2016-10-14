@@ -23,7 +23,6 @@
 
 @protocol ZMObjectStrategyDirectory;
 
-@class ZMBadge;
 @class ZMAuthenticationStatus;
 @class ZMAccountStatus;
 

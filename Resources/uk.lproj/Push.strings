@@ -40,7 +40,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "Нове відео в розмові";
 "push.notification.add.video.group.noconversationname" = "%1$@ поділився(-лась) відео в розмові";
 
-"push.notification.add.video.oneonone" = "%1$@ поділився відео";
+"push.notification.add.video.oneonone" = "%1$@ поділився(-лась) відео";
 "push.notification.add.video.oneonone.nousername" = "Нове відео в розмові";
 
 "push.notification.add.audio.group" = "%1$@ поділився(-лась) аудіоповідомленням в %2$@";
@@ -56,7 +56,7 @@
 "push.notification.add.file.group.nousername.noconversationname" = "Новий файл в розмові";
 "push.notification.add.file.group.noconversationname" = "%1$@ поділився(-лась) файлом в розмові";
 
-"push.notification.add.file.oneonone" = "%1$@ поділився файлом";
+"push.notification.add.file.oneonone" = "%1$@ поділився(-лась) файлом";
 "push.notification.add.file.oneonone.nousername" = "Новий файл в розмові";
 
 "push.notification.add.location.group" = "%1$@ поділився(-лась) розташуванням в %2$@";

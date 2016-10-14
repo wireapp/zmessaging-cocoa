@@ -1,0 +1,169 @@
+// 
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
+//
+
+
+"push.notification.default" = "新しいメッセージ";
+
+"push.notification.add.message.group" = "%1$@ が %2$@ で %3$@";
+"push.notification.add.message.group.nousername" = "%1$@ で新しいメッセージです。%2$@";
+"push.notification.add.message.group.nousername.noconversationname" = "新メッセージ：%1$@";
+"push.notification.add.message.group.noconversationname" = "%1$@が会話において%2$@";
+
+"push.notification.add.message.oneonone" = "%1$@: %2$@";
+"push.notification.add.message.oneonone.nousername" = "新メッセージ：%1$@";
+
+"push.notification.add.image.group" = "%1$@が%2$@で写真を共有しました";
+"push.notification.add.image.group.nousername" = "%1$@での新しい写真";
+"push.notification.add.image.group.nousername.noconversationname" = "会話での新しい写真";
+"push.notification.add.image.group.noconversationname" = "%1$@が新しい写真をシェアしました";
+
+"push.notification.add.image.oneonone" = "%1$@が写真をシェアしました";
+"push.notification.add.image.oneonone.nousername" = "新しい写真";
+
+"push.notification.add.video.group" = "%1$@が%2$@でビデオをシェアしました";
+"push.notification.add.video.group.nousername" = "%1$@での新しいビデオ";
+"push.notification.add.video.group.nousername.noconversationname" = "新しいビデオ";
+"push.notification.add.video.group.noconversationname" = "%1$@が新しいビデオをシェアしました";
+
+"push.notification.add.video.oneonone" = "%1$@がビデオをシェアしました";
+"push.notification.add.video.oneonone.nousername" = "新しいビデオ";
+
+"push.notification.add.audio.group" = "%1$@が%2$@で音声メッセージをシェアしました";
+"push.notification.add.audio.group.nousername" = "%1$@での新しい音声メッセージ";
+"push.notification.add.audio.group.nousername.noconversationname" = "新しい音声メッセージ";
+"push.notification.add.audio.group.noconversationname" = "%1$@が音声メッセージをシェアしました";
+
+"push.notification.add.audio.oneonone" = "%1$@が音声メッセージをシェアしました";
+"push.notification.add.audio.oneonone.nousername" = "新しい音声メッセージ";
+
+"push.notification.add.file.group" = "%1$@が%2$@でファイルをシェアしました";
+"push.notification.add.file.group.nousername" = "%1$@での新しいファイル";
+"push.notification.add.file.group.nousername.noconversationname" = "新しいファイル";
+"push.notification.add.file.group.noconversationname" = "%1$@が新しいファイルをシェアしました";
+
+"push.notification.add.file.oneonone" = "%1$@がファイルをシェアしました";
+"push.notification.add.file.oneonone.nousername" = "新しいファイル";
+
+"push.notification.add.location.group" = "%1$@が位置情報を%2$@でシェアしました";
+"push.notification.add.location.group.nousername" = "%1$@での新しい位置情報";
+"push.notification.add.location.group.nousername.noconversationname" = "新しい位置情報";
+"push.notification.add.location.group.noconversationname" = "%1$@が位置情報をシェアしました";
+
+"push.notification.add.location.oneonone" = "%1$@が位置情報をシェアしました";
+"push.notification.add.location.oneonone.nousername" = "新しい位置情報";
+
+"push.notification.member.join" = "%1$@が%3$@を%2$@に追加しました";
+"push.notification.member.join.noconversationname" = "%1$@が%2$@を会話に追加しました";
+"push.notification.member.join.nousername.noconversationname" = "%1$@が会話に追加されました";
+"push.notification.member.join.nousername" = "%2$@が%1$@に追加されました";
+
+"push.notification.member.join.many.nootherusername" = "%1$@が%2$@に参加者を追加しました";
+"push.notification.member.join.many.nootherusername.noconversationname" = "%1$@が参加者を会話に追加しました";
+"push.notification.member.join.many.nootherusername.nousername" = "%1$@に参加者が追加されました";
+"push.notification.member.join.many.nootherusername.nousername.noconversationname" = "会話に参加者が追加されました";
+
+"push.notification.member.join.self" = "%1$@があなたを%2$@に追加しました";
+"push.notification.member.join.self.noconversationname" = "%1$@はあなたを会話に追加しました";
+"push.notification.member.join.self.nousername.noconversationname" = "あなたわ会話に追加されました";
+"push.notification.member.join.self.nousername" = "あなたは%1$@に追加されました";
+
+"push.notification.member.join.nootherusername" = "%1$@が%2$@に参加者を追加しました";
+"push.notification.member.join.nootherusername.noconversationname" = "%1$@が参加者を会話に追加しました";
+"push.notification.member.join.nootherusername.nousername.noconversationname" = "会話に参加者が追加されました";
+"push.notification.member.join.nootherusername.nousername" = "%1$@に参加者が追加されました";
+
+"push.notification.member.leave" = "%1$@が%3$@を%2$@から削除しました";
+"push.notification.member.leave.noconversationname" = "%1$@が%2$@を会話から削除しました";
+"push.notification.member.leave.nousername.noconversationname" = "%1$@は会話から削除されました";
+"push.notification.member.leave.nousername" = "%2$@は%1$@から削除されました";
+
+"push.notification.member.leave.many.nootherusername" = "%1$@が%2$@から参加者を削除しました";
+"push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@が会話から参加者を削除しました";
+"push.notification.member.leave.many.nootherusername.nousername" = "%1$@から参加者が削除されました";
+"push.notification.member.leave.many.nootherusername.nousername.noconversationname" = "会話から参加者が削除されました";
+
+"push.notification.member.leave.self" = "%1$@があなたを%2$@から削除しました";
+"push.notification.member.leave.self.noconversationname" = "%1$@があなたを会話から削除しました";
+"push.notification.member.leave.self.nousername.noconversationname" = "あなたは会話から削除されました";
+"push.notification.member.leave.self.nousername" = "あなたは%1$@から削除されました";
+
+"push.notification.member.leave.nootherusername" = "%1$@が%2$@から参加者を削除しました";
+"push.notification.member.leave.nootherusername.noconversationname" = "%1$@が会話から参加者を削除しました";
+"push.notification.member.leave.nootherusername.nousername.noconversationname" = "会話から参加者が削除されました";
+"push.notification.member.leave.nootherusername.nousername" = "%1$@から参加者が削除されました";
+
+"push.notification.member.leave.sender.nootherusername" = "%1$@が%2$@から退出しました";
+"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@が会話から退出しました";
+"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "参加者が会話から退出しました";
+"push.notification.member.leave.sender.nootherusername.nousername" = "参加者が%1$@から退出しました";
+
+
+"push.notification.call.started.video.oneonone" = "%1$@からのビデオ通話";
+"push.notification.call.started.video.oneonone.nousername" = "ビデオ通話です";
+
+"push.notification.call.started.video.group" = "%1$@が%2$@でビデオ通話の呼び出し中です";
+"push.notification.call.started.video.group.nousername" = "誰かによる%1$@でのビデオ通話呼びかけ中です。";
+"push.notification.call.started.video.group.noconversationname" = "%1$@からのビデオ通話です";
+"push.notification.call.started.video.group.nousername.noconversationname" = "ビデオ通話です";
+
+"push.notification.call.started.oneonone" = "%1$@からの着信中";
+"push.notification.call.started.oneonone.nousername" = "誰かからの着信中です";
+
+"push.notification.call.started.group" = "%1$@が%2$@で呼び出し中です";
+"push.notification.call.started.group.nousername" = "%1$@で誰かが呼び出し中です";
+"push.notification.call.started.group.noconversationname" = "%1$@からの着信中です";
+"push.notification.call.started.group.nousername.noconversationname" = "誰かからの着信中です";
+
+"push.notification.conversation.create" = "%1$@があなたとグループ会話を作成しました";
+"push.notification.conversation.create.nousername" = "だれかがあなたとのグループ会話を作成しました";
+
+"push.notification.conversation.rename" = "%1$@が%2$@と名前の変更をしました";
+"push.notification.conversation.rename.nousername" = "会話が%1$@という名に変更されました";
+
+"push.notification.connection.request" = "%@がつながりたいようです";
+"push.notification.connection.request.nousername" = "だれかがつながりたいようです";
+
+"push.notification.connection.accepted" = "あなたと%@がつながりました";
+"push.notification.connection.accepted.nousername" = "あなたは新しい連絡先があります";
+
+"push.notification.failed.message.oneonone" = "%1$@に新しいメッセージを送ることができません";
+"push.notification.failed.message.oneonone.nousername" = "メッセージを送ることができません";
+
+"push.notification.failed.message.group" = "%1$@でメッセージを送ることができません";
+"push.notification.failed.message.group.noconversationname" = "メッセージを送ることができません";
+
+"push.notification.reaction.group" = "%1$@が%2$@でのあなたのメッセージを%3$@";
+"push.notification.reaction.group.nousername.noconversationname" = "だれかが会話でのあなたのメッセージを%@";
+"push.notification.reaction.group.nousername" = "だれかが%1$@でのあなたのメッセージを%2$@";
+"push.notification.reaction.group.noconversationname" = "%@が会話でのあなたのメッセージを%@";
+
+"push.notification.reaction.oneonone" = "%@があなたのメッセージを%@";
+"push.notification.reaction.oneonone.nousername" = "だれかがあなたのメッセージを%@";
+
+"push.notification.new_user" = "%@がたったいまWireに参加しました";
+
+"push.notification.action.message.open" = "開ける";
+"push.notification.action.message.reply" = "返信";
+"push.notification.action.message.reply.button.title" = "送信";
+"push.notification.action.conversation.mute" = "ミュート";
+
+"push.notification.action.call.accept" = "受け入れる";
+"push.notification.action.call.ignore" = "辞退";
+"push.notification.action.call.message" = "メッセージ";
+"push.notification.action.call.callback" = "電話をかけ直す";
+"push.notification.action.connection.accept" = "受け入れる";

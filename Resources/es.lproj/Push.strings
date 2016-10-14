@@ -157,7 +157,7 @@
 
 "push.notification.new_user" = "%@ se unió a Wire";
 
-"push.notification.action.message.open" = "Abierto";
+"push.notification.action.message.open" = "Abrir";
 "push.notification.action.message.reply" = "Responder";
 "push.notification.action.message.reply.button.title" = "Enviar";
 "push.notification.action.conversation.mute" = "Silenciar";

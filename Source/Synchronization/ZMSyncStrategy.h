@@ -31,7 +31,6 @@
 @class ZMAuthenticationStatus;
 @class ZMOnDemandFlowManager;
 @class ZMTransportSession;
-@class ZMBadge;
 @class ZMLocalNotificationDispatcher;
 @class ZMUserProfileUpdateStatus;
 @class ProxiedRequestsStatus;
@@ -65,7 +64,6 @@
                 localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
                     taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
                           appGroupIdentifier:(NSString *)appGroupIdentifier
-                                       badge:(ZMBadge *)badge
                                  application:(id<ZMApplication>)application;
 
 - (void)didInterruptUpdateEventsStream;

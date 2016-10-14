@@ -58,7 +58,6 @@
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMUserProfileUpdateTranscoder.h"
 #import "ZMUserProfileUpdateStatus.h"
-#import "ZMBadge.h"
 #import "MessagingTest+EventFactory.h"
 #import "zmessaging_iOS_Tests-Swift.h"
 
@@ -83,7 +82,6 @@
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects1;
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects2;
 @property (nonatomic) id mockDispatcher;
-@property (nonatomic) ZMBadge *badge;
 
 @end
 
@@ -95,7 +93,6 @@
 {
     [super setUp];
     
-    self.badge = [[ZMBadge alloc] initWithApplication:self.application];
     self.mockDispatcher = [OCMockObject niceMockForClass:[ZMLocalNotificationDispatcher class]];
     self.mockUpstreamSync1 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     self.mockUpstreamSync2 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
@@ -144,7 +141,7 @@
 
     id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
-    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY];
+    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY];
     
     id flowTranscoder = [OCMockObject mockForClass:ZMFlowSync.class];
     [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];
@@ -254,7 +251,6 @@
                                        localNotificationsDispatcher:self.mockDispatcher
                                            taskCancellationProvider:OCMOCK_ANY
                                                  appGroupIdentifier:nil
-                                                              badge:self.badge
                                                         application:self.application];
     
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
@@ -308,7 +304,6 @@
     self.clientRegistrationStatus = nil;
     self.clientUpdateStatus = nil;
     self.syncObjects = nil;
-    self.badge = nil;
     [super tearDown];
 }
 

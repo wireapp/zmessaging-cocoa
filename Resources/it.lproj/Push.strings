@@ -1,0 +1,169 @@
+// 
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
+//
+
+
+"push.notification.default" = "Nuovo messaggio";
+
+"push.notification.add.message.group" = "%1$@ in %2$@: %3$@";
+"push.notification.add.message.group.nousername" = "Nuovo messaggio in %1$@: %2$@";
+"push.notification.add.message.group.nousername.noconversationname" = "Nuovo messaggio: %1$@";
+"push.notification.add.message.group.noconversationname" = "%1$@ in una conversazione: %2$@";
+
+"push.notification.add.message.oneonone" = "%1$@: %2$@";
+"push.notification.add.message.oneonone.nousername" = "Nuovo messaggio: %1$@";
+
+"push.notification.add.image.group" = "%1$@ ha condiviso una foto in %2$@";
+"push.notification.add.image.group.nousername" = "Nuova foto in %1$@";
+"push.notification.add.image.group.nousername.noconversationname" = "Nuova foto in una conversazione";
+"push.notification.add.image.group.noconversationname" = "%1$@ ha condiviso una foto in una conversazione";
+
+"push.notification.add.image.oneonone" = "%1$@ ha condiviso una foto";
+"push.notification.add.image.oneonone.nousername" = "Nuova foto in una conversazione";
+
+"push.notification.add.video.group" = "%1$@ ha condiviso un video in %2$@";
+"push.notification.add.video.group.nousername" = "Nuovo video in %1$@";
+"push.notification.add.video.group.nousername.noconversationname" = "Nuovo video in una conversazione";
+"push.notification.add.video.group.noconversationname" = "%1$@ ha condiviso un video in una conversazione";
+
+"push.notification.add.video.oneonone" = "%1$@ ha condiviso un video";
+"push.notification.add.video.oneonone.nousername" = "Nuovo video in una conversazione";
+
+"push.notification.add.audio.group" = "%1$@ ha condiviso un messaggio vocale in %2$@";
+"push.notification.add.audio.group.nousername" = "Nuovo messaggio vocale in %1$@";
+"push.notification.add.audio.group.nousername.noconversationname" = "Nuovo messaggio vocale in una conversazione";
+"push.notification.add.audio.group.noconversationname" = "%1$@ ha condiviso un messaggio vocale in una conversazione";
+
+"push.notification.add.audio.oneonone" = "%1$@ ha condiviso un messaggio vocale";
+"push.notification.add.audio.oneonone.nousername" = "Nuovo messaggio vocale in una conversazione";
+
+"push.notification.add.file.group" = "%1$@ ha condiviso un file in %2$@";
+"push.notification.add.file.group.nousername" = "Nuovo file in %1$@";
+"push.notification.add.file.group.nousername.noconversationname" = "Nuovo file in una conversazione";
+"push.notification.add.file.group.noconversationname" = "%1$@ ha condiviso un file in una conversazione";
+
+"push.notification.add.file.oneonone" = "%1$@ ha condiviso un file";
+"push.notification.add.file.oneonone.nousername" = "Nuovo file in una conversazione";
+
+"push.notification.add.location.group" = "%1$@ ha condiviso la posizione in %2$@";
+"push.notification.add.location.group.nousername" = "Nuova posizione in %1$@";
+"push.notification.add.location.group.nousername.noconversationname" = "Nuova posizione in una conversazione";
+"push.notification.add.location.group.noconversationname" = "%1$@ ha condiviso la posizione in una conversazione";
+
+"push.notification.add.location.oneonone" = "%1$@ ha condiviso una posizione";
+"push.notification.add.location.oneonone.nousername" = "Nuova posizione in una conversazione";
+
+"push.notification.member.join" = "%1$@ ha aggiunto %3$@ a %2$@";
+"push.notification.member.join.noconversationname" = "%1$@ ha aggiunto %2$@ a una conversazione";
+"push.notification.member.join.nousername.noconversationname" = "%1$@ è stato aggiunto in una conversazione";
+"push.notification.member.join.nousername" = "%2$@ è stato aggiunto a %1$@";
+
+"push.notification.member.join.many.nootherusername" = "%1$@ ha aggiunto persone a %2$@";
+"push.notification.member.join.many.nootherusername.noconversationname" = "%1$@ ha aggiunto delle persone alla conversazione";
+"push.notification.member.join.many.nootherusername.nousername" = "Persone sono stati aggiunte a %1$@";
+"push.notification.member.join.many.nootherusername.nousername.noconversationname" = "Persone sono state aggiunte a una conversazione";
+
+"push.notification.member.join.self" = "%1$@ ti ha aggiunto a %2$@";
+"push.notification.member.join.self.noconversationname" = "%1$@ ti ha aggiunto a una conversazione";
+"push.notification.member.join.self.nousername.noconversationname" = "Sei stato aggiunto a una conversazione";
+"push.notification.member.join.self.nousername" = "Sei stato aggiunto a %1$@";
+
+"push.notification.member.join.nootherusername" = "%1$@ ha aggiunto persone a %2$@";
+"push.notification.member.join.nootherusername.noconversationname" = "%1$@ ha aggiunto delle persone alla conversazione";
+"push.notification.member.join.nootherusername.nousername.noconversationname" = "Persone sono state aggiunte a una conversazione";
+"push.notification.member.join.nootherusername.nousername" = "Persone sono stati aggiunte a %1$@";
+
+"push.notification.member.leave" = "%1$@ ha rimosso %3$@ da %2$@";
+"push.notification.member.leave.noconversationname" = "%1$@ ha rimosso %2$@ da una conversazione";
+"push.notification.member.leave.nousername.noconversationname" = "%1$@ è stato rimosso da una conversazione";
+"push.notification.member.leave.nousername" = "%2$@ è stato rimosso da %1$@";
+
+"push.notification.member.leave.many.nootherusername" = "%1$@ ha rimosso delle persone da %2$@";
+"push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@ ha rimosso delle persone da una conversazione";
+"push.notification.member.leave.many.nootherusername.nousername" = "Persone sono state rimosse da %1$@";
+"push.notification.member.leave.many.nootherusername.nousername.noconversationname" = "Persone sono state rimosse da una conversazione";
+
+"push.notification.member.leave.self" = "%1$@ ti ha rimosso da %2$@";
+"push.notification.member.leave.self.noconversationname" = "%1$@ ti ha rimosso da una conversazione";
+"push.notification.member.leave.self.nousername.noconversationname" = "Sei stato rimosso da una conversazione";
+"push.notification.member.leave.self.nousername" = "Sei stato rimosso da %1$@";
+
+"push.notification.member.leave.nootherusername" = "%1$@ ha rimosso delle persone da %2$@";
+"push.notification.member.leave.nootherusername.noconversationname" = "%1$@ ha rimosso delle persone da una conversazione";
+"push.notification.member.leave.nootherusername.nousername.noconversationname" = "Persone sono state rimosse da una conversazione";
+"push.notification.member.leave.nootherusername.nousername" = "Persone sono state rimosse da %1$@";
+
+"push.notification.member.leave.sender.nootherusername" = "%1$@ ha abbandonato %2$@";
+"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ ha abbandonato una conversazione";
+"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Delle perone hanno abbandonato una conversazione";
+"push.notification.member.leave.sender.nootherusername.nousername" = "Delle persone hanno abbandonato %1$@";
+
+
+"push.notification.call.started.video.oneonone" = "%1$@ sta videochiamando";
+"push.notification.call.started.video.oneonone.nousername" = "Qualcuno sta videochiamando";
+
+"push.notification.call.started.video.group" = "%1$@ sta videochiamando in %2$@";
+"push.notification.call.started.video.group.nousername" = "Qualcuno sta videochiamando in %1$@";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ sta videochiamando in una conversazione";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Qualcuno sta videochiamando in una conversazione";
+
+"push.notification.call.started.oneonone" = "%1$@ sta chiamando";
+"push.notification.call.started.oneonone.nousername" = "Qualcuno sta chiamando";
+
+"push.notification.call.started.group" = "%1$@ sta chiamando in %2$@";
+"push.notification.call.started.group.nousername" = "Qualcuno sta chiamando in %1$@";
+"push.notification.call.started.group.noconversationname" = "%1$@ sta chiamando in una conversazione";
+"push.notification.call.started.group.nousername.noconversationname" = "Qualcuno sta chiamando in una conversazione";
+
+"push.notification.conversation.create" = "%1$@ ha creato una conversazione di gruppo con te";
+"push.notification.conversation.create.nousername" = "Qualcuno ha creato una conversazione di gruppo con te";
+
+"push.notification.conversation.rename" = "%1$@ ha rinominato una conversazione com %2$@";
+"push.notification.conversation.rename.nousername" = "Una conversazione è stata rinominata con %1$@";
+
+"push.notification.connection.request" = "%@ vuole connettersi";
+"push.notification.connection.request.nousername" = "Qualcuno vuole connettersi";
+
+"push.notification.connection.accepted" = "Tu e %@ siete ora connessi";
+"push.notification.connection.accepted.nousername" = "Hai una nuova connessione";
+
+"push.notification.failed.message.oneonone" = "Impossibile inviare un messaggio a %1$@";
+"push.notification.failed.message.oneonone.nousername" = "Impossibile inviare un messaggio";
+
+"push.notification.failed.message.group" = "Impossibile inviare un messaggio a %1$@";
+"push.notification.failed.message.group.noconversationname" = "Impossibile inviare un messaggio";
+
+"push.notification.reaction.group" = "%1$@ %3$@ il tuo messaggio in %2$@";
+"push.notification.reaction.group.nousername.noconversationname" = "Qualcuno %@ il tuo messaggio in una conversazione";
+"push.notification.reaction.group.nousername" = "Qualcuno %2$@ il tuo messaggio in %1$@";
+"push.notification.reaction.group.noconversationname" = "%@ %@ il tuo messaggio in una conversazione";
+
+"push.notification.reaction.oneonone" = "%@ %@ il tuo messaggio";
+"push.notification.reaction.oneonone.nousername" = "Qualcuno %@ il tuo messaggio";
+
+"push.notification.new_user" = "%@ è ora su Wire";
+
+"push.notification.action.message.open" = "Apri";
+"push.notification.action.message.reply" = "Rispondi";
+"push.notification.action.message.reply.button.title" = "Invia";
+"push.notification.action.conversation.mute" = "Silenzia";
+
+"push.notification.action.call.accept" = "Accetta";
+"push.notification.action.call.ignore" = "Rifiuta";
+"push.notification.action.call.message" = "Messaggio";
+"push.notification.action.call.callback" = "Richiama";
+"push.notification.action.connection.accept" = "Accetta";

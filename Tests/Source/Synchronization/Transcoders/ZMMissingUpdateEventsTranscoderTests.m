@@ -34,6 +34,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 @property (nonatomic, readonly) ZMMissingUpdateEventsTranscoder *sut;
 @property (nonatomic, readonly) id lastUpdateEventIDTranscoder;
 @property (nonatomic, readonly) ZMSyncStrategy *syncStrategy;
+@property (nonatomic, readonly) id<PreviouslyReceivedEventIDsCollection> mockEventIDsCollection;
 
 @end
 
@@ -43,28 +44,20 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [super setUp];
     
     _syncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
+    _mockEventIDsCollection = OCMProtocolMock(@protocol(PreviouslyReceivedEventIDsCollection));
     [[[(id) self.syncStrategy stub] andReturn:self.uiMOC] syncMOC];
     [self verifyMockLater:self.syncStrategy];
     
-    _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy];
+    _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection];
 }
 
 - (void)tearDown {
     [self.sut tearDown];
     _sut = nil;
     _syncStrategy = nil;
+    _mockEventIDsCollection = nil;
     
     [super tearDown];
-}
-
-- (void)testThatItCreatesAListPaginatorSync
-{
-    // when
-    ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy];
-    
-    // then
-    XCTAssertNotNil(sut.listPaginator);
-    [sut tearDown];
 }
 
 - (void)testThatItOnlyProcessesMissingUpdateEvents;
@@ -465,7 +458,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy];
+    ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection];
     WaitForAllGroupsToBeEmpty(0.5);
     [sut.listPaginator resetFetching];
     ZMTransportRequest *request = [sut.listPaginator nextRequest];
@@ -743,6 +736,44 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     XCTAssertNotNil(request3);
     NSURLComponents *components3 = [NSURLComponents componentsWithString:request3.path];
     XCTAssertTrue([components3.queryItems containsObject:[NSURLQueryItem queryItemWithName:@"since" value:lastUpdateEventID2.transportString]]);
+}
+
+- (void)testThatItDiscardsThePreviouslyReceivedEventIDsWhenReachingTheEndOfPagination
+{
+    // given
+    NSUUID *lastUpdateEventID1 = [NSUUID createUUID];
+    NSUUID *lastUpdateEventID2 = [NSUUID createUUID];
+    
+    [self setLastUpdateEventID:lastUpdateEventID1 hasMore:NO];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // when
+    [self.sut startDownloadingMissingNotifications];
+    ZMTransportRequest *request1 = [self.sut.listPaginator nextRequest];
+    [request1 completeWithResponse:[self responseForSettingLastUpdateEventID:lastUpdateEventID2 hasMore:NO]];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    OCMVerify([self.mockEventIDsCollection discardListOfAlreadyReceivedPushEventIDs]);
+}
+
+- (void)testThatItDoesNotDiscardsThePreviouslyReceivedEventIDsWhenNotReachingTheEndOfPagination
+{
+    // given
+    NSUUID *lastUpdateEventID1 = [NSUUID createUUID];
+    NSUUID *lastUpdateEventID2 = [NSUUID createUUID];
+    
+    [self setLastUpdateEventID:lastUpdateEventID1 hasMore:NO];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // expect
+    OCMReject([self.mockEventIDsCollection discardListOfAlreadyReceivedPushEventIDs]);
+
+    // when
+    [self.sut startDownloadingMissingNotifications];
+    ZMTransportRequest *request1 = [self.sut.listPaginator nextRequest];
+    [request1 completeWithResponse:[self responseForSettingLastUpdateEventID:lastUpdateEventID2 hasMore:YES]];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 @end

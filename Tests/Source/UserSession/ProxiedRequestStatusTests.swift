@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -19,13 +19,25 @@
 
 import XCTest
 
+
+class MockRequestCancellation : NSObject, ZMRequestCancellation {
+    
+    var canceledTasks : [ZMTaskIdentifier] = []
+    
+    func cancelTask(with taskIdentifier: ZMTaskIdentifier) {
+        canceledTasks.append(taskIdentifier)
+    }
+}
+
 class ProxiedRequestsStatusTests: MessagingTest {
     
     fileprivate var sut: ProxiedRequestsStatus!
+    fileprivate var mockRequestCancellation : MockRequestCancellation!
     
     override func setUp() {
         super.setUp()
-        self.sut = ProxiedRequestsStatus()
+        self.mockRequestCancellation = MockRequestCancellation()
+        self.sut = ProxiedRequestsStatus(requestCancellation: mockRequestCancellation)
     }
     
     override func tearDown() {
@@ -33,32 +45,40 @@ class ProxiedRequestsStatusTests: MessagingTest {
     }
     
     func testThatRequestIsAddedToPendingRequest() {
-
-        let exp = self.expectation(description: "expected callback")
-
         //given
-        let path = "foo/bar"
-        let url = URL(string: path, relativeTo: nil)!
-        
-        let callback: (Data?, HTTPURLResponse?, Error?) -> Void = { (_, _, _) -> Void in
-            exp.fulfill()
-        }
+        let request = ProxyRequest(type: .giphy, path: "foo/bar", method: .methodGET, callback: nil)
         
         //when
-        self.sut.addRequest(.giphy, path:url.relativeString, method:.methodGET, callback: callback)
+        self.sut.add(request: request)
         
         //then
-        let request = self.sut.pendingRequests.last
-        XCTAssert(request != nil)
-        XCTAssertEqual(request!.path, path)
-        XCTAssert(request!.callback != nil)
-        if let receivedCallback = request!.callback {
-            receivedCallback(nil, HTTPURLResponse(), nil)
-        }
-        else {
-            XCTFail("No callback")
-        }
-        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        let pendingRequest = self.sut.pendingRequests.first
+        XCTAssertEqual(pendingRequest, request)
+    }
+    
+    func testCancelRemovesRequestFromPendingRequests() {
+        // given
+        let request = ProxyRequest(type: .giphy, path: "foo/bar", method: .methodGET, callback: nil)
+        sut.add(request: request)
+        
+        // when
+        sut.cancel(request: request)
+        
+        // then
+        XCTAssertTrue(sut.pendingRequests.isEmpty)
+    }
+    
+    func testCancelCancelsAssociatedDataTask() {
+        // given
+        let request = ProxyRequest(type: .giphy, path: "foo/bar", method: .methodGET, callback: nil)
+        let taskIdentifier = ZMTaskIdentifier(identifier: 0, sessionIdentifier: "123")!
+        sut.executedRequests[request] = taskIdentifier
+
+        // when
+        sut.cancel(request: request)
+        
+        // then
+        XCTAssertEqual(mockRequestCancellation.canceledTasks.first, taskIdentifier)
     }
     
 }

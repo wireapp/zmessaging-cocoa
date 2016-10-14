@@ -36,6 +36,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 @interface ZMMissingUpdateEventsTranscoder ()
 
 @property (nonatomic, readonly, weak) ZMSyncStrategy *syncStrategy;
+@property (nonatomic, weak) id<PreviouslyReceivedEventIDsCollection> previouslyReceivedEventIDsCollection;
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response;
 
@@ -48,11 +49,12 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 @implementation ZMMissingUpdateEventsTranscoder
 
-- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
+- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
 {
     self = [super initWithManagedObjectContext:strategy.syncMOC];
     if(self) {
         _syncStrategy = strategy;
+        self.previouslyReceivedEventIDsCollection = eventIDsCollection;
         self.listPaginator = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:NotificationsPath
                                                                            startKey:StartKey
                                                                            pageSize:ZMMissingUpdateEventsTranscoderListPageSize
@@ -150,7 +152,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
     
     [syncStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
     [syncStrategy processUpdateEvents:lastCallStateEvents.allValues ignoreBuffer:NO];
-    
+
     [tp warnIfLongerThanInterval];
     return latestEventId;
 }
@@ -218,6 +220,10 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
         self.lastUpdateEventID = latestEventId;
     }
     
+    Boolean hasMore = ((NSNumber *) response.payload.asDictionary[@"has_more"]).boolValue;
+    if(!hasMore) {
+        [self.previouslyReceivedEventIDsCollection discardListOfAlreadyReceivedPushEventIDs];
+    }
     [self appendPotentialGapSystemMessageIfNeededWithResponse:response];
     return self.lastUpdateEventID;
 }

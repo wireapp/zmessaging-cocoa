@@ -24,7 +24,6 @@
 
 #import "ZMLocalNotificationDispatcher+Testing.h"
 #import "ZMLocalNotification.h"
-#import "ZMBadge.h"
 #import "ZMPushRegistrant.h"
 #import <zmessaging/zmessaging-Swift.h>
 

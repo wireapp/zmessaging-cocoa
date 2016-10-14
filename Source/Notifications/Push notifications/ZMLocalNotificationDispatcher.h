@@ -24,7 +24,6 @@
 
 @class ZMUpdateEvent;
 @class ZMConversation;
-@class ZMBadge;
 @class ZMLocalNotificationForEvent;
 @class ZMLocalNotificationForExpiredMessage;
 @class ZMMessage;

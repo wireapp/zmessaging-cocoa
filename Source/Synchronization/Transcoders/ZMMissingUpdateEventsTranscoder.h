@@ -20,13 +20,15 @@
 @import Foundation;
 @import WireRequestStrategy;
 
+@protocol PreviouslyReceivedEventIDsCollection;
+
 @interface ZMMissingUpdateEventsTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
 
 @property (nonatomic, readonly) BOOL hasLastUpdateEventID;
 @property (nonatomic, readonly) BOOL isDownloadingMissingNotifications;
 @property (nonatomic, readonly) NSUUID *lastUpdateEventID;
 
-- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy;
+- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection;
 - (void)startDownloadingMissingNotifications;
 
 + (NSUUID *)processUpdateEventsAndReturnLastNotificationIDFromPayload:(id<ZMTransportData>)payload syncStrategy:(ZMSyncStrategy *)syncStrategy;
