@@ -273,7 +273,7 @@
 - (void)testThatItEncodesTheRightRequestWithClient
 {
     // given
-    UserClient *selfClient = self.createSelfClient;
+    UserClient *selfClient = [self setupSelfClientInMoc:self.uiMOC];
     XCTAssertNotNil(selfClient);
     
     // when

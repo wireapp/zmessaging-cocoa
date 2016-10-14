@@ -207,15 +207,15 @@
     }];
     
     [self performPretendingUiMocIsSyncMoc:^{
-        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
         selfUser.remoteIdentifier = NSUUID.createUUID;
         
-        UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
+        UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
         client.remoteIdentifier = @"identifier";
         client.user = selfUser;
         
-        [self.syncMOC setPersistentStoreMetadata:client.remoteIdentifier forKey:ZMPersistedClientIdKey];
-        [self.syncMOC saveOrRollback];
+        [self.uiMOC setPersistentStoreMetadata:client.remoteIdentifier forKey:ZMPersistedClientIdKey];
+        [self.uiMOC saveOrRollback];
         
         // when
         [self.sut didDetectCurrentClientDeletion];

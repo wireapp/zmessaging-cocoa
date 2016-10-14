@@ -156,7 +156,7 @@ class ZMAccountStatusTests : MessagingTest {
     
     func testThatItAppendsANewDeviceMessageWhenSyncCompletes_NewDevice() {
         // given
-        createSelfClient()
+        setupSelfClient(inMoc: self.uiMOC)
         
         let cookieStorage = MockCookieStorage()
         cookieStorage.shouldReturnCookie = false
@@ -197,7 +197,7 @@ class ZMAccountStatusTests : MessagingTest {
     
     func testThatItAppendsAReactivedDeviceMessageWhenSyncCompletes_ReactivatedDevice() {
         // given
-        createSelfClient()
+        setupSelfClient(inMoc: self.uiMOC)
         
         let cookieStorage = MockCookieStorage()
         cookieStorage.shouldReturnCookie = false

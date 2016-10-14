@@ -659,6 +659,20 @@ static int32_t eventIdCounter;
     XCTAssertNil(error, @"Error establishing session: %@", error);
 }
 
+- (UserClient *)setupSelfClientInMoc:(NSManagedObjectContext *)moc;
+{
+    ZMUser *selfUser = [ZMUser selfUserInContext:moc];
+    
+    UserClient *client = [UserClient insertNewObjectInManagedObjectContext:moc];
+    client.remoteIdentifier = @"identifier";
+    client.user = selfUser;
+    
+    [moc setPersistentStoreMetadata:client.remoteIdentifier forKey:ZMPersistedClientIdKey];
+    [moc saveOrRollback];
+    
+    return client;
+}
+
 - (UserClient *)createSelfClient
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
