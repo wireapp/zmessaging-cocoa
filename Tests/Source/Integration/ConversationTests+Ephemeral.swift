@@ -162,7 +162,7 @@ extension ConversationTests_Ephemeral {
             ephemeral.startDestructionIfNeeded()
         }
         XCTAssertTrue(waitForEverythingToBeDone())
-        spinMainQueue(withTimeout:0.5)
+        spinMainQueue(withTimeout:5.1) // We can't set isTesting and therefore have to wait 5sec at least :-/
         
         // then
         XCTAssertEqual(mockTransportSession.receivedRequests().count, 1)

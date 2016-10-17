@@ -1690,9 +1690,9 @@
     NSUInteger initialMessageCount = conversation.messages.count;
     
     NSURL *fileURL = self.testVideoFileURL;
-    NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
+    NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages?report_missing=%@", conversation.remoteIdentifier.transportString, self.user1.identifier];
     // Used for uploading the thumbnail and the full asset
-    NSString *expectedAssetAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString];
+    NSString *expectedAssetAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets?report_missing=%@", conversation.remoteIdentifier.transportString, self.user1.identifier];
     
     // when
     [self.mockTransportSession resetReceivedRequests];
@@ -1714,7 +1714,7 @@
     if (3 != requests.count) {
         return XCTFail(@"Wrong number of requests");
     }
-    
+
     XCTAssertEqualObjects(requests.firstObject.path, expectedMessageAddPath);
     
     ZMTransportRequest *thumbnailRequest = requests[1];
