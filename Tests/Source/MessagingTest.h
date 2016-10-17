@@ -132,6 +132,7 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 
 - (NSData *)encryptedMessage:(ZMGenericMessage *)message recipient:(UserClient *)recipient;
 
+- (UserClient *)setupSelfClientInMoc:(NSManagedObjectContext *)moc;
 - (UserClient *)createSelfClient;
 - (UserClient *)createClientForUser:(ZMUser *)user createSessionWithSelfUser:(BOOL)createSessionWithSeflUser;
 - (UserClient *)createClientForMockUser:(MockUser *)mockUser createSessionWithSelfUser:(BOOL)createSessionWithSeflUser;

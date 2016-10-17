@@ -473,7 +473,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatTheClientIDFromTheUserClientIsIncludedInRequest
 {
     // Given
-    UserClient *userClient = [self createSelfClient];
+    UserClient *userClient = [self setupSelfClientInMoc:self.uiMOC];
     [self.sut startDownloadingMissingNotifications];
     
     // when
