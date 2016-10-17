@@ -662,9 +662,12 @@ static int32_t eventIdCounter;
 - (UserClient *)setupSelfClientInMoc:(NSManagedObjectContext *)moc;
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:moc];
+    if (selfUser.remoteIdentifier == nil) {
+        selfUser.remoteIdentifier = [NSUUID createUUID];
+    }
     
     UserClient *client = [UserClient insertNewObjectInManagedObjectContext:moc];
-    client.remoteIdentifier = @"identifier";
+    client.remoteIdentifier = [NSString createAlphanumericalString];
     client.user = selfUser;
     
     [moc setPersistentStoreMetadata:client.remoteIdentifier forKey:ZMPersistedClientIdKey];
@@ -675,15 +678,7 @@ static int32_t eventIdCounter;
 
 - (UserClient *)createSelfClient
 {
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-    selfUser.remoteIdentifier = selfUser.remoteIdentifier ?: [NSUUID createUUID];
-    
-    UserClient *selfClient = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
-    selfClient.remoteIdentifier = [NSString createAlphanumericalString];
-    selfClient.user = selfUser;
-    
-    [self.syncMOC setPersistentStoreMetadata:selfClient.remoteIdentifier forKey:ZMPersistedClientIdKey];
-    
+    UserClient *selfClient = [self setupSelfClientInMoc:self.syncMOC];
     [UserClient createOrUpdateClient:@{@"id": selfClient.remoteIdentifier, @"type": @"permanent", @"time": [[NSDate date] transportString]} context:self.syncMOC];
     [self.syncMOC saveOrRollback];
     
