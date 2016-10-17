@@ -43,9 +43,11 @@ extension NotificationForMessage {
     
     public func configureNotification(_ message: MessageType, isEphemeral: Bool = false) -> UILocalNotification {
         let notification = UILocalNotification()
-        var shouldHideContent = isEphemeral
+        let shouldHideContent : Bool
         if let hide = message.managedObjectContext!.value(forKey: ZMShouldHideNotificationContentKey) as? NSNumber, hide.boolValue == true {
             shouldHideContent = true
+        } else {
+            shouldHideContent = isEphemeral
         }
         if shouldHideContent {
             notification.alertBody = (isEphemeral ? ZMPushStringEphemeral : ZMPushStringDefault).localized()

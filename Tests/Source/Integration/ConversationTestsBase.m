@@ -31,6 +31,14 @@
 - (void)tearDown
 {
     self.receivedConversationWindowChangeNotifications = nil;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self.syncMOC zm_teardownMessageObfuscationTimer];
+    }];
+    XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout: 0.5]);
+    
+    [self.uiMOC zm_teardownMessageDeletionTimer];
+    XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout: 0.5]);
+    
     [super tearDown];
 }
 

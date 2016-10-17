@@ -21,20 +21,6 @@ import Foundation
 
 class ConversationTests_Ephemeral : ConversationTestsBase {
     
-    override func tearDown(){
-        syncMOC.performGroupedBlockAndWait {
-            self.syncMOC.zm_teardownMessageObfuscationTimer()
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        uiMOC.performGroupedBlockAndWait {
-            self.uiMOC.zm_teardownMessageDeletionTimer()
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        super.tearDown()
-    }
-    
     var obfuscationTimer : ZMMessageDestructionTimer {
         return syncMOC.zm_messageObfuscationTimer
     }

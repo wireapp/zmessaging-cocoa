@@ -121,10 +121,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     [self.uiMOC.globalManagedObjectContextObserver tearDown];
     [self.syncMOC.globalManagedObjectContextObserver tearDown];
     [self.syncMOC zm_tearDownCryptKeyStore];
-    [self.uiMOC zm_teardownMessageDeletionTimer];
-    [self.syncMOC performBlockAndWait:^{
-        [self.syncMOC zm_teardownMessageObfuscationTimer];
-    }];
+    
     [self.conversationChangeObserver tearDown];
     [self.userChangeObserver tearDown];
     [self.messageChangeObserver tearDown];
