@@ -41,6 +41,11 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
               let sender = message.sender
         else {return nil}
         
+        // We don't want to create notifications when a user leaves the conversation
+        if message.systemMessageType == .participantsRemoved, let removedUser = message.removedUsers.first, message.sender == removedUser {
+            return nil
+        }
+        
         self.senderUUID = sender.remoteIdentifier!
         self.application = application ?? UIApplication.shared
         super.init(conversationID: message.conversation?.remoteIdentifier)

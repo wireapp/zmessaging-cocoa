@@ -94,6 +94,21 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         return uiNote.alertBody
     }
     
+    func testThatItDoesNotCreateANotificationWhenTheUserLeaves(){
+        // given
+        let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
+        systemMessage.systemMessageType = .participantsRemoved
+        systemMessage.removedUsers = [otherUser]
+        systemMessage.sender = otherUser
+        systemMessage.visibleInConversation = groupConversation
+        
+        // when
+        let note = ZMLocalNotificationForSystemMessage(message: systemMessage, application: application)
+
+        // then
+        XCTAssertNil(note)
+    }
+    
     func testThatItCreatesANotificationForParticipantRemoved(){
         
         //    "push.notification.member.leave.self" = "%1$@ removed you from %2$@";
@@ -110,9 +125,6 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         //
         //    "push.notification.member.leave.many.nootherusername" = "%1$@ removed people from %2$@";
         //    "push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@ removed people from a conversation";
-        
-        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: sender)), "Super User left Super Conversation")
-        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: sender)), "Super User left a conversation")
         
         XCTAssertEqual(alertBodyForParticipantRemoved(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: otherUser)), "Super User removed Other User from Super Conversation")
         XCTAssertEqual(alertBodyForParticipantRemoved(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: selfUser)), "Super User removed you from Super Conversation")
