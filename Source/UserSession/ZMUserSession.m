@@ -58,6 +58,7 @@ NSString * const ZMUserSessionTrackingIdentifierDidChangeNotification = @"ZMUser
 static NSString * const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
 NSString * const ZMAppendAVSLogNotificationName = @"ZMAppendAVSLogNotification";
 NSString * const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
+NSString * const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLoopNotificationName";
 
 static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-client/id930944768?ls=1&mt=8";
 
@@ -203,6 +204,17 @@ ZM_EMPTY_ASSERTING_INIT()
     UIApplication *application = [UIApplication sharedApplication];
     
     ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC mainGroupQueue:userInterfaceContext application:application];
+    
+    RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
+    session.requestLoopDetectionCallback = ^(NSString *path) {
+        //TAG analytics
+        [tracker tagWithPath:path];
+        ZMLogWarn(@"Request loop happening at path: %@", path);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportRequestLoopNotificationName object:nil userInfo:@{@"path" : path}];
+        });
+    };
+    
     
     self = [self initWithTransportSession:session
                      userInterfaceContext:userInterfaceContext

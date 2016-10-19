@@ -52,6 +52,7 @@ extern NSString * const ZMUserSessionTrackingIdentifierDidChangeNotification;
 extern NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName;
 extern NSString * const ZMPhoneVerificationCodeKey;
 extern NSString * const ZMUserSessionResetPushTokensNotificationName;
+extern NSString * const ZMTransportRequestLoopNotificationName;
 
 /// The main entry point for the zmessaging API.
 ///
