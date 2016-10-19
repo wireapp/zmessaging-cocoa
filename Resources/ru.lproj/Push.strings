@@ -18,6 +18,7 @@
 
 
 "push.notification.default" = "Новое сообщение";
+"push.notification.ephemeral" = "Вам отправлено сообщение";
 
 "push.notification.add.message.group" = "%1$@ в %2$@: %3$@";
 "push.notification.add.message.group.nousername" = "Новое сообщение в %1$@: %2$@";
