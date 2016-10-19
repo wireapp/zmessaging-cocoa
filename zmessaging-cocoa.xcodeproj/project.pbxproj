@@ -895,6 +895,10 @@
 		B409649C1DAD3D1E0098667A /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = nl; path = nl.lproj/Push.stringsdict; sourceTree = "<group>"; };
 		B409649D1DAD3D260098667A /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Push.strings; sourceTree = "<group>"; };
 		B409649E1DAD3D260098667A /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = tr; path = tr.lproj/Push.stringsdict; sourceTree = "<group>"; };
+		B40CD09F1DB7997E0008DA45 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Push.strings; sourceTree = "<group>"; };
+		B40CD0A01DB7997E0008DA45 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = fr; path = fr.lproj/Push.stringsdict; sourceTree = "<group>"; };
+		B40CD0A11DB799850008DA45 /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/Push.strings; sourceTree = "<group>"; };
+		B40CD0A21DB799850008DA45 /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = da; path = da.lproj/Push.stringsdict; sourceTree = "<group>"; };
 		B40DC79C1D01A61600CEF65C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Push.strings"; sourceTree = "<group>"; };
 		B40DC79D1D01A61600CEF65C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "pt-BR"; path = "pt-BR.lproj/Push.stringsdict"; sourceTree = "<group>"; };
 		B4D37F921D7EEA3F00D0C1BC /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Push.strings; sourceTree = "<group>"; };
@@ -2310,6 +2314,8 @@
 				it,
 				nl,
 				tr,
+				fr,
+				da,
 			);
 			mainGroup = 540029AA1918CA8500578793;
 			productRefGroup = 540029B51918CA8500578793 /* Products */;
@@ -2770,6 +2776,8 @@
 				B40964991DAD3D170098667A /* it */,
 				B409649B1DAD3D1E0098667A /* nl */,
 				B409649D1DAD3D260098667A /* tr */,
+				B40CD09F1DB7997E0008DA45 /* fr */,
+				B40CD0A11DB799850008DA45 /* da */,
 			);
 			name = Push.strings;
 			sourceTree = "<group>";
@@ -2787,6 +2795,8 @@
 				B409649A1DAD3D170098667A /* it */,
 				B409649C1DAD3D1E0098667A /* nl */,
 				B409649E1DAD3D260098667A /* tr */,
+				B40CD0A01DB7997E0008DA45 /* fr */,
+				B40CD0A21DB799850008DA45 /* da */,
 			);
 			name = Push.stringsdict;
 			sourceTree = "<group>";
