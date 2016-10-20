@@ -132,9 +132,8 @@ ZM_EMPTY_ASSERTING_INIT()
     }
     id strongTranscoder = self.transcoder;
     if ([strongTranscoder respondsToSelector:@selector(nextUUIDFromResponse:forListPaginator:)]) {
-        NSUUID *lastUUID = [strongTranscoder nextUUIDFromResponse:response forListPaginator:self];
         self.hasMoreToFetch = [[[response.payload asDictionary] optionalNumberForKey:@"has_more"] boolValue];
-        self.lastUUIDOfPreviousPage = lastUUID;
+        self.lastUUIDOfPreviousPage = [strongTranscoder nextUUIDFromResponse:response forListPaginator:self];
     }
     else {
         self.hasMoreToFetch = NO;

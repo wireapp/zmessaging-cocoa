@@ -148,6 +148,8 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
             analytics: syncManagedObjectContext.analytics
         )
 
+        zmLog.debug("Notification fetch triggered for \(eventsWithID.identifier)")
+
         guard authenticationStatusProvider?.currentPhase == .authenticated else { return }
         notificationIDs.append(eventsWithID)
 
@@ -208,6 +210,7 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
         // update the status, end the background activity and remove the handler
         defer {
             if !hasMore {
+                zmLog.debug("Received last batch for \(identifier), updating status")
                 updateStatus()
                 eventsWithHandlerByNotificationID[identifier] = nil
             }
