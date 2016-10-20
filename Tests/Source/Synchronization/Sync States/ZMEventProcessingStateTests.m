@@ -60,7 +60,6 @@
         self.objectDirectory.pushTokenTranscoder,
         self.objectDirectory.systemMessageTranscoder,
         self.objectDirectory.clientMessageTranscoder,
-        self.objectDirectory.knockTranscoder,
         self.objectDirectory.userImageTranscoder,
         self.objectDirectory.searchUserImageTranscoder,
         self.objectDirectory.assetTranscoder,

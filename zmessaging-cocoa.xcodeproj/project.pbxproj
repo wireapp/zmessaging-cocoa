@@ -207,7 +207,6 @@
 		549816321A432BC800A7CE2E /* ZMUserTranscoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 54F8D6ED19AB535700146664 /* ZMUserTranscoder.m */; };
 		549816341A432BC800A7CE2E /* ZMPushTokenTranscoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E03BD8219BE11AA00D8A29F /* ZMPushTokenTranscoder.m */; };
 		549816351A432BC800A7CE2E /* ZMLoginTranscoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 54C11B9F19D1E4A100576A96 /* ZMLoginTranscoder.m */; };
-		549816361A432BC800A7CE2E /* ZMKnockTranscoder.m in Sources */ = {isa = PBXBuildFile; fileRef = A9D1775219E6D2AB00DBD3DF /* ZMKnockTranscoder.m */; };
 		549816371A432BC800A7CE2E /* ZMSearchUserImageTranscoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 54D9812119EBBF9E00037518 /* ZMSearchUserImageTranscoder.m */; };
 		549816381A432BC800A7CE2E /* ZMTypingTranscoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E3C00DD1A237CF700D02D21 /* ZMTypingTranscoder.m */; };
 		549816391A432BC800A7CE2E /* ZMSyncState.m in Sources */ = {isa = PBXBuildFile; fileRef = 54B717EF1940788E00B798FA /* ZMSyncState.m */; };
@@ -303,7 +302,6 @@
 		A907771A192E33A500141F13 /* SlowSyncTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85D997334755E841D13EA /* SlowSyncTests.m */; };
 		A9692F8A1986476900849241 /* NSString_NormalizationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A9692F881986476900849241 /* NSString_NormalizationTests.m */; };
 		A9A3CA10198A9967007F7BDB /* SearchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A9A3CA0E198A9967007F7BDB /* SearchTests.m */; };
-		A9D1775919E6D3F900DBD3DF /* ZMKnockTranscoderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A9D1775719E6D3F900DBD3DF /* ZMKnockTranscoderTests.m */; };
 		A9E522BF195DD8FA00CFB8E8 /* ConversationsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E6CD176194F435F00BAE83E /* ConversationsTests.m */; };
 		A9FD58B419B4B69900DB7A50 /* ZMCallStateTranscoderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A9FD58B219B4B69900DB7A50 /* ZMCallStateTranscoderTests.m */; };
 		AF6415A41C9C17FF00A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt in Resources */ = {isa = PBXBuildFile; fileRef = AF6415A01C9C151700A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt */; };
@@ -878,9 +876,6 @@
 		A9BABE7619BA1F5900E9E5A3 /* ZMSearchRequestCodec.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMSearchRequestCodec.m; sourceTree = "<group>"; };
 		A9BABE7B19BA1FE500E9E5A3 /* ZMSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMSearch.h; sourceTree = "<group>"; };
 		A9BABE7C19BA1FE500E9E5A3 /* ZMSearch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMSearch.m; sourceTree = "<group>"; };
-		A9D1775119E6D2AB00DBD3DF /* ZMKnockTranscoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMKnockTranscoder.h; sourceTree = "<group>"; };
-		A9D1775219E6D2AB00DBD3DF /* ZMKnockTranscoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMKnockTranscoder.m; sourceTree = "<group>"; };
-		A9D1775719E6D3F900DBD3DF /* ZMKnockTranscoderTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMKnockTranscoderTests.m; sourceTree = "<group>"; };
 		A9D24788198151E300EDFE79 /* ZMTestNotifications.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZMTestNotifications.h; sourceTree = "<group>"; };
 		A9D2478D1981522100EDFE79 /* ZMTestNotifications.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMTestNotifications.m; sourceTree = "<group>"; };
 		A9EADFE219DAAFDC00FD386C /* ZMUserImageTranscoder+Testing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ZMUserImageTranscoder+Testing.h"; sourceTree = "<group>"; };
@@ -1730,8 +1725,6 @@
 				54C11B9F19D1E4A100576A96 /* ZMLoginTranscoder.m */,
 				09531F131AE960E300B8556A /* ZMLoginCodeRequestTranscoder.h */,
 				09531F141AE960E300B8556A /* ZMLoginCodeRequestTranscoder.m */,
-				A9D1775119E6D2AB00DBD3DF /* ZMKnockTranscoder.h */,
-				A9D1775219E6D2AB00DBD3DF /* ZMKnockTranscoder.m */,
 				3EE27F7E1A9F20A4006B7090 /* ZMRemovedSuggestedPeopleTranscoder.h */,
 				3EE27F7F1A9F20A4006B7090 /* ZMRemovedSuggestedPeopleTranscoder.m */,
 				54D9812019EBBF9E00037518 /* ZMSearchUserImageTranscoder.h */,
@@ -1768,7 +1761,6 @@
 				3E03BD8B19BE11C300D8A29F /* ZMPushTokenTranscoderTests.m */,
 				54C11BAB19D1EB7500576A96 /* ZMLoginTranscoderTests.m */,
 				09531F1A1AE9644800B8556A /* ZMLoginCodeRequestTranscoderTests.m */,
-				A9D1775719E6D3F900DBD3DF /* ZMKnockTranscoderTests.m */,
 				54D9812719EBC04900037518 /* ZMSearchUserImageTranscoderTests.m */,
 				3E3C00E21A237DA400D02D21 /* ZMTypingTranscoderTests.m */,
 				3EE27F851A9F21B8006B7090 /* ZMRemovedSuggestedPeopleTranscoderTests.m */,
@@ -2494,7 +2486,6 @@
 				5447E4681AECDE6500411FCD /* ZMUserSessionTestsBase.m in Sources */,
 				54B9D9791AF9202A00F6DDF1 /* ZMUnauthenticatedStateTests.m in Sources */,
 				5492C6C519ACCCA8008F41E2 /* ConnectionTests.m in Sources */,
-				A9D1775919E6D3F900DBD3DF /* ZMKnockTranscoderTests.m in Sources */,
 				3E1858BC1951D6DA005FE78F /* MemoryLeaksObserver.m in Sources */,
 				F95557471A1FA2E50035F0C8 /* ZMSuggestionSearchTests.m in Sources */,
 				542DA04719B71C86008BDB92 /* ZMSlowSyncPhaseOneStateTests.m in Sources */,
@@ -2636,7 +2627,6 @@
 				546E73EE1ADFD9F200AFF9BE /* ZMUserSessionAuthenticationNotification.m in Sources */,
 				5498164C1A432BC800A7CE2E /* ZMIncompleteConversationsCache.m in Sources */,
 				09CC4ADF1B7D076700201C63 /* ZMEnvironmentsSetup.m in Sources */,
-				549816361A432BC800A7CE2E /* ZMKnockTranscoder.m in Sources */,
 				5498162E1A432BC800A7CE2E /* ZMLastUpdateEventIDTranscoder.m in Sources */,
 				549815BE1A432BC700A7CE2E /* ZMLocalNotificationDispatcher.m in Sources */,
 				8785CA611C568D1F00FD671C /* ZMVoiceChannel+VideoCalling.m in Sources */,

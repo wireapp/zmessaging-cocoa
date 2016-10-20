@@ -54,7 +54,6 @@
 #import "ZMSearchUserImageTranscoder.h"
 #import "ZMTypingTranscoder.h"
 #import "ZMRemovedSuggestedPeopleTranscoder.h"
-#import "ZMKnockTranscoder.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserProfileUpdateTranscoder.h"
 #import <zmessaging/zmessaging-Swift.h>
@@ -325,8 +324,6 @@ static const int32_t Mersenne3 = 8191;
     [self verifyMockLater:systemMessageTranscoder];
     id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
     [self verifyMockLater:clientMessageTranscoder];
-    id knockTranscoder = [OCMockObject mockForClass:ZMKnockTranscoder.class];
-    [self verifyMockLater:knockTranscoder];
     id assetTranscoder = [OCMockObject mockForClass:ZMAssetTranscoder.class];
     [self verifyMockLater:assetTranscoder];
     id selfTranscoder = [OCMockObject mockForClass:ZMSelfTranscoder.class];
@@ -366,7 +363,6 @@ static const int32_t Mersenne3 = 8191;
     [[[objectDirectory stub] andReturn:conversationTranscoder] conversationTranscoder];
     [[[objectDirectory stub] andReturn:systemMessageTranscoder] systemMessageTranscoder];
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
-    [[[objectDirectory stub] andReturn:knockTranscoder] knockTranscoder];
     [[[objectDirectory stub] andReturn:assetTranscoder] assetTranscoder];
     [[[objectDirectory stub] andReturn:selfTranscoder] selfTranscoder];
     [[[objectDirectory stub] andReturn:connectionTranscoder] connectionTranscoder];
@@ -391,7 +387,6 @@ static const int32_t Mersenne3 = 8191;
                                         conversationEventsTranscoder,
                                         systemMessageTranscoder,
                                         clientMessageTranscoder,
-                                        knockTranscoder,
                                         assetTranscoder,
                                         selfTranscoder,
                                         connectionTranscoder,
