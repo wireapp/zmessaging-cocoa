@@ -20,15 +20,19 @@
 @import Foundation;
 @import WireRequestStrategy;
 
+@class BackgroundAPNSPingBackStatus;
 @protocol PreviouslyReceivedEventIDsCollection;
 
-@interface ZMMissingUpdateEventsTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
+@interface ZMMissingUpdateEventsTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator>
 
 @property (nonatomic, readonly) BOOL hasLastUpdateEventID;
 @property (nonatomic, readonly) BOOL isDownloadingMissingNotifications;
 @property (nonatomic, readonly) NSUUID *lastUpdateEventID;
 
-- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection;
+- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
+previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
+        backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSpingbackStatus;
+
 - (void)startDownloadingMissingNotifications;
 
 + (NSUUID *)processUpdateEventsAndReturnLastNotificationIDFromPayload:(id<ZMTransportData>)payload syncStrategy:(ZMSyncStrategy *)syncStrategy;

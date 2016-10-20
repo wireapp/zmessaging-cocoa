@@ -59,41 +59,89 @@ extension EventsWithIdentifier {
     }
 }
 
+@objc public protocol ZMLastNotificationIDStore: ZMKeyValueStore {
+    var zm_lastNotificationID : UUID? { get set }
+    var zm_hasLastNotificationID : Bool { get }
+}
+
+extension UUID {
+    func compare(withType1 uuid: UUID) -> ComparisonResult {
+        return (self as NSUUID).compare(withType1UUID: uuid as NSUUID)
+    }
+}
+
+extension NSManagedObjectContext : ZMLastNotificationIDStore {
+    public var zm_lastNotificationID: UUID? {
+        set (newValue) {
+            if let value = newValue, let previousValue = zm_lastNotificationID,
+                value.isType1UUID && previousValue.isType1UUID &&
+                previousValue.compare(withType1: value) != .orderedAscending {
+                return
+            }
+
+            setValue(newValue?.uuidString, forKey: "LastUpdateEventID")
+        }
+
+        get {
+            guard let uuidString = value(forKey: "LastUpdateEventID") as? String,
+                let uuid = UUID(uuidString: uuidString)
+                else { return nil }
+            return uuid
+        }
+    }
+
+    public var zm_hasLastNotificationID: Bool {
+        return zm_lastNotificationID != nil
+    }
+}
+
+
+fileprivate extension UUID {
+    func isOlder(than uuid: UUID?) -> Bool {
+        guard let reference = uuid else { return false }
+        return compare(withType1: reference) != .orderedDescending
+    }
+}
+
 
 // MARK: - BackgroundAPNSPingBackStatus
 
-@objc public enum PingBackStatus: Int  {
-    case pinging, fetchingNotice, done
+@objc public enum PingBackStatus: UInt8 {
+    case done, pinging, fetchingNotice, fetchingNotificationStream
 }
 
-@objc open class BackgroundAPNSPingBackStatus: NSObject {
+@objc public class BackgroundAPNSPingBackStatus: NSObject {
 
     public typealias PingBackResultHandler = (ZMPushPayloadResult, [ZMUpdateEvent]) -> Void
     public typealias EventsWithHandler = (events: [ZMUpdateEvent]?, handler: PingBackResultHandler)
     
-    public fileprivate(set) var eventsWithHandlerByNotificationID: [UUID: EventsWithHandler] = [:]
-    public fileprivate(set) var backgroundActivity: ZMBackgroundActivity?
+    public private(set) var eventsWithHandlerByNotificationID: [UUID: EventsWithHandler] = [:]
+    public private(set) var backgroundActivity: ZMBackgroundActivity?
     public var status: PingBackStatus = .done
 
-    open var hasNotificationIDs: Bool {
+    private var failedOnLastFetch = false
+    public private(set) var notificationInProgress = false
+
+    public var hasNotificationIDs: Bool {
         if let next = notificationIDs.first {
             return !next.isNotice
         }
         return false
     }
     
-    open var hasNoticeNotificationIDs: Bool {
-        if let next = notificationIDs.first {
-            return next.isNotice
+    public var hasNoticeNotificationIDs: Bool {
+        if let next = notificationIDs.first, !notificationInProgress {
+            return next.isNotice && !next.identifier.isOlder(than: syncManagedObjectContext.zm_lastNotificationID)
         }
         return false
     }
+
+
+    private var notificationIDs: [EventsWithIdentifier] = []
+    private var notificationIDToEventsMap : [UUID : [ZMUpdateEvent]] = [:]
     
-    fileprivate var notificationIDs: [EventsWithIdentifier] = []
-    fileprivate var notificationIDToEventsMap : [UUID : [ZMUpdateEvent]] = [:]
-    
-    fileprivate var syncManagedObjectContext: NSManagedObjectContext
-    fileprivate weak var authenticationStatusProvider: AuthenticationStatusProvider?
+    private var syncManagedObjectContext: NSManagedObjectContext
+    private weak var authenticationStatusProvider: AuthenticationStatusProvider?
     
     public init(
         syncManagedObjectContext moc: NSManagedObjectContext,
@@ -109,30 +157,31 @@ extension EventsWithIdentifier {
         backgroundActivity?.end()
     }
     
-    open func nextNotificationEventsWithID() -> EventsWithIdentifier? {
-        return hasNotificationIDs ?  notificationIDs.removeFirst() : .none
+    public func nextNotificationEventsWithID() -> EventsWithIdentifier? {
+        return hasNotificationIDs ? notificationIDs.removeFirst() : .none
     }
     
-    open func nextNoticeNotificationEventsWithID() -> EventsWithIdentifier? {
+    public func nextNoticeNotificationEventsWithID() -> EventsWithIdentifier? {
         return hasNoticeNotificationIDs ? notificationIDs.removeFirst() : .none
     }
     
-    open func didReceiveVoIPNotification(_ eventsWithID: EventsWithIdentifier, handler: @escaping PingBackResultHandler) {
+    public func didReceiveVoIPNotification(_ eventsWithID: EventsWithIdentifier, handler: @escaping PingBackResultHandler) {
         APNSPerformanceTracker.sharedTracker.trackNotification(
             eventsWithID.identifier,
             state: .pingBackStatus,
             analytics: syncManagedObjectContext.analytics
         )
-        
+
+        guard authenticationStatusProvider?.currentPhase == .authenticated else { return }
+
         notificationIDs.append(eventsWithID)
         if !eventsWithID.isNotice {
             notificationIDToEventsMap[eventsWithID.identifier] = eventsWithID.events
         }
+
         eventsWithHandlerByNotificationID[eventsWithID.identifier] = (eventsWithID.events, handler)
-        
-        if authenticationStatusProvider?.currentPhase == .authenticated {
-            backgroundActivity = backgroundActivity ?? BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Ping back to BE")
-        }
+        backgroundActivity = backgroundActivity ?? BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Ping back to BE")
+
         
         if status == .done {
             updateStatus()
@@ -141,7 +190,7 @@ extension EventsWithIdentifier {
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
     
-    open func didPerfomPingBackRequest(_ eventsWithID: EventsWithIdentifier, responseStatus: ZMTransportResponseStatus) {
+    public func didPerfomPingBackRequest(_ eventsWithID: EventsWithIdentifier, responseStatus: ZMTransportResponseStatus) {
         let notificationID = eventsWithID.identifier
         let eventsWithHandler = eventsWithHandlerByNotificationID.removeValue(forKey: notificationID)
 
@@ -159,7 +208,7 @@ extension EventsWithIdentifier {
         }
     }
     
-    open func didFetchNoticeNotification(_ eventsWithID: EventsWithIdentifier, responseStatus: ZMTransportResponseStatus, events: [ZMUpdateEvent]) {
+    public func didFetchNoticeNotification(_ eventsWithID: EventsWithIdentifier, responseStatus: ZMTransportResponseStatus, events: [ZMUpdateEvent]) {
         var finalEvents = events
         let notificationID = eventsWithID.identifier
         

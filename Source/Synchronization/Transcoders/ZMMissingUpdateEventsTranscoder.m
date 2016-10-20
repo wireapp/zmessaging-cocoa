@@ -37,6 +37,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 @property (nonatomic, readonly, weak) ZMSyncStrategy *syncStrategy;
 @property (nonatomic, weak) id<PreviouslyReceivedEventIDsCollection> previouslyReceivedEventIDsCollection;
+@property (nonatomic) BackgroundAPNSPingBackStatus *pingbackStatus;
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response;
 
@@ -49,12 +50,15 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 @implementation ZMMissingUpdateEventsTranscoder
 
-- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
+- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
+previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
+        backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus
 {
     self = [super initWithManagedObjectContext:strategy.syncMOC];
     if(self) {
         _syncStrategy = strategy;
         self.previouslyReceivedEventIDsCollection = eventIDsCollection;
+        self.pingbackStatus = backgroundAPNSPingbackStatus;
         self.listPaginator = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:NotificationsPath
                                                                            startKey:StartKey
                                                                            pageSize:ZMMissingUpdateEventsTranscoderListPageSize
@@ -68,6 +72,12 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 - (BOOL)isDownloadingMissingNotifications
 {
     return self.listPaginator.hasMoreToFetch;
+}
+
+- (BOOL)isFetchingStreamForAPNS
+{
+    return (UIApplication.sharedApplication.applicationState == UIApplicationStateBackground) &&
+           (self.pingbackStatus.status == PingBackStatusFetchingNotificationStream);
 }
 
 - (NSUUID *)lastUpdateEventID
@@ -201,6 +211,24 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 - (void)setNeedsSlowSync
 {
     // no op
+}
+
+- (ZMTransportRequest *)nextRequest
+{
+    // TODO: see https://github.com/wearezeta/zmessaging-cocoa/pull/1293/files#diff-00b9c970d19a4250d1a44271a2af9d03R179
+    BOOL fetchingStream = self.pingbackStatus.status == PingBackStatusFetchingNotificationStream;
+
+    // TODO: We are we only checking if there are new notice notification, shouldn't we also fetch the notification stream
+    // if we received a non-notice notification in case we missed messages in between?
+    BOOL hasNewNotificationID = self.pingbackStatus.hasNoticeNotificationIDs;
+
+    ZMTransportRequest *request = nil;
+
+
+
+
+
+    return request;
 }
 
 
