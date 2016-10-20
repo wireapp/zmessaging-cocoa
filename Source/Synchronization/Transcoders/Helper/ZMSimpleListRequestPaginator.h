@@ -59,4 +59,7 @@
 @optional
 - (BOOL)shouldParseErrorResponseForStatusCode:(NSInteger)statusCode;
 
+/// Any additional query parameters the paginator should append to the request
+@property (nonatomic, readonly) NSArray <NSURLQueryItem *> * additionalQueryItems;
+
 @end

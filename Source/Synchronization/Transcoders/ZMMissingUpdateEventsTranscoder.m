@@ -38,6 +38,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 @property (nonatomic, readonly, weak) ZMSyncStrategy *syncStrategy;
 @property (nonatomic, weak) id<PreviouslyReceivedEventIDsCollection> previouslyReceivedEventIDsCollection;
 @property (nonatomic) BackgroundAPNSPingBackStatus *pingbackStatus;
+@property (nonatomic) EventsWithIdentifier *notificationEventsToCancel;
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response;
 
@@ -77,25 +78,17 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 - (BOOL)isFetchingStreamForAPNS
 {
     return (UIApplication.sharedApplication.applicationState == UIApplicationStateBackground) &&
-           (self.pingbackStatus.status == PingBackStatusFetchingNotificationStream);
+           (self.pingbackStatus.status == PingBackStatusInProgress);
 }
 
 - (NSUUID *)lastUpdateEventID
 {
-    return [((NSString *)[self.managedObjectContext persistentStoreMetadataForKey:LastUpdateEventIDStoreKey]) UUID];
+    return self.managedObjectContext.zm_lastNotificationID;
 }
 
 - (void)setLastUpdateEventID:(NSUUID *)lastUpdateEventID
 {
-    NSUUID *previousUUID = self.lastUpdateEventID;
-    if(
-       previousUUID.isType1UUID && lastUpdateEventID.isType1UUID && // both are type 1 (or I can't compare)
-       [previousUUID compareWithType1UUID:lastUpdateEventID] != NSOrderedAscending // and I'm not setting to a new one
-       ) {
-        // only set if more recent
-        return;
-    }
-    [self.managedObjectContext setPersistentStoreMetadata:lastUpdateEventID.UUIDString forKey:LastUpdateEventIDStoreKey];
+    self.managedObjectContext.zm_lastNotificationID = lastUpdateEventID;
 }
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response
@@ -133,10 +126,11 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 {
     return [payload.asDictionary optionalArrayForKey:@"notifications"].asDictionaries;
 }
-+ (NSUUID *)processUpdateEventsAndReturnLastNotificationIDFromPayload:(id<ZMTransportData>)payload syncStrategy:(ZMSyncStrategy *)syncStrategy {
-    
-    ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:10 label:NSStringFromClass(self)];
-    NSArray *eventsDictionaries = [self eventDictionariesFromPayload:payload];
+
+- (NSUUID *)processUpdateEventsAndReturnLastNotificationIDFromPayload:(id<ZMTransportData>)payload syncStrategy:(ZMSyncStrategy *)syncStrategy
+{
+    ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:10 label:NSStringFromClass(self.class)];
+    NSArray *eventsDictionaries = [self.class eventDictionariesFromPayload:payload];
     
     NSMutableArray *parsedEvents = [NSMutableArray array];
     NSMutableDictionary *lastCallStateEvents = [NSMutableDictionary dictionary];
@@ -159,9 +153,19 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
             }
         }
     }
-    
-    [syncStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
-    [syncStrategy processUpdateEvents:lastCallStateEvents.allValues ignoreBuffer:NO];
+
+    if (self.isFetchingStreamForAPNS) {
+        // In case we are fetching the stream because we have received a push notification we need to forward them to the pingback status
+        // The status will forward them to the operationloop and check if the received notification was contained in this batch.
+        NSArray <ZMUpdateEvent *> *events = [parsedEvents arrayByAddingObjectsFromArray:lastCallStateEvents.allKeys];
+        [self.pingbackStatus didReceiveEvents:events originalEvents:self.notificationEventsToCancel hasMore:self.listPaginator.hasMoreToFetch];
+        if (!self.listPaginator.hasMoreToFetch) {
+            self.notificationEventsToCancel = nil;
+        }
+    } else {
+        [syncStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
+        [syncStrategy processUpdateEvents:lastCallStateEvents.allValues ignoreBuffer:NO];
+    }
 
     [tp warnIfLongerThanInterval];
     return latestEventId;
@@ -215,22 +219,29 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
 - (ZMTransportRequest *)nextRequest
 {
-    // TODO: see https://github.com/wearezeta/zmessaging-cocoa/pull/1293/files#diff-00b9c970d19a4250d1a44271a2af9d03R179
-    BOOL fetchingStream = self.pingbackStatus.status == PingBackStatusFetchingNotificationStream;
+    BOOL fetchingStream = self.pingbackStatus.status == PingBackStatusInProgress;
+    BOOL hasNewNotification = self.pingbackStatus.hasNotificationIDs;
 
-    // TODO: We are we only checking if there are new notice notification, shouldn't we also fetch the notification stream
-    // if we received a non-notice notification in case we missed messages in between?
-    BOOL hasNewNotificationID = self.pingbackStatus.hasNoticeNotificationIDs;
+    if (fetchingStream && hasNewNotification) {
+        EventsWithIdentifier *newEvents = self.pingbackStatus.nextNotificationEventsWithID;
+        if (nil != newEvents) {
+            self.notificationEventsToCancel = newEvents;
+            [self.listPaginator resetFetching];
+            return self.listPaginator.nextRequest;
+        }
+    }
 
-    ZMTransportRequest *request = nil;
-
-
-
-
-
-    return request;
+    return nil;
 }
 
+- (NSArray <NSURLQueryItem *> *)additionalQueryItems
+{
+    if (nil == self.notificationEventsToCancel.identifier) {
+        return nil;
+    }
+
+    return @[[NSURLQueryItem queryItemWithName:@"cancel_fallback" value:self.notificationEventsToCancel.identifier.transportString]];
+}
 
 @end
 
@@ -243,12 +254,12 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 {
     NOT_USED(paginator);
     
-    NSUUID *latestEventId = [ZMMissingUpdateEventsTranscoder processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
+    NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
     if (latestEventId != nil) {
         self.lastUpdateEventID = latestEventId;
     }
     
-    Boolean hasMore = ((NSNumber *) response.payload.asDictionary[@"has_more"]).boolValue;
+    BOOL hasMore = ((NSNumber *) response.payload.asDictionary[@"has_more"]).boolValue;
     if(!hasMore) {
         [self.previouslyReceivedEventIDsCollection discardListOfAlreadyReceivedPushEventIDs];
     }
@@ -256,12 +267,10 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     return self.lastUpdateEventID;
 }
 
-
 - (NSUUID *)startUUID
 {
     return self.lastUpdateEventID;
 }
-
 
 - (BOOL)shouldParseErrorResponseForStatusCode:(NSInteger)statusCode;
 {

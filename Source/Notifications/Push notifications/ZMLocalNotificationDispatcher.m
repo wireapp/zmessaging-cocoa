@@ -161,9 +161,12 @@ ZM_EMPTY_ASSERTING_INIT();
     
     NSArray *eventsToForward = [events filterWithBlock:^BOOL(ZMUpdateEvent *event) {
         // we only want to process events we received through Push
-        if (event.source != ZMUpdateEventSourcePushNotification) {
-            return NO;
-        }
+
+        // TODO: When fetching from the notification stream in the background this source will not be set and need to be adjusted accordingly
+        (void)event;
+//        if (event.source != ZMUpdateEventSourcePushNotification) {
+//            return NO;
+//        }
         // TODO Sabine : Can we maybe filter message events here already for Reactions?
         return YES;
     }];

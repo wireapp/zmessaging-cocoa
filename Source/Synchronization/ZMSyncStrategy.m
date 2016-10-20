@@ -196,6 +196,7 @@ ZM_EMPTY_ASSERTING_INIT()
         
         self.requestStrategies = @[self.userClientRequestStrategy,
                                    self.missingClientsRequestStrategy,
+                                   self.missingUpdateEventsTranscoder,
                                    [[ProxiedRequestStrategy alloc] initWithRequestsStatus:proxiedRequestStatus
                                                                      managedObjectContext:self.syncMOC],
                                    [[DeleteAccountRequestStrategy alloc] initWithAuthStatus:authenticationStatus

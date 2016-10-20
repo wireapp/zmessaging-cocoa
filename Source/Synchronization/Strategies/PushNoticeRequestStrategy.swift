@@ -20,6 +20,9 @@
 import Foundation
 
 
+// TODO: This class can should be removed as we now fetch the notification stream when we recevie an APN
+
+
 @objc
 public final class PushNoticeRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy {
     
@@ -49,12 +52,13 @@ public final class PushNoticeRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        guard authenticationStatus?.currentPhase == .authenticated && pingBackStatus?.status == .fetchingNotice,
-              let hasNotification = pingBackStatus?.hasNoticeNotificationIDs , hasNotification
-        else { return nil }
-        
-        pingBackSync.readyForNextRequest()
-        return pingBackSync.nextRequest()
+//        guard authenticationStatus?.currentPhase == .authenticated && pingBackStatus?.status == .fetchingNotice,
+//              let hasNotification = pingBackStatus?.hasNoticeNotificationIDs , hasNotification
+//        else { return nil }
+//        
+//        pingBackSync.readyForNextRequest()
+//        return pingBackSync.nextRequest()
+        return nil
     }
     
     public func setNeedsSlowSync() {
@@ -72,39 +76,39 @@ public final class PushNoticeRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
 extension PushNoticeRequestStrategy: ZMSingleRequestTranscoder {
     
     public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
-        guard sync == pingBackSync,
-              let nextEventsWithID = pingBackStatus?.nextNoticeNotificationEventsWithID(),
-              let selfClientID = ZMUser.selfUser(in: self.managedObjectContext).selfClient()?.remoteIdentifier
-        else { return nil }
-        
-        let nextNotificationID = nextEventsWithID.identifier
-        let basePath = "/notifications/\((nextNotificationID as NSUUID).transportString())"
-        let clientComponent = URLQueryItem(name: "client", value: selfClientID)
-        let fallbackComponent = URLQueryItem(name: "cancel_fallback", value: "true")
-        var path = URLComponents(string: basePath)
-        path!.queryItems = [clientComponent, fallbackComponent]
-        
-        let request = ZMTransportRequest(path: path!.string!, method: .methodGET, payload: nil)
-        request.forceToVoipSession()
-
-        let completion = ZMCompletionHandler(on: managedObjectContext)  { [weak self] response in
-            let success = response.result == .success
-            var events : [ZMUpdateEvent] = []
-            if success {
-                events = ZMUpdateEvent.eventsArray(from: response.payload!, source: ZMUpdateEventSource.pushNotification) ?? []
-            }
-            self?.pingBackStatus?.didFetchNoticeNotification(nextEventsWithID, responseStatus: response.result, events: events)
-        }
-        
-        request.add(completion)
-        
-        APNSPerformanceTracker.sharedTracker.trackNotification(
-            nextNotificationID,
-            state: .pingBackStrategy(notice: true),
-            analytics: managedObjectContext.analytics
-        )
-        
-        return request
+//        guard sync == pingBackSync,
+//              let nextEventsWithID = pingBackStatus?.nextNoticeNotificationEventsWithID(),
+//              let selfClientID = ZMUser.selfUser(in: self.managedObjectContext).selfClient()?.remoteIdentifier
+//        else { return nil }
+//        
+//        let nextNotificationID = nextEventsWithID.identifier
+//        let basePath = "/notifications/\((nextNotificationID as NSUUID).transportString())"
+//        let clientComponent = URLQueryItem(name: "client", value: selfClientID)
+//        let fallbackComponent = URLQueryItem(name: "cancel_fallback", value: "true")
+//        var path = URLComponents(string: basePath)
+//        path!.queryItems = [clientComponent, fallbackComponent]
+//        
+//        let request = ZMTransportRequest(path: path!.string!, method: .methodGET, payload: nil)
+//        request.forceToVoipSession()
+//
+//        let completion = ZMCompletionHandler(on: managedObjectContext)  { [weak self] response in
+//            let success = response.result == .success
+//            var events : [ZMUpdateEvent] = []
+//            if success {
+//                events = ZMUpdateEvent.eventsArray(from: response.payload!, source: ZMUpdateEventSource.pushNotification) ?? []
+//            }
+//            self?.pingBackStatus?.didFetchNoticeNotification(nextEventsWithID, responseStatus: response.result, events: events)
+//        }
+//        
+//        request.add(completion)
+//        
+//        APNSPerformanceTracker.sharedTracker.trackNotification(
+//            nextNotificationID,
+//            state: .pingBackStrategy(notice: true),
+//            analytics: managedObjectContext.analytics
+//        )
+//        
+        return nil
     }
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {

@@ -96,18 +96,10 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
 }
 
 
-fileprivate extension UUID {
-    func isOlder(than uuid: UUID?) -> Bool {
-        guard let reference = uuid else { return false }
-        return compare(withType1: reference) != .orderedDescending
-    }
-}
-
-
 // MARK: - BackgroundAPNSPingBackStatus
 
 @objc public enum PingBackStatus: UInt8 {
-    case done, pinging, fetchingNotice, fetchingNotificationStream
+    case done, inProgress
 }
 
 @objc public class BackgroundAPNSPingBackStatus: NSObject {
@@ -120,22 +112,14 @@ fileprivate extension UUID {
     public var status: PingBackStatus = .done
 
     private var failedOnLastFetch = false
-    public private(set) var notificationInProgress = false
 
+    // We do not care if the notification is a notice or not as we will fetch the notification stream in both cases
     public var hasNotificationIDs: Bool {
         if let next = notificationIDs.first {
-            return !next.isNotice
+            return true
         }
         return false
     }
-    
-    public var hasNoticeNotificationIDs: Bool {
-        if let next = notificationIDs.first, !notificationInProgress {
-            return next.isNotice && !next.identifier.isOlder(than: syncManagedObjectContext.zm_lastNotificationID)
-        }
-        return false
-    }
-
 
     private var notificationIDs: [EventsWithIdentifier] = []
     private var notificationIDToEventsMap : [UUID : [ZMUpdateEvent]] = [:]
@@ -143,11 +127,7 @@ fileprivate extension UUID {
     private var syncManagedObjectContext: NSManagedObjectContext
     private weak var authenticationStatusProvider: AuthenticationStatusProvider?
     
-    public init(
-        syncManagedObjectContext moc: NSManagedObjectContext,
-        authenticationProvider: AuthenticationStatusProvider
-        )
-    {
+    public init(syncManagedObjectContext moc: NSManagedObjectContext, authenticationProvider: AuthenticationStatusProvider) {
         syncManagedObjectContext = moc
         authenticationStatusProvider = authenticationProvider
         super.init()
@@ -161,10 +141,6 @@ fileprivate extension UUID {
         return hasNotificationIDs ? notificationIDs.removeFirst() : .none
     }
     
-    public func nextNoticeNotificationEventsWithID() -> EventsWithIdentifier? {
-        return hasNoticeNotificationIDs ? notificationIDs.removeFirst() : .none
-    }
-    
     public func didReceiveVoIPNotification(_ eventsWithID: EventsWithIdentifier, handler: @escaping PingBackResultHandler) {
         APNSPerformanceTracker.sharedTracker.trackNotification(
             eventsWithID.identifier,
@@ -173,59 +149,78 @@ fileprivate extension UUID {
         )
 
         guard authenticationStatusProvider?.currentPhase == .authenticated else { return }
-
         notificationIDs.append(eventsWithID)
-        if !eventsWithID.isNotice {
-            notificationIDToEventsMap[eventsWithID.identifier] = eventsWithID.events
-        }
 
         eventsWithHandlerByNotificationID[eventsWithID.identifier] = (eventsWithID.events, handler)
         backgroundActivity = backgroundActivity ?? BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Ping back to BE")
 
-        
         if status == .done {
             updateStatus()
         }
-        
+
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
     
-    public func didPerfomPingBackRequest(_ eventsWithID: EventsWithIdentifier, responseStatus: ZMTransportResponseStatus) {
-        let notificationID = eventsWithID.identifier
-        let eventsWithHandler = eventsWithHandlerByNotificationID.removeValue(forKey: notificationID)
+//    public func didPerfomPingBackRequest(_ eventsWithID: EventsWithIdentifier, responseStatus: ZMTransportResponseStatus) {
+//        let notificationID = eventsWithID.identifier
+//        let eventsWithHandler = eventsWithHandlerByNotificationID.removeValue(forKey: notificationID)
+//
+//        updateStatus()
+//        zmLog.debug("Pingback with status \(status) for notification ID: \(notificationID)")
+//        
+//        if responseStatus == .tryAgainLater {
+//            guard let handler = eventsWithHandler?.handler else { return }
+//            didReceiveVoIPNotification(eventsWithID, handler: handler)
+//        }
+//        
+//        if responseStatus != .tryAgainLater {
+//            let result: ZMPushPayloadResult = (responseStatus == .success) ? .success : .failure
+//            eventsWithHandler?.handler(result, notificationIDToEventsMap[notificationID] ?? [])
+//        }
+//    }
+//    
+//    public func didFetchNoticeNotification(_ eventsWithID: EventsWithIdentifier, responseStatus: ZMTransportResponseStatus, events: [ZMUpdateEvent]) {
+//        let notificationID = eventsWithID.identifier
+//        
+//        switch responseStatus {
+//        case .success: // we fetched the event and pinged back
+//            notificationIDToEventsMap[notificationID] = events
+//            fallthrough
+//        case .tryAgainLater:
+//            didPerfomPingBackRequest(eventsWithID, responseStatus: responseStatus)
+//        default: // we could't fetch the event and want the fallback
+//            let eventsWithHandler = eventsWithHandlerByNotificationID.removeValue(forKey: notificationID)
+//            defer { eventsWithHandler?.handler(.failure, []) }
+//            updateStatus()
+//        }
+//        
+//        zmLog.debug("Fetching notification with status \(responseStatus) for notification ID: \(notificationID)")
+//    }
 
-        updateStatus()
-        zmLog.debug("Pingback with status \(status) for notification ID: \(notificationID)")
-        
-        if responseStatus == .tryAgainLater {
-            guard let handler = eventsWithHandler?.handler else { return }
-            didReceiveVoIPNotification(eventsWithID, handler: handler)
+    public func didReceiveEvents(_ encryptedEvents: [ZMUpdateEvent], originalEvents: EventsWithIdentifier, hasMore: Bool) {
+        let receivedIdentifiers = encryptedEvents.flatMap { $0.uuid }
+        let identifier = originalEvents.identifier
+        let receivedOriginal = receivedIdentifiers.contains(identifier)
+
+        zmLog.debug("Received events from notification stream for \(identifier), received original: \(receivedOriginal), hasMore: \(hasMore)")
+
+        // If we do not have any more notifications to fetch we want to 
+        // update the status, end the background activity and remove the handler
+        defer {
+            if !hasMore {
+                updateStatus()
+                eventsWithHandlerByNotificationID[identifier] = nil
+            }
         }
-        
-        if responseStatus != .tryAgainLater {
-            let result : ZMPushPayloadResult = (responseStatus == .success) ? .success : .failure
-            eventsWithHandler?.handler(result, notificationIDToEventsMap[notificationID] ?? [])
+
+        // We did not get the notification for the push and there are no more notifications to be fetched
+        if !receivedOriginal && !hasMore {
+            // TODO
+            return
         }
-    }
-    
-    public func didFetchNoticeNotification(_ eventsWithID: EventsWithIdentifier, responseStatus: ZMTransportResponseStatus, events: [ZMUpdateEvent]) {
-        var finalEvents = events
-        let notificationID = eventsWithID.identifier
-        
-        switch responseStatus {
-        case .success: // we fetched the event and pinged back
-            finalEvents = events
-            notificationIDToEventsMap[notificationID] = events
-            fallthrough
-        case .tryAgainLater:
-            didPerfomPingBackRequest(eventsWithID, responseStatus: responseStatus)
-        default: // we could't fetch the event and want the fallback
-            let eventsWithHandler = eventsWithHandlerByNotificationID.removeValue(forKey: notificationID)
-            defer { eventsWithHandler?.handler(.failure, []) }
-            updateStatus()
-        }
-        
-        zmLog.debug("Fetching notification with status \(responseStatus) for notification ID: \(notificationID)")
+
+        // Call the handler with the events fetched from the notification stream
+        eventsWithHandlerByNotificationID[identifier]?.handler(.success, encryptedEvents)
     }
     
     func updateStatus() {
@@ -234,7 +229,7 @@ fileprivate extension UUID {
             backgroundActivity = nil
             status = .done
         } else {
-            status = hasNoticeNotificationIDs ? .fetchingNotice : .pinging
+            status = .inProgress
         }
     }
     

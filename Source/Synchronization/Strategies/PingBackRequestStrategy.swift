@@ -51,12 +51,14 @@ public final class PingBackRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrate
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        guard authenticationStatus?.currentPhase == .authenticated && pingBackStatus?.status == .pinging,
-             let hasNotification = pingBackStatus?.hasNotificationIDs , hasNotification
-        else { return nil }
-        
-        pingBackSync.readyForNextRequest()
-        return pingBackSync.nextRequest()
+//        guard authenticationStatus?.currentPhase == .authenticated && pingBackStatus?.status == .pinging,
+//             let hasNotification = pingBackStatus?.hasNotificationIDs , hasNotification
+//        else { return nil }
+//        
+//        pingBackSync.readyForNextRequest()
+//        return pingBackSync.nextRequest()
+
+        return nil
     }
     
     public func setNeedsSlowSync() {
@@ -74,24 +76,26 @@ public final class PingBackRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrate
 extension PingBackRequestStrategy: ZMSingleRequestTranscoder {
     
     public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
-        guard sync == pingBackSync else { return nil }
-        guard let nextEventsWithID = pingBackStatus?.nextNotificationEventsWithID() else { return nil }
-        let path = "/push/fallback/\(nextEventsWithID.identifier.transportString())/cancel"
-        let request = ZMTransportRequest(path: path, method: .methodPOST, payload: nil)
-        request.forceToVoipSession()
-        let completion = ZMCompletionHandler(on: managedObjectContext)  { [weak self] response in
-            self?.pingBackStatus?.didPerfomPingBackRequest(nextEventsWithID, responseStatus: response.result)
-        }
-        
-        request.add(completion)
-        
-        APNSPerformanceTracker.sharedTracker.trackNotification(
-            nextEventsWithID.identifier,
-            state: .pingBackStrategy(notice: false),
-            analytics: managedObjectContext.analytics
-        )
-        
-        return request
+//        guard sync == pingBackSync else { return nil }
+//        guard let nextEventsWithID = pingBackStatus?.nextNotificationEventsWithID() else { return nil }
+//        let path = "/push/fallback/\(nextEventsWithID.identifier.transportString())/cancel"
+//        let request = ZMTransportRequest(path: path, method: .methodPOST, payload: nil)
+//        request.forceToVoipSession()
+//        let completion = ZMCompletionHandler(on: managedObjectContext)  { [weak self] response in
+//            self?.pingBackStatus?.didPerfomPingBackRequest(nextEventsWithID, responseStatus: response.result)
+//        }
+//        
+//        request.add(completion)
+//        
+//        APNSPerformanceTracker.sharedTracker.trackNotification(
+//            nextEventsWithID.identifier,
+//            state: .pingBackStrategy(notice: false),
+//            analytics: managedObjectContext.analytics
+//        )
+//        
+//        return request
+
+        return nil
     }
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
