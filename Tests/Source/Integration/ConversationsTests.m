@@ -2265,34 +2265,6 @@
     XCTAssertFalse(conversation.isArchived);
 }
 
-- (void)testThatReceivingRemoteKnockMessageRevealsClearedConversation
-{
-    //given
-    const NSUInteger messagesCount = 5;
-    [self loginAndFillConversationWithMessages:self.groupConversation messagesCount:messagesCount];
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    
-    [self.userSession performChanges:^{
-        [conversation clearMessageHistory];
-    }];
-    WaitForEverythingToBeDone();
-    XCTAssertEqual(conversation.messages.count, 0u);
-    // when
-    
-    [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self spinMainQueueWithTimeout:1]; // if the action happens within the same second the user clears the history, the event is not added
-        [self.groupConversation insertKnockFromUser:self.user2 nonce:[NSUUID createUUID]];
-    }];
-    WaitForEverythingToBeDone();
-    
-    // then
-    conversation = [self conversationForMockConversation:self.groupConversation];
-    ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
-    XCTAssertEqual(window.messages.count, 1u);
-    XCTAssertEqual(conversation.messages.count, 1u);
-    XCTAssertFalse(conversation.isArchived);
-}
-
 - (void)testThatReceivingRemoteImageMessageRevealsClearedConversation
 {
     //given

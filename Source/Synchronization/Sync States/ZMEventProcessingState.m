@@ -70,7 +70,6 @@
                              objectStrategyDirectory.pushTokenTranscoder,
                              objectStrategyDirectory.systemMessageTranscoder,
                              objectStrategyDirectory.clientMessageTranscoder,
-                             objectStrategyDirectory.knockTranscoder,
                              objectStrategyDirectory.userImageTranscoder,
                              objectStrategyDirectory.searchUserImageTranscoder,
                              objectStrategyDirectory.assetTranscoder,

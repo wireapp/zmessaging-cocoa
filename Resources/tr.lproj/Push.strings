@@ -18,6 +18,7 @@
 
 
 "push.notification.default" = "Yeni Mesaj";
+"push.notification.ephemeral" = "Birisi size mesaj gönderdi";
 
 "push.notification.add.message.group" = "%1$@ %2$@'de: %3$@";
 "push.notification.add.message.group.nousername" = "%1$@'de yeni mesaj: %2$@";

@@ -18,6 +18,7 @@
 
 
 "push.notification.default" = "新しいメッセージ";
+"push.notification.ephemeral" = "メッセージを受信しました";
 
 "push.notification.add.message.group" = "%1$@ が %2$@ で %3$@";
 "push.notification.add.message.group.nousername" = "%1$@ で新しいメッセージです。%2$@";
