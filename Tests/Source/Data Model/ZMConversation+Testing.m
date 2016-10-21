@@ -54,21 +54,6 @@
          [[mockActiveUsersUUID.allObjects valueForKey:@"transportString"] componentsJoinedByString:@", "]];
     }
 
-    NSMutableSet *inactiveUsersUUID = [NSMutableSet set];
-    for(ZMUser *user in self.otherInactiveParticipants) {
-        [inactiveUsersUUID addObject:user.remoteIdentifier];
-    }
-    NSMutableSet *mockInactiveUsersUUID = [NSMutableSet set];
-    for (MockUser *mockUser in conversation.inactiveUsers) {
-        [mockInactiveUsersUUID addObject:[mockUser.identifier UUID]];
-    }
-    [mockInactiveUsersUUID removeObject:conversation.selfIdentifier.UUID];
-    if (![inactiveUsersUUID isEqual:mockInactiveUsersUUID]) {
-        [failureRecorder recordFailure:@"Inactive users don't match {%@} != {%@}",
-         [[inactiveUsersUUID.allObjects valueForKey:@"transportString"] componentsJoinedByString:@", "],
-         [[mockInactiveUsersUUID.allObjects valueForKey:@"transportString"] componentsJoinedByString:@", "]];
-    }
-
     if (!((self.lastModifiedDate == conversation.lastEventTime
           || fabs([self.lastModifiedDate timeIntervalSinceDate:conversation.lastEventTime]) < 1))) {
         [failureRecorder recordFailure:@"Last modified date doesn't match '%@' != '%@'",

@@ -70,7 +70,7 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
     func alertBodyForParticipantEvents(_ message: ZMSystemMessage) -> String {
         let isLeaveEvent = (message.systemMessageType == .participantsRemoved)
         let isCopy = (userCount != 0)
-        let users = (isLeaveEvent ? message.removedUsers : message.addedUsers) ?? Set()
+        let users = (isLeaveEvent ? message.removedUsers : message.addedUsers)
         
         userCount = userCount + users.count
         if isCopy {

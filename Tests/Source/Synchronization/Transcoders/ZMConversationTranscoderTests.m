@@ -162,19 +162,13 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         sameActiveUsers = sameActiveUsers && [activeParticipants containsObject:user.remoteIdentifier];
     }
     
-    BOOL sameInactiveUsers = inactiveParticipants.count == conversation.otherInactiveParticipants.count;
-    for(ZMUser *user in conversation.otherInactiveParticipants) {
-        sameInactiveUsers = sameInactiveUsers && [inactiveParticipants containsObject:user.remoteIdentifier];
-    }
-    
     return (sameLastEvent
             && sameRemoteIdentifier
             && sameModifiedDate
             && sameCreator
             && sameName
             && sameType
-            && sameActiveUsers
-            && sameInactiveUsers);
+            && sameActiveUsers);
 }
 
 
@@ -2337,9 +2331,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     // then
     [self.syncMOC performGroupedBlockAndWait:^{
         XCTAssertEqual(conversation.otherActiveParticipants.count, 1u);
-        XCTAssertEqual(conversation.otherInactiveParticipants.count, 1u);
         XCTAssertEqualObjects(conversation.otherActiveParticipants.firstObject, nonRemovedUser);
-        XCTAssertEqualObjects(conversation.otherInactiveParticipants.firstObject, removedUser);
         
     }];
 }
@@ -2830,7 +2822,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         // then
         XCTAssertEqual(conversation.otherActiveParticipants.count, 3u);
-        XCTAssertEqual(conversation.otherInactiveParticipants.count, 0u);
     }];
 }
 

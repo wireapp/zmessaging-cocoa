@@ -1028,7 +1028,6 @@
     ZMUser *removedUser = [self userForMockUser:self.user1];
     
     // then
-    XCTAssertEqual(conversation.inactiveParticipants.count, 2lu); // because we removed user3 and user1
     XCTAssertEqual(conversation.activeParticipants.count, 3lu);
     XCTAssertEqual(systemMessage.users.count, 3lu);
     XCTAssertEqual(systemMessage.addedUsers.count, 1lu);
