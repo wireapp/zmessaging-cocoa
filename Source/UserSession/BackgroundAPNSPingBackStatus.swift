@@ -111,14 +111,10 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
     public private(set) var backgroundActivity: ZMBackgroundActivity?
     public var status: PingBackStatus = .done
 
-    private var failedOnLastFetch = false
+    private var isFetching = false
 
-    // We do not care if the notification is a notice or not as we will fetch the notification stream in both cases
     public var hasNotificationIDs: Bool {
-        if let next = notificationIDs.first {
-            return true
-        }
-        return false
+        return nil != notificationIDs.first && !isFetching
     }
 
     private var notificationIDs: [EventsWithIdentifier] = []
@@ -136,9 +132,11 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
     deinit {
         backgroundActivity?.end()
     }
-    
+
     public func nextNotificationEventsWithID() -> EventsWithIdentifier? {
-        return hasNotificationIDs ? notificationIDs.removeFirst() : .none
+        guard hasNotificationIDs else { return .none }
+        isFetching = true
+        return notificationIDs.removeFirst()
     }
     
     public func didReceiveVoIPNotification(_ eventsWithID: EventsWithIdentifier, handler: @escaping PingBackResultHandler) {
@@ -162,48 +160,14 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
 
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
-    
-//    public func didPerfomPingBackRequest(_ eventsWithID: EventsWithIdentifier, responseStatus: ZMTransportResponseStatus) {
-//        let notificationID = eventsWithID.identifier
-//        let eventsWithHandler = eventsWithHandlerByNotificationID.removeValue(forKey: notificationID)
-//
-//        updateStatus()
-//        zmLog.debug("Pingback with status \(status) for notification ID: \(notificationID)")
-//        
-//        if responseStatus == .tryAgainLater {
-//            guard let handler = eventsWithHandler?.handler else { return }
-//            didReceiveVoIPNotification(eventsWithID, handler: handler)
-//        }
-//        
-//        if responseStatus != .tryAgainLater {
-//            let result: ZMPushPayloadResult = (responseStatus == .success) ? .success : .failure
-//            eventsWithHandler?.handler(result, notificationIDToEventsMap[notificationID] ?? [])
-//        }
-//    }
-//    
-//    public func didFetchNoticeNotification(_ eventsWithID: EventsWithIdentifier, responseStatus: ZMTransportResponseStatus, events: [ZMUpdateEvent]) {
-//        let notificationID = eventsWithID.identifier
-//        
-//        switch responseStatus {
-//        case .success: // we fetched the event and pinged back
-//            notificationIDToEventsMap[notificationID] = events
-//            fallthrough
-//        case .tryAgainLater:
-//            didPerfomPingBackRequest(eventsWithID, responseStatus: responseStatus)
-//        default: // we could't fetch the event and want the fallback
-//            let eventsWithHandler = eventsWithHandlerByNotificationID.removeValue(forKey: notificationID)
-//            defer { eventsWithHandler?.handler(.failure, []) }
-//            updateStatus()
-//        }
-//        
-//        zmLog.debug("Fetching notification with status \(responseStatus) for notification ID: \(notificationID)")
-//    }
 
-    public func didReceiveEvents(_ encryptedEvents: [ZMUpdateEvent], originalEvents: EventsWithIdentifier, hasMore: Bool) {
+    @objc(didReceiveEncryptedEvents:originalEvents:hasMore:)
+    public func didReceive(encryptedEvents: [ZMUpdateEvent], originalEvents: EventsWithIdentifier, hasMore: Bool) {
         let receivedIdentifiers = encryptedEvents.flatMap { $0.uuid }
         let identifier = originalEvents.identifier
         let receivedOriginal = receivedIdentifiers.contains(identifier)
 
+        isFetching = hasMore
         zmLog.debug("Received events from notification stream for \(identifier), received original: \(receivedOriginal), hasMore: \(hasMore)")
 
         // If we do not have any more notifications to fetch we want to 
@@ -216,14 +180,14 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
             }
         }
 
-        // We did not get the notification for the push and there are no more notifications to be fetched
-        if !receivedOriginal && !hasMore {
-            // TODO
-            return
-        }
-
         // Call the handler with the events fetched from the notification stream
         eventsWithHandlerByNotificationID[identifier]?.handler(.success, encryptedEvents)
+    }
+
+    @objc(didFailDownloadingOriginalEvents:)
+    public func didFailDownloading(originalEvents: EventsWithIdentifier) {
+        isFetching = false
+        updateStatus()
     }
     
     func updateStatus() {

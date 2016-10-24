@@ -117,7 +117,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
                 timestamp = [conversation.lastModifiedDate dateByAddingTimeInterval:offset];
             }
             [conversation appendNewPotentialGapSystemMessageWithUsers:conversation.activeParticipants.set
-                                                               timestamp:timestamp];
+                                                            timestamp:timestamp];
         }
     }
 }
@@ -137,7 +137,9 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     NSUUID *latestEventId = nil;
     
     for(NSDictionary *eventDict in eventsDictionaries) {
-        NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventDict];
+        NSUUID *sourceThreshold = self.notificationEventsToCancel.identifier;
+        NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventDict pushStartingAt:sourceThreshold];
+
         for (ZMUpdateEvent *event in events) {
             [event appendDebugInformation:@"From missing update events transcoder, processUpdateEventsAndReturnLastNotificationIDFromPayload"];
 
@@ -157,8 +159,8 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     if (self.isFetchingStreamForAPNS) {
         // In case we are fetching the stream because we have received a push notification we need to forward them to the pingback status
         // The status will forward them to the operationloop and check if the received notification was contained in this batch.
-        NSArray <ZMUpdateEvent *> *events = [parsedEvents arrayByAddingObjectsFromArray:lastCallStateEvents.allKeys];
-        [self.pingbackStatus didReceiveEvents:events originalEvents:self.notificationEventsToCancel hasMore:self.listPaginator.hasMoreToFetch];
+        NSArray <ZMUpdateEvent *> *events = [parsedEvents arrayByAddingObjectsFromArray:lastCallStateEvents.allValues];
+        [self.pingbackStatus didReceiveEncryptedEvents:events originalEvents:self.notificationEventsToCancel hasMore:self.listPaginator.hasMoreToFetch];
         if (!self.listPaginator.hasMoreToFetch) {
             self.notificationEventsToCancel = nil;
         }
@@ -221,13 +223,24 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 {
     BOOL fetchingStream = self.pingbackStatus.status == PingBackStatusInProgress;
     BOOL hasNewNotification = self.pingbackStatus.hasNotificationIDs;
+    BOOL inProgress = self.listPaginator.status == ZMSingleRequestInProgress;
 
-    if (fetchingStream && hasNewNotification) {
+    // We want to create a new request if we are either currently fetching the paginated stream
+    // or if we have a new notification ID that rewuires a pingback.
+    BOOL shouldCreateRequest = inProgress || hasNewNotification;
+
+    if (fetchingStream && shouldCreateRequest) {
         EventsWithIdentifier *newEvents = self.pingbackStatus.nextNotificationEventsWithID;
+
         if (nil != newEvents) {
             self.notificationEventsToCancel = newEvents;
             [self.listPaginator resetFetching];
-            return self.listPaginator.nextRequest;
+        }
+
+        if (nil != self.notificationEventsToCancel) {
+            ZMTransportRequest *request = self.listPaginator.nextRequest;
+            [request forceToVoipSession];
+            return request;
         }
     }
 
@@ -277,6 +290,12 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     if (statusCode == 404) {
         return YES;
     }
+
+    if (nil != self.notificationEventsToCancel) {
+        [self.pingbackStatus didFailDownloadingOriginalEvents:self.notificationEventsToCancel];
+        self.notificationEventsToCancel = nil;
+    }
+
     return NO;
 }
 

@@ -76,6 +76,11 @@ ZM_EMPTY_ASSERTING_INIT()
     return self.singleRequestSync.nextRequest;
 }
 
+- (ZMSingleRequestProgress)status
+{
+    return self.singleRequestSync.status;
+}
+
 - (ZMTransportRequest *)requestForSingleRequestSync:(ZMSingleRequestSync * __unused)sync
 {
     if(!self.hasMoreToFetch) {

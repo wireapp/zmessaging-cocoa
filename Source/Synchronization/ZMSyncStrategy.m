@@ -87,8 +87,6 @@
 @property (nonatomic) ZMTypingTranscoder *typingTranscoder;
 @property (nonatomic) ZMRemovedSuggestedPeopleTranscoder *removedSuggestedPeopleTranscoder;
 @property (nonatomic) ZMUserProfileUpdateTranscoder *userProfileUpdateTranscoder;
-@property (nonatomic) PingBackRequestStrategy *pingBackRequestStrategy;
-@property (nonatomic) PushNoticeRequestStrategy *pushNoticeFetchStrategy;
 @property (nonatomic) LinkPreviewAssetUploadRequestStrategy *linkPreviewAssetUploadRequestStrategy;
 @property (nonatomic) ImageUploadRequestStrategy *imageUploadRequestStrategy;
 @property (nonatomic) ImageDownloadRequestStrategy *imageDownloadRequestStrategy;
@@ -205,8 +203,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[AddressBookUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus
                                                                                  clientRegistrationStatus:clientRegistrationStatus
                                                                                                       moc:self.syncMOC],
-                                   self.pingBackRequestStrategy,
-                                   self.pushNoticeFetchStrategy,
                                    self.fileUploadRequestStrategy,
                                    self.linkPreviewAssetDownloadRequestStrategy,
                                    self.linkPreviewAssetUploadRequestStrategy,
@@ -263,8 +259,6 @@ ZM_EMPTY_ASSERTING_INIT()
     self.phoneNumberVerificationTranscoder = [[ZMPhoneNumberVerificationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
     self.userProfileUpdateTranscoder = [[ZMUserProfileUpdateTranscoder alloc] initWithManagedObjectContext:self.syncMOC userProfileUpdateStatus:userProfileStatus];
     self.conversationStatusSync = [[ConversationStatusStrategy alloc] initWithManagedObjectContext:self.syncMOC];
-    self.pingBackRequestStrategy = [[PingBackRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC backgroundAPNSPingBackStatus:backgroundAPNSPingBackStatus authenticationStatus:authenticationStatus];
-    self.pushNoticeFetchStrategy = [[PushNoticeRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC backgroundAPNSPingBackStatus:backgroundAPNSPingBackStatus authenticationStatus:authenticationStatus];
     self.fileUploadRequestStrategy = [[FileUploadRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC taskCancellationProvider:taskCancellationProvider];
     self.linkPreviewAssetDownloadRequestStrategy = [[LinkPreviewAssetDownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
     self.linkPreviewAssetUploadRequestStrategy = [[LinkPreviewAssetUploadRequestStrategy alloc] initWithClientRegistrationDelegate:clientRegistrationStatus managedObjectContext:self.syncMOC];
@@ -328,16 +322,14 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.application unregisterObserverForStateChange:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self appTerminated:nil];
-    
+
     for (ZMObjectSyncStrategy *s in [self.allTranscoders arrayByAddingObjectsFromArray:self.requestStrategies]) {
         if ([s respondsToSelector:@selector((tearDown))]) {
             [s tearDown];
         }
     }
-    
+
     [self.conversationStatusSync tearDown];
-    [self.pingBackRequestStrategy tearDown];
-    [self.pushNoticeFetchStrategy tearDown];
     [self.fileUploadRequestStrategy tearDown];
 }
 

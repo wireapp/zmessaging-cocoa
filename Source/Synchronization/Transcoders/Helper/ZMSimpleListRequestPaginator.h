@@ -19,6 +19,9 @@
 
 @import Foundation;
 @import ZMTransport;
+@import WireRequestStrategy;
+
+
 
 @protocol ZMSimpleListRequestPaginatorSync;
 
@@ -28,6 +31,10 @@
 
 /// YES if more requests should be made before to fetch the full list
 @property (nonatomic, readonly) BOOL hasMoreToFetch;
+
+/// Status of the underlying singleRequestTranscoder
+@property (nonatomic, readonly) ZMSingleRequestProgress status;
+
 
 - (instancetype)initWithBasePath:(NSString *)basePath
                         startKey:(NSString *)startKey
