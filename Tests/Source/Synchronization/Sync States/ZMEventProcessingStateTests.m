@@ -25,7 +25,6 @@
 #import "ZMConnectionTranscoder.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMAssetTranscoder.h"
-#import "ZMConversationEventsTranscoder.h"
 #import "ZMUserImageTranscoder.h"
 #import "StateBaseTest.h"
 #import "ZMObjectStrategyDirectory.h"

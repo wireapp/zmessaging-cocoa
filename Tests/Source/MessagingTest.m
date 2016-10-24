@@ -38,7 +38,6 @@
 #import "ZMUserTranscoder.h"
 #import "ZMUserImageTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMConversationEventsTranscoder.h"
 #import "ZMAssetTranscoder.h"
 #import "ZMSelfTranscoder.h"
 #import "ZMConnectionTranscoder.h"
@@ -318,8 +317,6 @@ static const int32_t Mersenne3 = 8191;
     [self verifyMockLater:userImageTranscoder];
     id conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [self verifyMockLater:conversationTranscoder];
-    id conversationEventsTranscoder = [OCMockObject mockForClass:ZMConversationEventsTranscoder.class];
-    [self verifyMockLater:conversationEventsTranscoder];
     id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
     [self verifyMockLater:systemMessageTranscoder];
     id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
@@ -384,7 +381,6 @@ static const int32_t Mersenne3 = 8191;
                                         userTranscoder,
                                         userImageTranscoder,
                                         conversationTranscoder,
-                                        conversationEventsTranscoder,
                                         systemMessageTranscoder,
                                         clientMessageTranscoder,
                                         assetTranscoder,

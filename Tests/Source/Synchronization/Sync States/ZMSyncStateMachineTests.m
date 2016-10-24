@@ -31,7 +31,6 @@
 #import "ZMUserTranscoder.h"
 #import "ZMUserImageTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMConversationEventsTranscoder.h"
 #import "ZMAssetTranscoder.h"
 #import "ZMSelfTranscoder.h"
 #import "ZMConnectionTranscoder.h"

@@ -49,7 +49,6 @@
 #import <zmessaging/ZMAPSMessageDecoder.h>
 #import <zmessaging/ZMUserTranscoder.h>
 #import <zmessaging/NSError+ZMUserSessionInternal.h>
-#import <zmessaging/ZMIncompleteConversationsCache.h>
 #import <zmessaging/ZMOperationLoop.h>
 #import <zmessaging/ZMClientUpdateNotification+Internal.h>
 #import <zmessaging/ZMCookie.h>

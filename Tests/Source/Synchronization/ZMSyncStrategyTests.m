@@ -36,7 +36,6 @@
 #import "ZMSlowSyncPhaseTwoState.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
-#import "ZMConversationEventsTranscoder.h"
 #import "ZMAssetTranscoder.h"
 #import "ZMUserImageTranscoder.h"
 #import "ZMSyncStateMachine.h"

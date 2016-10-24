@@ -26,7 +26,6 @@
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMuserProfileUpdateTranscoder.h"
 #import "ZMCallStateTranscoder.h"
-#import "ZMConversationEventsTranscoder.h"
 
 @implementation ZMSlowSyncPhaseTwoState
 
