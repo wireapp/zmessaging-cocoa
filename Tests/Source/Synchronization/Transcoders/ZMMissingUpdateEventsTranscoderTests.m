@@ -26,6 +26,8 @@
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
 #import "ZMSimpleListRequestPaginator.h"
+#import <zmessaging/zmessaging-Swift.h>
+
 
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 
@@ -35,6 +37,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 @property (nonatomic, readonly) id lastUpdateEventIDTranscoder;
 @property (nonatomic, readonly) ZMSyncStrategy *syncStrategy;
 @property (nonatomic, readonly) id<PreviouslyReceivedEventIDsCollection> mockEventIDsCollection;
+@property (nonatomic, readonly) id mockPingbackStatus;
 
 @end
 
@@ -45,10 +48,14 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     
     _syncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
     _mockEventIDsCollection = OCMProtocolMock(@protocol(PreviouslyReceivedEventIDsCollection));
+    _mockPingbackStatus = [OCMockObject niceMockForClass:BackgroundAPNSPingBackStatus.class];
     [[[(id) self.syncStrategy stub] andReturn:self.uiMOC] syncMOC];
     [self verifyMockLater:self.syncStrategy];
-    
-    _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection];
+
+    _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
+                                    previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
+                                                             application:(id)self.application
+                                            backgroundAPNSPingbackStatus:self.mockPingbackStatus];
 }
 
 - (void)tearDown {
@@ -456,9 +463,12 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [self.syncMOC setPersistentStoreMetadata:lastUpdateEventID.UUIDString forKey:LastUpdateEventIDStoreKey];
     [self.syncMOC saveOrRollback];
     WaitForAllGroupsToBeEmpty(0.5);
-    
+
     // when
-    ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection];
+    ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
+                                                                    previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
+                                                                                             application:(id)self.application
+                                                                            backgroundAPNSPingbackStatus:self.mockPingbackStatus];
     WaitForAllGroupsToBeEmpty(0.5);
     [sut.listPaginator resetFetching];
     ZMTransportRequest *request = [sut.listPaginator nextRequest];
@@ -774,6 +784,47 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     ZMTransportRequest *request1 = [self.sut.listPaginator nextRequest];
     [request1 completeWithResponse:[self responseForSettingLastUpdateEventID:lastUpdateEventID2 hasMore:YES]];
     WaitForAllGroupsToBeEmpty(0.5);
+}
+
+@end
+
+
+
+@implementation ZMMissingUpdateEventsTranscoderTests (FallbackCancellation)
+
+- (void)testThatItAddsTheCancelationQueryToItsPathWhenItHasANotificationIdToCancel
+{
+    XCTFail();
+}
+
+- (void)testThatItCallsThePingBackStatusWithFetchedNotificationsIfItHasANotificationIdToCancel
+{
+    XCTFail();
+}
+
+- (void)testThatItReportsWhenItIsFetchingFromAPushNotification
+{
+    XCTFail();
+}
+
+- (void)testThatItNotifiesThePingBackStatusInCaseOfAFailure
+{
+    XCTFail();
+}
+
+- (void)testThatIUsesTheLastNotificationIdToRequestTheNotificationStreamFromAPush
+{
+    XCTFail();
+}
+
+- (void)testThatItRequestsMorePagesIfThereAreMoreThanOneFromAPush
+{
+    XCTFail();
+}
+
+- (void)testThatItDoesForwardTheResponseInCaseOfA404AndDoesNotReportAFailure
+{
+    XCTFail();
 }
 
 @end

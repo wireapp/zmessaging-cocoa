@@ -26,6 +26,7 @@
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMSimpleListRequestPaginator.h"
 
+
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 static NSString * const NotificationsKey = @"notifications";
 static NSString * const NotificationsPath = @"/notifications";
@@ -37,6 +38,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 @property (nonatomic, readonly, weak) ZMSyncStrategy *syncStrategy;
 @property (nonatomic, weak) id<PreviouslyReceivedEventIDsCollection> previouslyReceivedEventIDsCollection;
+@property (nonatomic, weak) id <ZMApplication> application;
 @property (nonatomic) BackgroundAPNSPingBackStatus *pingbackStatus;
 @property (nonatomic) EventsWithIdentifier *notificationEventsToCancel;
 
@@ -53,11 +55,13 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
 previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
+                         application:(id <ZMApplication>)application
         backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus
 {
     self = [super initWithManagedObjectContext:strategy.syncMOC];
     if(self) {
         _syncStrategy = strategy;
+        self.application = application;
         self.previouslyReceivedEventIDsCollection = eventIDsCollection;
         self.pingbackStatus = backgroundAPNSPingbackStatus;
         self.listPaginator = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:NotificationsPath
@@ -77,8 +81,8 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
 - (BOOL)isFetchingStreamForAPNS
 {
-    return (UIApplication.sharedApplication.applicationState == UIApplicationStateBackground) &&
-           (self.pingbackStatus.status == PingBackStatusInProgress);
+    return self.application.applicationState == UIApplicationStateBackground &&
+           self.pingbackStatus.status == PingBackStatusInProgress;
 }
 
 - (NSUUID *)lastUpdateEventID
@@ -232,7 +236,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     if (fetchingStream && shouldCreateRequest) {
         EventsWithIdentifier *newEvents = self.pingbackStatus.nextNotificationEventsWithID;
 
-        if (nil != newEvents) {
+        if (nil != newEvents && ![newEvents isEqual:self.notificationEventsToCancel]) {
             self.notificationEventsToCancel = newEvents;
             [self.listPaginator resetFetching];
         }

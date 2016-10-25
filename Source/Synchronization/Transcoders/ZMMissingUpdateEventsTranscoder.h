@@ -22,6 +22,7 @@
 
 @class BackgroundAPNSPingBackStatus;
 @protocol PreviouslyReceivedEventIDsCollection;
+@protocol ZMApplication;
 
 @interface ZMMissingUpdateEventsTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator>
 
@@ -31,7 +32,8 @@
 
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
 previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
-        backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSpingbackStatus;
+                         application:(id <ZMApplication>)application
+        backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus;
 
 - (void)startDownloadingMissingNotifications;
 
