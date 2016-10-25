@@ -974,7 +974,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 {
     // given
     self.application.applicationState = UIApplicationStateActive;
-    [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(PingBackStatusInProgress)] status];
 
     // then
     XCTAssertFalse(self.sut.isFetchingStreamForAPNS);
@@ -984,7 +983,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 {
     // given
     self.application.applicationState = UIApplicationStateActive;
-    [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(PingBackStatusInProgress)] status];
 
     // then
     XCTAssertFalse(self.sut.isFetchingStreamForAPNS);
