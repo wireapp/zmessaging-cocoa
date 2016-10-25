@@ -225,7 +225,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
 - (ZMTransportRequest *)nextRequest
 {
-    BOOL fetchingStream = self.pingbackStatus.status == PingBackStatusInProgress;
+    BOOL fetchingStream = self.isFetchingStreamForAPNS;
     BOOL hasNewNotification = self.pingbackStatus.hasNotificationIDs;
     BOOL inProgress = self.listPaginator.status == ZMSingleRequestInProgress;
 

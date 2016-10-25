@@ -30,4 +30,6 @@ extern NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize;
 @property (nonatomic) ZMSimpleListRequestPaginator *listPaginator;
 @property (nonatomic) NSUUID *lastUpdateEventID;
 
+@property (nonatomic, readonly) BOOL isFetchingStreamForAPNS;
+
 @end
