@@ -47,7 +47,7 @@
         };
     }
     
-    XCTAssertTrue([self waitForEverythingToBeDone]);
+    WaitForEverythingToBeDone();
 }
 
 - (ZMTransportResponse *)notificationFetchResponseForRequest:(ZMTransportRequest *)request payload:(NSDictionary *)payload identifier:(NSUUID *)identifier
@@ -84,7 +84,7 @@
     UILocalNotification *notification;
     // (1) when we recieve a push notification
     {
-        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.createUUID mockResponse:YES];
+        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID mockResponse:YES];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
@@ -133,7 +133,7 @@
     UILocalNotification *notification;
     {
 
-        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.createUUID mockResponse:YES];
+        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID mockResponse:YES];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
@@ -209,23 +209,32 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMUser *user2 = [self userForMockUser:self.user2];
-    NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest joinedUsers:@[user2] videoSendingUsers:@[user2] sequence:@1 session:@"session2"];
-    
+    NSDictionary *pushPayload = [self payloadForCallStateEventInConversation:self.conversationUnderTest
+                                                                 joinedUsers:@[user2]
+                                                           videoSendingUsers:@[user2]
+                                                                    sequence:@1
+                                                                     session:@"session2"];
+
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session simulatePushChannelClosed];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
-    NSUUID *notificationId = NSUUID.createUUID;
-    [self simulateRestartWithoutEnteringEventProcessingWithNotificationFetchResponse:payload forIdentifier:notificationId];
+    NSUUID *notificationId = NSUUID.timeBasedUUID;
+    NSDictionary *streamPayload = @{ @"id": notificationId.transportString, @"payload": @[pushPayload] };
+    [self simulateRestartWithoutEnteringEventProcessingWithNotificationFetchResponse:streamPayload forIdentifier:notificationId];
     
     UILocalNotification *notification;    
     [self.application setBackground];
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
+    WaitForAllGroupsToBeEmpty(0.5);
+
     XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 0u);
     
     // (1) when we recieve a push notification
     {
-        [self simulateReceivePushNotificationWithPayload:payload identifier:notificationId mockResponse:NO];
+        [self simulateReceivePushNotificationWithPayload:pushPayload identifier:notificationId mockResponse:NO];
         XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
         WaitForAllGroupsToBeEmpty(0.5);
         
@@ -249,7 +258,7 @@
         XCTAssertTrue(self.userSession.isPerformingSync);
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 1u);
     }
-    
+
     // (3) we enter event processing state
     {
         XCTestExpectation *expectation = [self expectationWithDescription:@"call state event sent"];
@@ -260,6 +269,7 @@
             return nil;
         };
 
+        [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationWillEnterForegroundNotification object:nil];
         [self.mockTransportSession completeAllBlockedRequests];
         
         XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
