@@ -64,34 +64,6 @@
         [failureRecorder recordFailure:@"Remote ID doesn't match '%@' != '%@'",
          self.remoteIdentifier.transportString, conversation.identifier];
     }
-
-    // matching events
-    // TODO Sabine
-    //    NSMutableArray *mockTextMessages = [NSMutableArray array];
-//    for(MockEvent *event in conversation.events)
-//    {
-//        if([event.type isEqual:@"conversation.message-add"]) {
-//            [mockTextMessages addObject:[ZMEventID eventIDWithString:event.identifier]];
-//        }
-//    }
-//    [mockTextMessages sortUsingComparator:^NSComparisonResult(ZMEventID *event1, ZMEventID* event2) {
-//        return [event1 compare:event2];
-//    }];
-//
-//    NSMutableArray *originalTextMessages = [NSMutableArray array];
-//    for(ZMMessage *message in self.messages) {
-//        if([message isKindOfClass:ZMTextMessage.class]) {
-//            [originalTextMessages addObject:message.eventID];
-//        }
-//    }
-//    [originalTextMessages sortUsingComparator:^NSComparisonResult(ZMEventID *event1, ZMEventID* event2) {
-//        return [event1 compare:event2];
-//    }];
-//
-//    if (![mockTextMessages isEqualToArray:originalTextMessages]) {
-//        [failureRecorder recordFailure:@"Text messages don't match '%@' != '%@'",
-//         mockTextMessages, originalTextMessages];
-//    }
 }
 - (void)setUnreadCount:(NSUInteger)count;
 {

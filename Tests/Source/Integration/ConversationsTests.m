@@ -2022,7 +2022,6 @@
     
     // when deleting the conversation remotely
     {
-        // TODO Sabine: This creates a race condition when we first receive the cleared and then the archived event
         [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
             [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:YES];
         }];
