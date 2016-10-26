@@ -24,7 +24,6 @@
 #import "NSManagedObjectContext+TestHelpers.h"
 
 
-@class ZMEventID;
 @class NSManagedObjectContext;
 @class MockTransportSession;
 @class ZMManagedObject;
@@ -49,10 +48,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Waits for queues and managed object contexts to finish work and verifies mocks
 - (void)cleanUpAndVerify;
-
-- (ZMEventID *)createEventID;
-+ (ZMEventID *)createEventID;
-+ (NSInteger)randomSignedIntWithMax:(NSInteger)max;
 
 /// Wait for the block to return @c YES. The block is called on the given @c queue. The block is only called after each @c NSManagedObjectContextDidChange notification of the given context.
 /// Should be wrapped in call to @c XCTAssert()

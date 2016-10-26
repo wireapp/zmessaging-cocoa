@@ -22,7 +22,6 @@
 #import "StateBaseTest.h"
 #import "ZMBackgroundFetchState.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
-#import "ZMAssetTranscoder.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMStateMachineDelegate.h"
 
@@ -33,7 +32,6 @@
 @property (nonatomic) NSUUID *lastUpdateEventID;
 @property (nonatomic) NSMutableArray *results;
 @property (nonatomic) NSMutableArray *forwardedRequests;
-@property (nonatomic) BOOL assetTranscoderHasOutstandingItems;
 @property (nonatomic) BOOL missingUpdateEventsTranscoderIsDownloadingMissingNotifications;
 
 @end
@@ -124,7 +122,6 @@
         [[[transcoder stub] andReturn:@[]] requestGenerators];
     }
     (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturnValue:@(YES)] isDownloadingMissingNotifications];
-    (void)[(ZMAssetTranscoder *) [[(id) self.objectDirectory.assetTranscoder stub] andReturnValue:@(NO)] hasOutstandingItems];
     
     // expect
     [[(id) self.stateMachine reject] goToState:OCMOCK_ANY];
@@ -134,22 +131,6 @@
     (void) [self.sut nextRequest];
 }
 
-- (void)testThatItWaitsForAssets;
-{
-    // given
-    for (id transcoder in self.syncObjectsUsedByState) {
-        [[[transcoder stub] andReturn:@[]] requestGenerators];
-    }
-    (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturnValue:@(NO)] isDownloadingMissingNotifications];
-    (void)[(ZMAssetTranscoder *) [[(id) self.objectDirectory.assetTranscoder stub] andReturnValue:@(YES)] hasOutstandingItems];
-    
-    // expect
-    [[(id) self.stateMachine reject] goToState:OCMOCK_ANY];
-    
-    // when
-    (void) [self.sut nextRequest];
-    (void) [self.sut dataDidChange];
-}
 
 - (void)testThatItTransitionsToThePreBackgroundStateWhenDone;
 {
@@ -158,7 +139,6 @@
         [[[transcoder stub] andReturn:@[]] requestGenerators];
     }
     (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturnValue:@(NO)] isDownloadingMissingNotifications];
-    (void)[(ZMAssetTranscoder *) [[(id) self.objectDirectory.assetTranscoder stub] andReturnValue:@(NO)] hasOutstandingItems];
     
     // expect
     [[(id) self.stateMachine expect] goToState:self.stateMachine.preBackgroundState];
@@ -206,12 +186,10 @@
     [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturn:@[requestGenerator]] requestGenerators];
     id request = [OCMockObject niceMockForClass:ZMTransportRequest.class];
     [self.forwardedRequests addObject:request];
-    [[[(id) self.objectDirectory.assetTranscoder stub] andReturn:@[]] requestGenerators];
     
     
     (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andCall:@selector(missingUpdateEventsTranscoderIsDownloadingMissingNotifications) onObject:self] isDownloadingMissingNotifications];
     self.missingUpdateEventsTranscoderIsDownloadingMissingNotifications = YES;
-    (void)[(ZMAssetTranscoder *) [[(id) self.objectDirectory.assetTranscoder stub] andReturnValue:@(NO)] hasOutstandingItems];
     
     // expect
     [[(id) self.stateMachine expect] goToState:self.stateMachine.preBackgroundState];
@@ -236,45 +214,6 @@
     XCTAssertEqual(self.lastResult, ZMBackgroundFetchResultNewData);
 }
 
-- (void)testThatItCallsTheCompletionHandlerWithNewDataAfterDownloadingAssets;
-{
-    // given
-    //
-    // 'lastUpdateEventID' does not change.
-    // But we have 1 asset request.
-    [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] startDownloadingMissingNotifications];
-    [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturn:@[]] requestGenerators];
-    id requestGenerator = [OCMockObject niceMockForProtocol:@protocol(ZMRequestGenerator)];
-    [[[requestGenerator stub] andCall:@selector(nextForwardedRequest) onObject:self] nextRequest];
-    [[[(id) self.objectDirectory.assetTranscoder stub] andReturn:@[requestGenerator]] requestGenerators];
-    id request = [OCMockObject niceMockForClass:ZMTransportRequest.class];
-    [self.forwardedRequests addObject:request];
-    
-    (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturnValue:@(NO)] isDownloadingMissingNotifications];
-    (void)[(ZMAssetTranscoder *) [[(id) self.objectDirectory.assetTranscoder stub] andCall:@selector(assetTranscoderHasOutstandingItems) onObject:self] hasOutstandingItems];
-    self.assetTranscoderHasOutstandingItems = YES;
-    
-    // expect
-    [[(id) self.stateMachine expect] goToState:self.stateMachine.preBackgroundState];
-    
-    // when (1)
-    [self.sut didEnterState];
-    XCTAssertNotNil([self.sut nextRequest]);
-    XCTAssertNil([self.sut nextRequest]);
-    self.assetTranscoderHasOutstandingItems = NO;
-    XCTAssertNil([self.sut nextRequest]);
-    
-    // then (1)
-    XCTAssertEqual(self.results.count, 0u);
-    
-    // when (2)
-    [(id) self.stateMachine verify];
-    [self.sut didLeaveState];
-    
-    // then (2)
-    XCTAssertEqual(self.results.count, 1u);
-    XCTAssertEqual(self.lastResult, ZMBackgroundFetchResultNewData);
-}
 
 - (void)testThatItCallsTheCompletionHandlerWhenThereIsNoNewData;
 {
@@ -283,10 +222,8 @@
     // 'lastUpdateEventID' does not change. No assets to download.
     [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] startDownloadingMissingNotifications];
     [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturn:@[]] requestGenerators];
-    [[[(id) self.objectDirectory.assetTranscoder stub] andReturn:@[]] requestGenerators];
     
     (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturnValue:@(NO)] isDownloadingMissingNotifications];
-    (void)[(ZMAssetTranscoder *) [[(id) self.objectDirectory.assetTranscoder stub] andReturnValue:@(NO)] hasOutstandingItems];
     
     // expect
     [[(id) self.stateMachine expect] goToState:self.stateMachine.preBackgroundState];
@@ -321,13 +258,11 @@
     [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturn:@[requestGenerator]] requestGenerators];
     id request = [[ZMTransportRequest alloc] initWithPath:@"/foo" method:ZMMethodPOST payload:@{}];
     [self.forwardedRequests addObject:request];
-    [[[(id) self.objectDirectory.assetTranscoder stub] andReturn:@[]] requestGenerators];
     NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeAuthenticationFailed userInfo:nil];
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:error];
     
     (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andCall:@selector(missingUpdateEventsTranscoderIsDownloadingMissingNotifications) onObject:self] isDownloadingMissingNotifications];
     self.missingUpdateEventsTranscoderIsDownloadingMissingNotifications = YES;
-    (void)[(ZMAssetTranscoder *) [[(id) self.objectDirectory.assetTranscoder stub] andReturnValue:@(NO)] hasOutstandingItems];
     
     // expect
     [[(id) self.stateMachine expect] goToState:self.stateMachine.preBackgroundState];
@@ -386,7 +321,6 @@
     [self checkThatItCallsRequestGeneratorsOnObjectsOfClass:[self syncObjectsUsedByState] creationOfStateBlock:^ZMSyncState *(id<ZMObjectStrategyDirectory> directory) {
         [[[(id) directory.missingUpdateEventsTranscoder stub] andCall:@selector(missingUpdateEventsTranscoderLastUpdateEventID) onObject:self] lastUpdateEventID];
         (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) directory.missingUpdateEventsTranscoder stub] andReturnValue:@(YES)] isDownloadingMissingNotifications];
-        (void)[(ZMAssetTranscoder *) [[(id) directory.assetTranscoder stub] andReturnValue:@(YES)] hasOutstandingItems];
         return [[ZMBackgroundFetchState alloc] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:directory stateMachineDelegate:self.stateMachine];
     }];
 }
@@ -414,13 +348,7 @@
 {
     return  @[ /* Note: these must be in the same order as in the class */
               self.objectDirectory.missingUpdateEventsTranscoder,
-              self.objectDirectory.assetTranscoder,
               ];
-}
-
-- (BOOL)assetTranscoderHasOutstandingItems;
-{
-    return _assetTranscoderHasOutstandingItems;
 }
 
 - (BOOL)missingUpdateEventsTranscoderIsDownloadingMissingNotifications;

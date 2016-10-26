@@ -71,7 +71,6 @@
                              objectStrategyDirectory.clientMessageTranscoder,
                              objectStrategyDirectory.userImageTranscoder,
                              objectStrategyDirectory.searchUserImageTranscoder,
-                             objectStrategyDirectory.assetTranscoder,
                              objectStrategyDirectory.typingTranscoder,
                              objectStrategyDirectory.removedSuggestedPeopleTranscoder,
                              ];

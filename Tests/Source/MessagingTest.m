@@ -38,7 +38,6 @@
 #import "ZMUserTranscoder.h"
 #import "ZMUserImageTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMAssetTranscoder.h"
 #import "ZMSelfTranscoder.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
@@ -58,10 +57,6 @@
 #import <zmessaging/zmessaging-Swift.h>
 #import "zmessaging_iOS_Tests-Swift.h"
 
-static const int32_t Mersenne1 = 524287;
-static const int32_t Mersenne2 = 131071;
-static const int32_t Mersenne3 = 8191;
-
 
 @interface MessagingTest () 
 
@@ -75,7 +70,7 @@ static const int32_t Mersenne3 = 8191;
 @property (nonatomic) NSURL *databaseDirectory;
 @property (nonatomic) MockTransportSession *mockTransportSession;
 
-@property (nonatomic) NSTimeInterval originalConversationLastReadEventIDTimerValue; // this will speed up the tests A LOT
+@property (nonatomic) NSTimeInterval originalConversationLastReadTimestampTimerValue; // this will speed up the tests A LOT
 
 @end
 
@@ -120,8 +115,8 @@ static const int32_t Mersenne3 = 8191;
     self.databaseDirectory = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
     _application = [[ApplicationMock alloc] init];
     
-    self.originalConversationLastReadEventIDTimerValue = ZMConversationDefaultLastReadEventIDSaveDelay;
-    ZMConversationDefaultLastReadEventIDSaveDelay = 0.02;
+    self.originalConversationLastReadTimestampTimerValue = ZMConversationDefaultLastReadTimestampSaveDelay;
+    ZMConversationDefaultLastReadTimestampSaveDelay = 0.02;
     
     NSString *testName = NSStringFromSelector(self.invocation.selector);
     NSString *methodName = [NSString stringWithFormat:@"setup%@%@", [testName substringToIndex:1].capitalizedString, [testName substringFromIndex:1]];
@@ -165,7 +160,7 @@ static const int32_t Mersenne3 = 8191;
 
 - (void)tearDown;
 {
-    ZMConversationDefaultLastReadEventIDSaveDelay = self.originalConversationLastReadEventIDTimerValue;
+    ZMConversationDefaultLastReadTimestampSaveDelay = self.originalConversationLastReadTimestampTimerValue;
     [self resetState];
     [MessagingTest deleteAllFilesInCache];
     [super tearDown];
@@ -321,8 +316,6 @@ static const int32_t Mersenne3 = 8191;
     [self verifyMockLater:systemMessageTranscoder];
     id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
     [self verifyMockLater:clientMessageTranscoder];
-    id assetTranscoder = [OCMockObject mockForClass:ZMAssetTranscoder.class];
-    [self verifyMockLater:assetTranscoder];
     id selfTranscoder = [OCMockObject mockForClass:ZMSelfTranscoder.class];
     [self verifyMockLater:selfTranscoder];
     id connectionTranscoder = [OCMockObject mockForClass:ZMConnectionTranscoder.class];
@@ -360,7 +353,6 @@ static const int32_t Mersenne3 = 8191;
     [[[objectDirectory stub] andReturn:conversationTranscoder] conversationTranscoder];
     [[[objectDirectory stub] andReturn:systemMessageTranscoder] systemMessageTranscoder];
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
-    [[[objectDirectory stub] andReturn:assetTranscoder] assetTranscoder];
     [[[objectDirectory stub] andReturn:selfTranscoder] selfTranscoder];
     [[[objectDirectory stub] andReturn:connectionTranscoder] connectionTranscoder];
     [[[objectDirectory stub] andReturn:registrationTranscoder] registrationTranscoder];
@@ -383,7 +375,6 @@ static const int32_t Mersenne3 = 8191;
                                         conversationTranscoder,
                                         systemMessageTranscoder,
                                         clientMessageTranscoder,
-                                        assetTranscoder,
                                         selfTranscoder,
                                         connectionTranscoder,
                                         registrationTranscoder,
@@ -408,28 +399,6 @@ static const int32_t Mersenne3 = 8191;
     return objectDirectory;
 }
 
-static int32_t eventIdCounter;
-
-- (ZMEventID *)createEventID
-{
-    return [self.class createEventID];
-}
-
-+ (ZMEventID *)createEventID
-{
-    int32_t major = OSAtomicIncrement32(&eventIdCounter) + 1;
-    major += 1;
-    int32_t minor = ((Mersenne1 * OSAtomicIncrement32(&eventIdCounter)) % Mersenne2) + Mersenne3;
-    return [ZMEventID eventIDWithMajor:(uint64_t)major
-                                 minor:(uint64_t)minor];
-}
-
-
-+ (NSInteger)randomSignedIntWithMax:(NSInteger)max;
-{
-    int32_t c = OSAtomicIncrement32(&eventIdCounter);
-    return (((int)c * Mersenne3) + Mersenne2) % (max+1);
-}
 
 - (BOOL)waitWithTimeout:(NSTimeInterval)timeout forSaveOfContext:(NSManagedObjectContext *)moc untilBlock:(BOOL(^)(void))block;
 {

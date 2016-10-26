@@ -36,7 +36,6 @@
 #import "ZMSlowSyncPhaseTwoState.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
-#import "ZMAssetTranscoder.h"
 #import "ZMUserImageTranscoder.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMAuthenticationStatus.h"
@@ -145,10 +144,6 @@
     [[[[userImageTranscoder expect] andReturn:userImageTranscoder] classMethod] alloc];
     (void) [[[userImageTranscoder expect] andReturn:userImageTranscoder] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:OCMOCK_ANY];
 
-    id assetTranscoder = [OCMockObject mockForClass:ZMAssetTranscoder.class];
-    [[[[assetTranscoder expect] andReturn:assetTranscoder] classMethod] alloc];
-    (void) [[[assetTranscoder expect] andReturn:assetTranscoder] initWithManagedObjectContext:self.syncMOC];
-
     id pushTokenTranscoder = [OCMockObject mockForClass:ZMPushTokenTranscoder.class];
     [[[[pushTokenTranscoder expect] andReturn:pushTokenTranscoder] classMethod] alloc];
     (void) [[[pushTokenTranscoder expect] andReturn:pushTokenTranscoder] initWithManagedObjectContext:self.syncMOC clientRegistrationStatus:OCMOCK_ANY];
@@ -203,7 +198,6 @@
                          selfTranscoder,
                          systemMessageTranscoder,
                          clientMessageTranscoder,
-                         assetTranscoder,
                          userImageTranscoder,
                          missingUpdateEventsTranscoder,
                          registrationTranscoder,
@@ -251,7 +245,6 @@
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
     XCTAssertEqual(self.sut.systemMessageTranscoder, systemMessageTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
-    XCTAssertEqual(self.sut.assetTranscoder, assetTranscoder);
     XCTAssertEqual(self.sut.selfTranscoder, selfTranscoder);
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
     XCTAssertEqual(self.sut.registrationTranscoder, registrationTranscoder);
@@ -1126,7 +1119,6 @@
 - (NSSet <Class> *)transcodersExpectedToReturnNonces
 {
     return @[
-             ZMAssetTranscoder.class,
              ZMClientMessageTranscoder.class,
              ].set;
 }

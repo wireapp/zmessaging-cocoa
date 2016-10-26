@@ -250,7 +250,6 @@ NSString * const EventNewConnection = @"user.contact-join";
               @"conversation" : conversation.remoteIdentifier.transportString,
               @"data" : data ?: @[],
               @"from" : fromUser.remoteIdentifier.transportString ?: [NSNull null],
-              @"id" : self.createEventID.transportString,
               @"time" : date.transportString,
               @"type" : type
               } mutableCopy];

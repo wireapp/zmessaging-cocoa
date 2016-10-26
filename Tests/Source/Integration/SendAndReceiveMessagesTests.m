@@ -613,180 +613,6 @@
                           }];
 }
 
-- (void)testThatItSendsANotificationWhenReceivingAnImageThroughThePushChannelWithoutBeingRequested
-{
-    [self testThatItSendsANotificationInConversation:self.groupConversation
-                                      ignoreLastRead:NO
-                          onRemoteMessageCreatedWith:^{
-                              [self.groupConversation insertImageEventsFromUser:self.user2];
-                          } verify:^(ZMConversation *conversation) {
-                              ZMImageMessage *msg = conversation.messages.lastObject;
-                              XCTAssertEqual(msg.deliveryState, ZMDeliveryStateSent);
-                              XCTAssertEqual(msg.mediumData.length, (NSUInteger) 0);
-                              XCTAssertEqual(msg.previewData.length, (NSUInteger) 2338);
-                          }];
-}
-
-- (void)testThatItSendsANotificationWhenReceivingAnImageThroughThePushChannelWhenBeingRequested
-{
-    [self testThatItSendsANotificationInConversation:self.groupConversation
-                                      ignoreLastRead:NO
-                          onRemoteMessageCreatedWith:^{
-                              [self.groupConversation insertImageEventsFromUser:self.user2];
-                          } verify:^(ZMConversation *conversation) {
-                              ZMImageMessage *msg = conversation.messages.lastObject;
-                              [msg requestImageDownload];
-                              WaitForAllGroupsToBeEmpty(0.5);
-                              XCTAssertEqual(msg.deliveryState, ZMDeliveryStateSent);
-                              XCTAssertEqual(msg.mediumData.length, (NSUInteger) 317748u);
-                              XCTAssertEqual(msg.previewData.length, (NSUInteger) 2338);
-                          }];
-}
-
-- (void)testThatItSendsANotificationWhenReceivingImageMediumAndPreviewInDifferentOrderThroughThePushChannel
-{
-    NSUUID *nonce = [NSUUID createUUID];
-    NSUUID *correlationID = [NSUUID createUUID];
-    
-    [self testThatItSendsANotificationInConversation:self.groupConversation
-                                     afterLoginBlock:^{
-                                         [self.groupConversation insertPreviewImageEventFromUser:self.user2 correlationID:correlationID none:nonce];
-                                         [self.syncMOC saveOrRollback];
-                                     } onRemoteMessageCreatedWith:^{
-                                         [self.groupConversation insertMediumImageEventFromUser:self.user2 correlationID:correlationID none:nonce];
-                                     } verifyWithObserver:^(ZMConversation *conversation, ConversationChangeObserver *observer) {
-                                         ZMImageMessage *msg = conversation.messages.lastObject;
-                                         [msg requestImageDownload];
-                                         WaitForAllGroupsToBeEmpty(0.5);
-                                         XCTAssertEqual(observer.notifications.count, 1u);
-                                         XCTAssertEqual(msg.deliveryState, ZMDeliveryStateSent);
-                                         XCTAssertEqual(msg.mediumData.length, 317748u);
-                                         XCTAssertEqual(msg.previewData.length, 2338u);
-                                     }];
-}
-
-- (void)testThatItSendsANotificationWhenReceivingTheImageEventsAfterOneAnotherThroughThePushChannel
-{
-    
-    // given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    
-    // need to fault conversation and messages in order to receive notifications
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    (void) conversation.userDefinedName;
-    XCTAssertEqual(conversation.messages.count, 2u);
-    
-    ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
-    ZMImageMessage *msg;
-    NSUUID *nonce = [NSUUID createUUID];
-    NSUUID *correlationID = [NSUUID createUUID];
-    
-    
-    // when we insert a previewImage
-    {
-        [observer clearNotifications];
-        
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * ZM_UNUSED session) {
-            [self.groupConversation insertPreviewImageEventFromUser:self.user2 correlationID:correlationID none:nonce];
-            [self spinMainQueueWithTimeout:0.2];
-        }];
-        
-        WaitForEverythingToBeDone();
-    }
-    
-    
-    // then we should receive a conversation change notification about the inserted message
-    {
-        XCTAssertEqual(observer.notifications.count, 1u);
-        
-        ConversationChangeInfo *note = observer.notifications.firstObject;
-        XCTAssertNotNil(note);
-        XCTAssertEqualObjects(note.conversation, conversation);
-        
-        XCTAssertTrue(note.lastModifiedDateChanged);
-        XCTAssertTrue(note.unreadCountChanged);
-        XCTAssertEqual(conversation.messages.count, 3u);
-        
-        msg = conversation.messages.lastObject;
-        XCTAssertEqual(msg.deliveryState, ZMDeliveryStateSent);
-        XCTAssertEqual(msg.mediumData.length, (NSUInteger) 0);
-        XCTAssertEqual(msg.previewData.length, (NSUInteger) 2338);
-    }
-    
-    
-    // when we insert the medium image
-    {
-        [observer clearNotifications];
-        
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * ZM_UNUSED session) {
-            [self.groupConversation insertMediumImageEventFromUser:self.user2 correlationID:correlationID none:nonce];
-        }];
-        
-        WaitForEverythingToBeDone();
-    }
-    
-    
-    // then we should receive a notification. however, the message count should not change, the preexisting message should be updated
-    {
-        XCTAssertGreaterThanOrEqual(observer.notifications.count, 1u);
-        
-        ConversationChangeInfo *note = observer.notifications.firstObject;
-        XCTAssertTrue(note.lastModifiedDateChanged);
-        XCTAssertEqual(conversation.messages.count, 3u); // including "new conversation" and "you started using this device" message
-        XCTAssertEqual(msg.deliveryState, ZMDeliveryStateSent);
-        XCTAssertEqual(msg.mediumData.length, (NSUInteger) 0);
-        XCTAssertEqual(msg.previewData.length, (NSUInteger) 2338);
-    }
-    [observer tearDown];
-}
-
-- (void)testThatItSendsANotificationWhenSendingAnImage
-{
-    // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    // need to fault conversation
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    (void) conversation.displayName;
-    // fault relationship
-    for(ZMMessage *msg in conversation.messages) {
-        (void) msg.nonce;
-    }
-    
-    // when
-    ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
-    [observer clearNotifications];
-    
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * ZM_UNUSED session) {
-        [self.groupConversation insertImageEventsFromUser:self.selfUser];
-    }];
-    
-    WaitForEverythingToBeDone();
-    
-    // then
-    XCTAssertGreaterThanOrEqual(observer.notifications.count, 1u);
-    
-    ConversationChangeInfo *note = observer.notifications.firstObject;
-    XCTAssertNotNil(note);
-    XCTAssertTrue(note.messagesChanged);
-    XCTAssertFalse(note.participantsChanged);
-    XCTAssertFalse(note.nameChanged);
-    XCTAssertTrue(note.lastModifiedDateChanged);
-    XCTAssertFalse(note.unreadCountChanged);
-    XCTAssertFalse(note.connectionStateChanged);
-    
-    void (^checkImageMessage)(ZMConversation*, ZMTFailureRecorder *) = ^(ZMConversation* conv, ZMTFailureRecorder *recorder){
-        ZMImageMessage *msg = conv.messages.lastObject;
-        FHAssertEqual(recorder, msg.deliveryState, ZMDeliveryStateSent);
-        FHAssertEqual(recorder, msg.mediumData.length, (NSUInteger) 0);
-        FHAssertEqual(recorder, msg.previewData.length, (NSUInteger) 2338);
-    };
-    
-    checkImageMessage(conversation, NewFailureRecorder());
-    WaitForEverythingToBeDone();
-    [observer tearDown];
-}
-
 - (void)testThatInsertedConversationsArePropagatedToTheUIContext;
 {
     // given
@@ -910,7 +736,6 @@
     XCTAssertNotNil(groupConversation);
     
     NSUUID *payloadNotificationID = NSUUID.createUUID;
-    ZMEventID *firstEventID = self.createEventID;
     NSUUID *lastMessageNonce = NSUUID.createUUID;
     NSDate *messageTimeStamp = [[NSDate date] dateByAddingTimeInterval:1000];
     MockUserClient *fromClient = self.user2.clients.anyObject, *toClient = self.selfUser.clients.anyObject;
@@ -925,7 +750,6 @@
                                                        @"id" : payloadNotificationID.transportString,
                                                        @"payload" : @[
                                                                @{
-                                                                   @"id": firstEventID.transportString,
                                                                    @"conversation": groupConversation.remoteIdentifier.transportString,
                                                                    @"type": @"conversation.otr-message-add",
                                                                    // We use a later date to simulate the time between the last message
