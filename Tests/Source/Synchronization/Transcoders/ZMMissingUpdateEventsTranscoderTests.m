@@ -796,6 +796,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 
 @implementation ZMMissingUpdateEventsTranscoderTests (FallbackCancellation)
 
+
 - (void)expectMockPingBackStatus:(PingBackStatus)status hasNotifications:(BOOL)hasNotifications nextEvents:(EventsWithIdentifier *)nextEvents inBackground:(BOOL)backgroudned
 {
     self.application.applicationState = backgroudned ? UIApplicationStateBackground : UIApplicationStateActive;
@@ -982,7 +983,8 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItDoesNotReportThatItIsFetchingFromAPushNotificationWhenNoPingBackIsInProgress
 {
     // given
-    self.application.applicationState = UIApplicationStateActive;
+    [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(PingBackStatusDone)] status];
+    self.application.applicationState = UIApplicationStateBackground;
 
     // then
     XCTAssertFalse(self.sut.isFetchingStreamForAPNS);
@@ -990,22 +992,66 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 
 - (void)testThatItNotifiesThePingBackStatusInCaseOfAFailure
 {
-    XCTFail();
+    // given
+    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
+    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
+    [self expectMockPingBackStatus:PingBackStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
+
+    // when
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
+    ZMTransportRequest *request = [self.sut nextRequest];
+    [(BackgroundAPNSPingBackStatus *)[self.mockPingbackStatus expect] didFailDownloadingOriginalEvents:events];
+
+    [request completeWithResponse:response];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatIUsesTheLastNotificationIdToRequestTheNotificationStreamFromAPush
 {
-    XCTFail();
-}
+    // given
+    NSUUID *lastID = NSUUID.createUUID;
+    // sync strategy is mocked to return the uiMOC when asked for the syncMOC
+    self.uiMOC.zm_lastNotificationID = lastID;
 
-- (void)testThatItRequestsMorePagesIfThereAreMoreThanOneFromAPush
-{
-    XCTFail();
+    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
+    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
+    [self expectMockPingBackStatus:PingBackStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
+
+    // when
+    ZMTransportRequest *request = [self.sut nextRequest];
+
+    // then
+    XCTAssertNotNil(request);
+    BOOL hasSinceQuery = NO;
+    NSArray <NSURLQueryItem *> *items = [NSURLComponents componentsWithString:request.path].queryItems;
+    for (NSURLQueryItem *item in items) {
+        if ([item.name isEqualToString:@"since"]) {
+            hasSinceQuery = YES;
+            XCTAssertEqualObjects(item.value, lastID.transportString);
+        }
+    }
+
+    XCTAssertTrue(hasSinceQuery);
 }
 
 - (void)testThatItDoesForwardTheResponseInCaseOfA404AndDoesNotReportAFailure_MissingMessages
 {
-    XCTFail();
+    // given
+    self.application.applicationState = UIApplicationStateBackground;
+    [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(PingBackStatusInProgress)] status];
+    NSDictionary *payload =  @{
+                               @"id" : NSUUID.createUUID.transportString,
+                               @"payload" : @[ @{ @"type" : @"conversation.message-add" } ]
+                               };
+
+    NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
+    [(BackgroundAPNSPingBackStatus *)[self.mockPingbackStatus expect] didReceiveEncryptedEvents:expectedEvents originalEvents:OCMOCK_ANY hasMore:NO];
+
+    // when
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"notifications": @[payload]} HTTPStatus:404 transportSessionError:nil];
+    [(id)self.sut.listPaginator didReceiveResponse:response forSingleRequest:nil];
+
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 @end
