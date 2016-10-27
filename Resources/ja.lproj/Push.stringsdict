@@ -117,7 +117,7 @@
         <key>push.notification.call.missed.group.nousername</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>誰かが %1$@ で %2$#@new_calls@</string>
+            <string>%1$@ で %2$#@new_calls@ 着信です</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -133,7 +133,7 @@
         <key>push.notification.call.missed.group.nousername.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>誰かが会話において%1 に電話 $#@new_calls@</string>
+            <string>%1 に $#@new_calls@ 着信です</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -255,7 +255,7 @@
                 <key>one</key>
                 <string>Ping</string>
                 <key>other</key>
-                <string>%1$@ Ping</string>
+                <string>%1$@ がPingしました</string>
             </dict>
         </dict>
         <key>push.notification.knock.oneonone</key>
@@ -287,7 +287,7 @@
                 <key>one</key>
                 <string>Ping</string>
                 <key>other</key>
-                <string>%2$@ Ping</string>
+                <string>%2$@ がPingしました</string>
             </dict>
         </dict>
     </dict>
