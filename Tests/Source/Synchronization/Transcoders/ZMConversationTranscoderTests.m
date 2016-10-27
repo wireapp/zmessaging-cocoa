@@ -3872,7 +3872,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                   @"from" : @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
                                   @"time" : newDate.transportString,
                                   @"type" : @"conversation.voice-channel-activate",
-                                  @"id"   : [NSUUID UUID].transportString
                                   };
         
         ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
@@ -3910,7 +3909,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                   @"from" : @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
                                   @"time" : [oldArchived transportString],
                                   @"type" : @"conversation.voice-channel-activate",
-                                  @"id"   : [[NSUUID UUID] transportString]
                                   };
         
         ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
@@ -4153,7 +4151,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                   @"from" : @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
                                   @"time" : newTimestamp.transportString,
                                   @"type" : @"conversation.voice-channel-deactivate",
-                                  @"id"   : NSUUID.createUUID
                                   };
         
         ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];

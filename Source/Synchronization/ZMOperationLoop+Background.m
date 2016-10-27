@@ -27,7 +27,7 @@
 #import "ZMSyncStrategy+Internal.h"
 #import <zmessaging/zmessaging-Swift.h>
 
-static char* const ZMLogTag ZM_UNUSED = "Network";
+static NSString *ZMLogTag ZM_UNUSED = @"Network";
 
 
 static NSString * const PushChannelDataKey = @"data";

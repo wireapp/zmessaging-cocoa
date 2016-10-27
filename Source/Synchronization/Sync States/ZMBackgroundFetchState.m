@@ -28,7 +28,7 @@
 #import "ZMSyncStateMachine.h"
 
 
-static char* const ZMLogTag ZM_UNUSED = "BackgroundFetch";
+static NSString* ZMLogTag ZM_UNUSED = @"BackgroundFetch";
 
 static NSTimeInterval const MaximumTimeInState = 25;
 

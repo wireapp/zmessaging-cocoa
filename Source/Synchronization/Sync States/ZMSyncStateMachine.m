@@ -47,7 +47,7 @@
 NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName = @"ZMApplicationDidEnterEventProcessingStateNotification";
 
 
-static char* const ZMLogTag ZM_UNUSED = "State machine";
+static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 static void traceEnterState(ZMSyncState * const state);
 static void traceLeaveState(ZMSyncState * const state);
 

@@ -255,7 +255,7 @@
 
 - (void)testThatItSendsFailedOTRMessageAfterMissingClientsAreFetchedButSessionIsNotCreated
 {
-    // given
+    // GIVEN
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -276,15 +276,19 @@
         return nil;
     }];
     
-    // when
-    [self.mockTransportSession resetReceivedRequests];
-    
+    // WHEN
     __block id <ZMConversationMessage> message;
-    [self.userSession performChanges:^{
-        message = [conversation appendMessageWithText:@"Hello World"];
+    [self.mockTransportSession resetReceivedRequests];
+
+    [self performIgnoringZMLogError:^{
+        [self.userSession performChanges:^{
+            message = [conversation appendMessageWithText:@"Hello World"];
+        }];
+        WaitForEverythingToBeDoneWithTimeout(5);
+
     }];
-    WaitForEverythingToBeDoneWithTimeout(5);
-    
+
+    // THEN
     NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/otr", conversation.remoteIdentifier.transportString];
     
     // then we expect it to receive a bomb message
@@ -475,7 +479,7 @@
 
 - (void)testThatItSendsFailedSessionOTRAssetMessageAfterMissingClientsAreFetchedButSessionIsNotCreated
 {
-    // given
+    // GIVEN
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -501,13 +505,16 @@
         return nil;
     }];
 
-    // when
+    // WHEN
     [self.mockTransportSession resetReceivedRequests];
-    [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithImageData:[self verySmallJPEGData] nonce:[NSUUID createUUID]];
+    [self performIgnoringZMLogError:^{
+        [self.userSession performChanges:^{
+            message = [conversation appendOTRMessageWithImageData:[self verySmallJPEGData] nonce:[NSUUID createUUID]];
+        }];
+        WaitForEverythingToBeDoneWithTimeout(5);
     }];
-    WaitForEverythingToBeDoneWithTimeout(5);
 
+    // THEN
     NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString];
     
     // then we expect it to receive a bomb preview and medium

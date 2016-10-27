@@ -29,7 +29,7 @@
 #import <zmessaging/zmessaging-Swift.h>
 
 
-static char* const ZMLogTag ZM_UNUSED = "BackgroundTask";
+static NSString *ZMLogTag ZM_UNUSED = @"BackgroundTask";
 
 static NSTimeInterval const MaximumTimeInState = 25;
 

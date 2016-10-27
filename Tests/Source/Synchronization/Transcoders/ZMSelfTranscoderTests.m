@@ -47,6 +47,10 @@
     
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
     self.upstreamObjectSync = [OCMockObject niceMockForClass:ZMUpstreamModifiedObjectSync.class];
+    [self.syncMOC performBlockAndWait:^{
+        [ZMUser selfUserInContext:self.syncMOC].needsToBeUpdatedFromBackend = NO;
+        [self.syncMOC saveOrRollback];
+    }];
     self.sut = (id) [[ZMSelfTranscoder alloc] initWithClientRegistrationStatus:self.mockClientRegistrationStatus
                                                           managedObjectContext:self.syncMOC
                                                             upstreamObjectSync:self.upstreamObjectSync];
@@ -78,48 +82,6 @@
               @"picture" : @[],
               @"tracking_id": self.trackingIdentifier,
               } mutableCopy];
-}
-
-- (void)testThatItOnlyProcessesUpdateSelfUserRequestsDuringSlowSync
-{
-    // given
-    [self.sut setNeedsSlowSync];
-    XCTAssertFalse(self.sut.isSlowSyncDone);
-    
-    // when
-    NSArray *generators = self.sut.requestGenerators;
-    
-    // then
-    XCTAssertEqual(generators.count, 1u);
-    XCTAssertTrue([generators.firstObject isKindOfClass:ZMSingleRequestSync.class]);
-}
-
-- (void)testThatItReturnsTheContextChangeTrackers;
-{
-    // when
-    NSArray *trackers = self.sut.contextChangeTrackers;
-    
-    // then
-    XCTAssertEqual(trackers.count, 2u);
-    NSArray *classes = [trackers mapWithBlock:^id(id<NSObject> obj) {
-        return obj.class;
-    }];
-    NSArray *expected = @[ZMUpstreamModifiedObjectSync.class, ZMSelfTranscoder.class];
-    XCTAssertEqualObjects(classes, expected);
-}
-
-- (void)testThatItProcessesDownstreamRequestsBeforeUpstreamRequests
-{
-    // given
-    XCTAssertTrue(self.sut.isSlowSyncDone);
-    
-    // when
-    NSArray *generators = self.sut.requestGenerators;
-    
-    // then
-    XCTAssertEqual(generators.count, 2u);
-    XCTAssertTrue([generators.firstObject isKindOfClass:ZMSingleRequestSync.class]);
-    XCTAssertTrue([generators.lastObject isKindOfClass:ZMUpstreamModifiedObjectSync.class]);
 }
 
 - (void)testThatItRequestSelfUserIfNeedsSlowSync

@@ -23,7 +23,7 @@
 #import <ZMTransport/ZMTransport.h>
 #import <zmessaging/zmessaging-Swift.h>
 
-static char* const ZMLogTag ZM_UNUSED = "HotFix";
+static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
 
 @implementation ZMHotFixPatch
 

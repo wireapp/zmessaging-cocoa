@@ -33,7 +33,7 @@
 #import "ZMStoredLocalNotification.h"
 #import <zmessaging/zmessaging-Swift.h>
 
-static const char *ZMLogTag = "Push";
+static NSString *ZMLogTag = @"Push";
 
 @interface ZMUserSession (NotificationProcessing)
 
