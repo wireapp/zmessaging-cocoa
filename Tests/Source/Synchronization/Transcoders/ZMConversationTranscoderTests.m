@@ -1760,9 +1760,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 {
     __block ZMConversation *insertedConversation;
     __block ZMTransportRequest *request;
-    
-    ZMEventID *lastReadEventID = [ZMEventID eventIDWithMajor:11 minor:32];
-    ZMEventID *lastEventID = [ZMEventID eventIDWithMajor:23 minor:32];
+
     NSDate *lastModifiedDate = [NSDate dateWithTimeIntervalSinceNow:-2133333];
     NSUUID *convUUID =[NSUUID createUUID];
     NSString *name = @"Procrastination";
@@ -1786,7 +1784,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         NSDictionary *payload =  @{
                                    @"creator" : user1ID.transportString,
                                    @"id" : convUUID.transportString,
-                                   @"last_event" : lastEventID.transportString,
                                    @"last_event_time" : lastModifiedDate.transportString,
                                    @"members" : @{
                                            @"others" : @[
@@ -1801,7 +1798,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                                    ],
                                            @"self" : @{
                                                    @"id" : @"90c74fe0-cef7-446a-affb-6cba0e75d5da",
-                                                   @"last_read" : lastReadEventID.transportString,
                                                    @"status" : @0,
                                                    },
                                            },
