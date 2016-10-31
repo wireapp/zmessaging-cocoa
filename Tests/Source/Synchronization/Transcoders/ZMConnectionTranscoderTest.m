@@ -1047,7 +1047,7 @@
         // when
         NSDictionary *payload = [self connectionPayloadForConversationID:conversation.remoteIdentifier fromID:selfUser.remoteIdentifier toID:user.remoteIdentifier status:@"accepted"];
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-        [self.sut updateUpdatedObject:connection requestUserInfo:nil response:response keysToParse:[NSSet setWithArray:conversation.keysTrackedForLocalModifications]];
+        [self.sut updateUpdatedObject:connection requestUserInfo:nil response:response keysToParse:conversation.keysTrackedForLocalModifications];
         
         // then
         XCTAssertTrue(conversation.needsToBeUpdatedFromBackend);

@@ -26,10 +26,9 @@
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMSyncStateMachine.h"
-#import "ZMAssetTranscoder.h"
 
 
-static char* const ZMLogTag ZM_UNUSED = "BackgroundFetch";
+static NSString* ZMLogTag ZM_UNUSED = @"BackgroundFetch";
 
 static NSTimeInterval const MaximumTimeInState = 25;
 
@@ -39,9 +38,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
 
 @property (nonatomic) BOOL errorInDowloading;
 @property (nonatomic) NSUUID *updateEventIDWhenStartingFetch;
-@property (nonatomic) BOOL didRequestAssets;
 @property (nonatomic, readonly, weak) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
-@property (nonatomic, readonly, weak) ZMAssetTranscoder *assetTranscoder;
 @property (nonatomic) NSDate *stateEnterDate;
 @property (nonatomic) ZMTimer *timer;
 @property (nonatomic) NSTimeInterval maximumTimeInState;
@@ -72,7 +69,6 @@ static NSTimeInterval const MaximumTimeInState = 25;
     
     self.stateEnterDate = [NSDate date];
     self.errorInDowloading = NO;
-    self.didRequestAssets = NO;
     ZMMissingUpdateEventsTranscoder *strongTranscoder = self.missingUpdateEventsTranscoder;
     
     self.updateEventIDWhenStartingFetch = strongTranscoder.lastUpdateEventID;
@@ -139,20 +135,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
 
     ZMTransportRequest *request;
     request = [self.missingUpdateEventsTranscoder.requestGenerators nextRequest];
-    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:directory.moc block:^(ZMTransportResponse *response) {
-        if (response.result == ZMTransportResponseStatusSuccess) {
-            // Need to save synchronously here to make sure we pick up assets.
-            // The normal 'enqueueDelayedSave' would cause us to drop out of this state since the asset transcoder hasn't
-            // picked up the changes, yet, hence doesn't realize it has assets to download.
-            [directory.moc saveOrRollback];
-        }
-    }]];
-    if (request == nil) {
-        request = [self.assetTranscoder.requestGenerators nextRequest];
-        if (request != nil) {
-            self.didRequestAssets = YES;
-        }
-    }
+
     ZM_WEAK(self);
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:directory.moc block:^(ZMTransportResponse *response) {
         ZM_STRONG(self);
@@ -178,12 +161,9 @@ static NSTimeInterval const MaximumTimeInState = 25;
         [stateMachine goToState:stateMachine.preBackgroundState];
     } else {
         const BOOL waitingForNotifications = self.missingUpdateEventsTranscoder.isDownloadingMissingNotifications;
-        const BOOL waitingForAssets = self.assetTranscoder.hasOutstandingItems;
-        ZMLogDebug(@"Background fetch: waiting for %@%@",
-                   waitingForNotifications ? @"notifications " : @"",
-                   waitingForAssets ? @"assets " : @"");
+        ZMLogDebug(@"Background fetch: waiting for %@", waitingForNotifications ? @"notifications " : @"");
         
-        if (!waitingForNotifications && !waitingForAssets) {
+        if (!waitingForNotifications) {
             [stateMachine goToState:stateMachine.preBackgroundState];
         }
     }
@@ -212,8 +192,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
     if (self.errorInDowloading) {
         return ZMBackgroundFetchResultFailed;
     } else {
-        BOOL newData = (self.didDownloadEvents || self.didRequestAssets);
-        return newData ? ZMBackgroundFetchResultNewData : ZMBackgroundFetchResultNoData;
+        return self.didDownloadEvents ? ZMBackgroundFetchResultNewData : ZMBackgroundFetchResultNoData;
     }
 }
 
@@ -228,11 +207,5 @@ static NSTimeInterval const MaximumTimeInState = 25;
 {
     return self.objectStrategyDirectory.missingUpdateEventsTranscoder;
 }
-
-- (ZMAssetTranscoder *)assetTranscoder;
-{
-    return self.objectStrategyDirectory.assetTranscoder;
-}
-
 
 @end

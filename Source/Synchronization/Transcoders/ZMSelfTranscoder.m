@@ -130,12 +130,13 @@ NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
 
 - (BOOL)isSlowSyncDone;
 {
-    return (self.downstreamSelfUserSync.status != ZMSingleRequestInProgress && self.downstreamSelfUserSync.status != ZMSingleRequestReady);
+    return ![ZMUser selfUserInContext:self.managedObjectContext].needsToBeUpdatedFromBackend;
 }
 
 - (void)setNeedsSlowSync
 {
     [self.downstreamSelfUserSync readyForNextRequest];
+    [ZMUser selfUserInContext:self.managedObjectContext].needsToBeUpdatedFromBackend = YES;
 }
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> __unused *)events

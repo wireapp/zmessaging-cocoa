@@ -25,7 +25,7 @@ extension ZMUserSession {
     {
         if let tags = ProcessInfo.processInfo.environment["ZMLOG_TAGS"] {
             for tag in (tags.characters.split { $0 == "," }.map { String($0) }) {
-                ZMLogSetLevelForTag(ZMLogLevel_t.debug, (tag as NSString).utf8String)
+                ZMSLog.set(level: .debug, tag: tag)
             }
         }
     }

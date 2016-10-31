@@ -8,7 +8,6 @@
 
 #import "MessagingTest.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMConversationEventsTranscoder+Internal.h"
 #import "IntegrationTestBase.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMLoginTranscoder+Internal.h"

@@ -2938,10 +2938,10 @@
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
 
         // when
-        [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
+        [self.sut updateUpdatedObject:syncConv requestUserInfo:nil response:response keysToParse:self.keys];
         
         // then
-        XCTAssertFalse(conversation.hasLocalModificationsForCallDeviceIsActive);
+        XCTAssertFalse(syncConv.hasLocalModificationsForCallDeviceIsActive);
         [syncConv.voiceChannel tearDown];
     }];
 }
@@ -3155,9 +3155,11 @@
 
 - (void)testThatWeSendErrorNotificationIfUserIsAnActiveMemberOfConversation
 {
-    // given
-    ZMConversation *conversation = [self insertConversationNeedsUpdateFromBackend:NO callDeviceIsActive:YES];
-    XCTAssertTrue(conversation.hasLocalModificationsForCallDeviceIsActive);
+    // GIVEN
+    
+    ZMConversation *uiConv = [self insertConversationNeedsUpdateFromBackend:NO callDeviceIsActive:YES];
+    XCTAssertTrue(uiConv.hasLocalModificationsForCallDeviceIsActive);
+    [self.uiMOC saveOrRollback];
     
     __block BOOL errorNotificationPosted = NO;
     id errorObserver = [[NSNotificationCenter defaultCenter] addObserverForName:ZMConversationVoiceChannelJoinFailedNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
@@ -3167,15 +3169,16 @@
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil];
     
-    // when
+    // WHEN
     
-    [self performPretendingUiMocIsSyncMoc:^{
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMConversation *conversation = (id)[self.syncMOC objectWithID:uiConv.objectID];
         ZMUpstreamRequest *request = [self.sut requestForUpdatingObject:conversation forKeys:self.keys];
         [request.transportRequest completeWithResponse:response];
-        WaitForAllGroupsToBeEmpty(0.5);
     }];
     
-    // then
+    // THEN
+    WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertTrue(errorNotificationPosted);
     
     
@@ -3185,10 +3188,10 @@
 
 - (void)testThatWeDoNotSendErrorNotificationsIfUserIsNotActiveMemberOfConversation
 {
-    // given
-    ZMConversation *conversation = [self insertConversationNeedsUpdateFromBackend:NO callDeviceIsActive:YES];
-    conversation.isSelfAnActiveMember = NO;
-    XCTAssertTrue(conversation.hasLocalModificationsForCallDeviceIsActive);
+    // GIVEN
+    ZMConversation *uiConv = [self insertConversationNeedsUpdateFromBackend:NO callDeviceIsActive:YES];
+    [self.uiMOC saveOrRollback];
+    XCTAssertTrue(uiConv.hasLocalModificationsForCallDeviceIsActive);
     
     __block BOOL errorNotificationPosted = NO;
     id errorObserver = [[NSNotificationCenter defaultCenter] addObserverForName:ZMConversationVoiceChannelJoinFailedNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(__unused NSNotification *note) {
@@ -3197,15 +3200,17 @@
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil];
     
-    // when
-    [self performPretendingUiMocIsSyncMoc:^{
+    // WHEN
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMConversation *conversation = (id)[self.syncMOC objectWithID:uiConv.objectID];
+        conversation.isSelfAnActiveMember = NO;
         ZMUpstreamRequest *request = [self.sut requestForUpdatingObject:conversation forKeys:self.keys];
         [request.transportRequest completeWithResponse:response];
-        WaitForAllGroupsToBeEmpty(0.5);
     }];
 
     
-    // then
+    // THEN
+    WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertFalse(errorNotificationPosted);
     
     WaitForAllGroupsToBeEmpty(0.5);

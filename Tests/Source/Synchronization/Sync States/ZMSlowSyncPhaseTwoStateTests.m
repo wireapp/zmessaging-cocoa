@@ -25,7 +25,6 @@
 #import "StateBaseTest.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMLastUpdateEventIDTranscoder.h"
-#import "ZMConversationEventsTranscoder.h"
 
 @interface ZMSlowSyncPhaseTwoStateTests : StateBaseTest
 
@@ -125,15 +124,6 @@
 {
     // expect
     [[(id) self.objectDirectory.lastUpdateEventIDTranscoder expect] persistLastUpdateEventID];
-    
-    // when
-    [self.sut didLeaveState];
-}
-
-- (void)testThatItCalls_downloadTopIncompleteConversations_OnConversationEventsTranscoderWhenItLeavesTheState
-{
-    // expect
-    [[(id) self.objectDirectory.lastUpdateEventIDTranscoder stub] persistLastUpdateEventID];
     
     // when
     [self.sut didLeaveState];

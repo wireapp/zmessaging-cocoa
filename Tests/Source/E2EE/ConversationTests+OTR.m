@@ -255,7 +255,7 @@
 
 - (void)testThatItSendsFailedOTRMessageAfterMissingClientsAreFetchedButSessionIsNotCreated
 {
-    // given
+    // GIVEN
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -276,15 +276,19 @@
         return nil;
     }];
     
-    // when
-    [self.mockTransportSession resetReceivedRequests];
-    
+    // WHEN
     __block id <ZMConversationMessage> message;
-    [self.userSession performChanges:^{
-        message = [conversation appendMessageWithText:@"Hello World"];
+    [self.mockTransportSession resetReceivedRequests];
+
+    [self performIgnoringZMLogError:^{
+        [self.userSession performChanges:^{
+            message = [conversation appendMessageWithText:@"Hello World"];
+        }];
+        WaitForEverythingToBeDoneWithTimeout(5);
+
     }];
-    WaitForEverythingToBeDoneWithTimeout(5);
-    
+
+    // THEN
     NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/otr", conversation.remoteIdentifier.transportString];
     
     // then we expect it to receive a bomb message
@@ -475,7 +479,7 @@
 
 - (void)testThatItSendsFailedSessionOTRAssetMessageAfterMissingClientsAreFetchedButSessionIsNotCreated
 {
-    // given
+    // GIVEN
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -501,13 +505,16 @@
         return nil;
     }];
 
-    // when
+    // WHEN
     [self.mockTransportSession resetReceivedRequests];
-    [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithImageData:[self verySmallJPEGData] nonce:[NSUUID createUUID]];
+    [self performIgnoringZMLogError:^{
+        [self.userSession performChanges:^{
+            message = [conversation appendOTRMessageWithImageData:[self verySmallJPEGData] nonce:[NSUUID createUUID]];
+        }];
+        WaitForEverythingToBeDoneWithTimeout(5);
     }];
-    WaitForEverythingToBeDoneWithTimeout(5);
 
+    // THEN
     NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString];
     
     // then we expect it to receive a bomb preview and medium
@@ -707,19 +714,33 @@
     
     ZMClientMessage *msg = conversation.messages[initialMessagesCount];
     XCTAssertEqualObjects(msg.genericMessage.text.content, expectedText);
-    [observer tearDown];
+    [observer tearDown];    
+}
 
+- (ZMGenericMessage *)remotelyInsertOTRImageIntoConversation:(MockConversation *)mockConversation imageFormat:(ZMImageFormat)format
+{
+    NSData *encryptedImageData;
+    NSData *imageData = [self verySmallJPEGData];
+    ZMGenericMessage *message = [self otrAssetGenericMessage:format imageData:imageData encryptedData:&encryptedImageData];
     
+    MockUserClient *selfClient = [self.selfUser.clients anyObject];
+    MockUserClient *senderClient = [self.user1.clients anyObject];
+    
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        NSData *messageData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:message.data];
+        NSUUID *assetId = [NSUUID createUUID];
+        [session createAssetWithData:encryptedImageData identifier:assetId.transportString contentType:@"" forConversation:mockConversation.identifier];
+        [mockConversation insertOTRAssetFromClient:senderClient toClient:selfClient metaData:messageData imageData:encryptedImageData assetId:assetId isInline:format == ZMImageFormatPreview];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    return message;
 }
 
 - (void)testThatItSendsANotificationWhenRecievingAOtrAssetMessageThroughThePushChannel:(ZMImageFormat)format
 {
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForEverythingToBeDone();
-    
-    NSData *encryptedImageData;
-    NSData *imageData = [self verySmallJPEGData];
-    ZMGenericMessage *message = [self otrAssetGenericMessage:format imageData:imageData encryptedData:&encryptedImageData];
     
     MockConversation *mockConversation = self.groupConversation;
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
@@ -728,25 +749,12 @@
     for (id obj in conversation.messages) {
         (void) obj;
     }
-    
-    MockUserClient *selfClient = [self.selfUser.clients anyObject];
-    MockUserClient *senderClient = [self.user1.clients anyObject];
-    
     NSUInteger initialMessagesCount = conversation.messages.count;
     
     // when
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
-    
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        
-        NSData *messageData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:message.data];
-        
-        NSUUID *assetId = [NSUUID createUUID];
-        [session createAssetWithData:encryptedImageData identifier:assetId.transportString contentType:@"" forConversation:mockConversation.identifier];
-        [mockConversation insertOTRAssetFromClient:senderClient toClient:selfClient metaData:messageData imageData:encryptedImageData assetId:assetId isInline:format == ZMImageFormatPreview];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
+    ZMGenericMessage *assetMessage = [self remotelyInsertOTRImageIntoConversation:mockConversation imageFormat:format];
     
     // then
     XCTAssertEqual(observer.notifications.count, 1u);
@@ -760,7 +768,7 @@
     XCTAssertFalse(note.connectionStateChanged);
     
     ZMAssetClientMessage *msg = conversation.messages[initialMessagesCount];
-    XCTAssertEqualObjects([msg.imageAssetStorage genericMessageForFormat:format], message);
+    XCTAssertEqualObjects([msg.imageAssetStorage genericMessageForFormat:format], assetMessage);
     [observer tearDown];
 
 }

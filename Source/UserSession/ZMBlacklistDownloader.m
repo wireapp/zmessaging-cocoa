@@ -26,7 +26,7 @@
 #import "ZMUserSession.h"
 #import <zmessaging/zmessaging-Swift.h>
 
-static char* const ZMLogTag ZM_UNUSED = "Blacklist";
+static NSString *ZMLogTag ZM_UNUSED = @"Blacklist";
 
 /// When to retry if the requests are failing
 static NSTimeInterval UnsuccessfulDownloadRetryInterval = 30 * 60; // 30 minutes
@@ -153,9 +153,7 @@ static NSString * const ExcludeVersionsKey = @"exclude";
         [application registerObserverForDidBecomeActive:self selector:@selector(didBecomeActive:)];
         [application registerObserverForWillResignActive:self selector:@selector(willResignActive:)];
         
-        [self startTimerIfNeeded];
-        
-        ZMLogSetLevelForTag(ZMLogLevelInfo, ZMLogTag);
+        [self startTimerIfNeeded];        
     }
     return self;
 }

@@ -24,7 +24,6 @@
 #import "ZMConnectionTranscoder.h"
 #import "ZMUserTranscoder.h"
 #import "ZMSyncStrategy.h"
-#import "ZMConversationEventsTranscoder.h"
 #import "ZMTestNotifications.h"
 #import "ZMSyncStateDelegate.h"
 #import "ZMStateMachineDelegate.h"
@@ -72,7 +71,6 @@
                              objectStrategyDirectory.clientMessageTranscoder,
                              objectStrategyDirectory.userImageTranscoder,
                              objectStrategyDirectory.searchUserImageTranscoder,
-                             objectStrategyDirectory.assetTranscoder,
                              objectStrategyDirectory.typingTranscoder,
                              objectStrategyDirectory.removedSuggestedPeopleTranscoder,
                              ];

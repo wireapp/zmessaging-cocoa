@@ -32,7 +32,7 @@
 static NSString * const DefaultMediaType = @"application/json";
 id ZMFlowSyncInternalDeploymentEnvironmentOverride;
 
-static char* const ZMLogTag ZM_UNUSED = "Calling";
+static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 @interface ZMFlowSync ()
 

@@ -1041,7 +1041,12 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(PingBackStatusInProgress)] status];
     NSDictionary *payload =  @{
                                @"id" : NSUUID.createUUID.transportString,
-                               @"payload" : @[ @{ @"type" : @"conversation.message-add" } ]
+                               @"payload" : @[
+                                       @{
+                                           @"type" : @"conversation.message-add",
+                                           @"time": NSDate.date.transportString
+                                           }
+                                       ]
                                };
 
     NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];

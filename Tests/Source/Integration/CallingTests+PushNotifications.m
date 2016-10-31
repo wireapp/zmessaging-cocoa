@@ -30,10 +30,9 @@
 
 @implementation CallingTests (PushNotifications)
 
-- (void)simulateReceivePushNotificationWithPayload:(NSDictionary *)payload identifier:(NSUUID *)identifier mockResponse:(BOOL)mockResponse
+- (void)simulateReceivePushNotificationWithPayload:(NSDictionary *)payload identifier:(NSUUID *)identifier fromUser:(MockUser *)user
 {
-    NSDictionary *actualPayload = @{ @"id": identifier.transportString, @"payload": @[payload] };
-    NSDictionary *pushPayload = @{ @"data": actualPayload };
+    NSDictionary *pushPayload = @{ @"data": @{ @"id": identifier.transportString, @"payload": @[payload] } };
 
     PKPushPayload *pkPayload = [OCMockObject niceMockForClass:[PKPushPayload class]];
     [(PKPushPayload *)[[(id)pkPayload stub] andReturn:pushPayload] dictionaryPayload];
@@ -41,12 +40,10 @@
     PKPushRegistry *mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
     [self.userSession.pushRegistrant pushRegistry:mockPushRegistry didReceiveIncomingPushWithPayload:pkPayload forType:pkPayload.type];
 
-    if (mockResponse) {
-        self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-            return [self notificationFetchResponseForRequest:request payload:actualPayload identifier:identifier];
-        };
-    }
-    
+    [self.mockTransportSession closePushChannelAndRemoveConsumer];
+    [self.mockTransportSession registerPushEvent:[MockPushEvent eventWithPayload:payload uuid:identifier fromUser:user isTransient:YES]];
+    [self.mockTransportSession restartPushChannel];
+
     WaitForEverythingToBeDone();
 }
 
@@ -84,7 +81,7 @@
     UILocalNotification *notification;
     // (1) when we recieve a push notification
     {
-        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID mockResponse:YES];
+        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID fromUser:self.user2];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
@@ -132,8 +129,7 @@
     // (1) when we recieve a push notification
     UILocalNotification *notification;
     {
-
-        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID mockResponse:YES];
+        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID fromUser:self.user2];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
@@ -189,9 +185,7 @@
     
     WaitForAllGroupsToBeEmpty(0.5);
 
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        return [self notificationFetchResponseForRequest:request payload:payload identifier:identifier];
-    };
+    self.mockTransportSession.responseGeneratorBlock = nil;
 
     XCTAssertTrue(self.userSession.didStartInitialSync);
     XCTAssertTrue(self.userSession.isPerformingSync);
@@ -218,9 +212,10 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session simulatePushChannelClosed];
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
 
     NSUUID *notificationId = NSUUID.timeBasedUUID;
+    WaitForAllGroupsToBeEmpty(0.5);
+
     NSDictionary *streamPayload = @{ @"id": notificationId.transportString, @"payload": @[pushPayload] };
     [self simulateRestartWithoutEnteringEventProcessingWithNotificationFetchResponse:streamPayload forIdentifier:notificationId];
     
@@ -234,7 +229,7 @@
     
     // (1) when we recieve a push notification
     {
-        [self simulateReceivePushNotificationWithPayload:pushPayload identifier:notificationId mockResponse:NO];
+        [self simulateReceivePushNotificationWithPayload:pushPayload identifier:notificationId fromUser:self.user2];
         XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
         WaitForAllGroupsToBeEmpty(0.5);
         
@@ -244,7 +239,6 @@
         XCTAssertEqualObjects(notification.alertBody, @"Extra User2 is video calling");
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 1u);
     }
-
     
     // (2) we press on the action
     {

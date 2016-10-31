@@ -29,7 +29,7 @@
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMPushToken.h"
 
-static char* const ZMLogTag ZM_UNUSED = "Authentication";
+static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 static NSString *const HasHistoryKey = @"hasHistory";
 
 @implementation ZMUserSession (Authentication)
