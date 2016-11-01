@@ -43,7 +43,7 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         // given
         let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
         systemMessage.systemMessageType = .participantsAdded
-        systemMessage.addedUsers = otherUsers
+        systemMessage.users = otherUsers
         systemMessage.sender = aSender
         systemMessage.visibleInConversation = conversation
         
@@ -82,7 +82,7 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         // given
         let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
         systemMessage.systemMessageType = .participantsRemoved
-        systemMessage.removedUsers = otherUsers
+        systemMessage.users = otherUsers
         systemMessage.sender = aSender
         systemMessage.visibleInConversation = conversation
         
@@ -98,7 +98,7 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         // given
         let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
         systemMessage.systemMessageType = .participantsRemoved
-        systemMessage.removedUsers = [otherUser]
+        systemMessage.users = [otherUser]
         systemMessage.sender = otherUser
         systemMessage.visibleInConversation = groupConversation
         
