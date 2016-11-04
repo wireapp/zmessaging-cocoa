@@ -199,6 +199,9 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[AssetDownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus
                                                                    taskCancellationProvider:taskCancellationProvider
                                                                        managedObjectContext:self.syncMOC],
+                                   [[AssetV3DownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus
+                                                                   taskCancellationProvider:taskCancellationProvider
+                                                                       managedObjectContext:self.syncMOC],
                                    [[AssetV3PreviewDownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus
                                                                                 managedObjectContext:self.syncMOC],
                                    [[AddressBookUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus
