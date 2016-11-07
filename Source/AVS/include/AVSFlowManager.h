@@ -1,21 +1,20 @@
-// 
-// Wire
-// Copyright (C) 2016 Wire Swiss GmbH
-// 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see http://www.gnu.org/licenses/.
-// 
-
+/*
+* Wire
+* Copyright (C) 2016 Wire Swiss GmbH
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #import <Foundation/Foundation.h>
 #import <TargetConditionals.h>
@@ -31,8 +30,11 @@ typedef NSView UIView;
 #define FlowManagerOtherUserParticipantIdentifier @"other"
 
 #define FlowManagerVideoReceiveStateNotification @"AVSFlowManagerVideoReceiveStateNotification"
+#define FlowManagerAudioReceiveStateNotification @"AVSFlowManagerAudioReceiveStateNotification"
 
 #import "AVSMediaManager.h"
+
+#import "AVSAudioEffect.h"
 
 /* IMPORTANT: Make sure to keep these enums in sync with avs_flowmgr.h */
 
@@ -90,6 +92,11 @@ typedef NS_ENUM(int, AVSFlowManagerVideoReason) {
 	FLOWMANAGER_VIDEO_BAD_CONNECTION
 };
 
+typedef NS_ENUM(int, AVSFlowManagerAudioReceiveState) {
+	FLOWMANAGER_AUDIO_INTERRUPTION_STOPPED = 0,
+	FLOWMANAGER_AUDIO_INTERRUPTION_STARTED
+};
+
 @interface AVSVideoStateChangeInfo : NSObject
 @property (readonly) AVSFlowManagerVideoReceiveState state;
 @property (readonly) AVSFlowManagerVideoReason reason;
@@ -98,6 +105,10 @@ typedef NS_ENUM(int, AVSFlowManagerVideoReason) {
 @interface AVSVideoCaptureDevice : NSObject
 @property (readonly) NSString *deviceId;
 @property (readonly) NSString *deviceName;
+@end
+
+@interface AVSAudioStateChangeInfo : NSObject
+@property (readonly) AVSFlowManagerAudioReceiveState state;
 @end
 
 @protocol AVSFlowManagerDelegate<NSObject>
@@ -117,8 +128,6 @@ typedef NS_ENUM(int, AVSFlowManagerVideoReason) {
 - (void)mediaWarningOnConversation:(NSString *)convId; 
 
 - (void)errorHandler:(int)err conversationId:(NSString *)convid context:(void const*)ctx;
-
-- (void)vmStatushandler:(BOOL)is_playing current_time:(int)cur_time_ms length:(int)file_length_ms;
 @optional
 
 - (void) didUpdateVolume:(double)volume conversationId:(NSString *)convid participantId:(NSString *)participantId;
@@ -210,18 +219,16 @@ struct flowmgr;
 - (BOOL)isSendingVideoInConversation:(NSString *)convId
                       forParticipant:(NSString *)partId;
 - (void)setVideoSendState:(AVSFlowManagerVideoSendState)state forConversation:(NSString *)convId;
-- (void)setVideoPreview:(UIView *)view;
+- (void)attachVideoPreview:(UIView *)view;
+- (void)detachVideoPreview:(UIView *)view;
 
-- (void)setVideoView:(UIView *)view;
+- (void)attachVideoView:(UIView *)view;
+- (void)detachVideoView:(UIView *)view;
 
 - (NSArray*)getVideoCaptureDevices;
 - (void)setVideoCaptureDevice:(NSString *)deviceId forConversation:(NSString *)convId;
 
-- (void)vmStartRecord:(NSString *)fileName;
-- (void)vmStopRecord;
-- (int)vmGetLength:(NSString *)fileName;
-- (void)vmStartPlay:(NSString *)fileName toStart:(int)startpos;
-- (void)vmStopPlay;
+- (int)setAudioEffect:(AVSAudioEffectType) effect;
 
 @end
 
