@@ -25,7 +25,6 @@
 @class ZMSelfTranscoder;
 @class ZMMessageTranscoder;
 @class ZMConversationTranscoder;
-@class ZMAssetTranscoder;
 @class ZMUserImageTranscoder;
 @class ZMMissingUpdateEventsTranscoder;
 @class ZMRegistrationTranscoder;
@@ -53,7 +52,6 @@
 @property (nonatomic, readonly) ZMConversationTranscoder *conversationTranscoder;
 @property (nonatomic, readonly) ZMMessageTranscoder *systemMessageTranscoder;
 @property (nonatomic, readonly) ZMMessageTranscoder *clientMessageTranscoder;
-@property (nonatomic, readonly) ZMAssetTranscoder *assetTranscoder;
 @property (nonatomic, readonly) ZMUserImageTranscoder *userImageTranscoder;
 @property (nonatomic, readonly) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
 @property (nonatomic, readonly) ZMLastUpdateEventIDTranscoder *lastUpdateEventIDTranscoder;

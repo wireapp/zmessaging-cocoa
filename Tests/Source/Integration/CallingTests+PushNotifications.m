@@ -30,13 +30,38 @@
 
 @implementation CallingTests (PushNotifications)
 
-- (void)simulateReceivePushNotification:(NSDictionary *)payload
+- (void)simulateReceivePushNotificationWithPayload:(NSDictionary *)payload identifier:(NSUUID *)identifier fromUser:(MockUser *)user
 {
+    NSDictionary *pushPayload = @{ @"data": @{ @"id": identifier.transportString, @"payload": @[payload] } };
+
     PKPushPayload *pkPayload = [OCMockObject niceMockForClass:[PKPushPayload class]];
-    [(PKPushPayload *)[[(id)pkPayload stub] andReturn:payload] dictionaryPayload];
+    [(PKPushPayload *)[[(id)pkPayload stub] andReturn:pushPayload] dictionaryPayload];
     [(PKPushPayload *)[[(id)pkPayload stub] andReturn:PKPushTypeVoIP] type];
     PKPushRegistry *mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
     [self.userSession.pushRegistrant pushRegistry:mockPushRegistry didReceiveIncomingPushWithPayload:pkPayload forType:pkPayload.type];
+
+    [self.mockTransportSession closePushChannelAndRemoveConsumer];
+    [self.mockTransportSession registerPushEvent:[MockPushEvent eventWithPayload:payload uuid:identifier fromUser:user isTransient:YES]];
+    [self.mockTransportSession restartPushChannel];
+
+    WaitForEverythingToBeDone();
+}
+
+- (ZMTransportResponse *)notificationFetchResponseForRequest:(ZMTransportRequest *)request payload:(NSDictionary *)payload identifier:(NSUUID *)identifier
+{
+    ZMUser *selfUser = [self userForMockUser:self.selfUser];
+    NSString *suffix = [NSString stringWithFormat:@"&client=%@&cancel_fallback=%@",
+                        selfUser.selfClient.remoteIdentifier, identifier.transportString];
+
+    if (request.method == ZMMethodGET &&
+        [request.path containsString:@"/notifications?size=500"] &&
+        [request.path containsString:suffix]) {
+        return [ZMTransportResponse responseWithPayload:@{ @"hasMore": @NO, @"notifications": @[payload] }
+                                             HTTPStatus:200
+                                  transportSessionError:nil];
+    }
+
+    return nil;
 }
 
 - (void)testThatItJoinsACallFromPushNotifications
@@ -56,10 +81,7 @@
     UILocalNotification *notification;
     // (1) when we recieve a push notification
     {
-        [self simulateReceivePushNotification:@{@"data": @{@"payload": @[payload],
-                                                           @"id": [NSUUID createUUID].transportString
-                                                           }
-                                                }];
+        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID fromUser:self.user2];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
@@ -107,10 +129,7 @@
     // (1) when we recieve a push notification
     UILocalNotification *notification;
     {
-        [self simulateReceivePushNotification:@{@"data": @{@"payload": @[payload],
-                                                           @"id": [NSUUID createUUID].transportString
-                                                           }
-                                                }];
+        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID fromUser:self.user2];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
@@ -143,7 +162,7 @@
     }
 }
 
-- (void)simulateRestartWithoutEnteringEventProcessing
+- (void)simulateRestartWithoutEnteringEventProcessingWithNotificationFetchResponse:(NSDictionary *)payload forIdentifier:(NSUUID *)identifier
 {
     __block BOOL shouldBlockRequests = NO;
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request){
@@ -151,11 +170,11 @@
             shouldBlockRequests = YES;
         }
         
-        if (shouldBlockRequests && ! [request.path containsString:@"fallback"]) {
+        if (shouldBlockRequests && ! [request.path containsString:@"cancel_fallback"]) {
             return ResponseGenerator.ResponseNotCompleted;
         }
         
-        return nil;
+        return [self notificationFetchResponseForRequest:request payload:payload identifier:identifier];
     };
     
     [self.mockTransportSession resetReceivedRequests];
@@ -165,10 +184,13 @@
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
-    
+
     self.mockTransportSession.responseGeneratorBlock = nil;
+
     XCTAssertTrue(self.userSession.didStartInitialSync);
     XCTAssertTrue(self.userSession.isPerformingSync);
+
+    WaitForEverythingToBeDone();
 }
 
 - (void)testThatItJoinsAVideoCallFromAPushNotification_DuringSyncState
@@ -181,26 +203,33 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMUser *user2 = [self userForMockUser:self.user2];
-    NSDictionary *payload = [self payloadForCallStateEventInConversation:self.conversationUnderTest joinedUsers:@[user2] videoSendingUsers:@[user2] sequence:@1 session:@"session2"];
-    
+    NSDictionary *pushPayload = [self payloadForCallStateEventInConversation:self.conversationUnderTest
+                                                                 joinedUsers:@[user2]
+                                                           videoSendingUsers:@[user2]
+                                                                    sequence:@1
+                                                                     session:@"session2"];
+
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session simulatePushChannelClosed];
     }];
+
+    NSUUID *notificationId = NSUUID.timeBasedUUID;
     WaitForAllGroupsToBeEmpty(0.5);
 
-    [self simulateRestartWithoutEnteringEventProcessing];
+    NSDictionary *streamPayload = @{ @"id": notificationId.transportString, @"payload": @[pushPayload] };
+    [self simulateRestartWithoutEnteringEventProcessingWithNotificationFetchResponse:streamPayload forIdentifier:notificationId];
     
     UILocalNotification *notification;    
     [self.application setBackground];
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
+    WaitForAllGroupsToBeEmpty(0.5);
+
     XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 0u);
     
     // (1) when we recieve a push notification
     {
-        [self simulateReceivePushNotification:@{@"data": @{@"payload": @[payload],
-                                                           @"id": [NSUUID createUUID].transportString
-                                                           }
-                                                }];
-        
+        [self simulateReceivePushNotificationWithPayload:pushPayload identifier:notificationId fromUser:self.user2];
         XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
         WaitForAllGroupsToBeEmpty(0.5);
         
@@ -210,21 +239,20 @@
         XCTAssertEqualObjects(notification.alertBody, @"Extra User2 is video calling");
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 1u);
     }
-
     
     // (2) we press on the action
     {
         [self.application setInactive];
         [self.userSession application:self.userSession.application handleActionWithIdentifier:ZMCallAcceptAction forLocalNotification:notification responseInfo:nil completionHandler:nil];
         WaitForAllGroupsToBeEmpty(0.5);
-        
+
         // then
         XCTAssertFalse([self lastRequestContainsSelfStateJoined]);
         XCTAssertTrue(self.userSession.didStartInitialSync);
         XCTAssertTrue(self.userSession.isPerformingSync);
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 1u);
     }
-    
+
     // (3) we enter event processing state
     {
         XCTestExpectation *expectation = [self expectationWithDescription:@"call state event sent"];
@@ -235,6 +263,7 @@
             return nil;
         };
 
+        [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationWillEnterForegroundNotification object:nil];
         [self.mockTransportSession completeAllBlockedRequests];
         
         XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);

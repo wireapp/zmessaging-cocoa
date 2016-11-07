@@ -87,7 +87,6 @@
               self.objectDirectory.systemMessageTranscoder,
               self.objectDirectory.clientMessageTranscoder,
               self.objectDirectory.selfTranscoder,
-              self.objectDirectory.assetTranscoder,
               ];
 }
 

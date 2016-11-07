@@ -52,13 +52,13 @@
 "push.notification.add.audio.oneonone" = "%1$@ hat eine Audio-Nachricht geteilt";
 "push.notification.add.audio.oneonone.nousername" = "Neue Audio-Nachricht in einer Unterhaltung";
 
-"push.notification.add.file.group" = "%1$@ hat ein File in %2$@ geteilt";
-"push.notification.add.file.group.nousername" = "Jemand hat ein File in %1$@ geteilt";
-"push.notification.add.file.group.nousername.noconversationname" = "Jemand hat ein File in einer Unterhaltung geteilt";
-"push.notification.add.file.group.noconversationname" = "%1$@ hat ein File in einer Unterhaltung geteilt";
+"push.notification.add.file.group" = "%1$@ hat eine Datei in %2$@ geteilt";
+"push.notification.add.file.group.nousername" = "Jemand hat eine Datei in %1$@ geteilt";
+"push.notification.add.file.group.nousername.noconversationname" = "Jemand hat eine Datei in einer Unterhaltung geteilt";
+"push.notification.add.file.group.noconversationname" = "%1$@ hat eine Datei in einer Unterhaltung geteilt";
 
-"push.notification.add.file.oneonone" = "%1$@ hat ein File geteilt";
-"push.notification.add.file.oneonone.nousername" = "Jemand hat ein File in einer Unterhaltung geteilt";
+"push.notification.add.file.oneonone" = "%1$@ hat eine Datei geteilt";
+"push.notification.add.file.oneonone.nousername" = "Jemand hat eine Datei in einer Unterhaltung geteilt";
 
 "push.notification.add.location.group" = "%1$@ hat einen Standort in %2$@ geteilt";
 "push.notification.add.location.group.nousername" = "Jemand hat einen Standort in %1$@ geteilt";

@@ -26,6 +26,7 @@
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMSimpleListRequestPaginator.h"
 
+
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 static NSString * const NotificationsKey = @"notifications";
 static NSString * const NotificationsPath = @"/notifications";
@@ -37,6 +38,9 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 @property (nonatomic, readonly, weak) ZMSyncStrategy *syncStrategy;
 @property (nonatomic, weak) id<PreviouslyReceivedEventIDsCollection> previouslyReceivedEventIDsCollection;
+@property (nonatomic, weak) id <ZMApplication> application;
+@property (nonatomic) BackgroundAPNSPingBackStatus *pingbackStatus;
+@property (nonatomic) EventsWithIdentifier *notificationEventsToCancel;
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response;
 
@@ -49,12 +53,17 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 @implementation ZMMissingUpdateEventsTranscoder
 
-- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
+- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
+previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
+                         application:(id <ZMApplication>)application
+        backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus
 {
     self = [super initWithManagedObjectContext:strategy.syncMOC];
     if(self) {
         _syncStrategy = strategy;
+        self.application = application;
         self.previouslyReceivedEventIDsCollection = eventIDsCollection;
+        self.pingbackStatus = backgroundAPNSPingbackStatus;
         self.listPaginator = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:NotificationsPath
                                                                            startKey:StartKey
                                                                            pageSize:ZMMissingUpdateEventsTranscoderListPageSize
@@ -70,22 +79,20 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
     return self.listPaginator.hasMoreToFetch;
 }
 
+- (BOOL)isFetchingStreamForAPNS
+{
+    return self.application.applicationState == UIApplicationStateBackground &&
+           self.pingbackStatus.status == PingBackStatusInProgress;
+}
+
 - (NSUUID *)lastUpdateEventID
 {
-    return [((NSString *)[self.managedObjectContext persistentStoreMetadataForKey:LastUpdateEventIDStoreKey]) UUID];
+    return self.managedObjectContext.zm_lastNotificationID;
 }
 
 - (void)setLastUpdateEventID:(NSUUID *)lastUpdateEventID
 {
-    NSUUID *previousUUID = self.lastUpdateEventID;
-    if(
-       previousUUID.isType1UUID && lastUpdateEventID.isType1UUID && // both are type 1 (or I can't compare)
-       [previousUUID compareWithType1UUID:lastUpdateEventID] != NSOrderedAscending // and I'm not setting to a new one
-       ) {
-        // only set if more recent
-        return;
-    }
-    [self.managedObjectContext setPersistentStoreMetadata:lastUpdateEventID.UUIDString forKey:LastUpdateEventIDStoreKey];
+    self.managedObjectContext.zm_lastNotificationID = lastUpdateEventID;
 }
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response
@@ -114,7 +121,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
                 timestamp = [conversation.lastModifiedDate dateByAddingTimeInterval:offset];
             }
             [conversation appendNewPotentialGapSystemMessageWithUsers:conversation.activeParticipants.set
-                                                               timestamp:timestamp];
+                                                            timestamp:timestamp];
         }
     }
 }
@@ -123,17 +130,20 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 {
     return [payload.asDictionary optionalArrayForKey:@"notifications"].asDictionaries;
 }
-+ (NSUUID *)processUpdateEventsAndReturnLastNotificationIDFromPayload:(id<ZMTransportData>)payload syncStrategy:(ZMSyncStrategy *)syncStrategy {
-    
-    ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:10 label:NSStringFromClass(self)];
-    NSArray *eventsDictionaries = [self eventDictionariesFromPayload:payload];
+
+- (NSUUID *)processUpdateEventsAndReturnLastNotificationIDFromPayload:(id<ZMTransportData>)payload syncStrategy:(ZMSyncStrategy *)syncStrategy
+{
+    ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:10 label:NSStringFromClass(self.class)];
+    NSArray *eventsDictionaries = [self.class eventDictionariesFromPayload:payload];
     
     NSMutableArray *parsedEvents = [NSMutableArray array];
     NSMutableDictionary *lastCallStateEvents = [NSMutableDictionary dictionary];
     NSUUID *latestEventId = nil;
     
     for(NSDictionary *eventDict in eventsDictionaries) {
-        NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventDict];
+        NSUUID *sourceThreshold = self.notificationEventsToCancel.identifier;
+        NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventDict pushStartingAt:sourceThreshold];
+
         for (ZMUpdateEvent *event in events) {
             [event appendDebugInformation:@"From missing update events transcoder, processUpdateEventsAndReturnLastNotificationIDFromPayload"];
 
@@ -149,9 +159,19 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
             }
         }
     }
-    
-    [syncStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
-    [syncStrategy processUpdateEvents:lastCallStateEvents.allValues ignoreBuffer:NO];
+
+    if (self.isFetchingStreamForAPNS) {
+        // In case we are fetching the stream because we have received a push notification we need to forward them to the pingback status
+        // The status will forward them to the operationloop and check if the received notification was contained in this batch.
+        NSArray <ZMUpdateEvent *> *events = [parsedEvents arrayByAddingObjectsFromArray:lastCallStateEvents.allValues];
+        [self.pingbackStatus didReceiveEncryptedEvents:events originalEvents:self.notificationEventsToCancel hasMore:self.listPaginator.hasMoreToFetch];
+        if (!self.listPaginator.hasMoreToFetch) {
+            self.notificationEventsToCancel = nil;
+        }
+    } else {
+        [syncStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
+        [syncStrategy processUpdateEvents:lastCallStateEvents.allValues ignoreBuffer:NO];
+    }
 
     [tp warnIfLongerThanInterval];
     return latestEventId;
@@ -203,6 +223,42 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
     // no op
 }
 
+- (ZMTransportRequest *)nextRequest
+{
+    BOOL fetchingStream = self.isFetchingStreamForAPNS;
+    BOOL hasNewNotification = self.pingbackStatus.hasNotificationIDs;
+    BOOL inProgress = self.listPaginator.status == ZMSingleRequestInProgress;
+
+    // We want to create a new request if we are either currently fetching the paginated stream
+    // or if we have a new notification ID that rewuires a pingback.
+    BOOL shouldCreateRequest = inProgress || hasNewNotification;
+
+    if (fetchingStream && shouldCreateRequest) {
+        EventsWithIdentifier *newEvents = self.pingbackStatus.nextNotificationEventsWithID;
+
+        if (nil != newEvents && ![newEvents isEqual:self.notificationEventsToCancel]) {
+            self.notificationEventsToCancel = newEvents;
+            [self.listPaginator resetFetching];
+        }
+
+        if (nil != self.notificationEventsToCancel) {
+            ZMTransportRequest *request = self.listPaginator.nextRequest;
+            [request forceToVoipSession];
+            return request;
+        }
+    }
+
+    return nil;
+}
+
+- (NSArray <NSURLQueryItem *> *)additionalQueryItems
+{
+    if (nil == self.notificationEventsToCancel.identifier) {
+        return nil;
+    }
+
+    return @[[NSURLQueryItem queryItemWithName:@"cancel_fallback" value:self.notificationEventsToCancel.identifier.transportString]];
+}
 
 @end
 
@@ -215,12 +271,12 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 {
     NOT_USED(paginator);
     
-    NSUUID *latestEventId = [ZMMissingUpdateEventsTranscoder processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
+    NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
     if (latestEventId != nil) {
         self.lastUpdateEventID = latestEventId;
     }
     
-    Boolean hasMore = ((NSNumber *) response.payload.asDictionary[@"has_more"]).boolValue;
+    BOOL hasMore = ((NSNumber *) response.payload.asDictionary[@"has_more"]).boolValue;
     if(!hasMore) {
         [self.previouslyReceivedEventIDsCollection discardListOfAlreadyReceivedPushEventIDs];
     }
@@ -228,18 +284,22 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
     return self.lastUpdateEventID;
 }
 
-
 - (NSUUID *)startUUID
 {
     return self.lastUpdateEventID;
 }
-
 
 - (BOOL)shouldParseErrorResponseForStatusCode:(NSInteger)statusCode;
 {
     if (statusCode == 404) {
         return YES;
     }
+
+    if (nil != self.notificationEventsToCancel) {
+        [self.pingbackStatus didFailDownloadingOriginalEvents:self.notificationEventsToCancel];
+        self.notificationEventsToCancel = nil;
+    }
+
     return NO;
 }
 

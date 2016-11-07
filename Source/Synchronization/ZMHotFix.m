@@ -26,7 +26,7 @@
 #import "ZMHotFixDirectory.h"
 #import "ZMUserSession.h"
 
-static char* const ZMLogTag ZM_UNUSED = "HotFix";
+static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
 static NSString * const LastSavedVersionKey = @"lastSavedVersion";
 NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
 

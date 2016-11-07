@@ -115,8 +115,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 {
     NSArray *keysWithRef = @[
              ZMConversationArchivedChangedTimeStampKey,
-             ZMConversationSilencedChangedTimeStampKey,
-             ZMConversationClearedEventIDDataKey];
+             ZMConversationSilencedChangedTimeStampKey];
     NSArray *allKeys = [keysWithRef arrayByAddingObjectsFromArray:self.keysToSyncWithoutRef];
     return allKeys;
 }
@@ -314,10 +313,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 {
     // Update last event-id
     NSDate *oldLastTimeStamp = conversation.lastServerTimeStamp;
-    ZMEventID *oldLastEventID = conversation.lastEventID;
-
     NSDate *timeStamp = event.timeStamp;
-    ZMEventID *eventId = event.eventID;
     
     BOOL isMessageEvent = (event.type == ZMUpdateEventConversationOtrMessageAdd) ||
                           (event.type == ZMUpdateEventConversationOtrAssetAdd);
@@ -329,8 +325,6 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
             conversation.lastModifiedDate = [NSDate lastestOfDate:conversation.lastModifiedDate and:timeStamp];
         }
     }
-    [conversation updateLastEventIDIfNeededWithEventID:eventId];
-
     
     BOOL eventIsCompletedVoiceCall = NO;
     if (event.type == ZMUpdateEventConversationVoiceChannelDeactivate) {
@@ -341,9 +335,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     if (eventIsCompletedVoiceCall) {
         [self updateLastReadForInvisibleEventInConversation:conversation
                                                   timeStamp:timeStamp
-                                           oldLastTimeStamp:oldLastTimeStamp
-                                                    eventID:eventId
-                                             oldLastEventID:oldLastEventID];
+                                           oldLastTimeStamp:oldLastTimeStamp];
     }
     
     // Unarchive conversations when applicable
@@ -356,32 +348,19 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 - (void)updateLastReadForInvisibleEventInConversation:(ZMConversation *)conversation
                                             timeStamp:(NSDate *)timeStamp
                                      oldLastTimeStamp:(NSDate *)oldLastTimeStamp
-                                              eventID:(ZMEventID *)eventID
-                                       oldLastEventID:(ZMEventID *)oldLastEventID
 {
 
     if (timeStamp != nil && oldLastTimeStamp != nil && [oldLastTimeStamp isEqualToDate:conversation.lastReadServerTimeStamp]) {
         [conversation updateLastReadServerTimeStampIfNeededWithTimeStamp:timeStamp andSync:NO];
     }
-    
-    if (eventID != nil && oldLastEventID != nil && [oldLastEventID isEqualToEventID:conversation.lastReadEventID]) {
-        [conversation updateLastReadEventIDIfNeededWithEventID:eventID];
-    }
 }
 
 - (void)updatePropertiesOfConversation:(ZMConversation *)conversation withPostPayloadEvent:(ZMUpdateEvent *)event
 {
-    // Clear self user leave event if conversation was previously cleared
-    BOOL conversationWasCleared = conversation.clearedEventID != nil || conversation.clearedTimeStamp != nil;
-    BOOL selfUserLeft = (event.type == ZMUpdateEventConversationMemberLeave) &&
-                        ([event.senderUUID isEqual:[ZMUser selfUserInContext:self.managedObjectContext].remoteIdentifier]);
-    
-    if(conversationWasCleared && selfUserLeft) {
-        BOOL isResponseToClearEvent = [conversation.clearedEventID isEqual:conversation.lastEventID] ||
-        [conversation.clearedTimeStamp isEqualToDate:conversation.lastServerTimeStamp];
-        if (isResponseToClearEvent) {
-            [conversation updateClearedFromPostPayloadEvent:event];
-        }
+    BOOL senderIsSelfUser = ([event.senderUUID isEqual:[ZMUser selfUserInContext:self.managedObjectContext].remoteIdentifier]);
+    BOOL selfUserLeft = (event.type == ZMUpdateEventConversationMemberLeave) && senderIsSelfUser;
+    if (selfUserLeft && conversation.clearedTimeStamp != nil && [conversation.clearedTimeStamp isEqualToDate:conversation.lastServerTimeStamp]) {
+        [conversation updateClearedFromPostPayloadEvent:event];
     }
     
     // Self generated messages shouldn't generate unread dots
@@ -428,10 +407,11 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
         if(![self shouldProcessUpdateEvent:event]) {
             continue;
         }
+        NSDate * const currentLastTimestamp = conversation.lastServerTimeStamp;
         [self updatePropertiesOfConversation:conversation fromEvent:event];
         
-        if(liveEvents) {
-            [self processUpdateEvent:event forConversation:conversation];
+        if (liveEvents) {
+            [self processUpdateEvent:event forConversation:conversation previousLastServerTimestamp:currentLastTimestamp];
         }
     }
 }
@@ -474,7 +454,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     }
 }
 
-- (void)processUpdateEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation
+- (void)processUpdateEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation previousLastServerTimestamp:(NSDate *)previousLastServerTimestamp
 {
     switch (event.type) {
         case ZMUpdateEventConversationRename: {
@@ -495,7 +475,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
         }
         case ZMUpdateEventConversationMemberUpdate:
         {
-            [self processMemberUpdateEvent:event forConversation:conversation];
+            [self processMemberUpdateEvent:event forConversation:conversation previousLastServerTimeStamp:previousLastServerTimestamp];
             break;
         }
         default: {
@@ -525,12 +505,14 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     }
 }
 
-- (void)processMemberUpdateEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation
+- (void)processMemberUpdateEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation previousLastServerTimeStamp:(NSDate *)previousLastServerTimestamp
 {
     NSDictionary *dataPayload = [event.payload.asDictionary dictionaryForKey:@"data"];
  
     if(dataPayload) {
-        [conversation updateSelfStatusFromDictionary:dataPayload timeStamp:event.timeStamp];
+        [conversation updateSelfStatusFromDictionary:dataPayload
+                                           timeStamp:event.timeStamp
+                         previousLastServerTimeStamp:previousLastServerTimestamp];
     }
 }
 
@@ -559,9 +541,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
         request = [self requestForUpdatingUnsyncedActiveParticipantsInConversation:updatedConversation];
     }
     if (request == nil && (   [keys containsObject:ZMConversationArchivedChangedTimeStampKey]
-                           || [keys containsObject:ZMConversationSilencedChangedTimeStampKey]
-                           || [keys containsObject:ZMConversationClearedEventIDDataKey]) )
-    {
+                           || [keys containsObject:ZMConversationSilencedChangedTimeStampKey])) {
         request = [self requestForUpdatingConversationSelfInfo:updatedConversation];
     }
     if (request == nil && [keys containsObject:ZMConversationIsSelfAnActiveMemberKey] && ! updatedConversation.isSelfAnActiveMember) {
@@ -644,14 +624,8 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
             conversation.silencedChangedTimestamp = [NSDate date];
         }
         payload[ZMConversationInfoOTRMutedValueKey] = @(conversation.isSilenced);
-        payload[ZMConversationInfoMutedValueKey] = @(conversation.isSilenced);
         payload[ZMConversationInfoOTRMutedReferenceKey] = [conversation.silencedChangedTimestamp transportString];
         [updatedKeys addObject:ZMConversationSilencedChangedTimeStampKey];
-    }
-    
-    if ([conversation hasLocalModificationsForKey:ZMConversationClearedEventIDDataKey]) {
-        payload[ZMConversationInfoClearedValueKey] = conversation.clearedEventID == nil ? [NSNull null] : conversation.clearedEventID.transportString;
-        [updatedKeys addObject:ZMConversationClearedEventIDDataKey];
     }
     
     if ([conversation hasLocalModificationsForKey:ZMConversationArchivedChangedTimeStampKey]) {
@@ -661,15 +635,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
         
         payload[ZMConversationInfoOTRArchivedValueKey] = @(conversation.isArchived);
         payload[ZMConversationInfoOTRArchivedReferenceKey] = [conversation.archivedChangedTimestamp transportString];
-        if (conversation.isArchived) {
-            if (conversation.lastEventID != nil) {
-                payload[ZMConversationInfoArchivedValueKey] = conversation.lastEventID.transportString;
-            }
-        } else {
-            payload[ZMConversationInfoArchivedValueKey] = @"false";
-        }
         [updatedKeys addObject:ZMConversationArchivedChangedTimeStampKey];
-        
     }
     
     if (updatedKeys.count == 0) {
@@ -725,7 +691,6 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     }
     insertedConversation.remoteIdentifier = remoteID;
     [insertedConversation updateWithTransportData:response.payload.asDictionary];
-    [insertedConversation startFetchingMessages];
 }
 
 - (ZMUpdateEvent *)conversationEventWithKeys:(NSSet *)keys responsePayload:(id<ZMTransportData>)payload;
@@ -796,10 +761,8 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     }
     if( keysToParse == nil ||
        [keysToParse isEmpty] ||
-       [keysToParse containsObject:ZMConversationLastReadEventIDDataKey] ||
        [keysToParse containsObject:ZMConversationSilencedChangedTimeStampKey] ||
        [keysToParse containsObject:ZMConversationArchivedChangedTimeStampKey] ||
-       [keysToParse containsObject:ZMConversationClearedEventIDDataKey] ||
        [keysToParse containsObject:ZMConversationIsSelfAnActiveMemberKey])
     {
         return NO;

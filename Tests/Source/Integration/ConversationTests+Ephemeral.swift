@@ -163,7 +163,8 @@ extension ConversationTests_Ephemeral {
         }
         XCTAssertTrue(waitForEverythingToBeDone())
         spinMainQueue(withTimeout:5.1) // We can't set isTesting and therefore have to wait 5sec at least :-/
-        
+        XCTAssertTrue(waitForEverythingToBeDone()) // we have to wait until the request "made the roundtrip" to the backend
+
         // then
         XCTAssertEqual(mockTransportSession.receivedRequests().count, 1)
         XCTAssertEqual(conversation.messages.count, messageCount)

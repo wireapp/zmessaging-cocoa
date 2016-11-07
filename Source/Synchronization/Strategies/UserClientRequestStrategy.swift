@@ -24,7 +24,7 @@ import ZMUtilities
 import Cryptobox
 import ZMCDataModel
 
-private let zmLog = ZMSLog(tag: "Crypto")
+private let zmLog = ZMSLog(tag: "userClientRS")
 
 
 // Register new client, update it with new keys, deletes clients.

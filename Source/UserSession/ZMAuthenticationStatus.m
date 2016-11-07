@@ -35,7 +35,7 @@
 static NSString * const AuthenticationCenterDataChangeNotificationName = @"ZMAuthenticationStatusDataChangeNotificationName";
 NSString * const RegisteredOnThisDeviceKey = @"ZMRegisteredOnThisDevice";
 
-static char* const ZMLogTag ZM_UNUSED = "Authentication";
+static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 
 @implementation ZMAuthenticationStatus

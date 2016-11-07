@@ -91,7 +91,6 @@
                              directory.systemMessageTranscoder,
                              directory.clientMessageTranscoder,
                              directory.selfTranscoder,
-                             directory.assetTranscoder,
                              ];
     
     ZMTransportRequest *nextRequest = [self nextRequestFromTranscoders:transcoders];

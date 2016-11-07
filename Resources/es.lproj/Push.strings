@@ -18,7 +18,7 @@
 
 
 "push.notification.default" = "Mensaje Nuevo";
-"push.notification.ephemeral" = "Someone sent you a message";
+"push.notification.ephemeral" = "Alguien te envió un mensaje";
 
 "push.notification.add.message.group" = "%1$@ en %2$@: %3$@";
 "push.notification.add.message.group.nousername" = "Nuevo mensaje en %1$@: %2$@";

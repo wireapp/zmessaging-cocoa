@@ -43,7 +43,7 @@
 static NSString *const TimerInfoOriginalCredentialsKey = @"originalCredentials";
 NSTimeInterval DebugLoginFailureTimerOverride = 0;
 
-static char* const ZMLogTag ZM_UNUSED = "State machine";
+static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 
 // if the request will fail in less than 50ms, don't even start it
 static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;

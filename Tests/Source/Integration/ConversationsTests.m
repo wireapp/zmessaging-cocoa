@@ -1899,11 +1899,9 @@
         
         ZMTransportRequest *firstRequest = self.mockTransportSession.receivedRequests.firstObject;
         NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/self", conversation.remoteIdentifier.transportString];
-        XCTAssertEqualObjects(firstRequest.payload[@"cleared"], conversation.lastEventID.transportString);
         XCTAssertEqualObjects(firstRequest.payload[@"otr_archived_ref"], conversation.lastServerTimeStamp.transportString);
         XCTAssertEqualObjects(firstRequest.payload[@"otr_archived"], @1);
 
-        XCTAssertNil(firstRequest.payload[@"last_read"]);
         XCTAssertEqualObjects(firstRequest.path, expectedPath);
         XCTAssertEqual(firstRequest.method, ZMMethodPUT);
         
@@ -1928,7 +1926,6 @@
 
         // then
         conversation = [self conversationForMockConversation:self.groupConversation];
-        [conversation startFetchingMessages];
         WaitForEverythingToBeDone();
 
         ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:5];
@@ -1961,11 +1958,10 @@
     ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectory];
     NSManagedObjectID *conversationID = conversation.objectID;
     
+   
     // when removing messages remotely
     {
-        [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-            [self.groupConversation remotelyClearHistoryFromUser:self.selfUser includeOTR:NO];
-        }];
+        [self remotelyAppendSelfConversationWithZMClearedForMockConversation:self.groupConversation atTime:conversation.lastServerTimeStamp];
         WaitForEverythingToBeDone();
         
         // then
@@ -2002,7 +1998,6 @@
         
         // then
         conversation = [self conversationForMockConversation:self.groupConversation];
-        [conversation startFetchingMessages];
         WaitForEverythingToBeDone();
         
         window = [conversation conversationWindowWithSize:messagesCount];
@@ -2029,8 +2024,10 @@
     // when deleting the conversation remotely
     {
         [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-            [self.groupConversation remotelyDeleteFromUser:self.selfUser includeOTR:NO];
+            [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:YES];
         }];
+        WaitForEverythingToBeDone();
+        [self remotelyAppendSelfConversationWithZMClearedForMockConversation:self.groupConversation atTime:conversation.lastServerTimeStamp];
         WaitForEverythingToBeDone();
         
         // then
@@ -2054,7 +2051,6 @@
         
         // then
         conversation = [self conversationForMockConversation:self.groupConversation];
-        [conversation startFetchingMessages];
         WaitForEverythingToBeDone();
         
         window = [conversation conversationWindowWithSize:messagesCount];
@@ -2084,37 +2080,11 @@
     NSManagedObjectID *conversationID = conversation.objectID;
     
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:NO];
-    }];
-    WaitForEverythingToBeDone();
-    
-    [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.groupConversation remotelyClearHistoryFromUser:self.selfUser includeOTR:NO];
-    }];
-    WaitForEverythingToBeDone();
-    
-    // then
-    XCTAssertFalse([conversationDirectory.conversationsIncludingArchived.objectIDs containsObject:conversationID]);
-}
-
-- (void)testFirstArchivingThenClearingRemotelyShouldDeleteConversation_UseOTRFlags
-{
-    //given
-    const NSUInteger messagesCount = 5;
-    [self loginAndFillConversationWithMessages:self.groupConversation messagesCount:messagesCount];
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    
-    ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectory];
-    NSManagedObjectID *conversationID = conversation.objectID;
-    
-    [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
         [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:YES];
     }];
     WaitForEverythingToBeDone();
     
-    [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.groupConversation remotelyClearHistoryFromUser:self.selfUser includeOTR:YES];
-    }];
+    [self remotelyAppendSelfConversationWithZMClearedForMockConversation:self.groupConversation atTime:conversation.lastServerTimeStamp];
     WaitForEverythingToBeDone();
     
     // then
@@ -2131,14 +2101,11 @@
     ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectory];
     NSManagedObjectID *conversationID = conversation.objectID;
     
-    [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.groupConversation remotelyClearHistoryFromUser:self.selfUser includeOTR:NO];
-    }];
+    [self remotelyAppendSelfConversationWithZMClearedForMockConversation:self.groupConversation atTime:conversation.lastServerTimeStamp];
     WaitForEverythingToBeDone();
     
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:NO];
-        
+        [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:YES];
     }];
     WaitForEverythingToBeDone();
     
@@ -2157,7 +2124,7 @@
     
     // when archiving the conversation remotely
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:NO];
+        [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:YES];
     }];
     WaitForEverythingToBeDone();
     
@@ -2179,7 +2146,7 @@
     // when deleting the conversation remotely, whiping the cache and resyncing
     {
         [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-            [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:NO];
+            [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:YES];
         }];
         WaitForEverythingToBeDone();
         
@@ -2191,7 +2158,6 @@
     
     // then
     conversation = [self conversationForMockConversation:self.groupConversation];
-    [conversation startFetchingMessages];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -2258,36 +2224,6 @@
     XCTAssertEqual(conversation.messages.count, 1u);
     XCTAssertFalse(conversation.isArchived);
 }
-
-- (void)testThatReceivingRemoteImageMessageRevealsClearedConversation
-{
-    //given
-    const NSUInteger messagesCount = 5;
-    [self loginAndFillConversationWithMessages:self.groupConversation messagesCount:messagesCount];
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    
-    [self.userSession performChanges:^{
-        [conversation clearMessageHistory];
-    }];
-    WaitForEverythingToBeDone();
-    XCTAssertEqual(conversation.messages.count, 0u);
-
-    // when
-    
-    [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self spinMainQueueWithTimeout:1]; // if the action happens within the same second the user clears the history, the event is not added
-        [self.groupConversation insertPreviewImageEventFromUser:self.user2 correlationID:[NSUUID createUUID] none:[NSUUID createUUID]];
-    }];
-    WaitForEverythingToBeDone();
-    
-    // then
-    conversation = [self conversationForMockConversation:self.groupConversation];
-    ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
-    XCTAssertEqual(window.messages.count, 1u);
-    XCTAssertEqual(conversation.messages.count, 1u);
-    XCTAssertFalse(conversation.isArchived);
-}
-
 
 - (void)testThatOpeningClearedConversationRevealsIt
 {

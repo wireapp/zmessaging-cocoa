@@ -1027,7 +1027,7 @@
     // when
     [self searchAndConnectToUserWithName:searchUserName searchQuery:@"McUser"];
     [self.mockTransportSession waitForAllRequestsToCompleteWithTimeout:0.5];
-
+    
     // then
     XCTAssertEqual(conversations.count, beforeInsertingCount);
 }

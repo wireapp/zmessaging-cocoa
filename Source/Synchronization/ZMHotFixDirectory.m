@@ -23,7 +23,7 @@
 #import <ZMTransport/ZMTransport.h>
 #import <zmessaging/zmessaging-Swift.h>
 
-static char* const ZMLogTag ZM_UNUSED = "HotFix";
+static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
 
 @implementation ZMHotFixPatch
 
@@ -50,16 +50,6 @@ static char* const ZMLogTag ZM_UNUSED = "HotFix";
     static NSArray *patches;
     dispatch_once(&onceToken, ^{
         patches = @[
-                    [ZMHotFixPatch
-                     patchWithVersion:@"33.1"
-                     patchCode:^(NSManagedObjectContext *context){
-                         [ZMHotFixDirectory updateLastReadEventIDForConnectionRequestsOrClearedConversationsOnContext:context];
-                     }],
-                    [ZMHotFixPatch
-                     patchWithVersion:@"38.58"
-                     patchCode:^(NSManagedObjectContext *context){
-                         [ZMHotFixDirectory fetchAndDeleteConnectionRequestSystemMessagesInContext:context];
-                     }],
                     [ZMHotFixPatch
                      patchWithVersion:@"40.4"
                      patchCode:^(__unused NSManagedObjectContext *context){
@@ -101,48 +91,6 @@ static char* const ZMLogTag ZM_UNUSED = "HotFix";
     return patches;
 }
 
-
-
-+ (void)updateLastReadEventIDForConnectionRequestsOrClearedConversationsOnContext:(NSManagedObjectContext *)context
-{
-    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:ZMConversation.entityName];
-    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"(%K == %d || %K != NULL) && %K > %K",
-                              @"conversationType", ZMConversationTypeConnection,
-                              ZMConversationClearedEventIDDataKey,
-                              @"lastEventID_data", ZMConversationLastReadEventIDDataKey];
-    
-    NSArray *result = [context executeFetchRequestOrAssert:fetchRequest];
-    
-    for (ZMConversation *conversation in result){
-        if (!conversation.isSelfAnActiveMember || conversation.conversationType == ZMConversationTypeConnection || conversation.messages.count == 0) {
-            conversation.lastReadEventID = conversation.lastEventID;
-            conversation.lastReadServerTimeStamp = conversation.lastServerTimeStamp;
-            [conversation setLocallyModifiedKeys:@[ZMConversationLastReadServerTimeStampKey].set];
-        }
-    }
-}
-
-+ (void)fetchAndDeleteConnectionRequestSystemMessagesInContext:(NSManagedObjectContext *)context
-{
-    NSPredicate *connectionPredicate = [NSPredicate predicateWithFormat:@"%K == %d",
-                                        ZMMessageSystemMessageTypeKey, ZMSystemMessageTypeConnectionRequest];
-    
-    NSData *eventIDData = [ZMEventID eventIDWithMajor:2 minor:0].encodeToData;
-    NSPredicate *firstAddUserPredicate = [NSPredicate predicateWithFormat:@"%K == %d AND %K < %@",
-                                          ZMMessageSystemMessageTypeKey, ZMSystemMessageTypeParticipantsAdded,
-                                          ZMMessageEventIDDataKey, eventIDData];
-    
-    NSPredicate *messagesToDeletePredicate = [NSCompoundPredicate orPredicateWithSubpredicates:@[connectionPredicate, firstAddUserPredicate]];
-    NSFetchRequest *fetchRequest = [ZMSystemMessage sortedFetchRequestWithPredicate:messagesToDeletePredicate];
-    
-    NSArray <ZMSystemMessage *>*messages = [context executeFetchRequestOrAssert:fetchRequest];
-
-    for (ZMSystemMessage *systemMessage in messages) {
-        [context deleteObject:systemMessage];
-    }
-    
-    [context saveOrRollback];
-}
 
 + (void)resetPushTokens
 {

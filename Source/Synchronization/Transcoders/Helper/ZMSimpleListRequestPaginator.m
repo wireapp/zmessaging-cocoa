@@ -76,6 +76,11 @@ ZM_EMPTY_ASSERTING_INIT()
     return self.singleRequestSync.nextRequest;
 }
 
+- (ZMSingleRequestProgress)status
+{
+    return self.singleRequestSync.status;
+}
+
 - (ZMTransportRequest *)requestForSingleRequestSync:(ZMSingleRequestSync * __unused)sync
 {
     if(!self.hasMoreToFetch) {
@@ -93,6 +98,12 @@ ZM_EMPTY_ASSERTING_INIT()
             [queryItems addObject:[NSURLQueryItem queryItemWithName:@"client" value:selfClient.remoteIdentifier]];
         }
     }
+
+    id<ZMSimpleListRequestPaginatorSync> strongTranscoder = self.transcoder;
+    if ([strongTranscoder respondsToSelector:@selector(additionalQueryItems)]) {
+        [queryItems addObjectsFromArray:strongTranscoder.additionalQueryItems];
+    }
+
     NSURLComponents *components = [NSURLComponents componentsWithString:self.basePath];
     components.queryItems = queryItems;
     
@@ -126,9 +137,8 @@ ZM_EMPTY_ASSERTING_INIT()
     }
     id strongTranscoder = self.transcoder;
     if ([strongTranscoder respondsToSelector:@selector(nextUUIDFromResponse:forListPaginator:)]) {
-        NSUUID *lastUUID = [strongTranscoder nextUUIDFromResponse:response forListPaginator:self];
         self.hasMoreToFetch = [[[response.payload asDictionary] optionalNumberForKey:@"has_more"] boolValue];
-        self.lastUUIDOfPreviousPage = lastUUID;
+        self.lastUUIDOfPreviousPage = [strongTranscoder nextUUIDFromResponse:response forListPaginator:self];
     }
     else {
         self.hasMoreToFetch = NO;

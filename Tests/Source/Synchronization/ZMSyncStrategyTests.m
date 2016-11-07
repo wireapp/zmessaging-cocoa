@@ -36,7 +36,6 @@
 #import "ZMSlowSyncPhaseTwoState.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
-#import "ZMAssetTranscoder.h"
 #import "ZMUserImageTranscoder.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMAuthenticationStatus.h"
@@ -133,9 +132,9 @@
     [[[[registrationTranscoder expect] andReturn:registrationTranscoder] classMethod] alloc];
     (void) [[[registrationTranscoder expect] andReturn:registrationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.authenticationStatus];
 
-    id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
+    id missingUpdateEventsTranscoder = [OCMockObject niceMockForClass:ZMMissingUpdateEventsTranscoder.class];
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
-    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY];
+    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY application:OCMOCK_ANY backgroundAPNSPingbackStatus:OCMOCK_ANY];
     
     id flowTranscoder = [OCMockObject mockForClass:ZMFlowSync.class];
     [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];
@@ -144,10 +143,6 @@
     id userImageTranscoder = [OCMockObject mockForClass:ZMUserImageTranscoder.class];
     [[[[userImageTranscoder expect] andReturn:userImageTranscoder] classMethod] alloc];
     (void) [[[userImageTranscoder expect] andReturn:userImageTranscoder] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:OCMOCK_ANY];
-
-    id assetTranscoder = [OCMockObject mockForClass:ZMAssetTranscoder.class];
-    [[[[assetTranscoder expect] andReturn:assetTranscoder] classMethod] alloc];
-    (void) [[[assetTranscoder expect] andReturn:assetTranscoder] initWithManagedObjectContext:self.syncMOC];
 
     id pushTokenTranscoder = [OCMockObject mockForClass:ZMPushTokenTranscoder.class];
     [[[[pushTokenTranscoder expect] andReturn:pushTokenTranscoder] classMethod] alloc];
@@ -203,7 +198,6 @@
                          selfTranscoder,
                          systemMessageTranscoder,
                          clientMessageTranscoder,
-                         assetTranscoder,
                          userImageTranscoder,
                          missingUpdateEventsTranscoder,
                          registrationTranscoder,
@@ -251,7 +245,6 @@
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
     XCTAssertEqual(self.sut.systemMessageTranscoder, systemMessageTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
-    XCTAssertEqual(self.sut.assetTranscoder, assetTranscoder);
     XCTAssertEqual(self.sut.selfTranscoder, selfTranscoder);
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
     XCTAssertEqual(self.sut.registrationTranscoder, registrationTranscoder);
@@ -1126,7 +1119,6 @@
 - (NSSet <Class> *)transcodersExpectedToReturnNonces
 {
     return @[
-             ZMAssetTranscoder.class,
              ZMClientMessageTranscoder.class,
              ].set;
 }

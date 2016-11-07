@@ -60,54 +60,9 @@
          self.lastModifiedDate, conversation.lastEventTime];
     }
 
-    if (!((self.lastEventID == nil && conversation.lastEvent == nil)
-          || [self.lastEventID isEqualToEventID:[ZMEventID eventIDWithString:conversation.lastEvent]])) {
-        [failureRecorder recordFailure:@"Last event ID doesn't match '%@' != '%@'",
-         self.lastEventID, conversation.lastEvent];
-    }
-
-    if (!((self.lastReadEventID == nil && conversation.lastRead == nil)
-          || [self.lastReadEventID isEqualToEventID:[ZMEventID eventIDWithString:conversation.lastRead]])) {
-        [failureRecorder recordFailure:@"Last read event ID doesn't match '%@' != '%@'",
-         self.lastReadEventID, conversation.lastRead];
-    }
-
-    if (!((self.clearedEventID == nil && conversation.clearedEventID == nil)
-          || [self.clearedEventID isEqualToEventID:[ZMEventID eventIDWithString:conversation.clearedEventID]])) {
-        [failureRecorder recordFailure:@"Cleared event ID doesn't match '%@' != '%@'",
-         self.clearedEventID, conversation.clearedEventID];
-    }
-
     if (![self.remoteIdentifier isEqual:[conversation.identifier UUID]]) {
         [failureRecorder recordFailure:@"Remote ID doesn't match '%@' != '%@'",
          self.remoteIdentifier.transportString, conversation.identifier];
-    }
-
-    // matching events
-    NSMutableArray *mockTextMessages = [NSMutableArray array];
-    for(MockEvent *event in conversation.events)
-    {
-        if([event.type isEqual:@"conversation.message-add"]) {
-            [mockTextMessages addObject:[ZMEventID eventIDWithString:event.identifier]];
-        }
-    }
-    [mockTextMessages sortUsingComparator:^NSComparisonResult(ZMEventID *event1, ZMEventID* event2) {
-        return [event1 compare:event2];
-    }];
-
-    NSMutableArray *originalTextMessages = [NSMutableArray array];
-    for(ZMMessage *message in self.messages) {
-        if([message isKindOfClass:ZMTextMessage.class]) {
-            [originalTextMessages addObject:message.eventID];
-        }
-    }
-    [originalTextMessages sortUsingComparator:^NSComparisonResult(ZMEventID *event1, ZMEventID* event2) {
-        return [event1 compare:event2];
-    }];
-
-    if (![mockTextMessages isEqualToArray:originalTextMessages]) {
-        [failureRecorder recordFailure:@"Text messages don't match '%@' != '%@'",
-         mockTextMessages, originalTextMessages];
     }
 }
 - (void)setUnreadCount:(NSUInteger)count;

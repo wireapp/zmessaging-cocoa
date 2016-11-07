@@ -97,7 +97,7 @@
     if(useAPNS) {
         [self.userSession receivedPushNotificationWithPayload:[self APNSPayloadForNotificationPayload:payload] completionHandler:nil source:ZMPushNotficationTypeVoIP];
     }
-    WaitForAllGroupsToBeEmpty(0.2);
+    WaitForEverythingToBeDone();
     
     // then
     ZMConversationList *convs = [ZMConversationList conversationsInUserSession:self.userSession];
@@ -296,18 +296,20 @@
     // when
     [self.mockTransportSession resetReceivedRequests];
     NSDictionary *apnsPayload = [self APNSPayloadForNotificationPayload:payload identifier:identifier];
+    NSUUID *lastNotificationId = self.syncMOC.zm_lastNotificationID;
     [self.userSession receivedPushNotificationWithPayload:apnsPayload completionHandler:nil source:ZMPushNotficationTypeVoIP];
     WaitForAllGroupsToBeEmpty(0.2);
     
     // then
     NSArray <ZMTransportRequest *> *requests = self.mockTransportSession.receivedRequests;
-    ZMTransportRequest *lastRequest = requests.lastObject;
-    XCTAssertNotNil(lastRequest);
-    XCTAssertEqual(lastRequest.method, ZMMethodPOST);
-    XCTAssertEqual(requests.count, 1lu);
-    
-    NSString *expectedPath = [NSString stringWithFormat:@"/push/fallback/%@/cancel", identifier.transportString];
-    XCTAssertTrue([lastRequest.path containsString:expectedPath]);
+    ZMTransportRequest *firstRequest = requests.firstObject;
+    XCTAssertNotNil(firstRequest);
+    XCTAssertEqual(firstRequest.method, ZMMethodGET);
+    XCTAssertEqual(requests.count, 3lu); // Notification stream fetch (with fallback cancelation), GET call state, GET conversation metadata
+
+    ZMUser *selfUser = [self userForMockUser:self.selfUser];
+    NSString *expectedPath = [NSString stringWithFormat:@"/notifications?size=500&since=%@&client=%@&cancel_fallback=%@", lastNotificationId.transportString, selfUser.selfClient.remoteIdentifier, identifier.transportString];
+    XCTAssertTrue([firstRequest.path containsString:expectedPath]);
 }
 
 - (void)testThatItPingsBackToTheBackendWhenReceivingAVoIPNotificationToCancelTheAPNSNotificationAndRetiresAfter_401
@@ -318,7 +320,7 @@
     [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
     
     NSUUID *identifier = NSUUID.createUUID;
-    NSString *expectedPath = [NSString stringWithFormat:@"/push/fallback/%@/cancel", identifier.transportString];
+
     __block NSDictionary *conversationTransportData;
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -341,9 +343,13 @@
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
     
     __block NSUInteger callCount = 0;
-    
+
+    ZMUser *selfUser = [self userForMockUser:self.selfUser];
+    NSUUID *lastNotificationId = self.syncMOC.zm_lastNotificationID;
+    NSString *expectedPath = [NSString stringWithFormat:@"/notifications?size=500&since=%@&client=%@&cancel_fallback=%@", lastNotificationId.transportString, selfUser.selfClient.remoteIdentifier, identifier.transportString];
+
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        if ([request.path isEqualToString:expectedPath] && request.method == ZMMethodPOST) {
+        if ([request.path isEqualToString:expectedPath] && request.method == ZMMethodGET) {
             if (++callCount == 1) {
                 return [ZMTransportResponse responseWithTransportSessionError:NSError.tryAgainLaterError];
             } else {
@@ -360,12 +366,12 @@
     [self.userSession receivedPushNotificationWithPayload:apnsPayload completionHandler:nil source:ZMPushNotficationTypeVoIP];
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
     WaitForEverythingToBeDone();
-    
+
     // then
     NSArray <ZMTransportRequest *> *requests = self.mockTransportSession.receivedRequests;
     ZMTransportRequest *lastRequest = requests.lastObject;
     XCTAssertNotNil(lastRequest);
-    XCTAssertEqual(lastRequest.method, ZMMethodPOST);
+    XCTAssertEqual(lastRequest.method, ZMMethodGET);
     XCTAssertEqual(requests.count, 2lu);
     XCTAssertEqual(callCount, 2lu);
     XCTAssertTrue([lastRequest.path containsString:expectedPath]);
@@ -397,23 +403,26 @@
                                                                     conversationID:convIdentifier
                                                                      transportData:conversationTransportData
                                                                           senderID:self.user1.identifier];
+    NSDictionary *notificationStreamPayload = [self notificationStreamPayloadWithNotifications:@[eventPayload]];
     NSDictionary *noticePayload = [self noticePayloadWithIdentifier:notificationID];
+
     [self.application setBackground];
     
     // when
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
+    NSUUID *lastNotificationId = self.syncMOC.zm_lastNotificationID;
 
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        NSString *path = [NSString stringWithFormat:@"/notifications/%@?client=%@&cancel_fallback=true", notificationID.transportString,selfUser.selfClient.remoteIdentifier];
+        NSString *path = [NSString stringWithFormat:@"/notifications?size=500&since=%@&client=%@&cancel_fallback=%@", lastNotificationId.transportString ,selfUser.selfClient.remoteIdentifier, notificationID.transportString];
         if ([request.path isEqualToString:path] && request.method == ZMMethodGET) {
             [fetchingExpectation fulfill];
-            return [ZMTransportResponse responseWithPayload:eventPayload HTTPStatus:200 transportSessionError:nil];
+            return [ZMTransportResponse responseWithPayload:notificationStreamPayload HTTPStatus:200 transportSessionError:nil];
         };
         return nil;
     };
     
     [self.mockTransportSession resetReceivedRequests];
-    NSDictionary *apnsPayload =  noticePayload;
+    NSDictionary *apnsPayload = noticePayload;
     [self.userSession receivedPushNotificationWithPayload:apnsPayload completionHandler:nil source:ZMPushNotficationTypeVoIP];
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
     WaitForEverythingToBeDone();
@@ -448,19 +457,22 @@
                                                                     conversationID:convIdentifier
                                                                      transportData:conversationTransportData
                                                                           senderID:self.user1.identifier];
+    NSDictionary *notificationStreamPayload = [self notificationStreamPayloadWithNotifications:@[eventPayload]];
     NSDictionary *noticePayload = [self noticePayloadWithIdentifier:notificationID];
+
     [self.application setBackground];
     
     // when
     XCTestExpectation *fetchingExpectation = [self expectationWithDescription:@"fetching notification"];
     
     __block NSUInteger requestCount = 0;
+    NSUUID *lastNotificationId = self.syncMOC.zm_lastNotificationID;
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        NSString *path = [NSString stringWithFormat:@"/notifications/%@?client=%@&cancel_fallback=true", notificationID.transportString, selfUser.selfClient.remoteIdentifier];
+        NSString *path = [NSString stringWithFormat:@"/notifications?size=500&since=%@&client=%@&cancel_fallback=%@", lastNotificationId.transportString, selfUser.selfClient.remoteIdentifier, notificationID.transportString];
         if ([request.path isEqualToString:path] && request.method == ZMMethodGET) {
             if (++requestCount == 2) {
                 [fetchingExpectation fulfill];
-                return [ZMTransportResponse responseWithPayload:eventPayload HTTPStatus:200 transportSessionError:nil];
+                return [ZMTransportResponse responseWithPayload:notificationStreamPayload HTTPStatus:200 transportSessionError:nil];
             } else {
                 return [ZMTransportResponse responseWithTransportSessionError:NSError.tryAgainLaterError];
             }
@@ -555,6 +567,14 @@
                          @"type" : @"conversation.create"
                          }
                      ]
+             };
+}
+
+- (NSDictionary *)notificationStreamPayloadWithNotifications:(NSArray <NSDictionary *>*)notifications
+{
+    return @{
+             @"notifications": notifications,
+             @"hasMore": @NO
              };
 }
 
