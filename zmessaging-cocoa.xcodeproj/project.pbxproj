@@ -324,6 +324,8 @@
 		BFC747BA1CE0975D00F74333 /* zimages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFC747B91CE0975D00F74333 /* zimages.framework */; };
 		BFCE9A5B1C4E4C4D00951B3D /* store124.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = BFCE9A581C4E4C4D00951B3D /* store124.wiredatabase */; };
 		BFE53F551D5A2F7000398378 /* DeleteMessagesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE53F541D5A2F7000398378 /* DeleteMessagesTests.swift */; };
+		CE07A2141DD0C10900C9C0C1 /* ZMCDataModel.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE07A20F1DD0BFE300C9C0C1 /* ZMCDataModel.framework */; };
+		CE07A2151DD0C10D00C9C0C1 /* ZMCDataModel.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE07A20F1DD0BFE300C9C0C1 /* ZMCDataModel.framework */; };
 		CE35B7F71D353CC4007CF3F8 /* LinkPreviewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CE35B7F61D353CC4007CF3F8 /* LinkPreviewTests.m */; };
 		CE99C4A01D378C5D0001D297 /* MockLinkPreviewDetector.m in Sources */ = {isa = PBXBuildFile; fileRef = CE99C49F1D378C5D0001D297 /* MockLinkPreviewDetector.m */; };
 		CEF2DE7F1DB778F300451642 /* RequestLoopAnalyticsTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF2DE7E1DB778F300451642 /* RequestLoopAnalyticsTracker.swift */; };
@@ -446,6 +448,27 @@
 			proxyType = 1;
 			remoteGlobalIDString = 3E186087191A56F6000FE027;
 			remoteInfo = "zmessaging Test Host";
+		};
+		CE07A20E1DD0BFE300C9C0C1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE07A2081DD0BFE300C9C0C1 /* ZMCDataModel.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = F9C9A4FC1CAD5DF10039E10C;
+			remoteInfo = ZMCDataModel;
+		};
+		CE07A2101DD0BFE300C9C0C1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE07A2081DD0BFE300C9C0C1 /* ZMCDataModel.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = F9C9A5061CAD5DF10039E10C;
+			remoteInfo = ZMCDataModelTests;
+		};
+		CE07A2121DD0BFE300C9C0C1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE07A2081DD0BFE300C9C0C1 /* ZMCDataModel.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = F9C9A7F31CAED9510039E10C;
+			remoteInfo = ZMDataModelTestHost;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -910,6 +933,7 @@
 		BFC747B91CE0975D00F74333 /* zimages.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = zimages.framework; path = "../zmc-images/build/Debug-iphoneos/zimages.framework"; sourceTree = "<group>"; };
 		BFCE9A581C4E4C4D00951B3D /* store124.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; path = store124.wiredatabase; sourceTree = "<group>"; };
 		BFE53F541D5A2F7000398378 /* DeleteMessagesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeleteMessagesTests.swift; sourceTree = "<group>"; };
+		CE07A2081DD0BFE300C9C0C1 /* ZMCDataModel.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ZMCDataModel.xcodeproj; path = "../wire-ios-data-model/ZMCDataModel.xcodeproj"; sourceTree = "<group>"; };
 		CE35B7F61D353CC4007CF3F8 /* LinkPreviewTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LinkPreviewTests.m; sourceTree = "<group>"; };
 		CE59DD7B1CFC7D6C0009F8FD /* ZMCDataModel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ZMCDataModel.framework; path = "../../../../Library/Developer/Xcode/DerivedData/ZClient-iOS-dkzruzvfpikqstehiyrcjhyckwcj/Build/Products/Debug-iphonesimulator/ZMCDataModel.framework"; sourceTree = "<group>"; };
 		CE99C49E1D378C5D0001D297 /* MockLinkPreviewDetector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MockLinkPreviewDetector.h; sourceTree = "<group>"; };
@@ -1046,6 +1070,7 @@
 				544BA1571A43424F00D3B852 /* zmessaging.framework in Frameworks */,
 				098CFBB91B7B9B61000B02B1 /* ZMTesting.framework in Frameworks */,
 				1E16CE881BF4BC5F00336616 /* ProtocolBuffers.framework in Frameworks */,
+				CE07A2151DD0C10D00C9C0C1 /* ZMCDataModel.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1074,6 +1099,7 @@
 				097E36AA1B7A58570039CC4C /* ZMCSystem.framework in Frameworks */,
 				09CC4ABA1B7CCA1800201C63 /* ZMTransport.framework in Frameworks */,
 				BF0D67A41C901DEC007CE00F /* libPhoneNumber.framework in Frameworks */,
+				CE07A2141DD0C10900C9C0C1 /* ZMCDataModel.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1304,6 +1330,7 @@
 		540029AA1918CA8500578793 = {
 			isa = PBXGroup;
 			children = (
+				CE07A2081DD0BFE300C9C0C1 /* ZMCDataModel.xcodeproj */,
 				09284B6A1B8272C300EEE10E /* zmessaging Test Host.entitlements */,
 				09CC4AB71B7CB8B700201C63 /* Cartfile */,
 				5477CDF01BFE0D2700A36F7A /* Cartfile.resolved */,
@@ -2005,6 +2032,16 @@
 			name = "DB Fixture 1.24";
 			sourceTree = "<group>";
 		};
+		CE07A2091DD0BFE300C9C0C1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CE07A20F1DD0BFE300C9C0C1 /* ZMCDataModel.framework */,
+				CE07A2111DD0BFE300C9C0C1 /* ZMCDataModelTests.xctest */,
+				CE07A2131DD0BFE300C9C0C1 /* ZMDataModelTestHost.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		F928651C19F7A3D30097539C /* Push Notifications */ = {
 			isa = PBXGroup;
 			children = (
@@ -2289,6 +2326,12 @@
 			mainGroup = 540029AA1918CA8500578793;
 			productRefGroup = 540029B51918CA8500578793 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = CE07A2091DD0BFE300C9C0C1 /* Products */;
+					ProjectRef = CE07A2081DD0BFE300C9C0C1 /* ZMCDataModel.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				549815921A43232400A7CE2E /* zmessaging-ios */,
@@ -2297,6 +2340,30 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		CE07A20F1DD0BFE300C9C0C1 /* ZMCDataModel.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = ZMCDataModel.framework;
+			remoteRef = CE07A20E1DD0BFE300C9C0C1 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CE07A2111DD0BFE300C9C0C1 /* ZMCDataModelTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = ZMCDataModelTests.xctest;
+			remoteRef = CE07A2101DD0BFE300C9C0C1 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CE07A2131DD0BFE300C9C0C1 /* ZMDataModelTestHost.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = ZMDataModelTestHost.app;
+			remoteRef = CE07A2121DD0BFE300C9C0C1 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		3E186086191A56F6000FE027 /* Resources */ = {
