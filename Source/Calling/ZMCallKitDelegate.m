@@ -607,14 +607,16 @@ NS_ASSUME_NONNULL_END
     ZMUserSession *userSession = self.userSession;
 
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
-    [userSession performChanges:^{
-        if (callConversation.voiceChannel.selfUserConnectionState == ZMVoiceChannelConnectionStateNotConnected) {
-            [callConversation.voiceChannel ignoreIncomingCall];
-        }
-        else {
-            [callConversation.voiceChannel leave];
-        }
-    }];
+    if (callConversation.voiceChannel.state != ZMVoiceChannelStateNoActiveUsers) {
+        [userSession performChanges:^{
+            if (callConversation.voiceChannel.selfUserConnectionState == ZMVoiceChannelConnectionStateNotConnected) {
+                [callConversation.voiceChannel ignoreIncomingCall];
+            }
+            else {
+                [callConversation.voiceChannel leave];
+            }
+        }];
+    }
     [action fulfill];
 }
 
