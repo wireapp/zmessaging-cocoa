@@ -80,7 +80,7 @@
 
 "push.notification.member.join.self" = "%1$@があなたを%2$@に追加しました";
 "push.notification.member.join.self.noconversationname" = "%1$@はあなたを会話に追加しました";
-"push.notification.member.join.self.nousername.noconversationname" = "あなたわ会話に追加されました";
+"push.notification.member.join.self.nousername.noconversationname" = "あなたは会話に追加されました";
 "push.notification.member.join.self.nousername" = "あなたは%1$@に追加されました";
 
 "push.notification.member.join.nootherusername" = "%1$@が%2$@に参加者を追加しました";
@@ -123,21 +123,21 @@
 "push.notification.call.started.video.group.nousername.noconversationname" = "ビデオ通話です";
 
 "push.notification.call.started.oneonone" = "%1$@からの着信中";
-"push.notification.call.started.oneonone.nousername" = "誰かからの着信中です";
+"push.notification.call.started.oneonone.nousername" = "着信中";
 
 "push.notification.call.started.group" = "%1$@が%2$@で呼び出し中です";
-"push.notification.call.started.group.nousername" = "%1$@で誰かが呼び出し中です";
+"push.notification.call.started.group.nousername" = "%1$@で呼び出し中";
 "push.notification.call.started.group.noconversationname" = "%1$@からの着信中です";
-"push.notification.call.started.group.nousername.noconversationname" = "誰かからの着信中です";
+"push.notification.call.started.group.nousername.noconversationname" = "着信中です";
 
 "push.notification.conversation.create" = "%1$@があなたとグループ会話を作成しました";
-"push.notification.conversation.create.nousername" = "だれかがあなたとのグループ会話を作成しました";
+"push.notification.conversation.create.nousername" = "あなたとのグループ会話を作成されました";
 
 "push.notification.conversation.rename" = "%1$@が%2$@と名前の変更をしました";
 "push.notification.conversation.rename.nousername" = "会話が%1$@という名に変更されました";
 
-"push.notification.connection.request" = "%@がつながりたいようです";
-"push.notification.connection.request.nousername" = "だれかがつながりたいようです";
+"push.notification.connection.request" = "%@がつながりをリクエストしています";
+"push.notification.connection.request.nousername" = "つながりをリクエストされています";
 
 "push.notification.connection.accepted" = "あなたと%@がつながりました";
 "push.notification.connection.accepted.nousername" = "あなたは新しい連絡先があります";
@@ -149,8 +149,8 @@
 "push.notification.failed.message.group.noconversationname" = "メッセージを送ることができません";
 
 "push.notification.reaction.group" = "%1$@が%2$@でのあなたのメッセージを%3$@";
-"push.notification.reaction.group.nousername.noconversationname" = "だれかが会話でのあなたのメッセージを%@";
-"push.notification.reaction.group.nousername" = "だれかが%1$@でのあなたのメッセージを%2$@";
+"push.notification.reaction.group.nousername.noconversationname" = "あなたのメッセージが%@ されました";
+"push.notification.reaction.group.nousername" = "%1$@でのあなたのメッセージが%2$@ されました";
 "push.notification.reaction.group.noconversationname" = "%@が会話でのあなたのメッセージを%@";
 
 "push.notification.reaction.oneonone" = "%@があなたのメッセージを%@";
@@ -158,13 +158,13 @@
 
 "push.notification.new_user" = "%@がたったいまWireに参加しました";
 
-"push.notification.action.message.open" = "開ける";
+"push.notification.action.message.open" = "開く";
 "push.notification.action.message.reply" = "返信";
 "push.notification.action.message.reply.button.title" = "送信";
 "push.notification.action.conversation.mute" = "ミュート";
 
-"push.notification.action.call.accept" = "受け入れる";
+"push.notification.action.call.accept" = "承諾";
 "push.notification.action.call.ignore" = "辞退";
 "push.notification.action.call.message" = "メッセージ";
 "push.notification.action.call.callback" = "電話をかけ直す";
-"push.notification.action.connection.accept" = "受け入れる";
+"push.notification.action.connection.accept" = "承諾";

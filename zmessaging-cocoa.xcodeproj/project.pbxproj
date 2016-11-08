@@ -881,6 +881,8 @@
 		B40CD0A21DB799850008DA45 /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = da; path = da.lproj/Push.stringsdict; sourceTree = "<group>"; };
 		B40DC79C1D01A61600CEF65C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Push.strings"; sourceTree = "<group>"; };
 		B40DC79D1D01A61600CEF65C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "pt-BR"; path = "pt-BR.lproj/Push.stringsdict"; sourceTree = "<group>"; };
+		B49AFC271DCCCB3D006B753B /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Push.strings"; sourceTree = "<group>"; };
+		B49AFC281DCCCB3D006B753B /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "zh-Hans"; path = "zh-Hans.lproj/Push.stringsdict"; sourceTree = "<group>"; };
 		B4D37F921D7EEA3F00D0C1BC /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Push.strings; sourceTree = "<group>"; };
 		B4D37F931D7EEA3F00D0C1BC /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = es; path = es.lproj/Push.stringsdict; sourceTree = "<group>"; };
 		B4D37F941D7EEA5100D0C1BC /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Push.strings; sourceTree = "<group>"; };
@@ -2283,6 +2285,7 @@
 				tr,
 				fr,
 				da,
+				"zh-Hans",
 			);
 			mainGroup = 540029AA1918CA8500578793;
 			productRefGroup = 540029B51918CA8500578793 /* Products */;
@@ -2734,6 +2737,7 @@
 				B409649D1DAD3D260098667A /* tr */,
 				B40CD09F1DB7997E0008DA45 /* fr */,
 				B40CD0A11DB799850008DA45 /* da */,
+				B49AFC271DCCCB3D006B753B /* zh-Hans */,
 			);
 			name = Push.strings;
 			sourceTree = "<group>";
@@ -2753,6 +2757,7 @@
 				B409649E1DAD3D260098667A /* tr */,
 				B40CD0A01DB7997E0008DA45 /* fr */,
 				B40CD0A21DB799850008DA45 /* da */,
+				B49AFC281DCCCB3D006B753B /* zh-Hans */,
 			);
 			name = Push.stringsdict;
 			sourceTree = "<group>";

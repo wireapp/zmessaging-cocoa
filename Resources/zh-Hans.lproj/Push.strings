@@ -1,0 +1,170 @@
+// 
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
+//
+
+
+"push.notification.default" = "新信息";
+"push.notification.ephemeral" = "有好友发送给您一条信息";
+
+"push.notification.add.message.group" = "%1$@在%2$@：%3$@";
+"push.notification.add.message.group.nousername" = "在%1$@有新信息：%2$@";
+"push.notification.add.message.group.nousername.noconversationname" = "新信息：%1$@";
+"push.notification.add.message.group.noconversationname" = "%1$@在聊天中：%2$@";
+
+"push.notification.add.message.oneonone" = "%1$@：%2$@";
+"push.notification.add.message.oneonone.nousername" = "新信息：%1$@";
+
+"push.notification.add.image.group" = "%1$@在%2$@分享了一张图片";
+"push.notification.add.image.group.nousername" = "%1$@有一张新图片";
+"push.notification.add.image.group.nousername.noconversationname" = "收到新图片";
+"push.notification.add.image.group.noconversationname" = "%1$@ 在对话中分享了一张图片";
+
+"push.notification.add.image.oneonone" = "%1$@分享了一张图片";
+"push.notification.add.image.oneonone.nousername" = "收到新图片";
+
+"push.notification.add.video.group" = "%1$@ 在 %2$@ 分享了一段视频";
+"push.notification.add.video.group.nousername" = "%1$@ 有一段新视频信息";
+"push.notification.add.video.group.nousername.noconversationname" = "新视频";
+"push.notification.add.video.group.noconversationname" = "%1$@ 在聊天当中分享了一段视频";
+
+"push.notification.add.video.oneonone" = "%1$@ 分享了视频";
+"push.notification.add.video.oneonone.nousername" = "新视频";
+
+"push.notification.add.audio.group" = "%1$@ 在 %2$@ 分享了一条语音信息";
+"push.notification.add.audio.group.nousername" = "%1$@ 有一条新的语音信息";
+"push.notification.add.audio.group.nousername.noconversationname" = "在对话中有一条新的语音信息";
+"push.notification.add.audio.group.noconversationname" = "%1$@ 在对话中分享了一条新语音信息";
+
+"push.notification.add.audio.oneonone" = "%1$@ 分享了一条语音信息";
+"push.notification.add.audio.oneonone.nousername" = "在对话中有一条新的语音信息";
+
+"push.notification.add.file.group" = "%1$@ 在 %2$@ 分享了一个文件";
+"push.notification.add.file.group.nousername" = "%1$@ 有一个新文件";
+"push.notification.add.file.group.nousername.noconversationname" = "对话中有一个新文件";
+"push.notification.add.file.group.noconversationname" = "%1$@ 在聊天当中分享了一个文件";
+
+"push.notification.add.file.oneonone" = "%1$@ 分享了一个文件";
+"push.notification.add.file.oneonone.nousername" = "对话中有一个新文件";
+
+"push.notification.add.location.group" = "%1$@ 在 %2$@ 分享了位置";
+"push.notification.add.location.group.nousername" = "%1$@ 有一个位置分享";
+"push.notification.add.location.group.nousername.noconversationname" = "对话中有一个新的位置分享";
+"push.notification.add.location.group.noconversationname" = "%1$@ 在聊天当中分享了一个位置";
+
+"push.notification.add.location.oneonone" = "%1$@ 分享了位置";
+"push.notification.add.location.oneonone.nousername" = "对话中有一个新的位置分享";
+
+"push.notification.member.join" = "%1$@ 将 %3$@ 加到 %2$@";
+"push.notification.member.join.noconversationname" = "%1$@ 将 %2$@ 加入对话";
+"push.notification.member.join.nousername.noconversationname" = "%1$@ 被加入对话";
+"push.notification.member.join.nousername" = "%2$@ 被加入到 %1$@";
+
+"push.notification.member.join.many.nootherusername" = "%1$@ 添加其他好友到 %2$@";
+"push.notification.member.join.many.nootherusername.noconversationname" = "%1$@ 添加其他好友到对话";
+"push.notification.member.join.many.nootherusername.nousername" = "有人被添加到 %1$@";
+"push.notification.member.join.many.nootherusername.nousername.noconversationname" = "有人被添加到对话中";
+
+"push.notification.member.join.self" = "%1$@ 添加您到 %2$@";
+"push.notification.member.join.self.noconversationname" = "%1$@ 添加您到对话中";
+"push.notification.member.join.self.nousername.noconversationname" = "您被添加到一个对话中";
+"push.notification.member.join.self.nousername" = "您被添加到 %1$@";
+
+"push.notification.member.join.nootherusername" = "%1$@ 添加其他好友到 %2$@";
+"push.notification.member.join.nootherusername.noconversationname" = "%1$@ 添加其他好友到对话";
+"push.notification.member.join.nootherusername.nousername.noconversationname" = "有人被添加到对话中";
+"push.notification.member.join.nootherusername.nousername" = "有人被添加到 %1$@";
+
+"push.notification.member.leave" = "%1$@将%3$@从%2$@移除";
+"push.notification.member.leave.noconversationname" = "%1$@将%2$@移出对话";
+"push.notification.member.leave.nousername.noconversationname" = "%1$@被从对话中移出";
+"push.notification.member.leave.nousername" = "%2$@被从%1$@中移出";
+
+"push.notification.member.leave.many.nootherusername" = "%1$@在%2$@中将参与者移出";
+"push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@在对话中将参与者移出";
+"push.notification.member.leave.many.nootherusername.nousername" = "参与者被从%1$@中移出";
+"push.notification.member.leave.many.nootherusername.nousername.noconversationname" = "参与者被从对话中移出";
+
+"push.notification.member.leave.self" = "您被%1$@从%2$@中移出";
+"push.notification.member.leave.self.noconversationname" = "您被%1$@从对话中移出";
+"push.notification.member.leave.self.nousername.noconversationname" = "您从一个对话中被移出";
+"push.notification.member.leave.self.nousername" = "您从%1$@中被移出";
+
+"push.notification.member.leave.nootherusername" = "%1$@在%2$@中将参与者移出";
+"push.notification.member.leave.nootherusername.noconversationname" = "%1$@在对话中将参与者移出";
+"push.notification.member.leave.nootherusername.nousername.noconversationname" = "参与者被从对话中移出";
+"push.notification.member.leave.nootherusername.nousername" = "参与者被从%1$@中移出";
+
+"push.notification.member.leave.sender.nootherusername" = "%1$@ 离开 %2$@";
+"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ 离开了一个对话";
+"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "参与者离开了对话";
+"push.notification.member.leave.sender.nootherusername.nousername" = "参与者离开了 %1$@";
+
+
+"push.notification.call.started.video.oneonone" = "%1$@视频来电";
+"push.notification.call.started.video.oneonone.nousername" = "您接到一个视频来电";
+
+"push.notification.call.started.video.group" = "%1$@在%2$@中视频来电";
+"push.notification.call.started.video.group.nousername" = "在%1$@有人视频来电";
+"push.notification.call.started.video.group.noconversationname" = "%1$@在通话中视频来电";
+"push.notification.call.started.video.group.nousername.noconversationname" = "有人在通话中视频来电";
+
+"push.notification.call.started.oneonone" = "%1$@来电";
+"push.notification.call.started.oneonone.nousername" = "您接到一個来电";
+
+"push.notification.call.started.group" = "%1$@在%2$@来电";
+"push.notification.call.started.group.nousername" = "有参与者在%1$@来电";
+"push.notification.call.started.group.noconversationname" = "%1$@在对话中来电";
+"push.notification.call.started.group.nousername.noconversationname" = "有参与者在对话中来电";
+
+"push.notification.conversation.create" = "%1$@与您创建了一个群组聊天";
+"push.notification.conversation.create.nousername" = "好友与您创建了一个群组聊天";
+
+"push.notification.conversation.rename" = "%1$@将群组名称改为%2$@";
+"push.notification.conversation.rename.nousername" = "群组聊天被命名为%1$@";
+
+"push.notification.connection.request" = "%@想添加您为好友";
+"push.notification.connection.request.nousername" = "有人想加您为好友";
+
+"push.notification.connection.accepted" = "您和%@已成为好友";
+"push.notification.connection.accepted.nousername" = "您有一个新的好友";
+
+"push.notification.failed.message.oneonone" = "无法发送信息至%1$@";
+"push.notification.failed.message.oneonone.nousername" = "无法发送信息";
+
+"push.notification.failed.message.group" = "在%1$@中无法发送信息";
+"push.notification.failed.message.group.noconversationname" = "无法发送信息";
+
+"push.notification.reaction.group" = "%1$@在%2$@中%3$@您的信息";
+"push.notification.reaction.group.nousername.noconversationname" = "在对话中有参与者%@您的信息";
+"push.notification.reaction.group.nousername" = "在%1$@中有参与者%2$@您的信息";
+"push.notification.reaction.group.noconversationname" = "%@在对话中%@您的信息";
+
+"push.notification.reaction.oneonone" = "%@%@您的信息";
+"push.notification.reaction.oneonone.nousername" = "有参与者%@您的信息";
+
+"push.notification.new_user" = "%@ 刚刚加入Wire";
+
+"push.notification.action.message.open" = "开启";
+"push.notification.action.message.reply" = "回复";
+"push.notification.action.message.reply.button.title" = "发送";
+"push.notification.action.conversation.mute" = "静音";
+
+"push.notification.action.call.accept" = "接听";
+"push.notification.action.call.ignore" = "拒绝";
+"push.notification.action.call.message" = "信息";
+"push.notification.action.call.callback" = "回拨电话";
+"push.notification.action.connection.accept" = "接听";
