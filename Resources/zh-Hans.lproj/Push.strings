@@ -168,3 +168,8 @@
 "push.notification.action.call.message" = "信息";
 "push.notification.action.call.callback" = "回拨电话";
 "push.notification.action.connection.accept" = "接听";
+
+"push.notification.callkit.call.started.group" = "%1$@ 在 %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "在对话中联系人来电";
+"push.notification.callkit.call.started.group.nousername" = "在%1$@中联系人来电";
+"push.notification.callkit.call.started.group.noconversationname" = "在对话中%@来电";

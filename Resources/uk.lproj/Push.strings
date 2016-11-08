@@ -168,3 +168,8 @@
 "push.notification.action.call.message" = "Повідомлення";
 "push.notification.action.call.callback" = "Передзвонити";
 "push.notification.action.connection.accept" = "Прийняти";
+
+"push.notification.callkit.call.started.group" = "%1$@ в %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Хтось дзвонить у розмові";
+"push.notification.callkit.call.started.group.nousername" = "Хтось дзвонить в %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ дзвонить у розмові";
