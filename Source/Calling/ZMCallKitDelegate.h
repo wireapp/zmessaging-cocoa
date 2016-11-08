@@ -51,13 +51,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ZMUser (Handle)
 /// Generates the handle for CallKit, either a phone number or an email one.
-- (CXHandle *)callKitHandle;
+- (nullable CXHandle *)callKitHandle;
 @end
 
 @interface ZMConversation (Handle)
 /// Generates the handle for CallKit, either a phone number or an email one for one to one conversations and generic one
 /// for the group chats.
-- (CXHandle *)callKitHandle;
+- (nullable CXHandle *)callKitHandle;
 
 /// Finds the appropriate conversation described by the list of @c INPerson objects.
 + (nullable instancetype)resolveConversationForPersons:(NSArray<INPerson *> *)persons
