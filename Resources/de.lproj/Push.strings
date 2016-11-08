@@ -170,6 +170,6 @@
 "push.notification.action.connection.accept" = "Annehmen";
 
 "push.notification.callkit.call.started.group" = "%1$@ in %2$@";
-"push.notification.callkit.call.started.group.nousername.noconversationname" = "Someone calling in a conversation";
-"push.notification.callkit.call.started.group.nousername" = "Someone calling in %1$@";
-"push.notification.callkit.call.started.group.noconversationname" = "%@ calling in a conversation";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Jemand ruft in einer Unterhaltung an";
+"push.notification.callkit.call.started.group.nousername" = "Jemand ruft in %1$@ an";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ ruft in einer Unterhaltung an";
