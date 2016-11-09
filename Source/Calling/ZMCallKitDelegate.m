@@ -290,6 +290,7 @@ NS_ASSUME_NONNULL_END
     CXProviderConfiguration* providerConfiguration = [[CXProviderConfiguration alloc] initWithLocalizedName:localizedName];
 
     providerConfiguration.supportsVideo = YES;
+    providerConfiguration.maximumCallGroups = 1;
     providerConfiguration.maximumCallsPerCallGroup = 1;
     providerConfiguration.supportedHandleTypes = [NSSet setWithObjects:
                                                   @(CXHandleTypePhoneNumber),
@@ -347,6 +348,10 @@ NS_ASSUME_NONNULL_END
 {
     // Construct a CXCallUpdate describing the incoming call, including the caller.
     CXCallUpdate* update = [[CXCallUpdate alloc] init];
+    update.supportsHolding = NO;
+    update.supportsDTMF = NO;
+    update.supportsGrouping = NO;
+    update.supportsUngrouping = NO;
     
     ZMUser *caller = [conversation.voiceChannel.participants firstObject];
     
