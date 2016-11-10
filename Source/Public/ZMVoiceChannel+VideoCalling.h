@@ -33,7 +33,7 @@ FOUNDATION_EXPORT NSString * ZMVoiceChannelVideoCallErrorDomain;
 
 /// Establishing a video call or join a video call and send video straight away
 /// Returns an error if a video call can not be initialized
-- (BOOL)joinVideoCall:(NSError **)error;
+- (BOOL)joinVideoCall:(NSError **)error inUserSession:(ZMUserSession *)userSession;
 
 // Checks if sending of the video is possible for the participant
 - (BOOL)isSendingVideoForParticipant:(ZMUser *)participant error:(NSError **)error;

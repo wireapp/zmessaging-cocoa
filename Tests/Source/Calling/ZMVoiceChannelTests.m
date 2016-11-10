@@ -1463,7 +1463,7 @@
 {
     // given
     id call = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[call expect] andReturn:CTCallStateConnected] callState];
+    [(CTCall *)[[call expect] andReturn:CTCallStateConnected] callState];
     id callCenter = [OCMockObject niceMockForClass:[CTCallCenter class]];
     
     ZMVoiceChannel *voiceChannel = [[ZMVoiceChannel alloc] initWithConversation:self.conversation callCenter:callCenter];
@@ -1490,11 +1490,11 @@
     // given
     id token = [self.conversation.voiceChannel addCallingInitializationObserver:self];
     id call1 = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[call1 expect] andReturn:CTCallStateIncoming] callState];
+    [(CTCall *)[[call1 expect] andReturn:CTCallStateIncoming] callState];
     id call2 = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[call2 expect] andReturn:CTCallStateDisconnected] callState];
+    [(CTCall *)[[call2 expect] andReturn:CTCallStateDisconnected] callState];
     id call3 = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[call3 expect] andReturn:CTCallStateDialing] callState];
+    [(CTCall *)[[call3 expect] andReturn:CTCallStateDialing] callState];
     
     id callCenter = [OCMockObject niceMockForClass:[CTCallCenter class]];
     

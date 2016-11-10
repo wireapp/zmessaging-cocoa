@@ -22,8 +22,6 @@
 
 #import "ZMUserSession+Authentication.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMTracing.h"
-//#import "ZMOperationLoop.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
 #import "ZMUserSessionAuthenticationNotification.h"
@@ -52,9 +50,7 @@ static NSString *const HasHistoryKey = @"hasHistory";
 }
 
 - (void)loginWithCredentials:(ZMCredentials *)loginCredentials
-{
-    ZMTraceAuthUserSessionLogin(loginCredentials.email, loginCredentials.password.length > 0 ? 1 : 0);
-    
+{    
     [self.syncManagedObjectContext performGroupedBlock:^{
         if (self.isLoggedIn) {
             ZMLogDebug(@"User session has a cookie in loginWithEmail, no need to log in");

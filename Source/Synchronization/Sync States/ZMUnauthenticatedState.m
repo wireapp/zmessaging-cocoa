@@ -33,7 +33,6 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMCredentials.h"
 #import "NSError+ZMUserSessionInternal.h"
-#import "ZMTracing.h"
 #import "ZMStateMachineDelegate.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMRegistrationTranscoder.h"
@@ -261,7 +260,6 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 
 - (void)timerDidFire:(ZMTimer * __unused)timer
 {
-    ZMTraceAuthLoginStateFiredLoginTimer();
     [[self.objectStrategyDirectory moc] performGroupedBlock:^{
         [self.authenticationStatus didTimeoutLoginForCredentials:timer.userInfo[TimerInfoOriginalCredentialsKey]];
     }];
@@ -281,7 +279,6 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
     
     if ([self isDoneWithLogin]) {
-        ZMTraceAuthLoginStateEnter(2);
         if (self.application.applicationState == UIApplicationStateBackground) {
             ZMLogDebug(@"%@ is already logged in on enter. Launched suspended. Entering background state.", self.class);
             [stateMachine goToState:stateMachine.backgroundState];
@@ -297,14 +294,12 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     [directory.registrationTranscoder resetRegistrationState];
     
     if (self.shouldRunTimerForLoginExpiration) {
-        ZMTraceAuthLoginStateEnter(0);
         [self startLoginTimer];
     }
     
     [authenticationStatus addAuthenticationCenterObserver:self];
     
     if (! directory.selfTranscoder.isSelfUserComplete) {
-        ZMTraceAuthLoginStateEnter(1);
         [directory.selfTranscoder setNeedsSlowSync]; // TODO replace this with setting the "need to get from backend" flag on the self user
     }
 }

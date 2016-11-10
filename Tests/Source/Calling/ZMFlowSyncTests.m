@@ -846,6 +846,34 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [self.internalFlowManager verify];
 }
 
+- (void)testThatItDoesNotTryToEstablishVideoCallInBackgorund
+{
+    [ZMUserSession setUseCallKit:YES];
+    
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        self.application.applicationState = UIApplicationStateBackground;
+        
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        conversation.isVideoCall = YES;
+        [self.syncMOC saveOrRollback];
+        
+        // expect
+        [(AVSFlowManager *)[[self.internalFlowManager expect] andReturnValue:OCMOCK_VALUE(YES)] canSendVideoForConversation:conversation.remoteIdentifier.transportString];
+        [(AVSFlowManager *)[self.internalFlowManager reject] setVideoSendState:FLOWMANAGER_VIDEO_SEND forConversation:conversation.remoteIdentifier.transportString];
+        
+        // when
+        [self.sut didEstablishMediaInConversation:conversation.remoteIdentifier.transportString];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    [self.internalFlowManager verify];
+    
+    [ZMUserSession setUseCallKit:NO];
+}
+
 - (void)testThatItDoesNotTryToEstablishVideoCallIfCanNotSendVideoCall
 {
     [self.syncMOC performGroupedBlockAndWait:^{

@@ -24,12 +24,11 @@
 #import "ZMCallStateTranscoder.h"
 #import "ZMVoiceChannel+CallFlow.h"
 #import "ZMObjectStrategyDirectory.h"
-#import "ZMFlowSync.h"
-#import "ZMTracing.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMCallStateLogger.h"
 #import "ZMGSMCallHandler.h"
 #import "ZMLocalNotificationDispatcher.h"
+#import "ZMFlowSync.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 static NSString * const StateKey = @"state";
@@ -179,7 +178,7 @@ _Pragma("clang diagnostic pop")
 - (void)objectsDidChange:(NSSet *)objects
 {
     for (ZMConversation *conv in objects) {
-        ZMFlowSync *strongSync= self.flowSync;
+        ZMFlowSync *strongSync = self.flowSync;
         if ([conv isKindOfClass:[ZMConversation class]]){
             if ([self.upstreamFetchPredicate evaluateWithObject:conv] && !conv.callDeviceIsActive && conv.hasLocalModificationsForCallDeviceIsActive) {
                 // we need to release the flows as soon as the user wants to leave the call
@@ -587,8 +586,6 @@ _Pragma("clang diagnostic pop")
         [self setCallStateFromPayload:participantInfo forCallParticipant:participant inConversation:conversation eventSource:eventSource];
         [self addOrRemoveVideoParticipant:participantInfo forCallParticipant:participant inConversation:conversation];
         [currentParticipants removeObject:participant];
-
-        ZMTraceCallEventParticipant(conversation.remoteIdentifier, participant.remoteIdentifier, eventSource, [conversation.callParticipants containsObject:participant], participant.isSelfUser);
     }];
     
     // remove participants that don't have a state anymore
@@ -669,7 +666,7 @@ _Pragma("clang diagnostic pop")
 
 - (BOOL)shouldCreateRequestToSyncObject:(ZMManagedObject * __unused)managedObject forKeys:(NSSet<NSString *> * __unused)keys withSync:(id __unused)sync
 {
-    return self.pushChannelIsOpen;
+    return self.pushChannelIsOpen || [ZMUserSession useCallKit];
 }
 
 - (ZMUpstreamRequest *)requestForUpdatingObject:(ZMConversation *)conversation forKeys:(NSSet *)keys
@@ -692,7 +689,6 @@ _Pragma("clang diagnostic pop")
         [self.flowSync updateFlowsForConversation:conversation];
     }
     
-    ZMTraceTranscoderCallStateRequestUpdateIsJoined(0, conversation.remoteIdentifier, conversation.callDeviceIsActive);
     NSString *path = [self callStatePathForConversation:conversation];
     NSDictionary *payload = [self selfDictionaryForConversation:conversation];
     
@@ -724,7 +720,7 @@ _Pragma("clang diagnostic pop")
     
     [self.callStateLogger logCurrentStateForConversation:conversation
                                              withMessage:[NSString stringWithFormat:@"Received response for setting self call state: %@",response]];
-    if (response.result == ZMTransportResponseStatusPermanentError ) {
+    if (response.result == ZMTransportResponseStatusPermanentError) {
         BOOL isVoiceChannelFull = NO;
         if (conversation.isSelfAnActiveMember) {
             // we can be no more in conversation so we can ignore any errors

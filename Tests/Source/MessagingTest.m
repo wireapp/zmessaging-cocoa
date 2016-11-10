@@ -78,6 +78,7 @@
 
 
 @implementation MessagingTest
+@synthesize mockUserSession = _mockUserSession;
 
 - (BOOL)shouldSlowTestTimers
 {
@@ -160,7 +161,11 @@
 
 - (void)tearDown;
 {
+    [(id)_mockUserSession stopMocking];
+    _mockUserSession = nil;
+
     ZMConversationDefaultLastReadTimestampSaveDelay = self.originalConversationLastReadTimestampTimerValue;
+
     [self resetState];
     [MessagingTest deleteAllFilesInCache];
     [super tearDown];
@@ -399,6 +404,16 @@
     return objectDirectory;
 }
 
+- (ZMUserSession *)mockUserSession
+{
+    if (nil == _mockUserSession) {
+        id mockUserSession = [OCMockObject niceMockForClass:[ZMUserSession class]];
+        [[[mockUserSession stub] andReturn:self.uiMOC] managedObjectContext];
+        _mockUserSession = mockUserSession;
+    }
+    
+    return _mockUserSession;
+}
 
 - (BOOL)waitWithTimeout:(NSTimeInterval)timeout forSaveOfContext:(NSManagedObjectContext *)moc untilBlock:(BOOL(^)(void))block;
 {

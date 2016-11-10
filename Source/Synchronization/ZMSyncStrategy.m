@@ -41,7 +41,6 @@
 #import "ZMFlowSync.h"
 #import "ZMPushTokenTranscoder.h"
 #import "ZMLoginTranscoder.h"
-#import "ZMTracing.h"
 #import "ZMSearchUserImageTranscoder.h"
 #import "ZMTypingTranscoder.h"
 #import "ZMCallStateTranscoder.h"

@@ -24,7 +24,6 @@
 #import "ZMFlowSync.h"
 #import "ZMOperationLoop.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMTracing.h"
 
 #import <zmessaging/zmessaging-Swift.h>
 
@@ -177,7 +176,6 @@
     [ZMVoiceChannel setLastSessionIdentifier:sessionID];
     [ZMVoiceChannel setLastSessionStartDate:[NSDate date]];
     if (sessionID != nil) {
-        ZMTraceCallSession(sessionID);
         [self.flowSync setSessionIdentifier:sessionID forConversationIdentifier:conversation.remoteIdentifier];
     }
 }
@@ -240,14 +238,14 @@
 
 - (void)traceSelfInfoForConversation:(ZMConversation *)conversation withState:(NSString *)state eventSource:(ZMCallEventSource)eventSource
 {
+    NOT_USED(conversation);
+    NOT_USED(eventSource);
     BOOL isActive = NO;
     if ([state isEqualToString:@"joined"]) {
         isActive = YES;
     } else if( ![state isEqualToString:@"idle"]) {
         return;
     }
-    
-    ZMTraceCallEventSelf(conversation.remoteIdentifier, eventSource, isActive, conversation.callDeviceIsActive);
 }
 
 - (void)logFinalStateOfConversation:(ZMConversation *)conversation forEventSource:(ZMCallEventSource)eventSource

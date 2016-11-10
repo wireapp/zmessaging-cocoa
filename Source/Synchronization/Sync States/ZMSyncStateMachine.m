@@ -24,7 +24,6 @@
 #import "ZMUserTranscoder.h"
 #import "ZMSyncStateMachine+internal.h"
 #import "ZMSyncState.h"
-#import "ZMTracing.h"
 #import "ZMUnauthenticatedState.h"
 #import "ZMEventProcessingState.h"
 #import "ZMSlowSyncPhaseOneState.h"
@@ -48,8 +47,6 @@ NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName = @"ZM
 
 
 static NSString *ZMLogTag ZM_UNUSED = @"State machine";
-static void traceEnterState(ZMSyncState * const state);
-static void traceLeaveState(ZMSyncState * const state);
 
 @interface ZMSyncStateMachine ()
 
@@ -214,12 +211,10 @@ static void traceLeaveState(ZMSyncState * const state);
 
 - (void)goToState:(ZMSyncState *)state
 {
-    traceLeaveState(self.currentState);
     ZMLogDebug(@"%@ %@", NSStringFromSelector(_cmd), state);
     [self.currentState didLeaveState];
     
     self.currentState = state;
-    traceEnterState(state);
     [self.currentState didEnterState];
 }
 
@@ -276,20 +271,3 @@ static void traceLeaveState(ZMSyncState * const state);
 }
 
 @end
-
-
-static void traceEnterState(ZMSyncState * const state)
-{
-    ZMLogDebug(@"Will enter state <%@: %p>", state.class, state);
-    if (ZMTraceSyncStrategyGoToStateEnabled()) {
-        ZMTraceSyncStrategyGoToState(NSStringFromClass(state.class));
-    }
-}
-
-static void traceLeaveState(ZMSyncState * const state)
-{
-    ZMLogDebug(@"Will leave state <%@: %p>", state.class, state);
-    if (ZMTraceSyncStrategyDidLeaveStateEnabled()) {
-        ZMTraceSyncStrategyDidLeaveState(NSStringFromClass(state.class));
-    }
-}

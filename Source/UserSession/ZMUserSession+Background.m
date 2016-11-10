@@ -26,6 +26,7 @@
 #import "ZMOperationLoop+Private.h"
 #import "ZMLocalNotificationDispatcher.h"
 #import "ZMPushToken.h"
+#import "ZMCallKitDelegate.h"
 
 #import "ZMLocalNotification.h"
 #import "ZMBackgroundFetchState.h"
@@ -255,6 +256,12 @@ static NSString *ZMLogTag = @"Push";
     completionHandler(UIBackgroundFetchResultFailed);
 }
 
+- (BOOL)application:(id<ZMApplication>)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray * _Nullable))restorationHandler
+{
+    NOT_USED(application);
+    NOT_USED(restorationHandler);
+    return [self.callKitDelegate continueUserActivity:userActivity];
+}
 
 - (void)applicationDidEnterBackground:(NSNotification *)note;
 {

@@ -23,23 +23,24 @@ let ZMLocalNotificationRingingDefaultSoundName = "ringing_from_them_long.caf"
 let ZMLocalNotificationPingDefaultSoundName = "ping_from_them.caf"
 let ZMLocalNotificationNewMessageDefaultSoundName = "new_message_apns.caf"
 
+@objc public class ZMCustomSound: NSObject {
+    public static func notificationRingingSoundName() -> String {
+        return ZMCustomSoundName("ZMCallSoundName") ??  ZMLocalNotificationRingingDefaultSoundName
+    }
+
+    public static func notificationPingSoundName() -> String {
+        return ZMCustomSoundName("ZMPingSoundName") ?? ZMLocalNotificationPingDefaultSoundName
+    }
+    
+    public static func notificationNewMessageSoundName() -> String {
+        return ZMCustomSoundName("ZMMessageSoundName") ?? ZMLocalNotificationNewMessageDefaultSoundName
+    }
+}
+
 func ZMCustomSoundName(_ key: String) -> String? {
     guard let soundName = UserDefaults.standard.object(forKey: key) as? String else { return nil }
     return ZMSound(rawValue: soundName)?.filename()
 }
-
-func ZMLocalNotificationRingingSoundName() -> String {
-    return ZMCustomSoundName("ZMCallSoundName") ??  ZMLocalNotificationRingingDefaultSoundName
-}
-
-func ZMLocalNotificationPingSoundName() -> String {
-    return ZMCustomSoundName("ZMPingSoundName") ?? ZMLocalNotificationPingDefaultSoundName
-}
-
-func ZMLocalNotificationNewMessageSoundName() -> String {
-    return ZMCustomSoundName("ZMMessageSoundName") ?? ZMLocalNotificationNewMessageDefaultSoundName
-}
-
 
 public func findIndex<S: Sequence>(_ sequence: S, predicate: (S.Iterator.Element) -> Bool) -> Int? {
     for (index, element) in sequence.enumerated() {

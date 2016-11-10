@@ -42,7 +42,7 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
         else {return nil}
         
         // We don't want to create notifications when a user leaves the conversation
-        if message.systemMessageType == .participantsRemoved, let removedUser = message.removedUsers.first, message.sender == removedUser {
+        if message.systemMessageType == .participantsRemoved, let removedUser = message.users.first, message.sender == removedUser {
             return nil
         }
         
@@ -70,9 +70,8 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
     func alertBodyForParticipantEvents(_ message: ZMSystemMessage) -> String {
         let isLeaveEvent = (message.systemMessageType == .participantsRemoved)
         let isCopy = (userCount != 0)
-        let users = isLeaveEvent ? message.removedUsers : message.addedUsers
         
-        userCount = userCount + users.count
+        userCount = userCount + message.users.count
         if isCopy {
             let key = isLeaveEvent ? ZMPushStringMemberLeaveMany : ZMPushStringMemberJoinMany
             return key.localizedString(with: nil, conversation: message.conversation, otherUser: nil)
@@ -81,12 +80,8 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
         var user: ZMUser?
         var key : NSString = (isLeaveEvent ? ZMPushStringMemberLeaveMany : ZMPushStringMemberJoinMany) as NSString
         if userCount == 1 {
-            if (users.first == message.sender) {
-                key = ZMPushStringMemberLeaveSender as NSString
-            } else {
-                user = users.first
-                key = (isLeaveEvent ? ZMPushStringMemberLeave : ZMPushStringMemberJoin) as NSString
-            }
+            user = message.users.first
+            key = (isLeaveEvent ? ZMPushStringMemberLeave : ZMPushStringMemberJoin) as NSString
         }
         return key.localizedString(with: message.sender, conversation: message.conversation, otherUser: user)
     }

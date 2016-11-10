@@ -22,6 +22,7 @@
 @import ZMCSystem;
 @import ZMUtilities;
 @import ZMCDataModel;
+@import CallKit;
 
 #import "ZMUserSession+Background.h"
 
@@ -36,7 +37,6 @@
 #import "ZMPushToken.h"
 #import "ZMCommonContactsSearch.h"
 #import "ZMBlacklistVerificator.h"
-#import "ZMTracing.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMUserProfileUpdateStatus.h"
@@ -46,11 +46,14 @@
 #import "ZMOnDemandFlowManager.h"
 #import "ZMCookie.h"
 #import "ZMFlowSync.h"
+#import "ZMCallKitDelegate.h"
+#import "ZMOperationLoop+Private.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 #import "ZMEnvironmentsSetup.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMLocalNotificationDispatcher.h"
+#import "ZMCallKitDelegate+TypeConformance.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
@@ -102,7 +105,10 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 
 /// map from NSUUID to ZMCommonContactsSearchCachedEntry
 @property (nonatomic) NSCache *commonContactsCache;
+@end
 
+@interface ZMUserSession(PushChannel)
+- (void)pushChannelDidChange:(NSNotification *)note;
 @end
 
 @interface ZMUserSession (AlertView) <UIAlertViewDelegate>
@@ -182,6 +188,11 @@ ZM_EMPTY_ASSERTING_INIT()
     return [NSManagedObjectContext storeIsReady];
 }
 
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
 - (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager
                            analytics:(id<AnalyticsType>)analytics
                           appVersion:(NSString *)appVersion
@@ -249,6 +260,9 @@ ZM_EMPTY_ASSERTING_INIT()
         self.appVersion = appVersion;
         [ZMUserAgent setWireAppVersion:appVersion];
         self.didStartInitialSync = NO;
+        self.pushChannelIsOpen = NO;
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
+        
         self.apnsEnvironment = apnsEnvironment;
         self.networkIsOnline = YES;
         self.managedObjectContext = userInterfaceContext;
@@ -341,6 +355,16 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                            selector:@selector(didEnterEventProcessingState:)
                                                                                name:ZMApplicationDidEnterEventProcessingStateNotificationName
                                                                              object:nil]);
+        if ([self.class useCallKit]) {
+            CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[ZMCallKitDelegate providerConfiguration]];
+            CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
+            
+            self.callKitDelegate = [[ZMCallKitDelegate alloc] initWithCallKitProvider:provider
+                                                                       callController:callController
+                                                                  onDemandFlowManager:self.onDemandFlowManager
+                                                                          userSession:self
+                                                                         mediaManager:(AVSMediaManager *)mediaManager];
+        }
     }
     return self;
 }
@@ -776,6 +800,16 @@ ZM_EMPTY_ASSERTING_INIT()
 
 @end
 
+@implementation ZMUserSession(PushChannel)
+
+- (void)pushChannelDidChange:(NSNotification *)note
+{
+    BOOL newValue = [note.userInfo[ZMPushChannelIsOpenKey] boolValue];
+    self.pushChannelIsOpen = newValue;
+}
+
+@end
+
 
 
 static unsigned long CommonContactsSearchUniqueCounter = 0;
@@ -907,6 +941,24 @@ static NSString * const TrackingIdentifierKey = @"ZMTrackingIdentifier";
 }
 
 @end
+
+
+static BOOL ZMUserSessionUseCallKit = NO;
+
+@implementation ZMUserSession (Calling)
+
++ (BOOL)useCallKit
+{
+    return ZMUserSessionUseCallKit;
+}
+
++ (void)setUseCallKit:(BOOL)useCallKit
+{
+    ZMUserSessionUseCallKit = useCallKit;
+}
+
+@end
+
 
 
 @implementation NSManagedObjectContext (KeyValueStore)
