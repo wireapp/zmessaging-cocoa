@@ -36,7 +36,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         authenticationStatus = MockAuthenticationStatus(cookie: nil);
         self.sut = UserClientRequestFactory()
         
-        let newKeyStore = FakeKeysStore()
+        let newKeyStore = FakeKeysStore(keyStore: self.syncMOC.zm_cryptKeyStore)
         self.syncMOC.userInfo.setObject(newKeyStore, forKey: "ZMUserClientKeysStore" as NSCopying)
     }
     
@@ -72,7 +72,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         
         guard let lastKeyPayload = payload["lastkey"] as? [String: Any] else { return XCTFail() }
         XCTAssertEqual(lastKeyPayload["key"] as? String, lastPreKey)
-        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: UserClientKeysStore.MaxPreKeyID + 1))
+        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: EncryptionKeysStore.MaxPreKeyID + 1))
 
         guard let preKeysPayloadData = payload["prekeys"] as? [[String: Any]] else  { return XCTFail("Payload should contain prekeys") }
         zip(preKeysPayloadData, expectedKeyPayloadForClientPreKeys(client)).forEach { (lhs, rhs) in
@@ -110,7 +110,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         
         guard let lastKeyPayload = payload["lastkey"] as? [String: Any] else { return XCTFail("Payload should contain last prekey") }
         XCTAssertEqual(lastKeyPayload["key"] as? String, lastPreKey)
-        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: UserClientKeysStore.MaxPreKeyID + 1))
+        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: EncryptionKeysStore.MaxPreKeyID + 1))
         
         guard let preKeysPayloadData = payload["prekeys"] as? [[String: Any]] else { return XCTFail("Payload should contain prekeys") }
         

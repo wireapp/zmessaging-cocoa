@@ -89,7 +89,7 @@ public final class UserClientRequestFactory {
     internal func payloadForPreKeys(_ client: UserClient, startIndex: UInt16 = 0) throws -> (payload: [[String: Any]], maxRange: UInt16) {
         //we don't want to generate new prekeys if we already have them
         do {
-            let preKeys = try client.keysStore.generateMoreKeys(keyCount, start: startIndex)
+            let preKeys = try client.keysStore.generatePreKeys(keyCount, start: startIndex)
             guard preKeys.count > 0 else {
                 throw UserClientRequestError.noPreKeys
             }
@@ -109,7 +109,7 @@ public final class UserClientRequestFactory {
             let lastPreKeyString = lastKey
             let lastPreKeyPayloadData : [String: Any] = [
                 "key": lastPreKeyString,
-                "id": NSNumber(value: UserClientKeysStore.MaxPreKeyID + 1)
+                "id": NSNumber(value: EncryptionKeysStore.MaxPreKeyID + 1)
             ]
             return lastPreKeyPayloadData
         } catch  {

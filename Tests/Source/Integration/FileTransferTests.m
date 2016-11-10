@@ -1339,22 +1339,11 @@
                                                                      messageID:nonce.transportString
                                                                   expiresAfter:nil];
     
-    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
-    __block NSError *error;
-    __block NSString *prekey;
-    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
-    }];
-    XCTAssertNil(error);
-    
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self inserOTRMessage:original
-               inConversation:self.selfToUser1Conversation
-                     fromUser:self.user1
-                     toClient:self.selfUser.clients.anyObject
-                     usingKey:prekey
-                      session:session];
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+        [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject
+                                                            toClient:self.selfUser.clients.anyObject
+                                                                data:original.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1581,31 +1570,6 @@
     return url;
 }
 
-- (void)encryptAndRemotelyInsertOTRAssetToSelfClient:(ZMGenericMessage *)genericMessage
-                                            fromUser:(MockUser *)user
-                                      inConversation:(MockConversation *)conversation
-{
-    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
-    __block NSError *error;
-    __block NSString *prekey;
-    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
-    }];
-    XCTAssertNil(error);
-    
-    // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        
-        [self inserOTRMessage:genericMessage
-               inConversation:conversation
-                     fromUser:user
-                     toClient:self.selfUser.clients.anyObject
-                     usingKey:prekey
-                      session:session];
-    }];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-}
 
 - (ZMAssetClientMessage *)remotelyInsertAssetOriginalAndUpdate:(ZMGenericMessage *)updateMessage
                                                    insertBlock:(void (^)(NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to))insertBlock
@@ -1755,22 +1719,11 @@
                                                                      messageID:nonce.transportString
                                                                   expiresAfter:@20];
     
-    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
-    __block NSError *error;
-    __block NSString *prekey;
-    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
-    }];
-    XCTAssertNil(error);
-    
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self inserOTRMessage:original
-               inConversation:self.selfToUser1Conversation
-                     fromUser:self.user1
-                     toClient:self.selfUser.clients.anyObject
-                     usingKey:prekey
-                      session:session];
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+        [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject
+                                                            toClient:self.selfUser.clients.anyObject
+                                                                data:original.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);

@@ -41,7 +41,7 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
-        let newKeyStore = FakeKeysStore()
+        let newKeyStore = FakeKeysStore(keyStore: self.syncMOC.zm_cryptKeyStore)
         self.syncMOC.userInfo.setObject(newKeyStore, forKey: "ZMUserClientKeysStore" as NSCopying)
         cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer")
         let cookie = ZMCookie(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage)
@@ -760,7 +760,10 @@ extension UserClientRequestStrategyTests {
         // given
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
         let existingClient1 = self.createSelfClient()
-        let existingClient2 = self.createClient(for: selfUser, createSessionWithSelfUser:false)
+        let existingClient2 = UserClient.insertNewObject(in: self.syncMOC)
+        existingClient2.user = selfUser
+        existingClient2.remoteIdentifier = "aabbcc112233"
+        self.syncMOC.saveOrRollback()
         
         XCTAssertEqual(selfUser.clients.count, 2)
         let payload: [String: Any] = [

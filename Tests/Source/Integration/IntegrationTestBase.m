@@ -93,7 +93,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     
     self.mockObjectIDToRemoteID = [NSMutableDictionary dictionary];
     self.mockFlowManager = self.mockTransportSession.mockFlowManager;
-    self.mockTransportSession.cryptoboxLocation = [UserClientKeysStore otrDirectory];
+    self.mockTransportSession.cryptoboxLocation = [self OTRdirectoryURL];
 
     ZMFlowSyncInternalFlowManagerOverride = self.mockFlowManager;
     
@@ -634,7 +634,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 - (EncryptionContext *)setupOTREnvironmentForUser:(MockUser *)mockUser isSelfClient:(BOOL)isSelfClient numberOfKeys:(UInt16)numberOfKeys establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser
 {
-    NSURL *url = [UserClientKeysStore otrDirectory];
+    NSURL *url = [self OTRdirectoryURL];
     url = [url URLByAppendingPathComponent:mockUser.identifier];
     [[NSFileManager defaultManager] createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
     
@@ -681,11 +681,8 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         
         if (establishSessionWithSelfUser && ! isSelfClient) {
             //session from selfClient to userClient
-            [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-                NSError *error;
-                [sessionsDirectory createClientSession:remoteUserClient.identifier base64PreKeyString:userPreKeys.firstObject error:&error];
-                XCTAssertNil(error, @"Error creating session");
-            }];
+            UserClient *selfClient = selfUser.clients.anyObject;
+            [selfClient establishSessionWithClient:user.clients.anyObject usingPreKey:userLastKey];
         }
         
         [self.syncMOC saveOrRollback];
@@ -713,7 +710,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     MockUserClient *senderClient = [session registerClientForUser:sender label:sender.name type:@"permanent"];
     __block NSError *error;
     
-    NSURL *url = [UserClientKeysStore otrDirectory];
+    NSURL *url = [self OTRdirectoryURL];
     url = [url URLByAppendingPathComponent:senderClient.label];
     [[NSFileManager defaultManager] createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
     EncryptionContext *senderBox = [[EncryptionContext alloc] initWithPath:url];
