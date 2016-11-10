@@ -434,23 +434,48 @@ class ZMCallKitDelegateTest: MessagingTest {
     
     // Observer API - report incoming call
     
+    func testThatItIgnoresConversationsWithoutRemoteId() {
+        // given
+        let conversation = self.conversation()
+        conversation.remoteIdentifier = nil
+
+        conversation.callDeviceIsActive = true
+        
+        // when
+        let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
+        mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
+        mutableCallParticipants.add(ZMUser.selfUser(in: self.uiMOC))
+        self.uiMOC.saveOrRollback()
+        
+        XCTAssertEqual(conversation.voiceChannel.state, .selfIsJoiningActiveChannel)
+        // when
+        
+        self.uiMOC.saveOrRollback()
+        
+        // then
+        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
+    }
+    
     func testThatItDoesNotRequestCallStart_Outgoing() {
-//        // given
-//        let conversation = self.conversation()
-//        
-//        // when
-//        conversation.isOutgoingCall = true
-//        let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
-//        mutableCallParticipants.add(ZMUser.selfUser(in: self.uiMOC))
-//        self.uiMOC.saveOrRollback()
-//        XCTAssertEqual(conversation.voiceChannel.state, .outgoingCall)
-//
-//        // then
-//        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
-//        
-//        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
-//        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
-//        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
+        // given
+        let conversation = self.conversation()
+        
+        // when
+        conversation.isOutgoingCall = true
+        let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
+        mutableCallParticipants.add(ZMUser.selfUser(in: self.uiMOC))
+        self.uiMOC.saveOrRollback()
+        XCTAssertEqual(conversation.voiceChannel.state, .outgoingCall)
+
+        // then
+        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
+        
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
     
     func testThatItRequestsCallStart_Incoming() {
