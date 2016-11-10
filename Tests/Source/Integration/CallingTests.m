@@ -2724,7 +2724,7 @@
     // (1)when call is interrupted by incoming call
     {
         id call = [OCMockObject niceMockForClass:[CTCall class]];
-        [[[call expect] andReturn:CTCallStateDialing] callState];
+        [(CTCall *)[[call expect] andReturn:CTCallStateDialing] callState];
         
         self.gsmCallHandler.callEventHandler(call);
         WaitForAllGroupsToBeEmpty(0.5);
@@ -2766,7 +2766,7 @@
     // (1)when call is interrupted by incoming call
     {
         id call = [OCMockObject niceMockForClass:[CTCall class]];
-        [[[call stub] andReturn:CTCallStateIncoming] callState];
+        [(CTCall *)[[call stub] andReturn:CTCallStateIncoming] callState];
         
         self.gsmCallHandler.callEventHandler(call);
         WaitForAllGroupsToBeEmpty(0.5);
@@ -2779,7 +2779,7 @@
     // when the GSM call ends
     {
         id call = [OCMockObject niceMockForClass:[CTCall class]];
-        [[[call stub] andReturn:CTCallStateDisconnected] callState];
+        [(CTCall *)[[call stub] andReturn:CTCallStateDisconnected] callState];
         
         self.gsmCallHandler.callEventHandler(call);
         WaitForAllGroupsToBeEmpty(0.5);

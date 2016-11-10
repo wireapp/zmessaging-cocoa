@@ -121,7 +121,7 @@
     XCTAssertFalse(self.sut.hasStoredInterruptedCallConversation);
 
     id mockCall = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[mockCall stub] andReturn:CTCallStateDialing] callState];
+    [(CTCall *)[[mockCall stub] andReturn:CTCallStateDialing] callState];
     
     // when
     self.sut.callEventHandler(mockCall);
@@ -144,7 +144,7 @@
     XCTAssertFalse(self.sut.hasStoredInterruptedCallConversation);
 
     id mockCall = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[mockCall stub] andReturn:CTCallStateIncoming] callState];
+    [(CTCall *)[[mockCall stub] andReturn:CTCallStateIncoming] callState];
     
     // when
     self.sut.callEventHandler(mockCall);
@@ -172,7 +172,7 @@
     {
         // expect
         id mockCall = [OCMockObject niceMockForClass:[CTCall class]];
-        [[[mockCall stub] andReturn:CTCallStateDialing] callState];
+        [(CTCall *)[[mockCall stub] andReturn:CTCallStateDialing] callState];
         
         self.sut.callEventHandler(mockCall);
         WaitForAllGroupsToBeEmpty(0.5);
@@ -194,7 +194,7 @@
     {
         // expect
         id mockCall = [OCMockObject niceMockForClass:[CTCall class]];
-        [[[mockCall stub] andReturn:CTCallStateDisconnected] callState];
+        [(CTCall *)[[mockCall stub] andReturn:CTCallStateDisconnected] callState];
         
         // when
         self.sut.callEventHandler(mockCall);
@@ -232,7 +232,7 @@
     {
         // expect
         id mockCall = [OCMockObject niceMockForClass:[CTCall class]];
-        [[[mockCall stub] andReturn:CTCallStateDialing] callState];
+        [(CTCall *)[[mockCall stub] andReturn:CTCallStateDialing] callState];
         
         self.sut.callEventHandler(mockCall);
         WaitForAllGroupsToBeEmpty(0.5);
@@ -268,7 +268,7 @@
     {
         // expect
         id mockCall = [OCMockObject niceMockForClass:[CTCall class]];
-        [[[mockCall stub] andReturn:CTCallStateDisconnected] callState];
+        [(CTCall *)[[mockCall stub] andReturn:CTCallStateDisconnected] callState];
         
         // when
         self.sut.callEventHandler(mockCall);
@@ -307,7 +307,7 @@
     {
         // expect
         id mockCall = [OCMockObject niceMockForClass:[CTCall class]];
-        [[[mockCall stub] andReturn:CTCallStateDialing] callState];
+        [(CTCall *)[[mockCall stub] andReturn:CTCallStateDialing] callState];
         
         self.sut.callEventHandler(mockCall);
         WaitForAllGroupsToBeEmpty(0.5);
@@ -344,7 +344,7 @@
     {
         // expect
         id mockCall = [OCMockObject niceMockForClass:[CTCall class]];
-        [[[mockCall stub] andReturn:CTCallStateDisconnected] callState];
+        [(CTCall *)[[mockCall stub] andReturn:CTCallStateDisconnected] callState];
         
         // when
         self.sut.callEventHandler(mockCall);
@@ -365,7 +365,7 @@
     // given
     [self.sut setActiveCallSyncConversation:self.activeSyncCallConversation];
     id mockCall = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[mockCall stub] andReturn:CTCallStateDialing] callState];
+    [(CTCall *)[[mockCall stub] andReturn:CTCallStateDialing] callState];
     
     self.sut.callEventHandler(mockCall);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -388,7 +388,7 @@
     // given
     [self.sut setActiveCallSyncConversation:self.activeSyncCallConversation];
     id mockCall = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[mockCall stub] andReturn:CTCallStateDialing] callState];
+    [(CTCall *)[[mockCall stub] andReturn:CTCallStateDialing] callState];
     
     self.sut.callEventHandler(mockCall);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -416,7 +416,7 @@
     [[[mockCallCenter stub] andReturn:[NSSet set]] currentCalls];
     
     id mockCall1 = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[mockCall1 stub] andReturn:CTCallStateDialing] callState];
+    [(CTCall *)[[mockCall1 stub] andReturn:CTCallStateDialing] callState];
     
     self.sut.callEventHandler(mockCall1);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -432,7 +432,7 @@
     
     // when
     id mockCall2 = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[mockCall2 stub] andReturn:CTCallStateDisconnected] callState];
+    [(CTCall *)[[mockCall2 stub] andReturn:CTCallStateDisconnected] callState];
     
     self.sut.callEventHandler(mockCall2);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -457,10 +457,10 @@
     
     // when
     id mockCall1 = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[mockCall1 stub] andReturn:CTCallStateDialing] callState];
+    [(CTCall *)[[mockCall1 stub] andReturn:CTCallStateDialing] callState];
     
     id mockCall2 = [OCMockObject niceMockForClass:[CTCall class]];
-    [[[mockCall2 stub] andReturn:CTCallStateDisconnected] callState];
+    [(CTCall *)[[mockCall2 stub] andReturn:CTCallStateDisconnected] callState];
     
     id mockCallCenter = [OCMockObject niceMockForClass:[CTCallCenter class]];
     [[[mockCallCenter stub] andReturn:[NSSet setWithObject:mockCall2]] currentCalls];
