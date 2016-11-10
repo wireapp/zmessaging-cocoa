@@ -97,6 +97,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface ZMCallKitDelegate (VoiceChannelObserver)
+- (void)managedObjectContextDidSave:(NSNotification *)notification;
 - (void)conversationVoiceChannelStateDidChange:(ZMConversation *)conversation;
 @end
 
@@ -267,6 +268,11 @@ NS_ASSUME_NONNULL_END
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(managedObjectsDidChange:)
                                                      name:NSManagedObjectContextObjectsDidChangeNotification
+                                                   object:userSession.managedObjectContext];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(managedObjectContextDidSave:)
+                                                     name:NSManagedObjectContextDidSaveNotification
                                                    object:userSession.managedObjectContext];
         
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -485,6 +491,32 @@ NS_ASSUME_NONNULL_END
     handleChangeset(insertedSet);
 }
 
+- (void)managedObjectContextDidSave:(NSNotification *)notification
+{
+    NOT_USED(notification);
+    
+    for (NSString *conversationID in self.lastConversationsState.allKeys.copy) {
+        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:conversationID]
+                                                                 createIfNeeded:NO
+                                                                      inContext:self.userSession.managedObjectContext];
+        
+        if (conversation == nil) {
+            [self.lastConversationsState removeObjectForKey:conversationID];
+            continue;
+        }
+        
+        NSNumber *knownStateNumber = self.lastConversationsState[conversationID];
+        ZMVoiceChannelState knownState = (ZMVoiceChannelState)[knownStateNumber integerValue];
+        ZMVoiceChannelState newState = conversation.voiceChannel.state;
+
+        if (knownState != newState) {
+            [self conversationVoiceChannelStateDidChange:conversation];
+        }
+        
+        self.lastConversationsState[conversationID] = @(newState);
+    }
+}
+
 - (void)updateConversationIfNeeded:(ZMConversation *)conversation
 {
     if (conversation.remoteIdentifier == nil) {
@@ -524,6 +556,9 @@ NS_ASSUME_NONNULL_END
             conversation.voiceChannel.callStartDate = [NSDate date];
         break;
     case ZMVoiceChannelStateNoActiveUsers:
+    case ZMVoiceChannelStateIncomingCallInactive:
+    case ZMVoiceChannelStateOutgoingCallInactive:
+    case ZMVoiceChannelStateDeviceTransferReady:
         {
             CXEndCallAction *endCallAction = [[CXEndCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
             
@@ -620,7 +655,11 @@ NS_ASSUME_NONNULL_END
     ZMUserSession *userSession = self.userSession;
 
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
-    if (callConversation.voiceChannel.state != ZMVoiceChannelStateNoActiveUsers) {
+    if (callConversation.voiceChannel.state != ZMVoiceChannelStateNoActiveUsers &&
+        callConversation.voiceChannel.state != ZMVoiceChannelStateDeviceTransferReady &&
+        callConversation.voiceChannel.state != ZMVoiceChannelStateIncomingCallInactive &&
+        callConversation.voiceChannel.state != ZMVoiceChannelStateOutgoingCallInactive) {
+        
         [userSession performChanges:^{
             if (callConversation.voiceChannel.selfUserConnectionState == ZMVoiceChannelConnectionStateNotConnected) {
                 [callConversation.voiceChannel ignoreIncomingCall];
