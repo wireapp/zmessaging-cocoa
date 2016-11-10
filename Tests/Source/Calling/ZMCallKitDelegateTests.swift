@@ -650,13 +650,36 @@ class ZMCallKitDelegateTest: MessagingTest {
 
         XCTAssertEqual(conversation.voiceChannel.state, .selfIsJoiningActiveChannel)
         
-        
+        // when
         conversation.callDeviceIsActive = false
         let newMutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
         newMutableCallParticipants.removeAllObjects()
         self.uiMOC.saveOrRollback()
         
         XCTAssertEqual(conversation.voiceChannel.state, .noActiveUsers)
+        // then
+        XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
+    }
+    
+    func testThatItRequestsEndCall_Timeout() {
+        // given
+        let conversation = self.conversation()
+        conversation.callTimedOut = false
+        
+        // when
+        let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
+        mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
+        self.uiMOC.saveOrRollback()
+        
+        self.callKitController.timesRequestTransactionCalled = 0
+        
+        XCTAssertEqual(conversation.voiceChannel.state, .incomingCall)
+        
+        // when
+        conversation.callTimedOut = true
+        XCTAssertEqual(conversation.voiceChannel.state, .incomingCallInactive)
+        self.uiMOC.saveOrRollback()
+        
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
     }
