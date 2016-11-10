@@ -459,6 +459,31 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
     
+    func testThatItIgnoresMutedConversations() {
+        // given
+        let conversation = self.conversation()
+        conversation.isSilenced = true
+        
+        conversation.callDeviceIsActive = true
+        
+        // when
+        let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
+        mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
+        mutableCallParticipants.add(ZMUser.selfUser(in: self.uiMOC))
+        self.uiMOC.saveOrRollback()
+        
+        XCTAssertEqual(conversation.voiceChannel.state, .selfIsJoiningActiveChannel)
+        // when
+        
+        self.uiMOC.saveOrRollback()
+        
+        // then
+        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
+    }
+    
     func testThatItDoesNotRequestCallStart_Outgoing() {
         // given
         let conversation = self.conversation()

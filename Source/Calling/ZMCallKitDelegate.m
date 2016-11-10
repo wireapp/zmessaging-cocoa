@@ -491,6 +491,10 @@ NS_ASSUME_NONNULL_END
         return;
     }
     
+    if (conversation.isSilenced) {
+        return;
+    }
+    
     ZMVoiceChannelState newState = conversation.voiceChannel.state;
     NSNumber *knownStateNumber = self.lastConversationsState[conversation.remoteIdentifier.transportString];
     ZMVoiceChannelState knownState = (ZMVoiceChannelState)[knownStateNumber integerValue];
