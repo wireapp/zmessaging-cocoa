@@ -299,8 +299,6 @@ NS_ASSUME_NONNULL_END
     providerConfiguration.maximumCallGroups = 1;
     providerConfiguration.maximumCallsPerCallGroup = 1;
     providerConfiguration.supportedHandleTypes = [NSSet setWithObjects:
-                                                  @(CXHandleTypePhoneNumber),
-                                                  @(CXHandleTypeEmailAddress),
                                                   @(CXHandleTypeGeneric), nil];
     
     providerConfiguration.iconTemplateImageData = UIImagePNGRepresentation([UIImage imageNamed:@"logo"]);

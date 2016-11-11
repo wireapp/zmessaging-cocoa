@@ -146,8 +146,6 @@ class ZMCallKitDelegateTest: MessagingTest {
         // then
         XCTAssertEqual(configuration.supportsVideo, true)
         XCTAssertEqual(configuration.localizedName, "zmessaging Test Host")
-        XCTAssertTrue(configuration.supportedHandleTypes.contains(.phoneNumber))
-        XCTAssertTrue(configuration.supportedHandleTypes.contains(.emailAddress))
         XCTAssertTrue(configuration.supportedHandleTypes.contains(.generic))
     }
     
@@ -685,7 +683,6 @@ class ZMCallKitDelegateTest: MessagingTest {
     }
     
     func testThatItRequestsEndCall_OutgoingInGroupConversation() {
-        // given
         // given
         let conversation = self.conversation(type: .group)
         conversation.callDeviceIsActive = true
