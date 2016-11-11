@@ -32,7 +32,6 @@
 		09BA924C1BD55FA5000DC962 /* UserClientRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0920833C1BA84F3100F82B29 /* UserClientRequestStrategyTests.swift */; };
 		09BCDB8E1BCE7F000020DCC7 /* ZMAPSMessageDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 09BCDB8C1BCE7F000020DCC7 /* ZMAPSMessageDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		09BCDB8F1BCE7F000020DCC7 /* ZMAPSMessageDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 09BCDB8D1BCE7F000020DCC7 /* ZMAPSMessageDecoder.m */; };
-		09C77C501BA313CB00E2163F /* OtrBaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09C77C4F1BA313CB00E2163F /* OtrBaseTest.swift */; };
 		09C77C531BA6C77000E2163F /* UserClientRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09C77C521BA6C77000E2163F /* UserClientRequestStrategy.swift */; };
 		09CC4AAA1B7C884900201C63 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 09CC4AA91B7C884900201C63 /* libz.dylib */; };
 		09CC4AAC1B7C885100201C63 /* libbz2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 09CC4AAB1B7C885100201C63 /* libbz2.dylib */; };
@@ -166,7 +165,6 @@
 		5492C6C519ACCCA8008F41E2 /* ConnectionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5492C6C319ACCCA8008F41E2 /* ConnectionTests.m */; };
 		549552541D645683004F21F6 /* AddressBookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549552511D64567C004F21F6 /* AddressBookTests.swift */; };
 		54973A361DD48CAB007F8702 /* NSManagedObject+EncryptionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54973A351DD48CAB007F8702 /* NSManagedObject+EncryptionContext.swift */; };
-		54973A3B1DD4DC01007F8702 /* MessagingTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54973A391DD4DBEC007F8702 /* MessagingTest.swift */; };
 		549815BE1A432BC700A7CE2E /* ZMLocalNotificationDispatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = F9B53ED119F7F59F00C82A43 /* ZMLocalNotificationDispatcher.m */; };
 		549815CD1A432BC700A7CE2E /* ZMBlacklistDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = F9FD798619EE742600D70FCD /* ZMBlacklistDownloader.m */; };
 		549815CE1A432BC700A7CE2E /* ZMBlacklistVerificator.m in Sources */ = {isa = PBXBuildFile; fileRef = F9FD798C19EE9B9A00D70FCD /* ZMBlacklistVerificator.m */; };
@@ -509,7 +507,6 @@
 		09BCDB8D1BCE7F000020DCC7 /* ZMAPSMessageDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMAPSMessageDecoder.m; sourceTree = "<group>"; };
 		09C77C431BA2FB8E00E2163F /* libcryptobox.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcryptobox.a; path = "Carthage/Checkouts/cryptobox-ios/build/lib/libcryptobox.a"; sourceTree = "<group>"; };
 		09C77C441BA2FB8E00E2163F /* libsodium.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsodium.a; path = "Carthage/Checkouts/cryptobox-ios/build/lib/libsodium.a"; sourceTree = "<group>"; };
-		09C77C4F1BA313CB00E2163F /* OtrBaseTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OtrBaseTest.swift; sourceTree = "<group>"; };
 		09C77C521BA6C77000E2163F /* UserClientRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserClientRequestStrategy.swift; sourceTree = "<group>"; };
 		09CC4AA91B7C884900201C63 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.4.sdk/usr/lib/libz.dylib; sourceTree = DEVELOPER_DIR; };
 		09CC4AAB1B7C885100201C63 /* libbz2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.4.sdk/usr/lib/libbz2.dylib; sourceTree = DEVELOPER_DIR; };
@@ -693,7 +690,6 @@
 		5492C6C319ACCCA8008F41E2 /* ConnectionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = ConnectionTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		549552511D64567C004F21F6 /* AddressBookTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookTests.swift; sourceTree = "<group>"; };
 		54973A351DD48CAB007F8702 /* NSManagedObject+EncryptionContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSManagedObject+EncryptionContext.swift"; sourceTree = "<group>"; };
-		54973A391DD4DBEC007F8702 /* MessagingTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessagingTest.swift; sourceTree = "<group>"; };
 		549815931A43232400A7CE2E /* zmessaging.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = zmessaging.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		549815961A43232400A7CE2E /* zmessaging-ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "zmessaging-ios-Info.plist"; sourceTree = "<group>"; };
 		549AEA3A1D6340BC003C0BEC /* AddressBookUploadRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookUploadRequestStrategy.swift; sourceTree = "<group>"; };
@@ -1118,7 +1114,6 @@
 		09C77C3C1BA2E38D00E2163F /* E2EE */ = {
 			isa = PBXGroup;
 			children = (
-				09C77C4F1BA313CB00E2163F /* OtrBaseTest.swift */,
 				F9F9F5611D75D62100AE6499 /* RequestStrategyTestBase.swift */,
 				0920833C1BA84F3100F82B29 /* UserClientRequestStrategyTests.swift */,
 				093694441BA9633300F36B3A /* UserClientRequestFactoryTests.swift */,
@@ -1407,7 +1402,6 @@
 				3E799CF2192140300020A438 /* zmessaging-Tests.pch */,
 				098CFBBA1B7B9C94000B02B1 /* BaseTestSwiftHelpers.swift */,
 				5474C8051921309400185A3A /* MessagingTest.h */,
-				54973A391DD4DBEC007F8702 /* MessagingTest.swift */,
 				5474C8061921309400185A3A /* MessagingTest.m */,
 				5474C8081921309400185A3A /* MessagingTestTests.m */,
 				3E1858B21951D69B005FE78F /* MemoryLeaksObserver.h */,
@@ -2406,7 +2400,6 @@
 				54BABB1E19B7541700E65E74 /* StateBaseTest.m in Sources */,
 				546D700619C70F71005883E9 /* CallingTests.m in Sources */,
 				09531F1C1AE9644800B8556A /* ZMLoginCodeRequestTranscoderTests.m in Sources */,
-				54973A3B1DD4DC01007F8702 /* MessagingTest.swift in Sources */,
 				87D003FF1BB5810D00472E06 /* APSSignalingKeyStoreTests.swift in Sources */,
 				F9B71FAB1CB2C0FA001DB03F /* ZMCallStateTests+VideoCalling.swift in Sources */,
 				545434AB19AB6ADA003892D9 /* ZMMissingUpdateEventsTranscoderTests.m in Sources */,
@@ -2534,7 +2527,6 @@
 				BF889DC61D0ADE110031F3E6 /* AnalyticsTests.swift in Sources */,
 				54877C9619922C0B0097FB58 /* UserProfileTests.m in Sources */,
 				54DFB8F01B30649000F1C736 /* GiphyTests.m in Sources */,
-				09C77C501BA313CB00E2163F /* OtrBaseTest.swift in Sources */,
 				54C2F69B1A6FA988003D09D9 /* ZMLocalNotificationForExpiredMessageTest.m in Sources */,
 				54F7217219A5E7E1009A8AF5 /* ZMUpdateEventsCatchUpPhaseTwoStateTests.m in Sources */,
 				54B7181719409A4600B798FA /* ZMEventProcessingStateTests.m in Sources */,

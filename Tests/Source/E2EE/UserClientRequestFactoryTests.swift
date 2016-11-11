@@ -37,7 +37,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         self.sut = UserClientRequestFactory()
         
         let newKeyStore = FakeKeysStore(keyStore: self.syncMOC.zm_cryptKeyStore)
-        self.syncMOC.userInfo.setObject(newKeyStore, forKey: "ZMUserClientKeysStore" as NSCopying)
+        self.syncMOC.test_injectCryptKeyStore(newKeyStore)
     }
     
     override func tearDown() {

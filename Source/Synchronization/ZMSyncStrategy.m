@@ -187,7 +187,8 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                                  context:self.syncMOC];
         self.missingClientsRequestStrategy = [[MissingClientsRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus apnsConfirmationStatus: self.apnsConfirmationStatus managedObjectContext:self.syncMOC];
         
-        self.requestStrategies = @[self.userClientRequestStrategy,
+        self.requestStrategies = @[
+                                   self.userClientRequestStrategy,
                                    self.missingClientsRequestStrategy,
                                    self.missingUpdateEventsTranscoder,
                                    [[ProxiedRequestStrategy alloc] initWithRequestsStatus:proxiedRequestStatus
@@ -197,6 +198,11 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[AssetDownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus
                                                                    taskCancellationProvider:taskCancellationProvider
                                                                        managedObjectContext:self.syncMOC],
+                                   [[AssetV3DownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus
+                                                                   taskCancellationProvider:taskCancellationProvider
+                                                                       managedObjectContext:self.syncMOC],
+                                   [[AssetV3PreviewDownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus
+                                                                                managedObjectContext:self.syncMOC],
                                    [[AddressBookUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus
                                                                                  clientRegistrationStatus:clientRegistrationStatus
                                                                                                       moc:self.syncMOC],
@@ -206,9 +212,9 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.imageDownloadRequestStrategy,
                                    self.imageUploadRequestStrategy
                                    ];
-        
+
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
-        
+
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:self.syncMOC];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:uiMOC];
 

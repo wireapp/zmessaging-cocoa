@@ -146,8 +146,6 @@ class ZMCallKitDelegateTest: MessagingTest {
         // then
         XCTAssertEqual(configuration.supportsVideo, true)
         XCTAssertEqual(configuration.localizedName, "zmessaging Test Host")
-        XCTAssertTrue(configuration.supportedHandleTypes.contains(.phoneNumber))
-        XCTAssertTrue(configuration.supportedHandleTypes.contains(.emailAddress))
         XCTAssertTrue(configuration.supportedHandleTypes.contains(.generic))
     }
     
@@ -459,6 +457,31 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
     
+    func testThatItIgnoresMutedConversations() {
+        // given
+        let conversation = self.conversation()
+        conversation.isSilenced = true
+        
+        conversation.callDeviceIsActive = true
+        
+        // when
+        let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
+        mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
+        mutableCallParticipants.add(ZMUser.selfUser(in: self.uiMOC))
+        self.uiMOC.saveOrRollback()
+        
+        XCTAssertEqual(conversation.voiceChannel.state, .selfIsJoiningActiveChannel)
+        // when
+        
+        self.uiMOC.saveOrRollback()
+        
+        // then
+        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
+    }
+    
     func testThatItDoesNotRequestCallStart_Outgoing() {
         // given
         let conversation = self.conversation()
@@ -625,7 +648,7 @@ class ZMCallKitDelegateTest: MessagingTest {
 
         XCTAssertEqual(conversation.voiceChannel.state, .selfIsJoiningActiveChannel)
         
-        
+        // when
         conversation.callDeviceIsActive = false
         let newMutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
         newMutableCallParticipants.removeAllObjects()
@@ -636,8 +659,30 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
     }
     
-    func testThatItRequestsEndCall_OutgoingInGroupConversation() {
+    func testThatItRequestsEndCall_Timeout() {
         // given
+        let conversation = self.conversation()
+        conversation.callTimedOut = false
+        
+        // when
+        let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
+        mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
+        self.uiMOC.saveOrRollback()
+        
+        self.callKitController.timesRequestTransactionCalled = 0
+        
+        XCTAssertEqual(conversation.voiceChannel.state, .incomingCall)
+        
+        // when
+        conversation.callTimedOut = true
+        XCTAssertEqual(conversation.voiceChannel.state, .incomingCallInactive)
+        self.uiMOC.saveOrRollback()
+        
+        // then
+        XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
+    }
+    
+    func testThatItRequestsEndCall_OutgoingInGroupConversation() {
         // given
         let conversation = self.conversation(type: .group)
         conversation.callDeviceIsActive = true

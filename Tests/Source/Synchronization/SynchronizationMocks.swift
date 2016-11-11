@@ -121,6 +121,7 @@ class FakeKeysStore: KeyStore {
     }
     
     public func generatePreKeys(_ count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
+
         if self.failToGeneratePreKeys {
             let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
             throw error

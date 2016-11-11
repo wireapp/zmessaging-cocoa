@@ -1266,7 +1266,7 @@
     NSData *encryptedAsset = [self.mediumJPEGData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
     NSData *sha256 = encryptedAsset.zmSHA256Digest;
     
-    ZMAssetRemoteData *remote = [ZMAssetRemoteData remoteDataWithOTRKey:otrKey sha256:sha256 assetId:thumbnailIDString assetToken:nil];
+    ZMAssetRemoteData *remote = [ZMAssetRemoteData remoteDataWithOTRKey:otrKey sha256:sha256 assetId:nil assetToken:nil];
     ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
     ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
     ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
@@ -1593,7 +1593,6 @@
     XCTAssertNotNil(selfClient);
     XCTAssertNotNil(senderClient);
     
-    
     ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
                                                                       mimeType:mimeType
                                                                           name:self.name
@@ -1602,7 +1601,6 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *__unused session) {
-        
         NSData *messageData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:original.data];
         [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:messageData];
     }];
@@ -1711,13 +1709,14 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
-    
+    WaitForAllGroupsToBeEmpty(0.5);
+
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
                                                                       mimeType:@"text/plain"
                                                                           name:self.name
                                                                      messageID:nonce.transportString
-                                                                  expiresAfter:nil];
+                                                                  expiresAfter:@30];
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
@@ -1758,7 +1757,7 @@
     NSUUID *assetID = NSUUID.createUUID;
     NSData *otrKey = NSData.randomEncryptionKey;
     NSData *sha256 = NSData.zmRandomSHA256Key;
-    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:nil];
+    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -1782,7 +1781,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce.transportString  expiresAfter:nil];
+    ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce.transportString  expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:cancelled insertBlock:
@@ -1808,7 +1807,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *failed = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedFAILED messageID:nonce.transportString expiresAfter:nil];
+    ZMGenericMessage *failed = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedFAILED messageID:nonce.transportString expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:failed insertBlock:
@@ -1839,11 +1838,11 @@
     NSData *encryptedAsset = [self.mediumJPEGData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
     NSData *sha256 = encryptedAsset.zmSHA256Digest;
     
-    ZMAssetRemoteData *remote = [ZMAssetRemoteData remoteDataWithOTRKey:otrKey sha256:sha256 assetId:thumbnailIDString assetToken:nil];
+    ZMAssetRemoteData *remote = [ZMAssetRemoteData remoteDataWithOTRKey:otrKey sha256:sha256 assetId:nil assetToken:nil];
     ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
     ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
     ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
-    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:nil];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:@30];
     
     
     // when
@@ -1913,7 +1912,7 @@
     NSData *encryptedAsset = [assetData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
     NSData *sha256 = encryptedAsset.zmSHA256Digest;
     
-    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:nil];
+    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -1952,6 +1951,242 @@
     XCTAssertEqualObjects(lastRequest.path, expectedPath);
     XCTAssertEqual(message.transferState, ZMFileTransferStateFailedDownload);
     XCTAssertTrue(message.isEphemeral);
+}
+
+@end
+
+
+#pragma mark - Asset V3
+#pragma mark Receiving
+
+@implementation FileTransferTests (V3)
+
+- (void)testThatItReceivesAVideoFileMessageThumbnailSentRemotely_V3
+{
+    // given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    NSUUID *nonce = NSUUID.createUUID;
+    NSUUID *thumbnailAssetID = NSUUID.createUUID;
+    NSString *thumbnailIDString = thumbnailAssetID.transportString;
+    NSData *otrKey = NSData.randomEncryptionKey;
+    NSData *encryptedAsset = [self.mediumJPEGData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
+    NSData *sha256 = encryptedAsset.zmSHA256Digest;
+
+    ZMAssetRemoteData *remote = [ZMAssetRemoteData remoteDataWithOTRKey:otrKey sha256:sha256 assetId:thumbnailIDString assetToken:nil];
+    ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
+    ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
+    ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:nil];
+
+
+    // when
+    __block MessageChangeObserver *observer;
+    __block ZMConversation *conversation;
+
+    id insertBlock = ^(NSData *data, MockConversation *mockConversation, MockUserClient *from, MockUserClient *to) {
+        [mockConversation insertOTRMessageFromClient:from toClient:to data:data];
+        conversation = [self conversationForMockConversation:mockConversation];
+        observer = [[MessageChangeObserver alloc] initWithMessage:conversation.messages.lastObject];
+    };
+
+    ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalWithMimeType:@"video/mp4"
+                                                                updateWithMessage:updateMessage
+                                                                      insertBlock:insertBlock
+                                                                            nonce:nonce
+                                                                      isEphemeral:NO];
+
+    // Mock the asset/v3 request
+    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
+        NSString *expectedPath = [NSString stringWithFormat:@"/assets/v3/%@", thumbnailIDString];
+        if ([request.path isEqualToString:expectedPath]) {
+            return [[ZMTransportResponse alloc] initWithImageData:encryptedAsset HTTPStatus:200 transportSessionError:nil headers:nil];
+        }
+        return nil;
+    };
+
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertNotNil(message);
+    XCTAssertNotNil(observer);
+    XCTAssertNotNil(conversation);
+
+    [self.userSession performChanges:^{
+        [message requestImageDownload];
+    }];
+
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    XCTAssertNotNil(message);
+    NSArray *notifications = observer.notifications;
+    XCTAssertEqual(notifications.count, 1lu);
+    MessageChangeInfo *info = notifications.lastObject;
+    XCTAssertTrue(info.imageChanged);
+
+    // then
+    // We should have received an thumbnail asset ID to be able to download the thumbnail image
+    XCTAssertEqualObjects(message.fileMessageData.thumbnailAssetID, thumbnailIDString);
+    XCTAssertEqualObjects(message.nonce, nonce);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
+    
+    [observer tearDown];
+}
+
+- (void)testThatItReceivesAVideoFileMessageThumbnailSentRemotely_Ephemeral_V3
+{
+    // given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    NSUUID *nonce = NSUUID.createUUID;
+    NSUUID *thumbnailAssetID = NSUUID.createUUID;
+    NSString *thumbnailIDString = thumbnailAssetID.transportString;
+    NSData *otrKey = NSData.randomEncryptionKey;
+    NSData *encryptedAsset = [self.mediumJPEGData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
+    NSData *sha256 = encryptedAsset.zmSHA256Digest;
+
+    ZMAssetRemoteData *remote = [ZMAssetRemoteData remoteDataWithOTRKey:otrKey sha256:sha256 assetId:thumbnailIDString assetToken:nil];
+    ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
+    ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
+    ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:@20];
+
+    // when
+    __block MessageChangeObserver *observer;
+    __block ZMConversation *conversation;
+
+    id insertBlock = ^(NSData *data, MockConversation *mockConversation, MockUserClient *from, MockUserClient *to) {
+        [mockConversation insertOTRMessageFromClient:from toClient:to data:data];
+        conversation = [self conversationForMockConversation:mockConversation];
+        observer = [[MessageChangeObserver alloc] initWithMessage:conversation.messages.lastObject];
+    };
+
+    ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalWithMimeType:@"video/mp4"
+                                                                updateWithMessage:updateMessage
+                                                                      insertBlock:insertBlock
+                                                                            nonce:nonce
+                                                                      isEphemeral:YES];
+    XCTAssertTrue(message.isEphemeral);
+
+    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
+        NSString *expectedPath = [NSString stringWithFormat:@"/assets/v3/%@", thumbnailIDString];
+        if ([request.path isEqualToString:expectedPath]) {
+            return [[ZMTransportResponse alloc] initWithImageData:encryptedAsset HTTPStatus:200 transportSessionError:nil headers:nil];
+        }
+        return nil;
+    };
+
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertNotNil(message);
+    XCTAssertNotNil(observer);
+    XCTAssertNotNil(conversation);
+
+    [self.userSession performChanges:^{
+        [message requestImageDownload];
+    }];
+
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    XCTAssertNotNil(message);
+    NSArray *notifications = observer.notifications;
+    XCTAssertEqual(notifications.count, 1lu);
+    MessageChangeInfo *info = notifications.lastObject;
+    XCTAssertTrue(info.imageChanged);
+
+    // then
+    // We should have received an thumbnail asset ID to be able to download the thumbnail image
+    XCTAssertEqualObjects(message.fileMessageData.thumbnailAssetID, thumbnailIDString);
+    XCTAssertEqualObjects(message.nonce, nonce);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
+    XCTAssertTrue(message.isEphemeral);
+    
+    [observer tearDown];
+}
+
+- (void)testThatAFileUpload_AssetUploaded_MessageIsReceivedAndUpdatesTheOriginalMessageWhenSentRemotely_V3
+{
+    //given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    NSUUID *nonce = NSUUID.createUUID;
+    NSUUID *assetID = NSUUID.createUUID;
+    NSData *otrKey = NSData.randomEncryptionKey;
+    NSData *sha256 = NSData.zmRandomSHA256Key;
+    ZMGenericMessage *uploaded = [[ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:nil] updatedWithAssetId:assetID.transportString token:nil];
+
+    // when
+    ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
+                                     ^(NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to) {
+                                         [conversation insertOTRMessageFromClient:from toClient:to data:data];
+                                     } nonce:nonce];
+
+    // then
+    XCTAssertNil(message.assetId); // We do not store the asset ID in the DB for v3 assets
+    XCTAssertEqualObjects(message.genericAssetMessage.assetData.uploaded.assetId, assetID.transportString);
+    XCTAssertEqual(message.version, 3);
+    XCTAssertEqualObjects(message.nonce, nonce);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateUploaded);
+}
+
+- (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_Downloaded_AfterSuccesfullDecryption_V3
+{
+    //given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    NSUUID *nonce = NSUUID.createUUID;
+    NSUUID *assetID = NSUUID.createUUID;
+    NSData *otrKey = NSData.randomEncryptionKey;
+
+    NSData *assetData = [NSData secureRandomDataOfLength:256];
+    NSData *encryptedAsset = [assetData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
+    NSData *sha256 = encryptedAsset.zmSHA256Digest;
+
+    ZMGenericMessage *uploaded = [[ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:nil] updatedWithAssetId:assetID.transportString token:nil];
+
+    // when
+    ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
+                                     ^(__unused NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to) {
+                                         [conversation insertOTRMessageFromClient:from toClient:to data:data];
+                                     } nonce:nonce];
+    WaitForAllGroupsToBeEmpty(0.5);
+    __unused ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+
+    // then
+    XCTAssertNotNil(message);
+    XCTAssertNil(message.assetId); // We do not store the asset ID in the DB for v3 assets
+    XCTAssertEqualObjects(message.nonce, nonce);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateUploaded);
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // when
+    // Mock the asset/v3 request
+    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
+        NSString *expectedPath = [NSString stringWithFormat:@"/assets/v3/%@", assetID.transportString];
+        if ([request.path isEqualToString:expectedPath]) {
+            return [[ZMTransportResponse alloc] initWithImageData:encryptedAsset HTTPStatus:200 transportSessionError:nil headers:nil];
+        }
+        return nil;
+    };
+
+    [self.userSession performChanges:^{
+        [message requestFileDownload];
+    }];
+
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    ZMTransportRequest *lastRequest = self.mockTransportSession.receivedRequests.lastObject;
+    NSString *expectedPath = [NSString stringWithFormat:@"/assets/v3/%@", assetID.transportString];
+    XCTAssertEqualObjects(lastRequest.path, expectedPath);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateDownloaded);
 }
 
 @end
