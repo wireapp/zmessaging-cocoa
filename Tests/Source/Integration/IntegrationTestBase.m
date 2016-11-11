@@ -690,42 +690,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     return encryptionContext;
 }
 
-- (void)inserOTRMessage:(ZMGenericMessage *)message
-         inConversation:(MockConversation *)conversation
-               fromUser:(MockUser *)sender
-               toClient:(MockUserClient *)recipient
-         usingStringKey:(NSString *)preKey
-                session:(MockTransportSession<MockTransportSessionObjectCreation> *)session
-{
-    [self inserOTRMessage:message inConversation:conversation fromUser:sender toClient:recipient usingKey:preKey session:session];
-}
-
-- (EncryptionContext *)inserOTRMessage:(ZMGenericMessage *)message
-                        inConversation:(MockConversation *)conversation
-                              fromUser:(MockUser *)sender
-                              toClient:(MockUserClient *)recipient
-                              usingKey:(NSString *)preKey
-                               session:(MockTransportSession<MockTransportSessionObjectCreation> *)session
-{
-    MockUserClient *senderClient = [session registerClientForUser:sender label:sender.name type:@"permanent"];
-    __block NSError *error;
-    
-    NSURL *url = [self OTRdirectoryURL];
-    url = [url URLByAppendingPathComponent:senderClient.label];
-    [[NSFileManager defaultManager] createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
-    EncryptionContext *senderBox = [[EncryptionContext alloc] initWithPath:url];
-    
-    __block NSData *encryptedData;
-    [senderBox perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        [sessionsDirectory createClientSession:recipient.identifier base64PreKeyString:preKey error:&error];
-        encryptedData = [sessionsDirectory encrypt:message.data recipientClientId:recipient.identifier error:&error];
-    }];
-    
-    [conversation insertOTRMessageFromClient:senderClient toClient:recipient data:encryptedData];
-    return senderBox;
-}
-
-
 - (void)remotelyAppendSelfConversationWithZMClearedForMockConversation:(MockConversation *)mockConversation
                                                                 atTime:(NSDate *)newClearedTimeStamp
 {
