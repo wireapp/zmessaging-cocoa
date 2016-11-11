@@ -687,6 +687,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         
         [self.syncMOC saveOrRollback];
     }];
+    WaitForAllGroupsToBeEmpty(0.5);
     return encryptionContext;
 }
 

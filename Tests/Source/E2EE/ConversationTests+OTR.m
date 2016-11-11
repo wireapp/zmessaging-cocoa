@@ -436,7 +436,6 @@
             user.email = [NSString stringWithFormat:@"user%d@example.com", i+1];
             user.accentID = 4;
             [self storeRemoteIDForObject:user];
-            [self setupOTREnvironmentForUser:user isSelfClient:NO numberOfKeys:10 establishSessionWithSelfUser:NO];
             [self.groupConversation addUsersByUser:user addedUsers:@[user]];
         }
     }];
