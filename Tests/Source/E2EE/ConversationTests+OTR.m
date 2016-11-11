@@ -377,6 +377,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = ^ ZMTransportResponse *(ZMTransportRequest *__unused request) {
         if ([request.path.pathComponents containsObject:@"assets"]) {
+            self.mockTransportSession.responseGeneratorBlock = nil;
             return [ZMTransportResponse responseWithPayload:@{ @"label" : @"unknown-client"} HTTPStatus:403 transportSessionError:nil];
         }
         return nil;
@@ -1602,8 +1603,6 @@
     }
     
     if (sendingFromSelfCLient) {
-        [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:NO];
-        WaitForEverythingToBeDoneWithTimeout(0.5);
         
         // when
         [self.userSession performChanges:^{
@@ -1612,17 +1611,11 @@
         
         WaitForEverythingToBeDone();
     } else {
-        NSSet *user1Clients = [self.user1.clients copy];
-        [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:NO];
-        WaitForEverythingToBeDoneWithTimeout(0.5);
-        
-        NSMutableSet *newUser1Clients = [self.user1.clients mutableCopy];
-        [newUser1Clients minusSet:user1Clients];
-        MockUserClient *newClient = newUser1Clients.anyObject;
         
         // when
         ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Test" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused transportSession) {
+            MockUserClient *newClient = [transportSession registerClientForUser:self.user1 label:@"test-it" type:@"permanent"];
             [self.selfToUser1Conversation encryptAndInsertDataFromClient:newClient toClient:self.selfUser.clients.anyObject data:message.data];
         }];
         
@@ -1657,14 +1650,7 @@
     [self setupInitialSecurityLevel:initialSecurityLevel inConversation:conversation];
     
     //register new client for user1
-    NSSet *user1Clients = [self.user1.clients copy];
-    
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:NO];
-    WaitForEverythingToBeDoneWithTimeout(0.5);
-    
-    NSMutableSet *newUser1Clients = [self.user1.clients mutableCopy];
-    [newUser1Clients minusSet:user1Clients];
-    MockUserClient *newUser1Client = [newUser1Clients anyObject];
+    __block MockUserClient *newUser1Client;
     
     // Make sure this relationship is not a fault:
     for (id obj in conversation.messages) {
@@ -1678,6 +1664,7 @@
     NSOrderedSet *previousMessage = conversation.messages.copy;
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused transportSession) {
+        newUser1Client = [transportSession registerClientForUser:self.user1 label:@"iphone-something" type:@"permanent"];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:newUser1Client toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     
@@ -1902,6 +1889,12 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
+    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+    [self.userSession performChanges:^{
+        [conversation appendOTRMessageWithText:@"Hey you" nonce:[NSUUID createUUID]];
+    }];
+    WaitForEverythingToBeDone();
+    
     UserClient *selfClient = [ZMUser selfUserInUserSession:self.userSession].selfClient;
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
@@ -1911,7 +1904,6 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     
     NSArray *clients = selfClient.user.clients.allObjects;
     UserClient *otherClient = [clients firstObjectMatchingWithBlock:^BOOL(UserClient *client) {
@@ -2133,6 +2125,11 @@
     
     ZMConversation *conversation1 = [self conversationForMockConversation:self.selfToUser1Conversation];
     ZMConversation *conversation2 = [self conversationForMockConversation:self.selfToUser2Conversation];
+    
+    [self.userSession performChanges:^{
+        [conversation1 appendOTRMessageWithText:@"Hey!" nonce:[NSUUID createUUID]];
+    }];
+    WaitForEverythingToBeDone();
 
     ZMUser *selfUser = [self userForMockUser:self.selfUser];
     ZMUser *user1 = [self userForMockUser:self.user1];
@@ -2157,7 +2154,18 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     ZMConversation *conversation1 = [self conversationForMockConversation:self.selfToUser1Conversation];
-    ZMConversation *conversation2 = [self conversationForMockConversation:self.selfToUser2Conversation];
+    [self.userSession performChanges:^{
+        // this will eventually create a session with user1.client
+        [conversation1 appendOTRMessageWithText:@"Please establish session" nonce:[NSUUID createUUID]];
+    }];
+    WaitForEverythingToBeDoneWithTimeout(0.5);
+    
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        // this creates an extra client for self user
+        [session registerClientForUser:self.selfUser label:@"self" type:@"permanent"];
+    }];
+    WaitForEverythingToBeDoneWithTimeout(0.5);
+    
     
     ZMUser *selfUser = [self userForMockUser:self.selfUser];
     XCTAssertEqual(selfUser.clients.count, 2u);
@@ -2165,6 +2173,7 @@
        return obj.remoteIdentifier != selfUser.selfClient.remoteIdentifier;
     }];
     ZMUser *user1 = [self userForMockUser:self.user1];
+    XCTAssertNotNil(notSelfClient);
     
     // when
     [self.userSession performChanges:^{
@@ -2178,6 +2187,7 @@
     WaitForAllGroupsToBeEmpty(1.0);
     
     // then
+    ZMConversation *conversation2 = [self conversationForMockConversation:self.selfToUser2Conversation];
     XCTAssertEqual(conversation1.securityLevel, ZMConversationSecurityLevelSecure);
     XCTAssertEqual(conversation2.securityLevel, ZMConversationSecurityLevelNotSecure);
 }
