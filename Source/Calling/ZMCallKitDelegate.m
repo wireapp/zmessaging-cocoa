@@ -341,7 +341,7 @@ NS_ASSUME_NONNULL_END
 
 - (NSArray<ZMConversation *> *)nonIdleCallConversations
 {
-    ZMConversationList *nonIdleConversations = [ZMConversationList conversationsInUserSession:self.userSession];
+    ZMConversationList *nonIdleConversations = [ZMConversationList conversationsIncludingArchivedInUserSession:self.userSession];
     
     return [nonIdleConversations filterWithBlock:^BOOL(ZMConversation *conversation) {
         return conversation.voiceChannel.inNonIdleState;
