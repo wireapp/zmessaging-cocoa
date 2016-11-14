@@ -25,7 +25,7 @@
 #import "ZMUserSession.h"
 #import "ZMVoiceChannel+CallFlow.h"
 #import "ZMVoiceChannel+VideoCalling.h"
-#import "AVSFlowManager.h"
+#import <avs/AVSFlowManager.h>
 #import <zmessaging/zmessaging-Swift.h>
 
 

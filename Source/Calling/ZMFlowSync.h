@@ -20,8 +20,8 @@
 #import <Foundation/Foundation.h>
 @import WireRequestStrategy;
 
-#import "AVSMediaManager.h"
-#import "AVSFlowManager.h"
+#import <avs/AVSMediaManager.h>
+#import <avs/AVSFlowManager.h>
 @class ZMConversation;
 @class ZMUser;
 @class ZMOnDemandFlowManager;

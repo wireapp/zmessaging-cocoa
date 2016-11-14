@@ -17,7 +17,7 @@
  */
 
 import Foundation
-import WireCall
+import avs
 
 enum CallClosedReason : Int32 {
     case normal
@@ -100,6 +100,13 @@ class WireCallCenter {
         
         wcall_init(userId,
                    clientId,
+                   { (version, context) in
+                    if let context = context {
+                        _ = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
+                        
+                        
+                    }
+            },
                    { (conversationId, userId, clientId, data, dataLength, context) in
                     if let context = context, let conversationId = conversationId, let userId = userId, let clientId = clientId, let data = data {
                         let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
@@ -112,8 +119,8 @@ class WireCallCenter {
                     }
                     
                     return 0
-                    },
-                   { (conversationId, userId, callToken, context) in
+            },
+                   { (conversationId, userId, callToken, context) -> Void in
                     if let context = context, let conversationId = conversationId, let userId = userId  {
                         let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
                         
@@ -121,8 +128,8 @@ class WireCallCenter {
                                                userId: String.init(cString: userId),
                                                callToken: callToken)
                     }
-                    },
-                   { (conversationId, userId, callToken, context) in
+            },
+                   {(conversationId, userId, callToken, context) in
                     if let context = context, let conversationId = conversationId, let userId = userId  {
                         let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
                         
@@ -130,7 +137,7 @@ class WireCallCenter {
                                                   userId: String.init(cString: userId),
                                                   callToken: callToken)
                     }
-                    },
+            },
                    { (reason, conversationId, userId, callToken, context) in
                     if let context = context, let conversationId = conversationId, let userId = userId  {
                         let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
@@ -140,7 +147,7 @@ class WireCallCenter {
                                              callToken: callToken,
                                              reason: CallClosedReason(rawValue: reason) ?? .internalError)
                     }
-                    },
+            },
                    observer)
         
     }

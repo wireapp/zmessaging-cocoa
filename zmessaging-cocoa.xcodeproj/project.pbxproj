@@ -51,7 +51,6 @@
 		1621D2711D770FB1007108C2 /* ZMSyncStateDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */; };
 		1635C6B71BA9CB4A006857A8 /* ZMSuggestionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 1635C6B51BA9CB4A006857A8 /* ZMSuggestionResult.h */; };
 		1635C6B81BA9CB4A006857A8 /* ZMSuggestionResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 1635C6B61BA9CB4A006857A8 /* ZMSuggestionResult.m */; };
-		169AED7E1C8F1C2000E5F17E /* libavsobjcstub.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 169AED721C8F09A700E5F17E /* libavsobjcstub.a */; };
 		16B0E7DF1DCC9BAE00EB1589 /* WireCallCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B0E7DE1DCC9BAE00EB1589 /* WireCallCenter.swift */; };
 		16C22BA41BF4D5D7007099D9 /* NSError+ZMUserSessionInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3E05F254192A50CC00F22D80 /* NSError+ZMUserSessionInternal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		16DABFAE1DCF98D3001973E3 /* CallingRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DABFAD1DCF98D3001973E3 /* CallingRequestStrategy.swift */; };
@@ -322,6 +321,7 @@
 		BFCE9A5B1C4E4C4D00951B3D /* store124.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = BFCE9A581C4E4C4D00951B3D /* store124.wiredatabase */; };
 		BFE53F551D5A2F7000398378 /* DeleteMessagesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE53F541D5A2F7000398378 /* DeleteMessagesTests.swift */; };
 		CE35B7F71D353CC4007CF3F8 /* LinkPreviewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CE35B7F61D353CC4007CF3F8 /* LinkPreviewTests.m */; };
+		CE5DC1A11DDA09F000D24DBA /* avs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE5DC1A01DDA09F000D24DBA /* avs.framework */; };
 		CE99C4A01D378C5D0001D297 /* MockLinkPreviewDetector.m in Sources */ = {isa = PBXBuildFile; fileRef = CE99C49F1D378C5D0001D297 /* MockLinkPreviewDetector.m */; };
 		CEF2DE7F1DB778F300451642 /* RequestLoopAnalyticsTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF2DE7E1DB778F300451642 /* RequestLoopAnalyticsTracker.swift */; };
 		F920F4D61DA3DCF8002B860B /* ConversationTests+Ephemeral.swift in Sources */ = {isa = PBXBuildFile; fileRef = F920F4D51DA3DCF8002B860B /* ConversationTests+Ephemeral.swift */; };
@@ -526,8 +526,6 @@
 		1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMSyncStateDelegate.h; sourceTree = "<group>"; };
 		1635C6B51BA9CB4A006857A8 /* ZMSuggestionResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMSuggestionResult.h; sourceTree = "<group>"; };
 		1635C6B61BA9CB4A006857A8 /* ZMSuggestionResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMSuggestionResult.m; sourceTree = "<group>"; };
-		169AED721C8F09A700E5F17E /* libavsobjcstub.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavsobjcstub.a; sourceTree = "<group>"; };
-		169AED731C8F09A700E5F17E /* version.buildinfo */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = version.buildinfo; sourceTree = "<group>"; };
 		16B0E7DE1DCC9BAE00EB1589 /* WireCallCenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WireCallCenter.swift; sourceTree = "<group>"; };
 		16DABFAD1DCF98D3001973E3 /* CallingRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallingRequestStrategy.swift; sourceTree = "<group>"; };
 		16DCAD641B0F9447008C1DD9 /* NSURL+LaunchOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+LaunchOptions.h"; sourceTree = "<group>"; };
@@ -820,15 +818,6 @@
 		85D85D997334755E841D13EA /* SlowSyncTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SlowSyncTests.m; sourceTree = "<group>"; };
 		85D85F3EC8565FD102AC0E5B /* ZMOperationLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMOperationLoop.h; sourceTree = "<group>"; };
 		85D85FD47DF54EE1F532B5BE /* IntegrationTestBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IntegrationTestBase.m; sourceTree = "<group>"; };
-		870733EA1CA29318009080EF /* AVSCapturer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AVSCapturer.h; sourceTree = "<group>"; };
-		870733EB1CA29318009080EF /* AVSFlowManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AVSFlowManager.h; sourceTree = "<group>"; };
-		870733EC1CA29318009080EF /* AVSMedia.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AVSMedia.h; sourceTree = "<group>"; };
-		870733ED1CA29318009080EF /* AVSMediaManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AVSMediaManager.h; sourceTree = "<group>"; };
-		870733EE1CA29318009080EF /* AVSMediaManager+Client.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AVSMediaManager+Client.h"; sourceTree = "<group>"; };
-		870733EF1CA29318009080EF /* AVSMediaProtocols.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AVSMediaProtocols.h; sourceTree = "<group>"; };
-		870733F01CA29318009080EF /* AVSVideoConverter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AVSVideoConverter.h; sourceTree = "<group>"; };
-		870733F11CA29318009080EF /* AVSVideoPreview.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AVSVideoPreview.h; sourceTree = "<group>"; };
-		870733F21CA29318009080EF /* AVSVideoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AVSVideoView.h; sourceTree = "<group>"; };
 		871667F91BB2AE9C009C6EEA /* APSSignalingKeysStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = APSSignalingKeysStore.swift; sourceTree = "<group>"; };
 		874F142C1C16FD9700C15118 /* Device.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		87508E9F1D08264000162483 /* ZMSound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZMSound.swift; sourceTree = "<group>"; };
@@ -902,8 +891,10 @@
 		BFC747B91CE0975D00F74333 /* zimages.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = zimages.framework; path = "../zmc-images/build/Debug-iphoneos/zimages.framework"; sourceTree = "<group>"; };
 		BFCE9A581C4E4C4D00951B3D /* store124.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; path = store124.wiredatabase; sourceTree = "<group>"; };
 		BFE53F541D5A2F7000398378 /* DeleteMessagesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeleteMessagesTests.swift; sourceTree = "<group>"; };
+		CE33047B1DD9EDF500C9C840 /* avs.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = avs.framework; sourceTree = "<group>"; };
 		CE35B7F61D353CC4007CF3F8 /* LinkPreviewTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LinkPreviewTests.m; sourceTree = "<group>"; };
 		CE59DD7B1CFC7D6C0009F8FD /* ZMCDataModel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ZMCDataModel.framework; path = "../../../../Library/Developer/Xcode/DerivedData/ZClient-iOS-dkzruzvfpikqstehiyrcjhyckwcj/Build/Products/Debug-iphonesimulator/ZMCDataModel.framework"; sourceTree = "<group>"; };
+		CE5DC1A01DDA09F000D24DBA /* avs.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = avs.framework; path = Carthage/Build/iOS/avs.framework; sourceTree = "<group>"; };
 		CE99C49E1D378C5D0001D297 /* MockLinkPreviewDetector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MockLinkPreviewDetector.h; sourceTree = "<group>"; };
 		CE99C49F1D378C5D0001D297 /* MockLinkPreviewDetector.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MockLinkPreviewDetector.m; sourceTree = "<group>"; };
 		CE99C4A11D37ACC60001D297 /* Ono.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Ono.framework; path = Carthage/Build/iOS/Ono.framework; sourceTree = "<group>"; };
@@ -1044,7 +1035,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1E16CE841BF4BC1800336616 /* ZMProtos.framework in Frameworks */,
-				169AED7E1C8F1C2000E5F17E /* libavsobjcstub.a in Frameworks */,
 				09B978FF1B679F5D00A30B38 /* OCMock.framework in Frameworks */,
 				098CFBB81B7B9B47000B02B1 /* ZMTesting.framework in Frameworks */,
 				1E16CE871BF4BC5F00336616 /* ProtocolBuffers.framework in Frameworks */,
@@ -1056,6 +1046,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE5DC1A11DDA09F000D24DBA /* avs.framework in Frameworks */,
 				BF8899931DC7AD9F00187CBD /* ZMTransport.framework in Frameworks */,
 				09CC4AAE1B7C885800201C63 /* libc++.dylib in Frameworks */,
 				09CC4AAC1B7C885100201C63 /* libbz2.dylib in Frameworks */,
@@ -1113,41 +1104,6 @@
 				09914E521BD6613D00C10BF8 /* ZMDecodedAPSMessageTest.m */,
 			);
 			path = E2EE;
-			sourceTree = "<group>";
-		};
-		169AED691C8F09A700E5F17E /* AVS */ = {
-			isa = PBXGroup;
-			children = (
-				169AED6A1C8F09A700E5F17E /* include */,
-				169AED711C8F09A700E5F17E /* lib */,
-				169AED731C8F09A700E5F17E /* version.buildinfo */,
-			);
-			name = AVS;
-			path = Source/AVS;
-			sourceTree = "<group>";
-		};
-		169AED6A1C8F09A700E5F17E /* include */ = {
-			isa = PBXGroup;
-			children = (
-				870733EA1CA29318009080EF /* AVSCapturer.h */,
-				870733EB1CA29318009080EF /* AVSFlowManager.h */,
-				870733EC1CA29318009080EF /* AVSMedia.h */,
-				870733ED1CA29318009080EF /* AVSMediaManager.h */,
-				870733EE1CA29318009080EF /* AVSMediaManager+Client.h */,
-				870733EF1CA29318009080EF /* AVSMediaProtocols.h */,
-				870733F01CA29318009080EF /* AVSVideoConverter.h */,
-				870733F11CA29318009080EF /* AVSVideoPreview.h */,
-				870733F21CA29318009080EF /* AVSVideoView.h */,
-			);
-			path = include;
-			sourceTree = "<group>";
-		};
-		169AED711C8F09A700E5F17E /* lib */ = {
-			isa = PBXGroup;
-			children = (
-				169AED721C8F09A700E5F17E /* libavsobjcstub.a */,
-			);
-			path = lib;
 			sourceTree = "<group>";
 		};
 		3E18605A191A4EF8000FE027 /* Resources */ = {
@@ -1319,12 +1275,13 @@
 		540029B61918CA8500578793 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				CE5DC1A01DDA09F000D24DBA /* avs.framework */,
+				CE33047B1DD9EDF500C9C840 /* avs.framework */,
 				BF8899911DC7882F00187CBD /* ZMTransport.framework */,
 				1621D26E1D77098B007108C2 /* WireRequestStrategy.framework */,
 				CE99C4A11D37ACC60001D297 /* Ono.framework */,
 				CE59DD7B1CFC7D6C0009F8FD /* ZMCDataModel.framework */,
 				F9B71F361CB26FB2001DB03F /* ZMUtilities.framework */,
-				169AED691C8F09A700E5F17E /* AVS */,
 				BF0D67A31C901DEC007CE00F /* libPhoneNumber.framework */,
 				09C77C431BA2FB8E00E2163F /* libcryptobox.a */,
 				09C77C441BA2FB8E00E2163F /* libsodium.a */,
@@ -2247,8 +2204,8 @@
 					};
 					549815921A43232400A7CE2E = {
 						CreatedOnToolsVersion = 6.2;
-						DevelopmentTeam = W5KEQBF9B5;
 						LastSwiftMigration = 0800;
+						ProvisioningStyle = Manual;
 					};
 				};
 			};
@@ -2349,6 +2306,7 @@
 				"$(SRCROOT)/Carthage/Build/iOS/ZMCLinkPreview.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/WireRequestStrategy.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/WireMessageStrategy.framework",
+				"$(SRCROOT)/Carthage/Build/iOS/avs.framework",
 			);
 			name = "Copy Carthage Frameworks";
 			outputPaths = (
@@ -2768,6 +2726,7 @@
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
+					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -2800,6 +2759,7 @@
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
+					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -2924,7 +2884,8 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2938,10 +2899,6 @@
 					"$(SDKROOT)/usr/include/libxml2",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Resources/zmessaging-ios-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Source/AVS/lib",
-				);
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";
@@ -2956,7 +2913,8 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2970,10 +2928,6 @@
 					"$(SDKROOT)/usr/include/libxml2",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Resources/zmessaging-ios-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Source/AVS/lib",
-				);
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";

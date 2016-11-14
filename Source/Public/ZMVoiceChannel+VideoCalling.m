@@ -19,7 +19,7 @@
 @import ZMCDataModel;
 
 #import "ZMVoiceChannel+VideoCalling.h"
-#import "AVSFlowManager.h"
+#import <avs/AVSFlowManager.h>
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMAVSBridge.h"

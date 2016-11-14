@@ -1,4 +1,0 @@
-module WireCall [system] {
-	header "include/avs_wcall.h"
-	export *
-}
