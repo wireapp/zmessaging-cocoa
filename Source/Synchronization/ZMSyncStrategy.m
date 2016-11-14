@@ -199,10 +199,17 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                    taskCancellationProvider:taskCancellationProvider
                                                                        managedObjectContext:self.syncMOC],
                                    [[AssetV3DownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus
-                                                                   taskCancellationProvider:taskCancellationProvider
-                                                                       managedObjectContext:self.syncMOC],
+                                                                     taskCancellationProvider:taskCancellationProvider
+                                                                         managedObjectContext:self.syncMOC],
+                                   [[AssetClientMessageRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus
+                                                                                          managedObjectContext:self.syncMOC],
+                                   [[AssetV3ImageUploadRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus
+                                                                                          managedObjectContext:self.syncMOC],
                                    [[AssetV3PreviewDownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus
                                                                                 managedObjectContext:self.syncMOC],
+                                   [[AssetV3FileUploadRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus
+                                                                       taskCancellationProvider:taskCancellationProvider
+                                                                           managedObjectContext:self.syncMOC],
                                    [[AddressBookUploadRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus
                                                                                  clientRegistrationStatus:clientRegistrationStatus
                                                                                                       moc:self.syncMOC],
