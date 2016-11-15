@@ -32,7 +32,7 @@
 @class ZMOnDemandFlowManager;
 @class ZMTransportSession;
 @class ZMLocalNotificationDispatcher;
-@class ZMUserProfileUpdateStatus;
+@class UserProfileUpdateStatus;
 @class ProxiedRequestsStatus;
 @class ZMClientRegistrationStatus;
 @class ClientUpdateStatus;
@@ -49,7 +49,7 @@
 @interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory, ZMUpdateEventConsumer>
 
 - (instancetype)initWithAuthenticationCenter:(ZMAuthenticationStatus *)authenticationStatus
-                     userProfileUpdateStatus:(ZMUserProfileUpdateStatus *)userProfileStatus
+                     userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                           clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
                         proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus

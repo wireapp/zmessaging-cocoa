@@ -16,17 +16,16 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-
+/*
 @import ZMTransport;
 @import ZMCDataModel;
 
-#import "ZMUserProfileUpdateTranscoder.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMCredentials+Internal.h"
 #import "ZMUserSessionRegistrationNotification.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMUserSessionRegistrationNotification.h"
-#import "ZMUserProfileUpdateStatus.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 @interface ZMUserProfileUpdateTranscoder() <ZMSingleRequestTranscoder, ZMRequestGenerator>
 
@@ -35,7 +34,7 @@
 @property (nonatomic) ZMSingleRequestSync *passwordUpdateSync;
 @property (nonatomic) ZMSingleRequestSync *emailUpdateSync;
 
-@property (nonatomic, weak) ZMUserProfileUpdateStatus *userProfileUpdateStatus;
+@property (nonatomic, weak) UserProfileUpdateStatus *userProfileUpdateStatus;
 
 @end
 
@@ -47,7 +46,7 @@
     return nil;
 }
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc userProfileUpdateStatus:(ZMUserProfileUpdateStatus *)userProfileUpdateStatus
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileUpdateStatus
 {
     self = [super initWithManagedObjectContext:moc];
     if(self) {
@@ -63,7 +62,7 @@
 
 - (ZMTransportRequest *)requestForSingleRequestSync:(ZMSingleRequestSync *)sync
 {
-    ZMUserProfileUpdateStatus *strongStatus = self.userProfileUpdateStatus;
+    UserProfileUpdateStatus *strongStatus = self.userProfileUpdateStatus;
     
     if(sync == self.phoneCodeRequestSync)
     {
@@ -117,7 +116,7 @@
 
 - (ZMTransportRequest *)nextRequest
 {
-    ZMUserProfileUpdateStatus *strongStatus = self.userProfileUpdateStatus;
+    UserProfileUpdateStatus *strongStatus = self.userProfileUpdateStatus;
 
     if(strongStatus.phoneCredentialsToUpdate != nil) {
         [self.phoneVerificationSync readyForNextRequestIfNotBusy];
@@ -151,7 +150,7 @@
 
 - (void)didReceiveResponse:(ZMTransportResponse *)response forSingleRequest:(ZMSingleRequestSync *)sync
 {
-    ZMUserProfileUpdateStatus *strongStatus = self.userProfileUpdateStatus;
+    UserProfileUpdateStatus *strongStatus = self.userProfileUpdateStatus;
 
     if(sync == self.phoneVerificationSync) {
         if(response.result == ZMTransportResponseStatusSuccess) {
@@ -204,3 +203,4 @@
 }
 
 @end
+*/

@@ -34,8 +34,8 @@
 @class ZMPushRegistrant;
 @class ZMApplicationRemoteNotification;
 @class ZMStoredLocalNotification;
-@class ZMUserProfileUpdateStatus;
 @class ZMAPNSEnvironment;
+@class UserProfileUpdateStatus;
 @class ClientUpdateStatus;
 @class AVSFlowManager;
 @class ZMCallKitDelegate;
@@ -44,7 +44,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 @interface ZMUserSession (AuthenticationStatus)
 @property (nonatomic, readonly) ZMAuthenticationStatus *authenticationStatus;
-@property (nonatomic, readonly) ZMUserProfileUpdateStatus *userProfileUpdateStatus;
+@property (nonatomic, readonly) UserProfileUpdateStatus *userProfileUpdateStatus;
 @property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;
 @property (nonatomic, readonly) ZMAccountStatus *accountStatus;

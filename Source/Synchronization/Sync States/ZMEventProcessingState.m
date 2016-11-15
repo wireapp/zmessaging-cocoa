@@ -27,7 +27,6 @@
 #import "ZMTestNotifications.h"
 #import "ZMSyncStateDelegate.h"
 #import "ZMStateMachineDelegate.h"
-#import "ZMUserProfileUpdateTranscoder.h"
 #import "ZMHotFix.h"
 
 @interface ZMEventProcessingState ()
@@ -61,7 +60,6 @@
         self.syncObjects = @[
                              objectStrategyDirectory.flowTranscoder,
                              objectStrategyDirectory.callStateTranscoder,
-                             objectStrategyDirectory.userProfileUpdateTranscoder,
                              objectStrategyDirectory.connectionTranscoder,
                              objectStrategyDirectory.userTranscoder,
                              objectStrategyDirectory.selfTranscoder,

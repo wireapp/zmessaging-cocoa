@@ -20,52 +20,13 @@
 @import ZMCDataModel;
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+EditingVerification.h"
-#import "ZMUserProfileUpdateStatus.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 @implementation ZMUserSession (EditingVerification)
 
-- (NSString *)currentlyUpdatingEmail
-{
-    ZMUser *selfUser = [ZMUser selfUserInUserSession:self];
-    return (selfUser.emailAddress.length == 0) ? self.userProfileUpdateStatus.emailToUpdate : nil;
-}
-
-- (NSString *)currentlyUpdatingPhone
-{
-    ZMUser *selfUser = [ZMUser selfUserInUserSession:self];
-    return (selfUser.phoneNumber == nil) ?
-    (self.userProfileUpdateStatus.profilePhoneNumberThatNeedsAValidationCode ?: self.userProfileUpdateStatus.phoneCredentialsToUpdate.phoneNumber)
-    : nil;
-}
-
-/// Send email verification and set the password when user changes/adds email to the existing profile
-- (void)requestVerificationEmailForEmailUpdate:(ZMEmailCredentials *)credentials;
-{
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        [self.userProfileUpdateStatus prepareForEmailAndPasswordChangeWithCredentials:credentials];
-        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-    }];
-}
-
-/// Send email verification and set the password when user changes/adds email to the existing profile
-- (void)requestVerificationCodeForPhoneNumberUpdate:(NSString *)phoneNumber {
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        [self.userProfileUpdateStatus prepareForRequestingPhoneVerificationCodeForRegistration:phoneNumber];
-        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-    }];
-}
-
-/// Verify phone number for profile
-- (void)verifyPhoneNumberForUpdate:(ZMPhoneCredentials *)credentials;
-{
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        [self.userProfileUpdateStatus prepareForPhoneChangeWithCredentials:credentials];
-        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-    }];
-}
-
-- (id<ZMUserEditingObserverToken>)addUserEditingObserver:(id<ZMUserEditingObserver>)observer {
-    
+- (id<ZMUserEditingObserverToken>)addUserEditingObserver:(id<ZMUserEditingObserver> __unused)observer {
+    // TODO MARCO
+    /*
     return (id)[ZMUserProfileUpdateNotification addObserverWithBlock:^(ZMUserProfileUpdateNotification *note) {
         switch(note.type) {
             case ZMUserProfileNotificationEmailUpdateDidFail:
@@ -88,10 +49,13 @@
                 break;
         }
     }];
+     */
+    return nil;
 }
 
-- (void)removeUserEditingObserverForToken:(id<ZMUserEditingObserverToken>)observerToken {
-    [ZMUserProfileUpdateNotification removeObserver:(id)observerToken];
+- (void)removeUserEditingObserverForToken:(id<ZMUserEditingObserverToken> __unused)observerToken {
+    // TODO MARCO
+    // [ZMUserProfileUpdateNotification removeObserver:(id)observerToken];
 }
 
 @end
