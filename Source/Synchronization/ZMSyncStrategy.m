@@ -204,6 +204,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[AssetClientMessageRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus
                                                                                           managedObjectContext:self.syncMOC],
                                    [[AssetV3ImageUploadRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus
+                                                                                      taskCancellationProvider:taskCancellationProvider
                                                                                           managedObjectContext:self.syncMOC],
                                    [[AssetV3PreviewDownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus
                                                                                 managedObjectContext:self.syncMOC],
