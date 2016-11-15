@@ -155,7 +155,6 @@
     self.searchMOC = [NSManagedObjectContext createSearchContextWithStoreDirectory:self.databaseDirectory];
     [self.searchMOC addGroup:self.dispatchGroup];
     self.mockTransportSession = [[MockTransportSession alloc] initWithDispatchGroup:self.dispatchGroup];
-    self.mockTransportSession.cryptoboxLocation = [self.databaseDirectory URLByAppendingPathComponent:@"otr"];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
 }
 

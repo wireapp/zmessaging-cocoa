@@ -482,13 +482,7 @@
                                       conversation.remoteIdentifier.transportString];
     
     // when
-    // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
     __block ZMMessage *fileMessage;
-    
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
         fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
@@ -1151,15 +1145,7 @@
                                       conversation.remoteIdentifier.transportString];
     
     // when
-    // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
     __block ZMMessage *fileMessage;
-    
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
         fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
@@ -1330,7 +1316,6 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
 
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
@@ -1338,7 +1323,8 @@
                                                                           name:self.name
                                                                      messageID:nonce.transportString
                                                                   expiresAfter:nil];
-    
+
+
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject
@@ -1708,7 +1694,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
     WaitForAllGroupsToBeEmpty(0.5);
 
     NSUUID *nonce = NSUUID.createUUID;

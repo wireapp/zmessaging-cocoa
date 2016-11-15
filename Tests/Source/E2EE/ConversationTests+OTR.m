@@ -98,7 +98,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     //register other users clients
-    EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:shouldEstablishSessionBetweenUsers];
+    EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:shouldEstablishSessionBetweenUsers];
+
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
@@ -473,10 +474,6 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    //register other users clients
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:NO];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     
     __block ZMAssetClientMessage *message;
@@ -550,9 +547,6 @@
     NSTimeInterval defaultExpirationTime = [ZMMessage defaultExpirationTime];
     [ZMMessage setDefaultExpirationTime:0.3];
 
-    //register other users clients
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:NO];
-    
     self.mockTransportSession.doNotRespondToRequests = YES;
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
@@ -584,9 +578,6 @@
     
     NSTimeInterval defaultExpirationTime = [ZMMessage defaultExpirationTime];
     [ZMMessage setDefaultExpirationTime:0.3];
-    
-    //register other users clients
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:NO];
     
     self.mockTransportSession.doNotRespondToRequests = YES;
     
@@ -1121,7 +1112,7 @@
     
     //register other users clients
     if([self userForMockUser:self.user1].clients.count == 0) {
-        [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+        [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
         WaitForEverythingToBeDoneWithTimeout(0.5);
     }
     
@@ -1136,7 +1127,7 @@
         if(groupLocalConversation.securityLevel != ZMConversationSecurityLevelSecure) {
             for(MockUser* user in self.groupConversationWithOnlyConnected.activeUsers) {
                 if(user != self.selfUser && user.clients.count == 0) {
-                    [self setupOTREnvironmentForUser:user isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+                    [self setupOTREnvironmentForUser:user establishSessionWithSelfUser:YES];
                     WaitForAllGroupsToBeEmpty(0.5);
                 }
             }
@@ -1147,7 +1138,7 @@
     }
     
     if (createAdditionalClient) {
-        [self setupOTREnvironmentForUser:self.user1 isSelfClient:YES numberOfKeys:1 establishSessionWithSelfUser:NO];
+        [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:NO];
     }
     
     __block ConversationChangeObserver *observer;
@@ -1188,8 +1179,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // register other users clients
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
-    [self setupOTREnvironmentForUser:self.user2 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user2 establishSessionWithSelfUser:YES];
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversationWithOnlyConnected];
@@ -1224,7 +1215,7 @@
     WaitForEverythingToBeDoneWithTimeout(0.5);
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
     
-    [self setupOTREnvironmentForUser:self.user5 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user5 establishSessionWithSelfUser:YES];
     
     [self.userSession performChanges:^{
         ZMUser *selfUser = [self userForMockUser:self.selfUser];
@@ -1552,7 +1543,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     UserClient *selfClient = [ZMUser selfUserInUserSession:self.userSession].selfClient;
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
@@ -1590,7 +1581,7 @@
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
 
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
 
@@ -1641,7 +1632,7 @@
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
@@ -1735,7 +1726,7 @@
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
     XCTAssertFalse(self.user1.clients.isEmpty);
@@ -1853,7 +1844,7 @@
 {
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
@@ -2263,7 +2254,7 @@
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:10 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
     
     // when
     [self performIgnoringZMLogError:^{
@@ -2288,7 +2279,7 @@
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:10 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
     XCTestExpectation *expectation = [self expectationWithDescription:@"It should call the observer"];
     
     [[NSNotificationCenter defaultCenter] addObserverForName:ZMConversationFailedToDecryptMessageNotificationName object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification * _Nonnull note) {

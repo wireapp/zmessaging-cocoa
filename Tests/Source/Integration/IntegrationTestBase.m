@@ -631,29 +631,11 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     return remoteUserClient;
 }
 
-- (EncryptionContext *)setupOTREnvironmentForUser:(MockUser *)mockUser isSelfClient:(BOOL)isSelfClient numberOfKeys:(UInt16)numberOfKeys establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser
+- (void)setupOTREnvironmentForUser:(MockUser *)mockUser establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser
 {
-    NSURL *url = [self.mockTransportSession.cryptoboxLocation URLByAppendingPathComponent:mockUser.identifier];
-    [[NSFileManager defaultManager] createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
-    
-    EncryptionContext *encryptionContext = [[EncryptionContext alloc] initWithPath:url];
-    __block NSString *userLastKey;
-    __block NSMutableArray *userPreKeys = [NSMutableArray array];
-    [encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        NSError *error;
-        for (UInt16 i = 0; i < numberOfKeys; i++)  {
-            NSString *prekey = [sessionsDirectory generatePrekey:i error:&error];
-            XCTAssertNil(error, @"Error creating prekeys");
-            [userPreKeys addObject:prekey];
-        }
-        NSError *lastKeyError;
-        userLastKey = [sessionsDirectory generateLastPrekeyAndReturnError:&lastKeyError];
-        XCTAssertNil(lastKeyError, @"Error creating last key");
-    }];
-    
     ZMUser *realUser = [self userForMockUser:mockUser];
     
-    MockUserClient *remoteUserClient;
+    __block MockUserClient *remoteUserClient;
     if (isSelfClient && mockUser.clients.count != 0) {
         NSString *selfClientID = [self.syncMOC persistentStoreMetadataForKey:ZMPersistedClientIdKey];
         remoteUserClient = [mockUser.clients.allObjects firstObjectMatchingWithBlock:^BOOL(MockUserClient *obj) {
@@ -680,13 +662,12 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         if (establishSessionWithSelfUser && ! isSelfClient) {
             //session from selfClient to userClient
             UserClient *selfClient = selfUser.clients.anyObject;
-            [selfClient establishSessionWithClient:user.clients.anyObject usingPreKey:userLastKey];
+            [selfClient establishSessionWithClient:user.clients.anyObject usingPreKey:remoteUserClient.prekeys.anyObject];
         }
         
         [self.syncMOC saveOrRollback];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    return encryptionContext;
 }
 
 - (void)remotelyAppendSelfConversationWithZMClearedForMockConversation:(MockConversation *)mockConversation

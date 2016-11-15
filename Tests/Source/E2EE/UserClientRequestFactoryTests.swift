@@ -59,7 +59,10 @@ class UserClientRequestFactoryTests: MessagingTest {
         let credentials = ZMEmailCredentials(email: "some@example.com", password: "123")
         
         //when
-        let request = try! sut.registerClientRequest(client, credentials: credentials, authenticationStatus:authenticationStatus)
+        guard let request = try? sut.registerClientRequest(client, credentials: credentials, authenticationStatus:authenticationStatus) else {
+            XCTFail()
+            return
+        }
         
         //then
         guard let transportRequest = request.transportRequest else { return XCTFail("Should return non nil request") }

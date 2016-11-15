@@ -105,10 +105,7 @@ extern NSString * const SelfUserPassword;
 
 - (void)prefetchRemoteClientByInsertingMessageInConversation:(MockConversation *)conversation;
 
-- (EncryptionContext *)setupOTREnvironmentForUser:(MockUser *)mockUser
-                                     isSelfClient:(BOOL)isSelfClient
-                                     numberOfKeys:(UInt16)numberOfKeys
-                     establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser;
+- (void)setupOTREnvironmentForUser:(MockUser *)mockUser establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser;
 
 - (void)remotelyAppendSelfConversationWithZMClearedForMockConversation:(MockConversation *)mockConversation
                                                                 atTime:(NSDate *)newClearedTimeStamp;

@@ -201,7 +201,7 @@
     // given
     XCTAssert([self logInAndWaitForSyncToBeComplete]);
 
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     UserClient *selfClient = [ZMUser selfUserInUserSession:self.userSession].selfClient;
     [self.userSession performChanges:^{
@@ -234,7 +234,7 @@
     // given
     XCTAssert([self logInAndWaitForSyncToBeComplete]);
     
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     UserClient *selfClient = [ZMUser selfUserInUserSession:self.userSession].selfClient;
     [self.userSession performChanges:^{
