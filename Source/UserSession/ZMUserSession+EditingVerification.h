@@ -18,8 +18,11 @@
 
 
 #import "ZMUserSession.h"
+@class UserProfileUpdateStatus;
 
 @interface ZMUserSession (EditingVerification)
+
+@property (nonatomic, readonly) UserProfileUpdateStatus *userProfileUpdateStatus;
 
 - (id<ZMUserEditingObserverToken>)addUserEditingObserver:(id<ZMUserEditingObserver>)observer ZM_MUST_USE_RETURN;
 - (void)removeUserEditingObserverForToken:(id<ZMUserEditingObserverToken>)observerToken;

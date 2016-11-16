@@ -208,7 +208,7 @@
     }] phoneNumberVerificationCodeRequestDidSucceed];
     
     // when
-    [self.userSession requestVerificationCodeForPhoneNumberUpdate:phone]; // <- STEP 1
+    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone]; // <- STEP 1
     
     if(![self waitForCustomExpectationsWithTimeout:0.5]) {
         XCTFail(@"phoneNumberVerificationCodeExpectation");
@@ -216,7 +216,7 @@
     }
     
     // and when
-    [self.userSession verifyPhoneNumberForUpdate:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.phoneVerificationCodeForUpdatingProfile]];  // <- STEP 2
+    [self.userSession.userProfileUpdateStatus requestPhoneNumberChangeWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.phoneVerificationCodeForUpdatingProfile]];  // <- STEP 2
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -250,9 +250,9 @@
     [[userObserver expect] phoneNumberVerificationDidFail:OCMOCK_ANY];
     
     // when
-    [self.userSession requestVerificationCodeForPhoneNumberUpdate:phone];
+    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone];
     WaitForAllGroupsToBeEmpty(0.5);
-    [self.userSession verifyPhoneNumberForUpdate:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.invalidPhoneVerificationCode]];
+    [self.userSession.userProfileUpdateStatus requestPhoneNumberChangeWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.invalidPhoneVerificationCode]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -290,7 +290,7 @@
     
     
     // when
-    [self.userSession requestVerificationCodeForPhoneNumberUpdate:phone];
+    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -331,7 +331,7 @@
     
     
     // when
-    [self.userSession requestVerificationCodeForPhoneNumberUpdate:phone];
+    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -370,7 +370,7 @@
     
     
     // when
-    [self.userSession requestVerificationCodeForPhoneNumberUpdate:phone];
+    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -408,7 +408,7 @@
     
     
     // when
-    [self.userSession requestVerificationCodeForPhoneNumberUpdate:phone];
+    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -455,7 +455,7 @@
     
     
     // when
-    [self.userSession requestVerificationEmailForEmailUpdate:credentials]; // <- STEP 1
+    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil]; // <- STEP 1
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -501,7 +501,7 @@
     [[userObserver expect] passwordUpdateRequestDidFail];
     
     // when
-    [self.userSession requestVerificationEmailForEmailUpdate:credentials];
+    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -542,7 +542,7 @@
     [[editingObserver expect] passwordUpdateRequestDidFail];
     
     // when
-    [self.userSession requestVerificationEmailForEmailUpdate:credentials];
+    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -588,7 +588,7 @@
     [[editiongObserver expect] emailUpdateDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionUnkownError userInfo:nil]];
     
     // when
-    [self.userSession requestVerificationEmailForEmailUpdate:credentials];
+    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -625,7 +625,7 @@
     [[editiongObserver expect] emailUpdateDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidEmail userInfo:nil]];
     
     // when
-    [self.userSession requestVerificationEmailForEmailUpdate:credentials];
+    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -662,7 +662,7 @@
     [[editiongObserver expect] emailUpdateDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionEmailIsAlreadyRegistered userInfo:nil]];
     
     // when
-    [self.userSession requestVerificationEmailForEmailUpdate:credentials];
+    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

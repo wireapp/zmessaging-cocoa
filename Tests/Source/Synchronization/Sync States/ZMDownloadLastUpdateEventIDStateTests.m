@@ -70,9 +70,7 @@
 - (void)testThatItAsksNextRequestToTheObjectSyncs
 {
     NSArray *expectedObjectSync = @[
-                                    [self.objectDirectory lastUpdateEventIDTranscoder],
-                                    [self.objectDirectory userProfileUpdateTranscoder]
-                                    ];
+                                    [self.objectDirectory lastUpdateEventIDTranscoder]];
     
     [self checkThatItCallsRequestGeneratorsOnObjectsOfClass:expectedObjectSync creationOfStateBlock:^ZMSyncState *(id<ZMObjectStrategyDirectory> directory)
      {

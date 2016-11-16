@@ -573,7 +573,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
         ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
         [self.userSession performChanges:^{
-            [self.userSession requestVerificationEmailForEmailUpdate:credentials];
+            [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
         }];
     };
     
