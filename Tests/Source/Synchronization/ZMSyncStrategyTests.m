@@ -49,8 +49,8 @@
 #import "ZMOperationLoop.h"
 #import "ZMTypingTranscoder.h"
 #import "ZMRemovedSuggestedPeopleTranscoder.h"
-#import "AVSMediaManager.h"
-#import "AVSFlowManager.h"
+#import <avs/AVSMediaManager.h> // TODO: Remove that
+#import <avs/AVSFlowManager.h> // TODO: Remove that
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMUserProfileUpdateTranscoder.h"

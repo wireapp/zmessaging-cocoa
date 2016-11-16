@@ -22,6 +22,17 @@
 @class ZMCallTimer;
 @class AVSFlowManager;
 
+@protocol ZMCallImplementation <NSObject>
+
+- (void)join;
+- (void)leave;
+- (void)leaveOnAVSError;
+- (void)ignoreIncomingCall;
+
+@end
+
+
+
 @interface ZMVoiceChannel (CallFlow)
 
 - (void)join;

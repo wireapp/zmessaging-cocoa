@@ -65,8 +65,18 @@
 
 - (void)join
 {
-    ZMConversation *conv = self.conversation;
     
+    ZMConversation *conv = self.conversation;
+
+    if ([WireCallCenter callStateForConversationID:conv.remoteIdentifier.transportString] == AVSCallStateIncoming) {
+        [WireCallCenter answerCallForConversationID:conv.remoteIdentifier.transportString];
+    } else {
+        [WireCallCenter startCallForConversationID:conv.remoteIdentifier.transportString];
+    }
+    return;
+    
+    
+    /*
     if ([self hasOngoingGSMCall]) {
         [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
                 [CallingInitialisationNotification notifyCallingFailedWithErrorCode:ZMVoiceChannelErrorCodeOngoingGSMCall];
@@ -84,6 +94,7 @@
     conv.isOutgoingCall = (conv.callParticipants.count == 0);
     conv.isIgnoringCall = NO;
     conv.callDeviceIsActive = YES;
+     */
 }
 
 - (void)leave;

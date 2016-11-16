@@ -19,9 +19,8 @@
 
 #import <Foundation/Foundation.h>
 @import WireRequestStrategy;
+@import avs;
 
-#import <avs/AVSMediaManager.h>
-#import <avs/AVSFlowManager.h>
 @class ZMConversation;
 @class ZMUser;
 @class ZMOnDemandFlowManager;

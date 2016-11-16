@@ -98,6 +98,8 @@
 @property (nonatomic) FileUploadRequestStrategy *fileUploadRequestStrategy;
 @property (nonatomic) LinkPreviewAssetDownloadRequestStrategy *linkPreviewAssetDownloadRequestStrategy;
 
+@property (nonatomic) CallingRequestStrategy *callingRequestStrategy;
+
 @property (nonatomic) NSManagedObjectContext *eventMOC;
 @property (nonatomic) EventDecoder *eventDecoder;
 @property (nonatomic, weak) ZMLocalNotificationDispatcher *localNotificationDispatcher;
@@ -162,6 +164,18 @@ ZM_EMPTY_ASSERTING_INIT()
         self.apnsConfirmationStatus = [[BackgroundAPNSConfirmationStatus alloc] initWithApplication:application
                                                                                managedObjectContext:self.syncMOC
                                                                           backgroundActivityFactory:[BackgroundActivityFactory sharedInstance]];
+        
+        CallingRequestStrategy *callingStrategy = nil;
+        
+        if (![clientRegistrationStatus needsToRegisterClient]) {
+            ZMUser *user = [ZMUser selfUserInContext:uiMOC];
+            NSString *userIdentifier = user.remoteIdentifier.transportString;
+            NSString *clientIdentifier = user.selfClient.remoteIdentifier;
+            WireCallCenter *callCenter = [[WireCallCenter alloc] initWithUserId:userIdentifier clientId:clientIdentifier];
+            
+            callingStrategy = [[CallingRequestStrategy alloc] initWithCallCenter:callCenter managedObjectContext:self.syncMOC];
+            callCenter.transport = callingStrategy;
+        }
 
         [self createTranscodersWithClientRegistrationStatus:clientRegistrationStatus
                                     userProfileUpdateStatus:userProfileStatus
@@ -171,7 +185,8 @@ ZM_EMPTY_ASSERTING_INIT()
                                               accountStatus:accountStatus
                                                mediaManager:mediaManager
                                         onDemandFlowManager:onDemandFlowManager
-                                   taskCancellationProvider:taskCancellationProvider];
+                                   taskCancellationProvider:taskCancellationProvider
+                                    callingMessageReception:callingStrategy];
         
         self.stateMachine = [[ZMSyncStateMachine alloc] initWithAuthenticationStatus:authenticationStatus
                                                             clientRegistrationStatus:clientRegistrationStatus
@@ -229,7 +244,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                          mediaManager:(id<AVSMediaManager>)mediaManager
                                   onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                              taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
-
+                              callingMessageReception:(id <CallingMessageReceptionDelegate>)callingMessageReception
 {
     NSManagedObjectContext *uiMOC = self.uiMOC;
     NSOperationQueue *imageProcessingQueue = [ZMImagePreprocessor createSuitableImagePreprocessingQueue];
@@ -240,7 +255,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.selfTranscoder = [[ZMSelfTranscoder alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
     self.conversationTranscoder = [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus accountStatus:accountStatus syncStrategy:self];
     self.systemMessageTranscoder = [ZMMessageTranscoder systemMessageTranscoderWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher];
-    self.clientMessageTranscoder = [[ZMClientMessageTranscoder alloc ] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher clientRegistrationStatus:clientRegistrationStatus apnsConfirmationStatus: self.apnsConfirmationStatus];
+    self.clientMessageTranscoder = [[ZMClientMessageTranscoder alloc ] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher clientRegistrationStatus:clientRegistrationStatus apnsConfirmationStatus: self.apnsConfirmationStatus callingMessageReceptionDelegate:callingMessageReception];
     self.registrationTranscoder = [[ZMRegistrationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
     self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self previouslyReceivedEventIDsCollection:self.eventDecoder application:self.application backgroundAPNSPingbackStatus:backgroundAPNSPingBackStatus];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC objectDirectory:self];

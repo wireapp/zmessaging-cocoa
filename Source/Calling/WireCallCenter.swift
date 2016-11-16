@@ -19,14 +19,15 @@
 import Foundation
 import avs
 
-enum CallClosedReason : Int32 {
+public enum CallClosedReason : Int32 {
     case normal
     case internalError
     case timeout
     case lostMedia
 }
 
-enum CallState : Int32 {
+@objc(AVSCallState)
+public enum CallState : Int32 {
     /// There's no call
     case none
     /// Outgoing call is pending
@@ -41,8 +42,6 @@ enum CallState : Int32 {
     case unknown
 }
 
-typealias CallToken = OpaquePointer
-
 enum WireCallCenterNotificationType {
     case incoming
     case established
@@ -56,12 +55,10 @@ class WireCallCenterNotification : ZMNotification {
     let type : WireCallCenterNotificationType
     let conversationId : NSUUID
     let userId : NSUUID
-    let token : CallToken
     var callClosedReason : CallClosedReason?
     
-    init(type: WireCallCenterNotificationType, token: CallToken, conversationId: NSUUID, userId: NSUUID) {
+    init(type: WireCallCenterNotificationType, conversationId: NSUUID, userId: NSUUID) {
         self.type = type
-        self.token = token
         self.conversationId = conversationId
         self.userId = userId
         
@@ -76,79 +73,77 @@ class WireCallCenterNotification : ZMNotification {
 
 protocol WireCallCenterObserver {
     
-    func establishedCall(token: CallToken, conversationId: NSUUID, userId: NSUUID)
-    func incomingCall(token: CallToken, conversationId: NSUUID, userId: NSUUID)
-    func closedCall(token: CallToken, conversationId: NSUUID, userId: NSUUID, reason: CallClosedReason)
+    func establishedCall(conversationId: NSUUID, userId: NSUUID)
+    func incomingCall(conversationId: NSUUID, userId: NSUUID)
+    func closedCall(conversationId: NSUUID, userId: NSUUID, reason: CallClosedReason)
     
 }
 
-protocol WireCallCenterTransport {
+@objc public protocol WireCallCenterTransport: class {
     
-    func send(data: Data, conversation: NSUUID, userId: NSUUID)
-    
-    
+    func send(data: Data, conversationId: NSUUID, userId: NSUUID)
     
 }
 
-class WireCallCenter {
+@objc public class WireCallCenter : NSObject {
     
-    var transport : WireCallCenterTransport?
+    public weak var transport : WireCallCenterTransport? = nil
     
-    init(userId: String, clientId: String) {
+    public init(userId: String, clientId: String) {
+        
+        super.init()
         
         let observer = Unmanaged.passUnretained(self).toOpaque()
         
-        wcall_init(userId,
-                   clientId,
-                   { (version, context) in
-                    if let context = context {
-                        _ = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
-                        
-                        
-                    }
-            },
-                   { (conversationId, userId, clientId, data, dataLength, context) in
-                    if let context = context, let conversationId = conversationId, let userId = userId, let clientId = clientId, let data = data {
-                        let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
-                        
-                        return selfReference.send(conversationId: String.init(cString: conversationId),
-                                                  userId: String.init(cString: userId),
-                                                  clientId: String.init(cString: clientId),
-                                                  data: data,
-                                                  dataLength: dataLength)
-                    }
+        wcall_init(
+            userId,
+            clientId,
+            { (version, context) in
+                if let context = context {
+                    _ = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
                     
-                    return 0
+                    
+                }
             },
-                   { (conversationId, userId, callToken, context) -> Void in
-                    if let context = context, let conversationId = conversationId, let userId = userId  {
-                        let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
-                        
-                        selfReference.incoming(conversationId: String.init(cString: conversationId),
-                                               userId: String.init(cString: userId),
-                                               callToken: callToken)
-                    }
+            { (conversationId, userId, clientId, data, dataLength, context) in
+                if let context = context, let conversationId = conversationId, let userId = userId, let clientId = clientId, let data = data {
+                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
+                    
+                    return selfReference.send(conversationId: String.init(cString: conversationId),
+                                              userId: String.init(cString: userId),
+                                              clientId: String.init(cString: clientId),
+                                              data: data,
+                                              dataLength: dataLength)
+                }
+                
+                return 0
             },
-                   {(conversationId, userId, callToken, context) in
-                    if let context = context, let conversationId = conversationId, let userId = userId  {
-                        let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
-                        
-                        selfReference.established(conversationId: String.init(cString: conversationId),
-                                                  userId: String.init(cString: userId),
-                                                  callToken: callToken)
-                    }
+            { (conversationId, userId, context) -> Void in
+                if let context = context, let conversationId = conversationId, let userId = userId  {
+                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
+                    
+                    selfReference.incoming(conversationId: String.init(cString: conversationId),
+                                           userId: String.init(cString: userId))
+                }
             },
-                   { (reason, conversationId, userId, callToken, context) in
-                    if let context = context, let conversationId = conversationId, let userId = userId  {
-                        let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
-                        
-                        selfReference.closed(conversationId: String.init(cString: conversationId),
-                                             userId: String.init(cString: userId),
-                                             callToken: callToken,
-                                             reason: CallClosedReason(rawValue: reason) ?? .internalError)
-                    }
+            {(conversationId, userId, context) in
+                if let context = context, let conversationId = conversationId, let userId = userId  {
+                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
+                    
+                    selfReference.established(conversationId: String.init(cString: conversationId),
+                                              userId: String.init(cString: userId))
+                }
             },
-                   observer)
+            { (reason, conversationId, userId, metrics, context) in
+                if let context = context, let conversationId = conversationId, let userId = userId  {
+                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
+                    
+                    selfReference.closed(conversationId: String.init(cString: conversationId),
+                                         userId: String.init(cString: userId),
+                                         reason: CallClosedReason(rawValue: reason) ?? .internalError)
+                }
+            },
+            observer)
         
     }
     
@@ -157,23 +152,24 @@ class WireCallCenter {
         let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
         let data = Data(buffer: bytes)
         
-        transport?.send(data: data, conversation: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
+        transport?.send(data: data, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
         
         return 0
     }
     
-    private func incoming(conversationId: String, userId: String, callToken: CallToken?) {
-        let note = WireCallCenterNotification(type: .incoming, token: callToken!, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
+    private func incoming(conversationId: String, userId: String) {
+        let note = WireCallCenterNotification(type: .incoming, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
         NotificationCenter.default.post(note as Notification)
     }
     
-    private func established(conversationId: String, userId: String, callToken: CallToken?) {
-        let note = WireCallCenterNotification(type: .established, token: callToken!, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
+    private func established(conversationId: String, userId: String) {
+        let note = WireCallCenterNotification(type: .established, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
         NotificationCenter.default.post(note as Notification)
     }
     
-    private func closed(conversationId: String, userId: String, callToken: CallToken?, reason: CallClosedReason) {
-        let note = WireCallCenterNotification(type: .closed, token: callToken!, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
+    private func closed(conversationId: String, userId: String, reason: CallClosedReason) {
+        let note = WireCallCenterNotification(type: .closed, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
+        
         note.callClosedReason = reason
         NotificationCenter.default.post(note as Notification)
     }
@@ -195,11 +191,11 @@ class WireCallCenter {
             if let note = (note as NSNotification) as? WireCallCenterNotification {
                 switch (note.type) {
                 case .established:
-                    observer.establishedCall(token: note.token, conversationId: note.conversationId, userId: note.userId)
+                    observer.establishedCall(conversationId: note.conversationId, userId: note.userId)
                 case .incoming:
-                    observer.incomingCall(token: note.token, conversationId: note.conversationId, userId: note.userId)
+                    observer.incomingCall(conversationId: note.conversationId, userId: note.userId)
                 case .closed:
-                    observer.closedCall(token: note.token, conversationId: note.conversationId, userId: note.userId, reason: note.callClosedReason ?? .internalError)
+                    observer.closedCall(conversationId: note.conversationId, userId: note.userId, reason: note.callClosedReason ?? .internalError)
                 }
             }
         }
@@ -211,27 +207,28 @@ class WireCallCenter {
     
     // MARK - Call state methods
     
-    class func answerCall(conversationId: String) {
-        wcall_answer(conversationId)
+    @objc(answerCallForConversationID:)
+    public class func answerCall(conversationId: String) -> Bool {
+        return wcall_answer(conversationId) == 0
     }
     
-    class func startCall(conversationId: String) -> CallToken? {
-        return wcall_start(conversationId)
+    @objc(startCallForConversationID:)
+    public class func startCall(conversationId: String) -> Bool {
+        return wcall_start(conversationId) == 0
     }
     
-    class func closeCall(conversationId: String) {
-        wcall_end_inconv(conversationId)
+    @objc(closeCallForConversationID:)
+    public class func closeCall(conversationId: String) {
+        wcall_end(conversationId)
     }
     
-    class func closeCall(token: CallToken) {
-        wcall_end(token)
+    @objc(toogleVideoForConversationID:isActive:)
+    public class func toogleVideo(conversationID: String, active: Bool) {
+        wcall_set_video_send_active(conversationID, active ? 1 : 0)
     }
-    
-    class func callState(conversationId: String) -> CallState {
-        return CallState(rawValue: wcall_get_state_inconv(conversationId)) ?? .unknown
-    }
-    
-    class func callState(token: CallToken) -> CallState {
-        return CallState(rawValue: wcall_get_state(token)) ?? .unknown
+ 
+    @objc(callStateForConversationID:)
+    public class func callState(conversationId: String) -> CallState {
+        return CallState(rawValue: wcall_get_state(conversationId)) ?? .unknown
     }
 }
