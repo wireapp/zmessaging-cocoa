@@ -168,3 +168,8 @@
 "push.notification.action.call.message" = "Messaggio";
 "push.notification.action.call.callback" = "Richiama";
 "push.notification.action.connection.accept" = "Accetta";
+
+"push.notification.callkit.call.started.group" = "%1$@ in %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Qualcuno sta chiamando in una conversazione";
+"push.notification.callkit.call.started.group.nousername" = "Qualcuno sta chiamando in %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ sta chiamando in una conversazione";

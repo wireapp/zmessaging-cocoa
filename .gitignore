@@ -9,6 +9,7 @@ workspace.xml
 *.pyc
 Carthage
 zmessaging.framework.zip
+build
 
 # Test artefacts
 xcode-*.log

@@ -35,14 +35,15 @@ extension NotificationForMessage {
     public var soundName : String {
         switch contentType {
         case .knock:
-            return ZMLocalNotificationPingSoundName()
+            return ZMCustomSound.notificationPingSoundName()
         default:
-            return ZMLocalNotificationNewMessageSoundName()
+            return ZMCustomSound.notificationNewMessageSoundName()
         }
     }
     
     public func configureNotification(_ message: MessageType, isEphemeral: Bool = false) -> UILocalNotification {
         let notification = UILocalNotification()
+
         let shouldHideContent : Bool
         if let hide = message.managedObjectContext!.value(forKey: ZMShouldHideNotificationContentKey) as? NSNumber, hide.boolValue == true {
             shouldHideContent = true
@@ -51,7 +52,7 @@ extension NotificationForMessage {
         }
         if shouldHideContent {
             notification.alertBody = (isEphemeral ? ZMPushStringEphemeral : ZMPushStringDefault).localized()
-            notification.soundName = ZMLocalNotificationNewMessageSoundName()
+            notification.soundName = ZMCustomSound.notificationNewMessageSoundName()
             if isEphemeral {
                 notification.category = ZMConversationCategory
             }

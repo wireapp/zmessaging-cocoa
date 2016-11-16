@@ -158,7 +158,7 @@
     id mockActivity = [OCMockObject mockForClass:ZMBackgroundActivity.class];
     
     id factory = [OCMockObject mockForClass:BackgroundActivityFactory.class];
-    [[[[factory stub] andReturn:factory] classMethod] sharedInstance];
+    [(Class)[[[factory stub] andReturn:factory] classMethod] sharedInstance];
     [[[factory expect] andReturn:mockActivity] backgroundActivityWithName:OCMOCK_ANY];
     [[[factory reject] andReturn:mockActivity] backgroundActivityWithName:OCMOCK_ANY];
     

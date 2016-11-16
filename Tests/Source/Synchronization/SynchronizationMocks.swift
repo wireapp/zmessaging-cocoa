@@ -114,6 +114,11 @@ open class FakeKeysStore: UserClientKeysStore {
     var lastGeneratedKeys : [(id: UInt16, prekey: String)] = []
     var lastGeneratedLastPrekey : String?
 
+    static var testDirectory : URL {
+        let directoryURL = try! FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        return directoryURL.appendingPathComponent("otr")
+    }
+    
     override open func generateMoreKeys(_ count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
 
         if self.failToGeneratePreKeys {

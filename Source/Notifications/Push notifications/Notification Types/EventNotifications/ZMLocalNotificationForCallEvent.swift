@@ -55,8 +55,8 @@ final public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent
         guard super.containsIdenticalEvent(event) else { return false }
         
         guard let lastSequence = lastEvent?.callingSequence,
-              let currentSequence = event.callingSequence
-            , lastSequence == currentSequence else {
+              let currentSequence = event.callingSequence,
+              lastSequence == currentSequence else {
                 return false
         }
         
@@ -147,7 +147,7 @@ final public class ZMLocalNotificationForCallEvent : ZMLocalNotificationForEvent
     
     override var soundName : String {
         if let session = session , session.currentState == .incoming {
-            return ZMLocalNotificationRingingSoundName()
+            return ZMCustomSound.notificationRingingSoundName()
         }
         return super.soundName
     }

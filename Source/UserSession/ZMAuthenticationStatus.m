@@ -22,7 +22,6 @@
 @import ZMCDataModel;
 
 #include "ZMAuthenticationStatus.h"
-#include "ZMTracing.h"
 #include "ZMCredentials+Internal.h"
 #include "NSError+ZMUserSession.h"
 #include "NSError+ZMUserSessionInternal.h"
@@ -112,12 +111,6 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)setLoginCredentials:(ZMCredentials *)credentials
 {
-    if(credentials == nil) {
-        ZMTraceAuthCredentialsDeleted();
-    }
-    else {
-        ZMTraceAuthCredentialsSet();
-    }
     if(credentials != self.internalLoginCredentials) {
         self.internalLoginCredentials = credentials;
         [ZMPersistentCookieStorage setCookiesPolicy:NSHTTPCookieAcceptPolicyAlways];

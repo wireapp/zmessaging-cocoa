@@ -19,9 +19,11 @@
 @import ZMCDataModel;
 
 #import "ZMVoiceChannel+VideoCalling.h"
+#import "ZMVoiceChannel+CallFlowPrivate.h"
 #import "AVSFlowManager.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
+#import "ZMCallKitDelegate.h"
 #import "ZMAVSBridge.h"
 #import <zmessaging/zmessaging-Swift.h>
 
@@ -35,21 +37,19 @@ NSString * const ZMBackCameraDeviceID = @"com.apple.avfoundation.avcapturedevice
 @implementation ZMVoiceChannel (VideoCalling)
 
 /// Establishing a video call or join a video call and send video straight away
-- (BOOL)joinVideoCall:(NSError **)error;
+- (BOOL)joinVideoCall:(NSError **)error inUserSession:(ZMUserSession *)userSession
 {
-    ZMConversation *strongConversation = self.conversation;
-    if (strongConversation.callDeviceIsActive && !strongConversation.isVideoCall) {
-        // if there is already an ongoing audioCall we can not switch to videoCall
-        if (error != nil) {
-            *error = [ZMVoiceChannelError switchToVideoNotAllowedError];
+    if ([ZMUserSession useCallKit]) {
+        // Push channel must be open in order to process the call signalling
+        if (!userSession.pushChannelIsOpen) {
+            [userSession.transportSession restartPushChannel];
         }
-        return NO;
+        [userSession.callKitDelegate requestStartCallInConversation:self.conversation videoCall:YES];
+        return YES;
     }
-    
-    strongConversation.isVideoCall = YES;
-    [self join];
-    
-    return YES;
+    else {
+        return [self joinVideoCall:error];
+    }
 }
 
 - (BOOL)isSendingVideoForParticipant:(ZMUser *)participant error:(NSError **)error
