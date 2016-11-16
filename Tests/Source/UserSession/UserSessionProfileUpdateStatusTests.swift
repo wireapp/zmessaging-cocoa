@@ -25,8 +25,6 @@ class UserProfileUpdateStatusTests : MessagingTest {
     
     var sut : UserProfileUpdateStatus! = nil
     
-    var ignoreNotifications = false
-    
     /// Number of time the new request callback was invoked
     var newRequestCallbackCount = 0
     
@@ -56,7 +54,7 @@ extension UserProfileUpdateStatusTests {
         
         // GIVEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = nil
+        XCTAssertNil(selfUser.emailAddress)
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         
         // WHEN
@@ -153,13 +151,12 @@ extension UserProfileUpdateStatusTests {
     func testThatItIsNotSettingEmailAnymoreAsSoonAsTheSelfUserHasEmail() {
         
         // GIVEN
-        let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = nil
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
 
         
         // WHEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
         selfUser.emailAddress = "bar@example.com"
         
         // THEN
@@ -170,18 +167,48 @@ extension UserProfileUpdateStatusTests {
     func testThatItIsNotSettingPasswordAnymoreAsSoonAsTheSelfUserHasEmail() {
         
         // GIVEN
-        let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = nil
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
         self.sut.didUpdatePasswordSuccessfully()
 
         // WHEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
         selfUser.emailAddress = "bar@example.com"
         
         // THEN
         XCTAssertFalse(self.sut.currentlySettingEmail)
         XCTAssertFalse(self.sut.currentlySettingPassword)
+    }
+    
+    func testThatItIsNotSettingEmailAndPasswordAnymoreIfItFailsToUpdatePassword() {
+        
+        // GIVEN
+        let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
+        try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        
+        // WHEN
+        self.sut.didFailPasswordUpdate()
+        
+        // THEN
+        XCTAssertFalse(self.sut.currentlySettingEmail)
+        XCTAssertFalse(self.sut.currentlySettingPassword)
+        XCTAssertNil(self.sut.emailCredentials())
+    }
+    
+    func testThatItIsNotSettingEmailAnymoreIfItFailsToUpdateEmail() {
+        
+        // GIVEN
+        let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
+        try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        
+        // WHEN
+        self.sut.didUpdateEmailSuccessfully()
+        self.sut.didFailEmailUpdate(error: NSError())
+        
+        // THEN
+        XCTAssertFalse(self.sut.currentlySettingEmail)
+        XCTAssertFalse(self.sut.currentlySettingPassword)
+        XCTAssertNil(self.sut.emailCredentials())
     }
 }
  /*

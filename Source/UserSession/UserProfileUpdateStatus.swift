@@ -117,7 +117,8 @@ extension UserProfileUpdateStatus {
     
     /// Invoked when the request to set password failed
     func didFailPasswordUpdate() {
-        // TODO MARCO
+        self.lastEmailAndPassword = nil
+        self.emailPasswordToSet = (.idle, .idle)
     }
     
     /// Invoked when the request to change email was sent successfully
@@ -126,13 +127,15 @@ extension UserProfileUpdateStatus {
     }
     
     func didFailEmailUpdate(error: NSError) {
-        // TODO MARCO
+        self.lastEmailAndPassword = nil
+        self.emailPasswordToSet = (.idle, .idle)
     }
 }
 
 // MARK: - Data
 extension UserProfileUpdateStatus : ZMCredentialProvider {
     
+    /// The email to set on the backend
     public var emailValueToSet : String? {
         switch self.emailPasswordToSet {
         case (.idle, _):
@@ -150,6 +153,7 @@ extension UserProfileUpdateStatus : ZMCredentialProvider {
         }
     }
     
+    /// The password to set on the backend
     public var passwordValueToSet : String? {
         switch self.emailPasswordToSet {
         case (_, .idle):
