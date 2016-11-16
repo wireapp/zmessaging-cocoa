@@ -5,7 +5,7 @@
         <key>push.notification.add.message.many.group</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%2$#@new_messages@ in %1$@</string>
+            <string>%2$#@new_messages@ v %1$@</string>
             <key>new_messages</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -13,15 +13,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>New message</string>
+                <string>Novo sporočilo</string>
                 <key>other</key>
-                <string>%2$@ messages</string>
+                <string>%2$@ sporočil</string>
             </dict>
         </dict>
         <key>push.notification.add.message.many.group.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$#@new_messages@ in a conversation</string>
+            <string>%1$#@new_messages@ v pogovoru</string>
             <key>new_messages</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -29,15 +29,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>New message</string>
+                <string>Novo sporočilo</string>
                 <key>other</key>
-                <string>%1$@ messages</string>
+                <string>%1$@ sporočil</string>
             </dict>
         </dict>
         <key>push.notification.add.message.many.oneonone</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%2$#@new_messages@ from %1$@</string>
+            <string>%2$#@new_messages@ od %1$@</string>
             <key>new_messages</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -45,15 +45,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>New message</string>
+                <string>Novo sporočilo</string>
                 <key>other</key>
-                <string>%2$@ messages</string>
+                <string>%2$@ sporočil</string>
             </dict>
         </dict>
         <key>push.notification.add.message.many.oneonone.nousername</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$#@new_messages@ in a conversation</string>
+            <string>%1$#@new_messages@ v pogovoru</string>
             <key>new_messages</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -61,15 +61,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>New message</string>
+                <string>Novo sporočilo</string>
                 <key>other</key>
-                <string>%1$@ messages</string>
+                <string>%1$@ sporočil</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.oneonone</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ called%2$#@new_calls@</string>
+            <string>%1$@ je klical(-a)%2$#@new_calls@</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -79,13 +79,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %2$@ times</string>
+                <string> %2$@ krat</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.oneonone.nousername</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>Someone called%1$#@new_calls@</string>
+            <string>Nekdo je klical(-a)%1$#@new_calls@</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -95,13 +95,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %1$@ times</string>
+                <string> %1$@ krat</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.group</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ called%3$#@new_calls@ in %2$@</string>
+            <string>%1$@ je klical(-a)%3$#@new_calls@ v %2$@</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -111,13 +111,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %3$@ times</string>
+                <string> %3$@ krat</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.group.nousername</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>Someone called%2$#@new_calls@ in %1$@</string>
+            <string>Nekdo je klical(-a)%2$#@new_calls@ v %1$@</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -127,13 +127,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %2$@ times</string>
+                <string> %2$@ krat</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.group.nousername.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>Someone called%1$#@new_calls@ in a conversation</string>
+            <string>Nekdo je klical(-a)%1$#@new_calls@ v pogovoru</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -143,13 +143,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %1$@ times</string>
+                <string> %1$@ krat</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.group.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ called%2$#@new_calls@ in a conversation</string>
+            <string>%1$@ je klical(-a)%2$#@new_calls@ v pogovoru</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -159,13 +159,13 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %2$@ times</string>
+                <string> %2$@ krat</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.many</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>You have %2$#@new_calls@ in %1@</string>
+            <string>Imate %2$#@new_calls@ v %1@</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -173,15 +173,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>one missed call</string>
+                <string>en zgrešen klic</string>
                 <key>other</key>
-                <string>%2@ missed calls</string>
+                <string>%2@ zgrešenih klicev</string>
             </dict>
         </dict>
         <key>push.notification.call.missed.many.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>You have %1$#@new_calls@ in a conversation</string>
+            <string>Imate %1$#@new_calls@ v pogovoru</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -189,15 +189,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>one missed call</string>
+                <string>en zgrešen klic</string>
                 <key>other</key>
-                <string>%1$@ missed calls</string>
+                <string>%1$@ zgrešenih klicev</string>
             </dict>
         </dict>
         <key>push.notification.knock.group</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ pinged%3$#@new_knocks@in %2$@</string>
+            <string>%1$@ je%3$#@new_knocks@in %2$@ pingal(-a)</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -207,13 +207,13 @@
                 <key>one</key>
                 <string> </string>
                 <key>other</key>
-                <string> %3$@ times </string>
+                <string> %3$@ krat </string>
             </dict>
         </dict>
         <key>push.notification.knock.group.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ pinged%2$#@new_knocks@in a conversation</string>
+            <string>%1$@ je%2$#@new_knocks@in pingal(-a) v pogovoru</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -223,13 +223,13 @@
                 <key>one</key>
                 <string> </string>
                 <key>other</key>
-                <string> %2$@ times </string>
+                <string> %2$@ krat </string>
             </dict>
         </dict>
         <key>push.notification.knock.group.nousername</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%2$#@new_knocks@ in %1$@</string>
+            <string>%2$#@new_knocks@ v %1$@</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -239,13 +239,13 @@
                 <key>one</key>
                 <string>Ping</string>
                 <key>other</key>
-                <string>%2$@ pings</string>
+                <string>%2$@ pingov</string>
             </dict>
         </dict>
         <key>push.notification.knock.group.nousername.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$#@new_knocks@ in a conversation</string>
+            <string>%1$#@new_knocks@ v pogovoru</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -255,13 +255,13 @@
                 <key>one</key>
                 <string>Ping</string>
                 <key>other</key>
-                <string>%1$@ pings</string>
+                <string>%1$@ pingov</string>
             </dict>
         </dict>
         <key>push.notification.knock.oneonone</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ pinged%3$#@new_knocks@</string>
+            <string>%1$@ je%3$#@new_knocks@ pingal(-a)</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -271,7 +271,7 @@
                 <key>one</key>
                 <string> </string>
                 <key>other</key>
-                <string> %3$@ times</string>
+                <string> %3$@ krat</string>
             </dict>
         </dict>
         <key>push.notification.knock.oneonone.nousername</key>
@@ -287,7 +287,7 @@
                 <key>one</key>
                 <string>Ping</string>
                 <key>other</key>
-                <string>%2$@ pings</string>
+                <string>%2$@ pingov</string>
             </dict>
         </dict>
     </dict>
