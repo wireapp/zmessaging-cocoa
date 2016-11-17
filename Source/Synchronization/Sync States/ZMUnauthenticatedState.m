@@ -157,14 +157,8 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
                 return [[directory.selfTranscoder requestGenerators] nextRequest];
             }
             if (clientRegPhase == ZMClientRegistrationPhaseWaitingForEmailVerfication) {
-                // sync the email and password supplied by the user
-                // TODO MARCO
-                // ZMTransportRequest *request = [[directory.userProfileUpdateTranscoder requestGenerators] nextRequest];
-                // resend email verification if necessary
-                ZMTransportRequest *request =  nil;
-                if (request == nil) {
-                    request = [self loginRequest];
-                }
+                ZMTransportRequest *request =  [self loginRequest];
+                
                 // fetch selfUser with timed downstream sync until user has clicked on link in verification email
                 if (request == nil) {
                     request = [[directory.selfTranscoder requestGenerators] nextRequest];
