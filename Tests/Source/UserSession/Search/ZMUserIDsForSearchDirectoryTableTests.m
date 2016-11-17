@@ -115,7 +115,7 @@
         
         id mockUserSession = [OCMockObject mockForClass:ZMUserSession.class];
         [[[mockUserSession stub] andReturn:self.syncMOC] syncManagedObjectContext];
-        [[mockUserSession expect] databaseDirectoryURL];
+        [[mockUserSession expect] storeURL];
         [[mockUserSession expect] managedObjectContext];
 
         ZMSearchDirectory *directory = [[ZMSearchDirectory alloc] initWithUserSession:mockUserSession];
