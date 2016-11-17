@@ -19,13 +19,15 @@
 
 @import CoreTelephony;
 @import ZMCDataModel;
-
+@import avs;
 #import "ZMOnDemandFlowManager.h"
 #import "ZMAVSBridge.h"
 #import "ZMUserSession.h"
+#import "ZMUserSession+Internal.h"
 #import "ZMVoiceChannel+CallFlow.h"
+#import "ZMVoiceChannel+CallFlowPrivate.h"
 #import "ZMVoiceChannel+VideoCalling.h"
-#import <avs/AVSFlowManager.h>
+#import "ZMCallKitDelegate.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 
@@ -63,43 +65,28 @@
 }
 
 
-- (void)join
+- (void)joinInUserSession:(ZMUserSession *)userSession
 {
-    
-    ZMConversation *conv = self.conversation;
-
-    if ([WireCallCenter callStateForConversationID:conv.remoteIdentifier.transportString] == AVSCallStateIncoming) {
-        [WireCallCenter answerCallForConversationID:conv.remoteIdentifier.transportString];
-    } else {
-        [WireCallCenter startCallForConversationID:conv.remoteIdentifier.transportString];
+    if ([ZMUserSession useCallKit]) {
+        // Push channel must be open in order to process the call signalling
+        if (!userSession.pushChannelIsOpen) {
+            [userSession.transportSession restartPushChannel];
+        }
+        [userSession.callKitDelegate requestStartCallInConversation:self.conversation videoCall:NO];
     }
-    return;
-    
-    
-    /*
-    if ([self hasOngoingGSMCall]) {
-        [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
-                [CallingInitialisationNotification notifyCallingFailedWithErrorCode:ZMVoiceChannelErrorCodeOngoingGSMCall];
-            }];
-        return;
+    else {
+        [self join];
     }
-   
-    [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
-        [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportSessionShouldKeepWebsocketOpenNotificationName object:self userInfo:@{ZMTransportSessionShouldKeepWebsocketOpenKey: @YES}];
-    }];
-    
-    if(!conv.callDeviceIsActive) {
-        [ZMUserSession appendAVSLogMessageForConversation:conv withMessage:@"Self user wants to join voice channel"];
-    }
-    conv.isOutgoingCall = (conv.callParticipants.count == 0);
-    conv.isIgnoringCall = NO;
-    conv.callDeviceIsActive = YES;
-     */
 }
 
-- (void)leave;
+- (void)leaveInUserSession:(ZMUserSession *)userSession
 {
-    [self leaveWithReason:ZMCallStateReasonToLeaveUser];
+    if ([ZMUserSession useCallKit]) {
+        [userSession.callKitDelegate requestEndCallInConversation:self.conversation];
+    }
+    else {
+        [self leave];
+    }
 }
 
 - (void)leaveOnAVSError
@@ -287,6 +274,69 @@
         [self.managedObjectContext zm_resetCallTimer:self];
     }
     [super prepareForDeletion];
+}
+
+@end
+
+@implementation ZMVoiceChannel (CallFlowPrivate)
+
+- (void)join
+{
+    ZMConversation *conv = self.conversation;
+    
+    if ([self hasOngoingGSMCall] && ![ZMUserSession useCallKit]) {
+        [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
+            [CallingInitialisationNotification notifyCallingFailedWithErrorCode:ZMVoiceChannelErrorCodeOngoingGSMCall];
+        }];
+        return;
+    }
+    
+    [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportSessionShouldKeepWebsocketOpenNotificationName object:self userInfo:@{ZMTransportSessionShouldKeepWebsocketOpenKey: @YES}];
+    }];
+    
+    
+    if ([WireCallCenter callStateForConversationID:conv.remoteIdentifier.transportString] == AVSCallStateIncoming) {
+        [WireCallCenter answerCallForConversationID:conv.remoteIdentifier.transportString];
+    } else {
+        [WireCallCenter startCallForConversationID:conv.remoteIdentifier.transportString];
+    }
+
+    conv.isOutgoingCall = (conv.callParticipants.count == 0);
+    conv.isIgnoringCall = NO;
+    conv.callDeviceIsActive = YES;
+
+    /*
+    if(!conv.callDeviceIsActive) {
+        [ZMUserSession appendAVSLogMessageForConversation:conv withMessage:@"Self user wants to join voice channel"];
+    }
+    conv.isOutgoingCall = (conv.callParticipants.count == 0);
+    conv.isIgnoringCall = NO;
+    conv.callDeviceIsActive = YES;
+    */
+}
+
+- (BOOL)joinVideoCall:(NSError **)error
+{
+    ZMConversation *strongConversation = self.conversation;
+    if (strongConversation.callDeviceIsActive && !strongConversation.isVideoCall) {
+        // if there is already an ongoing audioCall we can not switch to videoCall
+        if (error != nil) {
+            *error = [ZMVoiceChannelError switchToVideoNotAllowedError];
+        }
+        return NO;
+    }
+    
+//    strongConversation.isVideoCall = YES;
+    [WireCallCenter toogleVideoForConversationID:strongConversation.remoteIdentifier.transportString isActive:YES];
+    [self join];
+    
+    return YES;
+}
+
+- (void)leave
+{
+    [self leaveWithReason:ZMCallStateReasonToLeaveUser];
 }
 
 @end

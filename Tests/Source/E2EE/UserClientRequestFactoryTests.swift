@@ -36,7 +36,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         authenticationStatus = MockAuthenticationStatus(cookie: nil);
         self.sut = UserClientRequestFactory()
         
-        let newKeyStore = FakeKeysStore()
+        let newKeyStore = FakeKeysStore(in: FakeKeysStore.testDirectory)
         self.syncMOC.userInfo.setObject(newKeyStore, forKey: "ZMUserClientKeysStore" as NSCopying)
     }
     

@@ -168,3 +168,8 @@
 "push.notification.action.call.message" = "Stuur bericht";
 "push.notification.action.call.callback" = "Bel terug";
 "push.notification.action.connection.accept" = "Neem op";
+
+"push.notification.callkit.call.started.group" = "%1$@ in %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Iemand belt in een gesprek";
+"push.notification.callkit.call.started.group.nousername" = "Iemand belt in %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ belt in een gesprek";

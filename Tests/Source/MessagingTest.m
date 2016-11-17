@@ -78,6 +78,7 @@
 
 
 @implementation MessagingTest
+@synthesize mockUserSession = _mockUserSession;
 
 - (BOOL)shouldSlowTestTimers
 {
@@ -154,13 +155,17 @@
     self.searchMOC = [NSManagedObjectContext createSearchContextWithStoreDirectory:self.databaseDirectory];
     [self.searchMOC addGroup:self.dispatchGroup];
     self.mockTransportSession = [[MockTransportSession alloc] initWithDispatchGroup:self.dispatchGroup];
-    self.mockTransportSession.cryptoboxLocation = [UserClientKeysStore otrDirectory];
+    self.mockTransportSession.cryptoboxLocation = [self.databaseDirectory URLByAppendingPathComponent:@"otr"];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
 }
 
 - (void)tearDown;
 {
+    [(id)_mockUserSession stopMocking];
+    _mockUserSession = nil;
+
     ZMConversationDefaultLastReadTimestampSaveDelay = self.originalConversationLastReadTimestampTimerValue;
+
     [self resetState];
     [MessagingTest deleteAllFilesInCache];
     [super tearDown];
@@ -290,13 +295,17 @@
     
     WaitForAllGroupsToBeEmpty(2);
     
+    [self performPretendingUiMocIsSyncMoc:^{
+        [self.uiMOC setupUserKeyStoreForDirectory:self.databaseDirectory];
+    }];
+    
     [self.uiMOC setPersistentStoreMetadata:clientID forKey:ZMPersistedClientIdKey];
     [self.uiMOC saveOrRollback];
     WaitForAllGroupsToBeEmpty(2);
     
     
     [self.uiMOC setZm_syncContext:self.syncMOC];
-    [self.uiMOC   setPersistentStoreMetadata:@(notificationContentVisible) forKey:@"ZMShouldNotificationContentKey"];
+    [self.uiMOC setPersistentStoreMetadata:@(notificationContentVisible) forKey:@"ZMShouldNotificationContentKey"];
 
     self.uiMOC.zm_imageAssetCache = imageAssetCache;
     self.uiMOC.zm_fileAssetCache = fileAssetCache;
@@ -399,6 +408,16 @@
     return objectDirectory;
 }
 
+- (ZMUserSession *)mockUserSession
+{
+    if (nil == _mockUserSession) {
+        id mockUserSession = [OCMockObject niceMockForClass:[ZMUserSession class]];
+        [[[mockUserSession stub] andReturn:self.uiMOC] managedObjectContext];
+        _mockUserSession = mockUserSession;
+    }
+    
+    return _mockUserSession;
+}
 
 - (BOOL)waitWithTimeout:(NSTimeInterval)timeout forSaveOfContext:(NSManagedObjectContext *)moc untilBlock:(BOOL(^)(void))block;
 {

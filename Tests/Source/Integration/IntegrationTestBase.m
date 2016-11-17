@@ -93,7 +93,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     
     self.mockObjectIDToRemoteID = [NSMutableDictionary dictionary];
     self.mockFlowManager = self.mockTransportSession.mockFlowManager;
-    self.mockTransportSession.cryptoboxLocation = [UserClientKeysStore otrDirectory];
+    self.mockTransportSession.cryptoboxLocation = [[[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier] URLByAppendingPathComponent:@"otr"];
 
     ZMFlowSyncInternalFlowManagerOverride = self.mockFlowManager;
     
@@ -634,8 +634,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 - (EncryptionContext *)setupOTREnvironmentForUser:(MockUser *)mockUser isSelfClient:(BOOL)isSelfClient numberOfKeys:(UInt16)numberOfKeys establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser
 {
-    NSURL *url = [UserClientKeysStore otrDirectory];
-    url = [url URLByAppendingPathComponent:mockUser.identifier];
+    NSURL *url = [self.mockTransportSession.cryptoboxLocation URLByAppendingPathComponent:mockUser.identifier];
     [[NSFileManager defaultManager] createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
     
     EncryptionContext *encryptionContext = [[EncryptionContext alloc] initWithPath:url];
@@ -713,8 +712,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     MockUserClient *senderClient = [session registerClientForUser:sender label:sender.name type:@"permanent"];
     __block NSError *error;
     
-    NSURL *url = [UserClientKeysStore otrDirectory];
-    url = [url URLByAppendingPathComponent:senderClient.label];
+    NSURL *url = [self.mockTransportSession.cryptoboxLocation URLByAppendingPathComponent:senderClient.label];
     [[NSFileManager defaultManager] createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
     EncryptionContext *senderBox = [[EncryptionContext alloc] initWithPath:url];
     

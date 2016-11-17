@@ -1,0 +1,170 @@
+// 
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
+//
+
+
+"push.notification.default" = "رسالة جديدة";
+"push.notification.ephemeral" = "أرسل أحدهم لك رسالة";
+
+"push.notification.add.message.group" = "%1$@ في %2$@: %3$@";
+"push.notification.add.message.group.nousername" = "رسالة جديدة في %1$@: %2$@";
+"push.notification.add.message.group.nousername.noconversationname" = "رسالة جديدة: %1$@";
+"push.notification.add.message.group.noconversationname" = "%1$@ في مُحادثة: %2$@";
+
+"push.notification.add.message.oneonone" = "%1$@: %2$@";
+"push.notification.add.message.oneonone.nousername" = "رسالة جديدة: %1$@";
+
+"push.notification.add.image.group" = "شارك %1$@ صورة في %2$@";
+"push.notification.add.image.group.nousername" = "صورة جديد في %1$@";
+"push.notification.add.image.group.nousername.noconversationname" = "صورة جديدة في مُحادثة";
+"push.notification.add.image.group.noconversationname" = "شارك %1$@ صورة جديدة في مُحادثة";
+
+"push.notification.add.image.oneonone" = "شارك %1$@ صورة";
+"push.notification.add.image.oneonone.nousername" = "صورة جديدة في المُحادثة";
+
+"push.notification.add.video.group" = "شارك %1$@ فيديو في %2$@";
+"push.notification.add.video.group.nousername" = "فيديو جديد في %1$@";
+"push.notification.add.video.group.nousername.noconversationname" = "فيديو جديد في مُحادثة";
+"push.notification.add.video.group.noconversationname" = "شارك %1$@ فيديو في مُحادثة";
+
+"push.notification.add.video.oneonone" = "شارك %1$@ فيديو";
+"push.notification.add.video.oneonone.nousername" = "فيديو جديد في مُحادثة";
+
+"push.notification.add.audio.group" = "شارك %1$@ رسالة صوتية في %2$@";
+"push.notification.add.audio.group.nousername" = "رسالة صوتية جديدة في %1$@";
+"push.notification.add.audio.group.nousername.noconversationname" = "رسالة صوتية جديدة في مُحادثة";
+"push.notification.add.audio.group.noconversationname" = "شارك %1$@ رسالة صوتية في مُحادثة";
+
+"push.notification.add.audio.oneonone" = "شارك %1$@ رسالة صوتية";
+"push.notification.add.audio.oneonone.nousername" = "رسالة صوتية جديدة في مُحادثة";
+
+"push.notification.add.file.group" = "شارك %1$@ ملف في %2$@";
+"push.notification.add.file.group.nousername" = "ملف جديد في %1$@";
+"push.notification.add.file.group.nousername.noconversationname" = "ملف جديد في مُحادثة";
+"push.notification.add.file.group.noconversationname" = "شارك %1$@ ملف في مُحادثة";
+
+"push.notification.add.file.oneonone" = "شارك %1$@ ملف";
+"push.notification.add.file.oneonone.nousername" = "ملف جديد في مُحادثة";
+
+"push.notification.add.location.group" = "شارك %1$@ موقع في %2$@";
+"push.notification.add.location.group.nousername" = "موقع جديد في %1$@";
+"push.notification.add.location.group.nousername.noconversationname" = "موقع جديد في مُحادثة";
+"push.notification.add.location.group.noconversationname" = "شارك %1$@ موقع في مُحادثة";
+
+"push.notification.add.location.oneonone" = "شارك %1$@ موقع";
+"push.notification.add.location.oneonone.nousername" = "موقع جديد في مُحادثة";
+
+"push.notification.member.join" = "أضاف %1$@ %3$@ لـ%2$@";
+"push.notification.member.join.noconversationname" = "%1$@ أضاف %2$@ لمحادثة";
+"push.notification.member.join.nousername.noconversationname" = "أُضيف %1$@ لمُحادثة";
+"push.notification.member.join.nousername" = "أُضيف %2$@ لـ%1$@";
+
+"push.notification.member.join.many.nootherusername" = "أضاف %1$@ أشخاص لـ%2$@";
+"push.notification.member.join.many.nootherusername.noconversationname" = "أضاف %1$@ أشخاص لمُحادثة";
+"push.notification.member.join.many.nootherusername.nousername" = "تم إضافة أشخاص لـ%1$@";
+"push.notification.member.join.many.nootherusername.nousername.noconversationname" = "تم إضافة أشخاص لمُحادثة";
+
+"push.notification.member.join.self" = "أضافك %1$@ لـ%2$@";
+"push.notification.member.join.self.noconversationname" = "أضافك %1$@ لمُحادثة";
+"push.notification.member.join.self.nousername.noconversationname" = "تم إضافتك لمُحادثة";
+"push.notification.member.join.self.nousername" = "تم إضافتك لـ%1$@";
+
+"push.notification.member.join.nootherusername" = "أضاف %1$@ أشخاص لـ%2$@";
+"push.notification.member.join.nootherusername.noconversationname" = "أضاف %1$@ أشخاص لمُحادثة";
+"push.notification.member.join.nootherusername.nousername.noconversationname" = "تم إضافة أشخاص لمُحادثة";
+"push.notification.member.join.nootherusername.nousername" = "تم إضافة أشخاص لـ%1$@";
+
+"push.notification.member.leave" = "%1$@ أزال %3$@ من %2$@";
+"push.notification.member.leave.noconversationname" = "%1$@ أزال %2$@ من مُحادثة";
+"push.notification.member.leave.nousername.noconversationname" = "تم إزالة %1$@ من مُحادثة";
+"push.notification.member.leave.nousername" = "تم إزالة %2$@ من %1$@";
+
+"push.notification.member.leave.many.nootherusername" = "أزال %1$@ أشخاص من %2$@";
+"push.notification.member.leave.many.nootherusername.noconversationname" = "أزال %1$@ أشخاص من مُحادثة";
+"push.notification.member.leave.many.nootherusername.nousername" = "تم إزالة أشخاص من %1$@";
+"push.notification.member.leave.many.nootherusername.nousername.noconversationname" = "تم إزالة أشخاص من مُحادثة";
+
+"push.notification.member.leave.self" = "أزالك %1$@ من %2$@";
+"push.notification.member.leave.self.noconversationname" = "أزالك %1$@ من مُحادثة";
+"push.notification.member.leave.self.nousername.noconversationname" = "تم حذفك من مُحادثة";
+"push.notification.member.leave.self.nousername" = "تم إزالتك من %1$@";
+
+"push.notification.member.leave.nootherusername" = "أزال %1$@ أشخاص من %2$@";
+"push.notification.member.leave.nootherusername.noconversationname" = "أزال %1$@ أشخاص من مُحادثة";
+"push.notification.member.leave.nootherusername.nousername.noconversationname" = "تم إزالة أشخاص من مُحادثة";
+"push.notification.member.leave.nootherusername.nousername" = "تم إزالة أشخاص من %1$@";
+
+"push.notification.member.leave.sender.nootherusername" = "غادر %1$@ %2$@";
+"push.notification.member.leave.sender.nootherusername.noconversationname" = "غادر %1$@ مُحادثة";
+"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "غادر أشخاص مُحادثة";
+"push.notification.member.leave.sender.nootherusername.nousername" = "غادر أشخاص %1$@";
+
+
+"push.notification.call.started.video.oneonone" = "مُكالمة فيديو من %1$@";
+"push.notification.call.started.video.oneonone.nousername" = "اتصال فيديو من شخص ما";
+
+"push.notification.call.started.video.group" = "%1$@ يتصل بالفيديو في %2$@";
+"push.notification.call.started.video.group.nousername" = "شخص يتصل فيديو في %1$@";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ يتصل بالفيديو في مُحادثة";
+"push.notification.call.started.video.group.nousername.noconversationname" = "شخص يتصل فيديو في مُحادثة";
+
+"push.notification.call.started.oneonone" = "%1$@ يتصل";
+"push.notification.call.started.oneonone.nousername" = "شخص يتصل";
+
+"push.notification.call.started.group" = "%1$@ يتصل في %2$@";
+"push.notification.call.started.group.nousername" = "شخص يتصل في %1$@";
+"push.notification.call.started.group.noconversationname" = "%1$@ يتصل في مُحادثة";
+"push.notification.call.started.group.nousername.noconversationname" = "شخص يتصل في مُحادثة";
+
+"push.notification.conversation.create" = "أنشأ %1$@ مُحادثة جماعية معك";
+"push.notification.conversation.create.nousername" = "أنشأ شخص مُحادثة جماعية معك";
+
+"push.notification.conversation.rename" = "أعاد %1$@ تسمية مُحادثة لـ%2$@";
+"push.notification.conversation.rename.nousername" = "تم إعادة تسمية مُحادثة لـ%1$@";
+
+"push.notification.connection.request" = "يريد %@ التواصل معك";
+"push.notification.connection.request.nousername" = "شخص يريد التواصل معك";
+
+"push.notification.connection.accepted" = "أنت و%@ متصلين الآن";
+"push.notification.connection.accepted.nousername" = "لديك تواصل جديد";
+
+"push.notification.failed.message.oneonone" = "تعذَّر إرسال رسالة لـ%1$@";
+"push.notification.failed.message.oneonone.nousername" = "تعذَّر إرسال رسالة";
+
+"push.notification.failed.message.group" = "تعذَّر إرسال رسالة في %1$@";
+"push.notification.failed.message.group.noconversationname" = "تعذَّر إرسال الرسالة";
+
+"push.notification.reaction.group" = "%1$@ %3$@ رسالتك في %2$@";
+"push.notification.reaction.group.nousername.noconversationname" = "شخص %@ برسالتك في مُحادثة";
+"push.notification.reaction.group.nousername" = "شخص %2$@ رسالتك في %1$@";
+"push.notification.reaction.group.noconversationname" = "%@ %@ رسالتك في مُحادثة";
+
+"push.notification.reaction.oneonone" = "%@ %@ رسالتك";
+"push.notification.reaction.oneonone.nousername" = "شخص %@ رسالتك";
+
+"push.notification.new_user" = "انضمّ %@ لـWire";
+
+"push.notification.action.message.open" = "افتح";
+"push.notification.action.message.reply" = "رد";
+"push.notification.action.message.reply.button.title" = "إرسال";
+"push.notification.action.conversation.mute" = "كتم الصوت";
+
+"push.notification.action.call.accept" = "قبول";
+"push.notification.action.call.ignore" = "رفض";
+"push.notification.action.call.message" = "رسالة";
+"push.notification.action.call.callback" = "معاودة الاتصال";
+"push.notification.action.connection.accept" = "قبول";

@@ -30,7 +30,6 @@
 
 @property (nonatomic) NSArray *remoteIdentifiers;
 @property (nonatomic) NSMutableDictionary *results;
-@property (nonatomic) id mockUserSession;
 @property (nonatomic) id mockCache;
 @property (nonatomic) ZMSuggestionSearch *sut;
 @property (nonatomic) ZMSearchToken token;
@@ -43,9 +42,7 @@
 
 - (void)setUp {
     [super setUp];
-    self.mockUserSession = [OCMockObject niceMockForClass:[ZMUserSession class]];
-    [[[self.mockUserSession stub] andReturn:self.uiMOC] managedObjectContext];
-    (void)[[[[self.mockUserSession stub] andReturn:self.uiMOC] managedObjectContext] dispatchGroup];
+    (void)[[[[(id)self.mockUserSession stub] andReturn:self.uiMOC] managedObjectContext] dispatchGroup];
     self.mockCache = [OCMockObject niceMockForClass:[NSCache class]];
     
     [self verifyMockLater:self.mockCache];
@@ -56,7 +53,6 @@
 
 - (void)tearDown {
     self.mockCache = nil;
-    self.mockUserSession = nil;
     [self.sut tearDown];
     [super tearDown];
 }

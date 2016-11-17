@@ -41,7 +41,7 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
-        let newKeyStore = FakeKeysStore()
+        let newKeyStore = FakeKeysStore(in: FakeKeysStore.testDirectory)
         self.syncMOC.userInfo.setObject(newKeyStore, forKey: "ZMUserClientKeysStore" as NSCopying)
         cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer")
         let cookie = ZMCookie(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage)

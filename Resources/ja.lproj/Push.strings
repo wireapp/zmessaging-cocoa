@@ -168,3 +168,8 @@
 "push.notification.action.call.message" = "メッセージ";
 "push.notification.action.call.callback" = "電話をかけ直す";
 "push.notification.action.connection.accept" = "承諾";
+
+"push.notification.callkit.call.started.group" = "%1$@ in %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Someone calling in a conversation";
+"push.notification.callkit.call.started.group.nousername" = "Someone calling in %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ calling in a conversation";

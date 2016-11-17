@@ -57,7 +57,12 @@ public extension ZMLocalNotificationForEvent {
         case .userContactJoin:
             return ZMLocalNotificationForNewUserEvent(events: [event], conversation: conversation,  managedObjectContext: managedObjectContext, application: application)
         case .callState:
-            return ZMLocalNotificationForCallEvent(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application: application, sessionTracker: sessionTracker)
+            if !ZMUserSession.useCallKit() {
+                return ZMLocalNotificationForCallEvent(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application: application, sessionTracker: sessionTracker)
+            }
+            else {
+                return nil
+            }
         default:
             return nil
         }
@@ -117,7 +122,7 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
         let shouldHideContent = managedObjectContext.value(forKey: ZMShouldHideNotificationContentKey)
         if let shouldHideContent = shouldHideContent as? NSNumber , shouldHideContent.boolValue == true {
             notification.alertBody = ZMPushStringDefault.localized()
-            notification.soundName = ZMLocalNotificationNewMessageSoundName()
+            notification.soundName = ZMCustomSound.notificationNewMessageSoundName()
         } else {
             notification.alertBody = configureAlertBody(conversation).escapingPercentageSymbols()
             notification.soundName = soundName
@@ -148,7 +153,7 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
     open var ignoresSilencedState : Bool { return false }
     
     /// if empty, it does not copy events
-    var soundName : String { return ZMLocalNotificationNewMessageSoundName() }
+    var soundName : String { return ZMCustomSound.notificationNewMessageSoundName() }
     var category : String { return ZMConversationCategory }
     
     

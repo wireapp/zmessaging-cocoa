@@ -159,6 +159,11 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 @end
 
 
+@interface ZMUserSession (Calling)
++ (BOOL)useCallKit;
++ (void)setUseCallKit:(BOOL)useCallKit;
+@end
+
 
 @protocol ZMRequestsToOpenViewsDelegate <NSObject>
 

@@ -42,11 +42,11 @@
 }
 
 - (ZMLocalNotificationForCallEvent *)callNotificationForConversation:(ZMConversation *)conversation
-                                                       otherUser:(ZMUser *)otherUser
-                                                 othersAreJoined:(BOOL)othersAreJoined
-                                                    selfIsJoined:(BOOL)selfIsJoined
-                                                        sequence:(NSNumber *)sequence
-                                                         session:(NSString *)session
+                                                           otherUser:(ZMUser *)otherUser
+                                                     othersAreJoined:(BOOL)othersAreJoined
+                                                        selfIsJoined:(BOOL)selfIsJoined
+                                                            sequence:(NSNumber *)sequence
+                                                             session:(NSString *)session
 {
     if (otherUser == nil) {
         otherUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];

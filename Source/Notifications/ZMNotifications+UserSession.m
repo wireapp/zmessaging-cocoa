@@ -21,7 +21,6 @@
 @import ZMTransport;
 
 #import "ZMNotifications+UserSession.h"
-#import "ZMTracing.h"
 #import "ZMUserSession+Internal.h"
 
 static NSString *const ZMNetworkAvailabilityChangeNotificationName = @"ZMNetworkAvailabilityChangeNotification";

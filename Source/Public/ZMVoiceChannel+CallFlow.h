@@ -19,8 +19,11 @@
 
 @import ZMCDataModel;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class ZMCallTimer;
 @class AVSFlowManager;
+@class ZMUserSession;
 
 @protocol ZMCallImplementation <NSObject>
 
@@ -35,14 +38,14 @@
 
 @interface ZMVoiceChannel (CallFlow)
 
-- (void)join;
-- (void)leave;
+- (void)joinInUserSession:(ZMUserSession *)userSession;
+- (void)leaveInUserSession:(ZMUserSession *)userSession;
 - (void)leaveOnAVSError;
 - (void)ignoreIncomingCall;
 
-- (void)updateActiveFlowParticipants:(nullable NSArray<ZMUser *>*)newParticipants;
-- (void)addCallParticipant:(nonnull ZMUser *)participant;
-- (void)removeCallParticipant:(nonnull ZMUser *)participant;
+- (void)updateActiveFlowParticipants:(NSArray<ZMUser *>*)newParticipants;
+- (void)addCallParticipant:(ZMUser *)participant;
+- (void)removeCallParticipant:(ZMUser *)participant;
 - (void)removeAllCallParticipants;
 
 
@@ -52,8 +55,9 @@
 - (void)tearDown;
 
 
-+ (nullable NSComparator)conferenceComparator;
++ (NSComparator)conferenceComparator;
 - (nullable AVSFlowManager *)flowManager;
 
 @end
 
+NS_ASSUME_NONNULL_END

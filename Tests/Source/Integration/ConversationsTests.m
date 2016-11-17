@@ -688,6 +688,7 @@
 - (void)testThatSelfUserSeesConversationWhenItIsAddedToConversationByOtherUser
 {
     // given
+    
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForEverythingToBeDone();
 

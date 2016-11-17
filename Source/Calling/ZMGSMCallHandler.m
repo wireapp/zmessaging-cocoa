@@ -84,6 +84,10 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
 
 - (void)didFinishSync:(NSNotification *)note
 {
+    if ([ZMUserSession useCallKit]) {
+        return;
+    }
+    
     NOT_USED(note);
     self.canUpdateCallState = YES;
     if (self.callCenter.currentCalls.count == 0 && self.hasStoredInterruptedCallConversation) {
@@ -97,6 +101,10 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     return ^void(CTCall *call){
         ZM_STRONG(self);
         if (!self.canUpdateCallState) {
+            return;
+        }
+        
+        if ([ZMUserSession useCallKit]) {
             return;
         }
         
@@ -208,6 +216,10 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
 
 - (BOOL)isInterruptedCallConversation:(ZMConversation *)conversation
 {
+    if ([ZMUserSession useCallKit]) {
+        return NO;
+    }
+    
     return [conversation.objectID isEqual:self.storedConversation.objectID];
 }
 
