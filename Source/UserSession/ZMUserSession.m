@@ -169,6 +169,18 @@ ZM_EMPTY_ASSERTING_INIT()
     return sharedContainerURL;
 }
 
++ (NSURL *)cachesURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
+{
+    NSFileManager *fm = NSFileManager.defaultManager;
+    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:appGroupIdentifier];
+    
+    if (sharedContainerURL != nil) {
+        return [[sharedContainerURL URLByAppendingPathComponent:@"Library" isDirectory:YES] URLByAppendingPathComponent:@"Caches" isDirectory:YES];
+    }
+    
+    return nil;
+}
+
 + (NSURL *)storeURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
 {
     return [[[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]
@@ -282,7 +294,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.syncManagedObjectContext.zm_userInterfaceContext = self.managedObjectContext;
         self.managedObjectContext.zm_syncContext = self.syncManagedObjectContext;
         
-        NSURL *cacheLocation = [self.class sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
+        NSURL *cacheLocation = [self.class cachesURLForAppGroupIdentifier:appGroupIdentifier];
         
         UserImageLocalCache *userImageCache = [[UserImageLocalCache alloc] initWithLocation:cacheLocation];
         self.syncManagedObjectContext.zm_userImageCache = userImageCache;
