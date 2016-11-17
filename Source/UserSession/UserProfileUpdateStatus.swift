@@ -24,16 +24,17 @@ import Foundation
 @objc public class UserProfileUpdateStatus : NSObject {
 
     /// phone credentials to update
-    fileprivate var phoneCredentialsToUpdate : SyncToBackendPhase<ZMPhoneCredentials> = .idle
+    fileprivate var synchingPhoneCredentials : SyncToBackendPhase<ZMPhoneCredentials> = .idle
     
     /// email and password to update
-    fileprivate var emailPasswordToSet : (email: SyncToBackendPhase<ZMEmailCredentials>, password: SyncToBackendPhase<ZMEmailCredentials>) = (.idle, .idle)
+    fileprivate var synchingEmailAndPassword : (email: SyncToBackendPhase<ZMEmailCredentials>,
+        password: SyncToBackendPhase<String>) = (.idle, .idle)
+    
+    /// phone number to validate
+    fileprivate var synchingPhoneNumberForValidationCode : SyncToBackendPhase<String> = .idle
     
     /// last set password and email
     fileprivate var lastEmailAndPassword : ZMEmailCredentials?
-    
-    /// phone number to validate
-    fileprivate var profilePhoneNumberThatNeedsAValidationCode : SyncToBackendPhase<String> = .idle
     
     let managedObjectContext : NSManagedObjectContext
     
@@ -53,19 +54,19 @@ extension UserProfileUpdateStatus {
     /// the user is expected to receive a PIN code on her phone
     /// and call `requestPhoneNumberChange` with that PIN
     public func requestPhoneVerificationCode(phoneNumber: String) {
-        // TODO MARCO
+        self.synchingPhoneNumberForValidationCode = .needToSync(phoneNumber)
     }
     
     /// Requests phone number changed, with a PIN received earlier
     public func requestPhoneNumberChange(credentials: ZMPhoneCredentials) {
-        // TODO MARCO
+        self.synchingPhoneCredentials = .needToSync(credentials)
     }
     
     /// Requests to set an email and password, for a user that does not have either. 
     /// Once this is called, we expect the user to eventually verify the email externally.
     /// - throws: if the email was already set, or if empty credentials are passed
     public func requestSettingEmailAndPassword(credentials: ZMEmailCredentials) throws {
-        guard credentials.email != nil, credentials.password != nil else {
+        guard credentials.email != nil, let password = credentials.password else {
             throw UserProfileUpdateError.missingArgument
         }
         
@@ -73,12 +74,11 @@ extension UserProfileUpdateStatus {
         
         let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
         guard selfUser.emailAddress == nil else {
-            self.emailPasswordToSet = (.idle, .idle)
+            self.synchingEmailAndPassword = (.idle, .idle)
             throw UserProfileUpdateError.emailAlreadySet
         }
         
-        self.emailPasswordToSet = (.needToSync(credentials), .needToSync(credentials))
-        // TODO MARCO
+        self.synchingEmailAndPassword = (.needToSync(credentials), .needToSync(password))
         
         self.newRequestCallback()
     }
@@ -86,7 +86,7 @@ extension UserProfileUpdateStatus {
     /// Cancel setting email and password
     public func cancelSettingEmailAndPassword() {
         self.lastEmailAndPassword = nil
-        self.emailPasswordToSet = (.idle, .idle)
+        self.synchingEmailAndPassword = (.idle, .idle)
     }
     
 }
@@ -94,41 +94,51 @@ extension UserProfileUpdateStatus {
 // MARK: - Update status
 extension UserProfileUpdateStatus {
 
-    
+    /// Invoked when requested a phone verification code successfully
     func didRequestPhoneVerificationCodeSuccessfully() {
-        // TODO MARCO
+        self.synchingPhoneNumberForValidationCode = .idle
+        UserProfileUpdateNotification.notifyPhoneNumberVerificationCodeRequestDidSucceed()
     }
     
-    func didFailPhoneVerificationCodeRequest(error: NSError) {
-        // TODO MARCO
+    /// Invoked when failed to request a verification code
+    func didFailPhoneVerificationCodeRequest(error: Error) {
+        self.synchingPhoneNumberForValidationCode = .idle
+        UserProfileUpdateNotification.notifyPhoneNumberVerificationCodeRequestDidFailWithError(error: error)
     }
     
-    func didVerifyPhoneSuccessfully() {
-        // TODO MARCO
+    /// Invoked when changing the phone number succeeded
+    func didChangePhoneSuccesfully() {
+        self.synchingPhoneCredentials = .idle
     }
-    func didFailPhoneVerification(error: NSError) {
-        // TODO MARCO
+    
+    /// Invoked when changing the phone number failed
+    func didFailChangingPhone(error: Error) {
+        self.synchingPhoneCredentials = .idle
+        UserProfileUpdateNotification.notifyPhoneNumberChangeDidFail(error: error)
     }
     
     /// Invoked when the request to set password succedeed
     func didUpdatePasswordSuccessfully() {
-        self.emailPasswordToSet.password = .idle
+        self.synchingEmailAndPassword.password = .idle
     }
     
     /// Invoked when the request to set password failed
     func didFailPasswordUpdate() {
         self.lastEmailAndPassword = nil
-        self.emailPasswordToSet = (.idle, .idle)
+        self.synchingEmailAndPassword = (.idle, .idle)
+        UserProfileUpdateNotification.notifyPasswordUpdateDidFail()
     }
     
     /// Invoked when the request to change email was sent successfully
     func didUpdateEmailSuccessfully() {
-        self.emailPasswordToSet = (.idle, .idle)
+        self.synchingEmailAndPassword.email = .idle
+        UserProfileUpdateNotification.notifyDidSendEmailVerification()
     }
     
-    func didFailEmailUpdate(error: NSError) {
+    func didFailEmailUpdate(error: Error) {
         self.lastEmailAndPassword = nil
-        self.emailPasswordToSet = (.idle, .idle)
+        self.synchingEmailAndPassword = (.idle, .idle)
+        UserProfileUpdateNotification.notifyEmailUpdateDidFail(error: error)
     }
 }
 
@@ -136,35 +146,27 @@ extension UserProfileUpdateStatus {
 extension UserProfileUpdateStatus : ZMCredentialProvider {
     
     /// The email to set on the backend
-    public var emailValueToSet : String? {
-        switch self.emailPasswordToSet {
-        case (.idle, _):
-            return nil
-        case (_, .needToSync):
-            return nil
-        case (_, .synchronizing):
-            return nil
-        case (.needToSync(let credentials), _):
-            return credentials.email
-        case (.synchronizing(let credentials), _):
-            return credentials.email
-        default:
+    var emailValueToSet : String? {
+        guard !self.currentlySettingPassword else {
             return nil
         }
+        
+        return self.synchingEmailAndPassword.email.value?.email
     }
     
     /// The password to set on the backend
-    public var passwordValueToSet : String? {
-        switch self.emailPasswordToSet {
-        case (_, .idle):
-            return nil
-        case (.needToSync(let credentials), _):
-            return credentials.password
-        case (.synchronizing(let credentials), _):
-            return credentials.password
-        default:
-            return nil
-        }
+    var passwordValueToSet : String? {
+        return self.synchingEmailAndPassword.password.value
+    }
+    
+    /// The phone number for which to request a validation code
+    var phoneNumberForWhichCodeIsRequested : String? {
+        return self.synchingPhoneNumberForValidationCode.value
+    }
+    
+    /// The phone number for which to request a validation code
+    var phoneNumberToSet : ZMPhoneCredentials? {
+        return self.synchingPhoneCredentials.value
     }
     
     public func emailCredentials() -> ZMEmailCredentials? {
@@ -182,7 +184,14 @@ extension UserProfileUpdateStatus : ZMCredentialProvider {
 // MARK: - External status
 extension UserProfileUpdateStatus {
     
+    /// Whether the current user has an email set in the profile
     private var selfUserHasEmail : Bool {
+        let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
+        return selfUser.emailAddress != nil && selfUser.emailAddress != ""
+    }
+    
+    /// Whether the current user has a phone number set in the profile
+    private var selfUserHasPhoneNumber : Bool {
         let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
         return selfUser.emailAddress != nil && selfUser.emailAddress != ""
     }
@@ -195,16 +204,7 @@ extension UserProfileUpdateStatus {
             return false
         }
         
-        switch self.emailPasswordToSet {
-        case (.idle, _):
-            return false
-        case (.needToSync, .idle):
-            return true
-        case (.synchronizing, .idle):
-            return true
-        default:
-            return false
-        }
+        return !self.synchingEmailAndPassword.email.isIdle && self.synchingEmailAndPassword.password.isIdle
     }
     
     /// Whether we are currently setting the password.
@@ -214,22 +214,24 @@ extension UserProfileUpdateStatus {
             return false
         }
         
-        switch self.emailPasswordToSet {
-        case (_, .idle):
-            return false
-        default:
-            return true
-        }
+        return !self.synchingEmailAndPassword.password.isIdle
     }
     
-    /// If the app stars and this is set, the app is waiting for the user to confirm her phone number
-    public var currentlyUpdatingPhone : Bool {
-        // TODO MARCO
-//        ZMUser *selfUser = [ZMUser selfUserInUserSession:self];
-//        return (selfUser.phoneNumber == nil) ?
-//            (self.userProfileUpdateStatus.profilePhoneNumberThatNeedsAValidationCode ?: self.userProfileUpdateStatus.phoneCredentialsToUpdate.phoneNumber)
-//            : nil;
-        return false
+    /// Whether we are currently requesting a PIN to update the phone
+    public var currentlyRequestingPhoneVerificationCode : Bool {
+        
+        return !self.synchingPhoneNumberForValidationCode.isIdle
+    }
+    
+    
+    /// Whether we are currently requesting a change of phone number
+    public var currentlySettingPhone : Bool {
+        
+        guard !self.selfUserHasPhoneNumber else {
+            return false
+        }
+        
+        return !self.synchingPhoneCredentials.isIdle
     }
 }
 
@@ -240,6 +242,26 @@ enum SyncToBackendPhase<T> {
     case idle
     case needToSync(T)
     case synchronizing(T)
+    
+    var isIdle : Bool {
+        switch self {
+        case .idle:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var value : T? {
+        switch self {
+        case .idle:
+            return nil
+        case .needToSync(let t):
+            return t
+        case .synchronizing(let t):
+            return t
+        }
+    }
 }
 
 
@@ -249,35 +271,3 @@ enum SyncToBackendPhase<T> {
     case emailAlreadySet
 }
 
-/*
-#pragma mark - Notifications
-
-@protocol ZMUserProfileUpdateNotificationObserverToken;
-
-typedef NS_ENUM(NSUInteger, ZMUserProfileUpdateNotificationType) {
-    ZMUserProfileNotificationPasswordUpdateDidFail,
-    ZMUserProfileNotificationEmailUpdateDidFail,
-    ZMUserProfileNotificationEmailDidSendVerification,
-    ZMUserProfileNotificationPhoneNumberVerificationCodeRequestDidFail,
-    ZMUserProfileNotificationPhoneNumberVerificationCodeRequestDidSucceed,
-    ZMUserProfileNotificationPhoneNumberVerificationDidFail
-};
-
-@interface ZMUserProfileUpdateNotification : ZMNotification
-
-@property (nonatomic, readonly) ZMUserProfileUpdateNotificationType type;
-@property (nonatomic, readonly) NSError *error;
-
-+ (void)notifyPasswordUpdateDidFail;
-+ (void)notifyEmailUpdateDidFail:(NSError *)error;
-+ (void)notifyPhoneNumberVerificationCodeRequestDidFailWithError:(NSError *)error;
-+ (void)notifyPhoneNumberVerificationCodeRequestDidSucceed;
-+ (void)notifyDidSendEmailVerification;
-
-+ (void)notifyPhoneNumberVerificationDidFail:(NSError *)error;
-
-+ (id<ZMUserProfileUpdateNotificationObserverToken>)addObserverWithBlock:(void(^)(ZMUserProfileUpdateNotification *))block ZM_MUST_USE_RETURN;
-+ (void)removeObserver:(id<ZMUserProfileUpdateNotificationObserverToken>)token;
-
-@end
-*/

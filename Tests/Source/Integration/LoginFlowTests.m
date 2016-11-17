@@ -25,7 +25,6 @@
 
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Authentication.h"
-#import "ZMUserSession+EditingVerification.h"
 #import "ZMUserSession+Registration.h"
 #import "ZMUserSession+OTR.h"
 

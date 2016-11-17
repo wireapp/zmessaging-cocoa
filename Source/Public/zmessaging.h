@@ -32,7 +32,6 @@
 #import <zmessaging/ZMBareUser+UserSession.h>
 #import <zmessaging/ZMSearchDirectory.h>
 #import <zmessaging/ZMVoiceChannel+CallFlow.h>
-#import <zmessaging/ZMUserSession+EditingVerification.h>
 #import <zmessaging/ZMTypingUsers.h>
 #import <zmessaging/ZMOnDemandFlowManager.h>
 
