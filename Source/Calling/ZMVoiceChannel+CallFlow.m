@@ -98,6 +98,8 @@
 {
     ZMConversation *conv = self.conversation;
     
+    [WireCallCenter closeCallForConversationID:conv.remoteIdentifier.transportString];
+    
     if (conv.isVideoCall) {
         [self.flowManager setVideoSendState:FLOWMANAGER_VIDEO_SEND_NONE forConversation:conv.remoteIdentifier.transportString];
     }

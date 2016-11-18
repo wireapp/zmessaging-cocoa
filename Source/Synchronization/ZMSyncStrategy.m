@@ -164,17 +164,16 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                managedObjectContext:self.syncMOC
                                                                           backgroundActivityFactory:[BackgroundActivityFactory sharedInstance]];
         
-        CallingRequestStrategy *callingStrategy = nil;
         
-        if (![clientRegistrationStatus needsToRegisterClient]) {
-            ZMUser *user = [ZMUser selfUserInContext:uiMOC];
-            NSString *userIdentifier = user.remoteIdentifier.transportString;
-            NSString *clientIdentifier = user.selfClient.remoteIdentifier;
-            WireCallCenter *callCenter = [[WireCallCenter alloc] initWithUserId:userIdentifier clientId:clientIdentifier];
-            
-            callingStrategy = [[CallingRequestStrategy alloc] initWithCallCenter:callCenter managedObjectContext:self.syncMOC];
-            callCenter.transport = callingStrategy;
-        }
+//        CallingRequestStrategy *callingStrategy = nil;
+//        if (![clientRegistrationStatus needsToRegisterClient]) {
+//            ZMUser *selfUser = [ZMUser selfUserInContext:syncMOC];
+//            WireCallCenter *callCenter = [[WireCallCenter alloc] initWithUserId:selfUser.remoteIdentifier.transportString clientId:selfUser.selfClient.remoteIdentifier];
+//            callingStrategy = [[CallingRequestStrategy alloc] initWithCallCenter:callCenter managedObjectContext:syncMOC];
+//            
+//            callCenter.transport = callingStrategy;
+//        }
+        
 
         [self createTranscodersWithClientRegistrationStatus:clientRegistrationStatus
                                     userProfileUpdateStatus:userProfileStatus
@@ -185,7 +184,8 @@ ZM_EMPTY_ASSERTING_INIT()
                                                mediaManager:mediaManager
                                         onDemandFlowManager:onDemandFlowManager
                                    taskCancellationProvider:taskCancellationProvider
-                                    callingMessageReception:callingStrategy];
+//                                    callingMessageReception:callingStrategy];
+         ];
         
         self.stateMachine = [[ZMSyncStateMachine alloc] initWithAuthenticationStatus:authenticationStatus
                                                             clientRegistrationStatus:clientRegistrationStatus
@@ -257,7 +257,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                          mediaManager:(id<AVSMediaManager>)mediaManager
                                   onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                              taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
-                              callingMessageReception:(id <CallingMessageReceptionDelegate>)callingMessageReception
+//                              callingMessageReception:(id <CallingMessageReceptionDelegate>)callingMessageReception
 {
     NSManagedObjectContext *uiMOC = self.uiMOC;
     NSOperationQueue *imageProcessingQueue = [ZMImagePreprocessor createSuitableImagePreprocessingQueue];
@@ -268,11 +268,21 @@ ZM_EMPTY_ASSERTING_INIT()
     self.selfTranscoder = [[ZMSelfTranscoder alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
     self.conversationTranscoder = [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus accountStatus:accountStatus syncStrategy:self];
     self.systemMessageTranscoder = [ZMMessageTranscoder systemMessageTranscoderWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher];
-    self.clientMessageTranscoder = [[ZMClientMessageTranscoder alloc ] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher clientRegistrationStatus:clientRegistrationStatus apnsConfirmationStatus: self.apnsConfirmationStatus callingMessageReceptionDelegate:callingMessageReception];
     self.registrationTranscoder = [[ZMRegistrationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
     self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self previouslyReceivedEventIDsCollection:self.eventDecoder application:self.application backgroundAPNSPingbackStatus:backgroundAPNSPingBackStatus];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC objectDirectory:self];
     self.flowTranscoder = [[ZMFlowSync alloc] initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC application:self.application];
+    
+    CallingRequestStrategy *callingStrategy = nil;
+    if (![clientRegistrationStatus needsToRegisterClient]) {
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        WireCallCenter *callCenter = [[WireCallCenter alloc] initWithUserId:selfUser.remoteIdentifier.transportString clientId:selfUser.selfClient.remoteIdentifier];
+        callingStrategy = [[CallingRequestStrategy alloc] initWithCallCenter:callCenter managedObjectContext:self.syncMOC];
+        
+        callCenter.transport = callingStrategy;
+    }
+    self.clientMessageTranscoder = [[ZMClientMessageTranscoder alloc ] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher clientRegistrationStatus:clientRegistrationStatus apnsConfirmationStatus: self.apnsConfirmationStatus callingMessageReceptionDelegate:callingStrategy];
+    
     self.pushTokenTranscoder = [[ZMPushTokenTranscoder alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationStatus:clientRegistrationStatus];
     self.callStateTranscoder = [[ZMCallStateTranscoder alloc] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC objectStrategyDirectory:self];
     self.userImageTranscoder = [[ZMUserImageTranscoder alloc] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:imageProcessingQueue];

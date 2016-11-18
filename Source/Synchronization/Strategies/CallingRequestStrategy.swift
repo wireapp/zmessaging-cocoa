@@ -27,6 +27,11 @@ extension ZMConversation {
         self.callCenter = callCenter
         self.managedObjectContext = managedObjectContext
         super.init()
+        managedObjectContext.userInfo["callingStrategy"] = self
+    }
+    
+    deinit {
+        print("JCVDay: deinitialisation CallingRequestStrategy")
     }
 }
 
@@ -34,24 +39,25 @@ extension CallingRequestStrategy : WireCallCenterTransport {
     
     public func send(data: Data, conversationId: NSUUID, userId: NSUUID) {
         
-        let dataString = String(data:data, encoding:.utf8)
+        let dataString = data.base64String()
         
-        
-        if let conversation = ZMConversation(remoteID: UUID(uuidString: conversationId.uuidString)!, createIfNeeded: false, in: self.managedObjectContext),
-            let string = dataString {
-            _ = conversation.appendCallingMessage(content: string)
+        self.managedObjectContext.performGroupedBlock { [unowned self] in
+            if let conversation = ZMConversation(remoteID: UUID(uuidString: conversationId.uuidString)!, createIfNeeded: false, in: self.managedObjectContext) {
+                _ = conversation.appendCallingMessage(content: dataString)
+                
+            }
+            self.managedObjectContext.saveOrRollback()
         }
+        
     }
 }
 
 extension CallingRequestStrategy : CallingMessageReceptionDelegate {
     
-    public func didReceiveMessage(withContent content: String, atServerTimestamp serverTimeStamp: Date, in conversation: ZMConversation, userID: UUID, clientID: UUID) {
+    public func didReceiveMessage(withContent content: String, atServerTimestamp serverTimeStamp: Date, in conversation: ZMConversation, userID: String, clientID: String) {
         
-        guard let data = Data(base64Encoded:content, options: []),
-              let conversationID = NSUUID(uuidString:conversation.remoteIdentifier!.uuidString),
-            let userID = NSUUID(uuidString: userID.uuidString),
-            let clientID = NSUUID(uuidString: clientID.uuidString)
+        guard let data = Data(base64Encoded: content),
+              let conversationID = NSUUID(uuidString:conversation.remoteIdentifier!.uuidString)
             else {
             fatal("NOOOO")
         }

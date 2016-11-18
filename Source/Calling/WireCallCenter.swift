@@ -87,7 +87,7 @@ protocol WireCallCenterObserver {
 
 @objc public class WireCallCenter : NSObject {
     
-    public weak var transport : WireCallCenterTransport? = nil
+    public var transport : WireCallCenterTransport? = nil
     
     public init(userId: String, clientId: String) {
         
@@ -95,19 +95,20 @@ protocol WireCallCenterObserver {
         
         let observer = Unmanaged.passUnretained(self).toOpaque()
         
-        wcall_init(
-            userId,
-            clientId,
+        let resultValue = wcall_init(
+            (userId as NSString).utf8String,
+            (clientId as NSString).utf8String,
             { (version, context) in
                 if let context = context {
-                    _ = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
+                    _ = Unmanaged<WireCallCenter>.fromOpaque(context).takeUnretainedValue()
                     
                     
                 }
             },
             { (conversationId, userId, clientId, data, dataLength, context) in
+                print("JCVDay: sending")
                 if let context = context, let conversationId = conversationId, let userId = userId, let clientId = clientId, let data = data {
-                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
+                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeUnretainedValue()
                     
                     return selfReference.send(conversationId: String.init(cString: conversationId),
                                               userId: String.init(cString: userId),
@@ -119,24 +120,27 @@ protocol WireCallCenterObserver {
                 return 0
             },
             { (conversationId, userId, context) -> Void in
+                print("JCVDay: incoming")
                 if let context = context, let conversationId = conversationId, let userId = userId  {
-                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
+                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeUnretainedValue()
                     
                     selfReference.incoming(conversationId: String.init(cString: conversationId),
                                            userId: String.init(cString: userId))
                 }
             },
             {(conversationId, userId, context) in
+                print("JCVDay: establishing")
                 if let context = context, let conversationId = conversationId, let userId = userId  {
-                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
+                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeUnretainedValue()
                     
                     selfReference.established(conversationId: String.init(cString: conversationId),
                                               userId: String.init(cString: userId))
                 }
             },
             { (reason, conversationId, userId, metrics, context) in
+                print("JCVDay: closing")
                 if let context = context, let conversationId = conversationId, let userId = userId  {
-                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeRetainedValue()
+                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeUnretainedValue()
                     
                     selfReference.closed(conversationId: String.init(cString: conversationId),
                                          userId: String.init(cString: userId),
@@ -145,19 +149,30 @@ protocol WireCallCenterObserver {
             },
             observer)
         
+        if resultValue != 0 {
+            fatal("Failed to initialise calling v3")
+        }
+        
     }
     
     private func send(conversationId: String, userId: String, clientId: String, data: UnsafePointer<UInt8>, dataLength: Int) -> Int32 {
         
         let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
-        let data = Data(buffer: bytes)
+        let transformedData = Data(buffer: bytes)
         
-        transport?.send(data: data, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
+        transport?.send(data: transformedData, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
         
         return 0
     }
     
     private func incoming(conversationId: String, userId: String) {
+        
+        // JACOB
+        if (wcall_answer(conversationId) != 0) {
+            fatal("peux pas repooooooondre")
+        }
+        return
+        
         let note = WireCallCenterNotification(type: .incoming, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
         NotificationCenter.default.post(note as Notification)
     }
@@ -175,12 +190,12 @@ protocol WireCallCenterObserver {
     }
     
     // TODO find a better place for this method
-    func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: NSUUID, userId: NSUUID, clientId: NSUUID) {
+    func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: NSUUID, userId: String, clientId: String) {
         data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
             let currentTime = UInt32(currentTimestamp.timeIntervalSince1970)
             let serverTime = UInt32(serverTimestamp.timeIntervalSince1970)
             
-            wcall_recv_msg(bytes, data.count, currentTime, serverTime, conversationId.transportString(), userId.transportString(), clientId.transportString())
+            wcall_recv_msg(bytes, data.count, currentTime, serverTime, conversationId.transportString(), userId, clientId)
         }
     }
     
