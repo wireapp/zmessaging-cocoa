@@ -205,7 +205,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                                       moc:self.syncMOC],
                                    [[UserProfileRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC
                                                                             userProfileUpdateStatus:userProfileStatus
-                                                                           clientRegistrationStatus:clientRegistrationStatus
                                                                                authenticationStatus:authenticationStatus],
                                    self.fileUploadRequestStrategy,
                                    self.linkPreviewAssetDownloadRequestStrategy,
