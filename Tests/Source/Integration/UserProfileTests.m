@@ -246,7 +246,7 @@
     
     //expect
     [[userObserver expect] phoneNumberVerificationCodeRequestDidSucceed];
-    [[userObserver expect] phoneNumberVerificationDidFail:OCMOCK_ANY];
+    [[userObserver expect] phoneNumberChangeDidFail:OCMOCK_ANY];
     
     // when
     [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone];

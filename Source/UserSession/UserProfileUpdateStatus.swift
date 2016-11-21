@@ -55,11 +55,15 @@ extension UserProfileUpdateStatus {
     /// and call `requestPhoneNumberChange` with that PIN
     public func requestPhoneVerificationCode(phoneNumber: String) {
         self.synchingPhoneNumberForValidationCode = .needToSync(phoneNumber)
+        self.newRequestCallback()
+
     }
     
     /// Requests phone number changed, with a PIN received earlier
     public func requestPhoneNumberChange(credentials: ZMPhoneCredentials) {
         self.synchingPhoneCredentials = .needToSync(credentials)
+        self.newRequestCallback()
+
     }
     
     /// Requests to set an email and password, for a user that does not have either. 
@@ -87,6 +91,8 @@ extension UserProfileUpdateStatus {
     public func cancelSettingEmailAndPassword() {
         self.lastEmailAndPassword = nil
         self.synchingEmailAndPassword = (.idle, .idle)
+        self.newRequestCallback()
+
     }
     
 }
@@ -193,7 +199,7 @@ extension UserProfileUpdateStatus {
     /// Whether the current user has a phone number set in the profile
     private var selfUserHasPhoneNumber : Bool {
         let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
-        return selfUser.emailAddress != nil && selfUser.emailAddress != ""
+        return selfUser.phoneNumber != nil && selfUser.phoneNumber != ""
     }
     
     /// Whether we are currently setting the email.

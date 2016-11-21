@@ -76,7 +76,7 @@ extension UserProfileUpdateStatusTests {
         XCTAssertFalse(self.sut.currentlySettingEmail)
         XCTAssertTrue(self.sut.currentlySettingPassword)
         XCTAssertNil(self.sut.emailCredentials())
-
+        XCTAssertEqual(self.newRequestCallbackCount, 1)
     }
     
     func testThatItReturnsErrorWhenPreparingForEmailAndPasswordChangeAndUserUserHasEmail() {
@@ -93,19 +93,6 @@ extension UserProfileUpdateStatusTests {
         } catch {
             return
         }
-    }
-    
-    func testThatItNotifiesOfNewRequestWhenPreparesForEmailAndPasswordChange() {
-        
-        // GIVEN
-        let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
-        XCTAssertEqual(self.newRequestCallbackCount, 0)
-        
-        // WHEN
-        try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
-        
-        // THEN
-        XCTAssertEqual(self.newRequestCallbackCount, 1)
     }
     
     func testThatItCanCancelSettingEmailAndPassword() {
@@ -136,6 +123,7 @@ extension UserProfileUpdateStatusTests {
         XCTAssertTrue(sut.currentlySettingEmail)
         XCTAssertFalse(sut.currentlySettingPassword)
         XCTAssertNil(self.sut.emailCredentials())
+
     }
     
     func testThatItCompletesAfterSuccessfullySettingPasswordAndEmail() {
@@ -360,6 +348,8 @@ extension UserProfileUpdateStatusTests {
         // THEN
         XCTAssertTrue(self.sut.currentlyRequestingPhoneVerificationCode)
         XCTAssertEqual(self.sut.phoneNumberForWhichCodeIsRequested, phoneNumber)
+        XCTAssertEqual(self.newRequestCallbackCount, 1)
+
     }
     
     func testThatItCompletesRequestingPhoneVerificationCode() {
@@ -453,6 +443,8 @@ extension UserProfileUpdateStatusTests {
         // THEN
         XCTAssertTrue(self.sut.currentlySettingPhone)
         XCTAssertEqual(self.sut.phoneNumberToSet, credentials)
+        XCTAssertEqual(self.newRequestCallbackCount, 1)
+
     }
     
     func testThatItCompletesUpdatingPhoneNumber() {
