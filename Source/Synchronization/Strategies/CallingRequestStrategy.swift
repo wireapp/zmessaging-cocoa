@@ -18,21 +18,87 @@ extension ZMConversation {
 }
 
 
-@objc public final class CallingRequestStrategy : NSObject {
+@objc public final class CallingRequestStrategy : NSObject, RequestStrategy {
     
-    let callCenter              : WireCallCenter
-    let managedObjectContext    : NSManagedObjectContext
+    fileprivate let zmLog = ZMSLog(tag: "calling")
+    fileprivate var callCenter              : WireCallCenter?
+    fileprivate let managedObjectContext    : NSManagedObjectContext
     
-    public init(callCenter: WireCallCenter, managedObjectContext: NSManagedObjectContext) {
-        self.callCenter = callCenter
+    public init(managedObjectContext: NSManagedObjectContext) {
         self.managedObjectContext = managedObjectContext
+        
         super.init()
-        managedObjectContext.userInfo["callingStrategy"] = self
+        
+        let selfUser = ZMUser.selfUser(in: managedObjectContext)
+        
+        if let userId = selfUser.remoteIdentifier?.transportString(), let clientId = selfUser.selfClient()?.remoteIdentifier {
+            callCenter = WireCallCenter(userId: userId, clientId: clientId)
+            callCenter?.transport = self
+        }
     }
     
     deinit {
         print("JCVDay: deinitialisation CallingRequestStrategy")
     }
+    
+    public func nextRequest() -> ZMTransportRequest? {
+        return nil
+    }
+}
+
+extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTrackerSource {
+    
+    public var contextChangeTrackers: [ZMContextChangeTracker] {
+        return [self]
+    }
+    
+    public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
+        return nil
+    }
+    
+    public func addTrackedObjects(_ objects: Set<NSManagedObject>) {
+        // nop
+    }
+    
+    public func objectsDidChange(_ objects: Set<NSManagedObject>) {
+        guard callCenter == nil else { return }
+        
+        for object in objects {
+            if let  userClient = object as? UserClient, userClient.isSelfClient(), let clientId = userClient.remoteIdentifier, let userId = userClient.user?.remoteIdentifier {
+                callCenter = WireCallCenter(userId: userId.transportString(), clientId: clientId)
+                callCenter?.transport = self
+                break
+            }
+        }
+    }
+    
+}
+
+extension CallingRequestStrategy : ZMEventConsumer {
+    
+    public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
+        for event in events {
+            guard event.type == .conversationOtrMessageAdd else { continue }
+            
+            if let genericMessage = ZMGenericMessage(from: event) {
+            
+                guard
+                    let callingPayload = genericMessage.calling.content,
+                    let encodedPayload = Data(base64Encoded: callingPayload),
+                    let senderUUID = event.senderUUID(),
+                    let conversationUUID = event.conversationUUID(),
+                    let clientId = event.senderClientID(),
+                    let eventTimestamp = event.timeStamp()
+                else {
+                    zmLog.error("Ignoring calling message: \(genericMessage.debugDescription)")
+                    continue
+                }
+                
+                callCenter?.received(data: encodedPayload, currentTimestamp: Date(), serverTimestamp: eventTimestamp, conversationId: conversationUUID, userId: senderUUID, clientId: clientId)
+            }
+        }
+    }
+    
 }
 
 extension CallingRequestStrategy : WireCallCenterTransport {
@@ -50,19 +116,5 @@ extension CallingRequestStrategy : WireCallCenterTransport {
         }
         
     }
-}
-
-extension CallingRequestStrategy : CallingMessageReceptionDelegate {
     
-    public func didReceiveMessage(withContent content: String, atServerTimestamp serverTimeStamp: Date, in conversation: ZMConversation, userID: String, clientID: String) {
-        
-        guard let data = Data(base64Encoded: content),
-              let conversationID = NSUUID(uuidString:conversation.remoteIdentifier!.uuidString)
-            else {
-            fatal("NOOOO")
-        }
-        
-        self.callCenter.received(data:data, currentTimestamp:Date(), serverTimestamp: serverTimeStamp, conversationId: conversationID, userId: userID, clientId: clientID)
-    }
-
 }

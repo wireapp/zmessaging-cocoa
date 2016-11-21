@@ -190,12 +190,12 @@ protocol WireCallCenterObserver {
     }
     
     // TODO find a better place for this method
-    func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: NSUUID, userId: String, clientId: String) {
+    func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
         data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
             let currentTime = UInt32(currentTimestamp.timeIntervalSince1970)
             let serverTime = UInt32(serverTimestamp.timeIntervalSince1970)
             
-            wcall_recv_msg(bytes, data.count, currentTime, serverTime, conversationId.transportString(), userId, clientId)
+            wcall_recv_msg(bytes, data.count, currentTime, serverTime, conversationId.transportString(), userId.transportString(), clientId)
         }
     }
     
