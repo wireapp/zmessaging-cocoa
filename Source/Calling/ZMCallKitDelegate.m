@@ -559,6 +559,7 @@ NS_ASSUME_NONNULL_END
         ZMConversation *callConversation = [ZMConversation resolveConversationForPersons:contacts
                                                                                inContext:userSession.managedObjectContext];
         if (nil != callConversation) {
+            [self configureAudioSession];
             if (isVideo) {
                 NSError *joinError = nil;
                 [callConversation.voiceChannel joinVideoCall:&joinError inUserSession:userSession];
@@ -757,9 +758,9 @@ NS_ASSUME_NONNULL_END
 
 - (void)provider:(CXProvider *)provider performAnswerCallAction:(CXAnswerCallAction *)action
 {
-    
-
     [self.userSession performChanges:^{
+        [self configureAudioSession];
+
         ZMConversation *callConversation = [action conversationInContext:self.userSession.managedObjectContext];
         [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider %@ performAnswerCallAction", provider];
         if (callConversation.isVideoCall) {
@@ -768,15 +769,12 @@ NS_ASSUME_NONNULL_END
         else {
             [callConversation.voiceChannel join];
         }
-        
-        [self configureAudioSession];
     }];
     [action fulfill];
 }
 
 - (void)provider:(CXProvider *)provider performEndCallAction:(nonnull CXEndCallAction *)action
 {
-    
     ZMUserSession *userSession = self.userSession;
 
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
