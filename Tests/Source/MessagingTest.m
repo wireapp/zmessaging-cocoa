@@ -53,7 +53,6 @@
 #import "ZMTypingTranscoder.h"
 #import "ZMRemovedSuggestedPeopleTranscoder.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMUserProfileUpdateTranscoder.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "zmessaging_iOS_Tests-Swift.h"
 
@@ -353,8 +352,6 @@
     [self verifyMockLater:typingTranscoder];
     id removedSuggestedPeopleTranscoder = [OCMockObject mockForClass:ZMRemovedSuggestedPeopleTranscoder.class];
     [self verifyMockLater:removedSuggestedPeopleTranscoder];
-    id userProfileUpdateTranscoder = [OCMockObject mockForClass:ZMUserProfileUpdateTranscoder.class];
-    [self verifyMockLater:userProfileUpdateTranscoder];
     
     
     [[[objectDirectory stub] andReturn:userTranscoder] userTranscoder];
@@ -376,7 +373,6 @@
     [[[objectDirectory stub] andReturn:searchUserImageTranscoder] searchUserImageTranscoder];
     [[[objectDirectory stub] andReturn:typingTranscoder] typingTranscoder];
     [[[objectDirectory stub] andReturn:removedSuggestedPeopleTranscoder] removedSuggestedPeopleTranscoder];
-    [[[objectDirectory stub] andReturn:userProfileUpdateTranscoder] userProfileUpdateTranscoder];
     
     [[[objectDirectory stub] andReturn:@[
                                         userTranscoder,
@@ -398,7 +394,6 @@
                                         searchUserImageTranscoder,
                                         typingTranscoder,
                                         removedSuggestedPeopleTranscoder,
-                                        userProfileUpdateTranscoder
                                         ]] allTranscoders];
     
     

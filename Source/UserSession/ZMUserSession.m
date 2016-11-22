@@ -39,7 +39,6 @@
 #import "ZMBlacklistVerificator.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMUserSessionAuthenticationNotification.h"
-#import "ZMUserProfileUpdateStatus.h"
 #import "NSURL+LaunchOptions.h"
 #import "ZMessagingLogs.h"
 #import "ZMAVSBridge.h"
@@ -81,7 +80,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
 @property (nonatomic) ZMAuthenticationStatus *authenticationStatus;
-@property (nonatomic) ZMUserProfileUpdateStatus *userProfileUpdateStatus;
+@property (nonatomic) UserProfileUpdateStatus *userProfileUpdateStatus;
 @property (nonatomic) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic) ClientUpdateStatus *clientUpdateStatus;
 @property (nonatomic) BackgroundAPNSPingBackStatus *pingBackStatus;
@@ -286,7 +285,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
         ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.managedObjectContext cookieStorage:session.cookieStorage];
         self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:syncManagedObjectContext cookie:cookie];
-        self.userProfileUpdateStatus = [[ZMUserProfileUpdateStatus alloc] initWithManagedObjectContext:syncManagedObjectContext];
+        self.userProfileUpdateStatus = [[UserProfileUpdateStatus alloc] initWithManagedObjectContext:syncManagedObjectContext];
         self.clientUpdateStatus = [[ClientUpdateStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext];
         
         self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:syncManagedObjectContext

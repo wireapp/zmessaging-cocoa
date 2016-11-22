@@ -31,6 +31,7 @@
 @class ZMConversation;
 @class UserClient;
 @class ZMProxyRequest;
+@class UserProfileUpdateStatus;
 
 @protocol AnalyticsType;
 @protocol AVSMediaManager;
@@ -199,6 +200,9 @@ typedef NS_ENUM (NSInteger, ProxiedRequestType){
 
 
 @interface ZMUserSession (SelfUserClient)
+
+/// Object for updating profile
+@property (nonatomic, readonly) UserProfileUpdateStatus *userProfileUpdateStatus;
 
 - (UserClient *)selfUserClient;
 @end
