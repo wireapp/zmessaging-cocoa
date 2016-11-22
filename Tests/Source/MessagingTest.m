@@ -50,7 +50,6 @@
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMSearchUserImageTranscoder.h"
-#import "ZMTypingTranscoder.h"
 #import "ZMRemovedSuggestedPeopleTranscoder.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserProfileUpdateTranscoder.h"
@@ -349,8 +348,6 @@
     [self verifyMockLater:loginCodeRequestTranscoder];
     id searchUserImageTranscoder = [OCMockObject mockForClass:ZMSearchUserImageTranscoder.class];
     [self verifyMockLater:searchUserImageTranscoder];
-    id typingTranscoder = [OCMockObject mockForClass:ZMTypingTranscoder.class];
-    [self verifyMockLater:typingTranscoder];
     id removedSuggestedPeopleTranscoder = [OCMockObject mockForClass:ZMRemovedSuggestedPeopleTranscoder.class];
     [self verifyMockLater:removedSuggestedPeopleTranscoder];
     id userProfileUpdateTranscoder = [OCMockObject mockForClass:ZMUserProfileUpdateTranscoder.class];
@@ -374,7 +371,6 @@
     [[[objectDirectory stub] andReturn:loginTranscoder] loginTranscoder];
     [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
     [[[objectDirectory stub] andReturn:searchUserImageTranscoder] searchUserImageTranscoder];
-    [[[objectDirectory stub] andReturn:typingTranscoder] typingTranscoder];
     [[[objectDirectory stub] andReturn:removedSuggestedPeopleTranscoder] removedSuggestedPeopleTranscoder];
     [[[objectDirectory stub] andReturn:userProfileUpdateTranscoder] userProfileUpdateTranscoder];
     
@@ -396,7 +392,6 @@
                                         loginTranscoder,
                                         loginCodeRequestTranscoder,
                                         searchUserImageTranscoder,
-                                        typingTranscoder,
                                         removedSuggestedPeopleTranscoder,
                                         userProfileUpdateTranscoder
                                         ]] allTranscoders];

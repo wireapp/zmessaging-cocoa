@@ -47,7 +47,6 @@
 #import "ZMPushTokenTranscoder.h"
 #import "ZMCallStateTranscoder.h"
 #import "ZMOperationLoop.h"
-#import "ZMTypingTranscoder.h"
 #import "ZMRemovedSuggestedPeopleTranscoder.h"
 #import "AVSMediaManager.h"
 #import "AVSFlowManager.h"
@@ -152,10 +151,6 @@
     [[[[callStateTranscoder expect] andReturn:callStateTranscoder] classMethod] alloc];
     (void) [[[callStateTranscoder expect] andReturn:callStateTranscoder] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC objectStrategyDirectory:OCMOCK_ANY];
     
-    id typingTranscoder = [OCMockObject mockForClass:ZMTypingTranscoder.class];
-    [[[[typingTranscoder expect] andReturn:typingTranscoder] classMethod] alloc];
-    (void) [[[typingTranscoder expect] andReturn:typingTranscoder] initWithManagedObjectContext:self.syncMOC userInterfaceContext:self.uiMOC];
-    
     id removedSuggestedPeopleTranscoder = [OCMockObject mockForClass:ZMRemovedSuggestedPeopleTranscoder.class];
     [[[[removedSuggestedPeopleTranscoder expect] andReturn:removedSuggestedPeopleTranscoder] classMethod] alloc];
     (void) [[[removedSuggestedPeopleTranscoder expect] andReturn:removedSuggestedPeopleTranscoder] initWithManagedObjectContext:self.syncMOC];
@@ -204,7 +199,6 @@
                          flowTranscoder,
                          pushTokenTranscoder,
                          callStateTranscoder,
-                         typingTranscoder,
                          removedSuggestedPeopleTranscoder,
                          loginCodeRequestTranscoder,
                          phoneNumberVerificationTranscoder,
@@ -251,7 +245,6 @@
     XCTAssertEqual(self.sut.flowTranscoder, flowTranscoder);
     XCTAssertEqual(self.sut.pushTokenTranscoder, pushTokenTranscoder);
     XCTAssertEqual(self.sut.callStateTranscoder, callStateTranscoder);
-    XCTAssertEqual(self.sut.typingTranscoder, typingTranscoder);
     XCTAssertEqual(self.sut.removedSuggestedPeopleTranscoder, removedSuggestedPeopleTranscoder);
     XCTAssertEqual(self.sut.loginCodeRequestTranscoder, loginCodeRequestTranscoder);
     XCTAssertEqual(self.sut.phoneNumberVerificationTranscoder, phoneNumberVerificationTranscoder);

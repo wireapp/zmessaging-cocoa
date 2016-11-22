@@ -23,7 +23,7 @@
 
 #import "ZMTypingUsers.h"
 #import "ZMNotifications+UserSession.h"
-#import "ZMTypingTranscoder.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 static NSString * const ZMTypingUsersKey = @"ZMTypingUsers";
 
@@ -104,7 +104,7 @@ static NSString * const ZMTypingUsersKey = @"ZMTypingUsers";
 
 - (void)setIsTyping:(BOOL)isTyping;
 {
-    [ZMTypingTranscoder notifyTranscoderThatUserIsTyping:isTyping inConversation:self];
+    [TypingStrategy notifyTranscoderThatUserWithIsTyping:isTyping in:self];
 }
 
 - (NSSet *)typingUsers
