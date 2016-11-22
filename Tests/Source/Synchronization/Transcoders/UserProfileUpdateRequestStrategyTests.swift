@@ -30,7 +30,7 @@ class UserProfileUpdateRequestStrategyTests : MessagingTest {
     override func setUp() {
         super.setUp()
         self.mockAuthenticationStatus = MockAuthenticationStatus()
-        self.userProfileUpdateStatus = TestUserProfileUpdateStatus(managedObjectContext: self.uiMOC, newRequestCallback: { _ in return })
+        self.userProfileUpdateStatus = TestUserProfileUpdateStatus(managedObjectContext: self.uiMOC)
         self.sut = UserProfileRequestStrategy(managedObjectContext: self.uiMOC,
                                               userProfileUpdateStatus: self.userProfileUpdateStatus,
                                               authenticationStatus: self.mockAuthenticationStatus)

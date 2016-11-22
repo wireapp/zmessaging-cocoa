@@ -41,9 +41,9 @@ import Foundation
     /// Callback invoked when there is a new request to send
     let newRequestCallback : ()->()
     
-    public init(managedObjectContext: NSManagedObjectContext, newRequestCallback: @escaping ()->()) {
+    public init(managedObjectContext: NSManagedObjectContext) {
         self.managedObjectContext = managedObjectContext
-        self.newRequestCallback = newRequestCallback
+        self.newRequestCallback = { _ in RequestAvailableNotification.notifyNewRequestsAvailable(nil) }
     }
 }
 

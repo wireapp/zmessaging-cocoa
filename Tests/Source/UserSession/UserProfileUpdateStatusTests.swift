@@ -29,18 +29,23 @@ class UserProfileUpdateStatusTests : MessagingTest {
     
     fileprivate var observer : TestUserProfileUpdateObserver! = nil
     
+    fileprivate var newRequestObserver : OperationLoopNewRequestObserver!
+    
     /// Number of time the new request callback was invoked
-    var newRequestCallbackCount = 0
+    var newRequestCallbackCount : Int {
+        return newRequestObserver.notifications.count
+    }
     
     override func setUp() {
         super.setUp()
-        self.newRequestCallbackCount = 0
+        self.newRequestObserver = OperationLoopNewRequestObserver()
         self.observer = TestUserProfileUpdateObserver()
-        self.sut = UserProfileUpdateStatus(managedObjectContext: self.uiMOC, newRequestCallback: { self.newRequestCallbackCount += 1 })
+        self.sut = UserProfileUpdateStatus(managedObjectContext: self.uiMOC)
         self.observerToken = self.sut.add(observer: self.observer)
     }
     
     override func tearDown() {
+        self.newRequestObserver = nil
         self.sut.removeObserver(token: self.observerToken!)
         self.sut = nil
         self.observer = nil
