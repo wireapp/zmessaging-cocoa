@@ -33,6 +33,9 @@ import Foundation
     /// phone number to validate
     fileprivate var synchingPhoneNumberForValidationCode : SyncToBackendPhase<String> = .idle
     
+    /// handle to check
+    fileprivate var synchingHandleCheck : SyncToBackendPhase<String> = .idle
+    
     /// last set password and email
     fileprivate var lastEmailAndPassword : ZMEmailCredentials?
     
@@ -95,6 +98,11 @@ extension UserProfileUpdateStatus {
 
     }
     
+    /// Requests a check of availability for a handle
+    public func requestCheckHandleAvailability(handle: String) {
+        self.synchingHandleCheck = .needToSync(handle)
+        self.newRequestCallback()
+    }
 }
 
 // MARK: - Update status
@@ -141,10 +149,36 @@ extension UserProfileUpdateStatus {
         UserProfileUpdateNotification.notifyDidSendEmailVerification()
     }
     
+    /// Invoked when the request to change email failed
     func didFailEmailUpdate(error: Error) {
         self.lastEmailAndPassword = nil
         self.synchingEmailAndPassword = (.idle, .idle)
         UserProfileUpdateNotification.notifyEmailUpdateDidFail(error: error)
+    }
+    
+    /// Invoked when the request to fetch a handle returned not found
+    func didNotFindHandle(handle: String) {
+        if self.handleToCheck == handle {
+            self.synchingHandleCheck = .idle
+        }
+        UserProfileUpdateNotification.notifyDidCheckAvailabilityOfHandle(handle: handle, available: true)
+    }
+    
+    /// Invoked when the request to fetch a handle returned successfully
+    func didFetchHandle(handle: String) {
+        if self.handleToCheck == handle {
+            self.synchingHandleCheck = .idle
+        }
+        UserProfileUpdateNotification.notifyDidCheckAvailabilityOfHandle(handle: handle, available: false)
+    }
+    
+    /// Invoked when the request to fetch a handle failed with
+    /// an error that is not "not found"
+    func didFailRequestToFetchHandle(handle: String) {
+        if self.handleToCheck == handle {
+            self.synchingHandleCheck = .idle
+        }
+        UserProfileUpdateNotification.notifyDidFailToCheckAvailabilityOfHandle(handle: handle)
     }
 }
 
@@ -173,6 +207,11 @@ extension UserProfileUpdateStatus : ZMCredentialProvider {
     /// The phone number for which to request a validation code
     var phoneNumberToSet : ZMPhoneCredentials? {
         return self.synchingPhoneCredentials.value
+    }
+    
+    /// The handle to check for availability
+    var handleToCheck : String? {
+        return self.synchingHandleCheck.value
     }
     
     public func emailCredentials() -> ZMEmailCredentials? {
@@ -239,6 +278,11 @@ extension UserProfileUpdateStatus {
         
         return !self.synchingPhoneCredentials.isIdle
     }
+    
+    /// Whether we are currently waiting to check for availability of a handle
+    public var currentlyCheckingHandleAvailability : Bool {
+        return self.handleToCheck != nil
+    }
 }
 
 // MARK: - Helpers
@@ -247,7 +291,6 @@ extension UserProfileUpdateStatus {
 enum SyncToBackendPhase<T> {
     case idle
     case needToSync(T)
-    case synchronizing(T)
     
     var isIdle : Bool {
         switch self {
@@ -263,8 +306,6 @@ enum SyncToBackendPhase<T> {
         case .idle:
             return nil
         case .needToSync(let t):
-            return t
-        case .synchronizing(let t):
             return t
         }
     }

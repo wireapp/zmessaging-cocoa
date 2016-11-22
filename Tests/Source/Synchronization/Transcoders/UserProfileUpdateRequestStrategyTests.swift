@@ -135,6 +135,20 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertEqual(request, expected)
         
     }
+    
+    func testThatItCreatesARequestToCheckHandleAvailability() {
+        
+        // GIVEN
+        let handle = "martha"
+        self.userProfileUpdateStatus.requestCheckHandleAvailability(handle: handle)
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        
+        // THEN
+        let expected = ZMTransportRequest(path: "/users/handles/\(handle)", method: .methodHEAD, payload: nil)
+        XCTAssertEqual(request, expected)
+    }
 }
 
 // MARK: - Parsing response
@@ -354,37 +368,108 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
         
     }
+    
+    func testThatItCallsDidFetchHandle() {
+        
+        // GIVEN
+        let handle = "martha"
+        self.userProfileUpdateStatus.requestCheckHandleAvailability(handle: handle)
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.successResponse(location: request?.path))
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFetchHandle, [handle])
+    }
+    
+    func testThatItCallsDidNotFindHandle() {
+        
+        // GIVEN
+        let handle = "martha"
+        self.userProfileUpdateStatus.requestCheckHandleAvailability(handle: handle)
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.notFoundResponse(location: request?.path))
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidNotFindHandle, [handle])
+    }
+    
+    func testThatItCallsFailedToCheckHandleAvailability() {
+        
+        // GIVEN
+        let handle = "martha"
+        self.userProfileUpdateStatus.requestCheckHandleAvailability(handle: handle)
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.errorResponse(location: request?.path))
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailRequestToFetchHandle, [handle])
+    }
 }
 
 // MARK: - Helpers
 extension UserProfileUpdateRequestStrategyTests {
     
-    func errorResponse() -> ZMTransportResponse {
-        return ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil)
+    func errorResponse(location: String? = nil) -> ZMTransportResponse {
+        return ZMTransportResponse(payload: nil,
+                                   httpStatus: 400,
+                                   transportSessionError: nil,
+                                   headers: ["Location" : location ?? ""]
+        )
     }
     
     func badRequestResponse() -> ZMTransportResponse {
-        return ZMTransportResponse(payload: ["label":"bad-request"] as NSDictionary, httpStatus: 400, transportSessionError: nil)
+        return ZMTransportResponse(payload: ["label":"bad-request"] as NSDictionary,
+                                   httpStatus: 400,
+                                   transportSessionError: nil)
     }
     
     func keyExistsResponse() -> ZMTransportResponse {
-        return ZMTransportResponse(payload: ["label":"key-exists"] as NSDictionary, httpStatus: 409, transportSessionError: nil)
+        return ZMTransportResponse(payload: ["label":"key-exists"] as NSDictionary,
+                                   httpStatus: 409,
+                                   transportSessionError: nil)
     }
     
     func invalidPhoneNumberResponse() -> ZMTransportResponse {
-        return ZMTransportResponse(payload: ["label":"invalid-phone"] as NSDictionary, httpStatus: 400, transportSessionError: nil)
+        return ZMTransportResponse(payload: ["label":"invalid-phone"] as NSDictionary,
+                                   httpStatus: 400,
+                                   transportSessionError: nil)
     }
     
     func invalidEmailResponse() -> ZMTransportResponse {
-        return ZMTransportResponse(payload: ["label":"invalid-email"] as NSDictionary, httpStatus: 400, transportSessionError: nil)
+        return ZMTransportResponse(payload: ["label":"invalid-email"] as NSDictionary,
+                                   httpStatus: 400,
+                                   transportSessionError: nil)
     }
     
     func invalidCredentialsResponse() -> ZMTransportResponse {
-        return ZMTransportResponse(payload: ["label":"invalid-credentials"] as NSDictionary, httpStatus: 403, transportSessionError: nil)
+        return ZMTransportResponse(payload: ["label":"invalid-credentials"] as NSDictionary,
+                                   httpStatus: 403,
+                                   transportSessionError: nil)
     }
     
-    func successResponse() -> ZMTransportResponse {
-        return ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
+    func successResponse(location: String? = nil) -> ZMTransportResponse {
+        return ZMTransportResponse(payload: nil,
+                                   httpStatus: 200,
+                                   transportSessionError: nil,
+                                   headers: ["Location" : location ?? ""]
+        )
+    }
+    
+    func notFoundResponse(location: String? = nil) -> ZMTransportResponse {
+        return ZMTransportResponse(payload: nil,
+                                   httpStatus: 404,
+                                   transportSessionError: nil,
+                                   headers: ["Location" : location ?? ""]
+        )
     }
 }
 
@@ -398,6 +483,9 @@ class TestUserProfileUpdateStatus : UserProfileUpdateStatus {
     var recordedDidFailChangingPhone : [Error] = []
     var recordedDidRequestPhoneVerificationCodeSuccessfully = 0
     var recordedDidFailPhoneVerificationCodeRequest : [Error] = []
+    var recordedDidFetchHandle : [String] = []
+    var recordedDidFailRequestToFetchHandle : [String] = []
+    var recordedDidNotFindHandle : [String] = []
     
     override func didFailEmailUpdate(error: Error) {
         recordedDidFailEmailUpdate.append(error)
@@ -437,5 +525,20 @@ class TestUserProfileUpdateStatus : UserProfileUpdateStatus {
     override func didFailPhoneVerificationCodeRequest(error: Error) {
         recordedDidFailPhoneVerificationCodeRequest.append(error)
         super.didFailPhoneVerificationCodeRequest(error: error)
+    }
+    
+    override func didFetchHandle(handle: String) {
+        recordedDidFetchHandle.append(handle)
+        super.didFetchHandle(handle: handle)
+    }
+    
+    override func didFailRequestToFetchHandle(handle: String) {
+        recordedDidFailRequestToFetchHandle.append(handle)
+        super.didFailRequestToFetchHandle(handle: handle)
+    }
+    
+    override func didNotFindHandle(handle: String) {
+        recordedDidNotFindHandle.append(handle)
+        super.didNotFindHandle(handle: handle)
     }
 }

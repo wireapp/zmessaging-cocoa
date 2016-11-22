@@ -41,19 +41,26 @@ import Foundation
     /// The opposite (phone number change success) will be notified
     /// by a change in the user phone number
     func phoneNumberChangeDidFail(_ error: Error!)
+    
+    /// Invoked when the availability of a handle was determined
+    func didCheckAvailiabilityOfHandle(handle: String, available: Bool)
+    
+    /// Invoked when failed to check for availability of a handle
+    func didFailToCheckAvailabilityOfHandle(handle: String)
 }
 
 
 
 // MARK: - Notification
-
-@objc public enum UserProfileUpdateNotificationType : Int {
+private enum UserProfileUpdateNotificationType {
     case passwordUpdateDidFail
-    case emailUpdateDidFail
+    case emailUpdateDidFail(error: Error)
     case emailDidSendVerification
-    case phoneNumberVerificationCodeRequestDidFail
+    case phoneNumberVerificationCodeRequestDidFail(error: Error)
     case phoneNumberVerificationCodeRequestDidSucceed
-    case phoneNumberChangeDidFail
+    case phoneNumberChangeDidFail(error: Error)
+    case didCheckAvailabilityOfHandle(handle: String, available: Bool)
+    case didFailToCheckAvailabilityOfHandle(handle: String)
 }
 
 struct UserProfileUpdateNotification {
@@ -61,37 +68,43 @@ struct UserProfileUpdateNotification {
     fileprivate static let notificationName = NSNotification.Name(rawValue: "UserProfileUpdateNotification")
     fileprivate static let userInfoKey = notificationName
     
-    let type : UserProfileUpdateNotificationType
-    let error : Error?
+    fileprivate let type : UserProfileUpdateNotificationType
     
     private func post() {
         NotificationCenter.default.post(name: type(of: self).notificationName, object: nil, userInfo: [UserProfileUpdateNotification.userInfoKey : self])
     }
     
-    public static func notifyPasswordUpdateDidFail() {
-        UserProfileUpdateNotification(type: .passwordUpdateDidFail, error: nil).post()
+    static func notifyPasswordUpdateDidFail() {
+        UserProfileUpdateNotification(type: .passwordUpdateDidFail).post()
     }
     
-    public static func notifyEmailUpdateDidFail(error: Error) {
-        UserProfileUpdateNotification(type: .emailUpdateDidFail, error: error).post()
+    static func notifyEmailUpdateDidFail(error: Error) {
+        UserProfileUpdateNotification(type: .emailUpdateDidFail(error: error)).post()
     }
     
-    public static func notifyPhoneNumberVerificationCodeRequestDidFailWithError(error: Error) {
-        UserProfileUpdateNotification(type: .phoneNumberVerificationCodeRequestDidFail, error: error).post()
+    static func notifyPhoneNumberVerificationCodeRequestDidFailWithError(error: Error) {
+        UserProfileUpdateNotification(type: .phoneNumberVerificationCodeRequestDidFail(error: error)).post()
     }
     
-    public static func notifyPhoneNumberVerificationCodeRequestDidSucceed() {
-        UserProfileUpdateNotification(type: .phoneNumberVerificationCodeRequestDidSucceed, error: nil).post()
+    static func notifyPhoneNumberVerificationCodeRequestDidSucceed() {
+        UserProfileUpdateNotification(type: .phoneNumberVerificationCodeRequestDidSucceed).post()
     }
     
-    public static func notifyDidSendEmailVerification() {
-        UserProfileUpdateNotification(type: .emailDidSendVerification, error: nil).post()
+    static func notifyDidSendEmailVerification() {
+        UserProfileUpdateNotification(type: .emailDidSendVerification).post()
     }
     
-    public static func notifyPhoneNumberChangeDidFail(error: Error) {
-        UserProfileUpdateNotification(type: .phoneNumberChangeDidFail, error: error).post()
+    static func notifyPhoneNumberChangeDidFail(error: Error) {
+        UserProfileUpdateNotification(type: .phoneNumberChangeDidFail(error: error)).post()
     }
 
+    static func notifyDidCheckAvailabilityOfHandle(handle: String, available: Bool) {
+        UserProfileUpdateNotification(type: .didCheckAvailabilityOfHandle(handle: handle, available: available)).post()
+    }
+    
+    static func notifyDidFailToCheckAvailabilityOfHandle(handle: String) {
+        UserProfileUpdateNotification(type: .didFailToCheckAvailabilityOfHandle(handle: handle)).post()
+    }
 }
 
 extension UserProfileUpdateStatus {
@@ -105,18 +118,22 @@ extension UserProfileUpdateStatus {
                 return
             }
             switch note.type {
-            case .emailUpdateDidFail:
-                observer.emailUpdateDidFail(note.error)
-            case .phoneNumberVerificationCodeRequestDidFail:
-                observer.phoneNumberVerificationCodeRequestDidFail(note.error);
-            case .phoneNumberChangeDidFail:
-                observer.phoneNumberChangeDidFail(note.error)
+            case .emailUpdateDidFail(let error):
+                observer.emailUpdateDidFail(error)
+            case .phoneNumberVerificationCodeRequestDidFail(let error):
+                observer.phoneNumberVerificationCodeRequestDidFail(error);
+            case .phoneNumberChangeDidFail(let error):
+                observer.phoneNumberChangeDidFail(error)
             case .passwordUpdateDidFail:
                 observer.passwordUpdateRequestDidFail()
             case .phoneNumberVerificationCodeRequestDidSucceed:
                 observer.phoneNumberVerificationCodeRequestDidSucceed()
             case .emailDidSendVerification:
                 observer.didSentVerificationEmail()
+            case .didCheckAvailabilityOfHandle(let handle, let available):
+                observer.didCheckAvailiabilityOfHandle(handle: handle, available: available)
+            case .didFailToCheckAvailabilityOfHandle(let handle):
+                observer.didFailToCheckAvailabilityOfHandle(handle: handle)
             }
         }
     }

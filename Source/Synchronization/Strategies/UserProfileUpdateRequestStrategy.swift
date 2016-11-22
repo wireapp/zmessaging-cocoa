@@ -35,6 +35,8 @@ import Foundation
     
     fileprivate var emailUpdateSync : ZMSingleRequestSync! = nil
     
+    fileprivate var handleCheckSync : ZMSingleRequestSync! = nil
+    
     public init(managedObjectContext: NSManagedObjectContext,
                 userProfileUpdateStatus: UserProfileUpdateStatus,
                 authenticationStatus: AuthenticationStatusProvider) {
@@ -47,6 +49,7 @@ import Foundation
         self.phoneUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.passwordUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.emailUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
+        self.handleCheckSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
     }
 }
 
@@ -76,6 +79,11 @@ extension UserProfileRequestStrategy : RequestStrategy {
         if self.userProfileUpdateStatus.currentlySettingPassword {
             self.passwordUpdateSync.readyForNextRequestIfNotBusy()
             return self.passwordUpdateSync.nextRequest()
+        }
+        
+        if self.userProfileUpdateStatus.currentlyCheckingHandleAvailability {
+            self.handleCheckSync.readyForNextRequestIfNotBusy()
+            return self.handleCheckSync.nextRequest()
         }
         
         return nil
@@ -112,6 +120,9 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
                 "email" : self.userProfileUpdateStatus.emailValueToSet!
             ]
             return ZMTransportRequest(path: "/self/email", method: .methodPUT, payload: payload)
+        case self.handleCheckSync:
+            let handle = self.userProfileUpdateStatus.handleToCheck!
+            return ZMTransportRequest(path: "/users/handles/\(handle)", method: .methodHEAD, payload: nil)
         default:
             return nil
         }
@@ -160,9 +171,21 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
                     NSError.userSessionErrorWith(ZMUserSessionErrorCode.unkownError, userInfo: nil)
                 self.userProfileUpdateStatus.didFailEmailUpdate(error: error)
             }
+            
+        case self.handleCheckSync:
+            let handle = (response.headers?["Location"] as? NSString)?.lastPathComponent ?? ""
+            if response.result == .success {
+                self.userProfileUpdateStatus.didFetchHandle(handle: handle)
+            } else {
+                if response.httpStatus == 404 {
+                    self.userProfileUpdateStatus.didNotFindHandle(handle: handle)
+                } else {
+                    self.userProfileUpdateStatus.didFailRequestToFetchHandle(handle: handle)
+                }
+            }
+            break
         default:
             break
         }
     }
 }
-

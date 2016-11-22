@@ -505,50 +505,220 @@ extension UserProfileUpdateStatusTests {
     }
 }
 
+// MARK: - Check handle availability
+extension UserProfileUpdateStatusTests {
+    
+    func testThatItIsNotCheckingAvailabilityAtCreation() {
+        XCTAssertFalse(self.sut.currentlyCheckingHandleAvailability)
+    }
+    
+    func testThatItPreparesForCheckingHandleAvailability() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestCheckHandleAvailability(handle: handle)
+        
+        // THEN
+        XCTAssertEqual(self.sut.handleToCheck, handle)
+        XCTAssertTrue(self.sut.currentlyCheckingHandleAvailability)
+        XCTAssertEqual(newRequestObserver.notifications.count, 1)
+    }
+    
+    func testThatItCompletesCheckingHandleAvailability_Available() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestCheckHandleAvailability(handle: handle)
+        self.sut.didNotFindHandle(handle: handle)
+        
+        // THEN
+        XCTAssertNil(self.sut.handleToCheck)
+        XCTAssertFalse(self.sut.currentlyCheckingHandleAvailability)
+    }
+    
+    func testThatItCompletesCheckingHandleAvailability_NotAvailable() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestCheckHandleAvailability(handle: handle)
+        self.sut.didFetchHandle(handle: handle)
+        
+        // THEN
+        XCTAssertNil(self.sut.handleToCheck)
+        XCTAssertFalse(self.sut.currentlyCheckingHandleAvailability)
+    }
+    
+    func testThatItFailsCheckingHandleAvailability() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestCheckHandleAvailability(handle: handle)
+        self.sut.didFailRequestToFetchHandle(handle: handle)
+        
+        // THEN
+        XCTAssertNil(self.sut.handleToCheck)
+        XCTAssertFalse(self.sut.currentlyCheckingHandleAvailability)
+    }
+    
+    func testThatItDoesCompletesCheckingHandleAvailabilityIfDifferentHandle_Available() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestCheckHandleAvailability(handle: handle)
+        self.sut.didNotFindHandle(handle: "other")
+        
+        // THEN
+        XCTAssertEqual(self.sut.handleToCheck, handle)
+        XCTAssertTrue(self.sut.currentlyCheckingHandleAvailability)
+    }
+    
+    func testThatItDoesCompletesCheckingHandleAvailabilityIfDifferentHandle_NotAvailable() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestCheckHandleAvailability(handle: handle)
+        self.sut.didFetchHandle(handle: "other")
+        
+        // THEN
+        XCTAssertEqual(self.sut.handleToCheck, handle)
+        XCTAssertTrue(self.sut.currentlyCheckingHandleAvailability)
+    }
+    
+    func testThatItDoesCompletesCheckingHandleAvailabilityIfDifferentHandle_Failed() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestCheckHandleAvailability(handle: handle)
+        self.sut.didFailRequestToFetchHandle(handle: "other")
+        
+        // THEN
+        XCTAssertEqual(self.sut.handleToCheck, handle)
+        XCTAssertTrue(self.sut.currentlyCheckingHandleAvailability)
+    }
+    
+    func testThatItNotifiesAfterCheckingHandleAvailability_Available() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestCheckHandleAvailability(handle: "other")
+        self.sut.didNotFindHandle(handle: handle)
+        
+        // THEN
+        XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
+        guard let first = self.observer.invokedCallbacks.first else { return }
+        switch first {
+        case .didCheckAvailabilityOfHandle(handle: handle, available: true):
+            break
+        default:
+            XCTFail()
+        }
+    }
+    
+    func testThatItNotifiesAfterCheckingHandleAvailability_NotAvailable() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestCheckHandleAvailability(handle: "other")
+        self.sut.didFetchHandle(handle: handle)
+        
+        // THEN
+        XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
+        guard let first = self.observer.invokedCallbacks.first else { return }
+        switch first {
+        case .didCheckAvailabilityOfHandle(handle: handle, available: false):
+            break
+        default:
+            XCTFail()
+        }
+    }
+    
+    func testThatItNotifiesAfterFailingCheckingHandleAvailability() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestCheckHandleAvailability(handle: "other")
+        self.sut.didFailRequestToFetchHandle(handle: handle)
+        
+        // THEN
+        XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
+        guard let first = self.observer.invokedCallbacks.first else { return }
+        switch first {
+        case .didFailToCheckAvailabilityOfHandle(handle: handle):
+            break
+        default:
+            XCTFail()
+        }
+    }
+}
+
 
 // MARK: - Helpers
 
-fileprivate enum TestUserProfileUpdateObserverCallbacks {
+enum TestUserProfileUpdateObserverCallbacks {
     case passwordUpdateRequestDidFail
     case emailUpdateDidFail(Error)
     case didSentVerificationEmail
     case phoneNumberVerificationCodeRequestDidFail(Error)
     case phoneNumberVerificationCodeRequestDidSucceed
     case phoneNumberChangeDidFail(Error)
+    case didCheckAvailabilityOfHandle(handle: String, available: Bool)
+    case didFailToCheckAvailabilityOfHandle(handle: String)
 }
 
-fileprivate class TestUserProfileUpdateObserver : NSObject, UserProfileUpdateObserver {
+class TestUserProfileUpdateObserver : NSObject, UserProfileUpdateObserver {
     
     var invokedCallbacks : [TestUserProfileUpdateObserverCallbacks] = []
     
     func passwordUpdateRequestDidFail() {
         invokedCallbacks.append(.passwordUpdateRequestDidFail)
     }
-    
-    /// Invoked when the email could not be set on the backend (duplicated?).
-    /// The password might already have been set though - this is how BE is designed and there's nothing SE can do about it
+
     func emailUpdateDidFail(_ error: Error!) {
         invokedCallbacks.append(.emailUpdateDidFail(error))
     }
     
-    /// Invoked when the email was sent to the backend
     func didSentVerificationEmail() {
         invokedCallbacks.append(.didSentVerificationEmail)
     }
     
-    /// Invoked when requesting the phone number verification code failed
     func phoneNumberVerificationCodeRequestDidFail(_ error: Error!) {
         invokedCallbacks.append(.phoneNumberVerificationCodeRequestDidFail(error))
     }
     
-    /// Invoken when requesting the phone number verification code succeeded
     func phoneNumberVerificationCodeRequestDidSucceed() {
         invokedCallbacks.append(.phoneNumberVerificationCodeRequestDidSucceed)
     }
     
-    /// Invoked when the phone number code verification failed
     func phoneNumberChangeDidFail(_ error: Error!) {
         invokedCallbacks.append(.phoneNumberChangeDidFail(error))
+    }
+    
+    func didCheckAvailiabilityOfHandle(handle: String, available: Bool) {
+        invokedCallbacks.append(.didCheckAvailabilityOfHandle(handle: handle, available: available))
+    }
+    
+    func didFailToCheckAvailabilityOfHandle(handle: String) {
+        invokedCallbacks.append(.didFailToCheckAvailabilityOfHandle(handle: handle))
     }
     
     func clearReceivedCallbacks() {
