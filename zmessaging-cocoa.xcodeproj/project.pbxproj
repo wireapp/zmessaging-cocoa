@@ -259,6 +259,7 @@
 		54D9812919EBC04900037518 /* ZMSearchUserImageTranscoderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54D9812719EBC04900037518 /* ZMSearchUserImageTranscoderTests.m */; };
 		54DE26B31BC56E62002B5FBC /* ZMHotFixDirectory.h in Headers */ = {isa = PBXBuildFile; fileRef = 54DE26B11BC56E62002B5FBC /* ZMHotFixDirectory.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		54DFB8F01B30649000F1C736 /* GiphyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54DFB8EE1B30649000F1C736 /* GiphyTests.m */; };
+		54E4DD0F1DE4A9C500FEF192 /* UserHandleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54E4DD0D1DE4A9A200FEF192 /* UserHandleTests.swift */; };
 		54EFF35D1D6D6CE9005DED56 /* ZMSearchResult+AddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54EFF35C1D6D6CE9005DED56 /* ZMSearchResult+AddressBook.swift */; };
 		54EFF35F1D6D9B3D005DED56 /* InvitationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54EFF35E1D6D9B3D005DED56 /* InvitationTests.swift */; };
 		54F0A0951B3018D7003386BC /* ProxiedRequestsStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54F0A0931B3018D7003386BC /* ProxiedRequestsStatus.swift */; };
@@ -762,6 +763,7 @@
 		54DE26B21BC56E62002B5FBC /* ZMHotFixDirectory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMHotFixDirectory.m; sourceTree = "<group>"; };
 		54DFAE211C92D979004B1D15 /* 1900x1500.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 1900x1500.jpg; sourceTree = "<group>"; };
 		54DFB8EE1B30649000F1C736 /* GiphyTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GiphyTests.m; sourceTree = "<group>"; };
+		54E4DD0D1DE4A9A200FEF192 /* UserHandleTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserHandleTests.swift; sourceTree = "<group>"; };
 		54EBDDEA1966B2B000B23C36 /* ZMConversationTranscoder+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ZMConversationTranscoder+Internal.h"; sourceTree = "<group>"; };
 		54EFF35C1D6D6CE9005DED56 /* ZMSearchResult+AddressBook.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMSearchResult+AddressBook.swift"; sourceTree = "<group>"; };
 		54EFF35E1D6D9B3D005DED56 /* InvitationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InvitationTests.swift; sourceTree = "<group>"; };
@@ -1776,6 +1778,7 @@
 				5454A69B1AEFA01D0022AFA4 /* EmailRegistrationTests.m */,
 				5454A69F1AEFA0A70022AFA4 /* PhoneRegistrationTests.m */,
 				3EEA678A199D079600AF7665 /* UserTests.m */,
+				54E4DD0D1DE4A9A200FEF192 /* UserHandleTests.swift */,
 				5476E3BB19A77C6900E68BAD /* PushChannelTests.m */,
 				545F3DBA1AAF64FB00BF817B /* APNSTests.m */,
 				5492C6C319ACCCA8008F41E2 /* ConnectionTests.m */,
@@ -2497,6 +2500,7 @@
 				5454A6A11AEFA0A70022AFA4 /* PhoneRegistrationTests.m in Sources */,
 				545643D61C62C1A800A2129C /* ConversationTestsBase.m in Sources */,
 				3E26BED51A4037370071B4C9 /* IsTypingTests.m in Sources */,
+				54E4DD0F1DE4A9C500FEF192 /* UserHandleTests.swift in Sources */,
 				F9DAC54F1C2035660001F11E /* ConversationStatusStrategyTests.swift in Sources */,
 				54F7217E19A62225009A8AF5 /* ZMUpdateEventsBufferTests.m in Sources */,
 				541DD5B819EBBC0600C02EC2 /* ZMSearchDirectoryTests.m in Sources */,
