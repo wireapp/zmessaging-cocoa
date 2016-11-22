@@ -81,10 +81,9 @@ extension CallingRequestStrategy : ZMEventConsumer {
             guard event.type == .conversationOtrMessageAdd else { continue }
             
             if let genericMessage = ZMGenericMessage(from: event) {
-            
+                
                 guard
-                    let callingPayload = genericMessage.calling.content,
-                    let encodedPayload = Data(base64Encoded: callingPayload),
+                    let payload = genericMessage.calling.content.data(using: .utf8, allowLossyConversion: false),
                     let senderUUID = event.senderUUID(),
                     let conversationUUID = event.conversationUUID(),
                     let clientId = event.senderClientID(),
@@ -94,7 +93,7 @@ extension CallingRequestStrategy : ZMEventConsumer {
                     continue
                 }
                 
-                callCenter?.received(data: encodedPayload, currentTimestamp: Date(), serverTimestamp: eventTimestamp, conversationId: conversationUUID, userId: senderUUID, clientId: clientId)
+                callCenter?.received(data: payload, currentTimestamp: Date(), serverTimestamp: eventTimestamp, conversationId: conversationUUID, userId: senderUUID, clientId: clientId)
             }
         }
     }
@@ -105,7 +104,10 @@ extension CallingRequestStrategy : WireCallCenterTransport {
     
     public func send(data: Data, conversationId: NSUUID, userId: NSUUID) {
         
-        let dataString = data.base64String()
+        guard let dataString = String(data: data, encoding: .utf8) else {
+            zmLog.error("Not sending calling messsage since it's not UTF-8")
+            return
+        }
         
         self.managedObjectContext.performGroupedBlock { [unowned self] in
             if let conversation = ZMConversation(remoteID: UUID(uuidString: conversationId.uuidString)!, createIfNeeded: false, in: self.managedObjectContext) {
