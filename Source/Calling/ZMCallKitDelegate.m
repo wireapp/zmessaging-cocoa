@@ -490,6 +490,8 @@ NS_ASSUME_NONNULL_END
                                           if (nil != error) {
                                               [conversation.voiceChannel leave];
                                               [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot report incoming call: %@", error];
+                                          } else {
+                                              [self configureAudioSession];
                                           }
                                       }];
 }
@@ -759,8 +761,6 @@ NS_ASSUME_NONNULL_END
 - (void)provider:(CXProvider *)provider performAnswerCallAction:(CXAnswerCallAction *)action
 {
     [self.userSession performChanges:^{
-        [self configureAudioSession];
-
         ZMConversation *callConversation = [action conversationInContext:self.userSession.managedObjectContext];
         [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider %@ performAnswerCallAction", provider];
         if (callConversation.isVideoCall) {
