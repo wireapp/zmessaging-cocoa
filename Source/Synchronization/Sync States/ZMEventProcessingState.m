@@ -66,7 +66,6 @@
                              objectStrategyDirectory.userTranscoder,
                              objectStrategyDirectory.selfTranscoder,
                              objectStrategyDirectory.conversationTranscoder,
-                             objectStrategyDirectory.pushTokenTranscoder,
                              objectStrategyDirectory.systemMessageTranscoder,
                              objectStrategyDirectory.clientMessageTranscoder,
                              objectStrategyDirectory.userImageTranscoder,
