@@ -324,25 +324,22 @@ extension SearchUserImageStrategyTests {
         
         // when
         guard let request1 = sut.nextRequest() else { return XCTFail() }
-        
+        guard let request2 = sut.nextRequest() else { return XCTFail() }
+
         // then
         XCTAssertNotNil(request1);
         XCTAssertEqual(request1.method, .methodGET);
         XCTAssertTrue(request1.needsAuthentication);
         
-        let expectedPath1 = requestPath(for:assetID1, of:searchUser1.remoteIdentifier)
-        XCTAssertEqual(request1.path, expectedPath1);
-        
-        // when
-        guard let request2 = sut.nextRequest() else { return XCTFail() }
-        
-        // then
         XCTAssertNotNil(request2);
         XCTAssertEqual(request2.method, .methodGET);
         XCTAssertTrue(request2.needsAuthentication);
         
+        let expectedPath1 = requestPath(for:assetID1, of:searchUser1.remoteIdentifier)
         let expectedPath2 = requestPath(for:assetID2, of:searchUser2.remoteIdentifier)
-        XCTAssertEqual(request2.path, expectedPath2);
+        XCTAssertTrue(request1.path == expectedPath1 || request1.path == expectedPath2)
+        XCTAssertTrue(request2.path == expectedPath1 || request2.path == expectedPath2)
+        XCTAssertNotEqual(request2.path, request1.path)
     }
     
     

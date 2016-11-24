@@ -146,8 +146,7 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
     }
     
     
-    static func requestForFetchingAssets(for usersWithIDs: Set<UUID>, completionHandler:ZMCompletionHandler) -> ZMTransportRequest
-    {
+    public static func requestForFetchingAssets(for usersWithIDs: Set<UUID>, completionHandler:ZMCompletionHandler) -> ZMTransportRequest {
         let usersList = usersWithIDs.map{$0.transportString()}.joined(separator: ",")
         let request = ZMTransportRequest(getFromPath: UsersPath+usersList)
         request.add(completionHandler)
@@ -181,7 +180,7 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
     }
     
     
-    func processSingleUserProfile(response: ZMTransportResponse,
+    public static func processSingleUserProfile(response: ZMTransportResponse,
                                   for userID: UUID,
                                   mediumAssetIDCache: NSCache<NSUUID, NSUUID>)
     {
