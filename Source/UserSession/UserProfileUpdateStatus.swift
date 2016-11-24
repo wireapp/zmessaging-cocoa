@@ -205,6 +205,9 @@ extension UserProfileUpdateStatus {
     
     /// Invoked when the handle was succesfully set
     func didSetHandle() {
+        if let handle = self.handleToSet {
+            ZMUser.selfUser(in: self.managedObjectContext).setHandle(handle)
+        }
         self.handleToSet = nil
         UserProfileUpdateNotification.post(type: .didSetHandle)
 

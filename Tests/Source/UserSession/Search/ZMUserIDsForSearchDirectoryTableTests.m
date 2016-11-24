@@ -54,7 +54,13 @@
 
 - (ZMSearchUser *)createSearchUser
 {
-    return [[ZMSearchUser alloc] initWithName:@"foo" accentColor:ZMAccentColorBrightOrange remoteID:[NSUUID createUUID] user:nil syncManagedObjectContext: self.syncMOC uiManagedObjectContext:self.uiMOC];
+    return [[ZMSearchUser alloc] initWithName:@"foo"
+                                       handle:@"foo"
+                                  accentColor:ZMAccentColorBrightOrange
+                                     remoteID:[NSUUID createUUID]
+                                         user:nil
+                     syncManagedObjectContext:self.syncMOC
+                       uiManagedObjectContext:self.uiMOC];
 
 }
 

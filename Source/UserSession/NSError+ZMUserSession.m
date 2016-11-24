@@ -125,7 +125,7 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
     return nil;
 }
 
-+ (instancetype)emailIsAlreadyRegisteredErrorWithResponse:(ZMTransportResponse *)response
++ (instancetype)keyExistsErrorWithResponse:(ZMTransportResponse *)response
 {
     if (response.HTTPStatus == 409 && [[response payloadLabel] isEqualToString:@"key-exists"]) {
         return [NSError userSessionErrorWithErrorCode:ZMUserSessionEmailIsAlreadyRegistered userInfo:nil];

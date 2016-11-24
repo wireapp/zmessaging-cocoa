@@ -696,6 +696,8 @@ extension UserProfileUpdateStatusTests {
         
         // GIVEN
         let handle = "foobar"
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        XCTAssertNotNil(selfUser)
         
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
@@ -704,12 +706,14 @@ extension UserProfileUpdateStatusTests {
         // THEN
         XCTAssertNil(self.sut.handleToSet)
         XCTAssertFalse(self.sut.currentlySettingHandle)
+        XCTAssertEqual(selfUser.handle, handle)
     }
     
     func testThatItCancelsSetHandle() {
         
         // GIVEN
         let handle = "foobar"
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
         
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
@@ -718,12 +722,14 @@ extension UserProfileUpdateStatusTests {
         // THEN
         XCTAssertNil(self.sut.handleToSet)
         XCTAssertFalse(self.sut.currentlySettingHandle)
+        XCTAssertNil(selfUser.handle)
     }
     
     func testThatItFailsToSetHandle() {
         
         // GIVEN
         let handle = "foobar"
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
         
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
@@ -732,12 +738,14 @@ extension UserProfileUpdateStatusTests {
         // THEN
         XCTAssertNil(self.sut.handleToSet)
         XCTAssertFalse(self.sut.currentlySettingHandle)
+        XCTAssertNil(selfUser.handle)
     }
     
     func testThatItFailsToSetHandleBecauseExisting() {
         
         // GIVEN
         let handle = "foobar"
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
         
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
@@ -746,6 +754,22 @@ extension UserProfileUpdateStatusTests {
         // THEN
         XCTAssertNil(self.sut.handleToSet)
         XCTAssertFalse(self.sut.currentlySettingHandle)
+        XCTAssertNil(selfUser.handle)
+    }
+    
+    func testThatItDoesNotSetTheHandleOnSelfUserIfCompletedAfterCancelling() {
+        
+        // GIVEN
+        let handle = "foobar"
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        
+        // WHEN
+        self.sut.requestSettingHandle(handle: handle)
+        self.sut.cancelSettingHandle()
+        self.sut.didSetHandle()
+        
+        // THEN
+        XCTAssertNil(selfUser.handle)
     }
     
     func testThatItNotifyWhenSetingHandleSuccessfully() {

@@ -86,4 +86,59 @@ class UserHandleTests : IntegrationTestBase {
             XCTFail()
         }
     }
+    
+    func testThatItCanSetTheHandle() {
+        
+        // GIVEN
+        let handle = "Evelyn"
+        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        
+        // WHEN
+        self.userSession.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileStatusObserver.invokedCallbacks.count, 1)
+        guard let first = self.userProfileStatusObserver.invokedCallbacks.first else { return }
+        switch first {
+        case .didSetHandle:
+            break
+        default:
+            XCTFail()
+            return
+        }
+        
+        let selfUser = ZMUser.selfUser(inUserSession: self.userSession)!
+        XCTAssertEqual(selfUser.handle, handle)
+        
+        self.mockTransportSession.performRemoteChanges { _ in
+            XCTAssertEqual(self.selfUser.handle, handle)
+        }
+    }
+    
+    func testThatItIsNotifiedWhenFailsToSetTheHandle() {
+        
+        // GIVEN
+        let handle = "Evelyn"
+        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        
+        // WHEN
+        self.userSession.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileStatusObserver.invokedCallbacks.count, 1)
+        guard let first = self.userProfileStatusObserver.invokedCallbacks.first else { return }
+        switch first {
+        case .didSetHandle:
+            break
+        default:
+            XCTFail()
+            return
+        }
+        
+        self.mockTransportSession.performRemoteChanges { _ in
+            XCTAssertEqual(self.selfUser.handle, handle)
+        }
+    }
 }

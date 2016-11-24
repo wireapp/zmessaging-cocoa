@@ -34,7 +34,7 @@
 + (instancetype)invalidPhoneVerificationCodeErrorWithResponse:(ZMTransportResponse *)response;
 
 + (instancetype)invalidEmailWithResponse:(ZMTransportResponse *)response;
-+ (instancetype)emailIsAlreadyRegisteredErrorWithResponse:(ZMTransportResponse *)response;
++ (instancetype)keyExistsErrorWithResponse:(ZMTransportResponse *)response;
 
 + (instancetype)invalidInvitationCodeWithResponse:(ZMTransportResponse *)response;
 

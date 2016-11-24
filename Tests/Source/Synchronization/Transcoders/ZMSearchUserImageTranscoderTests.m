@@ -69,7 +69,13 @@ static NSString *const UserRequestURL = @"/users?ids=";
 
 - (ZMSearchUser *)createSearchUser
 {
-    return [[ZMSearchUser alloc] initWithName:@"foobar" accentColor:ZMAccentColorBrightYellow remoteID:[NSUUID createUUID] user:nil syncManagedObjectContext: self.syncMOC uiManagedObjectContext:self.uiMOC];
+    return [[ZMSearchUser alloc] initWithName:@"foobar"
+                                       handle:@"foo"
+                                  accentColor:ZMAccentColorBrightYellow
+                                     remoteID:[NSUUID createUUID]
+                                         user:nil
+                     syncManagedObjectContext:self.syncMOC
+                       uiManagedObjectContext:self.uiMOC];
 }
 
 - (NSSet *)userIDsFromSearchUserSet:(NSSet *)searchUsers
