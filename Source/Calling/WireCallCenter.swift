@@ -48,42 +48,42 @@ enum WireCallCenterNotificationType {
     case closed
 }
 
-class WireCallCenterNotification : ZMNotification {
+struct WireCallCenterNotification {
     
     static let notificationName = Notification.Name("WireCallCenterNotification")
+    static let userInfoKey = notificationName.rawValue
     
-    let type : WireCallCenterNotificationType
-    let conversationId : NSUUID
-    let userId : NSUUID
+    let callState : CallState
+    let conversationId : UUID
+    let userId : UUID
     var callClosedReason : CallClosedReason?
     
-    init(type: WireCallCenterNotificationType, conversationId: NSUUID, userId: NSUUID) {
-        self.type = type
+    init(callState: CallState, conversationId: UUID, userId: UUID, callClosedReason: CallClosedReason? = nil) {
+        self.callState = callState
         self.conversationId = conversationId
         self.userId = userId
-        
-        super.init(name: WireCallCenterNotification.notificationName.rawValue, object: nil)
+        self.callClosedReason = callClosedReason
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    func post() {
+        NotificationCenter.default.post(name: WireCallCenterNotification.notificationName, object: nil, userInfo: [WireCallCenterNotification.userInfoKey : self])
     }
-    
 }
 
-protocol WireCallCenterObserver {
+public typealias WireCallCenterObserverToken = NSObjectProtocol
+
+public protocol WireCallCenterObserver {
     
-    func establishedCall(conversationId: NSUUID, userId: NSUUID)
-    func incomingCall(conversationId: NSUUID, userId: NSUUID)
-    func closedCall(conversationId: NSUUID, userId: NSUUID, reason: CallClosedReason)
-    
+    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID, callCloseReason: CallClosedReason?)
 }
 
 @objc public protocol WireCallCenterTransport: class {
     
-    func send(data: Data, conversationId: NSUUID, userId: NSUUID)
+    func send(data: Data, conversationId: NSUUID, userId: NSUUID, completionHandler:((_ status: Int) -> Void))
     
 }
+
+public typealias MessageToken = UnsafeMutableRawPointer
 
 @objc public class WireCallCenter : NSObject {
     
@@ -105,19 +105,20 @@ protocol WireCallCenterObserver {
                     
                 }
             },
-            { (conversationId, userId, clientId, data, dataLength, context) in
+            { (token, conversationId, userId, clientId, data, dataLength, context) in
                 print("JCVDay: sending")
-                if let context = context, let conversationId = conversationId, let userId = userId, let clientId = clientId, let data = data {
+                if let token = token, let context = context, let conversationId = conversationId, let userId = userId, let clientId = clientId, let data = data {
                     let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeUnretainedValue()
                     
-                    return selfReference.send(conversationId: String.init(cString: conversationId),
+                    return selfReference.send(token: token,
+                        conversationId: String.init(cString: conversationId),
                                               userId: String.init(cString: userId),
                                               clientId: String.init(cString: clientId),
                                               data: data,
                                               dataLength: dataLength)
                 }
                 
-                return 0
+                return -1
             },
             { (conversationId, userId, context) -> Void in
                 print("JCVDay: incoming")
@@ -155,12 +156,14 @@ protocol WireCallCenterObserver {
         
     }
     
-    private func send(conversationId: String, userId: String, clientId: String, data: UnsafePointer<UInt8>, dataLength: Int) -> Int32 {
+    private func send(token: MessageToken, conversationId: String, userId: String, clientId: String, data: UnsafePointer<UInt8>, dataLength: Int) -> Int32 {
         
         let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
         let transformedData = Data(buffer: bytes)
         
-        transport?.send(data: transformedData, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
+        transport?.send(data: transformedData, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!, completionHandler: { status in
+            wcall_resp(Int32(status), "", token)
+        })
         
         return 0
     }
@@ -173,24 +176,19 @@ protocol WireCallCenterObserver {
         }
         return
         
-        let note = WireCallCenterNotification(type: .incoming, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
-        NotificationCenter.default.post(note as Notification)
+        WireCallCenterNotification(callState: .incoming, conversationId: UUID(uuidString: conversationId)!, userId: UUID(uuidString: userId)!).post()
     }
     
     private func established(conversationId: String, userId: String) {
-        let note = WireCallCenterNotification(type: .established, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
-        NotificationCenter.default.post(note as Notification)
+        WireCallCenterNotification(callState: .established, conversationId: UUID(uuidString: conversationId)!, userId: UUID(uuidString: userId)!).post()
     }
     
     private func closed(conversationId: String, userId: String, reason: CallClosedReason) {
-        let note = WireCallCenterNotification(type: .closed, conversationId: NSUUID(uuidString: conversationId)!, userId: NSUUID(uuidString: userId)!)
-        
-        note.callClosedReason = reason
-        NotificationCenter.default.post(note as Notification)
+        WireCallCenterNotification(callState: .terminating, conversationId: UUID(uuidString: conversationId)!, userId: UUID(uuidString: userId)!, callClosedReason: reason).post()
     }
     
     // TODO find a better place for this method
-    func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
+    public func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
         data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
             let currentTime = UInt32(currentTimestamp.timeIntervalSince1970)
             let serverTime = UInt32(serverTimestamp.timeIntervalSince1970)
@@ -201,49 +199,42 @@ protocol WireCallCenterObserver {
     
     // MARK - observer
     
-    func addObserver(observer: WireCallCenterObserver) {
-        NotificationCenter.default.addObserver(forName: WireCallCenterNotification.notificationName, object: observer, queue: nil) { (note) in
-            if let note = (note as NSNotification) as? WireCallCenterNotification {
-                switch (note.type) {
-                case .established:
-                    observer.establishedCall(conversationId: note.conversationId, userId: note.userId)
-                case .incoming:
-                    observer.incomingCall(conversationId: note.conversationId, userId: note.userId)
-                case .closed:
-                    observer.closedCall(conversationId: note.conversationId, userId: note.userId, reason: note.callClosedReason ?? .internalError)
-                }
+    public class func addObserver(observer: WireCallCenterObserver) -> WireCallCenterObserverToken  {
+        return NotificationCenter.default.addObserver(forName: WireCallCenterNotification.notificationName, object: nil, queue: nil) { (note) in
+            if let note = note.userInfo?[WireCallCenterNotification.userInfoKey] as? WireCallCenterNotification {
+                observer.callCenterDidChange(callState: note.callState, conversationId: note.conversationId, userId: note.userId, callCloseReason: note.callClosedReason)
             }
         }
     }
     
-    func removeObserver(observer: WireCallCenterObserver) {
-        NotificationCenter.default.removeObserver(observer)
+    public class func removeObserver(token: WireCallCenterObserverToken) {
+        NotificationCenter.default.removeObserver(token)
     }
     
     // MARK - Call state methods
     
     @objc(answerCallForConversationID:)
-    public class func answerCall(conversationId: String) -> Bool {
-        return wcall_answer(conversationId) == 0
+    public class func answerCall(conversationId: UUID) -> Bool {
+        return wcall_answer(conversationId.transportString()) == 0
     }
     
     @objc(startCallForConversationID:)
-    public class func startCall(conversationId: String) -> Bool {
-        return wcall_start(conversationId) == 0
+    public class func startCall(conversationId: UUID) -> Bool {
+        return wcall_start(conversationId.transportString()) == 0
     }
     
     @objc(closeCallForConversationID:)
-    public class func closeCall(conversationId: String) {
-        wcall_end(conversationId)
+    public class func closeCall(conversationId: UUID) {
+        wcall_end(conversationId.transportString())
     }
     
     @objc(toogleVideoForConversationID:isActive:)
-    public class func toogleVideo(conversationID: String, active: Bool) {
-        wcall_set_video_send_active(conversationID, active ? 1 : 0)
+    public class func toogleVideo(conversationID: UUID, active: Bool) {
+        wcall_set_video_send_active(conversationID.transportString(), active ? 1 : 0)
     }
  
     @objc(callStateForConversationID:)
-    public class func callState(conversationId: String) -> CallState {
-        return CallState(rawValue: wcall_get_state(conversationId)) ?? .unknown
+    public class func callState(conversationId: UUID) -> CallState {
+        return CallState(rawValue: wcall_get_state(conversationId.transportString())) ?? .unknown
     }
 }

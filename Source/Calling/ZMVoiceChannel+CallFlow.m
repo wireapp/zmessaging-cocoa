@@ -98,7 +98,7 @@
 {
     ZMConversation *conv = self.conversation;
     
-    [WireCallCenter closeCallForConversationID:conv.remoteIdentifier.transportString];
+    [WireCallCenter closeCallForConversationID:conv.remoteIdentifier];
     
     if (conv.isVideoCall) {
         [self.flowManager setVideoSendState:FLOWMANAGER_VIDEO_SEND_NONE forConversation:conv.remoteIdentifier.transportString];
@@ -298,10 +298,10 @@
     }];
     
     
-    if ([WireCallCenter callStateForConversationID:conv.remoteIdentifier.transportString] == AVSCallStateIncoming) {
-        [WireCallCenter answerCallForConversationID:conv.remoteIdentifier.transportString];
+    if ([WireCallCenter callStateForConversationID:conv.remoteIdentifier] == AVSCallStateIncoming) {
+        [WireCallCenter answerCallForConversationID:conv.remoteIdentifier];
     } else {
-        [WireCallCenter startCallForConversationID:conv.remoteIdentifier.transportString];
+        [WireCallCenter startCallForConversationID:conv.remoteIdentifier];
     }
 
     conv.isOutgoingCall = (conv.callParticipants.count == 0);
@@ -330,7 +330,7 @@
     }
     
 //    strongConversation.isVideoCall = YES;
-    [WireCallCenter toogleVideoForConversationID:strongConversation.remoteIdentifier.transportString isActive:YES];
+    [WireCallCenter toogleVideoForConversationID:strongConversation.remoteIdentifier isActive:YES];
     [self join];
     
     return YES;

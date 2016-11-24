@@ -102,10 +102,11 @@ extension CallingRequestStrategy : ZMEventConsumer {
 
 extension CallingRequestStrategy : WireCallCenterTransport {
     
-    public func send(data: Data, conversationId: NSUUID, userId: NSUUID) {
+    public func send(data: Data, conversationId: NSUUID, userId: NSUUID, completionHandler: ((Int) -> Void)) {
         
         guard let dataString = String(data: data, encoding: .utf8) else {
             zmLog.error("Not sending calling messsage since it's not UTF-8")
+            completionHandler(500)
             return
         }
         
@@ -116,6 +117,8 @@ extension CallingRequestStrategy : WireCallCenterTransport {
             }
             self.managedObjectContext.saveOrRollback()
         }
+        
+        completionHandler(200)
         
     }
     
