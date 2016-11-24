@@ -48,7 +48,6 @@
 #import "ZMCallStateTranscoder.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
-#import "ZMRemovedSuggestedPeopleTranscoder.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserProfileUpdateTranscoder.h"
 #import <zmessaging/zmessaging-Swift.h>
@@ -342,8 +341,6 @@
     [self verifyMockLater:loginTranscoder];
     id loginCodeRequestTranscoder = [OCMockObject mockForClass:ZMLoginCodeRequestTranscoder.class];
     [self verifyMockLater:loginCodeRequestTranscoder];
-    id removedSuggestedPeopleTranscoder = [OCMockObject mockForClass:ZMRemovedSuggestedPeopleTranscoder.class];
-    [self verifyMockLater:removedSuggestedPeopleTranscoder];
     id userProfileUpdateTranscoder = [OCMockObject mockForClass:ZMUserProfileUpdateTranscoder.class];
     [self verifyMockLater:userProfileUpdateTranscoder];
     
@@ -363,7 +360,6 @@
     [[[objectDirectory stub] andReturn:callStateTranscoder] callStateTranscoder];
     [[[objectDirectory stub] andReturn:loginTranscoder] loginTranscoder];
     [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
-    [[[objectDirectory stub] andReturn:removedSuggestedPeopleTranscoder] removedSuggestedPeopleTranscoder];
     [[[objectDirectory stub] andReturn:userProfileUpdateTranscoder] userProfileUpdateTranscoder];
     
     [[[objectDirectory stub] andReturn:@[
@@ -382,7 +378,6 @@
                                         callStateTranscoder,
                                         loginTranscoder,
                                         loginCodeRequestTranscoder,
-                                        removedSuggestedPeopleTranscoder,
                                         userProfileUpdateTranscoder
                                         ]] allTranscoders];
     

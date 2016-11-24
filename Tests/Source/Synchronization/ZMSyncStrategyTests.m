@@ -46,7 +46,6 @@
 #import "ZMFlowSync.h"
 #import "ZMCallStateTranscoder.h"
 #import "ZMOperationLoop.h"
-#import "ZMRemovedSuggestedPeopleTranscoder.h"
 #import "AVSMediaManager.h"
 #import "AVSFlowManager.h"
 #import "ZMLoginCodeRequestTranscoder.h"
@@ -145,11 +144,7 @@
     id callStateTranscoder = [OCMockObject mockForClass:ZMCallStateTranscoder.class];
     [[[[callStateTranscoder expect] andReturn:callStateTranscoder] classMethod] alloc];
     (void) [[[callStateTranscoder expect] andReturn:callStateTranscoder] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC objectStrategyDirectory:OCMOCK_ANY];
-    
-    id removedSuggestedPeopleTranscoder = [OCMockObject mockForClass:ZMRemovedSuggestedPeopleTranscoder.class];
-    [[[[removedSuggestedPeopleTranscoder expect] andReturn:removedSuggestedPeopleTranscoder] classMethod] alloc];
-    (void) [[[removedSuggestedPeopleTranscoder expect] andReturn:removedSuggestedPeopleTranscoder] initWithManagedObjectContext:self.syncMOC];
-    
+        
     id loginCodeRequestTranscoder = [OCMockObject mockForClass:ZMLoginCodeRequestTranscoder.class];
     [[[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] classMethod] alloc];
     (void) [[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.authenticationStatus];
@@ -193,7 +188,6 @@
                          registrationTranscoder,
                          flowTranscoder,
                          callStateTranscoder,
-                         removedSuggestedPeopleTranscoder,
                          loginCodeRequestTranscoder,
                          phoneNumberVerificationTranscoder,
                          userProfileUpdateTranscoder
@@ -238,7 +232,6 @@
     XCTAssertEqual(self.sut.registrationTranscoder, registrationTranscoder);
     XCTAssertEqual(self.sut.flowTranscoder, flowTranscoder);
     XCTAssertEqual(self.sut.callStateTranscoder, callStateTranscoder);
-    XCTAssertEqual(self.sut.removedSuggestedPeopleTranscoder, removedSuggestedPeopleTranscoder);
     XCTAssertEqual(self.sut.loginCodeRequestTranscoder, loginCodeRequestTranscoder);
     XCTAssertEqual(self.sut.phoneNumberVerificationTranscoder, phoneNumberVerificationTranscoder);
     XCTAssertEqual(self.sut.userProfileUpdateTranscoder, userProfileUpdateTranscoder);

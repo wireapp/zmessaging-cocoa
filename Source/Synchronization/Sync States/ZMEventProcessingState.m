@@ -69,7 +69,6 @@
                              objectStrategyDirectory.systemMessageTranscoder,
                              objectStrategyDirectory.clientMessageTranscoder,
                              objectStrategyDirectory.userImageTranscoder,
-                             objectStrategyDirectory.removedSuggestedPeopleTranscoder,
                              ];
         
         for (id<ZMObjectStrategy> syncObject in self.syncObjects) {

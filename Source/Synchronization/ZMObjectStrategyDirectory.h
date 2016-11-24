@@ -33,7 +33,6 @@
 @class ZMLastUpdateEventIDTranscoder;
 @class ZMLoginTranscoder;
 @class ZMTypingTranscoder;
-@class ZMRemovedSuggestedPeopleTranscoder;
 @class ZMPhoneNumberVerificationTranscoder;
 @class ZMLoginCodeRequestTranscoder;
 @class ZMUserProfileUpdateTranscoder;
@@ -59,7 +58,6 @@
 @property (nonatomic, readonly) ZMLoginCodeRequestTranscoder *loginCodeRequestTranscoder;
 @property (nonatomic, readonly) ZMFlowSync *flowTranscoder;
 @property (nonatomic, readonly) ZMCallStateTranscoder *callStateTranscoder;
-@property (nonatomic, readonly) ZMRemovedSuggestedPeopleTranscoder *removedSuggestedPeopleTranscoder;
 @property (nonatomic, readonly) ZMUserProfileUpdateTranscoder *userProfileUpdateTranscoder;
 
 @property (nonatomic, readonly) NSManagedObjectContext *moc;
