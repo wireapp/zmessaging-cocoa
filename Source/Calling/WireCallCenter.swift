@@ -106,19 +106,18 @@ public typealias MessageToken = UnsafeMutableRawPointer
                 }
             },
             { (token, conversationId, userId, clientId, data, dataLength, context) in
-                print("JCVDay: sending")
-                if let token = token, let context = context, let conversationId = conversationId, let userId = userId, let clientId = clientId, let data = data {
-                    let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeUnretainedValue()
-                    
-                    return selfReference.send(token: token,
-                        conversationId: String.init(cString: conversationId),
-                                              userId: String.init(cString: userId),
-                                              clientId: String.init(cString: clientId),
-                                              data: data,
-                                              dataLength: dataLength)
+                guard let token = token, let context = context, let conversationId = conversationId, let userId = userId, let clientId = clientId, let data = data else {
+                    return EINVAL // invalid argument
                 }
                 
-                return -1
+                let selfReference = Unmanaged<WireCallCenter>.fromOpaque(context).takeUnretainedValue()
+                
+                return selfReference.send(token: token,
+                                          conversationId: String.init(cString: conversationId),
+                                          userId: String.init(cString: userId),
+                                          clientId: String.init(cString: clientId),
+                                          data: data,
+                                          dataLength: dataLength)
             },
             { (conversationId, userId, context) -> Void in
                 print("JCVDay: incoming")
