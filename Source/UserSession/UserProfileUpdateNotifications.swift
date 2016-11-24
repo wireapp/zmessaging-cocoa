@@ -61,7 +61,7 @@ import Foundation
 
 
 // MARK: - Notification
-private enum UserProfileUpdateNotificationType {
+enum UserProfileUpdateNotificationType {
     case passwordUpdateDidFail
     case emailUpdateDidFail(error: Error)
     case emailDidSendVerification
@@ -82,53 +82,10 @@ struct UserProfileUpdateNotification {
     
     fileprivate let type : UserProfileUpdateNotificationType
     
-    private func post() {
-        NotificationCenter.default.post(name: type(of: self).notificationName, object: nil, userInfo: [UserProfileUpdateNotification.userInfoKey : self])
-    }
-    
-    static func notifyPasswordUpdateDidFail() {
-        UserProfileUpdateNotification(type: .passwordUpdateDidFail).post()
-    }
-    
-    static func notifyEmailUpdateDidFail(error: Error) {
-        UserProfileUpdateNotification(type: .emailUpdateDidFail(error: error)).post()
-    }
-    
-    static func notifyPhoneNumberVerificationCodeRequestDidFailWithError(error: Error) {
-        UserProfileUpdateNotification(type: .phoneNumberVerificationCodeRequestDidFail(error: error)).post()
-    }
-    
-    static func notifyPhoneNumberVerificationCodeRequestDidSucceed() {
-        UserProfileUpdateNotification(type: .phoneNumberVerificationCodeRequestDidSucceed).post()
-    }
-    
-    static func notifyDidSendEmailVerification() {
-        UserProfileUpdateNotification(type: .emailDidSendVerification).post()
-    }
-    
-    static func notifyPhoneNumberChangeDidFail(error: Error) {
-        UserProfileUpdateNotification(type: .phoneNumberChangeDidFail(error: error)).post()
-    }
-
-    static func notifyDidCheckAvailabilityOfHandle(handle: String, available: Bool) {
-        UserProfileUpdateNotification(type: .didCheckAvailabilityOfHandle(handle: handle, available: available)).post()
-    }
-    
-    static func notifyDidFailToCheckAvailabilityOfHandle(handle: String) {
-        UserProfileUpdateNotification(type: .didFailToCheckAvailabilityOfHandle(handle: handle)).post()
-    }
-    
-    static func notifyDidSetHandle() {
-        UserProfileUpdateNotification(type: .didSetHandle).post()
-    }
-    
-    static func notifyDidFailToSetHandle() {
-        UserProfileUpdateNotification(type: .didFailToSetHandle).post()
-    }
-    
-    static func notifyDidFailToSetHandleBecauseExisting() {
-        UserProfileUpdateNotification(type: .didFailToSetHandleBecauseExisting).post()
-
+    static func post(type: UserProfileUpdateNotificationType) {
+        NotificationCenter.default.post(name: self.notificationName,
+                                        object: nil,
+                                        userInfo: [UserProfileUpdateNotification.userInfoKey : UserProfileUpdateNotification(type: type)])
     }
 }
 

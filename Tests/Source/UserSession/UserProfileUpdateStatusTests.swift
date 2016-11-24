@@ -162,7 +162,7 @@ extension UserProfileUpdateStatusTests {
         XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
         guard let first = self.observer.invokedCallbacks.first else { return }
         switch first {
-        case .didSentVerificationEmail:
+        case .emailDidSendVerification:
             break
         default:
             XCTFail()
@@ -229,7 +229,7 @@ extension UserProfileUpdateStatusTests {
         XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
         guard let first = self.observer.invokedCallbacks.first else { return }
         switch first {
-        case .passwordUpdateRequestDidFail:
+        case .passwordUpdateDidFail:
             break
         default:
             XCTFail()
@@ -811,39 +811,24 @@ extension UserProfileUpdateStatusTests {
 
 
 // MARK: - Helpers
-
-enum TestUserProfileUpdateObserverCallbacks {
-    case passwordUpdateRequestDidFail
-    case emailUpdateDidFail(Error)
-    case didSentVerificationEmail
-    case phoneNumberVerificationCodeRequestDidFail(Error)
-    case phoneNumberVerificationCodeRequestDidSucceed
-    case phoneNumberChangeDidFail(Error)
-    case didCheckAvailabilityOfHandle(handle: String, available: Bool)
-    case didFailToCheckAvailabilityOfHandle(handle: String)
-    case didSetHandle
-    case didFailToSetHandleBecauseExisting
-    case didFailToSetHandle
-}
-
 class TestUserProfileUpdateObserver : NSObject, UserProfileUpdateObserver {
     
-    var invokedCallbacks : [TestUserProfileUpdateObserverCallbacks] = []
+    var invokedCallbacks : [zmessaging.UserProfileUpdateNotificationType] = []
     
     func passwordUpdateRequestDidFail() {
-        invokedCallbacks.append(.passwordUpdateRequestDidFail)
+        invokedCallbacks.append(.passwordUpdateDidFail)
     }
 
     func emailUpdateDidFail(_ error: Error!) {
-        invokedCallbacks.append(.emailUpdateDidFail(error))
+        invokedCallbacks.append(.emailUpdateDidFail(error: error))
     }
     
     func didSentVerificationEmail() {
-        invokedCallbacks.append(.didSentVerificationEmail)
+        invokedCallbacks.append(.emailDidSendVerification)
     }
     
     func phoneNumberVerificationCodeRequestDidFail(_ error: Error!) {
-        invokedCallbacks.append(.phoneNumberVerificationCodeRequestDidFail(error))
+        invokedCallbacks.append(.phoneNumberVerificationCodeRequestDidFail(error: error))
     }
     
     func phoneNumberVerificationCodeRequestDidSucceed() {
@@ -851,7 +836,7 @@ class TestUserProfileUpdateObserver : NSObject, UserProfileUpdateObserver {
     }
     
     func phoneNumberChangeDidFail(_ error: Error!) {
-        invokedCallbacks.append(.phoneNumberChangeDidFail(error))
+        invokedCallbacks.append(.phoneNumberChangeDidFail(error: error))
     }
     
     func didCheckAvailiabilityOfHandle(handle: String, available: Bool) {

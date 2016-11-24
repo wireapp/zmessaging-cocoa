@@ -18,7 +18,7 @@
 
 
 import Foundation
-import zmessaging
+@testable import zmessaging
 import ZMCMockTransport
 
 class UserHandleTests : IntegrationTestBase {

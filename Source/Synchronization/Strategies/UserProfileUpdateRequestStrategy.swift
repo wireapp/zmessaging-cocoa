@@ -111,13 +111,13 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
         
         case self.passwordUpdateSync:
             let payload : NSDictionary = [
-                "new_password" : self.userProfileUpdateStatus.passwordValueToSet!
+                "new_password" : self.userProfileUpdateStatus.passwordToSet!
             ]
             return ZMTransportRequest(path: "/self/password", method: .methodPUT, payload: payload)
         
         case self.emailUpdateSync:
             let payload : NSDictionary = [
-                "email" : self.userProfileUpdateStatus.emailValueToSet!
+                "email" : self.userProfileUpdateStatus.emailToSet!
             ]
             return ZMTransportRequest(path: "/self/email", method: .methodPUT, payload: payload)
         case self.handleCheckSync:
