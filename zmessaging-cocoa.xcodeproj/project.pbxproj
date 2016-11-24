@@ -258,6 +258,8 @@
 		54D9811C19EBBCFA00037518 /* ZMSearchTopConversationsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54D9811519EBBCF400037518 /* ZMSearchTopConversationsTests.m */; };
 		54D9812919EBC04900037518 /* ZMSearchUserImageTranscoderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54D9812719EBC04900037518 /* ZMSearchUserImageTranscoderTests.m */; };
 		54DE26B31BC56E62002B5FBC /* ZMHotFixDirectory.h in Headers */ = {isa = PBXBuildFile; fileRef = 54DE26B11BC56E62002B5FBC /* ZMHotFixDirectory.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		54DE9BEB1DE74FFB00EFFB9C /* RandomHandleGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54DE9BEA1DE74FFB00EFFB9C /* RandomHandleGenerator.swift */; };
+		54DE9BEF1DE760A900EFFB9C /* RandomHandleGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54DE9BEC1DE75D4900EFFB9C /* RandomHandleGeneratorTests.swift */; };
 		54DFB8F01B30649000F1C736 /* GiphyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54DFB8EE1B30649000F1C736 /* GiphyTests.m */; };
 		54E4DD0F1DE4A9C500FEF192 /* UserHandleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54E4DD0D1DE4A9A200FEF192 /* UserHandleTests.swift */; };
 		54EFF35D1D6D6CE9005DED56 /* ZMSearchResult+AddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54EFF35C1D6D6CE9005DED56 /* ZMSearchResult+AddressBook.swift */; };
@@ -761,6 +763,8 @@
 		54DB35AB19A5E3AA001756C2 /* ZMUpdateEventsCatchUpPhaseTwoState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMUpdateEventsCatchUpPhaseTwoState.m; sourceTree = "<group>"; };
 		54DE26B11BC56E62002B5FBC /* ZMHotFixDirectory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMHotFixDirectory.h; sourceTree = "<group>"; };
 		54DE26B21BC56E62002B5FBC /* ZMHotFixDirectory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMHotFixDirectory.m; sourceTree = "<group>"; };
+		54DE9BEA1DE74FFB00EFFB9C /* RandomHandleGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RandomHandleGenerator.swift; sourceTree = "<group>"; };
+		54DE9BEC1DE75D4900EFFB9C /* RandomHandleGeneratorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RandomHandleGeneratorTests.swift; sourceTree = "<group>"; };
 		54DFAE211C92D979004B1D15 /* 1900x1500.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 1900x1500.jpg; sourceTree = "<group>"; };
 		54DFB8EE1B30649000F1C736 /* GiphyTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GiphyTests.m; sourceTree = "<group>"; };
 		54E4DD0D1DE4A9A200FEF192 /* UserHandleTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserHandleTests.swift; sourceTree = "<group>"; };
@@ -1670,6 +1674,7 @@
 			isa = PBXGroup;
 			children = (
 				549552511D64567C004F21F6 /* AddressBookTests.swift */,
+				54DE9BEC1DE75D4900EFFB9C /* RandomHandleGeneratorTests.swift */,
 			);
 			path = Registration;
 			sourceTree = "<group>";
@@ -1863,6 +1868,7 @@
 			isa = PBXGroup;
 			children = (
 				54389B461D5DEDE8005A1B41 /* AddressBook.swift */,
+				54DE9BEA1DE74FFB00EFFB9C /* RandomHandleGenerator.swift */,
 			);
 			path = Registration;
 			sourceTree = "<group>";
@@ -2498,6 +2504,7 @@
 				0920C4DA1B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift in Sources */,
 				541918ED195AD9D100A5023D /* SendAndReceiveMessagesTests.m in Sources */,
 				3EA1EC6D19BDE4C800AA1384 /* ZMPushTokenTests.m in Sources */,
+				54DE9BEF1DE760A900EFFB9C /* RandomHandleGeneratorTests.swift in Sources */,
 				F9C598AD1A0947B300B1F760 /* ZMBlacklistDownloaderTest.m in Sources */,
 				BFE53F551D5A2F7000398378 /* DeleteMessagesTests.swift in Sources */,
 				5490F8ED1AEFD2B3004696F4 /* ZMUserSessionAuthenticationTests.m in Sources */,
@@ -2641,6 +2648,7 @@
 				549815D01A432BC700A7CE2E /* ZMSearchRequestCodec.m in Sources */,
 				549815CF1A432BC700A7CE2E /* ZMSearchResult.m in Sources */,
 				54B2A08E1DAE71F100BB40B1 /* NSManagedObjectContext+Analytics.swift in Sources */,
+				54DE9BEB1DE74FFB00EFFB9C /* RandomHandleGenerator.swift in Sources */,
 				549815D61A432BC700A7CE2E /* ZMSearchTopConversations.m in Sources */,
 				549815D41A432BC700A7CE2E /* ZMSearchUser+UserSession.m in Sources */,
 				549816371A432BC800A7CE2E /* ZMSearchUserImageTranscoder.m in Sources */,
