@@ -75,6 +75,49 @@ static NSString * const ZMCallKitDelegateCallStartedInGroup = @"callkit.call.sta
 
 static NSString * const ZMLogTag ZM_UNUSED = @"CallKit";
 
+CXCallEndedReason CallEndedReasonFromZMVoiceChannelState(ZMVoiceChannelState state, ZMVoiceChannelState previousState);
+BOOL IsCallEndedByUserAction(ZMVoiceChannelState state, ZMVoiceChannelState previousState);
+
+CXCallEndedReason CallEndedReasonFromZMVoiceChannelState(ZMVoiceChannelState state, ZMVoiceChannelState previousState)
+{
+    switch (state) {
+        case ZMVoiceChannelStateNoActiveUsers:
+            switch (previousState) {
+                case ZMVoiceChannelStateIncomingCall:
+                    return CXCallEndedReasonRemoteEnded;
+                case ZMVoiceChannelStateOutgoingCall:
+                    return CXCallEndedReasonUnanswered;
+                default:
+                    return CXCallEndedReasonUnanswered;
+            }
+        case ZMVoiceChannelStateInvalid:
+            return CXCallEndedReasonFailed;
+        case ZMVoiceChannelStateDeviceTransferReady:
+            return CXCallEndedReasonAnsweredElsewhere;
+        case ZMVoiceChannelStateIncomingCallInactive:
+        case ZMVoiceChannelStateOutgoingCallInactive:
+            return CXCallEndedReasonUnanswered;
+        default:
+            return CXCallEndedReasonFailed;
+    }
+}
+
+BOOL IsCallEndedByUserAction(ZMVoiceChannelState state, ZMVoiceChannelState previousState)
+{
+    switch (state) {
+        case ZMVoiceChannelStateNoActiveUsers:
+            switch (previousState) {
+                case ZMVoiceChannelStateIncomingCall:
+                case ZMVoiceChannelStateOutgoingCall:
+                    return YES;
+                default:
+                    return NO;
+            }
+        default:
+            return NO;
+    }
+}
+
 NS_ASSUME_NONNULL_BEGIN
 
 @implementation CXProvider (TypeConformance)
@@ -98,7 +141,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ZMCallKitDelegate (VoiceChannelObserver)
 - (void)managedObjectContextDidSave:(NSNotification *)notification;
-- (void)conversationVoiceChannelStateDidChange:(ZMConversation *)conversation;
+- (void)conversationVoiceChannelStateDidChange:(ZMConversation *)conversation previousState:(ZMVoiceChannelState)prevState;
 @end
 
 NS_ASSUME_NONNULL_END
@@ -279,10 +322,10 @@ NS_ASSUME_NONNULL_END
                                                  selector:@selector(applicationDidBecomeActive:)
                                                      name:UIApplicationDidBecomeActiveNotification
                                                    object:nil];
+        // If we see "ongoing" calls when app starts we need to end them. App cannot have calls when it is not running.
+        [self endAllOngoingCallKitCallsExcept:nil];
         
-        for (ZMConversation *conversation in self.nonIdleCallConversations) {
-            [self conversationVoiceChannelStateDidChange:conversation];
-        }
+        [self updateStateOfOngoingCalls];
     }
     return self;
 }
@@ -308,32 +351,100 @@ NS_ASSUME_NONNULL_END
     return providerConfiguration;
 }
 
+// MARK: - Logging
+
+- (void)logErrorForConversation:(NSString *)conversationId line:(NSUInteger)line format:(NSString *)format, ...
+{
+    va_list args;
+    va_start(args, format);
+    NSString *logString = [[NSString alloc] initWithFormat:format arguments:args];
+    [self logForConversation:conversationId level:ZMLogLevelError line:line message:logString];
+    va_end(args);
+}
+
+- (void)logInfoForConversation:(NSString *)conversationId line:(NSUInteger)line format:(NSString *)format, ...
+{
+    va_list args;
+    va_start(args, format);
+    NSString *logString = [[NSString alloc] initWithFormat:format arguments:args];
+    [self logForConversation:conversationId level:ZMLogLevelInfo line:line message:logString];
+    va_end(args);
+}
+
+- (void)logForConversation:(NSString *)conversationId level:(ZMLogLevel_t)level line:(NSUInteger)line message:(NSString *)message
+{
+    NSString *messageWithLine = [NSString stringWithFormat:@"%s:%ld:%@ %@", __FILE__, (unsigned long)line, level == ZMLogLevelError ? @"ERROR: " : @"", message];
+    [self.onDemandFlowManager.flowManager appendLogForConversation:conversationId message:messageWithLine];
+}
+
+- (void)endAllOngoingCallKitCallsExcept:(ZMConversation *)conversation
+{
+    for (CXCall *call in self.callController.callObserver.calls) {
+        
+        if (nil != conversation && [conversation.remoteIdentifier isEqual:call.UUID]) {
+            continue;
+        }
+        
+        CXEndCallAction *endCallAction = [[CXEndCallAction alloc] initWithCallUUID:call.UUID];
+        
+        CXTransaction *endCallTransaction = [[CXTransaction alloc] initWithActions:@[endCallAction]];
+        
+        [self.callController requestTransaction:endCallTransaction completion:^(NSError * _Nullable error) {
+            if (nil != error) {
+                [self logErrorForConversation:call.UUID.transportString line:__LINE__ format:@"Cannot end call: %@", error];
+            }
+        }];
+        
+
+    }
+}
+
+- (void)updateStateOfOngoingCalls
+{
+    for (ZMConversation *conversation in self.nonIdleCallConversations) {
+        [self conversationVoiceChannelStateDidChange:conversation previousState:ZMVoiceChannelStateNoActiveUsers];
+    }
+}
+
 - (void)requestStartCallInConversation:(ZMConversation *)conversation videoCall:(BOOL)video
 {
-    ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
-    
-    CXStartCallAction *startCallAction = [[CXStartCallAction alloc] initWithCallUUID:conversation.remoteIdentifier
-                                                                              handle:selfUser.callKitHandle];
-    startCallAction.video = video;
-    
-    CXTransaction *startCallTransaction = [[CXTransaction alloc] initWithAction:startCallAction];
-    
-    [self.callController requestTransaction:startCallTransaction completion:^(NSError * _Nullable error) {
-        if (nil != error) {
-            ZMLogError(@"Cannot start call: %@", error);
-        }
-    }];
+    if (conversation.voiceChannel.state == ZMVoiceChannelStateIncomingCall) {
+        CXAnswerCallAction *answerAction = [[CXAnswerCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
+        CXTransaction *callAnswerTransaction = [[CXTransaction alloc] initWithAction:answerAction];
+        [self.callController requestTransaction:callAnswerTransaction completion:^(NSError * _Nullable error) {
+            if (nil != error) {
+                [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot answer call: %@", error];
+            }
+        }];
+    }
+    else {
+        [self endAllOngoingCallKitCallsExcept:conversation];
+        
+        ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
+        
+        CXStartCallAction *startCallAction = [[CXStartCallAction alloc] initWithCallUUID:conversation.remoteIdentifier
+                                                                                  handle:selfUser.callKitHandle];
+        startCallAction.video = video;
+        
+        CXTransaction *startCallTransaction = [[CXTransaction alloc] initWithAction:startCallAction];
+        
+        [self.callController requestTransaction:startCallTransaction completion:^(NSError * _Nullable error) {
+            if (nil != error) {
+                [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot start call: %@", error];
+            }
+        }];
+    }
 }
 
 - (void)requestEndCallInConversation:(ZMConversation *)conversation
 {
     CXEndCallAction *endCallAction = [[CXEndCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
     
-    CXTransaction *endCallTransaction = [[CXTransaction alloc] initWithAction:endCallAction];
+    CXTransaction *endCallTransaction = [[CXTransaction alloc] initWithActions:@[endCallAction]];
     
     [self.callController requestTransaction:endCallTransaction completion:^(NSError * _Nullable error) {
         if (nil != error) {
-            ZMLogError(@"Cannot end call: %@", error);
+            [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot end call: %@", error];
         }
         [conversation.voiceChannel leave];
     }];
@@ -370,12 +481,17 @@ NS_ASSUME_NONNULL_END
     
     update.remoteHandle = conversation.callKitHandle;
     update.hasVideo = conversation.isVideoCall;
+    
+    [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"CallKit: reportNewIncomingCallWithUUID remoteHandle.type = %ld, remoteHandle.value = %@", (long)update.remoteHandle.type, update.remoteHandle.value];
+    
     [self.provider reportNewIncomingCallWithUUID:conversation.remoteIdentifier
                                           update:update
                                       completion:^(NSError * _Nullable error) {
                                           if (nil != error) {
                                               [conversation.voiceChannel leave];
-                                              ZMLogError(@"Cannot report incoming call: %@", error);
+                                              [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot report incoming call: %@", error];
+                                          } else {
+                                              [self configureAudioSession];
                                           }
                                       }];
 }
@@ -402,19 +518,19 @@ NS_ASSUME_NONNULL_END
     NSError *error = nil;
     [sessionInstance setCategory:AVAudioSessionCategoryPlayAndRecord error:&error];
     if (error.code != 0) {
-        ZMLogError(@"couldn't set session's audio category: %ld", (long)error.code);
+        [self logErrorForConversation:nil line:__LINE__ format:@"couldn't set session's audio category: %ld", (long)error.code];
     }
     
     // set the mode to voice chat
     [sessionInstance setMode:AVAudioSessionModeVoiceChat error:&error];
     if (error.code != 0) {
-        ZMLogError(@"couldn't set session's audio mode: %ld", (long)error.code);
+        [self logErrorForConversation:nil line:__LINE__ format:@"couldn't set session's audio mode: %ld", (long)error.code];
     }
     
     // set the session's sample rate
     [sessionInstance setPreferredSampleRate:16000 error:&error];
     if (error.code != 0) {
-        ZMLogError(@"couldn't set session's preferred sample rate: %ld", (long)error.code);
+        [self logErrorForConversation:nil line:__LINE__ format:@"couldn't set session's preferred sample rate: %ld", (long)error.code];
     }
 }
 
@@ -445,11 +561,12 @@ NS_ASSUME_NONNULL_END
         ZMConversation *callConversation = [ZMConversation resolveConversationForPersons:contacts
                                                                                inContext:userSession.managedObjectContext];
         if (nil != callConversation) {
+            [self configureAudioSession];
             if (isVideo) {
                 NSError *joinError = nil;
                 [callConversation.voiceChannel joinVideoCall:&joinError inUserSession:userSession];
                 if (nil != joinError) {
-                    ZMLogError(@"Cannot start the video call: %@", joinError);
+                    [self logErrorForConversation:callConversation.remoteIdentifier.transportString  line:__LINE__ format:@"Cannot start the video call: %@", joinError];
                 }
             }
             else {
@@ -502,16 +619,8 @@ NS_ASSUME_NONNULL_END
             [self.lastConversationsState removeObjectForKey:conversationID];
             continue;
         }
-        
-        NSNumber *knownStateNumber = self.lastConversationsState[conversationID];
-        ZMVoiceChannelState knownState = (ZMVoiceChannelState)[knownStateNumber integerValue];
-        ZMVoiceChannelState newState = conversation.voiceChannel.state;
 
-        if (knownState != newState) {
-            [self conversationVoiceChannelStateDidChange:conversation];
-        }
-        
-        self.lastConversationsState[conversationID] = @(newState);
+        [self updateConversationIfNeeded:conversation];
     }
 }
 
@@ -525,19 +634,27 @@ NS_ASSUME_NONNULL_END
         return;
     }
     
+    if (conversation.conversationType != ZMConversationTypeGroup &&
+        conversation.conversationType != ZMConversationTypeOneOnOne) {
+        return;
+    }
+    
     ZMVoiceChannelState newState = conversation.voiceChannel.state;
     NSNumber *knownStateNumber = self.lastConversationsState[conversation.remoteIdentifier.transportString];
     ZMVoiceChannelState knownState = (ZMVoiceChannelState)[knownStateNumber integerValue];
-    if (knownStateNumber == nil || knownState != newState) {
-        [self conversationVoiceChannelStateDidChange:conversation];
+    
+    BOOL firstKnownIdleState = knownStateNumber == nil && newState == ZMVoiceChannelStateNoActiveUsers;
+    
+    if (!firstKnownIdleState && (knownStateNumber == nil || knownState != newState)) {
+        [self conversationVoiceChannelStateDidChange:conversation previousState:knownState];
     }
     
     self.lastConversationsState[conversation.remoteIdentifier.transportString] = @(newState);
 }
 
-- (void)conversationVoiceChannelStateDidChange:(ZMConversation *)conversation
+- (void)conversationVoiceChannelStateDidChange:(ZMConversation *)conversation previousState:(ZMVoiceChannelState)prevState
 {
-    ZMLogInfo(@"Call state %d in %@", conversation.voiceChannel.state, conversation.displayName);
+    [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Call state %d in %@", conversation.voiceChannel.state, conversation.displayName];
     
     switch (conversation.voiceChannel.state) {
     case ZMVoiceChannelStateIncomingCall:
@@ -554,19 +671,31 @@ NS_ASSUME_NONNULL_END
             conversation.voiceChannel.callStartDate = [NSDate date];
         break;
     case ZMVoiceChannelStateNoActiveUsers:
+        [self.lastConversationsState removeObjectForKey:conversation.remoteIdentifier.transportString];
+        // fallthrought
     case ZMVoiceChannelStateIncomingCallInactive:
     case ZMVoiceChannelStateOutgoingCallInactive:
     case ZMVoiceChannelStateDeviceTransferReady:
         {
-            CXEndCallAction *endCallAction = [[CXEndCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
-            
-            CXTransaction *endCallTransaction = [[CXTransaction alloc] initWithAction:endCallAction];
-            
-            [self.callController requestTransaction:endCallTransaction completion:^(NSError * _Nullable error) {
-                if (nil != error) {
-                    ZMLogError(@"Cannot end call: %@", error);
-                }
-            }];
+            if (IsCallEndedByUserAction(conversation.voiceChannel.state, prevState)) {
+                [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"requestTransaction:endCallTransaction on %@", conversation.remoteIdentifier];
+                
+                CXEndCallAction *endCallAction = [[CXEndCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
+                
+                CXTransaction *endCallTransaction = [[CXTransaction alloc] initWithActions:@[endCallAction]];
+                
+                [self.callController requestTransaction:endCallTransaction completion:^(NSError * _Nullable error) {
+                    if (nil != error) {
+                        [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot end call in %@: %@", conversation.displayName, error];
+                    }
+                }];
+            }
+            else {
+                [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"reportCallWithUUID:endedAtDate:"];
+                [self.provider reportCallWithUUID:conversation.remoteIdentifier
+                                      endedAtDate:nil
+                                           reason:CallEndedReasonFromZMVoiceChannelState(conversation.voiceChannel.state, prevState)];
+            }
             conversation.voiceChannel.callStartDate = nil;
         }
         break;
@@ -597,18 +726,18 @@ NS_ASSUME_NONNULL_END
 
 - (void)providerDidBegin:(CXProvider *)provider
 {
-    ZMLogInfo(@"CXProvider %@ didBegin", provider);
+    [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ didBegin", provider];
 }
 
 - (void)providerDidReset:(CXProvider *)provider
 {
-    ZMLogInfo(@"CXProvider %@ didReset", provider);
+    [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ didReset", provider];
     [self leaveAllActiveCalls];
 }
 
 - (void)provider:(CXProvider *)provider performStartCallAction:(CXStartCallAction *)action
 {
-    ZMLogInfo(@"CXProvider %@ performStartCallAction", provider);
+    [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ performStartCallAction", provider];
     ZMUserSession *userSession = self.userSession;
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
     [userSession performChanges:^{
@@ -618,7 +747,7 @@ NS_ASSUME_NONNULL_END
             NSError *error = nil;
             [callConversation.voiceChannel joinVideoCall:&error];
             if (nil != error) {
-                ZMLogError(@"Error joining video call: %@", error);
+                [self logErrorForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"Error joining video call: %@", error];
             }
         }
         else {
@@ -631,28 +760,26 @@ NS_ASSUME_NONNULL_END
 
 - (void)provider:(CXProvider *)provider performAnswerCallAction:(CXAnswerCallAction *)action
 {
-    ZMLogInfo(@"CXProvider %@ performAnswerCallAction", provider);
-
     [self.userSession performChanges:^{
         ZMConversation *callConversation = [action conversationInContext:self.userSession.managedObjectContext];
+        [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider %@ performAnswerCallAction", provider];
         if (callConversation.isVideoCall) {
             [callConversation.voiceChannel joinVideoCall:nil];
         }
         else {
             [callConversation.voiceChannel join];
         }
-        
-        [self configureAudioSession];
     }];
     [action fulfill];
 }
 
 - (void)provider:(CXProvider *)provider performEndCallAction:(nonnull CXEndCallAction *)action
 {
-    ZMLogInfo(@"CXProvider %@ performEndCallAction", provider);
     ZMUserSession *userSession = self.userSession;
 
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
+    [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider %@ performEndCallAction on %@: current state %ld", provider, callConversation.displayName, (long)callConversation.voiceChannel.state];
+    
     if (callConversation.voiceChannel.state != ZMVoiceChannelStateNoActiveUsers &&
         callConversation.voiceChannel.state != ZMVoiceChannelStateDeviceTransferReady &&
         callConversation.voiceChannel.state != ZMVoiceChannelStateIncomingCallInactive &&
@@ -660,9 +787,11 @@ NS_ASSUME_NONNULL_END
         
         [userSession performChanges:^{
             if (callConversation.voiceChannel.selfUserConnectionState == ZMVoiceChannelConnectionStateNotConnected) {
+                [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: ignore incoming call"];
                 [callConversation.voiceChannel ignoreIncomingCall];
             }
             else {
+                [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: leave"];
                 [callConversation.voiceChannel leave];
             }
         }];
@@ -672,7 +801,7 @@ NS_ASSUME_NONNULL_END
 
 - (void)provider:(CXProvider *)provider performSetHeldCallAction:(nonnull CXSetHeldCallAction *)action
 {
-    ZMLogInfo(@"CXProvider %@ performSetHeldCallAction", provider);
+    [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ performSetHeldCallAction", provider];
     [self.userSession performChanges:^{
         self.mediaManager.microphoneMuted = action.onHold;
     }];
@@ -681,7 +810,7 @@ NS_ASSUME_NONNULL_END
 
 - (void)provider:(CXProvider *)provider performSetMutedCallAction:(CXSetMutedCallAction *)action
 {
-    ZMLogInfo(@"CXProvider %@ performSetMutedCallAction", provider);
+    [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ performSetMutedCallAction", provider];
     [self.userSession performChanges:^{
         self.mediaManager.microphoneMuted = action.muted;
     }];
@@ -690,17 +819,17 @@ NS_ASSUME_NONNULL_END
 
 - (void)provider:(CXProvider *)provider timedOutPerformingAction:(CXAction *)action
 {
-    ZMLogInfo(@"CXProvider %@ timedOutPerformingAction %@", provider, action);
+    [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ timedOutPerformingAction %@", provider, action];
 }
 
 - (void)provider:(CXProvider __unused *)provider didActivateAudioSession:(AVAudioSession __unused *)audioSession
 {
-    ZMLogInfo(@"CXProvider %@ didActivateAudioSession", provider);
+    [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ didActivateAudioSession", provider];
 }
 
 - (void)provider:(CXProvider *)provider didDeactivateAudioSession:(AVAudioSession __unused *)audioSession
 {
-    ZMLogInfo(@"CXProvider %@ didDeactivateAudioSession", provider);
+    [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ didDeactivateAudioSession", provider];
 }
 
 @end

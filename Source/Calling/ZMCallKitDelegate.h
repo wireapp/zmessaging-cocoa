@@ -31,6 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class CXCallUpdate;
 @class CXTransaction;
 @class CXHandle;
+@class CXCallObserver;
 
 /// Needed to unbound @c ZMCallKitDelegate from OS CallKit implementation (for testing).
 @protocol CallKitProviderType <NSObject>
@@ -47,6 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Needed to unbound @c ZMCallKitDelegate from OS CallKit implementation (for testing).
 @protocol CallKitCallController <NSObject>
 - (void)requestTransaction:(CXTransaction *)transaction completion:(void (^)(NSError *_Nullable error))completion;
+@property (nonatomic, readonly, strong, nullable) CXCallObserver *callObserver;
 @end
 
 @interface ZMUser (Handle)

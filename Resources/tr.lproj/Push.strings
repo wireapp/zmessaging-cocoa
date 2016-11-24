@@ -169,7 +169,7 @@
 "push.notification.action.call.callback" = "Geri Ara";
 "push.notification.action.connection.accept" = "Kabul et";
 
-"push.notification.callkit.call.started.group" = "%1$@ in %2$@";
-"push.notification.callkit.call.started.group.nousername.noconversationname" = "Someone calling in a conversation";
-"push.notification.callkit.call.started.group.nousername" = "Someone calling in %1$@";
-"push.notification.callkit.call.started.group.noconversationname" = "%@ calling in a conversation";
+"push.notification.callkit.call.started.group" = "%2$@'de %1$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Konuşmadan birileri arıyor";
+"push.notification.callkit.call.started.group.nousername" = "Birileri %1$@'de arıyor";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ bir konuşmada arıyor";

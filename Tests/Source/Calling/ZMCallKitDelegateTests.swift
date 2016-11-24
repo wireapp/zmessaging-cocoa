@@ -24,11 +24,6 @@ import Intents
 @available(iOS 10.0, *)
 class MockCallKitProvider: NSObject, CallKitProviderType {
 
-    public func reportCall(with UUID: UUID, endedAt dateEnded: Date?, reason endedReason: UInt) {
-        
-    }
-
-    
     required init(configuration: CXProviderConfiguration) {
         
     }
@@ -44,7 +39,7 @@ class MockCallKitProvider: NSObject, CallKitProviderType {
     }
     
     public var timesReportCallEndedAtCalled: Int = 0
-    func reportCall(with UUID: UUID, endedAt dateEnded: Date?, reason endedReason: CXCallEndedReason) {
+    public func reportCall(with UUID: UUID, endedAt dateEnded: Date?, reason endedReason: UInt) {
         timesReportCallEndedAtCalled = timesReportCallEndedAtCalled + 1
     }
     
@@ -61,9 +56,13 @@ class MockCallKitProvider: NSObject, CallKitProviderType {
 
 @available(iOS 10.0, *)
 class MockCallKitCallController: NSObject, CallKitCallController {
+    public var callObserver: CXCallObserver? {
+        return nil
+    }
     
     public var timesRequestTransactionCalled: Int = 0
     public var requestedTransaction: CXTransaction? = .none
+    
     
     @available(iOS 10.0, *)
     public func request(_ transaction: CXTransaction, completion: @escaping (Error?) -> Void) {
@@ -656,7 +655,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         XCTAssertEqual(conversation.voiceChannel.state, .noActiveUsers)
         // then
-        XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
+        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 1)
     }
     
     func testThatItRequestsEndCall_Timeout() {
@@ -679,7 +678,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         self.uiMOC.saveOrRollback()
         
         // then
-        XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
+        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 1)
     }
     
     func testThatItRequestsEndCall_OutgoingInGroupConversation() {
