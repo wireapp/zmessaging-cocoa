@@ -132,6 +132,18 @@ extension SearchUserImageStrategyTests {
         let expectedUserIDs = userIDs(from: searchSet)
         XCTAssertEqual(userIDs(in:request), expectedUserIDs)
     }
+    
+    func testThatNextRequestDoesNotCreateARequestClientNotReady(){
+        // given
+        _ = setupSearchDirectory(userCount: 3)
+        clientRegistrationDelegate.mockReadiness = false
+        
+        // when
+        let request = sut.nextRequest()
+        
+        // then
+        XCTAssertNil(request);
+    }
 
     func testThatNextRequestCreatesARequestForAllUserIDsInTheUserTableThatWeAreNotAlreadyRequesting() {
         // given

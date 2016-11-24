@@ -79,8 +79,8 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
         self.syncContext = managedObjectContext
         self.uiContext = managedObjectContext.zm_userInterface
         self.clientRegistrationDelegate = clientRegistrationDelegate
-        self.imagesByUserIDCache = ZMSearchUser.searchUserToSmallProfileImageCache()
-        self.mediumAssetIDByUserIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
+        self.imagesByUserIDCache = ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>
+        self.mediumAssetIDByUserIDCache = ZMSearchUser.searchUserToMediumAssetIDCache() as! NSCache<NSUUID, NSUUID>
         self.userIDsTable = ZMSearchDirectory.userIDsMissingProfileImage()
     }
     
@@ -93,12 +93,13 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
         self.syncContext = managedObjectContext
         self.uiContext = managedObjectContext.zm_userInterface
         self.clientRegistrationDelegate = clientRegistrationDelegate
-        self.imagesByUserIDCache = imagesByUserIDCache ?? ZMSearchUser.searchUserToSmallProfileImageCache()
-        self.mediumAssetIDByUserIDCache = mediumAssetIDByUserIDCache ?? ZMSearchUser.searchUserToMediumAssetIDCache()
+        self.imagesByUserIDCache = imagesByUserIDCache ?? ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>
+        self.mediumAssetIDByUserIDCache = mediumAssetIDByUserIDCache ?? ZMSearchUser.searchUserToMediumAssetIDCache() as! NSCache<NSUUID, NSUUID>
         self.userIDsTable = userIDsTable ?? ZMSearchDirectory.userIDsMissingProfileImage()
     }
     
     public func nextRequest() -> ZMTransportRequest? {
+        guard clientRegistrationDelegate.clientIsReadyForRequests else { return nil }
         let request = fetchUsersRequest() ?? fetchAssetRequest()
         request?.setDebugInformationTranscoder(self)
         return request
