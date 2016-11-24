@@ -24,20 +24,25 @@ import Foundation
 @objc public class UserProfileUpdateStatus : NSObject {
 
     /// phone credentials to update
-    fileprivate var synchingPhoneCredentials : SyncToBackendPhase<ZMPhoneCredentials> = .idle
+    fileprivate(set) var phoneNumberToSet : ZMPhoneCredentials?
     
-    /// email and password to update
-    fileprivate var synchingEmailAndPassword : (email: SyncToBackendPhase<ZMEmailCredentials>,
-        password: SyncToBackendPhase<String>) = (.idle, .idle)
+    /// email to set
+    fileprivate(set) var emailToSet : String?
+    
+    /// password to set
+    fileprivate(set) var passwordToSet: String?
     
     /// phone number to validate
-    fileprivate var synchingPhoneNumberForValidationCode : SyncToBackendPhase<String> = .idle
+    fileprivate(set) var phoneNumberForWhichCodeIsRequested : String?
+    
+    /// handle to check for availability
+    fileprivate(set) var handleToCheck : String?
     
     /// handle to check
-    fileprivate var synchingHandleCheck : SyncToBackendPhase<String> = .idle
+    fileprivate(set) var handleToSet : String?
     
     /// last set password and email
-    fileprivate var lastEmailAndPassword : ZMEmailCredentials?
+    fileprivate(set) var lastEmailAndPassword : ZMEmailCredentials?
     
     let managedObjectContext : NSManagedObjectContext
     
@@ -48,6 +53,7 @@ import Foundation
         self.managedObjectContext = managedObjectContext
         self.newRequestCallback = { _ in RequestAvailableNotification.notifyNewRequestsAvailable(nil) }
     }
+
 }
 
 // MARK: - Request changes
@@ -57,14 +63,14 @@ extension UserProfileUpdateStatus {
     /// the user is expected to receive a PIN code on her phone
     /// and call `requestPhoneNumberChange` with that PIN
     public func requestPhoneVerificationCode(phoneNumber: String) {
-        self.synchingPhoneNumberForValidationCode = .needToSync(phoneNumber)
+        self.phoneNumberForWhichCodeIsRequested = phoneNumber
         self.newRequestCallback()
 
     }
     
     /// Requests phone number changed, with a PIN received earlier
     public func requestPhoneNumberChange(credentials: ZMPhoneCredentials) {
-        self.synchingPhoneCredentials = .needToSync(credentials)
+        self.phoneNumberToSet = credentials
         self.newRequestCallback()
 
     }
@@ -73,7 +79,7 @@ extension UserProfileUpdateStatus {
     /// Once this is called, we expect the user to eventually verify the email externally.
     /// - throws: if the email was already set, or if empty credentials are passed
     public func requestSettingEmailAndPassword(credentials: ZMEmailCredentials) throws {
-        guard credentials.email != nil, let password = credentials.password else {
+        guard let email = credentials.email, let password = credentials.password else {
             throw UserProfileUpdateError.missingArgument
         }
         
@@ -81,11 +87,13 @@ extension UserProfileUpdateStatus {
         
         let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
         guard selfUser.emailAddress == nil else {
-            self.synchingEmailAndPassword = (.idle, .idle)
+            self.emailToSet = nil
+            self.passwordToSet = nil
             throw UserProfileUpdateError.emailAlreadySet
         }
         
-        self.synchingEmailAndPassword = (.needToSync(credentials), .needToSync(password))
+        self.emailToSet = email
+        self.passwordToSet = password
         
         self.newRequestCallback()
     }
@@ -93,15 +101,27 @@ extension UserProfileUpdateStatus {
     /// Cancel setting email and password
     public func cancelSettingEmailAndPassword() {
         self.lastEmailAndPassword = nil
-        self.synchingEmailAndPassword = (.idle, .idle)
+        self.emailToSet = nil
+        self.passwordToSet = nil
         self.newRequestCallback()
 
     }
     
     /// Requests a check of availability for a handle
     public func requestCheckHandleAvailability(handle: String) {
-        self.synchingHandleCheck = .needToSync(handle)
+        self.handleToCheck = handle
         self.newRequestCallback()
+    }
+    
+    /// Requests setting the handle
+    public func requestSettingHandle(handle: String) {
+        self.handleToSet = handle
+        self.newRequestCallback()
+    }
+    
+    /// Cancels setting the handle
+    public func cancelSettingHandle() {
+        self.handleToSet = nil
     }
 }
 
@@ -110,110 +130,107 @@ extension UserProfileUpdateStatus {
 
     /// Invoked when requested a phone verification code successfully
     func didRequestPhoneVerificationCodeSuccessfully() {
-        self.synchingPhoneNumberForValidationCode = .idle
-        UserProfileUpdateNotification.notifyPhoneNumberVerificationCodeRequestDidSucceed()
+        self.phoneNumberForWhichCodeIsRequested = nil
+        UserProfileUpdateNotification.post(type: .phoneNumberVerificationCodeRequestDidSucceed)
     }
     
     /// Invoked when failed to request a verification code
     func didFailPhoneVerificationCodeRequest(error: Error) {
-        self.synchingPhoneNumberForValidationCode = .idle
-        UserProfileUpdateNotification.notifyPhoneNumberVerificationCodeRequestDidFailWithError(error: error)
+        self.phoneNumberForWhichCodeIsRequested = nil
+        UserProfileUpdateNotification.post(type: .phoneNumberVerificationCodeRequestDidFail(error: error))
     }
     
     /// Invoked when changing the phone number succeeded
     func didChangePhoneSuccesfully() {
-        self.synchingPhoneCredentials = .idle
+        self.phoneNumberToSet = nil
     }
     
     /// Invoked when changing the phone number failed
     func didFailChangingPhone(error: Error) {
-        self.synchingPhoneCredentials = .idle
-        UserProfileUpdateNotification.notifyPhoneNumberChangeDidFail(error: error)
+        self.phoneNumberToSet = nil
+        UserProfileUpdateNotification.post(type: .phoneNumberChangeDidFail(error: error))
     }
     
     /// Invoked when the request to set password succedeed
     func didUpdatePasswordSuccessfully() {
-        self.synchingEmailAndPassword.password = .idle
+        self.passwordToSet = nil
     }
     
     /// Invoked when the request to set password failed
     func didFailPasswordUpdate() {
         self.lastEmailAndPassword = nil
-        self.synchingEmailAndPassword = (.idle, .idle)
-        UserProfileUpdateNotification.notifyPasswordUpdateDidFail()
+        self.emailToSet = nil
+        self.passwordToSet = nil
+        UserProfileUpdateNotification.post(type: .passwordUpdateDidFail)
     }
     
     /// Invoked when the request to change email was sent successfully
     func didUpdateEmailSuccessfully() {
-        self.synchingEmailAndPassword.email = .idle
-        UserProfileUpdateNotification.notifyDidSendEmailVerification()
+        self.emailToSet = nil
+        UserProfileUpdateNotification.post(type: .emailDidSendVerification)
     }
     
     /// Invoked when the request to change email failed
     func didFailEmailUpdate(error: Error) {
         self.lastEmailAndPassword = nil
-        self.synchingEmailAndPassword = (.idle, .idle)
-        UserProfileUpdateNotification.notifyEmailUpdateDidFail(error: error)
+        self.emailToSet = nil
+        self.passwordToSet = nil
+        UserProfileUpdateNotification.post(type: .emailUpdateDidFail(error: error))
     }
     
     /// Invoked when the request to fetch a handle returned not found
     func didNotFindHandle(handle: String) {
         if self.handleToCheck == handle {
-            self.synchingHandleCheck = .idle
+            self.handleToCheck = nil
         }
-        UserProfileUpdateNotification.notifyDidCheckAvailabilityOfHandle(handle: handle, available: true)
+        UserProfileUpdateNotification.post(type: .didCheckAvailabilityOfHandle(handle: handle, available: true))
     }
     
     /// Invoked when the request to fetch a handle returned successfully
     func didFetchHandle(handle: String) {
         if self.handleToCheck == handle {
-            self.synchingHandleCheck = .idle
+            self.handleToCheck = nil
         }
-        UserProfileUpdateNotification.notifyDidCheckAvailabilityOfHandle(handle: handle, available: false)
+        UserProfileUpdateNotification.post(type: .didCheckAvailabilityOfHandle(handle: handle, available: false))
     }
     
     /// Invoked when the request to fetch a handle failed with
     /// an error that is not "not found"
     func didFailRequestToFetchHandle(handle: String) {
         if self.handleToCheck == handle {
-            self.synchingHandleCheck = .idle
+            self.handleToCheck = nil
         }
-        UserProfileUpdateNotification.notifyDidFailToCheckAvailabilityOfHandle(handle: handle)
+        UserProfileUpdateNotification.post(type: .didFailToCheckAvailabilityOfHandle(handle: handle))
     }
+    
+    /// Invoked when the handle was succesfully set
+    func didSetHandle() {
+        if let handle = self.handleToSet {
+            ZMUser.selfUser(in: self.managedObjectContext).setHandle(handle)
+        }
+        self.handleToSet = nil
+        UserProfileUpdateNotification.post(type: .didSetHandle)
+
+    }
+    
+    /// Invoked when the handle was not set because of a generic error
+    func didFailToSetHandle() {
+        self.handleToSet = nil
+        UserProfileUpdateNotification.post(type: .didFailToSetHandle)
+    }
+    
+    /// Invoked when the handle was not set because it was already existing
+    func didFailToSetAlreadyExistingHandle() {
+        self.handleToSet = nil
+        UserProfileUpdateNotification.post(type: .didFailToSetHandleBecauseExisting)
+    }
+    
 }
 
 // MARK: - Data
 extension UserProfileUpdateStatus : ZMCredentialProvider {
     
-    /// The email to set on the backend
-    var emailValueToSet : String? {
-        guard !self.currentlySettingPassword else {
-            return nil
-        }
-        
-        return self.synchingEmailAndPassword.email.value?.email
-    }
-    
-    /// The password to set on the backend
-    var passwordValueToSet : String? {
-        return self.synchingEmailAndPassword.password.value
-    }
-    
-    /// The phone number for which to request a validation code
-    var phoneNumberForWhichCodeIsRequested : String? {
-        return self.synchingPhoneNumberForValidationCode.value
-    }
-    
-    /// The phone number for which to request a validation code
-    var phoneNumberToSet : ZMPhoneCredentials? {
-        return self.synchingPhoneCredentials.value
-    }
-    
-    /// The handle to check for availability
-    var handleToCheck : String? {
-        return self.synchingHandleCheck.value
-    }
-    
+    /// The email credentials being set
     public func emailCredentials() -> ZMEmailCredentials? {
         guard !self.currentlySettingEmail && !self.currentlySettingPassword else {
             return nil
@@ -248,8 +265,7 @@ extension UserProfileUpdateStatus {
         guard !self.selfUserHasEmail else {
             return false
         }
-        
-        return !self.synchingEmailAndPassword.email.isIdle && self.synchingEmailAndPassword.password.isIdle
+        return self.emailToSet != nil && self.passwordToSet == nil
     }
     
     /// Whether we are currently setting the password.
@@ -258,59 +274,36 @@ extension UserProfileUpdateStatus {
         guard !self.selfUserHasEmail else {
             return false
         }
-        
-        return !self.synchingEmailAndPassword.password.isIdle
+        return self.passwordToSet != nil
     }
     
     /// Whether we are currently requesting a PIN to update the phone
     public var currentlyRequestingPhoneVerificationCode : Bool {
-        
-        return !self.synchingPhoneNumberForValidationCode.isIdle
+        return self.phoneNumberForWhichCodeIsRequested != nil
     }
     
     
     /// Whether we are currently requesting a change of phone number
     public var currentlySettingPhone : Bool {
-        
         guard !self.selfUserHasPhoneNumber else {
             return false
         }
         
-        return !self.synchingPhoneCredentials.isIdle
+        return self.phoneNumberToSet != nil
     }
     
     /// Whether we are currently waiting to check for availability of a handle
     public var currentlyCheckingHandleAvailability : Bool {
         return self.handleToCheck != nil
     }
+    
+    /// Whether we are currently requesting a change of handle
+    public var currentlySettingHandle : Bool {
+        return handleToSet != nil
+    }
 }
 
 // MARK: - Helpers
-
-/// Tracks the state of synchronizing something to the backend
-enum SyncToBackendPhase<T> {
-    case idle
-    case needToSync(T)
-    
-    var isIdle : Bool {
-        switch self {
-        case .idle:
-            return true
-        default:
-            return false
-        }
-    }
-    
-    var value : T? {
-        switch self {
-        case .idle:
-            return nil
-        case .needToSync(let t):
-            return t
-        }
-    }
-}
-
 
 /// Errors
 @objc public enum UserProfileUpdateError: Int, Error {

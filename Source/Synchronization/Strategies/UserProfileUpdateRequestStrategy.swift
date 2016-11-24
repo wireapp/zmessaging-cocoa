@@ -37,6 +37,8 @@ import Foundation
     
     fileprivate var handleCheckSync : ZMSingleRequestSync! = nil
     
+    fileprivate var handleSetSync : ZMSingleRequestSync! = nil
+    
     public init(managedObjectContext: NSManagedObjectContext,
                 userProfileUpdateStatus: UserProfileUpdateStatus,
                 authenticationStatus: AuthenticationStatusProvider) {
@@ -50,6 +52,7 @@ import Foundation
         self.passwordUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.emailUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.handleCheckSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
+        self.handleSetSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
     }
 }
 
@@ -86,6 +89,11 @@ extension UserProfileRequestStrategy : RequestStrategy {
             return self.handleCheckSync.nextRequest()
         }
         
+        if self.userProfileUpdateStatus.currentlySettingHandle {
+            self.handleSetSync.readyForNextRequestIfNotBusy()
+            return self.handleSetSync.nextRequest()
+        }
+        
         return nil
     }
 }
@@ -111,18 +119,24 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
         
         case self.passwordUpdateSync:
             let payload : NSDictionary = [
-                "new_password" : self.userProfileUpdateStatus.passwordValueToSet!
+                "new_password" : self.userProfileUpdateStatus.passwordToSet!
             ]
             return ZMTransportRequest(path: "/self/password", method: .methodPUT, payload: payload)
         
         case self.emailUpdateSync:
             let payload : NSDictionary = [
-                "email" : self.userProfileUpdateStatus.emailValueToSet!
+                "email" : self.userProfileUpdateStatus.emailToSet!
             ]
             return ZMTransportRequest(path: "/self/email", method: .methodPUT, payload: payload)
+            
         case self.handleCheckSync:
             let handle = self.userProfileUpdateStatus.handleToCheck!
             return ZMTransportRequest(path: "/users/handles/\(handle)", method: .methodHEAD, payload: nil)
+        
+        case self.handleSetSync:
+            let payload : NSDictionary = ["handle" : self.userProfileUpdateStatus.handleToSet!]
+            return ZMTransportRequest(path: "/self/handle", method: .methodPUT, payload: payload)
+        
         default:
             return nil
         }
@@ -167,7 +181,7 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
                 self.userProfileUpdateStatus.didUpdateEmailSuccessfully()
             } else {
                 let error : Error = NSError.invalidEmail(with: response) ??
-                    NSError.emailIsAlreadyRegisteredError(with: response) ??
+                    NSError.keyExistsError(with: response) ??
                     NSError.userSessionErrorWith(ZMUserSessionErrorCode.unkownError, userInfo: nil)
                 self.userProfileUpdateStatus.didFailEmailUpdate(error: error)
             }
@@ -184,6 +198,18 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
                 }
             }
             break
+            
+        case self.handleSetSync:
+            if response.result == .success {
+                self.userProfileUpdateStatus.didSetHandle()
+            } else {
+                if NSError.keyExistsError(with: response) != nil {
+                    self.userProfileUpdateStatus.didFailToSetAlreadyExistingHandle()
+                } else {
+                    self.userProfileUpdateStatus.didFailToSetHandle()
+                }
+            }
+            
         default:
             break
         }

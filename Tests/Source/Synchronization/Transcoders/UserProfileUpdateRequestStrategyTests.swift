@@ -149,6 +149,21 @@ extension UserProfileUpdateRequestStrategyTests {
         let expected = ZMTransportRequest(path: "/users/handles/\(handle)", method: .methodHEAD, payload: nil)
         XCTAssertEqual(request, expected)
     }
+    
+    func testThatItCreatesARequestToSetHandle() {
+        
+        // GIVEN
+        let handle = "martha"
+        self.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        
+        // THEN
+        let payload : NSDictionary = ["handle" : handle]
+        let expected = ZMTransportRequest(path: "/self/handle", method: .methodPUT, payload: payload)
+        XCTAssertEqual(request, expected)
+    }
 }
 
 // MARK: - Parsing response
@@ -413,6 +428,51 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailRequestToFetchHandle, [handle])
     }
+    
+    func testThatItCallsSuccessSetHandle() {
+        
+        // GIVEN
+        let handle = "martha"
+        self.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.successResponse())
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidSetHandle, 1)
+    }
+    
+    func testThatItCallsFailedToSetHandle() {
+        
+        // GIVEN
+        let handle = "martha"
+        self.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.errorResponse())
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailToSetHandle, 1)
+    }
+    
+    func testThatItCallsFailedToSetHandleBecauseExisting() {
+        
+        // GIVEN
+        let handle = "martha"
+        self.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.keyExistsResponse())
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailToSetAlreadyExistingHandle , 1)
+    }
 }
 
 // MARK: - Helpers
@@ -486,6 +546,9 @@ class TestUserProfileUpdateStatus : UserProfileUpdateStatus {
     var recordedDidFetchHandle : [String] = []
     var recordedDidFailRequestToFetchHandle : [String] = []
     var recordedDidNotFindHandle : [String] = []
+    var recordedDidSetHandle = 0
+    var recordedDidFailToSetHandle = 0
+    var recordedDidFailToSetAlreadyExistingHandle = 0
     
     override func didFailEmailUpdate(error: Error) {
         recordedDidFailEmailUpdate.append(error)
@@ -540,5 +603,20 @@ class TestUserProfileUpdateStatus : UserProfileUpdateStatus {
     override func didNotFindHandle(handle: String) {
         recordedDidNotFindHandle.append(handle)
         super.didNotFindHandle(handle: handle)
+    }
+    
+    override func didSetHandle() {
+        recordedDidSetHandle += 1
+        super.didSetHandle()
+    }
+    
+    override func didFailToSetHandle() {
+        recordedDidFailToSetHandle += 1
+        super.didFailToSetHandle()
+    }
+    
+    override func didFailToSetAlreadyExistingHandle() {
+        recordedDidFailToSetAlreadyExistingHandle += 1
+        super.didFailToSetAlreadyExistingHandle()
     }
 }

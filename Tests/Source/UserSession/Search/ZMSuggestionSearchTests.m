@@ -163,7 +163,13 @@
 
 - (ZMSearchUser *)createSearchUserWithName:(NSString *)name;
 {
-    return [[ZMSearchUser alloc] initWithName:name accentColor:ZMAccentColorSoftPink remoteID:[NSUUID createUUID] user:nil syncManagedObjectContext: self.syncMOC uiManagedObjectContext:self.uiMOC];
+    return [[ZMSearchUser alloc] initWithName:name
+                                       handle:@"foo"
+                                  accentColor:ZMAccentColorSoftPink
+                                     remoteID:[NSUUID createUUID]
+                                         user:nil
+                     syncManagedObjectContext:self.syncMOC
+                       uiManagedObjectContext:self.uiMOC];
 
 }
 

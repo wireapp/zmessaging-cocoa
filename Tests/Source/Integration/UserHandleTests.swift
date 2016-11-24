@@ -18,7 +18,7 @@
 
 
 import Foundation
-import zmessaging
+@testable import zmessaging
 import ZMCMockTransport
 
 class UserHandleTests : IntegrationTestBase {
@@ -84,6 +84,88 @@ class UserHandleTests : IntegrationTestBase {
             XCTAssertFalse(available)
         default:
             XCTFail()
+        }
+    }
+    
+    func testThatItCanSetTheHandle() {
+        
+        // GIVEN
+        let handle = "Evelyn"
+        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        
+        // WHEN
+        self.userSession.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileStatusObserver.invokedCallbacks.count, 1)
+        guard let first = self.userProfileStatusObserver.invokedCallbacks.first else { return }
+        switch first {
+        case .didSetHandle:
+            break
+        default:
+            XCTFail()
+            return
+        }
+        
+        let selfUser = ZMUser.selfUser(inUserSession: self.userSession)!
+        XCTAssertEqual(selfUser.handle, handle)
+        
+        self.mockTransportSession.performRemoteChanges { _ in
+            XCTAssertEqual(self.selfUser.handle, handle)
+        }
+    }
+    
+    func testThatItIsNotifiedWhenFailsToSetTheHandleBecauseItExists() {
+        
+        // GIVEN
+        let handle = "Evelyn"
+        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        self.mockTransportSession.performRemoteChanges { (session) in
+            self.user1.handle = handle
+        }
+        
+        // WHEN
+        self.userSession.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileStatusObserver.invokedCallbacks.count, 1)
+        guard let first = self.userProfileStatusObserver.invokedCallbacks.first else { return }
+        switch first {
+        case .didFailToSetHandleBecauseExisting:
+            break
+        default:
+            XCTFail()
+            return
+        }
+    }
+    
+    func testThatItIsNotifiedWhenFailsToSetTheHandle() {
+        
+        // GIVEN
+        let handle = "Evelyn"
+        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        self.mockTransportSession.responseGeneratorBlock = { req in
+            if req.path == "/self/handle" {
+                return ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil)
+            }
+            return nil
+        }
+        
+        // WHEN
+        self.userSession.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileStatusObserver.invokedCallbacks.count, 1)
+        guard let first = self.userProfileStatusObserver.invokedCallbacks.first else { return }
+        switch first {
+        case .didFailToSetHandle:
+            break
+        default:
+            XCTFail()
+            return
         }
     }
 }
