@@ -36,6 +36,9 @@ import Foundation
     /// handle to check
     fileprivate var synchingHandleCheck : SyncToBackendPhase<String> = .idle
     
+    /// handle to check
+    fileprivate var synchingHandle : SyncToBackendPhase<String> = .idle
+    
     /// last set password and email
     fileprivate var lastEmailAndPassword : ZMEmailCredentials?
     
@@ -102,6 +105,17 @@ extension UserProfileUpdateStatus {
     public func requestCheckHandleAvailability(handle: String) {
         self.synchingHandleCheck = .needToSync(handle)
         self.newRequestCallback()
+    }
+    
+    /// Requests setting the handle
+    public func requestSettingHandle(handle: String) {
+        self.synchingHandle = .needToSync(handle)
+        self.newRequestCallback()
+    }
+    
+    /// Cancels setting the handle
+    public func cancelSettingHandle() {
+        self.synchingHandle = .idle
     }
 }
 
@@ -180,6 +194,26 @@ extension UserProfileUpdateStatus {
         }
         UserProfileUpdateNotification.notifyDidFailToCheckAvailabilityOfHandle(handle: handle)
     }
+    
+    /// Invoked when the handle was succesfully set
+    func didSetHandle() {
+        self.synchingHandle = .idle
+        UserProfileUpdateNotification.notifyDidSetHandle()
+
+    }
+    
+    /// Invoked when the handle was not set because of a generic error
+    func didFailToSetHandle() {
+        self.synchingHandle = .idle
+        UserProfileUpdateNotification.notifyDidFailToSetHandle()
+    }
+    
+    /// Invoked when the handle was not set because it was already existing
+    func didFailToSetAlreadyExistingHandle() {
+        self.synchingHandle = .idle
+        UserProfileUpdateNotification.notifyDidFailToSetHandleBecauseExisting()
+    }
+    
 }
 
 // MARK: - Data
@@ -190,7 +224,6 @@ extension UserProfileUpdateStatus : ZMCredentialProvider {
         guard !self.currentlySettingPassword else {
             return nil
         }
-        
         return self.synchingEmailAndPassword.email.value?.email
     }
     
@@ -214,6 +247,12 @@ extension UserProfileUpdateStatus : ZMCredentialProvider {
         return self.synchingHandleCheck.value
     }
     
+    /// The handle to set for the user
+    var handleToSet : String? {
+        return self.synchingHandle.value
+    }
+    
+    /// The email credentials being set
     public func emailCredentials() -> ZMEmailCredentials? {
         guard !self.currentlySettingEmail && !self.currentlySettingPassword else {
             return nil
@@ -282,6 +321,11 @@ extension UserProfileUpdateStatus {
     /// Whether we are currently waiting to check for availability of a handle
     public var currentlyCheckingHandleAvailability : Bool {
         return self.handleToCheck != nil
+    }
+    
+    /// Whether we are currently requesting a change of handle
+    public var currentlySettingHandle : Bool {
+        return handleToSet != nil
     }
 }
 

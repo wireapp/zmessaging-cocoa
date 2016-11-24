@@ -671,6 +671,144 @@ extension UserProfileUpdateStatusTests {
     }
 }
 
+// MARK: - Set handle
+extension UserProfileUpdateStatusTests {
+    
+    func testThatItIsNotSettingHandleyAtCreation() {
+        XCTAssertFalse(self.sut.currentlySettingHandle)
+    }
+    
+    func testThatItPreparesForSettingHandle() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestSettingHandle(handle: handle)
+        
+        // THEN
+        XCTAssertEqual(self.sut.handleToSet, handle)
+        XCTAssertTrue(self.sut.currentlySettingHandle)
+        XCTAssertEqual(newRequestObserver.notifications.count, 1)
+    }
+    
+    func testThatItSetsHandleSuccessfully() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestSettingHandle(handle: handle)
+        self.sut.didSetHandle()
+        
+        // THEN
+        XCTAssertNil(self.sut.handleToSet)
+        XCTAssertFalse(self.sut.currentlySettingHandle)
+    }
+    
+    func testThatItCancelsSetHandle() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestSettingHandle(handle: handle)
+        self.sut.cancelSettingHandle()
+        
+        // THEN
+        XCTAssertNil(self.sut.handleToSet)
+        XCTAssertFalse(self.sut.currentlySettingHandle)
+    }
+    
+    func testThatItFailsToSetHandle() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestSettingHandle(handle: handle)
+        self.sut.didFailToSetHandle()
+        
+        // THEN
+        XCTAssertNil(self.sut.handleToSet)
+        XCTAssertFalse(self.sut.currentlySettingHandle)
+    }
+    
+    func testThatItFailsToSetHandleBecauseExisting() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestSettingHandle(handle: handle)
+        self.sut.didFailToSetAlreadyExistingHandle()
+        
+        // THEN
+        XCTAssertNil(self.sut.handleToSet)
+        XCTAssertFalse(self.sut.currentlySettingHandle)
+    }
+    
+    func testThatItNotifyWhenSetingHandleSuccessfully() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestSettingHandle(handle: handle)
+        self.sut.didSetHandle()
+        
+        // THEN
+        XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
+        guard let first = self.observer.invokedCallbacks.first else { return }
+        switch first {
+        case .didSetHandle:
+            break
+        default:
+            XCTFail()
+        }
+    }
+    
+    func testThatItNotifyWhenItFailsToSetHandle() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestSettingHandle(handle: handle)
+        self.sut.didFailToSetHandle()
+        
+        // THEN
+        XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
+        guard let first = self.observer.invokedCallbacks.first else { return }
+        switch first {
+        case .didFailToSetHandle:
+            break
+        default:
+            XCTFail()
+        }
+    }
+    
+    func testThatItNotifiesWhenItFailsToSetHandleBecauseExisting() {
+        
+        // GIVEN
+        let handle = "foobar"
+        
+        // WHEN
+        self.sut.requestSettingHandle(handle: handle)
+        self.sut.didFailToSetAlreadyExistingHandle()
+        
+        // THEN
+        XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
+        guard let first = self.observer.invokedCallbacks.first else { return }
+        switch first {
+        case .didFailToSetHandleBecauseExisting:
+            break
+        default:
+            XCTFail()
+        }
+    }
+}
+
 
 // MARK: - Helpers
 
@@ -683,6 +821,9 @@ enum TestUserProfileUpdateObserverCallbacks {
     case phoneNumberChangeDidFail(Error)
     case didCheckAvailabilityOfHandle(handle: String, available: Bool)
     case didFailToCheckAvailabilityOfHandle(handle: String)
+    case didSetHandle
+    case didFailToSetHandleBecauseExisting
+    case didFailToSetHandle
 }
 
 class TestUserProfileUpdateObserver : NSObject, UserProfileUpdateObserver {
@@ -719,6 +860,18 @@ class TestUserProfileUpdateObserver : NSObject, UserProfileUpdateObserver {
     
     func didFailToCheckAvailabilityOfHandle(handle: String) {
         invokedCallbacks.append(.didFailToCheckAvailabilityOfHandle(handle: handle))
+    }
+    
+    func didFailToSetHandleBecauseExisting() {
+        invokedCallbacks.append(.didFailToSetHandleBecauseExisting)
+    }
+    
+    func didFailToSetHandle() {
+        invokedCallbacks.append(.didFailToSetHandle)
+    }
+    
+    func didSetHandle() {
+        invokedCallbacks.append(.didSetHandle)
     }
     
     func clearReceivedCallbacks() {

@@ -47,6 +47,15 @@ import Foundation
     
     /// Invoked when failed to check for availability of a handle
     @objc optional func didFailToCheckAvailabilityOfHandle(handle: String)
+    
+    /// Invoked when the handle is set
+    @objc optional func didSetHandle()
+    
+    /// Invoked when failed to set the handle
+    @objc optional func didFailToSetHandle()
+    
+    /// Invoked when failed to set the handle because already taken
+    @objc optional func didFailToSetHandleBecauseExisting()
 }
 
 
@@ -61,6 +70,9 @@ private enum UserProfileUpdateNotificationType {
     case phoneNumberChangeDidFail(error: Error)
     case didCheckAvailabilityOfHandle(handle: String, available: Bool)
     case didFailToCheckAvailabilityOfHandle(handle: String)
+    case didSetHandle
+    case didFailToSetHandleBecauseExisting
+    case didFailToSetHandle
 }
 
 struct UserProfileUpdateNotification {
@@ -105,6 +117,19 @@ struct UserProfileUpdateNotification {
     static func notifyDidFailToCheckAvailabilityOfHandle(handle: String) {
         UserProfileUpdateNotification(type: .didFailToCheckAvailabilityOfHandle(handle: handle)).post()
     }
+    
+    static func notifyDidSetHandle() {
+        UserProfileUpdateNotification(type: .didSetHandle).post()
+    }
+    
+    static func notifyDidFailToSetHandle() {
+        UserProfileUpdateNotification(type: .didFailToSetHandle).post()
+    }
+    
+    static func notifyDidFailToSetHandleBecauseExisting() {
+        UserProfileUpdateNotification(type: .didFailToSetHandleBecauseExisting).post()
+
+    }
 }
 
 extension UserProfileUpdateStatus {
@@ -134,6 +159,12 @@ extension UserProfileUpdateStatus {
                 observer.didCheckAvailiabilityOfHandle?(handle: handle, available: available)
             case .didFailToCheckAvailabilityOfHandle(let handle):
                 observer.didFailToCheckAvailabilityOfHandle?(handle: handle)
+            case .didSetHandle:
+                observer.didSetHandle?()
+            case .didFailToSetHandle:
+                observer.didFailToSetHandle?()
+            case .didFailToSetHandleBecauseExisting:
+                observer.didFailToSetHandleBecauseExisting?()
             }
         }
     }
