@@ -69,7 +69,6 @@
                              objectStrategyDirectory.systemMessageTranscoder,
                              objectStrategyDirectory.clientMessageTranscoder,
                              objectStrategyDirectory.userImageTranscoder,
-                             objectStrategyDirectory.searchUserImageTranscoder,
                              objectStrategyDirectory.removedSuggestedPeopleTranscoder,
                              ];
         

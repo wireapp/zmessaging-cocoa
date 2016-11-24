@@ -64,10 +64,6 @@ class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus, ClientRegistra
     override var clientIsReadyForRequests: Bool {
         return mockReadiness
     }
-    
-    override func didDetectCurrentClientDeletion() {
-        super.didDetectCurrentClientDeletion()
-    }
 }
 
 class ZMMockClientUpdateStatus: ClientUpdateStatus {

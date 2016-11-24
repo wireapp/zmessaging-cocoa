@@ -40,7 +40,6 @@
 #import "ZMRegistrationTranscoder.h"
 #import "ZMFlowSync.h"
 #import "ZMLoginTranscoder.h"
-#import "ZMSearchUserImageTranscoder.h"
 #import "ZMCallStateTranscoder.h"
 #import "ZMRemovedSuggestedPeopleTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
@@ -77,7 +76,6 @@
 @property (nonatomic) ZMLoginCodeRequestTranscoder *loginCodeRequestTranscoder;
 @property (nonatomic) ZMFlowSync *flowTranscoder;
 @property (nonatomic) ZMCallStateTranscoder *callStateTranscoder;
-@property (nonatomic) ZMSearchUserImageTranscoder *searchUserImageTranscoder;
 @property (nonatomic) TypingStrategy *typingStrategy;
 @property (nonatomic) ZMRemovedSuggestedPeopleTranscoder *removedSuggestedPeopleTranscoder;
 @property (nonatomic) ZMUserProfileUpdateTranscoder *userProfileUpdateTranscoder;
@@ -94,6 +92,7 @@
 @property (nonatomic) FileUploadRequestStrategy *fileUploadRequestStrategy;
 @property (nonatomic) LinkPreviewAssetDownloadRequestStrategy *linkPreviewAssetDownloadRequestStrategy;
 @property (nonatomic) PushTokenStrategy *pushTokenStrategy;
+@property (nonatomic) SearchUserImageStrategy *searchUserImageStrategy;
 
 @property (nonatomic) NSManagedObjectContext *eventMOC;
 @property (nonatomic) EventDecoder *eventDecoder;
@@ -186,6 +185,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.missingClientsRequestStrategy = [[MissingClientsRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus apnsConfirmationStatus: self.apnsConfirmationStatus managedObjectContext:self.syncMOC];
         self.pushTokenStrategy = [[PushTokenStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus];
         self.typingStrategy = [[TypingStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus];
+        self.searchUserImageStrategy = [[SearchUserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus];
         self.requestStrategies = @[
                                    self.userClientRequestStrategy,
                                    self.missingClientsRequestStrategy,
@@ -219,7 +219,8 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.imageDownloadRequestStrategy,
                                    self.imageUploadRequestStrategy,
                                    self.pushTokenStrategy,
-                                   self.typingStrategy
+                                   self.typingStrategy,
+                                   self.searchUserImageStrategy
                                    ];
 
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
@@ -263,7 +264,6 @@ ZM_EMPTY_ASSERTING_INIT()
     self.userImageTranscoder = [[ZMUserImageTranscoder alloc] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:imageProcessingQueue];
     self.loginTranscoder = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus clientRegistrationStatus:clientRegistrationStatus];
     self.loginCodeRequestTranscoder = [[ZMLoginCodeRequestTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
-    self.searchUserImageTranscoder = [[ZMSearchUserImageTranscoder alloc] initWithManagedObjectContext:self.syncMOC uiContext:uiMOC];
     self.removedSuggestedPeopleTranscoder = [[ZMRemovedSuggestedPeopleTranscoder alloc] initWithManagedObjectContext:self.syncMOC];
     self.phoneNumberVerificationTranscoder = [[ZMPhoneNumberVerificationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
     self.userProfileUpdateTranscoder = [[ZMUserProfileUpdateTranscoder alloc] initWithManagedObjectContext:self.syncMOC userProfileUpdateStatus:userProfileStatus];
@@ -477,7 +477,6 @@ ZM_EMPTY_ASSERTING_INIT()
              self.registrationTranscoder,
              self.flowTranscoder,
              self.callStateTranscoder,
-             self.searchUserImageTranscoder,
              self.removedSuggestedPeopleTranscoder,
              self.phoneNumberVerificationTranscoder,
              self.loginCodeRequestTranscoder,

@@ -32,7 +32,6 @@
 @class ZMCallStateTranscoder;
 @class ZMLastUpdateEventIDTranscoder;
 @class ZMLoginTranscoder;
-@class ZMSearchUserImageTranscoder;
 @class ZMTypingTranscoder;
 @class ZMRemovedSuggestedPeopleTranscoder;
 @class ZMPhoneNumberVerificationTranscoder;
@@ -60,7 +59,6 @@
 @property (nonatomic, readonly) ZMLoginCodeRequestTranscoder *loginCodeRequestTranscoder;
 @property (nonatomic, readonly) ZMFlowSync *flowTranscoder;
 @property (nonatomic, readonly) ZMCallStateTranscoder *callStateTranscoder;
-@property (nonatomic, readonly) ZMSearchUserImageTranscoder *searchUserImageTranscoder;
 @property (nonatomic, readonly) ZMRemovedSuggestedPeopleTranscoder *removedSuggestedPeopleTranscoder;
 @property (nonatomic, readonly) ZMUserProfileUpdateTranscoder *userProfileUpdateTranscoder;
 

@@ -64,4 +64,7 @@
 #import <zmessaging/ZMCallKitDelegate.h>
 #import <zmessaging/ZMPushToken.h>
 #import <zmessaging/ZMTyping.h>
+#import <zmessaging/ZMUserIDsForSearchDirectoryTable.h>
+#import <zmessaging/ZMSearchDirectory+Internal.h>
+#import <zmessaging/ZMUserImageTranscoder.h>
 
