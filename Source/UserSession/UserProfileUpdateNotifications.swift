@@ -22,31 +22,31 @@ import Foundation
 @objc public protocol UserProfileUpdateObserver : NSObjectProtocol {
     
     /// Invoked when the password could not be set on the backend
-    func passwordUpdateRequestDidFail()
+    @objc optional func passwordUpdateRequestDidFail()
     
     /// Invoked when the email could not be set on the backend (duplicated?).
     /// The password might already have been set though - this is how BE is designed and there's nothing SE can do about it
-    func emailUpdateDidFail(_ error: Error!)
+    @objc optional func emailUpdateDidFail(_ error: Error!)
     
     /// Invoked when the email was sent to the backend
-    func didSentVerificationEmail()
+    @objc optional func didSentVerificationEmail()
     
     /// Invoked when requesting the phone number verification code failed
-    func phoneNumberVerificationCodeRequestDidFail(_ error: Error!)
+    @objc optional func phoneNumberVerificationCodeRequestDidFail(_ error: Error!)
     
     /// Invoken when requesting the phone number verification code succeeded
-    func phoneNumberVerificationCodeRequestDidSucceed()
+    @objc optional func phoneNumberVerificationCodeRequestDidSucceed()
     
     /// Invoked when the phone number code verification failed
     /// The opposite (phone number change success) will be notified
     /// by a change in the user phone number
-    func phoneNumberChangeDidFail(_ error: Error!)
+    @objc optional func phoneNumberChangeDidFail(_ error: Error!)
     
     /// Invoked when the availability of a handle was determined
-    func didCheckAvailiabilityOfHandle(handle: String, available: Bool)
+    @objc optional func didCheckAvailiabilityOfHandle(handle: String, available: Bool)
     
     /// Invoked when failed to check for availability of a handle
-    func didFailToCheckAvailabilityOfHandle(handle: String)
+    @objc optional func didFailToCheckAvailabilityOfHandle(handle: String)
 }
 
 
@@ -119,21 +119,21 @@ extension UserProfileUpdateStatus {
             }
             switch note.type {
             case .emailUpdateDidFail(let error):
-                observer.emailUpdateDidFail(error)
+                observer.emailUpdateDidFail?(error)
             case .phoneNumberVerificationCodeRequestDidFail(let error):
-                observer.phoneNumberVerificationCodeRequestDidFail(error);
+                observer.phoneNumberVerificationCodeRequestDidFail?(error);
             case .phoneNumberChangeDidFail(let error):
-                observer.phoneNumberChangeDidFail(error)
+                observer.phoneNumberChangeDidFail?(error)
             case .passwordUpdateDidFail:
-                observer.passwordUpdateRequestDidFail()
+                observer.passwordUpdateRequestDidFail?()
             case .phoneNumberVerificationCodeRequestDidSucceed:
-                observer.phoneNumberVerificationCodeRequestDidSucceed()
+                observer.phoneNumberVerificationCodeRequestDidSucceed?()
             case .emailDidSendVerification:
-                observer.didSentVerificationEmail()
+                observer.didSentVerificationEmail?()
             case .didCheckAvailabilityOfHandle(let handle, let available):
-                observer.didCheckAvailiabilityOfHandle(handle: handle, available: available)
+                observer.didCheckAvailiabilityOfHandle?(handle: handle, available: available)
             case .didFailToCheckAvailabilityOfHandle(let handle):
-                observer.didFailToCheckAvailabilityOfHandle(handle: handle)
+                observer.didFailToCheckAvailabilityOfHandle?(handle: handle)
             }
         }
     }
