@@ -613,8 +613,8 @@ static NSString *const UserRequestURL = @"/users?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // and when
-    [self.userIDsTable setSearchUsers:[NSSet setWithObject:user1] forSearchDirectory:fakeSearchDirectory1];
-    [self.userIDsTable replaceUserIDToDownload:user1.remoteIdentifier withAssetIDToDownload:assetID1];
+    //[self.userIDsTable setSearchUsers:[NSSet setWithObject:user1] forSearchDirectory:fakeSearchDirectory1];
+    //[self.userIDsTable replaceUserIDToDownload:user1.remoteIdentifier withAssetIDToDownload:assetID1];
     ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
     
     // then
@@ -639,8 +639,8 @@ static NSString *const UserRequestURL = @"/users?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // and when
-    [self.userIDsTable setSearchUsers:[NSSet setWithObject:user1] forSearchDirectory:fakeSearchDirectory1];
-    [self.userIDsTable replaceUserIDToDownload:user1.remoteIdentifier withAssetIDToDownload:assetID1];
+//    [self.userIDsTable setSearchUsers:[NSSet setWithObject:user1] forSearchDirectory:fakeSearchDirectory1];
+//    [self.userIDsTable replaceUserIDToDownload:user1.remoteIdentifier withAssetIDToDownload:assetID1];
     ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
     
     // then
