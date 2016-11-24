@@ -116,11 +116,14 @@ class UserHandleTests : IntegrationTestBase {
         }
     }
     
-    func testThatItIsNotifiedWhenFailsToSetTheHandle() {
+    func testThatItIsNotifiedWhenFailsToSetTheHandleBecauseItExists() {
         
         // GIVEN
         let handle = "Evelyn"
         XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        self.mockTransportSession.performRemoteChanges { (session) in
+            self.user1.handle = handle
+        }
         
         // WHEN
         self.userSession.userProfileUpdateStatus.requestSettingHandle(handle: handle)
@@ -130,15 +133,39 @@ class UserHandleTests : IntegrationTestBase {
         XCTAssertEqual(self.userProfileStatusObserver.invokedCallbacks.count, 1)
         guard let first = self.userProfileStatusObserver.invokedCallbacks.first else { return }
         switch first {
-        case .didSetHandle:
+        case .didFailToSetHandleBecauseExisting:
             break
         default:
             XCTFail()
             return
         }
+    }
+    
+    func testThatItIsNotifiedWhenFailsToSetTheHandle() {
         
-        self.mockTransportSession.performRemoteChanges { _ in
-            XCTAssertEqual(self.selfUser.handle, handle)
+        // GIVEN
+        let handle = "Evelyn"
+        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        self.mockTransportSession.responseGeneratorBlock = { req in
+            if req.path == "/self/handle" {
+                return ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil)
+            }
+            return nil
+        }
+        
+        // WHEN
+        self.userSession.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileStatusObserver.invokedCallbacks.count, 1)
+        guard let first = self.userProfileStatusObserver.invokedCallbacks.first else { return }
+        switch first {
+        case .didFailToSetHandle:
+            break
+        default:
+            XCTFail()
+            return
         }
     }
 }
