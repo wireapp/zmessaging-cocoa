@@ -61,7 +61,6 @@
 @property (nonatomic, readonly) ZMFlowSync *flowTranscoder;
 @property (nonatomic, readonly) ZMCallStateTranscoder *callStateTranscoder;
 @property (nonatomic, readonly) ZMSearchUserImageTranscoder *searchUserImageTranscoder;
-@property (nonatomic, readonly) ZMTypingTranscoder *typingTranscoder;
 @property (nonatomic, readonly) ZMRemovedSuggestedPeopleTranscoder *removedSuggestedPeopleTranscoder;
 @property (nonatomic, readonly) ZMUserProfileUpdateTranscoder *userProfileUpdateTranscoder;
 

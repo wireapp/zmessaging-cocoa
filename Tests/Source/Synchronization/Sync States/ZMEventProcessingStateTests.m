@@ -59,7 +59,6 @@
         self.objectDirectory.clientMessageTranscoder,
         self.objectDirectory.userImageTranscoder,
         self.objectDirectory.searchUserImageTranscoder,
-        self.objectDirectory.typingTranscoder,
         self.objectDirectory.removedSuggestedPeopleTranscoder,
         ];
 }

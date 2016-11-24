@@ -41,7 +41,6 @@
 #import "ZMFlowSync.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMSearchUserImageTranscoder.h"
-#import "ZMTypingTranscoder.h"
 #import "ZMCallStateTranscoder.h"
 #import "ZMRemovedSuggestedPeopleTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
@@ -79,7 +78,7 @@
 @property (nonatomic) ZMFlowSync *flowTranscoder;
 @property (nonatomic) ZMCallStateTranscoder *callStateTranscoder;
 @property (nonatomic) ZMSearchUserImageTranscoder *searchUserImageTranscoder;
-@property (nonatomic) ZMTypingTranscoder *typingTranscoder;
+@property (nonatomic) TypingStrategy *typingStrategy;
 @property (nonatomic) ZMRemovedSuggestedPeopleTranscoder *removedSuggestedPeopleTranscoder;
 @property (nonatomic) ZMUserProfileUpdateTranscoder *userProfileUpdateTranscoder;
 @property (nonatomic) LinkPreviewAssetUploadRequestStrategy *linkPreviewAssetUploadRequestStrategy;
@@ -186,6 +185,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                                  context:self.syncMOC];
         self.missingClientsRequestStrategy = [[MissingClientsRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus apnsConfirmationStatus: self.apnsConfirmationStatus managedObjectContext:self.syncMOC];
         self.pushTokenStrategy = [[PushTokenStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus];
+        self.typingStrategy = [[TypingStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus];
         self.requestStrategies = @[
                                    self.userClientRequestStrategy,
                                    self.missingClientsRequestStrategy,
@@ -218,7 +218,8 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.linkPreviewAssetUploadRequestStrategy,
                                    self.imageDownloadRequestStrategy,
                                    self.imageUploadRequestStrategy,
-                                   self.pushTokenStrategy
+                                   self.pushTokenStrategy,
+                                   self.typingStrategy
                                    ];
 
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
@@ -263,7 +264,6 @@ ZM_EMPTY_ASSERTING_INIT()
     self.loginTranscoder = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus clientRegistrationStatus:clientRegistrationStatus];
     self.loginCodeRequestTranscoder = [[ZMLoginCodeRequestTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
     self.searchUserImageTranscoder = [[ZMSearchUserImageTranscoder alloc] initWithManagedObjectContext:self.syncMOC uiContext:uiMOC];
-    self.typingTranscoder = [[ZMTypingTranscoder alloc] initWithManagedObjectContext:self.syncMOC userInterfaceContext:uiMOC];
     self.removedSuggestedPeopleTranscoder = [[ZMRemovedSuggestedPeopleTranscoder alloc] initWithManagedObjectContext:self.syncMOC];
     self.phoneNumberVerificationTranscoder = [[ZMPhoneNumberVerificationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
     self.userProfileUpdateTranscoder = [[ZMUserProfileUpdateTranscoder alloc] initWithManagedObjectContext:self.syncMOC userProfileUpdateStatus:userProfileStatus];
@@ -478,7 +478,6 @@ ZM_EMPTY_ASSERTING_INIT()
              self.flowTranscoder,
              self.callStateTranscoder,
              self.searchUserImageTranscoder,
-             self.typingTranscoder,
              self.removedSuggestedPeopleTranscoder,
              self.phoneNumberVerificationTranscoder,
              self.loginCodeRequestTranscoder,
@@ -616,9 +615,9 @@ ZM_EMPTY_ASSERTING_INIT()
         ZMFetchRequestBatchResult *prefetchResult = [self.syncMOC executeFetchRequestBatchOrAssert:fetchRequest];
         NSArray *allObjectStrategies = [self.allTranscoders arrayByAddingObjectsFromArray:self.requestStrategies];
         
-        for(id<ZMObjectStrategy> obj in allObjectStrategies) {
+        for(id obj in allObjectStrategies) {
             @autoreleasepool {
-                if ([obj conformsToProtocol:@protocol(ZMObjectStrategy)]) {
+                if ([obj conformsToProtocol:@protocol(ZMEventConsumer)]) {
                     [obj processEvents:decryptedEvents liveEvents:YES prefetchResult:prefetchResult];
                 }
             }

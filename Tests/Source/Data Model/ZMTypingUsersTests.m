@@ -20,7 +20,6 @@
 
 #import "MessagingTest.h"
 #import "ZMTypingUsers.h"
-#import "ZMTypingTranscoder.h"
 
 
 @interface ZMTypingUsersTests : MessagingTest
@@ -155,7 +154,7 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
 
     // then
-    [self expectationForNotification:ZMTypingNotificationName object:nil handler:^BOOL(NSNotification * notification) {
+    [self expectationForNotification:@"ZMTypingNotification" object:nil handler:^BOOL(NSNotification * notification) {
         XCTAssertEqual(notification.object, conversation);
         XCTAssertEqual(notification.userInfo[@"isTyping"], @(YES));
         return  YES;
