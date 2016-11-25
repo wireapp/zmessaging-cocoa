@@ -833,6 +833,131 @@ extension UserProfileUpdateStatusTests {
     }
 }
 
+// MARK: - Find handle suggestions
+extension UserProfileUpdateStatusTests {
+    
+    func testThatItIsNotGeneratingHandleSuggestionsAtCreation() {
+        XCTAssertFalse(self.sut.currentlyGeneratingHandleSuggestion)
+        XCTAssertNil(self.sut.bestHandleSuggestion)
+    }
+    
+    func testThatItPreparesForGeneratingHandleSuggestion() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        selfUser.name = "Anna Luna"
+        let normalized = "annaluna"
+        
+        // WHEN
+        self.sut.suggestHandles()
+        
+        // THEN
+        XCTAssertTrue(self.sut.currentlyGeneratingHandleSuggestion)
+        XCTAssertNil(self.sut.bestHandleSuggestion)
+        XCTAssertEqual(newRequestObserver.notifications.count, 1)
+        XCTAssertEqual(self.sut.suggestedHandlesToCheck?.first, normalized)
+    }
+    
+    func testThatItStopsGeneratingHandleSuggestionsIfHandleIsSet() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        selfUser.name = "Anna Luna"
+        
+        // WHEN
+        self.sut.suggestHandles()
+        XCTAssertTrue(self.sut.currentlyGeneratingHandleSuggestion)
+        selfUser.setHandle("annaluna")
+        
+        // THEN
+        XCTAssertFalse(self.sut.currentlyGeneratingHandleSuggestion)
+        XCTAssertNil(self.sut.bestHandleSuggestion)
+    }
+    
+    func testThatItPreparesForGeneratingHandleSuggestionWithInvalidDisplayName() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        selfUser.name = "-"
+        
+        // WHEN
+        self.sut.suggestHandles()
+        
+        // THEN
+        XCTAssertTrue(self.sut.currentlyGeneratingHandleSuggestion)
+        XCTAssertNil(self.sut.bestHandleSuggestion)
+        XCTAssertEqual(newRequestObserver.notifications.count, 1)
+        XCTAssertNotNil(self.sut.suggestedHandlesToCheck?.first)
+    }
+    
+    func testThatItCompletesGeneratingHandleSuggestions() {
+        
+        // GIVEN
+        let handle = "funkymonkey34"
+        self.sut.suggestHandles()
+        
+        // WHEN
+        self.sut.didFindHandleSuggestion(handle: handle)
+        
+        // THEN
+        XCTAssertFalse(self.sut.currentlyGeneratingHandleSuggestion)
+        XCTAssertEqual(self.sut.bestHandleSuggestion, handle)
+    }
+    
+    func testThatItFailsGeneratingHandleSuggestionsAndStopsIfItHasHandle() {
+        
+        // GIVEN
+        self.sut.suggestHandles()
+        
+        // WHEN
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        selfUser.setHandle("cozypanda23")
+        self.sut.didFailToFindHandleSuggestion()
+        
+        // THEN
+        XCTAssertFalse(self.sut.currentlyGeneratingHandleSuggestion)
+        XCTAssertNil(self.sut.bestHandleSuggestion)
+    }
+    
+    func testThatItFailsGeneratingHandleSuggestionsAndRestartsIfItHasNoHandle() {
+        
+        // GIVEN
+        self.sut.suggestHandles()
+        guard let previousHandle = self.sut.suggestedHandlesToCheck?.first else {
+            XCTFail()
+            return
+        }
+        
+        // WHEN
+        self.sut.didFailToFindHandleSuggestion()
+        
+        // THEN
+        XCTAssertTrue(self.sut.currentlyGeneratingHandleSuggestion)
+        XCTAssertNil(self.sut.bestHandleSuggestion)
+        XCTAssertNotNil(self.sut.suggestedHandlesToCheck?.first)
+        XCTAssertNotEqual(self.sut.suggestedHandlesToCheck?.first, previousHandle)
+    }
+    
+    func testThatItNotifiesAfterFindingAHandleSuggestion() {
+        
+        // GIVEN
+        let handle = "funkymokkey34"
+        self.sut.suggestHandles()
+        
+        // WHEN
+        self.sut.didFindHandleSuggestion(handle: handle)
+        
+        // THEN
+        XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
+        guard let first = self.observer.invokedCallbacks.first else { return }
+        switch first {
+        case .didFindHandleSuggestion(let _handle):
+            XCTAssertEqual(handle, _handle)
+        default:
+            XCTFail()
+        }
+    }
+}
 
 // MARK: - Helpers
 class TestUserProfileUpdateObserver : NSObject, UserProfileUpdateObserver {
@@ -881,6 +1006,10 @@ class TestUserProfileUpdateObserver : NSObject, UserProfileUpdateObserver {
     
     func didSetHandle() {
         invokedCallbacks.append(.didSetHandle)
+    }
+    
+    func didFindHandleSuggestion(handle: String) {
+        invokedCallbacks.append(.didFindHandleSuggestion(handle: handle))
     }
     
     func clearReceivedCallbacks() {

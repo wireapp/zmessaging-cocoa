@@ -39,6 +39,8 @@ import Foundation
     
     fileprivate var handleSetSync : ZMSingleRequestSync! = nil
     
+    fileprivate var handleSuggestionSearchSync : ZMSingleRequestSync! = nil
+    
     public init(managedObjectContext: NSManagedObjectContext,
                 userProfileUpdateStatus: UserProfileUpdateStatus,
                 authenticationStatus: AuthenticationStatusProvider) {
@@ -53,6 +55,7 @@ import Foundation
         self.emailUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.handleCheckSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.handleSetSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
+        self.handleSuggestionSearchSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
     }
 }
 
@@ -92,6 +95,11 @@ extension UserProfileRequestStrategy : RequestStrategy {
         if self.userProfileUpdateStatus.currentlySettingHandle {
             self.handleSetSync.readyForNextRequestIfNotBusy()
             return self.handleSetSync.nextRequest()
+        }
+        
+        if self.userProfileUpdateStatus.currentlyGeneratingHandleSuggestion {
+            self.handleSuggestionSearchSync.readyForNextRequestIfNotBusy()
+            return self.handleSuggestionSearchSync.nextRequest()
         }
         
         return nil
@@ -136,6 +144,10 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
         case self.handleSetSync:
             let payload : NSDictionary = ["handle" : self.userProfileUpdateStatus.handleToSet!]
             return ZMTransportRequest(path: "/self/handle", method: .methodPUT, payload: payload)
+            
+        case self.handleSuggestionSearchSync:
+            let handles = (self.userProfileUpdateStatus.suggestedHandlesToCheck ?? []).joined(separator: ",")
+            return ZMTransportRequest(path: "/users?handles=\(handles)", method: .methodGET, payload: nil)
         
         default:
             return nil
@@ -210,8 +222,35 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
                 }
             }
             
+        case self.handleSuggestionSearchSync:
+            if response.result == .success, let missingHandle = self.findMissingHandleInResponse(response: response) {
+                self.userProfileUpdateStatus.didFindHandleSuggestion(handle: missingHandle)
+            } else {
+                self.userProfileUpdateStatus.didFailToFindHandleSuggestion()
+            }
+            
         default:
             break
         }
     }
+    
+    /// Finds the handle that was searched for suggestion that is not in the given response
+    private func findMissingHandleInResponse(response: ZMTransportResponse) -> String? {
+        guard let usersPayload = response.payload as? [[String: AnyObject]] else {
+            return nil
+        }
+        guard let possibleHandles = self.userProfileUpdateStatus.suggestedHandlesToCheck else {
+            // this should not happen
+            return nil
+        }
+        
+        let existingHandles = Set(usersPayload.flatMap { $0["handle"] as? String })
+        for handle in possibleHandles {
+            if !existingHandles.contains(handle) {
+                return handle
+            }
+        }
+        return nil
+    }
+    
 }

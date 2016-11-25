@@ -76,6 +76,7 @@ enum UserProfileUpdateNotificationType {
     case didSetHandle
     case didFailToSetHandleBecauseExisting
     case didFailToSetHandle
+    case didFindHandleSuggestion(handle: String)
 }
 
 struct UserProfileUpdateNotification {
@@ -125,6 +126,8 @@ extension UserProfileUpdateStatus {
                 observer.didFailToSetHandle?()
             case .didFailToSetHandleBecauseExisting:
                 observer.didFailToSetHandleBecauseExisting?()
+            case .didFindHandleSuggestion(let handle):
+                observer.didFindHandleSuggestion?(handle: handle)
             }
         }
     }

@@ -164,6 +164,28 @@ extension UserProfileUpdateRequestStrategyTests {
         let expected = ZMTransportRequest(path: "/self/handle", method: .methodPUT, payload: payload)
         XCTAssertEqual(request, expected)
     }
+    
+    func testThatItCreatesARequestToFindHandleSuggestion() {
+        
+        // GIVEN
+        self.userProfileUpdateStatus.suggestHandles()
+        guard let handles = self.userProfileUpdateStatus.suggestedHandlesToCheck?.joined(separator: ",") else {
+            XCTFail()
+            return
+        }
+        
+        // WHEN
+        let possibleRequest = self.sut.nextRequest()
+        
+        // THEN
+        guard let request = possibleRequest else {
+            XCTFail()
+            return
+        }
+        
+        XCTAssertEqual(request.method, .methodGET)
+        XCTAssertTrue(request.path.hasPrefix("/users?handles=\(handles)"))
+    }
 }
 
 // MARK: - Parsing response
@@ -473,10 +495,82 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailToSetAlreadyExistingHandle , 1)
     }
+    
+    func testThatItCallsDidFinddHandleSuggestion() {
+        
+        // GIVEN
+        self.userProfileUpdateStatus.suggestHandles()
+        guard let handles = self.userProfileUpdateStatus.suggestedHandlesToCheck, handles.count > 10 else {
+            XCTFail()
+            return
+        }
+        let expectedHandle = handles[8]
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        let handlesInResponse = handles.filter { $0 != expectedHandle }
+        request?.complete(with: self.userProfileResponse(handles: handlesInResponse))
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFindHandleSuggestion, [expectedHandle])
+    }
+    
+    
+    func testThatItCallsFailedToFindHandleSuggestionIfAllHandlesArePresent() {
+        
+        // GIVEN
+        self.userProfileUpdateStatus.suggestHandles()
+        guard let handles = self.userProfileUpdateStatus.suggestedHandlesToCheck else {
+            XCTFail()
+            return
+        }
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.userProfileResponse(handles: handles))
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailToFindHandleSuggestion , 1)
+    }
+    
+    func testThatItCallsFailedToFindHandleSuggestionInCaseOfError() {
+        
+        // GIVEN
+        self.userProfileUpdateStatus.suggestHandles()
+        
+        // WHEN
+        guard let request = self.sut.nextRequest() else {
+            XCTFail()
+            return
+        }
+        request.complete(with: self.errorResponse())
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailToFindHandleSuggestion , 1)
+    }
 }
 
 // MARK: - Helpers
 extension UserProfileUpdateRequestStrategyTests {
+    
+    func userProfileResponse(handles: [String]) -> ZMTransportResponse {
+        
+        let users = handles.map {
+            return ["handle" : $0,
+                    "id" : UUID.create().transportString()
+            ]
+        }
+        return ZMTransportResponse(
+            payload: users as NSArray,
+            httpStatus: 200,
+            transportSessionError: nil,
+            headers: nil
+        )
+        
+    }
     
     func errorResponse(path: String? = nil) -> ZMTransportResponse {
         if let url = path.flatMap(URL.init) {
@@ -563,6 +657,8 @@ class TestUserProfileUpdateStatus : UserProfileUpdateStatus {
     var recordedDidSetHandle = 0
     var recordedDidFailToSetHandle = 0
     var recordedDidFailToSetAlreadyExistingHandle = 0
+    var recordedDidFailToFindHandleSuggestion = 0
+    var recordedDidFindHandleSuggestion : [String] = []
     
     override func didFailEmailUpdate(error: Error) {
         recordedDidFailEmailUpdate.append(error)
@@ -632,5 +728,15 @@ class TestUserProfileUpdateStatus : UserProfileUpdateStatus {
     override func didFailToSetAlreadyExistingHandle() {
         recordedDidFailToSetAlreadyExistingHandle += 1
         super.didFailToSetAlreadyExistingHandle()
+    }
+    
+    override func didFailToFindHandleSuggestion() {
+        recordedDidFailToFindHandleSuggestion += 1
+        super.didFailToFindHandleSuggestion()
+    }
+    
+    override func didFindHandleSuggestion(handle: String) {
+        recordedDidFindHandleSuggestion.append(handle)
+        super.didFindHandleSuggestion(handle: handle)
     }
 }
