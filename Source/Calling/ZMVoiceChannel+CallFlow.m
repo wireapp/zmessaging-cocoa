@@ -64,30 +64,30 @@
     }
 }
 
+// FIXME
+//- (void)joinInUserSession:(ZMUserSession *)userSession
+//{
+//    if ([ZMUserSession useCallKit]) {
+//        // Push channel must be open in order to process the call signalling
+//        if (!userSession.pushChannelIsOpen) {
+//            [userSession.transportSession restartPushChannel];
+//        }
+//        [userSession.callKitDelegate requestStartCallInConversation:self.conversation videoCall:NO];
+//    }
+//    else {
+//        [self join];
+//    }
+//}
 
-- (void)joinInUserSession:(ZMUserSession *)userSession
-{
-    if ([ZMUserSession useCallKit]) {
-        // Push channel must be open in order to process the call signalling
-        if (!userSession.pushChannelIsOpen) {
-            [userSession.transportSession restartPushChannel];
-        }
-        [userSession.callKitDelegate requestStartCallInConversation:self.conversation videoCall:NO];
-    }
-    else {
-        [self join];
-    }
-}
-
-- (void)leaveInUserSession:(ZMUserSession *)userSession
-{
-    if ([ZMUserSession useCallKit]) {
-        [userSession.callKitDelegate requestEndCallInConversation:self.conversation];
-    }
-    else {
-        [self leave];
-    }
-}
+//- (void)leaveInUserSession:(ZMUserSession *)userSession
+//{
+//    if ([ZMUserSession useCallKit]) {
+//        [userSession.callKitDelegate requestEndCallInConversation:self.conversation];
+//    }
+//    else {
+//        [self leave];
+//    }
+//}
 
 - (void)leaveOnAVSError
 {
@@ -97,8 +97,6 @@
 - (void)leaveWithReason:(ZMCallStateReasonToLeave)reasonToLeave
 {
     ZMConversation *conv = self.conversation;
-    
-    [WireCallCenter closeCallForConversationID:conv.remoteIdentifier];
     
     if (conv.isVideoCall) {
         [self.flowManager setVideoSendState:FLOWMANAGER_VIDEO_SEND_NONE forConversation:conv.remoteIdentifier.transportString];
@@ -297,25 +295,12 @@
         [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportSessionShouldKeepWebsocketOpenNotificationName object:self userInfo:@{ZMTransportSessionShouldKeepWebsocketOpenKey: @YES}];
     }];
     
-    
-    if ([WireCallCenter callStateForConversationID:conv.remoteIdentifier] == AVSCallStateIncoming) {
-        [WireCallCenter answerCallForConversationID:conv.remoteIdentifier];
-    } else {
-        [WireCallCenter startCallForConversationID:conv.remoteIdentifier];
-    }
-
-    conv.isOutgoingCall = (conv.callParticipants.count == 0);
-    conv.isIgnoringCall = NO;
-    conv.callDeviceIsActive = YES;
-
-    /*
     if(!conv.callDeviceIsActive) {
         [ZMUserSession appendAVSLogMessageForConversation:conv withMessage:@"Self user wants to join voice channel"];
     }
     conv.isOutgoingCall = (conv.callParticipants.count == 0);
     conv.isIgnoringCall = NO;
     conv.callDeviceIsActive = YES;
-    */
 }
 
 - (BOOL)joinVideoCall:(NSError **)error
@@ -329,8 +314,7 @@
         return NO;
     }
     
-//    strongConversation.isVideoCall = YES;
-    [WireCallCenter toogleVideoForConversationID:strongConversation.remoteIdentifier isActive:YES];
+    strongConversation.isVideoCall = YES;
     [self join];
     
     return YES;

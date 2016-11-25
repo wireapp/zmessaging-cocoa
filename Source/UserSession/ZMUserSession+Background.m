@@ -337,7 +337,7 @@ static NSString *ZMLogTag = @"Push";
         if ([note.conversation firstOtherConversationWithActiveCall] == nil &&
             (callIsStillOngoing || userWantsToCallBack))
         {
-            [note.conversation.voiceChannel join];
+            [note.conversation.voiceChannel joinWithVideo:NO];
             [note.conversation.managedObjectContext saveOrRollback];
         }
     }

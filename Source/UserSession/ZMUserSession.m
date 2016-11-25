@@ -957,6 +957,11 @@ static BOOL ZMUserSessionUseCallKit = NO;
     ZMUserSessionUseCallKit = useCallKit;
 }
 
++ (void)setEnableCallingV3:(BOOL)enableCallingV3
+{
+    [VoiceChannelRouter setIsCallingV3Enabled:enableCallingV3];
+}
+
 @end
 
 

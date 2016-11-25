@@ -24,6 +24,7 @@
 @import avs;
 #import "ZMCallKitDelegate.h"
 #import "ZMUserSession.h"
+#import "ZMUserSession+Internal.h"
 #import "ZMVoiceChannel+CallFlow.h"
 #import "ZMVoiceChannel+CallFlowPrivate.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
@@ -121,7 +122,7 @@ NS_ASSUME_NONNULL_BEGIN
 @implementation CXProvider (TypeConformance)
 @end
 
-@interface ZMVoiceChannel (NonIdleStates)
+@interface VoiceChannelRouter (NonIdleStates)
 /// Returns the list of @c ZMVoiceChannelState that are considered as an active call.
 + (NSSet *)nonIdleStates;
 /// Checks if current state of voice channel is one of the active ones.
@@ -255,7 +256,7 @@ NS_ASSUME_NONNULL_END
 
 @end
 
-@implementation ZMVoiceChannel (NonIdleStates)
+@implementation VoiceChannelRouter (NonIdleStates)
 
 + (NSSet *)nonIdleStates {
     return [NSSet setWithObjects:@(ZMVoiceChannelStateOutgoingCall),
@@ -460,7 +461,7 @@ NS_ASSUME_NONNULL_END
     [self.userSession enqueueChanges:^{
         for (ZMConversation *conversation in [ZMConversationList nonIdleVoiceChannelConversationsInUserSession:self.userSession]) {
             if (conversation.voiceChannel.state == ZMVoiceChannelStateIncomingCall) {
-                [conversation.voiceChannel ignoreIncomingCall];
+                [conversation.voiceChannel ignore];
             }
             else if (conversation.voiceChannel.inNonIdleState) {
                 [conversation.voiceChannel leave];
@@ -520,15 +521,24 @@ NS_ASSUME_NONNULL_END
         ZMConversation *callConversation = [ZMConversation resolveConversationForPersons:contacts
                                                                                inContext:userSession.managedObjectContext];
         if (nil != callConversation) {
+            
+            // Push channel must be open in order to process the call signaling
+            if (!userSession.pushChannelIsOpen) {
+                [userSession.transportSession restartPushChannel];
+            }
+            
             if (isVideo) {
                 NSError *joinError = nil;
-                [callConversation.voiceChannel joinVideoCall:&joinError inUserSession:userSession];
+                // FIXME
+//                [callConversation.voiceChannel joinVideoCall:&joinError inUserSession:userSession];
                 if (nil != joinError) {
                     ZMLogError(@"Cannot start the video call: %@", joinError);
                 }
             }
             else {
-                [callConversation.voiceChannel joinInUserSession:userSession];
+                // FIXME
+//                [callConversation.voiceChannel joinInUserSession:userSession];
+                [self requestStartCallInConversation:callConversation videoCall:NO];
             }
             
             return YES;
@@ -626,11 +636,12 @@ NS_ASSUME_NONNULL_END
     case ZMVoiceChannelStateSelfConnectedToActiveChannel:
             [self.provider reportOutgoingCallWithUUID:conversation.remoteIdentifier
                                       connectedAtDate:[NSDate date]];
-            conversation.voiceChannel.callStartDate = [NSDate date];
+            // FIXME
+//            conversation.voiceChannel.callStartDate = [NSDate date];
         break;
     case ZMVoiceChannelStateNoActiveUsers:
         [self.lastConversationsState removeObjectForKey:conversation.remoteIdentifier.transportString];
-        // fallthrought
+        // fallthrough
     case ZMVoiceChannelStateIncomingCallInactive:
     case ZMVoiceChannelStateOutgoingCallInactive:
     case ZMVoiceChannelStateDeviceTransferReady:
@@ -654,7 +665,8 @@ NS_ASSUME_NONNULL_END
                                       endedAtDate:nil
                                            reason:CallEndedReasonFromZMVoiceChannelState(conversation.voiceChannel.state, prevState)];
             }
-            conversation.voiceChannel.callStartDate = nil;
+            // FIXME
+//            conversation.voiceChannel.callStartDate = nil;
         }
         break;
     default:
@@ -703,13 +715,14 @@ NS_ASSUME_NONNULL_END
 
         if (action.video) {
             NSError *error = nil;
-            [callConversation.voiceChannel joinVideoCall:&error];
+            // FIXME
+//            [callConversation.voiceChannel joinVideoCall:&error];
             if (nil != error) {
                 ZMLogError(@"Error joining video call: %@", error);
             }
         }
         else {
-            [callConversation.voiceChannel join];
+            [callConversation.voiceChannel joinWithVideo:NO];
         }
     }];
     
@@ -723,10 +736,11 @@ NS_ASSUME_NONNULL_END
     [self.userSession performChanges:^{
         ZMConversation *callConversation = [action conversationInContext:self.userSession.managedObjectContext];
         if (callConversation.isVideoCall) {
-            [callConversation.voiceChannel joinVideoCall:nil];
+            // FIXME
+//            [callConversation.voiceChannel joinVideoCall:nil];
         }
         else {
-            [callConversation.voiceChannel join];
+            [callConversation.voiceChannel joinWithVideo:NO];
         }
         
         [self configureAudioSession];
@@ -750,7 +764,7 @@ NS_ASSUME_NONNULL_END
         [userSession performChanges:^{
             if (callConversation.voiceChannel.selfUserConnectionState == ZMVoiceChannelConnectionStateNotConnected) {
                 ZMLogInfo(@"CXProvider performEndCallAction: ignore incoming call");
-                [callConversation.voiceChannel ignoreIncomingCall];
+                [callConversation.voiceChannel ignore];
             }
             else {
                 ZMLogInfo(@"CXProvider performEndCallAction: leave");

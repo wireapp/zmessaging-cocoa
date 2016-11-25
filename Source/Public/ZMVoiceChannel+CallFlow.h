@@ -25,21 +25,11 @@ NS_ASSUME_NONNULL_BEGIN
 @class AVSFlowManager;
 @class ZMUserSession;
 
-@protocol ZMCallImplementation <NSObject>
-
-- (void)join;
-- (void)leave;
-- (void)leaveOnAVSError;
-- (void)ignoreIncomingCall;
-
-@end
-
-
-
 @interface ZMVoiceChannel (CallFlow)
 
-- (void)joinInUserSession:(ZMUserSession *)userSession;
-- (void)leaveInUserSession:(ZMUserSession *)userSession;
+// FIXME
+//- (void)joinInUserSession:(ZMUserSession *)userSession;
+//- (void)leaveInUserSession:(ZMUserSession *)userSession;
 - (void)leaveOnAVSError;
 - (void)ignoreIncomingCall;
 

@@ -515,7 +515,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
             ZMConversation *uiConv = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:self.uiManagedObjectContext];
             [ZMUserSession appendAVSLogMessageForConversation:uiConv withMessage:[NSString stringWithFormat:@"Self user wants to leave voice channel. Reason: %@", reason]];
             if (uiConv.callDeviceIsActive) {
-                [uiConv.voiceChannel leaveOnAVSError];
+                [uiConv.voiceChannel.v2 leaveOnAVSError];
                 [self.uiManagedObjectContext saveOrRollback];
             }
             else {
@@ -575,7 +575,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
             return  [ZMUser userWithRemoteID:userID.UUID createIfNeeded:NO inContext:self.managedObjectContext];
         }];
 
-        [conversation.voiceChannel updateActiveFlowParticipants:participants];
+        [conversation.voiceChannel.v2 updateActiveFlowParticipants:participants];
         [self.managedObjectContext enqueueDelayedSave];
     }];
 }
