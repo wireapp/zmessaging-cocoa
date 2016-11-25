@@ -44,6 +44,9 @@ import Foundation
     /// last set password and email
     fileprivate(set) var lastEmailAndPassword : ZMEmailCredentials?
     
+    /// best handle suggestion found so far
+    fileprivate(set) public var bestHandleSuggestion : String?
+    
     let managedObjectContext : NSManagedObjectContext
     
     /// Callback invoked when there is a new request to send
@@ -123,6 +126,13 @@ extension UserProfileUpdateStatus {
     public func cancelSettingHandle() {
         self.handleToSet = nil
     }
+    
+    /// Generates somes possible user handles, 
+    /// and invokes a callback when it finds one that is available
+    public func suggestHandles() {
+        // TODO MARCO
+    }
+    
 }
 
 // MARK: - Update status

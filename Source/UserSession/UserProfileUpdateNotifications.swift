@@ -56,6 +56,9 @@ import Foundation
     
     /// Invoked when failed to set the handle because already taken
     @objc optional func didFailToSetHandleBecauseExisting()
+    
+    /// Invoked when a good handle suggestion is found
+    @objc optional func didFindHandleSuggestion(handle: String)
 }
 
 

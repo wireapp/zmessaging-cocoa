@@ -103,6 +103,8 @@
 		542DA04719B71C86008BDB92 /* ZMSlowSyncPhaseOneStateTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54B718181940A18000B798FA /* ZMSlowSyncPhaseOneStateTests.m */; };
 		542DFEE61DDCA452000F5B95 /* UserProfileUpdateStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542DFEE51DDCA452000F5B95 /* UserProfileUpdateStatusTests.swift */; };
 		542DFEE81DDCA4FD000F5B95 /* UserProfileUpdateRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542DFEE71DDCA4FD000F5B95 /* UserProfileUpdateRequestStrategyTests.swift */; };
+		543095931DE76B170065367F /* random1.txt in Resources */ = {isa = PBXBuildFile; fileRef = 543095921DE76B170065367F /* random1.txt */; };
+		543095951DE76B270065367F /* random2.txt in Resources */ = {isa = PBXBuildFile; fileRef = 543095941DE76B270065367F /* random2.txt */; };
 		5430E9251BAA0D9F00395E05 /* ZMessagingLogs.h in Headers */ = {isa = PBXBuildFile; fileRef = 5430E9231BAA0D9F00395E05 /* ZMessagingLogs.h */; };
 		5430FF151CE4A359004ECFFE /* FileTransferTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5430FF141CE4A359004ECFFE /* FileTransferTests.m */; };
 		543236431AF90735003A54CE /* ZMUnauthenticatedState.m in Sources */ = {isa = PBXBuildFile; fileRef = 54B717FA19408B6900B798FA /* ZMUnauthenticatedState.m */; };
@@ -630,6 +632,8 @@
 		54294A2019472D4E007BE3CE /* ZMConversationTranscoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMConversationTranscoder.m; sourceTree = "<group>"; };
 		542DFEE51DDCA452000F5B95 /* UserProfileUpdateStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileUpdateStatusTests.swift; sourceTree = "<group>"; };
 		542DFEE71DDCA4FD000F5B95 /* UserProfileUpdateRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileUpdateRequestStrategyTests.swift; sourceTree = "<group>"; };
+		543095921DE76B170065367F /* random1.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = random1.txt; sourceTree = "<group>"; };
+		543095941DE76B270065367F /* random2.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = random2.txt; sourceTree = "<group>"; };
 		5430E9231BAA0D9F00395E05 /* ZMessagingLogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMessagingLogs.h; sourceTree = "<group>"; };
 		5430FF141CE4A359004ECFFE /* FileTransferTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileTransferTests.m; sourceTree = "<group>"; };
 		54386A5A1A248CE4001AD795 /* ZMPreBackgroundState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMPreBackgroundState.h; sourceTree = "<group>"; };
@@ -1217,6 +1221,8 @@
 				3E27131C1A8A68BF008EE50F /* Push.stringsdict */,
 				549815961A43232400A7CE2E /* zmessaging-ios-Info.plist */,
 				3E4CE69219657F0100939CEF /* ZMLocalizable.strings */,
+				543095921DE76B170065367F /* random1.txt */,
+				543095941DE76B270065367F /* random2.txt */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -2342,8 +2348,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				3E2713211A8A68BF008EE50F /* Push.stringsdict in Resources */,
+				543095951DE76B270065367F /* random2.txt in Resources */,
 				3E27131F1A8A68BF008EE50F /* Push.strings in Resources */,
 				0994E1D61B8354E400A51721 /* ZMLocalizable.strings in Resources */,
+				543095931DE76B170065367F /* random1.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
