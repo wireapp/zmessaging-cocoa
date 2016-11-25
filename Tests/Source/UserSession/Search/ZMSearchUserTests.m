@@ -153,7 +153,7 @@
                                                            handle:@"foo"
                                                       accentColor:ZMAccentColorStrongLimeGreen
                                                          remoteID:[NSUUID createUUID]
-                                                             user:nil
+                                                             user:user
                                          syncManagedObjectContext:self.syncMOC
                                            uiManagedObjectContext:self.uiMOC];
 

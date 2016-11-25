@@ -479,7 +479,7 @@ extension UserProfileUpdateRequestStrategyTests {
 extension UserProfileUpdateRequestStrategyTests {
     
     func errorResponse(path: String? = nil) -> ZMTransportResponse {
-        if let url = path.flatMap ({ URL(string: $0) }) {
+        if let url = path.flatMap(URL.init) {
             return ZMTransportResponse(originalUrl: url, httpStatus: 400, error: nil)
         }
 
@@ -521,7 +521,7 @@ extension UserProfileUpdateRequestStrategyTests {
     }
     
     func successResponse(path: String? = nil) -> ZMTransportResponse {
-        if let url = path.flatMap ({ URL(string: $0) }) {
+        if let url = path.flatMap(URL.init) {
             return ZMTransportResponse(originalUrl: url, httpStatus: 200, error: nil)
         }
         return ZMTransportResponse(
@@ -540,7 +540,8 @@ extension UserProfileUpdateRequestStrategyTests {
 extension ZMTransportResponse {
 
     convenience init(originalUrl: URL, httpStatus: Int, error: Error?) {
-        let httpResponse = HTTPURLResponse(url: originalUrl, statusCode: httpStatus, httpVersion: nil, headerFields: ["content-type": "json"])
+        let headers = ["Content-Type": "application/json"]
+        let httpResponse = HTTPURLResponse(url: originalUrl, statusCode: httpStatus, httpVersion: nil, headerFields: headers)
         self.init(httpurlResponse: httpResponse!, data: nil, error: error)
     }
 
