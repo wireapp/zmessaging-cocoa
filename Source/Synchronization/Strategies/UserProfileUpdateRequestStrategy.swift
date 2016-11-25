@@ -187,7 +187,7 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             }
             
         case self.handleCheckSync:
-            let handle = (response.headers?["Location"] as? NSString)?.lastPathComponent ?? ""
+            let handle = response.rawResponse?.url?.lastPathComponent ?? ""
             if response.result == .success {
                 self.userProfileUpdateStatus.didFetchHandle(handle: handle)
             } else {

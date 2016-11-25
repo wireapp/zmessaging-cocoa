@@ -392,7 +392,7 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // WHEN
         let request = self.sut.nextRequest()
-        request?.complete(with: self.successResponse(location: request?.path))
+        request?.complete(with: self.successResponse(path: request?.path))
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -407,7 +407,7 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // WHEN
         let request = self.sut.nextRequest()
-        request?.complete(with: self.notFoundResponse(location: request?.path))
+        request?.complete(with: self.notFoundResponse(path: request!.path))
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -422,7 +422,7 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // WHEN
         let request = self.sut.nextRequest()
-        request?.complete(with: self.errorResponse(location: request?.path))
+        request?.complete(with: self.errorResponse(path: request?.path))
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -478,11 +478,15 @@ extension UserProfileUpdateRequestStrategyTests {
 // MARK: - Helpers
 extension UserProfileUpdateRequestStrategyTests {
     
-    func errorResponse(location: String? = nil) -> ZMTransportResponse {
+    func errorResponse(path: String? = nil) -> ZMTransportResponse {
+        if let url = path.flatMap(URL.init) {
+            return ZMTransportResponse(originalUrl: url, httpStatus: 400, error: nil)
+        }
+
         return ZMTransportResponse(payload: nil,
                                    httpStatus: 400,
                                    transportSessionError: nil,
-                                   headers: ["Location" : location ?? ""]
+                                   headers: nil
         )
     }
     
@@ -516,21 +520,31 @@ extension UserProfileUpdateRequestStrategyTests {
                                    transportSessionError: nil)
     }
     
-    func successResponse(location: String? = nil) -> ZMTransportResponse {
-        return ZMTransportResponse(payload: nil,
-                                   httpStatus: 200,
-                                   transportSessionError: nil,
-                                   headers: ["Location" : location ?? ""]
+    func successResponse(path: String? = nil) -> ZMTransportResponse {
+        if let url = path.flatMap(URL.init) {
+            return ZMTransportResponse(originalUrl: url, httpStatus: 200, error: nil)
+        }
+        return ZMTransportResponse(
+            payload: nil,
+            httpStatus: 200,
+            transportSessionError: nil,
+            headers: nil
         )
     }
-    
-    func notFoundResponse(location: String? = nil) -> ZMTransportResponse {
-        return ZMTransportResponse(payload: nil,
-                                   httpStatus: 404,
-                                   transportSessionError: nil,
-                                   headers: ["Location" : location ?? ""]
-        )
+
+    func notFoundResponse(path: String) -> ZMTransportResponse {
+        return ZMTransportResponse(originalUrl: URL(string: path)!, httpStatus: 404, error: nil)
     }
+}
+
+extension ZMTransportResponse {
+
+    convenience init(originalUrl: URL, httpStatus: Int, error: Error?) {
+        let headers = ["Content-Type": "application/json"]
+        let httpResponse = HTTPURLResponse(url: originalUrl, statusCode: httpStatus, httpVersion: nil, headerFields: headers)
+        self.init(httpurlResponse: httpResponse!, data: nil, error: error)
+    }
+
 }
 
 class TestUserProfileUpdateStatus : UserProfileUpdateStatus {
