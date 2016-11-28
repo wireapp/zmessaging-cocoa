@@ -54,13 +54,9 @@
         self.objectDirectory.userTranscoder,
         self.objectDirectory.selfTranscoder,
         self.objectDirectory.conversationTranscoder,
-        self.objectDirectory.pushTokenTranscoder,
         self.objectDirectory.systemMessageTranscoder,
         self.objectDirectory.clientMessageTranscoder,
         self.objectDirectory.userImageTranscoder,
-        self.objectDirectory.searchUserImageTranscoder,
-        self.objectDirectory.typingTranscoder,
-        self.objectDirectory.removedSuggestedPeopleTranscoder,
         ];
 }
 

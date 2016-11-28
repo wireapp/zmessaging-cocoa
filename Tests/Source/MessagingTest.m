@@ -46,12 +46,8 @@
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMFlowSync.h"
 #import "ZMCallStateTranscoder.h"
-#import "ZMPushTokenTranscoder.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
-#import "ZMSearchUserImageTranscoder.h"
-#import "ZMTypingTranscoder.h"
-#import "ZMRemovedSuggestedPeopleTranscoder.h"
 #import "ZMUserSession+Internal.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "zmessaging_iOS_Tests-Swift.h"
@@ -340,18 +336,10 @@
     [self verifyMockLater:flowTranscoder];
     id callStateTranscoder = [OCMockObject mockForClass:ZMCallStateTranscoder.class];
     [self verifyMockLater:callStateTranscoder];
-    id pushTokenTranscoder = [OCMockObject mockForClass:ZMPushTokenTranscoder.class];
-    [self verifyMockLater:pushTokenTranscoder];
     id loginTranscoder = [OCMockObject mockForClass:ZMLoginTranscoder.class];
     [self verifyMockLater:loginTranscoder];
     id loginCodeRequestTranscoder = [OCMockObject mockForClass:ZMLoginCodeRequestTranscoder.class];
     [self verifyMockLater:loginCodeRequestTranscoder];
-    id searchUserImageTranscoder = [OCMockObject mockForClass:ZMSearchUserImageTranscoder.class];
-    [self verifyMockLater:searchUserImageTranscoder];
-    id typingTranscoder = [OCMockObject mockForClass:ZMTypingTranscoder.class];
-    [self verifyMockLater:typingTranscoder];
-    id removedSuggestedPeopleTranscoder = [OCMockObject mockForClass:ZMRemovedSuggestedPeopleTranscoder.class];
-    [self verifyMockLater:removedSuggestedPeopleTranscoder];
     
     
     [[[objectDirectory stub] andReturn:userTranscoder] userTranscoder];
@@ -367,12 +355,8 @@
     [[[objectDirectory stub] andReturn:lastUpdateEventIDTranscoder] lastUpdateEventIDTranscoder];
     [[[objectDirectory stub] andReturn:flowTranscoder] flowTranscoder];
     [[[objectDirectory stub] andReturn:callStateTranscoder] callStateTranscoder];
-    [[[objectDirectory stub] andReturn:pushTokenTranscoder] pushTokenTranscoder];
     [[[objectDirectory stub] andReturn:loginTranscoder] loginTranscoder];
     [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
-    [[[objectDirectory stub] andReturn:searchUserImageTranscoder] searchUserImageTranscoder];
-    [[[objectDirectory stub] andReturn:typingTranscoder] typingTranscoder];
-    [[[objectDirectory stub] andReturn:removedSuggestedPeopleTranscoder] removedSuggestedPeopleTranscoder];
     
     [[[objectDirectory stub] andReturn:@[
                                         userTranscoder,
@@ -388,12 +372,8 @@
                                         lastUpdateEventIDTranscoder,
                                         flowTranscoder,
                                         callStateTranscoder,
-                                        pushTokenTranscoder,
                                         loginTranscoder,
                                         loginCodeRequestTranscoder,
-                                        searchUserImageTranscoder,
-                                        typingTranscoder,
-                                        removedSuggestedPeopleTranscoder,
                                         ]] allTranscoders];
     
     

@@ -22,9 +22,6 @@
 @import ZMCDataModel;
 
 #import "ZMBareUser+UserSession.h"
-
-#import "ZMSearchUserImageTranscoder.h"
-
 #import "ZMUserSession+Internal.h"
 #import "ZMUserImageTranscoder.h"
 
@@ -89,12 +86,12 @@
 - (ZMTransportRequest *)requestUserInfoInUserSession:(ZMUserSession *)userSession
 {
     ZMCompletionHandler *completionHandler = [ZMCompletionHandler handlerOnGroupQueue:userSession.syncManagedObjectContext block:^(ZMTransportResponse *response) {
-        [ZMSearchUserImageTranscoder processSingleUserProfileResponse:response forUserID:self.remoteIdentifier mediumAssetIDCache:[ZMSearchUser searchUserToMediumAssetIDCache]];
+        [SearchUserImageStrategy processSingleUserProfileWithResponse:response for:self.remoteIdentifier mediumAssetIDCache:[ZMSearchUser searchUserToMediumAssetIDCache]];
         if (self.mediumAssetID != nil) {
             [self privateRequestMediumProfileImageInUserSession:userSession];
         }
     }];
-    ZMTransportRequest *request = [ZMSearchUserImageTranscoder fetchAssetsForUsersWithIDs:[NSSet setWithObject:self.remoteIdentifier] completionHandler:completionHandler];
+    ZMTransportRequest *request = [SearchUserImageStrategy requestForFetchingAssetsFor:[NSSet setWithObject:self.remoteIdentifier] completionHandler:completionHandler];
     
     return request;
 }

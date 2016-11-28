@@ -64,13 +64,9 @@
                              objectStrategyDirectory.userTranscoder,
                              objectStrategyDirectory.selfTranscoder,
                              objectStrategyDirectory.conversationTranscoder,
-                             objectStrategyDirectory.pushTokenTranscoder,
                              objectStrategyDirectory.systemMessageTranscoder,
                              objectStrategyDirectory.clientMessageTranscoder,
                              objectStrategyDirectory.userImageTranscoder,
-                             objectStrategyDirectory.searchUserImageTranscoder,
-                             objectStrategyDirectory.typingTranscoder,
-                             objectStrategyDirectory.removedSuggestedPeopleTranscoder,
                              ];
         
         for (id<ZMObjectStrategy> syncObject in self.syncObjects) {
