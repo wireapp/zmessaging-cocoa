@@ -6,7 +6,6 @@ asp
 badger
 bat
 bear
-beaver
 bee
 beetle
 bird
@@ -89,7 +88,7 @@ oyster
 panda
 panther
 parrot
-pellican
+pelican
 penguin
 pigeon
 pike
