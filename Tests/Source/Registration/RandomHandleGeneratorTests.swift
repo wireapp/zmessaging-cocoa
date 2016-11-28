@@ -43,11 +43,11 @@ class RandomHandleGeneratorTests : XCTestCase {
         
         // GIVEN
         let variations = 4
-        let expectedNormalized = "marialarochelle"
+        let expectedNormalized = "marialarochellevonschw"
         
         // WHEN
         var handles : [String] = zmessaging.RandomHandleGenerator.generatePossibleHandles(
-                displayName: "Maria La Rochelle",
+                displayName: "Maria La Rochelle Von Schwerigstein",
                 alternativeNames: variations
             ).reversed() // there is no popFirst, so I will revert to be able to use popLast
         
@@ -59,25 +59,28 @@ class RandomHandleGeneratorTests : XCTestCase {
         
         // then with digits 1 to 9
         (1..<10).forEach {
-            XCTAssertEqual(handles.popLast(), expectedNormalized+"\($0)")
+            XCTAssertEqual(handles.popLast(), expectedNormalized.truncated(at: 20)+"\($0)")
         }
         
         // then 4 with two digits
-        let twoDigits = try! NSRegularExpression(pattern: "^\(expectedNormalized)[0-9]{2}$", options: [])
+        let twoDigits = try! NSRegularExpression(pattern: "^\(expectedNormalized.truncated(at: 19))[0-9]{2}$", options: [])
         (0..<4).forEach { _ in
-            XCTAssertTrue(twoDigits.matches(handles.popLast()))
+            let handle = handles.popLast()
+            XCTAssertTrue(twoDigits.matches(handle), "\(handle) does not match")
         }
         
         // then 4 with three digits
-        let threeDigits = try! NSRegularExpression(pattern: "^\(expectedNormalized)[0-9]{3}$", options: [])
+        let threeDigits = try! NSRegularExpression(pattern: "^\(expectedNormalized.truncated(at: 18))[0-9]{3}$", options: [])
         (0..<4).forEach { _ in
-            XCTAssertTrue(threeDigits.matches(handles.popLast()))
+            let handle = handles.popLast()
+            XCTAssertTrue(threeDigits.matches(handle), "\(handle) does not match")
         }
         
         // then 6 with four digits
-        let sixDigits = try! NSRegularExpression(pattern: "^\(expectedNormalized)[0-9]{4}$", options: [])
+        let sixDigits = try! NSRegularExpression(pattern: "^\(expectedNormalized.truncated(at: 17))[0-9]{4}$", options: [])
         (0..<6).forEach { _ in
-            XCTAssertTrue(sixDigits.matches(handles.popLast()))
+            let handle = handles.popLast()
+            XCTAssertTrue(sixDigits.matches(handle), "\(handle) does not match")
         }
         
         // now random words

@@ -34,16 +34,16 @@ struct RandomHandleGenerator {
         
         if let normalized = normalized {
             possibleHandles.append(normalized)
-            possibleHandles.append(contentsOf: normalized.appendAllDigits())
-            possibleHandles.append(contentsOf: normalized.appendRandomDigits(numberOfDigits: 2, variations: 4))
-            possibleHandles.append(contentsOf: normalized.appendRandomDigits(numberOfDigits: 3, variations: 4))
-            possibleHandles.append(contentsOf: normalized.appendRandomDigits(numberOfDigits: 4, variations: 6))
+            possibleHandles.append(contentsOf: normalized.truncated(at: maximumUserHandleLength-1).appendAllDigits())
+            possibleHandles.append(contentsOf: normalized.truncated(at: maximumUserHandleLength-2).appendRandomDigits(numberOfDigits: 2, variations: 4))
+            possibleHandles.append(contentsOf: normalized.truncated(at: maximumUserHandleLength-3).appendRandomDigits(numberOfDigits: 3, variations: 4))
+            possibleHandles.append(contentsOf: normalized.truncated(at: maximumUserHandleLength-4).appendRandomDigits(numberOfDigits: 4, variations: 6))
         }
         
         possibleHandles.append(contentsOf: alternativeNames)
-        possibleHandles.append(contentsOf: alternativeNames.map { $0.appendRandomDigits(numberOfDigits: 2, variations: 2) }.flatMap { $0 })
-        possibleHandles.append(contentsOf: alternativeNames.map { $0.appendRandomDigits(numberOfDigits: 3, variations: 4) }.flatMap { $0 })
-        possibleHandles.append(contentsOf: alternativeNames.map { $0.appendRandomDigits(numberOfDigits: 4, variations: 6) }.flatMap { $0 })
+        possibleHandles.append(contentsOf: alternativeNames.map { $0.truncated(at: maximumUserHandleLength-2).appendRandomDigits(numberOfDigits: 2, variations: 2) }.flatMap { $0 })
+        possibleHandles.append(contentsOf: alternativeNames.map { $0.truncated(at: maximumUserHandleLength-3).appendRandomDigits(numberOfDigits: 3, variations: 4) }.flatMap { $0 })
+        possibleHandles.append(contentsOf: alternativeNames.map { $0.truncated(at: maximumUserHandleLength-4).appendRandomDigits(numberOfDigits: 4, variations: 6) }.flatMap { $0 })
         
         return possibleHandles
     }
@@ -165,7 +165,7 @@ extension String {
     }
     
     /// Returns a truncated version of the string
-    fileprivate func truncated(at position: Int) -> String {
+    func truncated(at position: Int) -> String {
         return self.substring(to: self.index(self.startIndex, offsetBy: min(position+1, self.characters.count)))
     }
     
