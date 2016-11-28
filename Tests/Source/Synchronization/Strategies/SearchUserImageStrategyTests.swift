@@ -45,7 +45,7 @@ class SearchUserImageStrategyTests : MessagingTest {
     }
     
     func createSearchUser() -> ZMSearchUser {
-        return ZMSearchUser(name: "foo", accentColor: .brightOrange, remoteID: UUID(), user: nil, syncManagedObjectContext: syncMOC, uiManagedObjectContext: uiMOC)
+        return ZMSearchUser(name: "foo", handle: "foo", accentColor: .brightOrange, remoteID: UUID(), user: nil, syncManagedObjectContext: syncMOC, uiManagedObjectContext: uiMOC)
     }
     
     func userIDs(from searchUsers: Set<ZMSearchUser>) -> Set<UUID> {
