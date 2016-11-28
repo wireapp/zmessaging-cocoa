@@ -978,6 +978,11 @@ static BOOL ZMUserSessionUseCallKit = NO;
 
 @implementation ZMUserSession (SelfUserClient)
 
+- (id<UserProfile>)userProfile
+{
+    return self.userProfileUpdateStatus;
+}
+
 - (UserClient *)selfUserClient
 {
     return [ZMUser selfUserInContext:self.managedObjectContext].selfClient;

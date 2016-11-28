@@ -87,6 +87,7 @@ struct UserProfileUpdateNotification {
     fileprivate let type : UserProfileUpdateNotificationType
     
     static func post(type: UserProfileUpdateNotificationType) {
+        
         NotificationCenter.default.post(name: self.notificationName,
                                         object: nil,
                                         userInfo: [UserProfileUpdateNotification.userInfoKey : UserProfileUpdateNotification(type: type)])
@@ -99,7 +100,8 @@ extension UserProfileUpdateStatus {
         return NotificationCenter.default.addObserver(forName: UserProfileUpdateNotification.notificationName,
                                                       object: nil,
                                                       queue: OperationQueue.main)
-        { (anynote: Notification) in
+        {
+            (anynote: Notification) in
             guard let note = anynote.userInfo?[UserProfileUpdateNotification.userInfoKey] as? UserProfileUpdateNotification else {
                 return
             }
