@@ -21,6 +21,8 @@ import Foundation
 
 public protocol CallFlow {
     
+    var isVideoCall : Bool { get }
+    
     func join(video: Bool)
     
     func leave()
@@ -30,6 +32,11 @@ public protocol CallFlow {
 }
 
 extension VoiceChannelRouter : CallFlow {
+    
+    public var isVideoCall: Bool {
+        guard let callFlow = currentVoiceChannel as? CallFlow else { return false }
+        return callFlow.isVideoCall
+    }
     
     public func join(video: Bool) {
         if let callFlow = currentVoiceChannel as? CallFlow {
@@ -53,6 +60,12 @@ extension VoiceChannelRouter : CallFlow {
 
 extension VoiceChannelV3 : CallFlow {
     
+    public var isVideoCall: Bool {
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
+        
+        return WireCallCenter.isVideoCall(conversationId: remoteIdentifier)
+    }
+    
     public func join(video: Bool) {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
         
@@ -61,8 +74,7 @@ extension VoiceChannelV3 : CallFlow {
         if state == .incomingCall {
             _ = WireCallCenter.answerCall(conversationId: remoteIdentifier)
         } else {
-            conversation?.isVideoCall = video
-            _ = WireCallCenter.startCall(conversationId: remoteIdentifier)
+            _ = WireCallCenter.startCall(conversationId: remoteIdentifier, video: video)
         }
     }
     
@@ -73,13 +85,19 @@ extension VoiceChannelV3 : CallFlow {
     }
     
     public func ignore() {
-        leave()
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
+        
+        WireCallCenter.ignoreCall(conversationId: remoteIdentifier)
     }
     
 }
 
 
 extension ZMVoiceChannel : CallFlow {
+    
+    public var isVideoCall: Bool {
+        return conversation?.isVideoCall ?? false
+    }
     
     public func join(video: Bool) {
         if video {
