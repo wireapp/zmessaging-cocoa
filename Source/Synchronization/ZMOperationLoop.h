@@ -23,7 +23,6 @@
 @class ZMTransportSession;
 @class ZMSyncStrategy;
 @class ZMAuthenticationStatus;
-@class ZMUserProfileUpdateStatus;
 @class ZMClientRegistrationStatus;
 @class NSManagedObjectContext;
 @class ZMLocalNotificationDispatcher;
@@ -36,6 +35,7 @@
 @class ZMOnDemandFlowManager;
 @class ProxiedRequestsStatus;
 @class ClientUpdateStatus;
+@class UserProfileUpdateStatus;
 
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
@@ -52,7 +52,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                     authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-                 userProfileUpdateStatus:(ZMUserProfileUpdateStatus *)userProfileUpdateStatus
+                 userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileUpdateStatus
                 clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                       clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
                     proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus

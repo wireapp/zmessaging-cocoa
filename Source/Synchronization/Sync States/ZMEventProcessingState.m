@@ -27,7 +27,6 @@
 #import "ZMTestNotifications.h"
 #import "ZMSyncStateDelegate.h"
 #import "ZMStateMachineDelegate.h"
-#import "ZMUserProfileUpdateTranscoder.h"
 #import "ZMHotFix.h"
 
 @interface ZMEventProcessingState ()
@@ -61,18 +60,13 @@
         self.syncObjects = @[
                              objectStrategyDirectory.flowTranscoder,
                              objectStrategyDirectory.callStateTranscoder,
-                             objectStrategyDirectory.userProfileUpdateTranscoder,
                              objectStrategyDirectory.connectionTranscoder,
                              objectStrategyDirectory.userTranscoder,
                              objectStrategyDirectory.selfTranscoder,
                              objectStrategyDirectory.conversationTranscoder,
-                             objectStrategyDirectory.pushTokenTranscoder,
                              objectStrategyDirectory.systemMessageTranscoder,
                              objectStrategyDirectory.clientMessageTranscoder,
                              objectStrategyDirectory.userImageTranscoder,
-                             objectStrategyDirectory.searchUserImageTranscoder,
-                             objectStrategyDirectory.typingTranscoder,
-                             objectStrategyDirectory.removedSuggestedPeopleTranscoder,
                              ];
         
         for (id<ZMObjectStrategy> syncObject in self.syncObjects) {

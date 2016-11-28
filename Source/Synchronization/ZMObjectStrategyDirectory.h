@@ -29,16 +29,12 @@
 @class ZMMissingUpdateEventsTranscoder;
 @class ZMRegistrationTranscoder;
 @class ZMFlowSync;
-@class ZMPushTokenTranscoder;
 @class ZMCallStateTranscoder;
 @class ZMLastUpdateEventIDTranscoder;
 @class ZMLoginTranscoder;
-@class ZMSearchUserImageTranscoder;
 @class ZMTypingTranscoder;
-@class ZMRemovedSuggestedPeopleTranscoder;
 @class ZMPhoneNumberVerificationTranscoder;
 @class ZMLoginCodeRequestTranscoder;
-@class ZMUserProfileUpdateTranscoder;
 
 @protocol ZMUpdateEventsFlushableCollection;
 
@@ -61,11 +57,7 @@
 @property (nonatomic, readonly) ZMLoginCodeRequestTranscoder *loginCodeRequestTranscoder;
 @property (nonatomic, readonly) ZMFlowSync *flowTranscoder;
 @property (nonatomic, readonly) ZMCallStateTranscoder *callStateTranscoder;
-@property (nonatomic, readonly) ZMPushTokenTranscoder *pushTokenTranscoder;
-@property (nonatomic, readonly) ZMSearchUserImageTranscoder *searchUserImageTranscoder;
-@property (nonatomic, readonly) ZMTypingTranscoder *typingTranscoder;
-@property (nonatomic, readonly) ZMRemovedSuggestedPeopleTranscoder *removedSuggestedPeopleTranscoder;
-@property (nonatomic, readonly) ZMUserProfileUpdateTranscoder *userProfileUpdateTranscoder;
+
 
 @property (nonatomic, readonly) NSManagedObjectContext *moc;
 

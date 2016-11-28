@@ -2173,13 +2173,31 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     XCTAssert([self.uiMOC saveOrRollback]);
 
-    ZMSearchUser *searchUser0 = [[ZMSearchUser alloc] initWithName:@"Sophie" accentColor:ZMAccentColorSoftPink remoteID:remoteIDs[0] user:nil syncManagedObjectContext: self.syncMOC uiManagedObjectContext:self.uiMOC];
+    ZMSearchUser *searchUser0 = [[ZMSearchUser alloc] initWithName:@"Sophie"
+                                                            handle:@"sophie"
+                                                       accentColor:ZMAccentColorSoftPink
+                                                          remoteID:remoteIDs[0]
+                                                              user:nil
+                                          syncManagedObjectContext:self.syncMOC
+                                            uiManagedObjectContext:self.uiMOC];
 
     // ZMSearchUser *searchUser1 = [[ZMSearchUser alloc] initWithName:nil accentColor:ZMAccentColorUndefined isConnected:NO remoteID:nil user:user1];
-    ZMSearchUser *searchUser2 = [[ZMSearchUser alloc] initWithName:@"Max" accentColor:ZMAccentColorStrongBlue remoteID:remoteIDs[2] user:nil syncManagedObjectContext: self.syncMOC uiManagedObjectContext:self.uiMOC];
+    ZMSearchUser *searchUser2 = [[ZMSearchUser alloc] initWithName:@"Max"
+                                                            handle:@"max"
+                                                       accentColor:ZMAccentColorStrongBlue
+                                                          remoteID:remoteIDs[2]
+                                                              user:nil
+                                          syncManagedObjectContext:self.syncMOC
+                                            uiManagedObjectContext:self.uiMOC];
 
     // ZMSearchUser *searchUser3 = [[ZMSearchUser alloc] initWithName:nil accentColor:ZMAccentColorUndefined isConnected:NO remoteID:nil user:user3];
-    ZMSearchUser *searchUser4 = [[ZMSearchUser alloc] initWithName:@"Maria" accentColor:ZMAccentColorStrongLimeGreen remoteID:remoteIDs[4] user:nil syncManagedObjectContext: self.syncMOC uiManagedObjectContext:self.uiMOC];
+    ZMSearchUser *searchUser4 = [[ZMSearchUser alloc] initWithName:@"Maria"
+                                                            handle:@"maria"
+                                                       accentColor:ZMAccentColorStrongLimeGreen
+                                                          remoteID:remoteIDs[4]
+                                                              user:nil
+                                          syncManagedObjectContext:self.syncMOC
+                                            uiManagedObjectContext:self.uiMOC];
     
     NSArray *responsePayload = @[@{@"accent_id": @(ZMAccentColorSoftPink),
                                    @"name": @"Sophie",
@@ -2484,7 +2502,13 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
 
     XCTAssert([self.uiMOC save:nil]);
     
-    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithName:@"Maria" accentColor:ZMAccentColorStrongLimeGreen remoteID:remoteIDs[0] user:nil syncManagedObjectContext: self.syncMOC uiManagedObjectContext:self.uiMOC];
+    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithName:@"Maria"
+                                                           handle:@"maria"
+                                                      accentColor:ZMAccentColorStrongLimeGreen
+                                                         remoteID:remoteIDs[0]
+                                                             user:nil
+                                         syncManagedObjectContext:self.syncMOC
+                                           uiManagedObjectContext:self.uiMOC];
 
     
     NSArray *responsePayload = @[@{@"accent_id": @(ZMAccentColorStrongLimeGreen),
@@ -2537,7 +2561,13 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
 
         XCTAssert([self.uiMOC save:nil]);
         
-        ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithName:@"Maria" accentColor:ZMAccentColorStrongLimeGreen remoteID:originalRemoteIDs[0] user:nil syncManagedObjectContext: self.syncMOC uiManagedObjectContext:self.uiMOC];
+        ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithName:@"Maria"
+                                                               handle:@"marie"
+                                                          accentColor:ZMAccentColorStrongLimeGreen
+                                                             remoteID:originalRemoteIDs[0]
+                                                                 user:nil
+                                             syncManagedObjectContext:self.syncMOC
+                                               uiManagedObjectContext:self.uiMOC];
 
         
         NSArray *responsePayload = @[@{@"accent_id": @(ZMAccentColorStrongLimeGreen),
@@ -2575,7 +2605,13 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     
     {
         NSArray *newRemoteIDs = @[NSUUID.createUUID];
-        ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithName:@"Hans" accentColor:ZMAccentColorBrightOrange remoteID:newRemoteIDs[0] user:nil syncManagedObjectContext: self.syncMOC uiManagedObjectContext:self.uiMOC];
+        ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithName:@"Hans"
+                                                               handle:@"hans"
+                                                          accentColor:ZMAccentColorBrightOrange
+                                                             remoteID:newRemoteIDs[0]
+                                                                 user:nil
+                                             syncManagedObjectContext:self.syncMOC
+                                               uiManagedObjectContext:self.uiMOC];
         
         NSArray *responsePayload = @[@{@"accent_id": @(ZMAccentColorBrightOrange),
                                        @"name": @"Maria",

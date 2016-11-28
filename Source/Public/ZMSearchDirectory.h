@@ -34,11 +34,14 @@ typedef id<ZMSearchToken> ZMSearchToken;
 @protocol ZMSearchTopConversationsObserver;
 
 
+@protocol ZMSearchResultStore <NSObject>
+@end
+
 
 /// This is the main entry point for searching for users and conversations.
 ///
 /// Searches will return an opaque token and results will be delivered asynchronously for that token to the ZMSearchResultObserver.
-@interface ZMSearchDirectory : NSObject
+@interface ZMSearchDirectory : NSObject <ZMSearchResultStore>
 
 - (instancetype)initWithUserSession:(ZMUserSession *)userSession;
 /// @p maxTopConversationsCount Maximum amount of top conversations to be returned.

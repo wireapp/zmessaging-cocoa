@@ -21,7 +21,7 @@
 
 @class ZMSearchDirectory;
 @class ZMSearchUser;
-
+@protocol ZMSearchResultStore;
 
 
 @interface ZMSearchUserAndAssetID : NSObject
@@ -40,18 +40,18 @@
 @interface ZMUserIDsForSearchDirectoryTable : NSObject
 
 /// returns a set of NSUUID
-@property (nonatomic, readonly) NSSet *allUserIDs;
+@property (nonatomic, readonly) NSSet<NSUUID*> *allUserIDs;
 /// returns a set of ZMUserIDAndAssetID
-@property (nonatomic, readonly) NSSet *allAssetIDs;
+@property (nonatomic, readonly) NSSet<ZMSearchUserAndAssetID*> *allAssetIDs;
 
 /// sets the search users that need a profile picture for a given search directory
-- (void)setSearchUsers:(NSSet *)searchUsers forSearchDirectory:(ZMSearchDirectory *)directory;
+- (void)setSearchUsers:(NSSet *)searchUsers forSearchDirectory:(id<ZMSearchResultStore>)directory;
 
 /// Replace all user ID to download with an asset ID to download
 - (void)replaceUserIDToDownload:(NSUUID *)userID withAssetIDToDownload:(NSUUID *)assetID;
 
 /// Remove all entries that contain these user IDs
-- (void)removeAllEntriesWithUserIDs:(NSSet *)userIDs;
+- (void)removeAllEntriesWithUserIDs:(NSSet<NSUUID*> *)userIDs;
 
 /// Remove the search directory from the table
 - (void)removeSearchDirectory:(ZMSearchDirectory *)directory;

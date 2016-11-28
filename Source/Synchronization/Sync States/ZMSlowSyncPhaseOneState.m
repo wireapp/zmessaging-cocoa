@@ -23,7 +23,6 @@
 #import "ZMConversationTranscoder.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMSyncStateDelegate.h"
-#import "ZMuserProfileUpdateTranscoder.h"
 
 
 @implementation ZMSlowSyncPhaseOneState
@@ -49,9 +48,7 @@
 {
     id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
     return [self nextRequestFromTranscoders:@[directory.connectionTranscoder,
-                                              directory.conversationTranscoder,
-                                              directory.userProfileUpdateTranscoder
-                                              ]];
+                                              directory.conversationTranscoder]];
 }
 
 - (ZMUpdateEventsPolicy)updateEventsPolicy

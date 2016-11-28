@@ -50,18 +50,13 @@
     return  @[ /* Note: these must be in the same order as in the class */
         self.objectDirectory.flowTranscoder,
         self.objectDirectory.callStateTranscoder,
-        self.objectDirectory.userProfileUpdateTranscoder,
         self.objectDirectory.connectionTranscoder,
         self.objectDirectory.userTranscoder,
         self.objectDirectory.selfTranscoder,
         self.objectDirectory.conversationTranscoder,
-        self.objectDirectory.pushTokenTranscoder,
         self.objectDirectory.systemMessageTranscoder,
         self.objectDirectory.clientMessageTranscoder,
         self.objectDirectory.userImageTranscoder,
-        self.objectDirectory.searchUserImageTranscoder,
-        self.objectDirectory.typingTranscoder,
-        self.objectDirectory.removedSuggestedPeopleTranscoder,
         ];
 }
 
