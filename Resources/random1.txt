@@ -2,11 +2,11 @@ acid
 agate
 agile
 amber
+aqua
 arid
 avid
 azure
 baby
-bald
 basic
 beige
 best
@@ -17,12 +17,12 @@ brass
 brave
 brown
 busy
-cheap
 chief
 chill
 clear
 cold
 cool
+coral
 cosy
 cozy
 cream
@@ -31,11 +31,8 @@ cyan
 dear
 dry
 early
-ebony
 even
-fake
 fancy
-fast
 fast
 fit
 folk
@@ -53,7 +50,7 @@ lemon
 light
 lilac
 lime
-lime
+lord
 lucid
 mauve
 melt
@@ -69,6 +66,7 @@ peach
 pearl
 pink
 plain
+purple
 quiet
 rapid
 red
@@ -78,6 +76,7 @@ ruby
 rust
 sand
 sassy
+shiny
 shy
 silly
 slow
@@ -92,9 +91,11 @@ topaz
 torn
 total
 vinyl
+violet
 warm
 white
 wise
 witty
+yellow
 young
 zinc
