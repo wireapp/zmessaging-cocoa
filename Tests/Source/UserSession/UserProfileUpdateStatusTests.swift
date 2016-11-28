@@ -78,6 +78,7 @@ extension UserProfileUpdateStatusTests {
         }
         
         // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         XCTAssertFalse(self.sut.currentlySettingEmail)
         XCTAssertTrue(self.sut.currentlySettingPassword)
         XCTAssertNil(self.sut.emailCredentials())
@@ -98,6 +99,9 @@ extension UserProfileUpdateStatusTests {
         } catch {
             return
         }
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
     }
     
     func testThatItCanCancelSettingEmailAndPassword() {
@@ -105,9 +109,11 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         self.sut.cancelSettingEmailAndPassword()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // THEN
         XCTAssertFalse(sut.currentlySettingEmail)
@@ -120,6 +126,7 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         self.sut.didUpdatePasswordSuccessfully()
@@ -136,7 +143,7 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
-
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         self.sut.didUpdatePasswordSuccessfully()
@@ -153,6 +160,7 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         self.sut.didUpdatePasswordSuccessfully()
@@ -174,7 +182,7 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
-
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
@@ -190,6 +198,7 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didUpdatePasswordSuccessfully()
 
         // WHEN
@@ -206,6 +215,7 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         self.sut.didFailPasswordUpdate()
@@ -221,6 +231,7 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         self.sut.didFailPasswordUpdate()
@@ -241,6 +252,7 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         let error = NSError(domain: "zmessaging", code: 100, userInfo: nil)
         
         // WHEN
@@ -259,6 +271,7 @@ extension UserProfileUpdateStatusTests {
         let error = NSError(domain: "zmessaging", code: 100, userInfo: nil)
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         self.sut.didUpdatePasswordSuccessfully()
@@ -286,6 +299,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didUpdatePasswordSuccessfully()
         
         // THEN
@@ -299,6 +313,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didUpdateEmailSuccessfully()
         
         // THEN
@@ -312,6 +327,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didUpdatePasswordSuccessfully()
         self.sut.didUpdateEmailSuccessfully()
         
@@ -324,6 +340,7 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didUpdatePasswordSuccessfully()
         self.sut.didUpdateEmailSuccessfully()
         
@@ -349,6 +366,7 @@ extension UserProfileUpdateStatusTests {
 
         // WHEN
         self.sut.requestPhoneVerificationCode(phoneNumber: phoneNumber)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // THEN
         XCTAssertTrue(self.sut.currentlyRequestingPhoneVerificationCode)
@@ -364,6 +382,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestPhoneVerificationCode(phoneNumber: phoneNumber)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didRequestPhoneVerificationCodeSuccessfully()
         
         // THEN
@@ -380,6 +399,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestPhoneVerificationCode(phoneNumber: phoneNumber)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFailPhoneVerificationCodeRequest(error: error)
         
         // THEN
@@ -395,6 +415,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestPhoneVerificationCode(phoneNumber: phoneNumber)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didRequestPhoneVerificationCodeSuccessfully()
         
         // THEN
@@ -416,6 +437,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestPhoneVerificationCode(phoneNumber: phoneNumber)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFailPhoneVerificationCodeRequest(error: error)
         
         // THEN
@@ -444,6 +466,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestPhoneNumberChange(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // THEN
         XCTAssertTrue(self.sut.currentlySettingPhone)
@@ -459,6 +482,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestPhoneNumberChange(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didChangePhoneSuccesfully()
         
         // THEN
@@ -475,6 +499,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestPhoneNumberChange(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFailChangingPhone(error: error)
         
         // THEN
@@ -491,6 +516,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestPhoneNumberChange(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFailChangingPhone(error: error)
         
         // THEN
@@ -519,6 +545,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestCheckHandleAvailability(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // THEN
         XCTAssertEqual(self.sut.handleToCheck, handle)
@@ -533,6 +560,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestCheckHandleAvailability(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didNotFindHandle(handle: handle)
         
         // THEN
@@ -547,6 +575,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestCheckHandleAvailability(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFetchHandle(handle: handle)
         
         // THEN
@@ -561,6 +590,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestCheckHandleAvailability(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFailRequestToFetchHandle(handle: handle)
         
         // THEN
@@ -575,6 +605,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestCheckHandleAvailability(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didNotFindHandle(handle: "other")
         
         // THEN
@@ -589,6 +620,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestCheckHandleAvailability(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFetchHandle(handle: "other")
         
         // THEN
@@ -603,6 +635,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestCheckHandleAvailability(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFailRequestToFetchHandle(handle: "other")
         
         // THEN
@@ -617,6 +650,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestCheckHandleAvailability(handle: "other")
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didNotFindHandle(handle: handle)
         
         // THEN
@@ -637,6 +671,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestCheckHandleAvailability(handle: "other")
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFetchHandle(handle: handle)
         
         // THEN
@@ -657,6 +692,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestCheckHandleAvailability(handle: "other")
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFailRequestToFetchHandle(handle: handle)
         
         // THEN
@@ -685,6 +721,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // THEN
         XCTAssertEqual(self.sut.handleToSet, handle)
@@ -701,6 +738,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didSetHandle()
         
         // THEN
@@ -718,6 +756,7 @@ extension UserProfileUpdateStatusTests {
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
         self.sut.cancelSettingHandle()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // THEN
         XCTAssertNil(self.sut.handleToSet)
@@ -733,6 +772,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFailToSetHandle()
         
         // THEN
@@ -749,6 +789,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFailToSetAlreadyExistingHandle()
         
         // THEN
@@ -766,6 +807,7 @@ extension UserProfileUpdateStatusTests {
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
         self.sut.cancelSettingHandle()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didSetHandle()
         
         // THEN
@@ -779,6 +821,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didSetHandle()
         
         // THEN
@@ -799,6 +842,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFailToSetHandle()
         
         // THEN
@@ -819,6 +863,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.requestSettingHandle(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.sut.didFailToSetAlreadyExistingHandle()
         
         // THEN
@@ -850,6 +895,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // THEN
         XCTAssertTrue(self.sut.currentlyGeneratingHandleSuggestion)
@@ -866,6 +912,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         XCTAssertTrue(self.sut.currentlyGeneratingHandleSuggestion)
         selfUser.setHandle("annaluna")
         
@@ -882,6 +929,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // THEN
         XCTAssertTrue(self.sut.currentlyGeneratingHandleSuggestion)
@@ -895,6 +943,7 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let handle = "funkymonkey34"
         self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         self.sut.didFindHandleSuggestion(handle: handle)
@@ -908,6 +957,7 @@ extension UserProfileUpdateStatusTests {
         
         // GIVEN
         self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
@@ -923,6 +973,7 @@ extension UserProfileUpdateStatusTests {
         
         // GIVEN
         self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         guard let previousHandle = self.sut.suggestedHandlesToCheck?.first else {
             XCTFail()
             return
@@ -943,6 +994,7 @@ extension UserProfileUpdateStatusTests {
         // GIVEN
         let handle = "funkymokkey34"
         self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         self.sut.didFindHandleSuggestion(handle: handle)

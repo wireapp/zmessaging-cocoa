@@ -30,11 +30,11 @@ class UserHandleTests : IntegrationTestBase {
     override func setUp() {
         super.setUp()
         self.userProfileStatusObserver = TestUserProfileUpdateObserver()
-        self.observerToken = self.userSession.userProfileUpdateStatus.add(observer: self.userProfileStatusObserver)
+        self.observerToken = self.userSession.userProfile.add(observer: self.userProfileStatusObserver)
     }
     
     override func tearDown() {
-        self.userSession.userProfileUpdateStatus.removeObserver(token: self.observerToken)
+        self.userSession.userProfile.removeObserver(token: self.observerToken)
         self.observerToken = nil
         self.userProfileStatusObserver = nil
         super.tearDown()
@@ -47,7 +47,7 @@ class UserHandleTests : IntegrationTestBase {
         XCTAssertTrue(logInAndWaitForSyncToBeComplete())
         
         // WHEN
-        self.userSession.userProfileUpdateStatus.requestCheckHandleAvailability(handle: handle)
+        self.userSession.userProfile.requestCheckHandleAvailability(handle: handle)
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -72,7 +72,7 @@ class UserHandleTests : IntegrationTestBase {
         }
         
         // WHEN
-        self.userSession.userProfileUpdateStatus.requestCheckHandleAvailability(handle: handle)
+        self.userSession.userProfile.requestCheckHandleAvailability(handle: handle)
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -94,7 +94,7 @@ class UserHandleTests : IntegrationTestBase {
         XCTAssertTrue(logInAndWaitForSyncToBeComplete())
         
         // WHEN
-        self.userSession.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        self.userSession.userProfile.requestSettingHandle(handle: handle)
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -126,7 +126,7 @@ class UserHandleTests : IntegrationTestBase {
         }
         
         // WHEN
-        self.userSession.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        self.userSession.userProfile.requestSettingHandle(handle: handle)
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -154,7 +154,7 @@ class UserHandleTests : IntegrationTestBase {
         }
         
         // WHEN
-        self.userSession.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        self.userSession.userProfile.requestSettingHandle(handle: handle)
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))

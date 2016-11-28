@@ -75,6 +75,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let phone = "+155523123123"
         self.userProfileUpdateStatus.requestPhoneVerificationCode(phoneNumber: phone)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -89,6 +90,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMPhoneCredentials(phoneNumber: "+155523123123", verificationCode: "12345")
         self.userProfileUpdateStatus.requestPhoneNumberChange(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -107,6 +109,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")
         try! self.userProfileUpdateStatus.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -123,6 +126,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")
         try! self.userProfileUpdateStatus.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.userProfileUpdateStatus.didUpdatePasswordSuccessfully()
         
         // WHEN
@@ -141,6 +145,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let handle = "martha"
         self.userProfileUpdateStatus.requestCheckHandleAvailability(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -155,6 +160,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let handle = "martha"
         self.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -169,6 +175,7 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // GIVEN
         self.userProfileUpdateStatus.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         guard let handles = self.userProfileUpdateStatus.suggestedHandlesToCheck?.joined(separator: ",") else {
             XCTFail()
             return
@@ -196,6 +203,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let phone = "+155523123123"
         self.userProfileUpdateStatus.requestPhoneVerificationCode(phoneNumber: phone)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -211,6 +219,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let phone = "+155523123123"
         self.userProfileUpdateStatus.requestPhoneVerificationCode(phoneNumber: phone)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -228,6 +237,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let phone = "+155523123123"
         self.userProfileUpdateStatus.requestPhoneVerificationCode(phoneNumber: phone)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -245,6 +255,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let phone = "+155523123123"
         self.userProfileUpdateStatus.requestPhoneVerificationCode(phoneNumber: phone)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -262,6 +273,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMPhoneCredentials(phoneNumber: "+155523123123", verificationCode: "12345")
         self.userProfileUpdateStatus.requestPhoneNumberChange(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -277,6 +289,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMPhoneCredentials(phoneNumber: "+155523123123", verificationCode: "12345")
         self.userProfileUpdateStatus.requestPhoneNumberChange(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -294,6 +307,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")
         try! self.userProfileUpdateStatus.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -309,6 +323,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")
         try! self.userProfileUpdateStatus.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -324,6 +339,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")
         try! self.userProfileUpdateStatus.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -339,6 +355,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")
         try! self.userProfileUpdateStatus.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.userProfileUpdateStatus.didUpdatePasswordSuccessfully()
         
         // WHEN
@@ -356,6 +373,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")
         try! self.userProfileUpdateStatus.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.userProfileUpdateStatus.didUpdatePasswordSuccessfully()
         
         // WHEN
@@ -374,6 +392,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")
         try! self.userProfileUpdateStatus.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.userProfileUpdateStatus.didUpdatePasswordSuccessfully()
         
         // WHEN
@@ -392,6 +411,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")
         try! self.userProfileUpdateStatus.requestSettingEmailAndPassword(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.userProfileUpdateStatus.didUpdatePasswordSuccessfully()
         
         // WHEN
@@ -411,6 +431,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let handle = "martha"
         self.userProfileUpdateStatus.requestCheckHandleAvailability(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -426,6 +447,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let handle = "martha"
         self.userProfileUpdateStatus.requestCheckHandleAvailability(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -441,6 +463,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let handle = "martha"
         self.userProfileUpdateStatus.requestCheckHandleAvailability(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -456,6 +479,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let handle = "martha"
         self.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -471,6 +495,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let handle = "martha"
         self.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -486,6 +511,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         let handle = "martha"
         self.userProfileUpdateStatus.requestSettingHandle(handle: handle)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         let request = self.sut.nextRequest()
@@ -500,6 +526,7 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // GIVEN
         self.userProfileUpdateStatus.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         guard let handles = self.userProfileUpdateStatus.suggestedHandlesToCheck, handles.count > 10 else {
             XCTFail()
             return
@@ -521,6 +548,7 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // GIVEN
         self.userProfileUpdateStatus.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         guard let handles = self.userProfileUpdateStatus.suggestedHandlesToCheck else {
             XCTFail()
             return
@@ -539,6 +567,8 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // GIVEN
         self.userProfileUpdateStatus.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN
         guard let request = self.sut.nextRequest() else {

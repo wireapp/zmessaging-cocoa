@@ -195,7 +195,7 @@
     id userObserverToken = [ZMUser addUserObserver:userObserver forUsers:@[selfUser] inUserSession:self.userSession];
     
     id editableUserObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id editableUserObserverToken = [self.userSession.userProfileUpdateStatus addObserver:editableUserObserver];
+    id editableUserObserverToken = [self.userSession.userProfile addObserver:editableUserObserver];
     
     [(id<ZMUserObserver>)[userObserver expect] userDidChange:OCMOCK_ANY]; // <- DONE: when receiving this, I know that the phone number was set
     
@@ -207,7 +207,7 @@
     }] phoneNumberVerificationCodeRequestDidSucceed];
     
     // when
-    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone]; // <- STEP 1
+    [self.userSession.userProfile requestPhoneVerificationCodeWithPhoneNumber:phone]; // <- STEP 1
     
     if(![self waitForCustomExpectationsWithTimeout:0.5]) {
         XCTFail(@"phoneNumberVerificationCodeExpectation");
@@ -215,7 +215,7 @@
     }
     
     // and when
-    [self.userSession.userProfileUpdateStatus requestPhoneNumberChangeWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.phoneVerificationCodeForUpdatingProfile]];  // <- STEP 2
+    [self.userSession.userProfile requestPhoneNumberChangeWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.phoneVerificationCodeForUpdatingProfile]];  // <- STEP 2
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -224,7 +224,7 @@
     
     // after
     [ZMUser removeUserObserverForToken:userObserverToken];
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:editableUserObserverToken];
+    [self.userSession.userProfile removeObserverWithToken:editableUserObserverToken];
 
 }
 
@@ -242,23 +242,23 @@
     XCTAssertEqualObjects(selfUser.phoneNumber, @"");
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id token = [self.userSession.userProfileUpdateStatus addObserver:userObserver];
+    id token = [self.userSession.userProfile addObserver:userObserver];
     
     //expect
     [[userObserver expect] phoneNumberVerificationCodeRequestDidSucceed];
     [[userObserver expect] phoneNumberChangeDidFail:OCMOCK_ANY];
     
     // when
-    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone];
+    [self.userSession.userProfile requestPhoneVerificationCodeWithPhoneNumber:phone];
     WaitForAllGroupsToBeEmpty(0.5);
-    [self.userSession.userProfileUpdateStatus requestPhoneNumberChangeWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.invalidPhoneVerificationCode]];
+    [self.userSession.userProfile requestPhoneNumberChangeWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.invalidPhoneVerificationCode]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
     
     // after
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:token];
+    [self.userSession.userProfile removeObserverWithToken:token];
 }
 
 - (void)testThatItIsNotifiedWhenItFailsToRequestAVerificationCode
@@ -275,7 +275,7 @@
     XCTAssertEqualObjects(selfUser.phoneNumber, @"");
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id token = [self.userSession.userProfileUpdateStatus addObserver:userObserver];
+    id token = [self.userSession.userProfile addObserver:userObserver];
     
     // expect
     [[userObserver expect] phoneNumberVerificationCodeRequestDidFail:[OCMArg isNotNil]];
@@ -289,14 +289,14 @@
     
     
     // when
-    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone];
+    [self.userSession.userProfile requestPhoneVerificationCodeWithPhoneNumber:phone];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
     // after
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:token];
+    [self.userSession.userProfile removeObserverWithToken:token];
 }
 
 
@@ -314,7 +314,7 @@
     XCTAssertEqualObjects(selfUser.phoneNumber, @"");
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id token = [self.userSession.userProfileUpdateStatus addObserver:userObserver];
+    id token = [self.userSession.userProfile addObserver:userObserver];
     
     // expect
     [[userObserver expect] phoneNumberVerificationCodeRequestDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
@@ -330,14 +330,14 @@
     
     
     // when
-    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone];
+    [self.userSession.userProfile requestPhoneVerificationCodeWithPhoneNumber:phone];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
     // after
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:token];
+    [self.userSession.userProfile removeObserverWithToken:token];
 }
 
 
@@ -355,7 +355,7 @@
     XCTAssertEqualObjects(selfUser.phoneNumber, @"");
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id token = [self.userSession.userProfileUpdateStatus addObserver:userObserver];
+    id token = [self.userSession.userProfile addObserver:userObserver];
     
     // expect
     [[userObserver expect] phoneNumberVerificationCodeRequestDidFail:[OCMArg isNotNil]];
@@ -369,14 +369,14 @@
     
     
     // when
-    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone];
+    [self.userSession.userProfile requestPhoneVerificationCodeWithPhoneNumber:phone];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
 
     // after
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:token];
+    [self.userSession.userProfile removeObserverWithToken:token];
 }
 
 - (void)testThatItGetsInvalidPhoneNumberErrorWhenItFailsToRequestAVerificationCodeWithInvalidPhoneResponse
@@ -393,7 +393,7 @@
     XCTAssertEqualObjects(selfUser.phoneNumber, @"");
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id token = [self.userSession.userProfileUpdateStatus addObserver:userObserver];
+    id token = [self.userSession.userProfile addObserver:userObserver];
     
     // expect
     [[userObserver expect] phoneNumberVerificationCodeRequestDidFail:[OCMArg isNotNil]];
@@ -407,14 +407,14 @@
     
     
     // when
-    [self.userSession.userProfileUpdateStatus requestPhoneVerificationCodeWithPhoneNumber:phone];
+    [self.userSession.userProfile requestPhoneVerificationCodeWithPhoneNumber:phone];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
     // after
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:token];
+    [self.userSession.userProfile removeObserverWithToken:token];
 }
 
 - (BOOL)loginWithPhoneAndRemoveEmail
@@ -445,7 +445,7 @@
 
     // expect
     id editUserObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id editUserObserverToken = [self.userSession.userProfileUpdateStatus addObserver:editUserObserver];
+    id editUserObserverToken = [self.userSession.userProfile addObserver:editUserObserver];
     [[editUserObserver expect] didSentVerificationEmail];
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(ZMUserObserver)];
@@ -454,7 +454,7 @@
     
     
     // when
-    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil]; // <- STEP 1
+    [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil]; // <- STEP 1
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -470,7 +470,7 @@
     
     // after
     [ZMUser removeUserObserverForToken:userObserverToken];
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:editUserObserverToken];
+    [self.userSession.userProfile removeObserverWithToken:editUserObserverToken];
     
 }
 
@@ -488,7 +488,7 @@
     XCTAssertEqualObjects(selfUser.emailAddress, nil);
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id token = [self.userSession.userProfileUpdateStatus addObserver:userObserver];
+    id token = [self.userSession.userProfile addObserver:userObserver];
     
     // expect
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
@@ -500,14 +500,14 @@
     [[userObserver expect] passwordUpdateRequestDidFail];
     
     // when
-    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
+    [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
     // after
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:token];
+    [self.userSession.userProfile removeObserverWithToken:token];
 }
 
 - (void)testThatItSilentlyIgnoreWhenFailingToSetThePasswordBecauseThePasswordWasAlreadyThere
@@ -524,7 +524,7 @@
     XCTAssertEqualObjects(selfUser.emailAddress, nil);
     
     id editingObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id editingToken = [self.userSession.userProfileUpdateStatus addObserver:editingObserver];
+    id editingToken = [self.userSession.userProfile addObserver:editingObserver];
     id userObserver = [OCMockObject mockForProtocol:@protocol(ZMUserObserver)];
     id userToken = [ZMUser addUserObserver:userObserver forUsers:@[selfUser] inUserSession:self.userSession];
     [(id<ZMUserObserver>)[userObserver expect] userDidChange:OCMOCK_ANY]; // when receiving this, I know that the email was set
@@ -540,7 +540,7 @@
     [[editingObserver expect] passwordUpdateRequestDidFail];
     
     // when
-    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
+    [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -556,7 +556,7 @@
     
     // after
     [ZMUser removeUserObserverForToken:userToken];
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:editingToken];
+    [self.userSession.userProfile removeObserverWithToken:editingToken];
     
 }
 
@@ -574,7 +574,7 @@
     XCTAssertEqualObjects(selfUser.emailAddress, nil);
     
     id editiongObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id token = [self.userSession.userProfileUpdateStatus addObserver:editiongObserver];
+    id token = [self.userSession.userProfile addObserver:editiongObserver];
     
     // expect
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
@@ -586,14 +586,14 @@
     [[editiongObserver expect] emailUpdateDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionUnkownError userInfo:nil]];
     
     // when
-    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
+    [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
     
     // after
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:token];
+    [self.userSession.userProfile removeObserverWithToken:token];
     
 }
 
@@ -611,7 +611,7 @@
     XCTAssertEqualObjects(selfUser.emailAddress, nil);
     
     id editiongObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id token = [self.userSession.userProfileUpdateStatus addObserver:editiongObserver];
+    id token = [self.userSession.userProfile addObserver:editiongObserver];
     
     // expect
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
@@ -623,14 +623,14 @@
     [[editiongObserver expect] emailUpdateDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidEmail userInfo:nil]];
     
     // when
-    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
+    [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
     
     // after
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:token];
+    [self.userSession.userProfile removeObserverWithToken:token];
     
 }
 
@@ -648,7 +648,7 @@
     XCTAssertEqualObjects(selfUser.emailAddress, nil);
     
     id editiongObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
-    id token = [self.userSession.userProfileUpdateStatus addObserver:editiongObserver];
+    id token = [self.userSession.userProfile addObserver:editiongObserver];
     
     // expect
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
@@ -660,14 +660,14 @@
     [[editiongObserver expect] emailUpdateDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionEmailIsAlreadyRegistered userInfo:nil]];
     
     // when
-    [self.userSession.userProfileUpdateStatus requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
+    [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
     
     // after
-    [self.userSession.userProfileUpdateStatus removeObserverWithToken:token];
+    [self.userSession.userProfile removeObserverWithToken:token];
     
 }
 
