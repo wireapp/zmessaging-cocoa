@@ -86,7 +86,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                          [ZMHotFixDirectory removeDeliveryReceiptsForDeletedMessages:context];
                      }],
                     [ZMHotFixPatch
-                     patchWithVersion:@"60.0.0"
+                     patchWithVersion:@"61.0.0"
                      patchCode:^(__unused NSManagedObjectContext *context) {
                         [ZMHotFixDirectory purgePINCachesInHostBundle];
                     }]

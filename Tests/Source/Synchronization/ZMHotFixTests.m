@@ -546,7 +546,7 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"60.0.0"];
+    [self.sut applyPatchesForCurrentVersion:@"61.0.0"];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.syncMOC saveOrRollback];
