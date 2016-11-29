@@ -56,5 +56,7 @@ import Foundation
     /// Removes the observer for callbacks about the user profile
     @objc func removeObserver(token: AnyObject)
 
+    /// Last handle to have been suggested
+    @objc var lastSuggestedHandle : String? { get }
 
 }

@@ -1008,6 +1008,36 @@ extension UserProfileUpdateStatusTests {
         default:
             XCTFail()
         }
+        XCTAssertEqual(self.sut.lastSuggestedHandle, handle)
+    }
+    
+    func testThatIfItSuggestsAHandleAndRequestedToSuggestMoreItStartsBySuggestingTheSame() {
+        
+        // GIVEN
+        let handle = "funkymokkey34"
+        self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        self.sut.didFindHandleSuggestion(handle: handle)
+        
+        // THEN
+        XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
+        guard let first = self.observer.invokedCallbacks.first else { return }
+        switch first {
+        case .didFindHandleSuggestion(let _handle):
+            XCTAssertEqual(handle, _handle)
+        default:
+            XCTFail()
+        }
+        
+        // AND WHEN
+        self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
+        XCTAssertEqual(self.sut.suggestedHandlesToCheck?.count, 1)
+        XCTAssertEqual(self.sut.suggestedHandlesToCheck?.first, handle)
     }
 }
 
