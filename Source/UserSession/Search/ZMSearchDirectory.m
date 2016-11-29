@@ -115,7 +115,7 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
 - (instancetype)initWithUserSession:(ZMUserSession *)userSession
 {
     return [self initWithUserSession:userSession 
-                       searchContext:[NSManagedObjectContext createSearchContextWithStoreDirectory:userSession.databaseDirectoryURL]
+                       searchContext:[NSManagedObjectContext createSearchContextWithStoreAtURL:userSession.storeURL]
             maxTopConversationsCount:24];
 }
 
@@ -123,7 +123,7 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
            maxTopConversationsCount:(NSInteger)maxTopConversationsCount
 {
     return [self initWithUserSession:userSession 
-                       searchContext:[NSManagedObjectContext createSearchContextWithStoreDirectory:userSession.databaseDirectoryURL]
+                       searchContext:[NSManagedObjectContext createSearchContextWithStoreAtURL:userSession.storeURL]
             maxTopConversationsCount:maxTopConversationsCount];
 }
 
@@ -234,7 +234,6 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
         
         if (searchRequest.includeAddressBookContacts) {
             searchResult = [searchResult extendWithContactsFromAddressBook:query
-                                                              usersToMatch:self.connectedAndBlockedAndPendingUsers
                                                                userSession:self.userSession];
         }
         

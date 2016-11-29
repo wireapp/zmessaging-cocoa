@@ -23,12 +23,12 @@ import XCTest
 class AddressBookSearchTests : MessagingTest {
     
     var sut : zmessaging.AddressBookSearch!
-    var addressBook : AddressBookContactsFake!
+    var addressBook : AddressBookFake!
     
     override func setUp() {
         super.setUp()
-        self.addressBook = AddressBookContactsFake()
-        self.sut = zmessaging.AddressBookSearch(addressBook: self.addressBook.addressBook())
+        self.addressBook = AddressBookFake()
+        self.sut = zmessaging.AddressBookSearch(addressBook: self.addressBook)
     }
     
     override func tearDown() {
@@ -38,230 +38,57 @@ class AddressBookSearchTests : MessagingTest {
     }
 }
 
-// MARK: - Contact for user
-extension AddressBookSearchTests {
-
-    func testThatContactForUserMatchesOnPhoneNumber() {
-        
-        // given
-        let user = ZMUser.insertNewObject(in: self.uiMOC)
-        user.phoneNumber = "+155505144"
-        addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: [user.phoneNumber])
-        ]
-        
-        // when
-        let contact = sut.contactForUser(user)
-        
-        // then
-        XCTAssertNotNil(contact)
-        if let contact = contact {
-            XCTAssertEqual(contact.emailAddresses, addressBook.contacts[0].emailAddresses)
-            XCTAssertEqual(contact.firstName, addressBook.contacts[0].firstName)
-            XCTAssertEqual(contact.phoneNumbers, addressBook.contacts[0].phoneNumbers)
-        } else {
-            XCTFail()
-        }
-    }
-    
-    func testThatContactForUserMatchesOnEmail() {
-        
-        // given
-        let user = ZMUser.insertNewObject(in: self.uiMOC)
-        user.emailAddress = "oli@example.com"
-        addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: "Olivia", emailAddresses: [user.emailAddress], phoneNumbers: [])
-        ]
-        
-        // when
-        let contact = sut.contactForUser(user)
-        
-        // then
-        XCTAssertNotNil(contact)
-        if let contact = contact {
-            XCTAssertEqual(contact.emailAddresses, addressBook.contacts[0].emailAddresses)
-            XCTAssertEqual(contact.firstName, addressBook.contacts[0].firstName)
-            XCTAssertEqual(contact.phoneNumbers, addressBook.contacts[0].phoneNumbers)
-        } else {
-            XCTFail()
-        }
-    }
-    
-    func testThatContactForUserDoesNotMatchIfThereIsNoAddressBookAccess() {
-        // given
-        let user = ZMUser.insertNewObject(in: self.uiMOC)
-        user.phoneNumber = "+155505144"
-        user.emailAddress = "oli@example.com"
-        addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: "Olivia", emailAddresses: [user.emailAddress], phoneNumbers: [user.phoneNumber])
-        ]
-        self.sut = zmessaging.AddressBookSearch(addressBook: nil)
-        
-        // when
-        let contact = sut.contactForUser(user)
-        
-        // then
-        XCTAssertNil(contact)
-    }
-}
-
 // MARK: - Search query
 extension AddressBookSearchTests {
     
     func testThatItSearchesByNameWithMatch() {
         
         // given
-        addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: []),
-            AddressBookContactsFake.Contact(firstName: "Ada", emailAddresses: [], phoneNumbers: ["+155505012"])
+        addressBook.fakeContacts = [
+            FakeAddressBookContact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: []),
+            FakeAddressBookContact(firstName: "Ada", emailAddresses: [], phoneNumbers: ["+155505012"])
         ]
         
         // when
-        let result = Array(sut.contactsMatchingQuery("ivi"))
+        let result = Array(sut.contactsMatchingQuery("ivi", identifiersToExclude: []))
         
         // then
         XCTAssertEqual(result.count, 1)
         guard result.count == 1 else { return }
         XCTAssertEqual(result[0].emailAddresses, ["oli@example.com"])
+    }
+    
+    func testThatItSearchesByNameWithMatchExcludingIdentifiers() {
+        
+        // given
+        let identifier = "233124"
+        addressBook.fakeContacts = [
+            FakeAddressBookContact(firstName: "Olivia 1", emailAddresses: ["oli@example.com"], phoneNumbers: [], identifier: identifier),
+            FakeAddressBookContact(firstName: "Olivia 2", emailAddresses: [], phoneNumbers: ["+155505012"])
+        ]
+        
+        // when
+        let result = Array(sut.contactsMatchingQuery("ivi", identifiersToExclude: [identifier]))
+        
+        // then
+        XCTAssertEqual(result.count, 1)
+        guard result.count == 1 else { return }
+        XCTAssertEqual(result[0].firstName, "Olivia 2")
     }
     
     func testThatItSearchesByNameWithNoMatch() {
         
         // given
-        addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: []),
-            AddressBookContactsFake.Contact(firstName: "Ada", emailAddresses: [], phoneNumbers: ["+155505012"])
+        addressBook.fakeContacts = [
+            FakeAddressBookContact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: []),
+            FakeAddressBookContact(firstName: "Ada", emailAddresses: [], phoneNumbers: ["+155505012"])
         ]
         
         // when
-        let result = Array(sut.contactsMatchingQuery("Nadia"))
+        let result = Array(sut.contactsMatchingQuery("Nadia", identifiersToExclude: []))
         
         // then
         XCTAssertEqual(result.count, 0)
     }
-    
-    func testThatItSearchesByNameWithMatchCaseInsensitive() {
-        
-        // given
-        addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: []),
-            AddressBookContactsFake.Contact(firstName: "Ada", emailAddresses: [], phoneNumbers: ["+155505012"])
-        ]
-        
-        // when
-        let result = Array(sut.contactsMatchingQuery("oL"))
-        
-        // then
-        XCTAssertEqual(result.count, 1)
-        guard result.count == 1 else { return }
-        XCTAssertEqual(result[0].emailAddresses, ["oli@example.com"])
-    }
-    
-    func testThatItSearchesByNameWithMatchDiacritics() {
-        
-        // given
-        addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: "Françoise", emailAddresses: [], phoneNumbers: ["+155505012"]),
-            AddressBookContactsFake.Contact(firstName: "Håkon", emailAddresses: ["oli@example.com"], phoneNumbers: [])
-        ]
-        
-        // when
-        let result = Array(sut.contactsMatchingQuery("ak"))
-        
-        // then
-        XCTAssertEqual(result.count, 1)
-        guard result.count == 1 else { return }
-        XCTAssertEqual(result[0].emailAddresses, ["oli@example.com"])
-    }
-    
-    func testThatItSearchesByNameWithInfiniteMatches() {
-        
-        // given
-        addressBook.createInfiniteContacts = true // "Johnny Infinite"
-        
-        // when
-        let result = Array(sut.contactsMatchingQuery("finite"))
-        
-        // then
-        XCTAssertEqual(result.count, 3000)
-    }
 }
 
-// MARK: - Matching contacts
-extension AddressBookSearchTests {
-    
-    func testThatItMatchesUserWithContacts() {
-        // given
-        addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: []),
-            AddressBookContactsFake.Contact(firstName: "Ada", emailAddresses: [], phoneNumbers: ["+155505012"]),
-            AddressBookContactsFake.Contact(firstName: "Håkon", emailAddresses: ["hak@example.com"], phoneNumbers: []),
-            AddressBookContactsFake.Contact(firstName: "Françoise", emailAddresses: [], phoneNumbers: ["+155505011"])
-        ]
-       
-        let user1 = ZMUser.insertNewObject(in: self.uiMOC)
-        user1.emailAddress = "oli@example.com"
-        let user2 = ZMUser.insertNewObject(in: self.uiMOC)
-        user2.phoneNumber = "+155505012"
-        
-        // when
-        let result = sut.matchInAddressBook([user1, user2])
-        
-        // then
-        XCTAssertEqual(result.count, 4)
-        guard result.count == 4 else { return }
-        XCTAssertEqual(result[0].user, user1)
-        if let contact = result[0].contact {
-            XCTAssertEqual(contact.emailAddresses, [user1.emailAddress])
-        }
-        XCTAssertEqual(result[1].user, user2)
-        if let contact = result[1].contact {
-            XCTAssertEqual(contact.phoneNumbers, [user2.phoneNumber])
-        }
-        XCTAssertNil(result[2].user)
-        if let contact = result[2].contact {
-            XCTAssertEqual(contact.emailAddresses, addressBook.contacts[2].emailAddresses)
-        }
-        XCTAssertNil(result[3].user)
-        if let contact = result[3].contact {
-            XCTAssertEqual(contact.phoneNumbers, addressBook.contacts[3].phoneNumbers)
-        }
-    }
-    
-    func testThatItReturnsNoContactIfUserDidNotMatch() {
-        
-        // given
-        let user1 = ZMUser.insertNewObject(in: self.uiMOC)
-        user1.emailAddress = "oli@example.com"
-        let user2 = ZMUser.insertNewObject(in: self.uiMOC)
-        user2.phoneNumber = "+155505012"
-
-        // when
-        let result = sut.matchInAddressBook([user1, user2])
-        
-        // then
-        XCTAssertEqual(result.count, 2)
-        guard result.count == 2 else { return }
-        
-        let users = Set(result.flatMap { $0.user })
-        XCTAssertEqual(users, Set([user1, user2]))
-        XCTAssertTrue(result.flatMap { $0.contact }.isEmpty)
-    }
-    
-    func testThatItMatchesUserWithInfiniteContacts() {
-        // given
-        addressBook.createInfiniteContacts = true
-        
-        let user1 = ZMUser.insertNewObject(in: self.uiMOC)
-        user1.emailAddress = "oli@example.com"
-        let user2 = ZMUser.insertNewObject(in: self.uiMOC)
-        user2.phoneNumber = "+155505012"
-        
-        // when
-        let result = sut.matchInAddressBook([user1, user2])
-        
-        // then
-        XCTAssertEqual(result.count, 3002) // the fact that it gets here without endless loop is a success
-    }
-    
-}

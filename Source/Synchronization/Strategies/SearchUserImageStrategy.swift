@@ -111,7 +111,7 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
         else { return nil }
         assetIDsBeingRequested.insert(userAssetID)
         
-        let request = ZMUserImageTranscoder.requestForFetchingAsset(with:userAssetID.assetID, forUserWith:userAssetID.userID)
+        let request = UserImageStrategy.requestForFetchingAsset(with:userAssetID.assetID, forUserWith:userAssetID.userID)
         request?.add(ZMCompletionHandler(on:syncContext){ [weak self] (response) in
             self?.processAsset(response: response, for: userAssetID)
         })

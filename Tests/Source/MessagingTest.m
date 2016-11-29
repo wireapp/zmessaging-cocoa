@@ -36,7 +36,6 @@
 #import "ZMObjectStrategyDirectory.h"
 
 #import "ZMUserTranscoder.h"
-#import "ZMUserImageTranscoder.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
 #import "ZMConnectionTranscoder.h"
@@ -61,8 +60,9 @@
 @property (nonatomic) NSManagedObjectContext *alternativeTestMOC;
 @property (nonatomic) NSManagedObjectContext *searchMOC;
 
-@property (nonatomic) NSString *groupIdentifier;
-@property (nonatomic) NSURL *databaseDirectory;
+@property (nonatomic) NSString *groupIdentifier;;
+@property (nonatomic) NSURL *storeURL;
+@property (nonatomic) NSURL *keyStoreURL;
 @property (nonatomic) MockTransportSession *mockTransportSession;
 
 @property (nonatomic) NSTimeInterval originalConversationLastReadTimestampTimerValue; // this will speed up the tests A LOT
@@ -107,8 +107,13 @@
     [super setUp];
     
     NSFileManager *fm = NSFileManager.defaultManager;
-    self.groupIdentifier = [@"group." stringByAppendingString:[NSBundle bundleForClass:self.class].bundleIdentifier];
-    self.databaseDirectory = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
+    NSString *bundleIdentifier = [NSBundle bundleForClass:self.class].bundleIdentifier;
+    self.groupIdentifier = [@"group." stringByAppendingString:bundleIdentifier];
+    
+    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
+    self.storeURL = [[sharedContainerURL URLByAppendingPathComponent:bundleIdentifier] URLByAppendingPathComponent:@"store.wiredatabase"];
+    self.keyStoreURL = [self.storeURL URLByDeletingLastPathComponent];
+    
     _application = [[ApplicationMock alloc] init];
     
     self.originalConversationLastReadTimestampTimerValue = ZMConversationDefaultLastReadTimestampSaveDelay;
@@ -147,10 +152,10 @@
     [self.testMOC addGroup:self.dispatchGroup];
     self.alternativeTestMOC = [MockModelObjectContextFactory alternativeMocForPSC:self.testMOC.persistentStoreCoordinator];
     [self.alternativeTestMOC addGroup:self.dispatchGroup];
-    self.searchMOC = [NSManagedObjectContext createSearchContextWithStoreDirectory:self.databaseDirectory];
+    self.searchMOC = [NSManagedObjectContext createSearchContextWithStoreAtURL:self.storeURL];
     [self.searchMOC addGroup:self.dispatchGroup];
     self.mockTransportSession = [[MockTransportSession alloc] initWithDispatchGroup:self.dispatchGroup];
-    self.mockTransportSession.cryptoboxLocation = [self.databaseDirectory URLByAppendingPathComponent:@"otr"];
+    self.mockTransportSession.cryptoboxLocation = [self.keyStoreURL URLByAppendingPathComponent:@"otr"];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
 }
 
@@ -266,17 +271,17 @@
         [NSManagedObjectContext resetSharedPersistentStoreCoordinator];
     }
     [self performIgnoringZMLogError:^{
-        self.uiMOC = [NSManagedObjectContext createUserInterfaceContextWithStoreDirectory:self.databaseDirectory];
+        self.uiMOC = [NSManagedObjectContext createUserInterfaceContextWithStoreAtURL:self.storeURL];
         self.uiMOC.globalManagedObjectContextObserver.propagateChanges = YES;
     }];
     
-    ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100];
-    FileAssetCache *fileAssetCache = [[FileAssetCache alloc] init];
+    ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100 location:nil];
+    FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:nil];
     
     [self.uiMOC addGroup:self.dispatchGroup];
     self.uiMOC.userInfo[@"TestName"] = self.name;
     
-    self.syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectory];
+    self.syncMOC = [NSManagedObjectContext createSyncContextWithStoreAtURL:self.storeURL keyStoreURL:self.keyStoreURL];
     [self.syncMOC performGroupedBlockAndWait:^{
         self.syncMOC.userInfo[@"TestName"] = self.name;
         [self.syncMOC addGroup:self.dispatchGroup];
@@ -291,7 +296,7 @@
     WaitForAllGroupsToBeEmpty(2);
     
     [self performPretendingUiMocIsSyncMoc:^{
-        [self.uiMOC setupUserKeyStoreForDirectory:self.databaseDirectory];
+        [self.uiMOC setupUserKeyStoreForDirectory:self.keyStoreURL];
     }];
     
     [self.uiMOC setPersistentStoreMetadata:clientID forKey:ZMPersistedClientIdKey];
@@ -312,8 +317,6 @@
     
     id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
     [self verifyMockLater:userTranscoder];
-    id userImageTranscoder = [OCMockObject mockForClass:ZMUserImageTranscoder.class];
-    [self verifyMockLater:userImageTranscoder];
     id conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [self verifyMockLater:conversationTranscoder];
     id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
@@ -343,7 +346,6 @@
     
     
     [[[objectDirectory stub] andReturn:userTranscoder] userTranscoder];
-    [[[objectDirectory stub] andReturn:userImageTranscoder] userImageTranscoder];
     [[[objectDirectory stub] andReturn:conversationTranscoder] conversationTranscoder];
     [[[objectDirectory stub] andReturn:systemMessageTranscoder] systemMessageTranscoder];
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
@@ -360,7 +362,6 @@
     
     [[[objectDirectory stub] andReturn:@[
                                         userTranscoder,
-                                        userImageTranscoder,
                                         conversationTranscoder,
                                         systemMessageTranscoder,
                                         clientMessageTranscoder,

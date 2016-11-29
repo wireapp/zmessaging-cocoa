@@ -23,8 +23,6 @@
 
 #import "ZMBareUser+UserSession.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMUserImageTranscoder.h"
-
 
 
 @interface ZMSearchUser (MediumImage_Private)
@@ -98,7 +96,7 @@
 
 - (ZMTransportRequest *)requestMediumProfileImageWithExistingMediumAssetIDInUserSession:(ZMUserSession *)userSession
 {
-    ZMTransportRequest *request = [ZMUserImageTranscoder requestForFetchingAssetWithID:self.mediumAssetID forUserWithID:self.remoteIdentifier];
+    ZMTransportRequest *request = [UserImageStrategy requestForFetchingAssetWith:self.mediumAssetID forUserWith:self.remoteIdentifier];
     ZM_WEAK(self);
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:userSession.syncManagedObjectContext block:^(ZMTransportResponse *response) {
         ZM_STRONG(self);

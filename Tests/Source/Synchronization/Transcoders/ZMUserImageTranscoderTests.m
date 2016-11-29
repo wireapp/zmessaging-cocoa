@@ -46,7 +46,7 @@
 {
     [super setUp];
     
-    self.syncMOC.zm_userImageCache = [[UserImageLocalCache alloc] init];
+    self.syncMOC.zm_userImageCache = [[UserImageLocalCache alloc] initWithLocation:nil];
     self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache;
     
     self.queue = [[NSOperationQueue alloc] init];

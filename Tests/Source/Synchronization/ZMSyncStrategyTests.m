@@ -36,7 +36,6 @@
 #import "ZMSlowSyncPhaseTwoState.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
-#import "ZMUserImageTranscoder.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMClientRegistrationStatus.h"
@@ -135,10 +134,6 @@
     [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];
     (void)[[[flowTranscoder expect] andReturn:flowTranscoder] initWithMediaManager:nil onDemandFlowManager:nil syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
 
-    id userImageTranscoder = [OCMockObject mockForClass:ZMUserImageTranscoder.class];
-    [[[[userImageTranscoder expect] andReturn:userImageTranscoder] classMethod] alloc];
-    (void) [[[userImageTranscoder expect] andReturn:userImageTranscoder] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:OCMOCK_ANY];
-
     id callStateTranscoder = [OCMockObject mockForClass:ZMCallStateTranscoder.class];
     [[[[callStateTranscoder expect] andReturn:callStateTranscoder] classMethod] alloc];
     (void) [[[callStateTranscoder expect] andReturn:callStateTranscoder] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC objectStrategyDirectory:OCMOCK_ANY];
@@ -177,7 +172,6 @@
                          selfTranscoder,
                          systemMessageTranscoder,
                          clientMessageTranscoder,
-                         userImageTranscoder,
                          missingUpdateEventsTranscoder,
                          registrationTranscoder,
                          flowTranscoder,
@@ -216,7 +210,6 @@
                                                         application:self.application];
     
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
-    XCTAssertEqual(self.sut.userImageTranscoder, userImageTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
     XCTAssertEqual(self.sut.systemMessageTranscoder, systemMessageTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);

@@ -82,9 +82,9 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic, readonly) NSManagedObjectContext *syncManagedObjectContext;
 @property (nonatomic, readonly) AVSFlowManager *flowManager;
 @property (nonatomic, readonly) ZMLocalNotificationDispatcher *localNotificationDispatcher;
-@property (nonatomic, readonly) NSURL *databaseDirectoryURL;
+@property (nonatomic, readonly) NSURL *storeURL;
 
-
++ (NSString *)databaseIdentifier;
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
                     userInterfaceContext:(NSManagedObjectContext *)userInterfaceContext

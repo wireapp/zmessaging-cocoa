@@ -45,7 +45,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
 {
     [super setUp];
     
-    self.syncMOC.zm_userImageCache = [[UserImageLocalCache alloc] init];
+    self.syncMOC.zm_userImageCache = [[UserImageLocalCache alloc] initWithLocation:nil];
     self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache;
     
     self.sut = [[ZMUserTranscoder alloc] initWithManagedObjectContext:self.syncMOC];

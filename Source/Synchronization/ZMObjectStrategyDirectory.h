@@ -25,14 +25,12 @@
 @class ZMSelfTranscoder;
 @class ZMMessageTranscoder;
 @class ZMConversationTranscoder;
-@class ZMUserImageTranscoder;
 @class ZMMissingUpdateEventsTranscoder;
 @class ZMRegistrationTranscoder;
 @class ZMFlowSync;
 @class ZMCallStateTranscoder;
 @class ZMLastUpdateEventIDTranscoder;
 @class ZMLoginTranscoder;
-@class ZMTypingTranscoder;
 @class ZMPhoneNumberVerificationTranscoder;
 @class ZMLoginCodeRequestTranscoder;
 
@@ -48,7 +46,6 @@
 @property (nonatomic, readonly) ZMConversationTranscoder *conversationTranscoder;
 @property (nonatomic, readonly) ZMMessageTranscoder *systemMessageTranscoder;
 @property (nonatomic, readonly) ZMMessageTranscoder *clientMessageTranscoder;
-@property (nonatomic, readonly) ZMUserImageTranscoder *userImageTranscoder;
 @property (nonatomic, readonly) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
 @property (nonatomic, readonly) ZMLastUpdateEventIDTranscoder *lastUpdateEventIDTranscoder;
 @property (nonatomic, readonly) ZMRegistrationTranscoder *registrationTranscoder;

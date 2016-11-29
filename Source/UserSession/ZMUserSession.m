@@ -96,7 +96,8 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 @property (nonatomic) ZMLocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSString *applicationGroupIdentifier;
-@property (nonatomic) NSURL *databaseDirectoryURL;
+@property (nonatomic) NSURL *storeURL;
+@property (nonatomic) NSURL *keyStoreURL;
 
 
 /// Build number of the Wire app
@@ -167,19 +168,39 @@ ZM_EMPTY_ASSERTING_INIT()
     return sharedContainerURL;
 }
 
++ (NSURL *)cachesURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
+{
+    NSFileManager *fm = NSFileManager.defaultManager;
+    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:appGroupIdentifier];
+    
+    if (sharedContainerURL != nil) {
+        return [[sharedContainerURL URLByAppendingPathComponent:@"Library" isDirectory:YES] URLByAppendingPathComponent:@"Caches" isDirectory:YES];
+    }
+    
+    return nil;
+}
+
++ (NSURL *)storeURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
+{
+    return [[[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]
+             URLByAppendingPathComponent:[NSBundle mainBundle].bundleIdentifier isDirectory:YES]
+             URLByAppendingPathComponent:@"store.wiredatabase"];
+}
+
 + (BOOL)needsToPrepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier
 {
-    return [NSManagedObjectContext needsToPrepareLocalStoreInDirectory:[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]];
+    return [NSManagedObjectContext needsToPrepareLocalStoreAtURL:[self storeURLForAppGroupIdentifier:appGroupIdentifier]];
 }
 
 + (void)prepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier completion:(void (^)())completionHandler
 {
     ZMDeploymentEnvironmentType environment = [[ZMDeploymentEnvironment alloc] init].environmentType;
     BOOL shouldBackupCorruptedDatabase = environment == ZMDeploymentEnvironmentTypeInternal || DEBUG;
-    [NSManagedObjectContext prepareLocalStoreSync:NO
-                                      inDirectory:[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]
-                       backingUpCorruptedDatabase:shouldBackupCorruptedDatabase
-                                completionHandler:completionHandler];
+    
+    [NSManagedObjectContext prepareLocalStoreAtURL:[self storeURLForAppGroupIdentifier:appGroupIdentifier]
+                           backupCorruptedDatabase:shouldBackupCorruptedDatabase
+                                       synchronous:NO
+                                 completionHandler:completionHandler];
 }
 
 + (BOOL)storeIsReady
@@ -205,15 +226,16 @@ ZM_EMPTY_ASSERTING_INIT()
 
     ZMAPNSEnvironment *apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
     
-    self.databaseDirectoryURL = [self.class sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
-    RequireString(nil != self.databaseDirectoryURL, "Unable to get a container URL using group identifier: %s", appGroupIdentifier.UTF8String);
-    NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContextWithStoreDirectory:self.databaseDirectoryURL];
-    NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectoryURL];
+    self.storeURL = [self.class storeURLForAppGroupIdentifier:appGroupIdentifier];
+    self.keyStoreURL = [self.storeURL URLByDeletingLastPathComponent];
+    RequireString(nil != self.storeURL, "Unable to get a store URL using group identifier: %s", appGroupIdentifier.UTF8String);
+    NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContextWithStoreAtURL:self.storeURL];
+    NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreAtURL:self.storeURL keyStoreURL:self.keyStoreURL];
     syncMOC.analytics = analytics;
 
     UIApplication *application = [UIApplication sharedApplication];
     
-    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC mainGroupQueue:userInterfaceContext application:application];
+    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC mainGroupQueue:userInterfaceContext application:application sharedContainerIdentifier:nil];
     
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
     session.requestLoopDetectionCallback = ^(NSString *path) {
@@ -271,15 +293,17 @@ ZM_EMPTY_ASSERTING_INIT()
         self.syncManagedObjectContext.zm_userInterfaceContext = self.managedObjectContext;
         self.managedObjectContext.zm_syncContext = self.syncManagedObjectContext;
         
-        UserImageLocalCache *userImageCache = [[UserImageLocalCache alloc] init];
+        NSURL *cacheLocation = [self.class cachesURLForAppGroupIdentifier:appGroupIdentifier];
+        
+        UserImageLocalCache *userImageCache = [[UserImageLocalCache alloc] initWithLocation:cacheLocation];
         self.syncManagedObjectContext.zm_userImageCache = userImageCache;
         self.managedObjectContext.zm_userImageCache = userImageCache;
         
-        ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100];
+        ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100 location:cacheLocation];
         self.syncManagedObjectContext.zm_imageAssetCache = imageAssetCache;
         self.managedObjectContext.zm_imageAssetCache = imageAssetCache;
         
-        FileAssetCache *fileAssetCache = [[FileAssetCache alloc] init];
+        FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:cacheLocation];
         self.syncManagedObjectContext.zm_fileAssetCache = fileAssetCache;
         self.managedObjectContext.zm_fileAssetCache = fileAssetCache;
 
