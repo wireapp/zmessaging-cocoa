@@ -36,7 +36,6 @@
 #import "ZMObjectStrategyDirectory.h"
 
 #import "ZMUserTranscoder.h"
-#import "ZMUserImageTranscoder.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
 #import "ZMConnectionTranscoder.h"
@@ -318,8 +317,6 @@
     
     id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
     [self verifyMockLater:userTranscoder];
-    id userImageTranscoder = [OCMockObject mockForClass:ZMUserImageTranscoder.class];
-    [self verifyMockLater:userImageTranscoder];
     id conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [self verifyMockLater:conversationTranscoder];
     id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
@@ -349,7 +346,6 @@
     
     
     [[[objectDirectory stub] andReturn:userTranscoder] userTranscoder];
-    [[[objectDirectory stub] andReturn:userImageTranscoder] userImageTranscoder];
     [[[objectDirectory stub] andReturn:conversationTranscoder] conversationTranscoder];
     [[[objectDirectory stub] andReturn:systemMessageTranscoder] systemMessageTranscoder];
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
@@ -366,7 +362,6 @@
     
     [[[objectDirectory stub] andReturn:@[
                                         userTranscoder,
-                                        userImageTranscoder,
                                         conversationTranscoder,
                                         systemMessageTranscoder,
                                         clientMessageTranscoder,

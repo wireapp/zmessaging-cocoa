@@ -24,7 +24,6 @@
 #import "ZMUserTranscoder.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMUserImageTranscoder.h"
 #import "StateBaseTest.h"
 #import "ZMObjectStrategyDirectory.h"
 
@@ -56,7 +55,6 @@
         self.objectDirectory.conversationTranscoder,
         self.objectDirectory.systemMessageTranscoder,
         self.objectDirectory.clientMessageTranscoder,
-        self.objectDirectory.userImageTranscoder,
         ];
 }
 

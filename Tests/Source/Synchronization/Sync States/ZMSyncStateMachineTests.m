@@ -29,7 +29,6 @@
 #import "ZMBackgroundState.h"
 
 #import "ZMUserTranscoder.h"
-#import "ZMUserImageTranscoder.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
 #import "ZMConnectionTranscoder.h"
