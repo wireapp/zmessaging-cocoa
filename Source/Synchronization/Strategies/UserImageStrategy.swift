@@ -30,9 +30,8 @@ let RequestUserProfileSmallAssetNotificationName = "ZMRequestUserProfileSmallAss
 class ImageRequestFactory : ImageRequestSource {
     static public func request(for imageOwner: ZMImageOwner, format: ZMImageFormat, conversationID: UUID, correlationID: UUID, resultHandler: ZMCompletionHandler?) -> ZMTransportRequest? {
         guard let imageData = imageOwner.imageData(for:format)
-            else {
-                assertionFailure("Imageowner does not have image data for ZMImageFormat rawValue \(format.rawValue)")
-                return nil
+        else {
+            fatal("Imageowner does not have image data for ZMImageFormat rawValue \(format.rawValue)")
         }
         
         let disposition = contentDisposition(for: imageOwner, format: format, conversationID: conversationID, correlationID: correlationID)
@@ -142,7 +141,6 @@ public class UserImageStrategy : NSObject, ZMDownstreamTranscoder, ZMUpstreamTra
     
     func requestAssetForNotification(note: Notification) {
         managedObjectContext.performGroupedBlock {
-            print("enter 2")
             guard let objectID = note.object as? NSManagedObjectID,
                   let object = self.managedObjectContext.object(with: objectID) as? ZMManagedObject
             else { return }
@@ -155,7 +153,6 @@ public class UserImageStrategy : NSObject, ZMDownstreamTranscoder, ZMUpstreamTra
             default:
                 break
             }
-            print("leave 2")
         }
     }
     
@@ -216,8 +213,7 @@ public class UserImageStrategy : NSObject, ZMDownstreamTranscoder, ZMUpstreamTra
     func requestForUploadingImageToSelfConversation(selfUser: ZMUser, keys: Set<String>) -> ZMUpstreamRequest? {
         guard let correlationID = selfUser.imageCorrelationIdentifier
         else {
-            assertionFailure("Image correlation identifier is missing")
-            return nil
+            fatal("Image correlation identifier is missing")
         }
         
         let imageFormat : ZMImageFormat
@@ -230,8 +226,7 @@ public class UserImageStrategy : NSObject, ZMDownstreamTranscoder, ZMUpstreamTra
             updatedKey = ImageMediumDataKey;
             imageFormat = .medium;
         } else {
-            assertionFailure("Modified keys do not contain medium nor smallProfile data key")
-            return nil
+            fatal("Modified keys do not contain medium nor smallProfile data key")
         }
     
         let selfConversationID = ZMConversation.selfConversationIdentifier(in: managedObjectContext)
@@ -241,8 +236,7 @@ public class UserImageStrategy : NSObject, ZMDownstreamTranscoder, ZMUpstreamTra
                                                              correlationID: correlationID,
                                                              resultHandler: nil)
         else {
-            assertionFailure("Request factory returned nil request.")
-            return nil
+            fatal("Request factory returned nil request.")
         }
         return ZMUpstreamRequest(keys: Set(arrayLiteral:updatedKey), transportRequest:request)
     }
@@ -261,7 +255,7 @@ public class UserImageStrategy : NSObject, ZMDownstreamTranscoder, ZMUpstreamTra
             user.imageMediumData = response.imageData
         }
         else {
-            assertionFailure("Invalid downstream sync")
+            preconditionFailure("Invalid downstream sync")
         }
     }
     

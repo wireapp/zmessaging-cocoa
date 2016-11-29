@@ -262,7 +262,6 @@ extension UserImageStrategyTests {
             self.user1.imageMediumData = nil;
             self.user1.localSmallProfileRemoteIdentifier = nil;
             self.user1.imageSmallProfileData = nil;
-            print("leave 1")
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     
@@ -273,7 +272,6 @@ extension UserImageStrategyTests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 1.5))
 
         syncMOC.performGroupedBlockAndWait{
-            print("enter 3")
             self.forwardChanges(for:self.user1)
             let request = self.sut.nextRequest()
 
@@ -281,7 +279,6 @@ extension UserImageStrategyTests {
             guard let req = request else {return XCTFail()}
             let path = "/assets/\(imageID.transportString())?conv_id=\(self.user1.remoteIdentifier!.transportString())"
             XCTAssertEqual(req.path, path)
-            print("leave 3")
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
