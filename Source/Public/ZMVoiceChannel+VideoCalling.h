@@ -24,9 +24,6 @@
 @class ZMUser;
 @class UIView;
 
-extern NSString * const ZMFrontCameraDeviceID;
-extern NSString * const ZMBackCameraDeviceID;
-
 FOUNDATION_EXPORT NSString * ZMVoiceChannelVideoCallErrorDomain;
 
 @interface ZMVoiceChannel (VideoCalling)
@@ -40,10 +37,6 @@ FOUNDATION_EXPORT NSString * ZMVoiceChannelVideoCallErrorDomain;
 
 // Set video sending active/inactive
 - (BOOL)setVideoSendActive:(BOOL)active error:(NSError **)error;
-
-// Selects camera
-- (BOOL)setVideoCaptureDevice:(NSString *)deviceId error:(NSError **)error;
-
 
 #pragma mark - Private
 - (BOOL)setVideoSendState:(int)state error:(NSError **)error;

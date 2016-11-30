@@ -243,12 +243,6 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
 
 }
 
-- (void)testThatQueryingTheCurrentDeviceIDWithoutStartingVideoReturnNil;
-{
-    // when
-    XCTAssertNil(self.conversation.voiceChannel.currentVideoDeviceID);
-}
-
 - (void)testThatItStartingVideoSetsCurrentVideoToDefaultBack;
 {
     // given

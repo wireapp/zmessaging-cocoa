@@ -17,11 +17,28 @@
 //
 
 import Foundation
+import avs
 
+@objc(ZMCaptureDevice)
+public enum CaptureDevice : Int {
+    case front
+    case back
+    
+    var deviceIdentifier : String {
+        switch  self {
+        case .front:
+            return "com.apple.avfoundation.avcapturedevice.built-in_video:1"
+        case .back:
+            return "com.apple.avfoundation.avcapturedevice.built-in_video:0"
+        }
+    }
+}
 
 public protocol CallFlow {
     
     var isVideoCall : Bool { get }
+    
+    func toggleVideo(active: Bool) throws
     
     func join(video: Bool)
     
@@ -31,11 +48,20 @@ public protocol CallFlow {
     
 }
 
+
 extension VoiceChannelRouter : CallFlow {
     
     public var isVideoCall: Bool {
         guard let callFlow = currentVoiceChannel as? CallFlow else { return false }
+        
         return callFlow.isVideoCall
+    }
+    
+    @objc(toggleVideoActive:error:)
+    public func toggleVideo(active: Bool) throws {
+        if let callFlow = currentVoiceChannel as? CallFlow {
+            try callFlow.toggleVideo(active: active)
+        }
     }
     
     public func join(video: Bool) {
@@ -56,6 +82,17 @@ extension VoiceChannelRouter : CallFlow {
         }
     }
     
+    public func setVideoCaptureDevice(device: CaptureDevice) throws {
+        guard flowManager.isReady() else { throw ZMVoiceChannelError.noFlowManagerError() }
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw ZMVoiceChannelError.switchToVideoNotAllowedError() }
+        
+        flowManager.setVideoCaptureDevice(device.deviceIdentifier, forConversation: remoteIdentifier.transportString())
+    }
+    
+    private var flowManager : AVSFlowManager {
+        return ZMAVSBridge.flowManagerClass().getInstance() as! AVSFlowManager
+    }
+    
 }
 
 extension VoiceChannelV3 : CallFlow {
@@ -66,10 +103,15 @@ extension VoiceChannelV3 : CallFlow {
         return WireCallCenter.isVideoCall(conversationId: remoteIdentifier)
     }
     
+    @objc(toggleVideoActive:error:)
+    public func toggleVideo(active: Bool) throws {
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw ZMVoiceChannelError.videoNotActiveError() }
+        
+        WireCallCenter.toogleVideo(conversationID: remoteIdentifier, active: active)
+    }
+    
     public func join(video: Bool) {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
-        
-        WireCallCenter.toogleVideo(conversationID: remoteIdentifier, active: video)
         
         if state == .incomingCall {
             _ = WireCallCenter.answerCall(conversationId: remoteIdentifier)
@@ -97,6 +139,11 @@ extension ZMVoiceChannel : CallFlow {
     
     public var isVideoCall: Bool {
         return conversation?.isVideoCall ?? false
+    }
+    
+    @objc(toggleVideoActive:error:)
+    public func toggleVideo(active: Bool) throws {
+        try setVideoSendActive(active)
     }
     
     public func join(video: Bool) {
