@@ -542,7 +542,24 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFindHandleSuggestion, [expectedHandle])
     }
-    
+
+    func testThatItCallsDidFinddHandleSuggestionIfItReceivesA404AndAllHandlesAreAvailable() {
+
+        // GIVEN
+        self.userProfileUpdateStatus.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        guard let handles = self.userProfileUpdateStatus.suggestedHandlesToCheck, handles.count > 10 else {
+            return XCTFail()
+        }
+
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.notFoundResponse())
+
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFindHandleSuggestion, [handles[0]])
+    }
     
     func testThatItCallsFailedToFindHandleSuggestionIfAllHandlesArePresent() {
         
@@ -613,6 +630,18 @@ extension UserProfileUpdateRequestStrategyTests {
                                    headers: nil
         )
     }
+
+    func notFoundResponse(path: String? = nil) -> ZMTransportResponse {
+        if let url = path.flatMap(URL.init) {
+            return ZMTransportResponse(originalUrl: url, httpStatus: 404, error: nil)
+        }
+
+        return ZMTransportResponse(payload: nil,
+                                   httpStatus: 404,
+                                   transportSessionError: nil,
+                                   headers: nil
+        )
+    }
     
     func badRequestResponse() -> ZMTransportResponse {
         return ZMTransportResponse(payload: ["label":"bad-request"] as NSDictionary,
@@ -654,10 +683,6 @@ extension UserProfileUpdateRequestStrategyTests {
             transportSessionError: nil,
             headers: nil
         )
-    }
-
-    func notFoundResponse(path: String) -> ZMTransportResponse {
-        return ZMTransportResponse(originalUrl: URL(string: path)!, httpStatus: 404, error: nil)
     }
 }
 
