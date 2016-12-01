@@ -54,6 +54,9 @@
 		1621D2711D770FB1007108C2 /* ZMSyncStateDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */; };
 		1635C6B71BA9CB4A006857A8 /* ZMSuggestionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 1635C6B51BA9CB4A006857A8 /* ZMSuggestionResult.h */; };
 		1635C6B81BA9CB4A006857A8 /* ZMSuggestionResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 1635C6B61BA9CB4A006857A8 /* ZMSuggestionResult.m */; };
+		1659114D1DEF1DA3007FA847 /* ZMLocalNotificationForCallState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1659114C1DEF1DA3007FA847 /* ZMLocalNotificationForCallState.swift */; };
+		1659114F1DEF1F6E007FA847 /* ZMLocalNotificationDispatcher+Calling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1659114E1DEF1F6E007FA847 /* ZMLocalNotificationDispatcher+Calling.swift */; };
+		165911531DEF38EC007FA847 /* CallStateObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165911521DEF38EC007FA847 /* CallStateObserver.swift */; };
 		16C22BA41BF4D5D7007099D9 /* NSError+ZMUserSessionInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3E05F254192A50CC00F22D80 /* NSError+ZMUserSessionInternal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		16DABFAE1DCF98D3001973E3 /* CallingRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DABFAD1DCF98D3001973E3 /* CallingRequestStrategy.swift */; };
 		16DCAD671B0F9447008C1DD9 /* NSURL+LaunchOptions.h in Headers */ = {isa = PBXBuildFile; fileRef = 16DCAD641B0F9447008C1DD9 /* NSURL+LaunchOptions.h */; };
@@ -536,6 +539,9 @@
 		1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMSyncStateDelegate.h; sourceTree = "<group>"; };
 		1635C6B51BA9CB4A006857A8 /* ZMSuggestionResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMSuggestionResult.h; sourceTree = "<group>"; };
 		1635C6B61BA9CB4A006857A8 /* ZMSuggestionResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMSuggestionResult.m; sourceTree = "<group>"; };
+		1659114C1DEF1DA3007FA847 /* ZMLocalNotificationForCallState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZMLocalNotificationForCallState.swift; sourceTree = "<group>"; };
+		1659114E1DEF1F6E007FA847 /* ZMLocalNotificationDispatcher+Calling.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMLocalNotificationDispatcher+Calling.swift"; sourceTree = "<group>"; };
+		165911521DEF38EC007FA847 /* CallStateObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallStateObserver.swift; sourceTree = "<group>"; };
 		16DABFAD1DCF98D3001973E3 /* CallingRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallingRequestStrategy.swift; sourceTree = "<group>"; };
 		16DCAD641B0F9447008C1DD9 /* NSURL+LaunchOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+LaunchOptions.h"; sourceTree = "<group>"; };
 		16DCAD651B0F9447008C1DD9 /* NSURL+LaunchOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+LaunchOptions.m"; sourceTree = "<group>"; };
@@ -1578,6 +1584,7 @@
 				16DCAD641B0F9447008C1DD9 /* NSURL+LaunchOptions.h */,
 				16DCAD651B0F9447008C1DD9 /* NSURL+LaunchOptions.m */,
 				54F7217319A5F0C5009A8AF5 /* ZMAuthenticationStatus.h */,
+				165911521DEF38EC007FA847 /* CallStateObserver.swift */,
 				54F0A0931B3018D7003386BC /* ProxiedRequestsStatus.swift */,
 				5490F8EF1AF00B50004696F4 /* ZMAuthenticationStatus+Testing.h */,
 				09E393B21BAAABCC00F3EA1B /* ZMAuthenticationStatus_Internal.h */,
@@ -1987,6 +1994,7 @@
 				548FA98C1A1F48C20082DF32 /* ZMLocalNotificationDispatcher+Testing.h */,
 				F9B53ED119F7F59F00C82A43 /* ZMLocalNotificationDispatcher.m */,
 				F96C8E791D7DCCE8004B6D87 /* ZMLocalNotificationDispatcher+Messages.swift */,
+				1659114E1DEF1F6E007FA847 /* ZMLocalNotificationDispatcher+Calling.swift */,
 				3E17FA611A66881900DFA12F /* ZMPushRegistrant.h */,
 				3E887BA31ABC51880022797E /* ZMPushKitLogging.m */,
 				3EDBFD761A65200F0095E2DD /* ZMPushRegistrant.swift */,
@@ -2001,6 +2009,7 @@
 				F98EDCC71D82B913001E65CB /* EventNotifications */,
 				F98EDCCC1D82B913001E65CB /* MessageNotifications */,
 				F98EDCD01D82B913001E65CB /* ZMLocalNotification+Internal.h */,
+				1659114C1DEF1DA3007FA847 /* ZMLocalNotificationForCallState.swift */,
 				F98EDCD11D82B913001E65CB /* ZMLocalNotification.h */,
 				F98EDCD21D82B913001E65CB /* ZMLocalNotification.m */,
 			);
@@ -2565,12 +2574,14 @@
 				F98EDCEB1D82B924001E65CB /* NotificationSounds.swift in Sources */,
 				54D175211ADE8B18001AA338 /* ZMUserSession+Registration.m in Sources */,
 				549816291A432BC800A7CE2E /* ZMConnectionTranscoder.m in Sources */,
+				165911531DEF38EC007FA847 /* CallStateObserver.swift in Sources */,
 				F9B71F401CB28449001DB03F /* ZMNotifications+UserSession.m in Sources */,
 				5498162B1A432BC800A7CE2E /* ZMConversationTranscoder.m in Sources */,
 				F98EDCED1D82B924001E65CB /* UILocalNotification+StringProcessing.m in Sources */,
 				F93A75F21C1F219800252586 /* ConversationStatusStrategy.swift in Sources */,
 				F98EDCD41D82B913001E65CB /* ZMLocalNotificationForConnectionEvent.swift in Sources */,
 				54A170651B300696001B41A5 /* ProxiedRequestStrategy.swift in Sources */,
+				1659114D1DEF1DA3007FA847 /* ZMLocalNotificationForCallState.swift in Sources */,
 				F98EDCD71D82B913001E65CB /* ZMLocalNotificationContentType.swift in Sources */,
 				87DC8A101C57979B00B7B4F2 /* ZMOnDemandFlowManager.m in Sources */,
 				549816421A432BC800A7CE2E /* ZMDownloadLastUpdateEventIDState.m in Sources */,
@@ -2616,6 +2627,7 @@
 				549815D31A432BC700A7CE2E /* ZMSearchDirectory.m in Sources */,
 				F97678FA1D76D11400CC075D /* BackgroundAPNSConfirmationStatus.swift in Sources */,
 				549815D01A432BC700A7CE2E /* ZMSearchRequestCodec.m in Sources */,
+				1659114F1DEF1F6E007FA847 /* ZMLocalNotificationDispatcher+Calling.swift in Sources */,
 				549815CF1A432BC700A7CE2E /* ZMSearchResult.m in Sources */,
 				16DABFAE1DCF98D3001973E3 /* CallingRequestStrategy.swift in Sources */,
 				54B2A08E1DAE71F100BB40B1 /* NSManagedObjectContext+Analytics.swift in Sources */,

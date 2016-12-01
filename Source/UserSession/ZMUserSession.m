@@ -304,6 +304,9 @@ ZM_EMPTY_ASSERTING_INIT()
         self.pingBackStatus = [[BackgroundAPNSPingBackStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext
                                                                               authenticationProvider:self.authenticationStatus];
         
+        self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
+                                                                             managedObjectContext:syncManagedObjectContext];
+        
         self.transportSession = session;
         self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
         self.transportSession.networkStateDelegate = self;
