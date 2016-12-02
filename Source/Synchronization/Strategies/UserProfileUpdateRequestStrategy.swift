@@ -225,6 +225,12 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
         case self.handleSuggestionSearchSync:
             if response.result == .success, let missingHandle = self.findMissingHandleInResponse(response: response) {
                 self.userProfileUpdateStatus.didFindHandleSuggestion(handle: missingHandle)
+            } else if response.httpStatus == 404 {
+                if let handle = self.userProfileUpdateStatus.suggestedHandlesToCheck?.first {
+                    self.userProfileUpdateStatus.didFindHandleSuggestion(handle: handle)
+                } else {
+                    self.userProfileUpdateStatus.didFailToFindHandleSuggestion()
+                }
             } else {
                 self.userProfileUpdateStatus.didFailToFindHandleSuggestion()
             }
