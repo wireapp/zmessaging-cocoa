@@ -112,7 +112,7 @@
     
     NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
     self.storeURL = [[sharedContainerURL URLByAppendingPathComponent:bundleIdentifier] URLByAppendingPathComponent:@"store.wiredatabase"];
-    self.keyStoreURL = [self.storeURL URLByDeletingLastPathComponent];
+    self.keyStoreURL = sharedContainerURL;
     
     _application = [[ApplicationMock alloc] init];
     
