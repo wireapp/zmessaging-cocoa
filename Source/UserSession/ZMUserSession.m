@@ -180,6 +180,11 @@ ZM_EMPTY_ASSERTING_INIT()
     return nil;
 }
 
++ (NSURL *)keyStoreURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
+{
+    return [self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
+}
+
 + (NSURL *)storeURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
 {
     return [[[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]
@@ -227,7 +232,7 @@ ZM_EMPTY_ASSERTING_INIT()
     ZMAPNSEnvironment *apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
     
     self.storeURL = [self.class storeURLForAppGroupIdentifier:appGroupIdentifier];
-    self.keyStoreURL = [self.storeURL URLByDeletingLastPathComponent];
+    self.keyStoreURL = [self.class keyStoreURLForAppGroupIdentifier:appGroupIdentifier];
     RequireString(nil != self.storeURL, "Unable to get a store URL using group identifier: %s", appGroupIdentifier.UTF8String);
     NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContextWithStoreAtURL:self.storeURL];
     NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreAtURL:self.storeURL keyStoreURL:self.keyStoreURL];
