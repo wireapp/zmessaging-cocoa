@@ -136,6 +136,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak) ZMUserSession *userSession;
 @property (nonatomic, weak) AVSMediaManager *mediaManager;
 @property (nonatomic) NSMutableDictionary <NSString *, NSNumber *> *lastConversationsState;
+@property (nonatomic) id<NSObject> callCenterObserverToken;
 @end
 
 @interface ZMCallKitDelegate (VoiceChannelObserver)
@@ -282,6 +283,7 @@ NS_ASSUME_NONNULL_END
 
 - (void)dealloc
 {
+    [WireCallCenter removeObserverWithToken:self.callCenterObserverToken];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -321,6 +323,9 @@ NS_ASSUME_NONNULL_END
                                                  selector:@selector(applicationDidBecomeActive:)
                                                      name:UIApplicationDidBecomeActiveNotification
                                                    object:nil];
+        
+        self.callCenterObserverToken = [self observeWireCallCenter];
+        
         // If we see "ongoing" calls when app starts we need to end them. App cannot have calls when it is not running.
         [self endAllOngoingCallKitCallsExcept:nil];
         
@@ -421,7 +426,7 @@ NS_ASSUME_NONNULL_END
     }];
 }
 
-- (void)indicateIncomingCallInConversation:(ZMConversation *)conversation
+- (void)indicateIncomingCallFromUser:(ZMUser *)user inConversation:(ZMConversation *)conversation
 {
     // Construct a CXCallUpdate describing the incoming call, including the caller.
     CXCallUpdate* update = [[CXCallUpdate alloc] init];
@@ -430,19 +435,17 @@ NS_ASSUME_NONNULL_END
     update.supportsGrouping = NO;
     update.supportsUngrouping = NO;
     
-    ZMUser *caller = [conversation.voiceChannel.participants firstObject];
-    
     if (conversation.conversationType == ZMConversationTypeGroup) {
-        update.localizedCallerName = [ZMCallKitDelegateCallStartedInGroup localizedStringWithUser:caller
+        update.localizedCallerName = [ZMCallKitDelegateCallStartedInGroup localizedStringWithUser:user
                                                                                      conversation:conversation
                                                                                             count:0];
     }
     else {
-        update.localizedCallerName = caller.displayName;
+        update.localizedCallerName = user.displayName;
     }
     
     update.remoteHandle = conversation.callKitHandle;
-    update.hasVideo = conversation.isVideoCall;
+    update.hasVideo = conversation.voiceChannel.isVideoCall;
     
     ZMLogInfo(@"CallKit: reportNewIncomingCallWithUUID remoteHandle.type = %ld, remoteHandle.value = %@", (long)update.remoteHandle.type, update.remoteHandle.value);
     
@@ -527,20 +530,7 @@ NS_ASSUME_NONNULL_END
                 [userSession.transportSession restartPushChannel];
             }
             
-            if (isVideo) {
-                NSError *joinError = nil;
-                // FIXME
-//                [callConversation.voiceChannel joinVideoCall:&joinError inUserSession:userSession];
-                if (nil != joinError) {
-                    ZMLogError(@"Cannot start the video call: %@", joinError);
-                }
-            }
-            else {
-                // FIXME
-//                [callConversation.voiceChannel joinInUserSession:userSession];
-                [self requestStartCallInConversation:callConversation videoCall:NO];
-            }
-            
+            [self requestStartCallInConversation:callConversation videoCall:isVideo]; // FIXME is this enough?
             return YES;
         }
         else {
@@ -626,7 +616,7 @@ NS_ASSUME_NONNULL_END
     
     switch (conversation.voiceChannel.state) {
     case ZMVoiceChannelStateIncomingCall:
-        [self indicateIncomingCallInConversation:conversation];
+        [self indicateIncomingCallFromUser:conversation.voiceChannel.participants.firstObject inConversation:conversation];
         break;
     case ZMVoiceChannelStateSelfIsJoiningActiveChannel:
             [self.provider reportOutgoingCallWithUUID:conversation.remoteIdentifier
@@ -683,7 +673,7 @@ NS_ASSUME_NONNULL_END
     NOT_USED(notification);
     // We need to start video in conversation that accepted video call in background but did not start the recording yet
     ZMConversation *callConversation = [[self nonIdleCallConversations] firstObject];
-    if (callConversation != nil && callConversation.isVideoCall) {
+    if (callConversation != nil && callConversation.isVideoCall) { // FIXME this doesn't work for V3 calling
         [self.onDemandFlowManager.flowManager setVideoSendState:FLOWMANAGER_VIDEO_SEND
                                                 forConversation:callConversation.remoteIdentifier.transportString];
     }
@@ -712,18 +702,7 @@ NS_ASSUME_NONNULL_END
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
     [userSession performChanges:^{
         [self configureAudioSession];
-
-        if (action.video) {
-            NSError *error = nil;
-            // FIXME
-//            [callConversation.voiceChannel joinVideoCall:&error];
-            if (nil != error) {
-                ZMLogError(@"Error joining video call: %@", error);
-            }
-        }
-        else {
-            [callConversation.voiceChannel joinWithVideo:NO];
-        }
+        [callConversation.voiceChannel joinWithVideo:action.video];
     }];
     
     [action fulfill];
@@ -735,14 +714,7 @@ NS_ASSUME_NONNULL_END
 
     [self.userSession performChanges:^{
         ZMConversation *callConversation = [action conversationInContext:self.userSession.managedObjectContext];
-        if (callConversation.isVideoCall) {
-            // FIXME
-//            [callConversation.voiceChannel joinVideoCall:nil];
-        }
-        else {
-            [callConversation.voiceChannel joinWithVideo:NO];
-        }
-        
+        [callConversation.voiceChannel joinWithVideo:NO]; // FIXME video argument is not relevant when answering a call
         [self configureAudioSession];
     }];
     [action fulfill];

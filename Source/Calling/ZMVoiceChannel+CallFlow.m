@@ -64,31 +64,6 @@
     }
 }
 
-// FIXME
-//- (void)joinInUserSession:(ZMUserSession *)userSession
-//{
-//    if ([ZMUserSession useCallKit]) {
-//        // Push channel must be open in order to process the call signalling
-//        if (!userSession.pushChannelIsOpen) {
-//            [userSession.transportSession restartPushChannel];
-//        }
-//        [userSession.callKitDelegate requestStartCallInConversation:self.conversation videoCall:NO];
-//    }
-//    else {
-//        [self join];
-//    }
-//}
-
-//- (void)leaveInUserSession:(ZMUserSession *)userSession
-//{
-//    if ([ZMUserSession useCallKit]) {
-//        [userSession.callKitDelegate requestEndCallInConversation:self.conversation];
-//    }
-//    else {
-//        [self leave];
-//    }
-//}
-
 - (void)leaveOnAVSError
 {
     [self leaveWithReason:ZMCallStateReasonToLeaveAvsError];

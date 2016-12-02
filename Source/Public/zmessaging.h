@@ -62,4 +62,5 @@
 #import <zmessaging/ZMUserSession+UserNotificationCategories.h>
 #import <zmessaging/ZMVoiceChannel+CallFlowPrivate.h>
 #import <zmessaging/ZMCallKitDelegate.h>
+#import <zmessaging/ZMCallKitDelegate+Internal.h>
 #import <zmessaging/ZMAVSBridge.h>
