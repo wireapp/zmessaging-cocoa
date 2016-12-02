@@ -51,10 +51,3 @@ class ZMSearchDirectoryAddressBookTests : MessagingTest {
         // TODO MARCO
     }
 }
-
-// MARK: - Helpers
-extension ZMSearchDirectoryAddressBookTests {
-    
-    
-    
-}
