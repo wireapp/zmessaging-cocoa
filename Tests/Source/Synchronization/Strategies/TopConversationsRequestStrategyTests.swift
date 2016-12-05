@@ -25,12 +25,12 @@ class TopConversationsRequestStrategyTests : MessagingTest {
     
     var authenticationStatus : MockAuthenticationStatus!
 
-    var conversationsDirectory : ConversationsDirectory!
+    var conversationsDirectory : TopConversationsDirectory!
     
     override func setUp() {
         super.setUp()
         self.authenticationStatus = MockAuthenticationStatus()
-        self.conversationsDirectory = ConversationsDirectory(managedObjectContext: self.uiMOC)
+        self.conversationsDirectory = TopConversationsDirectory(managedObjectContext: self.uiMOC)
         self.sut = TopConversationsRequestStrategy(managedObjectContext: self.uiMOC, authenticationStatus: self.authenticationStatus, conversationDirectory: self.conversationsDirectory)
     }
     

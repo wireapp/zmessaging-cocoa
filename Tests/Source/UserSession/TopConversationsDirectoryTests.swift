@@ -20,16 +20,16 @@ import Foundation
 import XCTest
 @testable import zmessaging
 
-class ConversationsDirectoryTests : MessagingTest {
+class TopConversationsDirectoryTests : MessagingTest {
 
-    var sut : ConversationsDirectory!
+    var sut : TopConversationsDirectory!
     
     var newRequestObserver : OperationLoopNewRequestObserver!
     
     override func setUp() {
         super.setUp()
         self.newRequestObserver = OperationLoopNewRequestObserver()
-        self.sut = ConversationsDirectory(managedObjectContext: self.uiMOC)
+        self.sut = TopConversationsDirectory(managedObjectContext: self.uiMOC)
     }
     
     override func tearDown() {
@@ -152,14 +152,14 @@ class ConversationsDirectoryTests : MessagingTest {
         self.uiMOC.saveOrRollback()
         
         // THEN
-        let sut2 = ConversationsDirectory(managedObjectContext: self.uiMOC)
+        let sut2 = TopConversationsDirectory(managedObjectContext: self.uiMOC)
         XCTAssertEqual(sut2.topConversations, self.sut.topConversations)
         
     }
 }
 
 // MARK: - Helpers
-extension ConversationsDirectoryTests {
+extension TopConversationsDirectoryTests {
     
     func createConversation(in managedObjectContext: NSManagedObjectContext) -> ZMConversation {
         let conversation = ZMConversation.insertNewObject(in: managedObjectContext)

@@ -38,7 +38,7 @@
 @protocol ZMNetworkAvailabilityObserver;
 @protocol ZMRequestsToOpenViewsDelegate;
 @protocol ZMThirdPartyServicesDelegate;
-@class ConversationDirectory;
+@class TopConversationsDirectory;
 
 @protocol ZMAVSLogObserver <NSObject>
 @required
@@ -126,8 +126,8 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 /// Initiates the deletion process for the current signed in user
 - (void)initiateUserDeletion;
 
-/// Conversation directory
-@property (nonatomic, readonly) ConversationDirectory *conversationDirectory;
+/// Top conversation directory
+@property (nonatomic, readonly) TopConversationsDirectory *topConversationsDirectory;
 
 @end
 

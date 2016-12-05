@@ -21,7 +21,7 @@ import ZMCDataModel
 
 /// Directory of various conversation lists
 /// This object is expected to be used on the UI context only
-@objc public class ConversationsDirectory : NSObject {
+@objc public class TopConversationsDirectory : NSObject {
 
     fileprivate let managedObjectContext : NSManagedObjectContext
 
@@ -31,7 +31,7 @@ import ZMCDataModel
     
     fileprivate(set) var fetchingTopConversations : Bool = false
     
-    init(managedObjectContext: NSManagedObjectContext) {
+    public init(managedObjectContext: NSManagedObjectContext) {
         self.managedObjectContext = managedObjectContext
         super.init()
         self.loadList()
@@ -41,7 +41,7 @@ import ZMCDataModel
 // MARK: - Top conversation
 private let topConversationsObjectIDKey = "WireTopConversationsObjectIDKey"
 
-extension ConversationsDirectory {
+extension TopConversationsDirectory {
 
     public func refreshTopConversations() {
         self.fetchingTopConversations = true

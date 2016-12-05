@@ -26,13 +26,13 @@ private let topPeopleCount = 24
     
     let authenticationStatus : AuthenticationStatusProvider
     
-    let conversationDirectory : ConversationsDirectory
+    let conversationDirectory : TopConversationsDirectory
     
     fileprivate var topPeopleSync : ZMSingleRequestSync! = nil
     
     public init(managedObjectContext: NSManagedObjectContext,
                 authenticationStatus: AuthenticationStatusProvider,
-                conversationDirectory: ConversationsDirectory
+                conversationDirectory: TopConversationsDirectory
                 ) {
         self.managedObjectContext = managedObjectContext
         self.authenticationStatus = authenticationStatus
