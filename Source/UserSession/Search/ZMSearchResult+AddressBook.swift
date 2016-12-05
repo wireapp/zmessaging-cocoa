@@ -29,7 +29,7 @@ extension ZMSearchResult {
     public func extendWithContactsFromAddressBook(_ query: String,
                                                   userSession: ZMUserSession) -> ZMSearchResult {
         /*
-         When I have a search result obtained (either with a local search of from the BE) by matching on Wire
+         When I have a search result obtained (either with a local search or from the BE) by matching on Wire
          users display names or handle, I also want to check if I have any address book contact in my local
          address book that match the query. However, matching local contacts might overlap in a number of ways 
          with the users that I already found from the Wire search. The following code makes sure that such overlaps
