@@ -750,7 +750,7 @@ NS_ASSUME_NONNULL_END
     [action fulfill];
 }
 
-- (void)provider:(CXProvider *)provider performAnswerCallAction:(CXAnswerCallAction *)action
+- (void)provider:(CXProvider * __unused)provider performAnswerCallAction:(CXAnswerCallAction *)action
 {
     [self.userSession performChanges:^{
         ZMConversation *callConversation = [action conversationInContext:self.userSession.managedObjectContext];
