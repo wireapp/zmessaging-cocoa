@@ -31,7 +31,7 @@ extension ZMConversation {
         
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         
-        if let userId = selfUser.remoteIdentifier?.transportString(), let clientId = selfUser.selfClient()?.remoteIdentifier {
+        if let userId = selfUser.remoteIdentifier, let clientId = selfUser.selfClient()?.remoteIdentifier {
             callCenter = WireCallCenter(userId: userId, clientId: clientId)
             callCenter?.transport = self
         }
@@ -65,7 +65,7 @@ extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTracke
         
         for object in objects {
             if let  userClient = object as? UserClient, userClient.isSelfClient(), let clientId = userClient.remoteIdentifier, let userId = userClient.user?.remoteIdentifier {
-                callCenter = WireCallCenter(userId: userId.transportString(), clientId: clientId)
+                callCenter = WireCallCenter(userId: userId, clientId: clientId)
                 callCenter?.transport = self
                 break
             }

@@ -114,22 +114,22 @@ extension VoiceChannelV3 : CallFlow {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
         
         if state == .incomingCall {
-            _ = WireCallCenter.answerCall(conversationId: remoteIdentifier)
+            _ = WireCallCenter.activeInstance?.answerCall(conversationId: remoteIdentifier)
         } else {
-            _ = WireCallCenter.startCall(conversationId: remoteIdentifier, video: video)
+            _ = WireCallCenter.activeInstance?.startCall(conversationId: remoteIdentifier, video: video)
         }
     }
     
     public func leave() {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
         
-        WireCallCenter.closeCall(conversationId: remoteIdentifier)
+        WireCallCenter.activeInstance?.closeCall(conversationId: remoteIdentifier)
     }
     
     public func ignore() {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
         
-        WireCallCenter.ignoreCall(conversationId: remoteIdentifier)
+        WireCallCenter.activeInstance?.ignoreCall(conversationId: remoteIdentifier)
     }
     
 }
