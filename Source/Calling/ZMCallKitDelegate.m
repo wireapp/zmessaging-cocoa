@@ -136,7 +136,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak) ZMUserSession *userSession;
 @property (nonatomic, weak) AVSMediaManager *mediaManager;
 @property (nonatomic) NSMutableDictionary <NSString *, NSNumber *> *lastConversationsState;
-@property (nonatomic) id<NSObject> callCenterObserverToken;
+@property (nonatomic) id<NSObject> callStateObserverToken;
+@property (nonatomic) id<NSObject> missedCallsObserverToken;
 @end
 
 @interface ZMCallKitDelegate (VoiceChannelObserver)
@@ -283,7 +284,8 @@ NS_ASSUME_NONNULL_END
 
 - (void)dealloc
 {
-    [WireCallCenter removeObserverWithToken:self.callCenterObserverToken];
+    [WireCallCenter removeObserverWithToken:self.callStateObserverToken];
+    [WireCallCenter removeObserverWithToken:self.missedCallsObserverToken];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -324,7 +326,8 @@ NS_ASSUME_NONNULL_END
                                                      name:UIApplicationDidBecomeActiveNotification
                                                    object:nil];
         
-        self.callCenterObserverToken = [self observeWireCallCenter];
+        self.callStateObserverToken = [self observeCallState];
+        self.missedCallsObserverToken = [self observeMissedCalls];
         
         // If we see "ongoing" calls when app starts we need to end them. App cannot have calls when it is not running.
         [self endAllOngoingCallKitCallsExcept:nil];

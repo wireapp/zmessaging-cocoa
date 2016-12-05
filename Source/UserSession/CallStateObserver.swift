@@ -39,12 +39,12 @@ public final class CallStateObserver : NSObject {
         
         super.init()
         
-        self.token = WireCallCenter.addObserver(observer: self)
+        self.token = WireCallCenter.addCallStateObserver(observer: self)
     }
     
 }
 
-extension CallStateObserver : WireCallCenterObserver {
+extension CallStateObserver : WireCallCenterCallStateObserver {
     
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID) {
         guard

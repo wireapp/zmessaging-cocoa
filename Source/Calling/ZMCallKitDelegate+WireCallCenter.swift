@@ -36,11 +36,11 @@ extension CallClosedReason {
     
 }
 
-extension ZMCallKitDelegate : WireCallCenterObserver {
- 
+extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
+    
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID) {
- 
-    switch callState {
+        
+        switch callState {
         case .incoming(video: _):
             guard
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext),
@@ -62,8 +62,18 @@ extension ZMCallKitDelegate : WireCallCenterObserver {
         }
     }
     
-    public func observeWireCallCenter() -> WireCallCenterObserverToken {
-        return WireCallCenter.addObserver(observer: self)
+    public func callCenterMissedCall(conversationId: UUID, userId: UUID, timestamp: Date, video: Bool) {
+        if #available(iOS 10.0, *) {
+            provider.reportCall(with: conversationId, endedAt: timestamp, reason: UInt(CXCallEndedReason.unanswered.rawValue))
+        }
+    }
+    
+    public func observeCallState() -> WireCallCenterObserverToken {
+        return WireCallCenter.addCallStateObserver(observer: self)
+    }
+    
+    public func observeMissedCalls() -> WireCallCenterObserverToken {
+        return WireCallCenter.addMissedCallObserver(observer: self)
     }
     
 }
