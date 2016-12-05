@@ -38,6 +38,7 @@
 @protocol ZMNetworkAvailabilityObserver;
 @protocol ZMRequestsToOpenViewsDelegate;
 @protocol ZMThirdPartyServicesDelegate;
+@class ConversationDirectory;
 
 @protocol ZMAVSLogObserver <NSObject>
 @required
@@ -125,6 +126,9 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 /// Initiates the deletion process for the current signed in user
 - (void)initiateUserDeletion;
 
+/// Conversation directory
+@property (nonatomic, readonly) ConversationDirectory *conversationDirectory;
+
 @end
 
 
@@ -206,3 +210,4 @@ typedef NS_ENUM (NSInteger, ProxiedRequestType){
 
 - (UserClient *)selfUserClient;
 @end
+

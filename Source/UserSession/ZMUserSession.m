@@ -98,6 +98,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) NSString *applicationGroupIdentifier;
 @property (nonatomic) NSURL *storeURL;
 @property (nonatomic) NSURL *keyStoreURL;
+@property (nonatomic) ConversationDirectory *conversationDirectory;
 
 
 /// Build number of the Wire app
