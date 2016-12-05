@@ -24,7 +24,6 @@
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMStateMachineDelegate.h"
-#import "ZMUserProfileUpdateTranscoder.h"
 
 
 @interface ZMUpdateEventsCatchUpPhaseOneState ()
@@ -95,9 +94,6 @@
                 self.errorInDowloading = YES;
             }
         }]];
-    }
-    else {
-        request = [directory.userProfileUpdateTranscoder.requestGenerators nextRequest];
     }
     return request;
 }

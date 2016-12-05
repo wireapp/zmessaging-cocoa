@@ -105,7 +105,6 @@ extension TimeInterval {
         
         if !state.isInitialState, let lastTimestamp = timestampsByNotificationID[identifier] {
             let date = currentDate ?? Date()
-            print(date.timeIntervalSince(lastTimestamp))
             let difference = round(date.timeIntervalSince(lastTimestamp) * TimeInterval.millisecondsPerSecond) // In milliseconds
             let clusterized = IntegerClusterizer.apnsPerformanceClusterizer.clusterize(Int(difference))
             attributes["time_since_last"] = clusterized as NSObject?

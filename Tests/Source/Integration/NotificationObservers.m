@@ -145,7 +145,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 
 @interface UserChangeObserver ()
-@property (nonatomic, weak) ZMUser *user;
+@property (nonatomic, weak) id<ZMBareUser> user;
 @property (nonatomic) id token;
 @end
 
@@ -161,6 +161,15 @@ ZM_EMPTY_ASSERTING_INIT()
     return self;
 }
 
+- (instancetype)initWithSearchUser:(ZMSearchUser *)searchUser managedObjectContext:(NSManagedObjectContext *)context;
+{
+    self = [super init];
+    if(self) {
+        self.user = searchUser;
+        self.token = [ZMUser addUserObserver:self forUsers:@[searchUser] managedObjectContext:context];
+    }
+    return self;
+}
 
 - (void)startObservering;
 {

@@ -18,7 +18,6 @@
 
 
 #import "ZMBareUser+UserSession.h"
-#import "ZMUserImageTranscoder.h"
 #import "ZMUserSession+Internal.h"
 
 @implementation ZMUser (UserSession)
@@ -36,7 +35,7 @@
         [self.managedObjectContext saveOrRollback];
     }
     
-    [ZMUserImageTranscoder requestAssetForUserWithObjectID:self.objectID];
+    [UserImageStrategy requestAssetForUserWith:self.objectID];
     [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
@@ -53,7 +52,7 @@
         [self.managedObjectContext saveOrRollback];
     }
     
-    [ZMUserImageTranscoder requestSmallAssetForUserWithObjectID:self.objectID];
+    [UserImageStrategy requestSmallAssetForUserWith:self.objectID];
     [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 

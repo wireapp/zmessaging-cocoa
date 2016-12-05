@@ -32,7 +32,6 @@
 #import <avs/AVSMediaManager.h>
 #import <avs/AVSFlowManager.h>
 #import "ZMAuthenticationStatus.h"
-#import "ZMUserProfileUpdateStatus.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMLocalNotificationDispatcher.h"

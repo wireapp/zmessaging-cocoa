@@ -24,7 +24,6 @@
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMStateMachineDelegate.h"
-#import "ZMuserProfileUpdateTranscoder.h"
 
 @implementation ZMDownloadLastUpdateEventIDState
 
@@ -41,9 +40,7 @@
 - (ZMTransportRequest *)nextRequest;
 {
     id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
-    return [self nextRequestFromTranscoders:@[directory.lastUpdateEventIDTranscoder,
-                                              directory.userProfileUpdateTranscoder
-                                              ]];
+    return [self nextRequestFromTranscoders:@[directory.lastUpdateEventIDTranscoder]];
 }
 
 - (ZMUpdateEventsPolicy)updateEventsPolicy

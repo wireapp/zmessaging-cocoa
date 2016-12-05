@@ -37,7 +37,6 @@
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMRegistrationTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
-#import "ZMUserProfileUpdateTranscoder.h"
 
 static NSString *const TimerInfoOriginalCredentialsKey = @"originalCredentials";
 NSTimeInterval DebugLoginFailureTimerOverride = 0;
@@ -158,12 +157,8 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
                 return [[directory.selfTranscoder requestGenerators] nextRequest];
             }
             if (clientRegPhase == ZMClientRegistrationPhaseWaitingForEmailVerfication) {
-                // sync the email and password supplied by the user
-                ZMTransportRequest *request = [[directory.userProfileUpdateTranscoder requestGenerators] nextRequest];
-                // resend email verification if necessary
-                if (request == nil) {
-                    request = [self loginRequest];
-                }
+                ZMTransportRequest *request =  [self loginRequest];
+                
                 // fetch selfUser with timed downstream sync until user has clicked on link in verification email
                 if (request == nil) {
                     request = [[directory.selfTranscoder requestGenerators] nextRequest];

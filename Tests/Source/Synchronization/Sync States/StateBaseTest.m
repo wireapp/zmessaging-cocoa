@@ -23,11 +23,9 @@
 #import "ZMObjectStrategyDirectory.h"
 
 #import "ZMUserTranscoder.h"
-#import "ZMUserImageTranscoder.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
 #import "ZMConnectionTranscoder.h"
-#import "ZMUserProfileUpdateTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
 

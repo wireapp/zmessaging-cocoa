@@ -29,9 +29,10 @@ class AnalyticsTests: XCTestCase {
     var analytics: MockAnalytics!
     
     func createSyncMOC() -> NSManagedObjectContext {
-        let fm = FileManager.default
-        let url = try! fm.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create:true)
-        return .createSyncContext(withStoreDirectory: url)
+        let storeURL = PersistentStoreRelocator.storeURL(in: .documentDirectory)
+        let keyStoreURL = storeURL?.deletingLastPathComponent()
+        
+        return NSManagedObjectContext.createSyncContextWithStore(at: storeURL, keyStore: keyStoreURL)
     }
     
     override func setUp() {

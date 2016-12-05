@@ -22,12 +22,7 @@
 @import ZMCDataModel;
 
 #import "ZMBareUser+UserSession.h"
-
-#import "ZMSearchUserImageTranscoder.h"
-
 #import "ZMUserSession+Internal.h"
-#import "ZMUserImageTranscoder.h"
-
 
 
 @interface ZMSearchUser (MediumImage_Private)
@@ -89,19 +84,19 @@
 - (ZMTransportRequest *)requestUserInfoInUserSession:(ZMUserSession *)userSession
 {
     ZMCompletionHandler *completionHandler = [ZMCompletionHandler handlerOnGroupQueue:userSession.syncManagedObjectContext block:^(ZMTransportResponse *response) {
-        [ZMSearchUserImageTranscoder processSingleUserProfileResponse:response forUserID:self.remoteIdentifier mediumAssetIDCache:[ZMSearchUser searchUserToMediumAssetIDCache]];
+        [SearchUserImageStrategy processSingleUserProfileWithResponse:response for:self.remoteIdentifier mediumAssetIDCache:[ZMSearchUser searchUserToMediumAssetIDCache]];
         if (self.mediumAssetID != nil) {
             [self privateRequestMediumProfileImageInUserSession:userSession];
         }
     }];
-    ZMTransportRequest *request = [ZMSearchUserImageTranscoder fetchAssetsForUsersWithIDs:[NSSet setWithObject:self.remoteIdentifier] completionHandler:completionHandler];
+    ZMTransportRequest *request = [SearchUserImageStrategy requestForFetchingAssetsFor:[NSSet setWithObject:self.remoteIdentifier] completionHandler:completionHandler];
     
     return request;
 }
 
 - (ZMTransportRequest *)requestMediumProfileImageWithExistingMediumAssetIDInUserSession:(ZMUserSession *)userSession
 {
-    ZMTransportRequest *request = [ZMUserImageTranscoder requestForFetchingAssetWithID:self.mediumAssetID forUserWithID:self.remoteIdentifier];
+    ZMTransportRequest *request = [UserImageStrategy requestForFetchingAssetWith:self.mediumAssetID forUserWith:self.remoteIdentifier];
     ZM_WEAK(self);
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:userSession.syncManagedObjectContext block:^(ZMTransportResponse *response) {
         ZM_STRONG(self);
