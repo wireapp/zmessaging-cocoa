@@ -23,15 +23,14 @@ class InvitationsTests : IntegrationTestBase {
     
     var searchDirectory : ZMSearchDirectory!
     
-    var addressBook : AddressBookContactsFake!
+    var addressBook : AddressBookFake!
     
     override func setUp() {
         super.setUp()
-        self.addressBook = AddressBookContactsFake()
+        self.addressBook = AddressBookFake()
         self.updateDisplayNameGenerator(withUsers: self.allUsers)
         self.searchDirectory = ZMSearchDirectory(userSession: self.userSession)
-        self.addressBook = AddressBookContactsFake()
-        zmessaging.debug_searchResultAddressBookOverride = self.addressBook.addressBook()
+        zmessaging.debug_searchResultAddressBookOverride = self.addressBook
     }
     
     override func tearDown() {
@@ -76,8 +75,8 @@ extension InvitationsTests {
         
         // given
         XCTAssertTrue(self.logInAndWaitForSyncToBeComplete())
-        self.addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: "Mario", emailAddresses: ["mm@example.com"], phoneNumbers: [])
+        self.addressBook.fakeContacts = [
+            FakeAddressBookContact(firstName: "Mario", emailAddresses: ["mm@example.com"], phoneNumbers: [])
         ]
         let expectation = self.expectation(description: "Observer called")
         let request = ZMSearchRequest()
@@ -87,7 +86,7 @@ extension InvitationsTests {
         
         let observer = SearchResultOberserverMock(callback: { result, token in
             XCTAssertNotNil(result)
-            XCTAssertEqual(result?.usersInContacts.count, self.connectedUsers.count + self.addressBook.contacts.count)
+            XCTAssertEqual(result?.usersInContacts.count, self.connectedUsers.count + self.addressBook.fakeContacts.count)
             XCTAssertNotNil(token)
             expectation.fulfill()
         })
@@ -106,10 +105,15 @@ extension InvitationsTests {
     func testThatFetchingContactDoesntDuplicateWireAndAddressBookContact() {
         
         //given
+        let identifier = "12341213"
         XCTAssertTrue(self.logInAndWaitForSyncToBeComplete())
-        self.addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: self.user1.name!, emailAddresses: [self.user1.email!], phoneNumbers: [String]()),
-            AddressBookContactsFake.Contact(firstName: "Mario", emailAddresses: ["mm@example.com"], phoneNumbers: [String]())
+        let user1 = self.conversation(for: self.selfToUser1Conversation).otherActiveParticipants[0] as! ZMUser
+        user1.addressBookEntry = AddressBookEntry.insertNewObject(in: self.uiMOC)
+        user1.addressBookEntry.localIdentifier = identifier
+        
+        self.addressBook.fakeContacts = [
+            FakeAddressBookContact(firstName: "Jasmine", emailAddresses: ["jasmine@example.com"], phoneNumbers: [String](), identifier: identifier),
+            FakeAddressBookContact(firstName: "Mario", emailAddresses: ["mm@example.com"], phoneNumbers: [String]())
         ]
         
         let expectation = self.expectation(description: "Observer called")
@@ -120,7 +124,7 @@ extension InvitationsTests {
         
         let observer = SearchResultOberserverMock(callback: { result, token in
             XCTAssertNotNil(result)
-            XCTAssertEqual(result?.usersInContacts.count, self.connectedUsers.count + self.addressBook.contacts.count - 1)
+            XCTAssertEqual(result?.usersInContacts.count, self.connectedUsers.count + self.addressBook.fakeContacts.count - 1)
             XCTAssertNotNil(token)
             expectation.fulfill()
         })

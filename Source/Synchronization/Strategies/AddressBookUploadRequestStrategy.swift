@@ -72,7 +72,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
     init(authenticationStatus: AuthenticationStatusProvider,
                 clientRegistrationStatus: ZMClientClientRegistrationStatusProvider,
                 managedObjectContext: NSManagedObjectContext,
-                addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook() },
+                addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook.factory() },
                 tracker: AddressBookTracker? = nil
                 )
     {

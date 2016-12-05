@@ -234,7 +234,6 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
         
         if (searchRequest.includeAddressBookContacts) {
             searchResult = [searchResult extendWithContactsFromAddressBook:query
-                                                              usersToMatch:self.connectedAndBlockedAndPendingUsers
                                                                userSession:self.userSession];
         }
         
