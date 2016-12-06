@@ -62,11 +62,6 @@ typedef id<ZMSearchToken> ZMSearchToken;
 /// Searches users and conversations matching a string (local only)
 - (ZMSearchToken)searchForLocalUsersAndConversationsMatchingQueryString:(NSString *)queryString;
 
-/// Searches for 'people you may want to connect to'
-- (ZMSearchToken)searchForSuggestedPeople;
-// This will trigger any observers for 'suggested people search' to receive an update.
-- (void)removeSearchUserFromSuggestedPeople:(ZMSearchUser *)searchUser;
-
 - (void)addSearchResultObserver:(id<ZMSearchResultObserver>)observer;
 - (void)removeSearchResultObserver:(id<ZMSearchResultObserver>)observer;
 

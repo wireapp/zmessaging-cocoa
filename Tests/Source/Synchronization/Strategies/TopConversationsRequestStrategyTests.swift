@@ -115,6 +115,7 @@ extension TopConversationsRequestStrategyTests {
         user.name = "NAME\(userCounter)"
         let connection = ZMConnection.insertNewObject(in: self.uiMOC)
         user.connection = connection
+        connection.status = .accepted
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
         conversation.conversationType = .oneOnOne
         conversation.remoteIdentifier = UUID.create()
