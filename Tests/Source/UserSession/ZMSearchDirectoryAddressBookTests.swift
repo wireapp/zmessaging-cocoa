@@ -25,7 +25,7 @@ class ZMSearchDirectoryAddressBookTests : MessagingTest {
     var sut : ZMSearchDirectory!
     
     override func setUp() {
-        self.sut = ZMSearchDirectory(userSession: nil, search: nil, maxTopConversationsCount: 10)
+        self.sut = ZMSearchDirectory(userSession: nil, search: nil)
         super.setUp()
     }
     

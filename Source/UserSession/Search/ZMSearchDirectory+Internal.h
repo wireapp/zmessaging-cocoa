@@ -26,15 +26,11 @@
 
 @property (nonatomic, readonly) ZMUserSession *userSession;
 - (instancetype)initWithUserSession:(ZMUserSession *)userSession
-                      searchContext:(NSManagedObjectContext *)searchContext
-           maxTopConversationsCount:(NSInteger)maxTopConversationsCount;
+                      searchContext:(NSManagedObjectContext *)searchContext;
 @end
 
 @interface ZMSearchDirectory (Internal)
 
-@property (nonatomic, readonly) BOOL cachedTopConversationsAreStale;
-
-+ (void)invalidateCachedTopConversations;
 + (ZMUserIDsForSearchDirectoryTable *)userIDsMissingProfileImage;
 
 @end

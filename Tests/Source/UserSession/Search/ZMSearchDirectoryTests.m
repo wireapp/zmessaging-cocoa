@@ -52,7 +52,7 @@
 
 
 
-@interface ZMSearchDirectoryTests : MessagingTest <ZMSearchResultObserver, ZMSearchTopConversationsObserver>
+@interface ZMSearchDirectoryTests : MessagingTest <ZMSearchResultObserver>
 
 @property (nonatomic) ZMSearchDirectory *sut;
 
@@ -64,10 +64,6 @@
 
 @property (nonatomic) NSInteger numberOfSearchResultUpdates;
 
-@property (nonatomic) NSUInteger topConversationChangeCount;
-
-@property (nonatomic) NSInteger maxTopConversationsCount;
-
 @end
 
 @implementation ZMSearchDirectoryTests
@@ -75,16 +71,13 @@
 - (void)setUp
 {
     [super setUp];
-    self.maxTopConversationsCount = 24;
-    self.topConversationChangeCount = 0;
     self.userSession = [OCMockObject niceMockForClass:ZMUserSession.class];
     self.transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     (void)[(ZMUserSession *)[[self.userSession stub] andReturn:self.transportSession] transportSession];
     (void)[(ZMUserSession *)[[self.userSession stub] andReturn:self.uiMOC] managedObjectContext];
     [[[self.userSession stub] andReturn:self.syncMOC] syncManagedObjectContext];
     
-    self.sut = [[ZMSearchDirectory alloc] initWithUserSession:(ZMUserSession *)self.userSession searchContext:self.searchMOC maxTopConversationsCount:self.maxTopConversationsCount];
-    [self.sut addTopConversationsObserver:self];
+    self.sut = [[ZMSearchDirectory alloc] initWithUserSession:(ZMUserSession *)self.userSession searchContext:self.searchMOC];
     self.sut.remoteSearchTimeout = 0.005;
     
     self.numberOfSearchResultUpdates = 0;
@@ -103,7 +96,6 @@
     [table clear];
     
     [self.sut removeSearchResultObserver:self];
-    [self.sut removeTopConversationsObserver:self];
     [self.sut tearDown];
     self.sut = nil;
     self.searchResults = nil;
@@ -116,10 +108,8 @@
 - (void)recreateSUT;
 {
     [self.sut removeSearchResultObserver:self];
-    [self.sut removeTopConversationsObserver:self];
     [self.sut tearDown];
-    self.sut = [[ZMSearchDirectory alloc] initWithUserSession:(ZMUserSession *)self.userSession searchContext:self.searchMOC maxTopConversationsCount:self.maxTopConversationsCount];
-    [self.sut addTopConversationsObserver:self];
+    self.sut = [[ZMSearchDirectory alloc] initWithUserSession:(ZMUserSession *)self.userSession searchContext:self.searchMOC];
 }
 
 - (void)didReceiveSearchResult:(ZMSearchResult *)result forToken:(ZMSearchToken)searchToken;
@@ -128,13 +118,6 @@
     [self.searchResults addObject:[[TokenAndSearchResult alloc] initWithToken:searchToken searchResult:result] ];
     [self.searchResultExpectation fulfill];
 }
-
-- (void)topConversationsDidChange:(NSNotification *)note;
-{
-    NOT_USED(note);
-    self.topConversationChangeCount++;
-}
-
 
 - (NSDictionary *)responseDataForUsers:(NSArray *)users {
     
@@ -1723,369 +1706,6 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
 
 
 @end
-
-
-
-
-@implementation ZMSearchDirectoryTests (TopConversations)
-
-- (void)testThatItRequests9TopConversations
-{
-    self.maxTopConversationsCount = 9;
-    
-    [self recreateSUT];
-    
-    // expect
-    [[self.transportSession expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(ZMTransportRequest *r) {
-        ZMTransportRequest *expectedRequest = [ZMTransportRequest requestGetFromPath:@"/search/top?size=9"];
-        XCTAssertEqualObjects(r, expectedRequest);
-        [self.searchResultExpectation fulfill];
-        return YES;
-    }]];
-    
-    // when
-    NSArray *topConversations = self.sut.topConversations;
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    
-    // then
-    [self.transportSession verify];
-    XCTAssertNotNil(topConversations);
-}
-
-- (void)testThatItRequests26TopConversations
-{
-    self.maxTopConversationsCount = 26;
-    
-    [self recreateSUT];
-
-    // expect
-    [[self.transportSession expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(ZMTransportRequest *r) {
-        ZMTransportRequest *expectedRequest = [ZMTransportRequest requestGetFromPath:@"/search/top?size=26"];
-        XCTAssertEqualObjects(r, expectedRequest);
-        [self.searchResultExpectation fulfill];
-        return YES;
-    }]];
-    
-    // when
-    NSArray *topConversations = self.sut.topConversations;
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    
-    // then
-    [self.transportSession verify];
-    XCTAssertNotNil(topConversations);
-}
-
-- (void)testThatItOnlyRequestsTopConversationsOnceIfCalledMultipleTimesInARow;
-{
-    // expect
-    [[self.transportSession expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(ZMTransportRequest *r) {
-        ZMTransportRequest *expectedRequest = [ZMTransportRequest requestGetFromPath:@"/search/top?size=24"];
-        XCTAssertEqualObjects(r, expectedRequest);
-        [self.searchResultExpectation fulfill];
-        return YES;
-    }]];
-    
-    // when
-    NSArray *topConversations1 = self.sut.topConversations;
-    NSArray *topConversations2 = self.sut.topConversations;
-    NSArray *topConversations3 = self.sut.topConversations;
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    
-    // then
-    [self.transportSession verify];
-    XCTAssertNotNil(topConversations1);
-    XCTAssertNotNil(topConversations2);
-    XCTAssertNotNil(topConversations3);
-}
-
-- (void)testThatItReturnsAnEmptyArrayTheFirstTime;
-{
-    // when
-    NSArray *topConversations = self.sut.topConversations;
-    
-    // then
-    XCTAssertNotNil(topConversations);
-    XCTAssertEqualObjects(topConversations, @[]);
-}
-
-- (void)testThatItReturnsTheCachedResultTheSecondTime;
-{
-    // given
-    NSArray *users = [self create9Users];
-    ZMTransportResponse *successResponse = [self transportResponseForUsers:users];
-    
-    // expect
-    [self expectSearchRequestAndCompleteWithResponse:successResponse expectation:self.searchResultExpectation];
-    
-    // when
-    NSArray *topConversations = self.sut.topConversations;
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    
-    // then
-    [self.transportSession verify];
-    XCTAssertNotNil(topConversations);
-    XCTAssertEqual(topConversations.count, 0u);
-    
-    // and when
-    topConversations = self.sut.topConversations;
-    XCTAssertNotNil(topConversations);
-    XCTAssertEqual(topConversations.count, 9u);
-    
-    [topConversations enumerateObjectsUsingBlock:^(ZMConversation *conversation, NSUInteger idx, BOOL *stop) {
-        NOT_USED(stop);
-        XCTAssertEqual(conversation.connection.to, users[idx]);
-    }];
-}
-
-- (void)testThatItDoesUpdatesTheCachedTopConversationsResultWhenTheCacheIsStale
-{
-    // given
-    NSArray *users1 = [self create9Users];
-    ZMTransportResponse *successResponse1 = [self transportResponseForUsers:users1];
-    NSArray *users2 = [users1 reverseObjectEnumerator].allObjects;
-    ZMTransportResponse *successResponse2 = [self transportResponseForUsers:users2];
-    
-    // expect
-    [self expectSearchRequestAndCompleteWithResponse:successResponse1 expectation:self.searchResultExpectation];
-    
-    // when
-    __block NSArray *topConversations = self.sut.topConversations;
-    
-    // then
-    [self.transportSession verify];
-    XCTAssertNotNil(topConversations);
-    XCTAssertEqual(topConversations.count, 0u);
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    XCTAssertEqual(self.topConversationChangeCount, 1u);
-    
-    //
-    // and expect
-    //
-    self.searchResultExpectation = [self expectationWithDescription:@"wait for result"];
-    [self expectSearchRequestAndCompleteWithResponse:successResponse2 expectation:self.searchResultExpectation];
-    
-    // when
-    [ZMSearchDirectory invalidateCachedTopConversations];
-    topConversations = self.sut.topConversations;
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    XCTAssertEqual(self.topConversationChangeCount, 2u);
-    
-    // then
-    XCTAssertNotNil(topConversations);
-    XCTAssertEqual(topConversations.count, 9u);
-    [topConversations enumerateObjectsUsingBlock:^(ZMConversation *conversation, NSUInteger idx, BOOL *stop) {
-        NOT_USED(stop);
-        XCTAssertEqual(conversation.connection.to, users1[idx]);
-    }];
-    
-    // and when
-    [ZMSearchDirectory invalidateCachedTopConversations];
-    topConversations = self.sut.topConversations;
-    
-    // then
-    // (all still unchanged):
-    XCTAssertNotNil(topConversations);
-    XCTAssertEqual(topConversations.count, 9u);
-    [topConversations enumerateObjectsUsingBlock:^(ZMConversation *conversation, NSUInteger idx, BOOL *stop) {
-        NOT_USED(stop);
-        XCTAssertEqual(conversation.connection.to, users2[idx]);
-    }];
-}
-
-- (void)testThatItDoesNotSendAnUpdateNotificationWhenTopConversationsRemainTheSame;
-{
-    // given
-    NSArray *users = [self create9Users];
-    ZMTransportResponse *successResponse = [self transportResponseForUsers:users];
-    
-    // expect
-    [self expectSearchRequestAndCompleteWithResponse:successResponse expectation:self.searchResultExpectation];
-    
-    // when
-    __block NSArray *topConversations = self.sut.topConversations;
-    
-    // then
-    [self.transportSession verify];
-    XCTAssertNotNil(topConversations);
-    XCTAssertEqual(topConversations.count, 0u);
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    XCTAssertEqual(self.topConversationChangeCount, 1u);
-    
-    //
-    // and expect
-    //
-    self.searchResultExpectation = [self expectationWithDescription:@"wait for result"];
-    [self expectSearchRequestAndCompleteWithResponse:successResponse expectation:self.searchResultExpectation];
-    
-    // when
-    [ZMSearchDirectory invalidateCachedTopConversations];
-    topConversations = self.sut.topConversations;
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    XCTAssertEqual(self.topConversationChangeCount, 1u);
-    
-    // then
-    XCTAssertNotNil(topConversations);
-    XCTAssertEqual(topConversations.count, 9u);
-    [topConversations enumerateObjectsUsingBlock:^(ZMConversation *conversation, NSUInteger idx, BOOL *stop) {
-        NOT_USED(stop);
-        XCTAssertEqual(conversation.connection.to, users[idx]);
-    }];
-    
-    // and when
-    [ZMSearchDirectory invalidateCachedTopConversations];
-
-    topConversations = self.sut.topConversations;
-    
-    // then
-    // (all still unchanged):
-    XCTAssertNotNil(topConversations);
-    XCTAssertEqual(topConversations.count, 9u);
-    [topConversations enumerateObjectsUsingBlock:^(ZMConversation *conversation, NSUInteger idx, BOOL *stop) {
-        NOT_USED(stop);
-        XCTAssertEqual(conversation.connection.to, users[idx]);
-    }];
-}
-
-- (void)testThatItDoesNotChangeTheCachedTopConversationsResultIfTheRequestFails;
-{
-    // given
-    NSArray *users = [self create9Users];
-    ZMTransportResponse *successResponse = [self transportResponseForUsers:users];
-    ZMTransportResponse *failureResponse = [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:[NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeTryAgainLater userInfo:nil]];
-    
-    // expect
-    [self expectSearchRequestAndCompleteWithResponse:successResponse expectation:self.searchResultExpectation];
-    
-    // when
-    __block NSArray *topConversations = self.sut.topConversations;
-    
-    // then
-    [self.transportSession verify];
-    XCTAssertNotNil(topConversations);
-    XCTAssertEqual(topConversations.count, 0u);
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    XCTAssertEqual(self.topConversationChangeCount, 1u);
-    
-    //
-    // and expect
-    //
-    [self performIgnoringZMLogError:^{
-        self.searchResultExpectation = [self expectationWithDescription:@"wait for result"];
-        [self expectSearchRequestAndCompleteWithResponse:failureResponse expectation:self.searchResultExpectation];
-        
-        // when
-        [ZMSearchDirectory invalidateCachedTopConversations];
-        topConversations = self.sut.topConversations;
-        WaitForAllGroupsToBeEmpty(0.5);
-        XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-        XCTAssertEqual(self.topConversationChangeCount, 1u, @"Should not receive a notification, since it didn't change.");
-        
-        // then
-        XCTAssertNotNil(topConversations);
-        XCTAssertEqual(topConversations.count, 9u);
-        [topConversations enumerateObjectsUsingBlock:^(ZMConversation *conversation, NSUInteger idx, BOOL *stop) {
-            NOT_USED(stop);
-            XCTAssertEqual(conversation.connection.to, users[idx]);
-        }];
-        
-        // and when
-        [ZMSearchDirectory invalidateCachedTopConversations];
-        topConversations = self.sut.topConversations;
-        
-        // then
-        // (all still unchanged):
-        XCTAssertNotNil(topConversations);
-        XCTAssertEqual(topConversations.count, 9u);
-        [topConversations enumerateObjectsUsingBlock:^(ZMConversation *conversation, NSUInteger idx, BOOL *stop) {
-            NOT_USED(stop);
-            XCTAssertEqual(conversation.connection.to, users[idx]);
-        }];
-    }];
-}
-
-- (void)testThatItPersistsTheTopConversations;
-{
-    // given
-    NSArray *users = [self create9Users];
-    ZMTransportResponse *successResponse = [self transportResponseForUsers:users];
-    
-    // expect
-    [self expectSearchRequestAndCompleteWithResponse:successResponse expectation:self.searchResultExpectation];
-    
-    // when (1)
-    NSArray *topConversations = self.sut.topConversations;
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    topConversations = self.sut.topConversations;
-    
-    // then (1)
-    XCTAssertEqual(topConversations.count, 9u);
-    
-    [self recreateSUT];
-    
-    // when (2)
-    topConversations = self.sut.topConversations;
-    
-    // then (2)
-    XCTAssertEqual(topConversations.count, 9u);
-    [topConversations enumerateObjectsUsingBlock:^(ZMConversation *conversation, NSUInteger idx, BOOL *stop) {
-        NOT_USED(stop);
-        XCTAssertEqual(conversation.connection.to, users[idx]);
-    }];
-}
-
-- (NSArray *)create9Users;
-{
-    NSMutableArray *users = [NSMutableArray array];
-    for (int i = 0; i < 9; ++i) {
-        ZMUser *user = [self createConnectedUserWithName:[NSString stringWithFormat:@"User %d", i]];
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-        conversation.conversationType = ZMConversationTypeOneOnOne;
-        user.connection.conversation = conversation;
-        [users addObject:user];
-    }
-    [self.uiMOC saveOrRollback];
-    return users;
-}
-
-- (ZMTransportResponse *)transportResponseForUsers:(NSArray *)users;
-{
-    NSMutableArray *searchUsers = [NSMutableArray array];
-    for (ZMUser *user in users) {
-        NSMutableDictionary *userData = [[self userDataWithName:user.name id:user.remoteIdentifier connected:YES] mutableCopy];
-        userData[@"accent_id"] = @(user.accentColorValue);
-        [searchUsers addObject:userData];
-    }
-    NSDictionary *responsePayload = [self responseDataForUsers:searchUsers];
-    return [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
-}
-
-- (void)expectSearchRequestAndCompleteWithResponse:(ZMTransportResponse *)response expectation:(XCTestExpectation *)expectation;
-{
-    [[self.transportSession expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(ZMTransportRequest *r) {
-        XCTAssertTrue([r.path hasPrefix:@"/search/top"]);
-        [expectation fulfill];
-        [self.syncMOC performGroupedBlock:^{
-            [r completeWithResponse:response];
-        }];
-        return YES;
-    }]];
-}
-
-
-@end
-
-
-
 
 
 

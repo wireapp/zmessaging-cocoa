@@ -126,6 +126,7 @@ ZM_EMPTY_ASSERTING_INIT()
                         proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
                                accountStatus:(ZMAccountStatus *)accountStatus
                 backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
+                   topConversationsDirectory:(TopConversationsDirectory *)topConversationsDirectory
                                 mediaManager:(id<AVSMediaManager>)mediaManager
                          onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                      syncMOC:(NSManagedObjectContext *)syncMOC
@@ -216,7 +217,8 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[TypingStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[SearchUserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[RemovedSuggestedPeopleStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
-                                   [[UserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:imageProcessingQueue clientRegistrationDelegate:clientRegistrationStatus]
+                                   [[UserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:imageProcessingQueue clientRegistrationDelegate:clientRegistrationStatus],
+                                   [[TopConversationsRequestStrategy alloc] initWithManagedObjectContext:uiMOC authenticationStatus:authenticationStatus conversationDirectory:topConversationsDirectory]
                                    ];
 
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];

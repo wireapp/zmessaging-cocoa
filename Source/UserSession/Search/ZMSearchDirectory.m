@@ -27,22 +27,16 @@
 #import "ZMSearch.h"
 #import "ZMSearchRequestCodec.h"
 #import "ZMSuggestionSearch.h"
-#import "ZMSearchTopConversations.h"
 #import "ZMUserIDsForSearchDirectoryTable.h"
 #import "ZMSuggestionResult.h"
 #import "ZMSearchResult+Internal.h"
 #import "ZMSearchRequest.h"
 
-static NSString * const TopConversationsDidChangeName = @"ZMTopConversationsDidChange";
 static const NSTimeInterval DefaultRemoteSearchTimeout = 1.5;
 static const NSTimeInterval DefaultUpdateDelay = 60;
-static const NSTimeInterval TopConversationsTimeout = 60;
 static const int SuggestedUsersFetchLimit = 30;
 
 static ZMUserIDsForSearchDirectoryTable *userIDMissingProfileImageBySearch;
-
-NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidateTopConversationCacheNotification";
-
 
 @interface ZMSearchResult (AllSearchUsers)
 
@@ -65,17 +59,6 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
 @end
 
 
-
-@interface ZMSearchDirectory (TopConversations)
-
-@property (nonatomic, readonly) BOOL cachedTopConversationsAreStale;
-- (void)fetchTopConversationsIfCacheIsStale;
-- (void)markCachedTopConversationsAsStale;
-
-@end
-
-
-
 @interface ZMSearchDirectory (SuggestedPeople)
 
 - (void)suggestedUsersForUserDidChange:(NSNotification *)note;
@@ -89,12 +72,9 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
 @property (nonatomic) NSHashTable *observers;
 @property (nonatomic) NSManagedObjectContext *searchContext;
 @property (nonatomic) NSManagedObjectContext *userInterfaceContext;
-@property (nonatomic) ZMSearchTopConversations *cachedTopConversations;
-@property (nonatomic) BOOL isFetchingTopConversations;
 @property (nonatomic) BOOL isFetchingSuggestedPeople;
 @property (nonatomic) NSMutableDictionary *searchMap;
 @property (nonatomic) ZMUserSession *userSession;
-@property (nonatomic) NSInteger maxTopConversationsCount;
 
 @property (nonatomic) NSCache *searchResultsCache;
 
@@ -115,16 +95,7 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
 - (instancetype)initWithUserSession:(ZMUserSession *)userSession
 {
     return [self initWithUserSession:userSession 
-                       searchContext:[NSManagedObjectContext createSearchContextWithStoreAtURL:userSession.storeURL]
-            maxTopConversationsCount:24];
-}
-
-- (instancetype)initWithUserSession:(ZMUserSession *)userSession
-           maxTopConversationsCount:(NSInteger)maxTopConversationsCount
-{
-    return [self initWithUserSession:userSession 
-                       searchContext:[NSManagedObjectContext createSearchContextWithStoreAtURL:userSession.storeURL]
-            maxTopConversationsCount:maxTopConversationsCount];
+                       searchContext:[NSManagedObjectContext createSearchContextWithStoreAtURL:userSession.storeURL]];
 }
 
 - (void)dealloc
@@ -144,9 +115,7 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
     self.userInterfaceContext = nil;
     self.userSession = nil;
     self.observers = nil;
-    self.cachedTopConversations = nil;
     self.searchResultsCache = nil;
-    self.isFetchingTopConversations = NO;
     self.isFetchingSuggestedPeople = NO;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -167,7 +136,6 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
 
 - (instancetype)initWithUserSession:(ZMUserSession *)userSession
                       searchContext:(NSManagedObjectContext *)searchContext
-           maxTopConversationsCount:(NSInteger)maxTopConversationsCount
 {
     self = [super init];
     if (self) {
@@ -177,30 +145,14 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
         self.userSession = userSession;
         self.searchMap = [NSMutableDictionary dictionary];
         
-        _maxTopConversationsCount = maxTopConversationsCount;
-        
         self.remoteSearchTimeout = DefaultRemoteSearchTimeout;
         self.updateDelay = DefaultUpdateDelay;
         
         self.searchResultsCache = [[NSCache alloc] init];
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(suggestedUsersForUserDidChange:) name:ZMSuggestedUsersForUserDidChange object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(requestedToInvalidateCache:) name:InvalidateTopConversationCacheNotificationName object:nil];
     }
     return self;
-}
-
-- (void)requestedToInvalidateCache:(NSNotification *)note
-{
-    NOT_USED(note);
-    [self markCachedTopConversationsAsStale];
-}
-
-- (NSArray *)topConversations
-{
-    [self fetchTopConversationsIfCacheIsStale];
-    NSArray *result = [self.cachedTopConversations conversationsInManagedObjectContext:self.userInterfaceContext];
-    return result ?: @[];
 }
 
 - (ZMSearchToken)performRequest:(ZMSearchRequest *)searchRequest
@@ -417,16 +369,6 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
     [self.observers removeObject:observer];
 }
 
-- (void)addTopConversationsObserver:(id<ZMSearchTopConversationsObserver>)observer;
-{
-    ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:observer selector:@selector(topConversationsDidChange:) name:TopConversationsDidChangeName object:self]);
-}
-
-- (void)removeTopConversationsObserver:(id<ZMSearchTopConversationsObserver>)observer;
-{
-    [[NSNotificationCenter defaultCenter] removeObserver:observer name:TopConversationsDidChangeName object:self];
-}
-
 + (ZMUserIDsForSearchDirectoryTable *)userIDsMissingProfileImage;
 {
     static dispatch_once_t onceToken;
@@ -434,116 +376,6 @@ NSString * const InvalidateTopConversationCacheNotificationName = @"ZMInvalidate
         userIDMissingProfileImageBySearch = [[ZMUserIDsForSearchDirectoryTable alloc] init];
     });
     return userIDMissingProfileImageBySearch;
-}
-
-@end
-
-
-
-@implementation ZMSearchDirectory (TopConversations)
-
-+ (void)invalidateCachedTopConversations
-{
-    [[NSNotificationCenter defaultCenter] postNotificationName:InvalidateTopConversationCacheNotificationName object:nil];
-}
-
-- (BOOL)cachedTopConversationsAreStale;
-{
-    return (self.cachedTopConversations == nil) || (self.cachedTopConversations.creationDate.timeIntervalSinceNow < -TopConversationsTimeout) || (self.cachedTopConversations.requestedConversationsCount != self.maxTopConversationsCount);
-}
-
-- (void)markCachedTopConversationsAsStale;
-{
-    // This is for testing only
-    [self.cachedTopConversations setValue:[NSDate dateWithTimeIntervalSinceNow:-1000] forKey:@"creationDate"];
-}
-
-- (void)fetchTopConversationsIfCacheIsStale;
-{
-    if ([self cachedTopConversationsAreStale]) {
-        if (self.cachedTopConversations == nil) {
-            [self loadCachedTopConversations];
-        }
-        [self fetchTopConversations];
-    }
-}
-
-- (void)fetchTopConversations
-{
-    if (self.isFetchingTopConversations) {
-        return;
-    }
-    self.isFetchingTopConversations = YES;
-    ZMTransportRequest *request = [ZMSearchRequestCodec searchRequestForTopConversationsWithFetchLimit:(int)self.maxTopConversationsCount];
-    ZM_WEAK(self);
-    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.userInterfaceContext block:^(ZMTransportResponse *response) {
-        ZM_STRONG(self);
-        [self updateTopConversationsFromTransportResponse:response];
-        [self.userInterfaceContext performGroupedBlock:^{
-            self.isFetchingTopConversations = NO;
-        }];
-    }]];
-    Require(self.userSession.transportSession != nil);
-    [self.userSession.transportSession enqueueSearchRequest:request];
-}
-
-- (void)updateTopConversationsFromTransportResponse:(ZMTransportResponse *)response;
-{
-    if (self.isTornDown) {
-        return;
-    }
-    if (response.result != ZMTransportResponseStatusSuccess) {
-        ZMLogWarn(@"Failed to get top conversations (%d): %@",
-                  (int) response.HTTPStatus, response.transportSessionError);
-        return;
-    }
-    ZMSearchResult *searchResult = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession];
-    NSMutableArray *conversations = [NSMutableArray array];
-    for (ZMSearchUser *searchUser in searchResult.usersInContacts) {
-        ZMConversation *conversation = searchUser.user.connection.conversation;
-        if (conversation != nil) {
-            [conversations addObject:conversation];
-        } else {
-            ZMLogWarn(@"No local conversation for 'top' user <%@: %p> %@", searchUser.class, searchUser, searchUser.remoteIdentifier.transportString);
-        }
-    }
-    Require(self.userInterfaceContext.dispatchGroup != nil);
-    [self.userInterfaceContext.dispatchGroup asyncOnQueue:dispatch_get_main_queue() block:^{
-        if ((conversations != nil) && ! [self.cachedTopConversations isEqual:conversations]) {
-            ZMSearchTopConversations *update = [[ZMSearchTopConversations alloc] initWithConversations:conversations];
-            update.requestedConversationsCount = self.maxTopConversationsCount;
-            BOOL didChange = ! [update hasConversationsIdenticalTo:self.cachedTopConversations];
-            self.cachedTopConversations = update;
-            [self persistTopConversationsToPersistentStore];
-            if (didChange) {
-                [[NSNotificationCenter defaultCenter] postNotificationName:TopConversationsDidChangeName object:self];
-            }
-        }
-    }];
-}
-
-static NSString * const TopConversationsKey = @"ZMSearchTopConversations";
-static NSString * const ObjectIDURIsKey = @"objectIDURIs";
-
-- (void)persistTopConversationsToPersistentStore;
-{
-    NSData * const data = [self.cachedTopConversations encode];
-    NSData * const existingData = [self.userInterfaceContext persistentStoreMetadataForKey:TopConversationsKey];
-    if ((existingData == data) || [existingData isEqual:data]) {
-        // no change
-        return;
-    }
-    [self.userInterfaceContext setPersistentStoreMetadata:data forKey:TopConversationsKey];
-    NSError *error;
-    if (! [self.userInterfaceContext save:&error]) {
-        ZMLogError(@"Failed to save store for metadata changes: %@", error);
-    }
-}
-
-- (void)loadCachedTopConversations;
-{
-    NSData *data = [self.userInterfaceContext persistentStoreMetadataForKey:TopConversationsKey];
-    self.cachedTopConversations = [ZMSearchTopConversations decodeFromData:data];
 }
 
 @end
