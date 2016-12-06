@@ -13,7 +13,7 @@
 #import "ZMLoginTranscoder+Internal.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMConversation+Testing.h"
-
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @interface SlowSyncTests : IntegrationTestBase
 
@@ -117,9 +117,9 @@
                                   [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", self.selfConversation.identifier,self.selfToUser1Conversation.identifier,self.selfToUser2Conversation.identifier,self.groupConversation.identifier]],
                                   [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@,%@", self.selfUser.identifier, self.user1.identifier, self.user2.identifier]],
                                   [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", self.user3.identifier]],
-                                  [ZMTransportRequest requestGetFromPath:@"/self"],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@",self.selfUser.smallProfileImageIdentifier,self.selfUser.identifier]],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@",self.selfUser.mediumImageIdentifier, self.selfUser.identifier]]
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@",self.selfUser.mediumImageIdentifier, self.selfUser.identifier]],
+                                  [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/notifications?size=500&since=%@&client=%@",  self.syncMOC.zm_lastNotificationID.transportString, [ZMUser selfUserInContext:self.syncMOC].selfClient.remoteIdentifier]]
                                   ];
     
     // then
@@ -252,9 +252,26 @@
     [self.mockTransportSession resetReceivedRequests];
 
     // make /notifications fail
+    __block BOOL hasNotificationsRequest = NO;
+    __block BOOL hasConversationsRequest = NO;
+    __block BOOL hasConnectionsRequest = NO;
+    __block BOOL hasUserRequest = NO;
+
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if([request.path hasPrefix:@"/notifications"]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
+            if (!(hasConnectionsRequest && hasConversationsRequest && hasUserRequest)) {
+                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
+            }
+            hasNotificationsRequest = YES;
+        }
+        if ([request.path hasPrefix:@"/users"]) {
+            hasUserRequest = YES;
+        }
+        if ([request.path hasPrefix:@"/conversations?ids="]) {
+            hasConversationsRequest = YES;
+        }
+        if ([request.path hasPrefix:@"/connections?size="]) {
+            hasConnectionsRequest = YES;
         }
         return nil;
     };
@@ -268,24 +285,9 @@
     WaitForEverythingToBeDone();
     
     // then
-    BOOL hasNotificationsRequest = NO;
-    BOOL hasConversationsRequest = NO;
-    BOOL hasConnectionsRequest = NO;
-    
-    for (ZMTransportRequest *request in self.mockTransportSession.receivedRequests) {
-        
-        if ([request.path hasPrefix:@"/notifications"]) {
-            hasNotificationsRequest = YES;
-        }
-        if ([request.path hasPrefix:@"/conversations?ids="]) {
-            hasConversationsRequest = YES;
-        }
-        if ([request.path hasPrefix:@"/connections?size="]) {
-            hasConnectionsRequest = YES;
-        }
-    }
-    
+
     XCTAssertTrue(hasNotificationsRequest);
+    XCTAssertTrue(hasUserRequest);
     XCTAssertTrue(hasConversationsRequest);
     XCTAssertTrue(hasConnectionsRequest);
 }
@@ -353,6 +355,37 @@
     ZMConversation *conversation = [ZMConversation conversationWithRemoteID:UUID createIfNeeded:NO inContext:moc];
     XCTAssertNotNil(conversation);
     return conversation;
+}
+
+@end
+
+
+@implementation SlowSyncTests (BackgroundFetch)
+
+- (void)testThatItFetchesTheNotificationStreamDuringBackgroundFetch
+{
+    // given
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self.application setBackground];
+    [self.application simulateApplicationDidEnterBackground];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self.mockTransportSession resetReceivedRequests];
+    
+    // when
+    XCTestExpectation *expectation = [self expectationWithDescription:@"fetchCompleted"];
+    [self.userSession application:self.application performFetchWithCompletionHandler:^(UIBackgroundFetchResult result) {
+        NOT_USED(result);
+        ZMTransportRequest *request = self.mockTransportSession.receivedRequests.lastObject;
+        XCTAssertNotNil(request);
+        XCTAssertTrue([request.path containsString:@"notifications"]);
+        [expectation fulfill];
+    }];
+    
+    // then
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 @end

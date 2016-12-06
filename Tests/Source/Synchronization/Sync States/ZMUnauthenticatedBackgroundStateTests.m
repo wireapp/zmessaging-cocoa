@@ -65,19 +65,10 @@
     XCTAssertEqual(self.sut.updateEventsPolicy, ZMUpdateEventPolicyIgnore);
 }
 
-- (void)testThatItDoesNotSwitchesToSlowSyncState
-{
-    // expectation
-    [[(id)self.stateMachine reject] goToState:OCMOCK_ANY];
-    
-    // when
-    [self.sut didRequestSynchronization];
-}
-
 - (void)testThatItDoesNotSwitchToQuickSyncOnEnteringForeground
 {
     // expectation
-    [[(id)self.stateMachine reject] startQuickSync];
+    [[(id)self.stateMachine reject] goToState:self.stateMachine.eventProcessingState];
     [[(id)self.stateMachine stub] goToState:self.stateMachine.unauthenticatedState];
     
     // when

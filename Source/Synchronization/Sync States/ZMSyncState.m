@@ -64,11 +64,6 @@
     return NO;
 }
 
-- (void)didRequestSynchronization
-{
-    [self.stateMachineDelegate startQuickSync];
-}
-
 - (void)didFailAuthentication
 {
     NSObject<ZMStateMachineDelegate> *strongDelegate = self.stateMachineDelegate;

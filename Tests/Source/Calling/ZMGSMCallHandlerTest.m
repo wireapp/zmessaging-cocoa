@@ -68,7 +68,7 @@
     self.sut = [[ZMGSMCallHandler alloc] initWithUIManagedObjectContext:self.uiMOC
                                                syncManagedObjectContext:self.syncMOC
                                                         callStateLogger:self.mockCallStateLogger];
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
+    [ZMUserSession notifyInitialSyncCompleted];
 }
 
 - (void)tearDown {
@@ -442,7 +442,7 @@
     XCTAssertTrue(self.activeUICallConversation.callDeviceIsActive);
     
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
+    [ZMUserSession notifyInitialSyncCompleted];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -486,7 +486,7 @@
     XCTAssertTrue(self.activeUICallConversation.callDeviceIsActive);
     
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
+    [ZMUserSession notifyInitialSyncCompleted];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

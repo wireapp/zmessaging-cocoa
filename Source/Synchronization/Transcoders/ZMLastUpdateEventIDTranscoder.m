@@ -29,6 +29,11 @@
 @property (nonatomic) ZMSingleRequestSync *lastUpdateEventIDSync;
 @property (nonatomic, weak) id<ZMObjectStrategyDirectory> directory;
 @property (nonatomic) NSUUID *lastUpdateEventID;
+
+@property (nonatomic, weak) SyncStatus *syncStatus;
+@property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
+@property (nonatomic) BOOL didStartSlowSync;
+
 @end
 
 
@@ -40,10 +45,15 @@
     return nil;
 }
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc objectDirectory:(id<ZMObjectStrategyDirectory>)directory;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                             objectDirectory:(id<ZMObjectStrategyDirectory>)directory
+                                  syncStatus:(SyncStatus *)syncStatus
+                  clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
 {
     self = [super initWithManagedObjectContext:moc];
     if(self) {
+        self.syncStatus = syncStatus;
+        self.clientRegistrationDelegate = clientRegistrationDelegate;
         self.directory = directory;
         self.lastUpdateEventIDSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self managedObjectContext:moc];
     }
@@ -78,6 +88,25 @@
     return YES;
 }
 
+- (SyncPhase)expectedSyncPhase
+{
+    return SyncPhaseFetchingLastUpdateEventID;
+}
+
+- (ZMTransportRequest *)nextRequest
+{
+    if (!self.clientRegistrationDelegate.clientIsReadyForRequests) {
+        return nil;
+    }
+    SyncStatus *status = self.syncStatus;
+    if (status.currentSyncPhase == self.expectedSyncPhase && !self.isDownloadingLastUpdateEventID) {
+        [self startRequestingLastUpdateEventIDWithoutPersistingIt];
+        [status didStart:self.expectedSyncPhase];
+        return [self.requestGenerators nextRequest];
+    }
+    return nil;
+}
+
 - (NSArray *)requestGenerators;
 {
     return @[self.lastUpdateEventIDSync];
@@ -90,7 +119,7 @@
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> __unused *)events
            liveEvents:(BOOL __unused)liveEvents
-prefetchResult:(ZMFetchRequestBatchResult __unused *)prefetchResult;
+       prefetchResult:(ZMFetchRequestBatchResult __unused *)prefetchResult;
 {
     // no op
 }
@@ -115,6 +144,11 @@ prefetchResult:(ZMFetchRequestBatchResult __unused *)prefetchResult;
         NSUUID *lastNotificationID = [[response.payload asDictionary] optionalUuidForKey:@"id"];
         if(lastNotificationID != nil) {
             self.lastUpdateEventID = lastNotificationID;
+            SyncStatus *status = self.syncStatus;
+            if (status.currentSyncPhase == SyncPhaseFetchingLastUpdateEventID) {
+                [status updateLastUpdateEventIDWithEventID:lastNotificationID];
+                [status didFinish:self.expectedSyncPhase];
+            }
         }
     }
 }

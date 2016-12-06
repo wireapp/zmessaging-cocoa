@@ -111,12 +111,13 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 
 - (void)dataDidChange
 {
-    if(self.shouldStartQuickSync) {
-        [self.stateMachineDelegate startQuickSync];
+    if(self.shouldEnterEventProcessingState) {
+        id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+        [stateMachine goToState:stateMachine.eventProcessingState];
     }
 }
 
-- (BOOL)shouldStartQuickSync;
+- (BOOL)shouldEnterEventProcessingState
 {
     if (!self.didLaunchInForeground && self.application.applicationState != UIApplicationStateBackground) {
         self.didLaunchInForeground = YES;
@@ -127,8 +128,9 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 - (ZMTransportRequest *)nextRequest
 {
     if([self isDoneWithLogin]) {
-        if (self.shouldStartQuickSync) {
-            [self.stateMachineDelegate startQuickSync];
+        if (self.shouldEnterEventProcessingState) {
+            id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+            [stateMachine goToState:stateMachine.eventProcessingState];
         }
         return nil;
     }
@@ -196,9 +198,6 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     // nop
 }
 
-- (void)didRequestSynchronization {
-    // nop
-}
 
 - (void)didEnterBackground
 {
@@ -211,7 +210,8 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     self.didLaunchInForeground = YES;
 
     if ([self isDoneWithLogin]) {
-        [self.stateMachineDelegate startQuickSync];
+        id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+        [stateMachine goToState:stateMachine.eventProcessingState];
     }
 }
 
@@ -279,7 +279,7 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
             [stateMachine goToState:stateMachine.backgroundState];
         } else {
             ZMLogDebug(@"%@ is already logged in on enter, starting quick sync", self.class);
-            [stateMachine startQuickSync];
+            [stateMachine goToState:stateMachine.eventProcessingState];
         }
         return;
     }

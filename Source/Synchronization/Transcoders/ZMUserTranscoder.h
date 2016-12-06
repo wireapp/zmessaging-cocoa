@@ -21,12 +21,17 @@
 @import WireRequestStrategy;
 
 @class NSManagedObjectContext;
+@class SyncStatus;
 
 extern NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest;
 
 
 
-@interface ZMUserTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
+@interface ZMUserTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator>
+
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                                  syncStatus:(SyncStatus *)syncStatus
+                  clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
 
 + (ZMTransportRequest *)requestForRemoteIdentifiers:(NSArray *)remoteIdentifiers;
 

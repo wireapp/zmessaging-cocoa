@@ -163,15 +163,6 @@
     XCTAssertFalse(self.sut.supportsBackgroundFetch);
 }
 
-- (void)testThatItDoesNotSwitchesToSlowSyncState
-{
-    // expectation
-    [[(id)self.stateMachine reject] goToState:OCMOCK_ANY];
-    
-    // when
-    [self.sut didRequestSynchronization];
-}
-
 - (void)testThatItSwitchesToLoginBackgroundState
 {
     // expectation
@@ -180,16 +171,6 @@
     // when
     [self.sut didEnterBackground];
 }
-
-- (void)testThatItDoesNotSwitchToQuickSyncOnEnteringForeground
-{
-    // expectation
-    [[(id)self.stateMachine reject] startQuickSync];
-    
-    // when
-    [self.sut didEnterForeground];
-}
-
 
 - (void)testThatItDoesNotSwitchesStateOnFailedAuthentication
 {
@@ -219,7 +200,7 @@
     XCTAssertEqualObjects(request, selfUserRequest);
 }
 
-- (void)testThatWeSwitchToTheNotificationCatchUpStateWhenEnteringTheStateAndAlreadyLoggedIn
+- (void)testThatWeSwitchToTheEventProcessingStateWhenEnteringTheStateAndAlreadyLoggedIn
 {
     // given
     [self recreateSUT];
@@ -231,7 +212,7 @@
     
     // expect
     [self.application setActive];
-    [[(id)self.stateMachine expect] startQuickSync];
+    [[(id)self.stateMachine expect] goToState:self.stateMachine.eventProcessingState];
     [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@YES] isSelfUserComplete]; //we also check for remoteIdentifier directly
     
     // when
@@ -257,7 +238,6 @@
     [self.sut didEnterState];
 }
 
-
 - (void)testThatWeDoNotSwitchToFollowingStateIfUserSessionIsNotLoggedIn
 {
     // given
@@ -266,8 +246,7 @@
     
     // expect
     [[(id)self.stateMachine reject] goToState:OCMOCK_ANY];
-    [[(id)self.stateMachine reject] startQuickSync];
-    
+
     // when
     [self.sut dataDidChange];
 }
@@ -405,7 +384,6 @@
     XCTAssertEqual(nextRequest, request);
 }
 
-
 - (void)testThatItDoesNotSendALoginRequestIfAlreadyLoggedInAndHasSelfUser
 {
     // given
@@ -414,7 +392,7 @@
     [self.authenticationStatus setAuthenticationCookieData:[@"foo" dataUsingEncoding:NSUTF8StringEncoding]];
     [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@YES] isSelfUserComplete];
     [[[(id)self.objectDirectory.loginTranscoder stub] andReturn:nil] nextRequest];
-    [[(id)self.stateMachine stub] startQuickSync];
+    [[(id)self.stateMachine stub] goToState:self.stateMachine.eventProcessingState];
     
     // when
     ZMTransportRequest *nextRequest = [self.sut nextRequest];
@@ -671,17 +649,19 @@
     return sut;
 }
 
+
 - (void)testThatItStartsQuickSyncIfApplicationLaunchStateIsForeground
 {
     // given
     ZMUnauthenticatedState *sut = [self mockedSUTWithLaunchInForeground:YES isLoggedIn:YES];
 
     // expect
-    [[(id)self.stateMachine expect] startQuickSync];
+    [[(id)self.stateMachine expect] goToState:self.stateMachine.eventProcessingState];
     
     // when
     [sut dataDidChange];
 }
+
 
 - (void)testThatItDoesNotStartQuickSyncIfApplicationLaunchStateIsInBackground
 {
@@ -689,7 +669,7 @@
     ZMUnauthenticatedState *sut = [self mockedSUTWithLaunchInForeground:NO isLoggedIn:YES];
     
     // expect
-    [[(id)self.stateMachine reject] startQuickSync];
+    [[(id)self.stateMachine reject] goToState:self.stateMachine.eventProcessingState];
     
     // when
     [sut dataDidChange];
@@ -701,7 +681,7 @@
     ZMUnauthenticatedState *sut = [self mockedSUTWithLaunchInForeground:YES isLoggedIn:YES];
     
     // expect
-    [[(id)self.stateMachine expect] startQuickSync];
+    [[(id)self.stateMachine expect] goToState:self.stateMachine.eventProcessingState];
     
     // when
     ZMTransportRequest *request = [sut nextRequest];
@@ -716,7 +696,7 @@
     ZMUnauthenticatedState *sut = [self mockedSUTWithLaunchInForeground:NO isLoggedIn:YES];
     
     // expect
-    [[(id)self.stateMachine reject] startQuickSync];
+    [[(id)self.stateMachine reject] goToState:self.stateMachine.eventProcessingState];
     
     // when
     ZMTransportRequest *request = [sut nextRequest];
@@ -731,7 +711,7 @@
     ZMUnauthenticatedState *sut = [self mockedSUTWithLaunchInForeground:YES isLoggedIn:YES];
     
     // expect
-    [[(id)self.stateMachine expect] startQuickSync];
+    [[(id)self.stateMachine expect] goToState:self.stateMachine.eventProcessingState];
     
     // when
     [sut didEnterForeground];
@@ -743,7 +723,7 @@
     ZMUnauthenticatedState *sut = [self mockedSUTWithLaunchInForeground:YES isLoggedIn:NO];
     
     // expect
-    [[(id)self.stateMachine reject] startQuickSync];
+    [[(id)self.stateMachine reject] goToState:self.stateMachine.eventProcessingState];
     
     // when
     [sut didEnterForeground];
@@ -762,7 +742,7 @@
     XCTAssertNil(request1);
     
     // expect
-    [[(id)self.stateMachine expect] startQuickSync];
+    [[(id)self.stateMachine expect] goToState:self.stateMachine.eventProcessingState];
     
     // and when
     [self.application setActive];

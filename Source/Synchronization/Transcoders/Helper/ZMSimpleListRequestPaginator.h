@@ -64,7 +64,7 @@
 
 /// Returns YES, if the error response for a specific statusCode should be parsed (e.g. if the payload contains content that needs to be processed)
 @optional
-- (BOOL)shouldParseErrorResponseForStatusCode:(NSInteger)statusCode;
+- (BOOL)shouldParseErrorForResponse:(ZMTransportResponse*)response;
 
 /// Any additional query parameters the paginator should append to the request
 @property (nonatomic, readonly) NSArray <NSURLQueryItem *> * additionalQueryItems;

@@ -24,11 +24,12 @@
 #import "ZMGSMCallHandler.h"
 #import "ZMCallStateLogger.h"
 #import "ZMSyncStateMachine.h"
+#import "ZMNotifications+UserSession.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConversationObjectID";
 
-@interface ZMGSMCallHandler ()
+@interface ZMGSMCallHandler () <ZMInitialSyncCompletionObserver>
 
 @property (nonatomic) NSManagedObjectContext *uiManagedObjectContext;
 @property (nonatomic) NSManagedObjectContext *syncManagedObjectContext;
@@ -72,23 +73,23 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
         self.callCenter.callEventHandler = self.callEventHandler;
         self.canUpdateCallState = NO;
         self.activeCallUIConversationObjectID = self.storedConversation.objectID;
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didFinishSync:) name:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
+        [ZMUserSession addInitalSyncCompletionObserver:self];
     }
     return self;
 }
 
 - (void)dealloc
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [ZMUserSession removeInitalSyncCompletionObserver:self];
 }
 
-- (void)didFinishSync:(NSNotification *)note
+- (void)initialSyncCompleted:(NSNotification *)notification
 {
+    NOT_USED(notification);
     if ([ZMUserSession useCallKit]) {
         return;
     }
     
-    NOT_USED(note);
     self.canUpdateCallState = YES;
     if (self.callCenter.currentCalls.count == 0 && self.hasStoredInterruptedCallConversation) {
         [self rejoinVoiceChannelAfterGSMInterruption];
@@ -165,7 +166,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
             // we need to hang up properly
             [storedConversation.voiceChannel leave];
         }
-        [self.uiManagedObjectContext enqueueDelayedSave];
+        [self.uiManagedObjectContext saveOrRollback];
     }];
 }
 

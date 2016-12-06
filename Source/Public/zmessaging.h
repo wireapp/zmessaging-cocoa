@@ -65,4 +65,4 @@
 #import <zmessaging/ZMTyping.h>
 #import <zmessaging/ZMUserIDsForSearchDirectoryTable.h>
 #import <zmessaging/ZMSearchDirectory+Internal.h>
-
+#import <zmessaging/ZMSyncStateDelegate.h>

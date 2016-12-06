@@ -47,8 +47,5 @@
     // nop
 }
 
-- (void)didRequestSynchronization {
-    // nop
-}
 
 @end

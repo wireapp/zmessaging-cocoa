@@ -28,6 +28,7 @@
 #import "ZMSimpleListRequestPaginator.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "zmessaging_iOS_Tests-Swift.h"
+#import "ZMSyncStateDelegate.h"
 
 
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
@@ -39,6 +40,9 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 @property (nonatomic, readonly) ZMSyncStrategy *syncStrategy;
 @property (nonatomic, readonly) id<PreviouslyReceivedEventIDsCollection> mockEventIDsCollection;
 @property (nonatomic, readonly) id mockPingbackStatus;
+@property (nonatomic) MockSyncStatus *mockSyncStatus;
+@property (nonatomic) id syncStateDelegate;
+@property (nonatomic) id clientRegistrationDelegate;
 
 @end
 
@@ -53,11 +57,18 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [[[(id) self.syncStrategy stub] andReturn:self.uiMOC] syncMOC];
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.mockPingbackStatus];
-
+    
+    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
+    self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
+    self.mockSyncStatus.mockPhase = SyncPhaseDone;
+    self.clientRegistrationDelegate = [OCMockObject niceMockForProtocol:@protocol(ClientRegistrationDelegate)];
+    [[[self.clientRegistrationDelegate stub] andReturnValue:@(YES)] clientIsReadyForRequests];
     _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
                                     previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
                                                              application:(id)self.application
-                                            backgroundAPNSPingbackStatus:self.mockPingbackStatus];
+                                            backgroundAPNSPingbackStatus:self.mockPingbackStatus
+                                                          syncStatus:self.mockSyncStatus
+                                              clientRegistrationDelegate:self.clientRegistrationDelegate];
 }
 
 - (void)tearDown {
@@ -472,7 +483,9 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
                                                                     previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
                                                                                              application:(id)self.application
-                                                                            backgroundAPNSPingbackStatus:self.mockPingbackStatus];
+                                                                            backgroundAPNSPingbackStatus:self.mockPingbackStatus
+                                                                                          syncStatus:self.mockSyncStatus
+                                                                              clientRegistrationDelegate:self.clientRegistrationDelegate];
     WaitForAllGroupsToBeEmpty(0.5);
     [sut.listPaginator resetFetching];
     ZMTransportRequest *request = [sut.listPaginator nextRequest];

@@ -214,3 +214,25 @@ class AddressBookContactsFake {
                                numberOfPeopleClosure: { _ in self.peopleCount })!
     }
 }
+
+public class MockSyncStatus : SyncStatus {
+
+    public var mockPhase : SyncPhase = .done {
+        didSet {
+            currentSyncPhase = mockPhase
+        }
+    }
+}
+
+public class MockSyncStateDelegate : NSObject, ZMSyncStateDelegate {
+    var didCallStartSync = false
+    var didCallFinishSync = false
+
+    public func didStartSync() {
+        didCallStartSync = true
+    }
+    
+    public func didFinishSync() {
+        didCallFinishSync = true
+    }
+}

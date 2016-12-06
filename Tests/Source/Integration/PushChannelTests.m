@@ -105,6 +105,7 @@
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session simulatePushChannelClosed];
+        [session simulatePushChannelOpened];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 

@@ -118,8 +118,8 @@ ZM_EMPTY_ASSERTING_INIT()
     }
     else if(response.result == ZMTransportResponseStatusPermanentError) {
         id strongTranscoder = self.transcoder;
-        if ([strongTranscoder respondsToSelector:@selector(shouldParseErrorResponseForStatusCode:)]) {
-            if ([strongTranscoder shouldParseErrorResponseForStatusCode:response.HTTPStatus]) {
+        if ([strongTranscoder respondsToSelector:@selector(shouldParseErrorForResponse:)]) {
+            if ([strongTranscoder shouldParseErrorForResponse:response]) {
                 [self updateStateWithResponse:response];
                 return;
             }

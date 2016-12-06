@@ -66,12 +66,8 @@
 
 - (void)didEnterForeground
 {
-    [self.stateMachineDelegate startQuickSync];
-}
-
-- (void)didRequestSynchronization
-{
-    // noop
+    id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+    [stateMachine goToState:stateMachine.eventProcessingState];
 }
 
 - (void)dataDidChange

@@ -54,6 +54,10 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic, weak) ZMAccountStatus *accountStatus;
 
+@property (nonatomic, weak) SyncStatus *syncStatus;
+@property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
+@property (nonatomic) BOOL didStartSlowSync;
+
 @end
 
 
@@ -83,10 +87,14 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                         authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
                                accountStatus:(ZMAccountStatus *)accountStatus
-                                syncStrategy:(ZMSyncStrategy *)syncStrategy;
+                                syncStrategy:(ZMSyncStrategy *)syncStrategy
+                                  syncStatus:(SyncStatus *)syncStatus
+                  clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
 {
     self = [super initWithManagedObjectContext:moc];
     if (self) {
+        self.syncStatus = syncStatus;
+        self.clientRegistrationDelegate = clientRegistrationDelegate;
         self.authenticationStatus = authenticationStatus;
         self.accountStatus = accountStatus;
         self.modifiedSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName updatePredicate:nil filter:nil keysToSync:self.keysToSync managedObjectContext:moc];
@@ -158,6 +166,33 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 - (BOOL)isSlowSyncDone
 {
     return ( ! self.listPaginator.hasMoreToFetch )  && (self.remoteIDSync.isDone);
+}
+
+- (SyncPhase)expectedSyncPhase
+{
+    return SyncPhaseFetchingConversations;
+}
+
+- (ZMTransportRequest *)nextRequest
+{
+    if (!self.clientRegistrationDelegate.clientIsReadyForRequests) {
+        return nil;
+    }
+    
+    SyncStatus *status = self.syncStatus;
+    if (status.currentSyncPhase == self.expectedSyncPhase) {
+        if (!self.didStartSlowSync) {
+            [self setNeedsSlowSync];
+            self.didStartSlowSync = YES;
+            [status didStart:self.expectedSyncPhase];
+        }
+        else if ([self isSlowSyncDone]) {
+            self.didStartSlowSync = NO;
+            [status didFinish:self.expectedSyncPhase];
+        }
+        return [self.requestGenerators nextRequest];
+    }
+    return [self.requestGenerators nextRequest];
 }
 
 - (NSArray *)contextChangeTrackers
@@ -910,6 +945,10 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     for (NSDictionary *rawConversation in [conversations asDictionaries]) {
         ZMConversation *conv = [self createConversationFromTransportData:rawConversation];
         conv.needsToBeUpdatedFromBackend = NO;
+    }
+    if (response.result == ZMTransportResponseStatusPermanentError && self.didStartSlowSync) {
+        self.didStartSlowSync = NO;
+        [self.syncStatus didFail:self.expectedSyncPhase];
     }
 }
 

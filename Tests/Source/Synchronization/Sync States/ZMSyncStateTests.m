@@ -28,22 +28,6 @@
 
 @implementation ZMSyncStateTests
 
-- (void)testThatItSwitchesToSlowSyncState
-{
-    
-    // given
-    ZMSyncState *sut = [[ZMSyncState alloc] initWithAuthenticationCenter:self.authenticationStatus
-                                                clientRegistrationStatus:self.clientRegistrationStatus
-                                                 objectStrategyDirectory:self.objectDirectory
-                                                    stateMachineDelegate:self.stateMachine];
-    
-    // expectation
-    [[(id)self.stateMachine expect] startQuickSync];
-
-    // when
-    [sut didRequestSynchronization];
-}
-
 - (void)testThatItSwitchesToLoginState
 {
     // given
