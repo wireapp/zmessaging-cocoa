@@ -138,40 +138,6 @@
     [self.userSession removeAuthenticationObserverForToken:authenticationObserverToken];
 }
 
-
-- (void)testThatItUsesTheContactsReceivedFromAddressBookUploadWhenDoingASearch
-{
-    // given
-    NSMutableSet *suggestedPeople = [NSMutableSet set];
-    [self registerUser];
-    
-    id searchObserver = [OCMockObject mockForProtocol:@protocol(ZMSearchResultObserver)];
-    [[searchObserver stub] didReceiveSearchResult:[OCMArg checkWithBlock:^BOOL(ZMSearchResult *result) {
-        [suggestedPeople addObjectsFromArray:result.usersInDirectory];
-        return YES;
-    }] forToken:OCMOCK_ANY];
-    
-    // and when
-    ZMSearchDirectory *directory = [[ZMSearchDirectory alloc] initWithUserSession:self.userSession];
-    [directory addSearchResultObserver:searchObserver];
-    [directory searchForSuggestedPeople];
-    
-    XCTAssertTrue([self waitOnMainLoopUntilBlock:^BOOL{
-        return suggestedPeople.count > 0u;
-    } timeout:0.5]);
-    
-    // then
-    // check that only users that I'm not connected to are there
-    NSSet *nonConnectedNames = [NSSet setWithArray:[self.nonConnectedUsers mapWithBlock:^id(MockUser *user) {
-        return user.name;
-    }]];
-    
-    NSSet *suggestedNames = [suggestedPeople mapWithBlock:^id(ZMUser *user) {
-        return user.name;
-    }];
-    XCTAssertEqualObjects(nonConnectedNames, suggestedNames);
-}
-
 @end
 
 

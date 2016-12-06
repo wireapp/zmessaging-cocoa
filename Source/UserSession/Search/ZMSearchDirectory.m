@@ -26,15 +26,12 @@
 #import "ZMUserSession+Internal.h"
 #import "ZMSearch.h"
 #import "ZMSearchRequestCodec.h"
-#import "ZMSuggestionSearch.h"
 #import "ZMUserIDsForSearchDirectoryTable.h"
-#import "ZMSuggestionResult.h"
 #import "ZMSearchResult+Internal.h"
 #import "ZMSearchRequest.h"
 
 static const NSTimeInterval DefaultRemoteSearchTimeout = 1.5;
 static const NSTimeInterval DefaultUpdateDelay = 60;
-static const int SuggestedUsersFetchLimit = 30;
 
 static ZMUserIDsForSearchDirectoryTable *userIDMissingProfileImageBySearch;
 
@@ -55,13 +52,6 @@ static ZMUserIDsForSearchDirectoryTable *userIDMissingProfileImageBySearch;
     [allUsers addObjectsFromArray:self.usersInDirectory];
     return allUsers;
 }
-
-@end
-
-
-@interface ZMSearchDirectory (SuggestedPeople)
-
-- (void)suggestedUsersForUserDidChange:(NSNotification *)note;
 
 @end
 
@@ -149,8 +139,6 @@ static ZMUserIDsForSearchDirectoryTable *userIDMissingProfileImageBySearch;
         self.updateDelay = DefaultUpdateDelay;
         
         self.searchResultsCache = [[NSCache alloc] init];
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(suggestedUsersForUserDidChange:) name:ZMSuggestedUsersForUserDidChange object:nil];
     }
     return self;
 }
@@ -237,89 +225,6 @@ static ZMUserIDsForSearchDirectoryTable *userIDMissingProfileImageBySearch;
 
 }
 
-- (ZMSearchToken)searchForSuggestedPeople;
-{
-    ZMSearchToken token = [ZMSuggestionSearch suggestionSearchToken];
-    [self remotelySearchForSuggestedPeopleAndUpdateIdentifiersWithToken:token];
-
-    ZMSuggestionSearch *search = self.searchMap[token];
-    if (search == nil) {
-        search = [self startSuggestedPeopleSearchForToken:token];
-    }
-    [search start];
-    return search.token;
-}
-
-- (void)removeSearchUserFromSuggestedPeople:(ZMSearchUser *)searchUser;
-{
-    VerifyReturn(searchUser != nil);
-    VerifyReturn(searchUser.remoteIdentifier != nil);
-    ZMSuggestionSearch *search = [[ZMSuggestionSearch alloc] initWithSearchContext:self.searchContext userSession:self.userSession resultCache:self.searchResultsCache];
-    [search removeSearchUser:searchUser];
-    [search tearDown];
-}
-
-- (ZMSuggestionSearch *)startSuggestedPeopleSearchForToken:(ZMSearchToken)token
-{
-    ZMSuggestionSearch *search = [[ZMSuggestionSearch alloc] initWithSearchContext:self.searchContext userSession:self.userSession resultCache:self.searchResultsCache];
-    self.searchMap[search.token] = search;
-    search.resultHandler = ^(ZMSearchResult *searchResult) {
-        [self storeSearchResultUserIDsInCache:searchResult];
-        [self sendSearchResult:searchResult forToken:token];
-    };
-    
-    return search;
-}
-- (void)restartSuggestedPeopleSearchForToken:(ZMSearchToken)token
-{
-    ZMSuggestionSearch *search = self.searchMap[token];
-    if (search != nil) {
-        [search tearDown];
-    }
-    search = [self startSuggestedPeopleSearchForToken:token];
-    [search start];
-}
-
-- (void)remotelySearchForSuggestedPeopleAndUpdateIdentifiersWithToken:(ZMSearchToken)token;
-{
-    [self.userSession.managedObjectContext performGroupedBlock:^{
-        if (self.isFetchingSuggestedPeople) {
-            return;
-        }
-        self.isFetchingSuggestedPeople = YES;
-        ZMTransportRequest *request = [ZMSearchRequestCodec searchRequestForSuggestedPeopleWithFetchLimit:SuggestedUsersFetchLimit];
-        ZM_WEAK(self);
-        [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.userInterfaceContext block:^(ZMTransportResponse *response) {
-            ZM_STRONG(self);
-            NSOrderedSet *remoteSuggestedUsersForUser = [ZMSearchRequestCodec remoteIdentifiersForSuggestedPeopleSearchResponse:response];
-            if (
-                response.result == ZMTransportResponseStatusSuccess
-                && ! [self.userSession.managedObjectContext.suggestedUsersForUser isEqual:remoteSuggestedUsersForUser])
-            {
-                self.userSession.managedObjectContext.suggestedUsersForUser = [remoteSuggestedUsersForUser valueForKey:@"userIdentifier"];
-                
-                NSMutableDictionary *commonConnectionsForUsers = [NSMutableDictionary dictionaryWithCapacity:remoteSuggestedUsersForUser.count];
-                for (ZMSuggestionResult *suggestionResult in remoteSuggestedUsersForUser) {
-                    [commonConnectionsForUsers setObject:suggestionResult.commonConnections forKey:suggestionResult.userIdentifier];
-                }
-                self.userSession.managedObjectContext.commonConnectionsForUsers = commonConnectionsForUsers;
-                
-                NSError *error;
-                if (! [self.userSession.managedObjectContext save:&error]) {
-                    ZMLogWarn(@"Failed to save remoteIdentifiers: %@", error);
-                } else {
-                    [self restartSuggestedPeopleSearchForToken:token];
-                }
-            }
-            self.isFetchingSuggestedPeople = NO;
-        }]];
-        if (! self.isTornDown) {
-            Require(self.userSession.transportSession != nil);
-            [self.userSession.transportSession enqueueSearchRequest:request];            
-        }
-    }];
-}
-
 - (NSArray *)connectedAndBlockedAndPendingUsers
 {
     NSArray *connectionStatuses = @[@(ZMConnectionStatusAccepted), @(ZMConnectionStatusPending), @(ZMConnectionStatusBlocked)];
@@ -379,29 +284,5 @@ static ZMUserIDsForSearchDirectoryTable *userIDMissingProfileImageBySearch;
 }
 
 @end
-
-
-
-@implementation ZMSearchDirectory (SuggestedPeople)
-
-- (void)suggestedUsersForUserDidChange:(NSNotification *)note;
-{
-    dispatch_block_t update = ^(){
-        ZMSearchToken token = [ZMSuggestionSearch suggestionSearchToken];
-        [self.searchResultsCache removeObjectForKey:token];
-        // Re-start the search if we already have one. This will trigger a new notification to get sent out:
-        ZMSuggestionSearch *search = self.searchMap[token];
-        [search start];
-    };
-    
-    if (note.object != self.userInterfaceContext) {
-        [self.userInterfaceContext performGroupedBlock:update];
-    } else {
-        update();
-    }
-}
-
-@end
-
 
 
