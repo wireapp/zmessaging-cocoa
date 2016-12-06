@@ -114,12 +114,14 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
         guard sync == self.requestSync, let encodedChunk = self.encodedAddressBookChunkToUpload else {
             return nil
         }
-        let contactCards = encodedChunk.otherContactsHashes
-            .enumerated()
-            .map { (index, hashes) -> [String:AnyObject] in
+        let contactCards : [[String: AnyObject]] = encodedChunk.otherContactsHashes
+            .keys
+            .sorted()
+            .map { index -> [String:AnyObject] in
+                let hashes = encodedChunk.otherContactsHashes[index]!
                 return [
-                    "card_id" : "\(encodedChunk.includedContacts.lowerBound + UInt(index))" as AnyObject,
-                    "contact" : hashes as AnyObject
+                    "card_id" : index as NSString,
+                    "contact" : hashes as NSArray
                 ]
         }
         let payload = ["cards" : contactCards, "self" : []]
@@ -133,15 +135,9 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
             if let payload = response.payload as? [String: AnyObject],
                 let results = payload["results"] as? [[String: AnyObject]]
             {
-                let suggestedIds = results.flatMap { $0["id"] as? String }
-                // XXX: this will always overwrite previous ones, effectively linking the suggestion to
-                // the batch size, i.e. only AB with less contacts than the batch size will have reliable
-                // suggestions. On the other hand, appending instead of replacing could cause infinite 
-                // growth. For the moment, we will live with having suggestions only from the last batch
-                self.managedObjectContext.suggestedUsersForUser = NSOrderedSet(array: suggestedIds)
+                // TODO MARCO: save contacts to users
             }
             
-            self.managedObjectContext.commonConnectionsForUsers = [:]
             self.addressBookNeedsToBeUploaded = false
             self.encodedAddressBookChunkToUpload = nil
             

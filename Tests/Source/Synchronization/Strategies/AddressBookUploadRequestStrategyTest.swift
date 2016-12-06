@@ -86,7 +86,9 @@ extension AddressBookUploadRequestStrategyTest {
         if let request = request {
             XCTAssertEqual(request.path, "/onboarding/v3")
             XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST)
-            let expectedCards = self.addressBook.fakeContacts.map { $0.expectedHashes } .enumerated().map { (index, hashes) in ContactCard(id: "\(index)", hashes: hashes)}
+            let expectedCards = self.addressBook.fakeContacts
+                .map { ContactCard(id: $0.localIdentifier, hashes: $0.expectedHashes) }
+                .sorted { $0.id < $1.id }
             
             if let parsedCards = request.payload?.parsedCards {
                 XCTAssertEqual(parsedCards, expectedCards)
@@ -207,7 +209,6 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertNotNil(request1)
         XCTAssertNotNil(request2)
         if let cards1 = (request1?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
-            print(cards1)
             XCTAssertEqual(cards1.count, maxEntriesInAddressBookChunk)
             self.checkCard(cards1.first, expectedIndex: 0)
             self.checkCard(cards1.last, expectedIndex: maxEntriesInAddressBookChunk - 1)
@@ -422,23 +423,28 @@ extension AddressBookUploadRequestStrategyTest {
 
 extension AddressBookUploadRequestStrategyTest {
     
-    func testThatItParsesSuggestedUsersFromResponse() {
+    func testThatItParsesMatchingUsersFromResponse() {
         
-        // given
-        self.syncMOC.suggestedUsersForUser = NSOrderedSet()
-        let id1 = "aabbccddee"
-        let id2 = "bbccddeeff"
+        // GIVEN
+        let user1 = self.createUser(connected: true)
+        let user2 = self.createUser(connected: true)
+        _ = self.createUser(connected: true)
+
+        let contacts = [
+            FakeAddressBookContact(firstName: "Joanna", emailAddresses: ["j@example.com"], phoneNumbers: [], identifier: UUID.create().transportString()),
+            FakeAddressBookContact(firstName: "Chihiro", emailAddresses: ["c@example.com"], phoneNumbers: [], identifier: UUID.create().transportString())
+        ]
+        self.addressBook.fakeContacts = contacts
+        
         let payload = [
             "results" : [
                 [
-                    "cards" : ["123","345"],
-                    "id" : id1,
-                    "card_id" : "cc11"
+                    "id" : user1.remoteIdentifier!.transportString(),
+                    "card_id" : contacts[0].localIdentifier
                 ],
                 [
-                    "cards" : ["444"],
-                    "id" : id2,
-                    "card_id" : "bb22"
+                    "id" : user2.remoteIdentifier!.transportString(),
+                    "card_id" : contacts[1].localIdentifier
                 ],
             ]
         ]
@@ -447,20 +453,34 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
         
-        // when
+        // WHEN
         request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        // then
-        XCTAssertEqual(self.syncMOC.suggestedUsersForUser.set, Set([id1, id2]))
+        // THEN
+        XCTAssertEqual(user1.addressBookEntry?.localIdentifier, contacts[0].localIdentifier)
+        XCTAssertEqual(user1.addressBookEntry?.cachedName, contacts[0].firstName)
+        XCTAssertEqual(user2.addressBookEntry?.localIdentifier, contacts[1].localIdentifier)
+        XCTAssertEqual(user2.addressBookEntry?.cachedName, contacts[1].firstName)
+
     }
     
-    func testThatItEmptiesSuggestedUsersIfResponseIsEmpty() {
+    func testThatItEmptiesMatchingUsersIfResponseIsEmpty() {
         
-        // given
-        let id1 = "aabbccddee"
-        let id2 = "bbccddeeff"
-        self.syncMOC.suggestedUsersForUser = NSOrderedSet(array: [id1, id2])
+        // GIVEN
+        let user1 = self.createUser(connected: true)
+        let user2 = self.createUser(connected: true)
+        user1.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
+        user2.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
+        user1.addressBookEntry.cachedName = "JJ"
+        user2.addressBookEntry.cachedName = "Kirk"
+        self.syncMOC.saveOrRollback()
+        
+        let contacts = [
+            FakeAddressBookContact(firstName: "Joanna", emailAddresses: ["j@example.com"], phoneNumbers: []),
+            FakeAddressBookContact(firstName: "Chihiro", emailAddresses: ["c@example.com"], phoneNumbers: [])
+        ]
+        self.addressBook.fakeContacts = contacts
         let payload = [
             "results" : []
         ]
@@ -470,20 +490,31 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
         
-        // when
+        // WHEN
         request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        // then
-        XCTAssertEqual(self.syncMOC.suggestedUsersForUser.count, 0)
+        // THEN
+        XCTAssertNil(user1.addressBookEntry)
+        XCTAssertNil(user2.addressBookEntry)
     }
     
-    func testThatItDoesNotParsesSuggestedUsersFromResponseIfNotParsed() {
+    func testThatItDoesNotEmptyMatchingUsersFromResponseIfNotParsed() {
         
-        // given
-        let id1 = "aabbccddee"
-        let id2 = "bbccddeeff"
-        self.syncMOC.suggestedUsersForUser = NSOrderedSet(array: [id1, id2])
+        // GIVEN
+        let user1 = self.createUser(connected: true)
+        let user2 = self.createUser(connected: true)
+        user1.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
+        user2.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
+        user1.addressBookEntry.cachedName = "JJ"
+        user2.addressBookEntry.cachedName = "Kirk"
+        self.syncMOC.saveOrRollback()
+        
+        let contacts = [
+            FakeAddressBookContact(firstName: "Joanna", emailAddresses: ["j@example.com"], phoneNumbers: []),
+            FakeAddressBookContact(firstName: "Chihiro", emailAddresses: ["c@example.com"], phoneNumbers: [])
+        ]
+        self.addressBook.fakeContacts = contacts
         let payload = [
             "apples" : "oranges"
         ]
@@ -494,12 +525,13 @@ extension AddressBookUploadRequestStrategyTest {
         let request = sut.nextRequest()
         XCTAssertNotNil(request)
         
-        // when
+        // WHEN
         request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        // then
-        XCTAssertEqual(self.syncMOC.suggestedUsersForUser.set, Set([id1, id2]))
+        // THEN
+        XCTAssertNotNil(user1.addressBookEntry)
+        XCTAssertNotNil(user2.addressBookEntry)
     }
 }
 
@@ -514,7 +546,8 @@ extension AddressBookUploadRequestStrategyTest {
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
-        request?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
+        let payload : [String: Any] = ["results" : []]
+        request?.complete(with: ZMTransportResponse(payload: payload as NSDictionary, httpStatus: 200, transportSessionError: nil))
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         return request
     }
@@ -522,14 +555,26 @@ extension AddressBookUploadRequestStrategyTest {
     /// Verify that a card matches the expected values: card ID and contact hash
     func checkCard(_ card: [String:AnyObject]?, expectedIndex: Int, line: UInt = #line, file: StaticString = #file) {
         let cardId = card?["card_id"] as? String
-        let expectedId = "\(expectedIndex)"
         guard let cardHashes = card?["contact"] as? [String] else {
             XCTFail(file: file, line: line)
             return
         }
-        let expectedHashes = self.addressBook.contact(card: UInt(expectedIndex)).expectedHashes
-        XCTAssertEqual(cardId, expectedId, file: file, line: line)
-        XCTAssertEqual(cardHashes, expectedHashes, file: file, line: line)
+        let expected = self.addressBook.fakeContacts[expectedIndex]
+        XCTAssertEqual(cardId, expected.localIdentifier, file: file, line: line)
+        XCTAssertEqual(cardHashes, expected.expectedHashes, file: file, line: line)
+    }
+    
+    /// Creates a new user
+    func createUser(connected: Bool) -> ZMUser {
+        let user = ZMUser.insertNewObject(in: self.syncMOC)
+        user.remoteIdentifier = UUID.create()
+        if connected {
+            let connection = ZMConnection.insertNewObject(in: self.syncMOC)
+            connection.to = user
+            connection.status = .accepted
+        }
+        self.syncMOC.saveOrRollback()
+        return user
     }
 }
 
@@ -575,13 +620,13 @@ class AddressBookFake : zmessaging.AddressBook, zmessaging.AddressBookAccessor {
     /// Replace the content with a given number of random hashes
     func fillWithContacts(_ number: UInt) {
         self.fakeContacts = (0..<number).map {
-            self.contact(card: $0)
+            self.createContact(card: $0)
         }
     }
     
     /// Create a fake contact
-    func contact(card: UInt) -> FakeAddressBookContact {
-        return FakeAddressBookContact(firstName: "tester \(card)", emailAddresses: ["tester_\(card)@example.com"], phoneNumbers: ["+1555123\(card % 1000)"])
+    func createContact(card: UInt) -> FakeAddressBookContact {
+        return FakeAddressBookContact(firstName: "tester \(card)", emailAddresses: ["tester_\(card)@example.com"], phoneNumbers: ["+155512300\(card.hashValue % 10)"], identifier: "\(card)")
     }
     
     /// Generate an infinite number of contacts
@@ -589,6 +634,8 @@ class AddressBookFake : zmessaging.AddressBook, zmessaging.AddressBookAccessor {
 }
 
 struct FakeAddressBookContact : zmessaging.ContactRecord {
+    
+    static var incrementalLocalIdentifier = 0
     
     var firstName = ""
     var lastName = ""
@@ -599,11 +646,14 @@ struct FakeAddressBookContact : zmessaging.ContactRecord {
     var organization = ""
     var localIdentifier = ""
     
-    init(firstName: String, emailAddresses: [String], phoneNumbers: [String], identifier: String = "") {
+    init(firstName: String, emailAddresses: [String], phoneNumbers: [String], identifier: String? = nil) {
         self.firstName = firstName
         self.rawEmails = emailAddresses
         self.rawPhoneNumbers = phoneNumbers
-        self.localIdentifier = identifier
+        self.localIdentifier = identifier ?? {
+            FakeAddressBookContact.incrementalLocalIdentifier += 1
+            return "\(FakeAddressBookContact.incrementalLocalIdentifier)"
+        }()
     }
     
     var expectedHashes : [String] {
@@ -641,6 +691,8 @@ extension ZMTransportData {
                     throw TestErrors.failedToParse
                 }
                 return ContactCard(id: id, hashes: hashes)
+            }.sorted {
+                $0.id < $1.id
             }
         } catch {
             return nil

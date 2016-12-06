@@ -226,13 +226,14 @@ extension AddressBookTests {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 3)
                 XCTAssertEqual(chunk.includedContacts, UInt(0)..<UInt(3))
                 let expected = [
-                    ["BSdmiT9F5EtQrsfcGm+VC7Ofb0ZRREtCGCFw4TCimqk=",
+                    self.addressBookFake.fakeContacts[0].localIdentifier : ["BSdmiT9F5EtQrsfcGm+VC7Ofb0ZRREtCGCFw4TCimqk=",
                      "f9KRVqKI/n1886fb6FnP4oIORkG5S2HO0BoCYOxLFaA="],
+                    self.addressBookFake.fakeContacts[1].localIdentifier :
                     ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
+                    self.addressBookFake.fakeContacts[2].localIdentifier :
                     ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
                 ]
-                
-                zip(chunk.otherContactsHashes, expected).forEach  { XCTAssertEqual($0.0, $0.1) }
+                checkEqual(lhs: chunk.otherContactsHashes, rhs: expected)
             } else {
                 XCTFail()
             }
@@ -286,11 +287,11 @@ extension AddressBookTests {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 3)
                 XCTAssertEqual(chunk.includedContacts, UInt(0)..<UInt(2))
                 let expected = [
-                    ["BSdmiT9F5EtQrsfcGm+VC7Ofb0ZRREtCGCFw4TCimqk=",
+                    self.addressBookFake.fakeContacts[0].localIdentifier : ["BSdmiT9F5EtQrsfcGm+VC7Ofb0ZRREtCGCFw4TCimqk=",
                         "f9KRVqKI/n1886fb6FnP4oIORkG5S2HO0BoCYOxLFaA="],
-                    ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="]
+                    self.addressBookFake.fakeContacts[1].localIdentifier : ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="]
                     ]
-                zip(chunk.otherContactsHashes, expected).forEach  { XCTAssertEqual($0.0, $0.1) }
+                checkEqual(lhs: chunk.otherContactsHashes, rhs: expected)
             } else {
                 XCTFail()
             }
@@ -324,10 +325,10 @@ extension AddressBookTests {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 4)
                 XCTAssertEqual(chunk.includedContacts, UInt(1)..<UInt(3))
                 let expected = [
-                    ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
-                    ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
+                    self.addressBookFake.fakeContacts[1].localIdentifier : ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
+                    self.addressBookFake.fakeContacts[2].localIdentifier : ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
                     ]
-                zip(chunk.otherContactsHashes, expected).forEach  { XCTAssertEqual($0.0, $0.1) }
+                checkEqual(lhs: chunk.otherContactsHashes, rhs: expected)
             } else {
                 XCTFail()
             }
@@ -361,10 +362,10 @@ extension AddressBookTests {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 4)
                 XCTAssertEqual(chunk.includedContacts, UInt(2)..<UInt(4))
                 let expected =  [
-                    ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
-                    ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
+                    self.addressBookFake.fakeContacts[2].localIdentifier : ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
+                    self.addressBookFake.fakeContacts[3].localIdentifier : ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
                     ]
-                zip(chunk.otherContactsHashes, expected).forEach  { XCTAssertEqual($0.0, $0.1) }
+                checkEqual(lhs: chunk.otherContactsHashes, rhs: expected)
             } else {
                 XCTFail()
             }
@@ -421,8 +422,8 @@ extension AddressBookTests {
         queue.createDispatchGroups()
         let expectation1 = self.expectation(description: "Callback invoked once")
         
-        var chunk1 : [[String]]? = nil
-        var chunk2 : [[String]]? = nil
+        var chunk1 : [String: [String]]? = nil
+        var chunk2 : [String: [String]]? = nil
         
         // when
         self.addressBookFake.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
@@ -447,8 +448,29 @@ extension AddressBookTests {
         }
         
         // then
-        XCTAssertNotNil(chunk1)
-        XCTAssertNotNil(chunk2)
-        zip(chunk1!, chunk2!).forEach { XCTAssertEqual($0.0, $0.1) }
+        checkEqual(lhs: chunk1, rhs: chunk2)
     }
+}
+
+
+// MARK: - Helpers
+private func checkEqual(lhs: [String : [String]]?, rhs: [String : [String]]?, line: UInt = #line, file : StaticString = #file) {
+    guard let lhs = lhs, let rhs = rhs else {
+        XCTFail("Value is nil", file: file, line: line)
+        return
+    }
+    
+    let keys1 = Set(lhs.keys)
+    let keys2 = Set(rhs.keys)
+    guard keys1 == keys2 else {
+        XCTAssertEqual(keys1, keys2, file: file, line: line)
+        return
+    }
+    
+    for key in keys1 {
+        let array1 = lhs[key]!
+        let array2 = rhs[key]!
+        zip(array1, array2).forEach { XCTAssertEqual($0.0, $0.1, file: file, line: line) }
+    }
+    
 }

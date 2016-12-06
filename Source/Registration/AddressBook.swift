@@ -97,13 +97,16 @@ extension AddressBookAccessor {
     }
     
     /// Generate contact cards for the given range of contacts
-    fileprivate func generateContactCards(range: Range<UInt>) -> [[String]]
+    fileprivate func generateContactCards(range: Range<UInt>) -> [String: [String]]
     {
-        return self.contacts(range: range)
-            .map { (contact: ZMAddressBookContact) -> [String] in
-                return (contact.emailAddresses.map { $0.base64EncodedSHADigest })
-                    + (contact.phoneNumbers.map { $0.base64EncodedSHADigest })
+        var cards = [String:[String]]()
+        
+        self.contacts(range: range).enumerated().forEach {
+            let contact = $0.element
+            cards[contact.localIdentifier ?? "\($0.offset)"] = (contact.emailAddresses.map { $0.base64EncodedSHADigest })
+                + (contact.phoneNumbers.map { $0.base64EncodedSHADigest })
         }
+        return cards
     }
     
     /// Returns contacts in a specific range
@@ -176,9 +179,10 @@ struct EncodedAddressBookChunk {
     let numberOfTotalContacts : UInt
     
     /// Data to upload for contacts other that the self user
-    let otherContactsHashes : [[String]]
+    /// maps from contact ID to hashes
+    let otherContactsHashes : [String : [String]]
     
-    /// Contacts included in this chuck, according to AB order
+    /// Contacts included in this chunck, according to AB order
     let includedContacts : CountableRange<UInt>
 }
 
