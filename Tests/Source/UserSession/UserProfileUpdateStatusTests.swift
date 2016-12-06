@@ -30,6 +30,8 @@ class UserProfileUpdateStatusTests : MessagingTest {
     fileprivate var observer : TestUserProfileUpdateObserver! = nil
     
     fileprivate var newRequestObserver : OperationLoopNewRequestObserver!
+
+    fileprivate var mockAnalytics : MockAnalytics!
     
     /// Number of time the new request callback was invoked
     var newRequestCallbackCount : Int {
@@ -40,7 +42,8 @@ class UserProfileUpdateStatusTests : MessagingTest {
         super.setUp()
         self.newRequestObserver = OperationLoopNewRequestObserver()
         self.observer = TestUserProfileUpdateObserver()
-        self.sut = UserProfileUpdateStatus(managedObjectContext: self.uiMOC)
+        self.mockAnalytics = MockAnalytics()
+        self.sut = UserProfileUpdateStatus(managedObjectContext: self.uiMOC, analytics: self.mockAnalytics)
         self.observerToken = self.sut.add(observer: self.observer)
     }
     
@@ -49,6 +52,7 @@ class UserProfileUpdateStatusTests : MessagingTest {
         self.sut.removeObserver(token: self.observerToken!)
         self.sut = nil
         self.observer = nil
+        self.mockAnalytics = nil
         super.tearDown()
     }
 }
@@ -1039,6 +1043,45 @@ extension UserProfileUpdateStatusTests {
         XCTAssertEqual(self.sut.suggestedHandlesToCheck?.count, 1)
         XCTAssertEqual(self.sut.suggestedHandlesToCheck?.first, handle)
     }
+}
+
+// MARK: - Analytics
+extension UserProfileUpdateStatusTests {
+
+    func testThatItTracksFindingASuggestedHandleOnTheFirstTry() {
+        // GIVEN
+        sut.suggestHandles()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // WHEN
+        sut.didFindHandleSuggestion(handle: "handle")
+
+        // THEN
+        XCTAssertEqual(mockAnalytics.taggedEventsWithAttributes.count, 1)
+        guard let event = mockAnalytics.taggedEventsWithAttributes.first else { return XCTFail() }
+        XCTAssertEqual(event.event, "onboarding.generated_username")
+        XCTAssertEqual(event.attributes["outcome"] as? String, "success")
+        XCTAssertEqual(event.attributes["num_of_attempts"] as? Int, 1)
+    }
+
+    func testThatItTracksFindingASuggestedHandleAfterMultipleAttempts() {
+        // GIVEN
+        sut.suggestHandles()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // WHEN
+        sut.didFailToFindHandleSuggestion()
+        sut.didFailToFindHandleSuggestion()
+        sut.didFindHandleSuggestion(handle: "handle")
+
+        // THEN
+        XCTAssertEqual(mockAnalytics.taggedEventsWithAttributes.count, 1)
+        guard let event = mockAnalytics.taggedEventsWithAttributes.first else { return XCTFail() }
+        XCTAssertEqual(event.event, "onboarding.generated_username")
+        XCTAssertEqual(event.attributes["outcome"] as? String, "success")
+        XCTAssertEqual(event.attributes["num_of_attempts"] as? Int, 3)
+    }
+
 }
 
 // MARK: - Helpers
