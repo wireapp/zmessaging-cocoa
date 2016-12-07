@@ -146,8 +146,11 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             return ZMTransportRequest(path: "/self/handle", method: .methodPUT, payload: payload)
             
         case self.handleSuggestionSearchSync:
+            guard let handlesToCheck = self.userProfileUpdateStatus.suggestedHandlesToCheck else {
+                fatal("Tried to check handles availability, but no handle was available")
+            }
             let payload = [
-                    "handles" : self.userProfileUpdateStatus.suggestedHandlesToCheck ?? [],
+                    "handles" :  handlesToCheck,
                     "return" : 1
                 ] as NSDictionary
             return ZMTransportRequest(path: "/users/handles", method: .methodPOST, payload: payload)
