@@ -38,6 +38,9 @@ protocol AddressBookAccessor {
     
     /// Normalization function for phone numbers
     var phoneNumberNormalizer : AddressBook.Normalizer { get }
+    
+    /// Gets a specific address book user by the local address book indentifier
+    func contact(identifier: String) -> ContactRecord?
 }
 
 extension AddressBookAccessor {
@@ -97,13 +100,16 @@ extension AddressBookAccessor {
     }
     
     /// Generate contact cards for the given range of contacts
-    fileprivate func generateContactCards(range: Range<UInt>) -> [[String]]
+    fileprivate func generateContactCards(range: Range<UInt>) -> [String: [String]]
     {
-        return self.contacts(range: range)
-            .map { (contact: ZMAddressBookContact) -> [String] in
-                return (contact.emailAddresses.map { $0.base64EncodedSHADigest })
-                    + (contact.phoneNumbers.map { $0.base64EncodedSHADigest })
+        var cards = [String:[String]]()
+        
+        self.contacts(range: range).enumerated().forEach {
+            let contact = $0.element
+            cards[contact.localIdentifier ?? "\($0.offset)"] = (contact.emailAddresses.map { $0.base64EncodedSHADigest })
+                + (contact.phoneNumbers.map { $0.base64EncodedSHADigest })
         }
+        return cards
     }
     
     /// Returns contacts in a specific range
@@ -176,9 +182,10 @@ struct EncodedAddressBookChunk {
     let numberOfTotalContacts : UInt
     
     /// Data to upload for contacts other that the self user
-    let otherContactsHashes : [[String]]
+    /// maps from contact ID to hashes
+    let otherContactsHashes : [String : [String]]
     
-    /// Contacts included in this chuck, according to AB order
+    /// Contacts included in this chunck, according to AB order
     let includedContacts : CountableRange<UInt>
 }
 
@@ -295,6 +302,15 @@ protocol ContactRecord {
     var organization : String { get }
     var localIdentifier : String { get }
     
+}
+
+extension ContactRecord {
+    
+    var displayName : String {
+        return [self.firstName, self.middleName, self.lastName]
+            .filter { $0 != "" }
+            .joined(separator: " ")
+    }
 }
 
 extension ZMAddressBookContact {

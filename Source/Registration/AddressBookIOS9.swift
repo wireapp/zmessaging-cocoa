@@ -29,6 +29,12 @@ class AddressBookIOS9 : AddressBook {
 @available(iOS 9.0, *)
 extension AddressBookIOS9 : AddressBookAccessor {
     
+    /// Gets a specific address book user by the local address book indentifier
+    internal func contact(identifier: String) -> ContactRecord? {
+        return try? store.unifiedContact(withIdentifier: identifier, keysToFetch: AddressBookIOS9.keysToFetch)
+    }
+
+    
     static var keysToFetch : [CNKeyDescriptor] {
         return  [CNContactPhoneNumbersKey as CNKeyDescriptor,
                  CNContactEmailAddressesKey as CNKeyDescriptor,

@@ -216,7 +216,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[PushTokenStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[TypingStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[SearchUserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
-                                   [[RemovedSuggestedPeopleStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[UserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:imageProcessingQueue clientRegistrationDelegate:clientRegistrationStatus],
                                    [[TopConversationsRequestStrategy alloc] initWithManagedObjectContext:uiMOC authenticationStatus:authenticationStatus conversationDirectory:topConversationsDirectory]
                                    ];
