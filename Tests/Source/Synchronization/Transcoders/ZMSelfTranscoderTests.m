@@ -84,10 +84,20 @@
               } mutableCopy];
 }
 
+- (void)simulateNeedsSlowSync
+{
+    [self.syncMOC performBlockAndWait:^{
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.needsToBeUpdatedFromBackend = YES;
+        [self.syncMOC saveOrRollback];
+        [self.sut objectsDidChange:[NSSet setWithObject:selfUser]];
+    }];
+}
+
 - (void)testThatItRequestSelfUserIfNeedsSlowSync
 {
     // given
-    [self.sut setNeedsSlowSync];
+    [self simulateNeedsSlowSync];
     
     // when
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
@@ -101,7 +111,7 @@
 - (void)testThatItDoesNotRequestSelfUserIfSlowSyncIsDone
 {
     // given
-    [self.sut setNeedsSlowSync];
+    [self simulateNeedsSlowSync];
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
@@ -123,11 +133,10 @@
 {
     // given
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
-    
+    [self simulateNeedsSlowSync];
+
     __block ZMUser *selfUser;
     [self.syncMOC performGroupedBlockAndWait:^{
-        [self.sut setNeedsSlowSync];
-
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
         selfUser = [ZMUser selfUserInContext:self.syncMOC];
@@ -165,7 +174,7 @@
 - (void)testThatItRequestsTheSelfUserAgain
 {
     // given
-    [self.sut setNeedsSlowSync];
+    [self simulateNeedsSlowSync];
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
@@ -176,7 +185,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    [self.sut setNeedsSlowSync];
+    [self simulateNeedsSlowSync];
     request = [self.sut.requestGenerators nextRequest];
     
     // then
@@ -203,8 +212,9 @@
 - (void)testThatItIndicatesThatTheSelfUserIsComplete
 {
     // given
+    [self simulateNeedsSlowSync];
+
     [self.syncMOC performGroupedBlockAndWait:^{
-        [self.sut setNeedsSlowSync];
         NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
         
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
@@ -226,18 +236,18 @@
 - (void)testThatItRequestsTheSelfUserAfterSetNeedSlowSync
 {
     // given
-    [self.sut setNeedsSlowSync];
-    XCTAssertFalse(self.sut.isSlowSyncDone);
+    [self simulateNeedsSlowSync];
+    XCTAssertFalse(self.sut.isSelfUserComplete);
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     
     // complete request and hard sync
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertTrue(self.sut.isSlowSyncDone);
+    XCTAssertTrue(self.sut.isSelfUserComplete);
     
     // when
-    [self.sut setNeedsSlowSync];
+    [self simulateNeedsSlowSync];
     
     // then
     ZMTransportRequest *secondRequest = [self.sut.requestGenerators nextRequest];
@@ -248,8 +258,8 @@
 - (void)testThatItReturnsSlowSyncDoneAfterCompletingRequest
 {
     // given
-    [self.sut setNeedsSlowSync];
-    XCTAssertFalse(self.sut.isSlowSyncDone);
+    [self simulateNeedsSlowSync];
+    XCTAssertFalse(self.sut.isSelfUserComplete);
     ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     
@@ -258,15 +268,9 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue(self.sut.isSlowSyncDone);
+    XCTAssertTrue(self.sut.isSelfUserComplete);
     
 }
-
-- (void)testThatItIsCreatedWithIsSlowSyncDoneTrue
-{
-    XCTAssertTrue(self.sut.isSlowSyncDone);
-}
-
 
 - (void)testThatItCalls_FetchRequestForTrackedObjects_OnUpStreamObjectSync
 {
@@ -437,7 +441,7 @@
 
 - (void)markSlowSyncAsDone;
 {
-    [self.sut setNeedsSlowSync];
+    [self simulateNeedsSlowSync];
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     

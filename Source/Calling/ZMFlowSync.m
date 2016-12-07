@@ -139,20 +139,11 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     self.eventTypesToForward = [types copy];
 }
 
-- (BOOL)isSlowSyncDone
-{
-    return YES;
-}
-
 - (NSArray *)contextChangeTrackers
 {
     return @[];
 }
 
-- (void)setNeedsSlowSync
-{
-    // no-op
-}
 
 - (NSArray *)requestGenerators;
 {

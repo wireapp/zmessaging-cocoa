@@ -227,7 +227,9 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
 - (void)setNeedsSlowSync
 {
-    // no op
+    self.didStartQuickSync = YES;
+    [self startDownloadingMissingNotifications];
+    [self.syncStatus didStart:self.expectedSyncPhase];
 }
 
 - (ZMTransportRequest *)nextRequest
@@ -260,9 +262,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     SyncStatus *syncStatus = self.syncStatus;
     if (syncStatus.currentSyncPhase == self.expectedSyncPhase) {
         if (!self.didStartQuickSync) {
-            self.didStartQuickSync = YES;
-            [self startDownloadingMissingNotifications];
-            [syncStatus didStart:self.expectedSyncPhase];
+            [self setNeedsSlowSync];
         }
         else if ([self isSlowSyncDone]) {
             self.didStartQuickSync = NO;

@@ -295,7 +295,8 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     [authenticationStatus addAuthenticationCenterObserver:self];
     
     if (! directory.selfTranscoder.isSelfUserComplete) {
-        [directory.selfTranscoder setNeedsSlowSync]; // TODO replace this with setting the "need to get from backend" flag on the self user
+        [ZMUser selfUserInContext:directory.moc].needsToBeUpdatedFromBackend = YES;
+        [directory.moc saveOrRollback];
     }
 }
 
