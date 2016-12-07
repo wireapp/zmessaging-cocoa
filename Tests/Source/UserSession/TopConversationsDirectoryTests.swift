@@ -23,16 +23,20 @@ import XCTest
 class TopConversationsDirectoryTests : MessagingTest {
 
     var sut : TopConversationsDirectory!
-    
+    var topConversationsObserver: FakeTopConversationsDirectoryObserver!
+    var topConversationsObserverToken: TopConversationsDirectoryObserverToken!
     var newRequestObserver : OperationLoopNewRequestObserver!
     
     override func setUp() {
         super.setUp()
         self.newRequestObserver = OperationLoopNewRequestObserver()
         self.sut = TopConversationsDirectory(managedObjectContext: self.uiMOC)
+        self.topConversationsObserver = FakeTopConversationsDirectoryObserver()
+        self.topConversationsObserverToken = self.sut.add(observer: topConversationsObserver)
     }
     
     override func tearDown() {
+        self.sut.removeObserver(with: self.topConversationsObserverToken)
         self.sut = nil
         self.newRequestObserver = nil
         super.tearDown()
@@ -158,6 +162,60 @@ class TopConversationsDirectoryTests : MessagingTest {
     }
 }
 
+// MARK: - Observation
+extension TopConversationsDirectoryTests {
+
+    func testThatItDoesNotNotifyTheObserverIfTheTopConversationsDidNotChange() {
+
+        // GIVEN
+        XCTAssertEqual(topConversationsObserver.topConversationsDidChangeCallCount, 0)
+
+        // WHEN
+        sut.refreshTopConversations()
+
+        // THEN
+        XCTAssertEqual(topConversationsObserver.topConversationsDidChangeCallCount, 0)
+    }
+
+    func testThatItNotifiesTheObserverWhenTheTopConversationsDidChange() {
+
+        // GIVEN
+        XCTAssertEqual(topConversationsObserver.topConversationsDidChangeCallCount, 0)
+        sut.refreshTopConversations()
+
+        // WHEN
+        sut.didDownloadTopConversations(conversations: [])
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
+        XCTAssertEqual(topConversationsObserver.topConversationsDidChangeCallCount, 1)
+    }
+
+    func testThatItNotifiesTheObserverWhenTheTopConversationsDidChangeSubsequentially() {
+
+        // GIVEN
+        XCTAssertEqual(topConversationsObserver.topConversationsDidChangeCallCount, 0)
+        sut.refreshTopConversations()
+
+        // WHEN
+        sut.didDownloadTopConversations(conversations: [])
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
+        XCTAssertEqual(topConversationsObserver.topConversationsDidChangeCallCount, 1)
+
+        // WHEN
+        let (conv1, conv2) = (createConversation(in: uiMOC), createConversation(in: uiMOC))
+        sut.refreshTopConversations()
+        sut.didDownloadTopConversations(conversations: [conv1, conv2])
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
+        XCTAssertEqual(topConversationsObserver.topConversationsDidChangeCallCount, 2)
+    }
+
+}
+
 // MARK: - Helpers
 extension TopConversationsDirectoryTests {
     
@@ -172,3 +230,12 @@ extension TopConversationsDirectoryTests {
     }
 }
 
+class FakeTopConversationsDirectoryObserver: TopConversationsDirectoryObserver {
+
+    var topConversationsDidChangeCallCount = 0
+
+    func topConversationsDidChange() {
+        topConversationsDidChangeCallCount += 1
+    }
+
+}
