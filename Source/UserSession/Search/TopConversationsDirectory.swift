@@ -65,6 +65,7 @@ extension TopConversationsDirectory {
     private func persistList() {
         let valueToSave = self.topConversations.map { $0.objectID.uriRepresentation() }
         self.managedObjectContext.setPersistentStoreMetadata(valueToSave, forKey: topConversationsObjectIDKey)
+        TopConversationsDirectoryNotification.post()
     }
 
     /// Load list from persistent store
@@ -75,4 +76,45 @@ extension TopConversationsDirectory {
         let managedObjectIDs = ids.flatMap { self.managedObjectContext.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: $0) }
         self.topConversationsCache = managedObjectIDs.flatMap { self.managedObjectContext.object(with: $0) as? ZMConversation }
     }
+}
+
+// MARK: – Observation
+@objc public protocol TopConversationsDirectoryObserver {
+
+    @objc func topConversationsDidChange()
+
+}
+
+
+struct TopConversationsDirectoryNotification {
+    fileprivate static let name = NSNotification.Name(rawValue: "TopConversationsDirectoryNotification")
+
+    static func post() {
+        NotificationCenter.default.post(name: name, object: nil, userInfo: nil)
+    }
+}
+
+@objc public class TopConversationsDirectoryObserverToken: NSObject {
+    let innerToken: Any
+
+    init(_ token: Any) {
+        self.innerToken = token
+    }
+}
+
+
+extension TopConversationsDirectory {
+
+    @objc(addObserver:) public func add(observer: TopConversationsDirectoryObserver) -> TopConversationsDirectoryObserverToken {
+        let token = NotificationCenter.default.addObserver(forName: TopConversationsDirectoryNotification.name, object: nil, queue: .main) { [weak observer] _ in
+            observer?.topConversationsDidChange()
+        }
+
+        return TopConversationsDirectoryObserverToken(token)
+    }
+
+    @objc(removeObserver:) public func removeObserver(with token: TopConversationsDirectoryObserverToken) {
+        NotificationCenter.default.removeObserver(token.innerToken, name: TopConversationsDirectoryNotification.name, object: nil)
+    }
+
 }
