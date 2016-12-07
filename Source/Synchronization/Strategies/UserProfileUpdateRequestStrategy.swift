@@ -146,8 +146,11 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             return ZMTransportRequest(path: "/self/handle", method: .methodPUT, payload: payload)
             
         case self.handleSuggestionSearchSync:
-            let handles = (self.userProfileUpdateStatus.suggestedHandlesToCheck ?? []).joined(separator: ",")
-            return ZMTransportRequest(path: "/users?handles=\(handles)", method: .methodGET, payload: nil)
+            let payload = [
+                    "handles" : self.userProfileUpdateStatus.suggestedHandlesToCheck ?? [],
+                    "return" : 1
+                ] as NSDictionary
+            return ZMTransportRequest(path: "/users/handles", method: .methodPOST, payload: payload)
         
         default:
             return nil
@@ -223,13 +226,11 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             }
             
         case self.handleSuggestionSearchSync:
-            if response.result == .success, let missingHandle = self.findMissingHandleInResponse(response: response) {
-                self.userProfileUpdateStatus.didFindHandleSuggestion(handle: missingHandle)
-            } else if response.httpStatus == 404 {
-                if let handle = self.userProfileUpdateStatus.suggestedHandlesToCheck?.first {
-                    self.userProfileUpdateStatus.didFindHandleSuggestion(handle: handle)
+            if response.result == .success {
+                if let availableHandle = (response.payload as? [String])?.first {
+                    self.userProfileUpdateStatus.didFindHandleSuggestion(handle: availableHandle)
                 } else {
-                    self.userProfileUpdateStatus.didFailToFindHandleSuggestion()
+                    self.userProfileUpdateStatus.didNotFindAvailableHandleSuggestion()
                 }
             } else {
                 self.userProfileUpdateStatus.didFailToFindHandleSuggestion()

@@ -176,7 +176,7 @@ extension UserProfileUpdateRequestStrategyTests {
         // GIVEN
         self.userProfileUpdateStatus.suggestHandles()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        guard let handles = self.userProfileUpdateStatus.suggestedHandlesToCheck?.joined(separator: ",") else {
+        guard let handles = self.userProfileUpdateStatus.suggestedHandlesToCheck else {
             XCTFail()
             return
         }
@@ -190,8 +190,16 @@ extension UserProfileUpdateRequestStrategyTests {
             return
         }
         
-        XCTAssertEqual(request.method, .methodGET)
-        XCTAssertTrue(request.path.hasPrefix("/users?handles=\(handles)"))
+        XCTAssertEqual(request.method, .methodPOST)
+        XCTAssertEqual(request.path, "/users/handles")
+        guard let payloadDictionary = request.payload?.asDictionary(),
+            let payloadHandles = payloadDictionary["handles"] as? [String]
+        else {
+            XCTFail()
+            return
+        }
+        XCTAssertEqual(payloadHandles, handles)
+        XCTAssertEqual(payloadDictionary["return"] as? Int, 1)
     }
 }
 
@@ -531,53 +539,31 @@ extension UserProfileUpdateRequestStrategyTests {
             XCTFail()
             return
         }
-        let expectedHandle = handles[8]
+        let expectedHandle = handles[5]
         
         // WHEN
         let request = self.sut.nextRequest()
-        let handlesInResponse = handles.filter { $0 != expectedHandle }
-        request?.complete(with: self.userProfileResponse(handles: handlesInResponse))
+        let handlesInResponse = [handles[5], handles[9], handles[10]]
+        request?.complete(with: ZMTransportResponse(payload: handlesInResponse as NSArray, httpStatus: 200, transportSessionError: nil))
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFindHandleSuggestion, [expectedHandle])
     }
-
-    func testThatItCallsDidFinddHandleSuggestionIfItReceivesA404AndAllHandlesAreAvailable() {
-
-        // GIVEN
-        self.userProfileUpdateStatus.suggestHandles()
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        guard let handles = self.userProfileUpdateStatus.suggestedHandlesToCheck, handles.count > 10 else {
-            return XCTFail()
-        }
-
-        // WHEN
-        let request = self.sut.nextRequest()
-        request?.complete(with: self.notFoundResponse())
-
-        // THEN
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFindHandleSuggestion, [handles[0]])
-    }
     
-    func testThatItCallsFailedToFindHandleSuggestionIfAllHandlesArePresent() {
+    func testThatItCallsFailedToFindHandleSuggestionIfNoHandlesAreReturned() {
         
         // GIVEN
         self.userProfileUpdateStatus.suggestHandles()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        guard let handles = self.userProfileUpdateStatus.suggestedHandlesToCheck else {
-            XCTFail()
-            return
-        }
         
         // WHEN
         let request = self.sut.nextRequest()
-        request?.complete(with: self.userProfileResponse(handles: handles))
+        request?.complete(with: ZMTransportResponse(payload: [] as NSArray, httpStatus: 200, transportSessionError: nil))
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailToFindHandleSuggestion , 1)
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidNotFindAvailableHandleSuggestion , 1)
     }
     
     func testThatItCallsFailedToFindHandleSuggestionInCaseOfError() {
@@ -596,28 +582,12 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailToFindHandleSuggestion , 1)
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailToFindHandleSuggestion, 1)
     }
 }
 
 // MARK: - Helpers
 extension UserProfileUpdateRequestStrategyTests {
-    
-    func userProfileResponse(handles: [String]) -> ZMTransportResponse {
-        
-        let users = handles.map {
-            return ["handle" : $0,
-                    "id" : UUID.create().transportString()
-            ]
-        }
-        return ZMTransportResponse(
-            payload: users as NSArray,
-            httpStatus: 200,
-            transportSessionError: nil,
-            headers: nil
-        )
-        
-    }
     
     func errorResponse(path: String? = nil) -> ZMTransportResponse {
         if let url = path.flatMap(URL.init) {
@@ -713,6 +683,7 @@ class TestUserProfileUpdateStatus : UserProfileUpdateStatus {
     var recordedDidFailToSetHandle = 0
     var recordedDidFailToSetAlreadyExistingHandle = 0
     var recordedDidFailToFindHandleSuggestion = 0
+    var recordedDidNotFindAvailableHandleSuggestion = 0
     var recordedDidFindHandleSuggestion : [String] = []
     
     override func didFailEmailUpdate(error: Error) {
@@ -783,6 +754,11 @@ class TestUserProfileUpdateStatus : UserProfileUpdateStatus {
     override func didFailToSetAlreadyExistingHandle() {
         recordedDidFailToSetAlreadyExistingHandle += 1
         super.didFailToSetAlreadyExistingHandle()
+    }
+    
+    override func didNotFindAvailableHandleSuggestion() {
+        recordedDidNotFindAvailableHandleSuggestion += 1
+        super.didNotFindAvailableHandleSuggestion()
     }
     
     override func didFailToFindHandleSuggestion() {
