@@ -38,6 +38,7 @@
 
 #import <zmessaging/zmessaging-Swift.h>
 
+NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName = @"ZMApplicationDidEnterEventProcessingStateNotification";
 
 static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 

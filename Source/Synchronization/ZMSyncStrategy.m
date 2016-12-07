@@ -703,8 +703,8 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     [self processAllEventsInBuffer];
     [self.hotFix applyPatches];
-
     [self.syncStateDelegate didFinishSync];
+    [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
 }
 
 @end
