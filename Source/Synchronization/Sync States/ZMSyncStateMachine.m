@@ -38,8 +38,6 @@
 
 #import <zmessaging/zmessaging-Swift.h>
 
-NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName = @"ZMApplicationDidEnterEventProcessingStateNotification";
-
 
 static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 
@@ -216,20 +214,11 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
     [self.currentState didFailAuthentication];
 }
 
-- (void)didStartSlowSync
-{
-    for(id<ZMObjectStrategy> obj in self.directory.allTranscoders) {
-        [obj setNeedsSlowSync];
-    }
-}
 
 - (void)dataDidChange
 {
     [self.currentState dataDidChange];
 }
 
-- (void)notifyEnteringEventProcessing
-{
-}
 
 @end

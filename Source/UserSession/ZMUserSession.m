@@ -379,10 +379,7 @@ ZM_EMPTY_ASSERTING_INIT()
         [self enableBackgroundFetch];
         
         self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = self.application.applicationState != UIApplicationStateBackground;
-        ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self
-                                                                           selector:@selector(didEnterEventProcessingState:)
-                                                                               name:ZMApplicationDidEnterEventProcessingStateNotificationName
-                                                                             object:nil]);
+
         if ([self.class useCallKit]) {
             CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[ZMCallKitDelegate providerConfiguration]];
             CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
@@ -823,6 +820,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.isPerformingSync = NO;
         [self changeNetworkStateAndNotify];
         [self notifyThirdPartyServices];
+        [self processPendingNotificationActions];
     }];
 }
 

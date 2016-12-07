@@ -176,17 +176,6 @@
     [self.eventProcessingState verify];
 }
 
-- (void)testThatItCallsDidStartSlowSyncOnAllSyncObjects
-{
-    // expect
-    for(id object in [self.objectDirectory allTranscoders]) {
-        [[object expect] setNeedsSlowSync];
-    }
-    
-    // when
-    [self.sut didStartSlowSync];
-}
-
 - (void)testThatItStartsBackgroundFetchWhenTheCurrentStateSupportsIt;
 {
     // given

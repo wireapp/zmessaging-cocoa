@@ -21,8 +21,6 @@
 
 #import "ZMSyncStateDelegate.h"
 
-extern NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName;
-
 @class ZMSyncState;
 
 @protocol ZMStateMachineDelegate <ZMSyncStateDelegate>
@@ -39,6 +37,5 @@ extern NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName
 @property (nonatomic, readonly) ZMSyncState *currentState;
 
 - (void)goToState:(ZMSyncState *)state;
-- (void)didStartSlowSync;
 
 @end

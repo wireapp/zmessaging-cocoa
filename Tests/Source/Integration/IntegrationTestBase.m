@@ -24,7 +24,6 @@
 #import "IntegrationTestBase.h"
 #import "ZMHotfix.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMTestNotifications.h"
 #import "ZMSearchDirectory.h"
 #import "ZMUserSession+Authentication.h"
 #import "ZMUserSession+Registration.h"
