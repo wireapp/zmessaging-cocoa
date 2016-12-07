@@ -38,6 +38,9 @@ protocol AddressBookAccessor {
     
     /// Normalization function for phone numbers
     var phoneNumberNormalizer : AddressBook.Normalizer { get }
+    
+    /// Gets a specific address book user by the local address book indentifier
+    func contact(identifier: String) -> ContactRecord?
 }
 
 extension AddressBookAccessor {
@@ -299,6 +302,15 @@ protocol ContactRecord {
     var organization : String { get }
     var localIdentifier : String { get }
     
+}
+
+extension ContactRecord {
+    
+    var displayName : String {
+        return [self.firstName, self.middleName, self.lastName]
+            .filter { $0 != "" }
+            .joined(separator: " ")
+    }
 }
 
 extension ZMAddressBookContact {

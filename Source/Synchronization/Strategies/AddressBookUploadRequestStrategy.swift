@@ -124,18 +124,30 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
                     "contact" : hashes as NSArray
                 ]
         }
+        
+        let allLocalContactIDs = Set(encodedChunk.otherContactsHashes.keys)
         let payload = ["cards" : contactCards, "self" : []]
         self.tracker.tagAddressBookUploadStarted(encodedChunk.numberOfTotalContacts)
-        return ZMTransportRequest(path: onboardingEndpoint, method: .methodPOST, payload: payload as ZMTransportData?, shouldCompress: true)
+        let request = ZMTransportRequest(path: onboardingEndpoint, method: .methodPOST, payload: payload as ZMTransportData?, shouldCompress: true)
+        request.add(ZMCompletionHandler(on: self.managedObjectContext, block: {
+            [weak self] response in
+            self?.parse(addressBookResponse: response, expectedContactIDs: allLocalContactIDs)
+            })
+        )
+        return request
     }
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
+        // no op
+    }
+    
+    private func parse(addressBookResponse response: ZMTransportResponse, expectedContactIDs: Set<String>) {
         if response.result == .success {
-
+            
             if let payload = response.payload as? [String: AnyObject],
                 let results = payload["results"] as? [[String: AnyObject]]
             {
-                // TODO MARCO: save contacts to users
+                self.updateLocalUsers(cards: results, expectedContactIDs: expectedContactIDs)
             }
             
             self.addressBookNeedsToBeUploaded = false
@@ -143,6 +155,57 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
             
             // tracking
             self.tracker.tagAddressBookUploadSuccess()
+        }
+    }
+    
+    /// Parse the cards response and updates the local users
+    private func updateLocalUsers(cards: [[String:AnyObject]], expectedContactIDs: Set<String>) {
+        
+        // do a single fetch for all users
+        let userIds = cards.flatMap { ($0["id"] as? String).flatMap { UUID(uuidString: $0 ) } }
+        let users = ZMUser.fetchObjects(withRemoteIdentifiers: NSOrderedSet(array: userIds), in: self.managedObjectContext)!.array as! [ZMUser]
+        
+        let idToUsers = users.dictionary {
+            return (key: $0.remoteIdentifier!, value: $0)
+        }
+        
+        guard let addressBook = self.addressBookGenerator() else {
+            return
+        }
+        
+        // add new matches
+        var missingIDs = Set(expectedContactIDs)
+        cards.forEach {
+            guard let userid = ($0["id"] as? String).flatMap({ UUID(uuidString: $0 )}),
+                let contactId = $0["card_id"] as? String,
+                let user = idToUsers[userid]
+            else { return }
+            
+            missingIDs.remove(contactId)
+            
+            if user.addressBookEntry == nil {
+                user.addressBookEntry = AddressBookEntry.insertNewObject(in: self.managedObjectContext)
+            }
+            user.addressBookEntry.localIdentifier = contactId
+            user.addressBookEntry.cachedName = addressBook.contact(identifier: contactId)?.displayName
+        }
+        
+        // now remove all address book entries for those users that were previously using the missing IDs
+        if #available(iOS 10.0, *) {
+            self.deleteEntriesForUsers(contactIDs: missingIDs)
+        }
+    }
+    
+    /// Remove address book entries for users previously matching the given contact IDs
+    @available(iOS 10.0, *)
+    private func deleteEntriesForUsers(contactIDs: Set<String>) {
+        let fetch = AddressBookEntry.fetchRequest()
+        fetch.predicate = NSPredicate(format: "%K IN %@", AddressBookEntry.Fields.localIdentifier.rawValue, contactIDs)
+        guard let entries = (try? self.managedObjectContext.fetch(fetch) as? [AddressBookEntry]) else {
+            return
+        }
+        entries?.forEach {
+            self.managedObjectContext.delete($0)
         }
     }
     

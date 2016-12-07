@@ -474,11 +474,13 @@ extension AddressBookUploadRequestStrategyTest {
         user2.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
         user1.addressBookEntry.cachedName = "JJ"
         user2.addressBookEntry.cachedName = "Kirk"
+        user1.addressBookEntry.localIdentifier = "u1"
+        user2.addressBookEntry.localIdentifier = "u2"
         self.syncMOC.saveOrRollback()
         
         let contacts = [
-            FakeAddressBookContact(firstName: "Joanna", emailAddresses: ["j@example.com"], phoneNumbers: []),
-            FakeAddressBookContact(firstName: "Chihiro", emailAddresses: ["c@example.com"], phoneNumbers: [])
+            FakeAddressBookContact(firstName: "Joanna", emailAddresses: ["j@example.com"], phoneNumbers: [], identifier: "u1"),
+            FakeAddressBookContact(firstName: "Chihiro", emailAddresses: ["c@example.com"], phoneNumbers: [], identifier: "u2")
         ]
         self.addressBook.fakeContacts = contacts
         let payload = [
@@ -580,6 +582,11 @@ extension AddressBookUploadRequestStrategyTest {
 
 /// Fake to supply predefined AB hashes
 class AddressBookFake : zmessaging.AddressBook, zmessaging.AddressBookAccessor {
+    
+    /// Find contact by Id
+    func contact(identifier: String) -> zmessaging.ContactRecord? {
+        return fakeContacts.first { $0.localIdentifier == identifier }
+    }
     
     /// List of contacts in this address book
     var fakeContacts = [FakeAddressBookContact]()
