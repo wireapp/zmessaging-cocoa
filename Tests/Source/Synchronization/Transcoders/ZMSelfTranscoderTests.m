@@ -86,11 +86,11 @@
 
 - (void)simulateNeedsSlowSync
 {
+    [(ZMClientRegistrationStatus* )[[self.mockClientRegistrationStatus stub] andReturnValue:@(ZMClientRegistrationPhaseWaitingForSelfUser)] currentPhase];
     [self.syncMOC performBlockAndWait:^{
         ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-        selfUser.needsToBeUpdatedFromBackend = YES;
+        selfUser.remoteIdentifier = nil;
         [self.syncMOC saveOrRollback];
-        [self.sut objectsDidChange:[NSSet setWithObject:selfUser]];
     }];
 }
 
@@ -412,7 +412,7 @@
 - (void)testThatItReturnsAnPUTRequestForSelf
 {
     // given
-    [self markSlowSyncAsDone];
+    [(ZMClientRegistrationStatus* )[[self.mockClientRegistrationStatus stub] andReturnValue:@(ZMClientRegistrationPhaseRegistered)] currentPhase];
     
     ZMTransportRequest *request = [ZMTransportRequest requestWithPath:@"/self" method:ZMMethodPUT payload:@{}];
     [[[(OCMockObject *)self.upstreamObjectSync expect] andReturn:request] nextRequest];
@@ -428,7 +428,7 @@
 
 - (void)testThatContextChangeTrackersContainUpstreamObjectSync
 {
-    [self markSlowSyncAsDone];
+    [(ZMClientRegistrationStatus* )[[self.mockClientRegistrationStatus stub] andReturnValue:@(ZMClientRegistrationPhaseRegistered)] currentPhase];
     
     // when
     NSArray *changeTrackers = self.sut.contextChangeTrackers;
@@ -436,20 +436,6 @@
     // then
     XCTAssertTrue([changeTrackers containsObject:self.upstreamObjectSync]);
     
-}
-
-
-
-- (void)markSlowSyncAsDone;
-{
-    [self simulateNeedsSlowSync];
-    NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-    
-    // simulate hard sync done
-    ZMTransportRequest *request = [self.sut nextRequest];
-    [request completeWithResponse:response];
-    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 @end
@@ -490,7 +476,8 @@
 {
     // given
     [self useSUTWithRealDependencies];
-    
+    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus stub] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseRegistered)] currentPhase];
+
     ZMUser *selfUser;
     [self setUpSelfUser:&selfUser];
 
@@ -551,9 +538,7 @@
 - (void)useSUTWithRealDependencies {
     [self.sut tearDown];
     //let it create an actual ZMUpstreamSync, not a mocked one
-    self.realClientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC loginCredentialProvider:nil updateCredentialProvider:nil cookie:nil registrationStatusDelegate:nil];
-    ;
-    self.sut = (id) [[ZMSelfStrategy alloc] initWithClientRegistrationStatus:self.realClientRegistrationStatus
+    self.sut = (id) [[ZMSelfStrategy alloc] initWithClientRegistrationStatus:self.mockClientRegistrationStatus
                                                           managedObjectContext:self.syncMOC];
 }
 
@@ -561,6 +546,7 @@
 {
     // when
     [self useSUTWithRealDependencies];
+    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus stub] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseRegistered)] currentPhase];
 
     ZMUser *selfUser;
     [self setUpSelfUser:&selfUser];
@@ -606,7 +592,8 @@
 {
     // given
     [self useSUTWithRealDependencies];
-    
+    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus stub] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseRegistered)] currentPhase];
+
     ZMUser *selfUser;
     [self setUpSelfUser:&selfUser];
     
@@ -706,7 +693,8 @@
     
     // when
     [self useSUTWithRealDependencies];
-    
+    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus stub] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseRegistered)] currentPhase];
+
     ZMUser *selfUser;
     [self setUpSelfUser:&selfUser];
     
