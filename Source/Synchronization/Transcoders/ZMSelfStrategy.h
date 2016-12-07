@@ -17,21 +17,24 @@
 // 
 
 
-#import "ZMSelfTranscoder.h"
+@import WireRequestStrategy;
 
-extern NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval;
+@class NSManagedObjectContext;
+@class NSOperationQueue;
+@class ZMUpstreamModifiedObjectSync;
 
+@class ZMClientRegistrationStatus;
 
+@interface ZMSelfStrategy : ZMObjectSyncStrategy <ZMRequestGenerator, ZMContextChangeTrackerSource>
 
-@class ZMTimedSingleRequestSync;
-
-@interface ZMSelfTranscoder ()
+@property (nonatomic, readonly) BOOL isSelfUserComplete;
 
 - (instancetype)initWithClientRegistrationStatus:(ZMClientRegistrationStatus *)clientStatus
-                            managedObjectContext:(NSManagedObjectContext *)moc
-                              upstreamObjectSync:(ZMUpstreamModifiedObjectSync *)upstreamObjectSync;
-
-
-@property (nonatomic, readonly) ZMTimedSingleRequestSync *timedDownstreamSync;
-
+                            managedObjectContext:(NSManagedObjectContext *)moc;
 @end
+
+
+@interface ZMSelfStrategy (ContextChangeTracker) <ZMContextChangeTracker>
+@end
+
+

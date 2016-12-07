@@ -92,7 +92,6 @@
               self.objectDirectory.flowTranscoder,
               self.objectDirectory.systemMessageTranscoder,
               self.objectDirectory.clientMessageTranscoder,
-              self.objectDirectory.selfTranscoder,
               ];
 }
 

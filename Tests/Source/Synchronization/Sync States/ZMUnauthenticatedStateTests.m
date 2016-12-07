@@ -25,7 +25,7 @@
 #import "ZMUnauthenticatedState+Tests.h"
 #import "ZMStateMachineDelegate.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMSyncStrategy.h"
 #import "StateBaseTest.h"
 #import "ZMLoginTranscoder+Internal.h"
@@ -189,9 +189,9 @@
     
     // expect
     [[(id)self.stateMachine reject] goToState:OCMOCK_ANY];
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@NO] isSelfUserComplete];
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@NO] isSelfUserComplete];
     id<ZMRequestGenerator> generator = [self generatorReturningRequest:selfUserRequest];
-    [[[(id)self.objectDirectory.selfTranscoder expect] andReturn:@[generator]] requestGenerators];
+    [[[(id)self.objectDirectory.selfStrategy expect] andReturn:@[generator]] requestGenerators];
     
     // when
     ZMTransportRequest *request = [self.sut nextRequest];
@@ -213,7 +213,7 @@
     // expect
     [self.application setActive];
     [[(id)self.stateMachine expect] goToState:self.stateMachine.eventProcessingState];
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@YES] isSelfUserComplete]; //we also check for remoteIdentifier directly
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@YES] isSelfUserComplete]; //we also check for remoteIdentifier directly
     
     // when
     [self.sut didEnterState];
@@ -232,7 +232,7 @@
     // expect
     [self.application setBackground];
     [[(id)self.stateMachine expect] goToState:self.stateMachine.backgroundState];
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@YES] isSelfUserComplete];
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@YES] isSelfUserComplete];
     
     // when
     [self.sut didEnterState];
@@ -390,7 +390,7 @@
     [ZMUser selfUserInContext:self.uiMOC].remoteIdentifier = [NSUUID createUUID];
     
     [self.authenticationStatus setAuthenticationCookieData:[@"foo" dataUsingEncoding:NSUTF8StringEncoding]];
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@YES] isSelfUserComplete];
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@YES] isSelfUserComplete];
     [[[(id)self.objectDirectory.loginTranscoder stub] andReturn:nil] nextRequest];
     [[(id)self.stateMachine stub] goToState:self.stateMachine.eventProcessingState];
     
@@ -423,8 +423,7 @@
     ZMCredentials *cred2 = [ZMEmailCredentials credentialsWithEmail:@"MARIO@example.com" password:@"kjhgfdss"];
     
     // expect
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@NO] isSelfUserComplete];
-    [[(id)self.objectDirectory.selfTranscoder stub] setNeedsSlowSync];
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@NO] isSelfUserComplete];
     [[(id)self.objectDirectory.registrationTranscoder stub] resetRegistrationState];
 
     // when
@@ -453,8 +452,7 @@
     [self.authenticationStatus prepareForLoginWithCredentials:cred1];
     
     // expect
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@NO] isSelfUserComplete];
-    [[(id)self.objectDirectory.selfTranscoder stub] setNeedsSlowSync];
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@NO] isSelfUserComplete];
     [[(id)self.objectDirectory.registrationTranscoder stub] resetRegistrationState];
 
     __block BOOL notified = NO;
@@ -486,8 +484,7 @@
 
     
     // expect
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@NO] isSelfUserComplete];
-    [[(id)self.objectDirectory.selfTranscoder stub] setNeedsSlowSync];
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@NO] isSelfUserComplete];
     [[(id)self.objectDirectory.registrationTranscoder stub] resetRegistrationState];
     
     
@@ -506,8 +503,7 @@
     [self.authenticationStatus prepareForLoginWithCredentials:credentials];
     
     // expect
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@NO] isSelfUserComplete];
-    [[(id)self.objectDirectory.selfTranscoder stub] setNeedsSlowSync];
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@NO] isSelfUserComplete];
     [[(id)self.objectDirectory.registrationTranscoder stub] resetRegistrationState];
 
 
@@ -522,8 +518,7 @@
 - (void)testThatItDoesNotStartTheTimerWhenTheStateIsEnteredIfTheCredentialsAreNotSet
 {
     // expect
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@NO] isSelfUserComplete];
-    [[(id)self.objectDirectory.selfTranscoder stub] setNeedsSlowSync];
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@NO] isSelfUserComplete];
     [[(id)self.objectDirectory.registrationTranscoder stub] resetRegistrationState];
 
     
@@ -543,8 +538,7 @@
     [self.authenticationStatus didFailLoginWithEmailBecausePendingValidation];
     
     // expect
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@NO] isSelfUserComplete];
-    [[(id)self.objectDirectory.selfTranscoder stub] setNeedsSlowSync];
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@NO] isSelfUserComplete];
     [[(id)self.objectDirectory.registrationTranscoder stub] resetRegistrationState];
 
     
@@ -597,8 +591,7 @@
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:@"ddd@dd.d" password:@"fdsfsdf"];
     id mockRequest = [OCMockObject mockForClass:ZMTransportRequest.class];
     
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@NO] isSelfUserComplete];
-    [[(id)self.objectDirectory.selfTranscoder stub] setNeedsSlowSync];
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@NO] isSelfUserComplete];
     [[(id)self.objectDirectory.registrationTranscoder stub] resetRegistrationState];
 
     [self.authenticationStatus prepareForLoginWithCredentials:credentials];
@@ -632,7 +625,7 @@
     
     [(ZMAuthenticationStatus *)[[mockAuthCenter stub] andReturnValue:OCMOCK_VALUE(authenticationPhase)] currentPhase];
     [(ZMClientRegistrationStatus *)[[mockClientRegStatus stub] andReturnValue:OCMOCK_VALUE(clientPhase)] currentPhase];
-    [[[(id)self.objectDirectory.selfTranscoder stub] andReturnValue:@YES] isSelfUserComplete];
+    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@YES] isSelfUserComplete];
     
     
     ZMUnauthenticatedState *sut = [[ZMUnauthenticatedState alloc] initWithAuthenticationCenter:mockAuthCenter
