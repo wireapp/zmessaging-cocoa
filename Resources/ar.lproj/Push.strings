@@ -168,3 +168,8 @@
 "push.notification.action.call.message" = "رسالة";
 "push.notification.action.call.callback" = "معاودة الاتصال";
 "push.notification.action.connection.accept" = "قبول";
+
+"push.notification.callkit.call.started.group" = "%1$@ في %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "شخص يتصل في مُحادثة";
+"push.notification.callkit.call.started.group.nousername" = "شخص يتصل في %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ يتصل في مُحادثة";
