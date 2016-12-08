@@ -402,7 +402,7 @@ extension AddressBookUploadRequestStrategyTest {
     }
 }
 
-// MARK: - Suggested contacts
+// MARK: - Matched contacts
 
 /*
  Expected payload for /onboarding/v3
@@ -463,6 +463,53 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertEqual(user2.addressBookEntry?.localIdentifier, contacts[1].localIdentifier)
         XCTAssertEqual(user2.addressBookEntry?.cachedName, contacts[1].firstName)
 
+    }
+    
+    func testThatItCreatesMatchingUsersFromResponseIfTheyDoNotExist() {
+        
+        // GIVEN
+        let user1 = self.createUser(connected: true)
+        user1.needsToBeUpdatedFromBackend = false
+        let user2ID = UUID.create()
+        
+        let contacts = [
+            FakeAddressBookContact(firstName: "Joanna", emailAddresses: ["j@example.com"], phoneNumbers: [], identifier: UUID.create().transportString()),
+            FakeAddressBookContact(firstName: "Chihiro", emailAddresses: ["c@example.com"], phoneNumbers: [], identifier: UUID.create().transportString())
+        ]
+        self.addressBook.fakeContacts = contacts
+        
+        let payload = [
+            "results" : [
+                [
+                    "id" : user1.remoteIdentifier!.transportString(),
+                    "cards" : [contacts[0].localIdentifier]
+                ],
+                [
+                    "id" : user2ID.transportString(),
+                    "cards" : [contacts[1].localIdentifier]
+                ],
+            ]
+        ]
+        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        _ = sut.nextRequest() // this will return nil and start async processing
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        let request = sut.nextRequest()
+        
+        // WHEN
+        request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertFalse(user1.needsToBeUpdatedFromBackend)
+        
+        guard let user2 = ZMUser(remoteID: user2ID, createIfNeeded: false, in: self.syncMOC) else {
+            XCTFail("No user was created")
+            return
+        }
+        XCTAssertEqual(user2.addressBookEntry?.localIdentifier, contacts[1].localIdentifier)
+        XCTAssertEqual(user2.addressBookEntry?.cachedName, contacts[1].firstName)
+        XCTAssertTrue(user2.needsToBeUpdatedFromBackend)
+        XCTAssertEqual(user2.remoteIdentifier, user2ID)
     }
     
     func testThatItEmptiesMatchingUsersIfResponseIsEmpty() {

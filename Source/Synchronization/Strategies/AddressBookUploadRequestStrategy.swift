@@ -177,9 +177,15 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
         var missingIDs = Set(expectedContactIDs)
         cards.forEach {
             guard let userid = ($0["id"] as? String).flatMap({ UUID(uuidString: $0 )}),
-                let contactIds = $0["cards"] as? [String],
-                let user = idToUsers[userid]
+                let contactIds = $0["cards"] as? [String]
             else { return }
+            
+            let user : ZMUser = idToUsers[userid] ?? {
+                let newUser = ZMUser.insertNewObject(in: self.managedObjectContext)
+                newUser.remoteIdentifier = userid
+                newUser.needsToBeUpdatedFromBackend = true
+                return newUser
+            }()
 
             contactIds.forEach { contactId in
                 missingIDs.remove(contactId)
