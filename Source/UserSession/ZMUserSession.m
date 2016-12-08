@@ -98,6 +98,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) NSString *applicationGroupIdentifier;
 @property (nonatomic) NSURL *storeURL;
 @property (nonatomic) NSURL *keyStoreURL;
+@property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 
 
 /// Build number of the Wire app
@@ -342,6 +343,8 @@ ZM_EMPTY_ASSERTING_INIT()
         
         _application = application;
         
+        self.topConversationsDirectory = [[TopConversationsDirectory alloc] initWithManagedObjectContext:self.managedObjectContext];
+        
         self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
                                                                             authenticationStatus:self.authenticationStatus
                                                                          userProfileUpdateStatus:self.userProfileUpdateStatus
@@ -350,6 +353,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                             proxiedRequestStatus:self.proxiedRequestStatus
                                                                                    accountStatus:self.accountStatus
                                                                     backgroundAPNSPingBackStatus:self.pingBackStatus
+                                                                      topConversationsDirectory:self.topConversationsDirectory
                                                                      localNotificationdispatcher:self.localNotificationDispatcher
                                                                                     mediaManager:mediaManager
                                                                              onDemandFlowManager:self.onDemandFlowManager

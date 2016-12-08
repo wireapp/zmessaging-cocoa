@@ -22,7 +22,6 @@
 @import ZMCDataModel;
 
 #import "ZMSearchRequestCodec.h"
-#import "ZMSuggestionResult.h"
 #import "ZMSearchResult+Internal.h"
 #import "ZMUserSession+Internal.h"
 
@@ -45,18 +44,6 @@ static NSString * const ZMSuggestedSearchEndPoint = @"/search/suggestions";
     NSString *path = [NSString stringWithFormat:@"%@?q=%@&l=%d&size=%d", ZMSearchEndPoint, urlEncodedQuery, levels, fetchLimit];
     return [ZMTransportRequest requestGetFromPath:path];
     
-}
-
-+ (ZMTransportRequest *)searchRequestForTopConversationsWithFetchLimit:(int)fetchLimit;
-{
-    NSString *path = [NSString stringWithFormat:@"%@?size=%d", ZMTopSearchEndPoint, fetchLimit];
-    return [ZMTransportRequest requestGetFromPath:path];
-}
-
-+ (ZMTransportRequest *)searchRequestForSuggestedPeopleWithFetchLimit:(int)fetchLimit;
-{
-    NSString *path = [NSString stringWithFormat:@"%@?size=%d", ZMSuggestedSearchEndPoint, fetchLimit];
-    return [ZMTransportRequest requestGetFromPath:path];
 }
 
 + (ZMSearchResult *)searchResultFromTransportResponse:(ZMTransportResponse *)response ignoredIDs:(NSArray *)ignoredIDs userSession:(ZMUserSession *)userSession
@@ -99,32 +86,6 @@ static NSString * const ZMSuggestedSearchEndPoint = @"/search/suggestions";
     [searchResult addUsersInContacts:connectedUsers];
     return searchResult;
 }
-
-+ (NSOrderedSet *)remoteIdentifiersForSuggestedPeopleSearchResponse:(ZMTransportResponse *)response
-{
-    if (response.result != ZMTransportResponseStatusSuccess ||
-        response.transportSessionError != nil )
-    {
-        return nil;
-    }
-    
-    NSDictionary *payload = [response.payload asDictionary];
-    NSArray *users = [payload optionalArrayForKey:@"documents"];
-    if (users == nil) {
-        return nil;
-    }
-    
-    NSMutableOrderedSet *suggestedUsers = [NSMutableOrderedSet orderedSetWithCapacity:users.count];
-    for (NSDictionary *user in users) {
-        ZMSuggestedUserCommonConnections *commonConnections = [[ZMSuggestedUserCommonConnections alloc] initWithPayload:user];
-        NSUUID *identifier = [user optionalUuidForKey:@"id"];
-        if (identifier != nil && commonConnections != nil) {
-            [suggestedUsers addObject:[[ZMSuggestionResult alloc] initWithUserIdentifier:identifier commonConnections:commonConnections]];
-        }
-    }
-    return suggestedUsers;
-}
-
 
 // There is a delay in the search, right after connecting to someone the backend will still say they are unconnected. But this method knows the truth.
 + (BOOL)canonicalIsUserConnected:(ZMSearchUser *)user {
