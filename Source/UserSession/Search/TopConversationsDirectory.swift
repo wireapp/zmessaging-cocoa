@@ -63,17 +63,17 @@ extension TopConversationsDirectory {
     
     /// Persist list of conversations to persistent store
     private func persistList() {
-        let valueToSave = self.topConversations.map { $0.objectID.uriRepresentation() }
+        let valueToSave = self.topConversations.map { $0.objectID.uriRepresentation().absoluteString }
         self.managedObjectContext.setPersistentStoreMetadata(valueToSave, forKey: topConversationsObjectIDKey)
         TopConversationsDirectoryNotification.post()
     }
 
     /// Load list from persistent store
     fileprivate func loadList() {
-        guard let ids = self.managedObjectContext.persistentStoreMetadata(forKey: topConversationsObjectIDKey) as? [URL] else {
+        guard let ids = self.managedObjectContext.persistentStoreMetadata(forKey: topConversationsObjectIDKey) as? [String] else {
             return
         }
-        let managedObjectIDs = ids.flatMap { self.managedObjectContext.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: $0) }
+        let managedObjectIDs = ids.flatMap(URL.init).flatMap { self.managedObjectContext.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: $0) }
         self.topConversationsCache = managedObjectIDs.flatMap { self.managedObjectContext.object(with: $0) as? ZMConversation }
     }
 }
