@@ -155,7 +155,7 @@
 
 - (NSArray *)conversationsMatchingSearchString:(NSString *)searchString
 {
-    if([searchString hasPrefix:@"@"]) { // ignore group conversations is query is for usernames
+    if([searchString hasPrefix:@"@"]) { // ignore group conversations if query is for usernames
         return @[];
     }
     NSFetchRequest *conversationFetchRequest = [ZMConversation sortedFetchRequestWithPredicate:[ZMConversation predicateForSearchString:searchString]];
