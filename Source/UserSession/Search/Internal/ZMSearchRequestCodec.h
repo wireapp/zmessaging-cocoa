@@ -28,10 +28,6 @@
 
 + (ZMTransportRequest *)searchRequestForQueryString:(NSString *)queryString levels:(int)levels fetchLimit:(int)fetchLimit;
 + (ZMSearchResult *)searchResultFromTransportResponse:(ZMTransportResponse *)response ignoredIDs:(NSArray *)ignoredIDs userSession:(ZMUserSession *)userSession;
-+ (ZMTransportRequest *)searchRequestForTopConversationsWithFetchLimit:(int)fetchLimit;
-
-+ (ZMTransportRequest *)searchRequestForSuggestedPeopleWithFetchLimit:(int)fetchLimit;
-+ (NSOrderedSet *)remoteIdentifiersForSuggestedPeopleSearchResponse:(ZMTransportResponse *)response;
 
 @end
 

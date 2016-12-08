@@ -172,7 +172,7 @@
     [self.receivedNotifications removeAllObjects];
 
     // when
-    [self spinMainQueueWithTimeout:timeout + 0.010];
+    [self spinMainQueueWithTimeout:timeout + 0.2];
     
     // then
     XCTAssertEqual(self.receivedNotifications.count, 1u);

@@ -957,6 +957,42 @@ extension UserProfileUpdateStatusTests {
         XCTAssertEqual(self.sut.bestHandleSuggestion, handle)
     }
     
+    func testThatItStopsSearchingForHandleSuggestionsIfItHasHandle() {
+        
+        // GIVEN
+        self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        selfUser.setHandle("cozypanda23")
+        self.sut.didNotFindAvailableHandleSuggestion()
+        
+        // THEN
+        XCTAssertFalse(self.sut.currentlyGeneratingHandleSuggestion)
+        XCTAssertNil(self.sut.bestHandleSuggestion)
+    }
+    
+    func testThatItRestatsSearchingForHandleSuggestionsAfterNotFindingAvailableOne() {
+        
+        // GIVEN
+        self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        guard let previousHandle = self.sut.suggestedHandlesToCheck?.first else {
+            XCTFail()
+            return
+        }
+        
+        // WHEN
+        self.sut.didNotFindAvailableHandleSuggestion()
+        
+        // THEN
+        XCTAssertTrue(self.sut.currentlyGeneratingHandleSuggestion)
+        XCTAssertNil(self.sut.bestHandleSuggestion)
+        XCTAssertNotNil(self.sut.suggestedHandlesToCheck?.first)
+        XCTAssertNotEqual(self.sut.suggestedHandlesToCheck?.first, previousHandle)
+    }
+    
     func testThatItFailsGeneratingHandleSuggestionsAndStopsIfItHasHandle() {
         
         // GIVEN
@@ -971,26 +1007,7 @@ extension UserProfileUpdateStatusTests {
         // THEN
         XCTAssertFalse(self.sut.currentlyGeneratingHandleSuggestion)
         XCTAssertNil(self.sut.bestHandleSuggestion)
-    }
-    
-    func testThatItFailsGeneratingHandleSuggestionsAndRestartsIfItHasNoHandle() {
-        
-        // GIVEN
-        self.sut.suggestHandles()
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        guard let previousHandle = self.sut.suggestedHandlesToCheck?.first else {
-            XCTFail()
-            return
-        }
-        
-        // WHEN
-        self.sut.didFailToFindHandleSuggestion()
-        
-        // THEN
-        XCTAssertTrue(self.sut.currentlyGeneratingHandleSuggestion)
-        XCTAssertNil(self.sut.bestHandleSuggestion)
-        XCTAssertNotNil(self.sut.suggestedHandlesToCheck?.first)
-        XCTAssertNotEqual(self.sut.suggestedHandlesToCheck?.first, previousHandle)
+        XCTAssertNil(self.sut.suggestedHandlesToCheck)
     }
     
     func testThatItNotifiesAfterFindingAHandleSuggestion() {

@@ -88,24 +88,6 @@
     
 }
 
-- (void)testThatItUsesTheCorrectPathForTopPeople
-{
-    // when
-    ZMTransportRequest *request = [ZMSearchRequestCodec searchRequestForTopConversationsWithFetchLimit:9];
-    
-    // then
-    XCTAssertEqualObjects(request.path, @"/search/top?size=9");
-}
-
-- (void)testThatItUsesTheCorrectPathForSuggestedPeople
-{
-    // when
-    ZMTransportRequest *request = [ZMSearchRequestCodec searchRequestForSuggestedPeopleWithFetchLimit:9];
-    
-    // then
-    XCTAssertEqualObjects(request.path, @"/search/suggestions?size=9");
-}
-
 - (void)testThatItUsesTheCorrectPathForNormalSearch
 {
     // given
@@ -116,55 +98,6 @@
     
     // then
     XCTAssertEqualObjects(request.path, @"/search/contacts?q=search%20me&l=1&size=9");
-}
-
-- (void)testThatItReturnsRemoteIdentifiers
-{
-    // given
-    NSDictionary *payload = [self payLoadForRemoteIDs];
-    NSInteger HTTPStatus = 200;
-    NSError *error = nil;
-
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:HTTPStatus transportSessionError:error];
-    
-    // when
-    NSOrderedSet *remoteIDs = [ZMSearchRequestCodec remoteIdentifiersForSuggestedPeopleSearchResponse:response];
-    
-    // then
-    NSArray *expectedRemoteIDs = [self remoteIDs];
-    XCTAssertEqualObjects([[remoteIDs valueForKey:@"userIdentifier"] array], expectedRemoteIDs);
-}
-
-- (void)testThatItReturnsNilForAnHTTPStatusOtherThan200
-{
-    // given
-    NSDictionary *payload = [self payLoadForRemoteIDs];
-    NSInteger HTTPStatus = 400;
-    NSError *error = nil;
-    
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:HTTPStatus transportSessionError:error];
-    
-    // when
-    NSOrderedSet *remoteIDs = [ZMSearchRequestCodec remoteIdentifiersForSuggestedPeopleSearchResponse:response];
-    
-    // then
-    XCTAssertNil(remoteIDs);
-}
-
-- (void)testThatItReturnsNilWhenItHasATansportSessionError
-{
-    // given
-    NSDictionary *payload = [self payLoadForRemoteIDs];
-    NSInteger HTTPStatus = 200;
-    NSError *error = [NSError errorWithDomain:@"ZMTransportSession" code:ZMTransportSessionErrorCodeTryAgainLater userInfo:nil];
-    
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:HTTPStatus transportSessionError:error];
-    
-    // when
-    NSOrderedSet *remoteIDs = [ZMSearchRequestCodec remoteIdentifiersForSuggestedPeopleSearchResponse:response];
-    
-    // then
-    XCTAssertNil(remoteIDs);
 }
 
 - (void)testThatItAddsConnectedUsersToSearchResults_UsersInContact

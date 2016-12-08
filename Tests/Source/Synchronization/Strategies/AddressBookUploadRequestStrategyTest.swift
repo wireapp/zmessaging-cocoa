@@ -37,9 +37,7 @@ class AddressBookUploadRequestStrategyTest : MessagingTest {
         self.trackerFake = AddressBookTrackerFake()
         
         let ab = self.addressBook // I don't want to capture self in closure later
-        ab?.contactHashes = [
-            ["1"], ["2a", "2b"], ["3"], ["4"]
-        ]
+        ab?.fillWithContacts(5)
         self.sut = zmessaging.AddressBookUploadRequestStrategy(authenticationStatus: self.authenticationStatus,
                                                                clientRegistrationStatus: self.clientRegistrationStatus,
                                                                managedObjectContext: self.syncMOC,
@@ -88,7 +86,9 @@ extension AddressBookUploadRequestStrategyTest {
         if let request = request {
             XCTAssertEqual(request.path, "/onboarding/v3")
             XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST)
-            let expectedCards = self.addressBook.contactHashes.enumerated().map { (index, hashes) in ContactCard(id: "\(index)", hashes: hashes)}
+            let expectedCards = self.addressBook.fakeContacts
+                .map { ContactCard(id: $0.localIdentifier, hashes: $0.expectedHashes) }
+                .sorted { $0.id < $1.id }
             
             if let parsedCards = request.payload?.parsedCards {
                 XCTAssertEqual(parsedCards, expectedCards)
@@ -124,7 +124,7 @@ extension AddressBookUploadRequestStrategyTest {
     func testThatItReturnsNoRequestWhenTheABIsMarkedForUploadAndEmpty() {
         
         // given
-        self.addressBook.contactHashes = []
+        self.addressBook.fakeContacts = []
         zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         
         // when
@@ -210,15 +210,15 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertNotNil(request2)
         if let cards1 = (request1?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
             XCTAssertEqual(cards1.count, maxEntriesInAddressBookChunk)
-            XCTAssertTrue(self.checkCard(cards1.first, expectedIndex: 0))
-            XCTAssertTrue(self.checkCard(cards1.last, expectedIndex: maxEntriesInAddressBookChunk - 1))
+            self.checkCard(cards1.first, expectedIndex: 0)
+            self.checkCard(cards1.last, expectedIndex: maxEntriesInAddressBookChunk - 1)
         } else {
             XCTFail()
         }
         if let cards2 = (request2?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
             XCTAssertEqual(cards2.count, maxEntriesInAddressBookChunk)
-            XCTAssertTrue(self.checkCard(cards2.first, expectedIndex: maxEntriesInAddressBookChunk))
-            XCTAssertTrue(self.checkCard(cards2.last, expectedIndex: maxEntriesInAddressBookChunk * 2 - 1))
+            self.checkCard(cards2.first, expectedIndex: maxEntriesInAddressBookChunk)
+            self.checkCard(cards2.last, expectedIndex: maxEntriesInAddressBookChunk * 2 - 1)
         } else {
             XCTFail()
         }
@@ -241,22 +241,22 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertNotNil(request3)
         if let cards1 = (request1?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
             XCTAssertEqual(cards1.count, maxEntriesInAddressBookChunk)
-            XCTAssertTrue(self.checkCard(cards1.first, expectedIndex: 0))
-            XCTAssertTrue(self.checkCard(cards1.last, expectedIndex: maxEntriesInAddressBookChunk - 1))
+            self.checkCard(cards1.first, expectedIndex: 0)
+            self.checkCard(cards1.last, expectedIndex: maxEntriesInAddressBookChunk - 1)
         } else {
             XCTFail()
         }
         if let cards2 = (request2?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
             XCTAssertEqual(cards2.count, cardsNumber - maxEntriesInAddressBookChunk)
-            XCTAssertTrue(self.checkCard(cards2.first, expectedIndex: maxEntriesInAddressBookChunk))
-            XCTAssertTrue(self.checkCard(cards2.last, expectedIndex: cardsNumber-1))
+            self.checkCard(cards2.first, expectedIndex: maxEntriesInAddressBookChunk)
+            self.checkCard(cards2.last, expectedIndex: cardsNumber-1)
         } else {
             XCTFail()
         }
         if let cards3 = (request3?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
             XCTAssertEqual(cards3.count, maxEntriesInAddressBookChunk)
-            XCTAssertTrue(self.checkCard(cards3.first, expectedIndex: 0))
-            XCTAssertTrue(self.checkCard(cards3.last, expectedIndex: maxEntriesInAddressBookChunk - 1))
+            self.checkCard(cards3.first, expectedIndex: 0)
+            self.checkCard(cards3.last, expectedIndex: maxEntriesInAddressBookChunk - 1)
         } else {
             XCTFail()
         }
@@ -277,22 +277,22 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertNotNil(request3)
         if let cards1 = (request1?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
             XCTAssertEqual(cards1.count, maxEntriesInAddressBookChunk)
-            XCTAssertTrue(self.checkCard(cards1.first, expectedIndex: 0))
-            XCTAssertTrue(self.checkCard(cards1.last, expectedIndex: maxEntriesInAddressBookChunk - 1))
+            self.checkCard(cards1.first, expectedIndex: 0)
+            self.checkCard(cards1.last, expectedIndex: maxEntriesInAddressBookChunk - 1)
         } else {
             XCTFail()
         }
         if let cards2 = (request2?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
             XCTAssertEqual(cards2.count, cardsNumber - maxEntriesInAddressBookChunk)
-            XCTAssertTrue(self.checkCard(cards2.first, expectedIndex: maxEntriesInAddressBookChunk))
-            XCTAssertTrue(self.checkCard(cards2.last, expectedIndex: cardsNumber-1))
+            self.checkCard(cards2.first, expectedIndex: maxEntriesInAddressBookChunk)
+            self.checkCard(cards2.last, expectedIndex: cardsNumber-1)
         } else {
             XCTFail()
         }
         if let cards3 = (request3?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
             XCTAssertEqual(cards3.count, maxEntriesInAddressBookChunk)
-            XCTAssertTrue(self.checkCard(cards3.first, expectedIndex: 0))
-            XCTAssertTrue(self.checkCard(cards3.last, expectedIndex: maxEntriesInAddressBookChunk - 1))
+            self.checkCard(cards3.first, expectedIndex: 0)
+            self.checkCard(cards3.last, expectedIndex: maxEntriesInAddressBookChunk - 1)
         } else {
             XCTFail()
         }
@@ -307,7 +307,7 @@ extension AddressBookUploadRequestStrategyTest {
         // given
         let cardsNumber = Int(Double(maxEntriesInAddressBookChunk) * 1.5)
         self.addressBook.fillWithContacts(UInt(cardsNumber))
-        self.addressBook.numberOfContactsOverride = UInt(maxEntriesInAddressBookChunk * 5)
+        self.addressBook.numberOfAdditionalContacts = UInt(maxEntriesInAddressBookChunk * 5)
         
         // when
         let request1 = self.getNextUploadingRequest()
@@ -320,22 +320,22 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertNotNil(request3)
         if let cards1 = (request1?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
             XCTAssertEqual(cards1.count, maxEntriesInAddressBookChunk)
-            XCTAssertTrue(self.checkCard(cards1.first, expectedIndex: 0))
-            XCTAssertTrue(self.checkCard(cards1.last, expectedIndex: maxEntriesInAddressBookChunk - 1))
+            self.checkCard(cards1.first, expectedIndex: 0)
+            self.checkCard(cards1.last, expectedIndex: maxEntriesInAddressBookChunk - 1)
         } else {
             XCTFail()
         }
         if let cards2 = (request2?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
             XCTAssertEqual(cards2.count, cardsNumber - maxEntriesInAddressBookChunk)
-            XCTAssertTrue(self.checkCard(cards2.first, expectedIndex: maxEntriesInAddressBookChunk))
-            XCTAssertTrue(self.checkCard(cards2.last, expectedIndex: cardsNumber-1))
+            self.checkCard(cards2.first, expectedIndex: maxEntriesInAddressBookChunk)
+            self.checkCard(cards2.last, expectedIndex: cardsNumber-1)
         } else {
             XCTFail()
         }
         if let cards3 = (request3?.payload as? [String:AnyObject])?["cards"] as? [[String:AnyObject]] {
             XCTAssertEqual(cards3.count, maxEntriesInAddressBookChunk)
-            XCTAssertTrue(self.checkCard(cards3.first, expectedIndex: 0))
-            XCTAssertTrue(self.checkCard(cards3.last, expectedIndex: maxEntriesInAddressBookChunk - 1))
+            self.checkCard(cards3.first, expectedIndex: 0)
+            self.checkCard(cards3.last, expectedIndex: maxEntriesInAddressBookChunk - 1)
         } else {
             XCTFail()
         }
@@ -359,7 +359,7 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.contactHashes.count)])
+        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.fakeContacts.count)])
         XCTAssertEqual(self.trackerFake.taggedEndEventCount, 0)
     }
     
@@ -378,7 +378,7 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.contactHashes.count)])
+        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.fakeContacts.count)])
         XCTAssertEqual(self.trackerFake.taggedEndEventCount, 1)
     }
     
@@ -397,7 +397,7 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.contactHashes.count)])
+        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.fakeContacts.count)])
         XCTAssertEqual(self.trackerFake.taggedEndEventCount, 0)
     }
 }
@@ -423,23 +423,28 @@ extension AddressBookUploadRequestStrategyTest {
 
 extension AddressBookUploadRequestStrategyTest {
     
-    func testThatItParsesSuggestedUsersFromResponse() {
+    func testThatItParsesMatchingUsersFromResponse() {
         
-        // given
-        self.syncMOC.suggestedUsersForUser = NSOrderedSet()
-        let id1 = "aabbccddee"
-        let id2 = "bbccddeeff"
+        // GIVEN
+        let user1 = self.createUser(connected: true)
+        let user2 = self.createUser(connected: true)
+        _ = self.createUser(connected: true)
+
+        let contacts = [
+            FakeAddressBookContact(firstName: "Joanna", emailAddresses: ["j@example.com"], phoneNumbers: [], identifier: UUID.create().transportString()),
+            FakeAddressBookContact(firstName: "Chihiro", emailAddresses: ["c@example.com"], phoneNumbers: [], identifier: UUID.create().transportString())
+        ]
+        self.addressBook.fakeContacts = contacts
+        
         let payload = [
             "results" : [
                 [
-                    "cards" : ["123","345"],
-                    "id" : id1,
-                    "card_id" : "cc11"
+                    "id" : user1.remoteIdentifier!.transportString(),
+                    "card_id" : contacts[0].localIdentifier
                 ],
                 [
-                    "cards" : ["444"],
-                    "id" : id2,
-                    "card_id" : "bb22"
+                    "id" : user2.remoteIdentifier!.transportString(),
+                    "card_id" : contacts[1].localIdentifier
                 ],
             ]
         ]
@@ -448,20 +453,36 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
         
-        // when
+        // WHEN
         request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        // then
-        XCTAssertEqual(self.syncMOC.suggestedUsersForUser.set, Set([id1, id2]))
+        // THEN
+        XCTAssertEqual(user1.addressBookEntry?.localIdentifier, contacts[0].localIdentifier)
+        XCTAssertEqual(user1.addressBookEntry?.cachedName, contacts[0].firstName)
+        XCTAssertEqual(user2.addressBookEntry?.localIdentifier, contacts[1].localIdentifier)
+        XCTAssertEqual(user2.addressBookEntry?.cachedName, contacts[1].firstName)
+
     }
     
-    func testThatItEmptiesSuggestedUsersIfResponseIsEmpty() {
+    func testThatItEmptiesMatchingUsersIfResponseIsEmpty() {
         
-        // given
-        let id1 = "aabbccddee"
-        let id2 = "bbccddeeff"
-        self.syncMOC.suggestedUsersForUser = NSOrderedSet(array: [id1, id2])
+        // GIVEN
+        let user1 = self.createUser(connected: true)
+        let user2 = self.createUser(connected: true)
+        user1.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
+        user2.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
+        user1.addressBookEntry.cachedName = "JJ"
+        user2.addressBookEntry.cachedName = "Kirk"
+        user1.addressBookEntry.localIdentifier = "u1"
+        user2.addressBookEntry.localIdentifier = "u2"
+        self.syncMOC.saveOrRollback()
+        
+        let contacts = [
+            FakeAddressBookContact(firstName: "Joanna", emailAddresses: ["j@example.com"], phoneNumbers: [], identifier: "u1"),
+            FakeAddressBookContact(firstName: "Chihiro", emailAddresses: ["c@example.com"], phoneNumbers: [], identifier: "u2")
+        ]
+        self.addressBook.fakeContacts = contacts
         let payload = [
             "results" : []
         ]
@@ -471,20 +492,31 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
         
-        // when
+        // WHEN
         request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        // then
-        XCTAssertEqual(self.syncMOC.suggestedUsersForUser.count, 0)
+        // THEN
+        XCTAssertNil(user1.addressBookEntry)
+        XCTAssertNil(user2.addressBookEntry)
     }
     
-    func testThatItDoesNotParsesSuggestedUsersFromResponseIfNotParsed() {
+    func testThatItDoesNotEmptyMatchingUsersFromResponseIfNotParsed() {
         
-        // given
-        let id1 = "aabbccddee"
-        let id2 = "bbccddeeff"
-        self.syncMOC.suggestedUsersForUser = NSOrderedSet(array: [id1, id2])
+        // GIVEN
+        let user1 = self.createUser(connected: true)
+        let user2 = self.createUser(connected: true)
+        user1.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
+        user2.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
+        user1.addressBookEntry.cachedName = "JJ"
+        user2.addressBookEntry.cachedName = "Kirk"
+        self.syncMOC.saveOrRollback()
+        
+        let contacts = [
+            FakeAddressBookContact(firstName: "Joanna", emailAddresses: ["j@example.com"], phoneNumbers: []),
+            FakeAddressBookContact(firstName: "Chihiro", emailAddresses: ["c@example.com"], phoneNumbers: [])
+        ]
+        self.addressBook.fakeContacts = contacts
         let payload = [
             "apples" : "oranges"
         ]
@@ -495,12 +527,13 @@ extension AddressBookUploadRequestStrategyTest {
         let request = sut.nextRequest()
         XCTAssertNotNil(request)
         
-        // when
+        // WHEN
         request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        // then
-        XCTAssertEqual(self.syncMOC.suggestedUsersForUser.set, Set([id1, id2]))
+        // THEN
+        XCTAssertNotNil(user1.addressBookEntry)
+        XCTAssertNotNil(user2.addressBookEntry)
     }
 }
 
@@ -515,79 +548,123 @@ extension AddressBookUploadRequestStrategyTest {
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
-        request?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
+        let payload : [String: Any] = ["results" : []]
+        request?.complete(with: ZMTransportResponse(payload: payload as NSDictionary, httpStatus: 200, transportSessionError: nil))
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         return request
     }
     
     /// Verify that a card matches the expected values: card ID and contact hash
-    func checkCard(_ card: [String:AnyObject]?, expectedIndex: Int) -> Bool {
+    func checkCard(_ card: [String:AnyObject]?, expectedIndex: Int, line: UInt = #line, file: StaticString = #file) {
         let cardId = card?["card_id"] as? String
-        let expectedId = "\(expectedIndex)"
         guard let cardHashes = card?["contact"] as? [String] else {
-            XCTFail()
-            return false
+            XCTFail(file: file, line: line)
+            return
         }
-        let expectedHashes = self.addressBook.hashesForCard(UInt(expectedIndex))
-        XCTAssertEqual(cardId, expectedId)
-        XCTAssertEqual(cardHashes, expectedHashes)
-        return cardId == expectedId && cardHashes == expectedHashes
+        let expected = self.addressBook.fakeContacts[expectedIndex]
+        XCTAssertEqual(cardId, expected.localIdentifier, file: file, line: line)
+        XCTAssertEqual(cardHashes, expected.expectedHashes, file: file, line: line)
+    }
+    
+    /// Creates a new user
+    func createUser(connected: Bool) -> ZMUser {
+        let user = ZMUser.insertNewObject(in: self.syncMOC)
+        user.remoteIdentifier = UUID.create()
+        if connected {
+            let connection = ZMConnection.insertNewObject(in: self.syncMOC)
+            connection.to = user
+            connection.status = .accepted
+        }
+        self.syncMOC.saveOrRollback()
+        return user
     }
 }
 
 /// Fake to supply predefined AB hashes
-class AddressBookFake : zmessaging.AddressBookAccessor {
+class AddressBookFake : zmessaging.AddressBook, zmessaging.AddressBookAccessor {
     
-    /// Number of contacts to return. If not set, it will count
-    /// the actual number of contact hashes
-    var numberOfContactsOverride : UInt? = nil
+    /// Find contact by Id
+    func contact(identifier: String) -> zmessaging.ContactRecord? {
+        return fakeContacts.first { $0.localIdentifier == identifier }
+    }
+    
+    /// List of contacts in this address book
+    var fakeContacts = [FakeAddressBookContact]()
+    
+    /// Reported number of contacts (it might be higher than `fakeContacts`
+    /// because some contacts are filtered for not having valid email/phone)
+    var numberOfAdditionalContacts : UInt = 0
     
     var numberOfContacts : UInt {
-        return self.numberOfContactsOverride ?? UInt(contactHashes.count)
+        return UInt(self.fakeContacts.count) + numberOfAdditionalContacts
+    }
+
+    /// Enumerates the contacts, invoking the block for each contact.
+    /// If the block returns false, it will stop enumerating them.
+    func enumerateRawContacts(block: @escaping (zmessaging.ContactRecord)->(Bool)) {
+        for contact in self.fakeContacts {
+            if !block(contact) {
+                return
+            }
+        }
+        let infiniteContact = FakeAddressBookContact(firstName: "johnny infinite",
+                                                   emailAddresses: ["johnny.infinite@example.com"],
+                                                   phoneNumbers: [])
+        while createInfiniteContacts {
+            if !block(infiniteContact) {
+                return
+            }
+        }
     }
     
-    /// Hashes to upload
-    var contactHashes : [[String]] = []
-    
-    func iterate() -> LazySequence<AnyIterator<ZMAddressBookContact>> {
-        return AnyIterator([].makeIterator()).lazy
-    }
-    
-    func encodeWithCompletionHandler(_ groupQueue: ZMSGroupQueue, startingContactIndex: UInt, maxNumberOfContacts: UInt, completion: @escaping (zmessaging.EncodedAddressBookChunk?) -> ()) {
-        guard self.contactHashes.count > 0 else {
-            groupQueue.performGroupedBlock({ 
-                completion(nil)
-            })
-            return
+    func rawContacts(matchingQuery: String) -> [zmessaging.ContactRecord] {
+        guard matchingQuery != "" else {
+            return fakeContacts
         }
-        let range = startingContactIndex..<(min(UInt(self.contactHashes.count), startingContactIndex+maxNumberOfContacts))
-        let contactsInRange = Array(self.contactHashes[Int(range.lowerBound)..<Int(range.upperBound)])
-        let chunk = zmessaging.EncodedAddressBookChunk(numberOfTotalContacts: self.numberOfContacts,
-                                                       otherContactsHashes: contactsInRange,
-                                                       includedContacts: range)
-        groupQueue.performGroupedBlock { 
-            completion(chunk)
-        }
+        return fakeContacts.filter { $0.firstName.lowercased().contains(matchingQuery.lowercased()) || $0.lastName.lowercased().contains(matchingQuery.lowercased()) }
     }
     
     /// Replace the content with a given number of random hashes
     func fillWithContacts(_ number: UInt) {
-        contactHashes = (0..<number).map {
-            self.hashesForCard($0)
+        self.fakeContacts = (0..<number).map {
+            self.createContact(card: $0)
         }
     }
     
-    fileprivate func hashesForCard(_ number: UInt) -> [String] {
-        return ["hash-\(number)_0", "hash-\(number)_1"]
+    /// Create a fake contact
+    func createContact(card: UInt) -> FakeAddressBookContact {
+        return FakeAddressBookContact(firstName: "tester \(card)", emailAddresses: ["tester_\(card)@example.com"], phoneNumbers: ["+155512300\(card.hashValue % 10)"], identifier: "\(card)")
     }
+    
+    /// Generate an infinite number of contacts
+    var createInfiniteContacts = false
 }
 
-extension ZMAddressBookContact {
+struct FakeAddressBookContact : zmessaging.ContactRecord {
     
-    convenience init(emailAddresses: [String], phoneNumbers: [String]) {
-        self.init()
-        self.emailAddresses = emailAddresses
-        self.phoneNumbers = phoneNumbers
+    static var incrementalLocalIdentifier = 0
+    
+    var firstName = ""
+    var lastName = ""
+    var middleName = ""
+    var rawEmails : [String]
+    var rawPhoneNumbers : [String]
+    var nickname = ""
+    var organization = ""
+    var localIdentifier = ""
+    
+    init(firstName: String, emailAddresses: [String], phoneNumbers: [String], identifier: String? = nil) {
+        self.firstName = firstName
+        self.rawEmails = emailAddresses
+        self.rawPhoneNumbers = phoneNumbers
+        self.localIdentifier = identifier ?? {
+            FakeAddressBookContact.incrementalLocalIdentifier += 1
+            return "\(FakeAddressBookContact.incrementalLocalIdentifier)"
+        }()
+    }
+    
+    var expectedHashes : [String] {
+        return self.rawEmails.map { $0.base64EncodedSHADigest } + self.rawPhoneNumbers.map { $0.base64EncodedSHADigest }
     }
 }
 
@@ -621,6 +698,8 @@ extension ZMTransportData {
                     throw TestErrors.failedToParse
                 }
                 return ContactCard(id: id, hashes: hashes)
+            }.sorted {
+                $0.id < $1.id
             }
         } catch {
             return nil

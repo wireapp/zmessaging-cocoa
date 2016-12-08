@@ -31,7 +31,6 @@
 @protocol ZMSearchToken;
 typedef id<ZMSearchToken> ZMSearchToken;
 @class ZMSearchResult;
-@protocol ZMSearchTopConversationsObserver;
 
 
 @protocol ZMSearchResultStore <NSObject>
@@ -44,9 +43,6 @@ typedef id<ZMSearchToken> ZMSearchToken;
 @interface ZMSearchDirectory : NSObject <ZMSearchResultStore>
 
 - (instancetype)initWithUserSession:(ZMUserSession *)userSession;
-/// @p maxTopConversationsCount Maximum amount of top conversations to be returned.
-- (instancetype)initWithUserSession:(ZMUserSession *)userSession 
-           maxTopConversationsCount:(NSInteger)maxTopConversationsCount;
 - (void)tearDown;
 
 /// How long to wait for results from the backend before returning local search results.
@@ -54,11 +50,6 @@ typedef id<ZMSearchToken> ZMSearchToken;
 
 /// The time during which a cached result is returned when searching the same query again. After this time a query triggers a normal search.
 @property (nonatomic) NSTimeInterval updateDelay;
-
-@property (readonly, nonatomic) NSInteger maxTopConversationsCount;
-
-/// List of current top conversations. If this list updates the ZMSearchTopConversationsObserver will be notified.
-@property (readonly, nonatomic) NSArray *topConversations;
 
 - (ZMSearchToken)performRequest:(ZMSearchRequest *)searchRequest;
 
@@ -71,16 +62,8 @@ typedef id<ZMSearchToken> ZMSearchToken;
 /// Searches users and conversations matching a string (local only)
 - (ZMSearchToken)searchForLocalUsersAndConversationsMatchingQueryString:(NSString *)queryString;
 
-/// Searches for 'people you may want to connect to'
-- (ZMSearchToken)searchForSuggestedPeople;
-// This will trigger any observers for 'suggested people search' to receive an update.
-- (void)removeSearchUserFromSuggestedPeople:(ZMSearchUser *)searchUser;
-
 - (void)addSearchResultObserver:(id<ZMSearchResultObserver>)observer;
 - (void)removeSearchResultObserver:(id<ZMSearchResultObserver>)observer;
-
-- (void)addTopConversationsObserver:(id<ZMSearchTopConversationsObserver>)observer;
-- (void)removeTopConversationsObserver:(id<ZMSearchTopConversationsObserver>)observer;
 
 @end
 
@@ -91,15 +74,6 @@ typedef id<ZMSearchToken> ZMSearchToken;
 - (void)didReceiveSearchResult:(ZMSearchResult *)result forToken:(ZMSearchToken)searchToken;
 
 @end
-
-
-
-@protocol ZMSearchTopConversationsObserver <NSObject>
-
-- (void)topConversationsDidChange:(NSNotification *)note;
-
-@end
-
 
 
 @protocol ZMSearchToken <NSCopying, NSObject>

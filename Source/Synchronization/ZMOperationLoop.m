@@ -73,6 +73,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                       proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
                            accountStatus:(ZMAccountStatus *)accountStatus
             backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
+               topConversationsDirectory:(TopConversationsDirectory *)topConversationsDirectory
              localNotificationdispatcher:(ZMLocalNotificationDispatcher *)dispatcher
                             mediaManager:(id<AVSMediaManager>)mediaManager
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
@@ -90,6 +91,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                                                                      proxiedRequestStatus:proxiedRequestStatus
                                                                           accountStatus:accountStatus
                                                            backgroundAPNSPingBackStatus:backgroundAPNSPingBackStatus
+                                                              topConversationsDirectory:topConversationsDirectory
                                                                            mediaManager:mediaManager
                                                                     onDemandFlowManager:onDemandFlowManager
                                                                                 syncMOC:syncMOC

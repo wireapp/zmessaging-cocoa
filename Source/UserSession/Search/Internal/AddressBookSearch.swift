@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import Contacts
 
 /// Search for contacts in the address book
 class AddressBookSearch {
@@ -29,116 +30,23 @@ class AddressBookSearch {
     fileprivate let addressBook : AddressBookAccessor?
     
     init(addressBook : AddressBookAccessor? = nil) {
-        self.addressBook = addressBook ?? AddressBook()
-    }
-}
-
-// MARK: - Match contacts to users
-
-struct Match {
-    let user : ZMUser?
-    let contact : ZMAddressBookContact?
-}
-
-extension AddressBookSearch {
-
-    /// Returns a contact matching a user based on email address or phone number.
-    func contactForUser(_ user: ZMUser) -> ZMAddressBookContact? {
-        for contact in self.limitedContactsRange() {
-            if contact.matches(user) {
-                return contact
-            }
-        }
-        return nil
-    }
-    
-    /// Returns a list of match for users that have a corresponding contact
-    /// in the address book
-    func matchInAddressBook(_ users: [ZMUser]) -> [Match] {
-        
-        var unmatchedUsers = Set(users)
-        
-        let emailToUser : [String: ZMUser] = { _ in
-            var dict = [String: ZMUser]()
-            users.forEach({ (user) in
-                guard let email = user.emailAddress else {
-                    return
-                }
-                dict[email] = user
-            })
-            return dict
-        }()
-        
-        let phoneToUser : [String: ZMUser] = { _ in
-            var dict = [String: ZMUser]()
-            users.forEach({ (user) in
-                guard let phone = user.phoneNumber else {
-                    return
-                }
-                dict[phone] = user
-            })
-            return dict
-        }()
-        
-        return self.limitedContactsRange().map { (contact) -> Match in
-            for email in contact.emailAddresses {
-                if let user = emailToUser[email] {
-                    unmatchedUsers.remove(user)
-                    return Match(user: user, contact: contact)
-                }
-            }
-            for phone in contact.phoneNumbers {
-                if let user = phoneToUser[phone] {
-                    unmatchedUsers.remove(user)
-                    return Match(user: user, contact: contact)
-                }
-            }
-            return Match(user: nil, contact: contact)
-        }
-        + unmatchedUsers.map { user -> Match in
-            return Match(user: user, contact: nil)
-        }
+        self.addressBook = addressBook ?? AddressBook.factory()
     }
 }
 
 // MARK: - Search contacts
 extension AddressBookSearch {
 
-    /// Returns contacts filtered by the query
-    func contactsMatchingQuery(_ query: String) -> LazySequence<AnyIterator<ZMAddressBookContact>> {
-        guard !query.isEmpty else {
-            return self.limitedContactsRange().lazy
-        }
-        let predicate = NSPredicate(format: "SELF.name CONTAINS[cd] %@", query)
-        return AnyIterator(limitedContactsRange().lazy.filter {
-            return predicate.evaluate(with: $0)
-        }.makeIterator()).lazy
-    }
-}
-
-extension AddressBookSearch {
-    
-    /// Returns an iterator on contacts within the range limit
-    fileprivate func limitedContactsRange() -> AnyIterator<ZMAddressBookContact> {
-        guard let addressBook = self.addressBook else {
-            return AnyIterator(Array<ZMAddressBookContact>().makeIterator())
-        }
-        return addressBook.iterate().elements(0..<maximumSearchRange).lazy.makeIterator()
-    }
-    
-}
-
-extension ZMAddressBookContact {
-    
-    /// Returns whether the contact shares email or phone with the user
-    fileprivate func matches(_ user: ZMUser) -> Bool {
-        if let email = user.emailAddress , self.emailAddresses.contains(email) {
-            return true
-        }
+    /// Returns address book contacts matching the query, excluding the one with the given identifier
+    func contactsMatchingQuery(_ query: String, identifiersToExclude: [String]) -> [ZMAddressBookContact] {
+        let excluded = Set(identifiersToExclude)
+        let addressBookMatches = self.addressBook?.contacts(matchingQuery: query.lowercased()) ?? []
         
-        if let phone = user.phoneNumber , self.phoneNumbers.contains(phone) {
-            return true
+        return addressBookMatches.filter { contact in
+            guard let identifier = contact.localIdentifier else {
+                return true
+            }
+            return !excluded.contains(identifier)
         }
-        return false
     }
 }
