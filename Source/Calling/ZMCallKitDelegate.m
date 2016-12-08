@@ -482,7 +482,7 @@ NS_ASSUME_NONNULL_END
     update.remoteHandle = conversation.callKitHandle;
     update.hasVideo = conversation.isVideoCall;
     
-    [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"CallKit: reportNewIncomingCallWithUUID remoteHandle.type = %ld, remoteHandle.value = %@", (long)update.remoteHandle.type, update.remoteHandle.value];
+    [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"CallKit: reportNewIncomingCallWithUUID remoteHandle.type = %ld", (long)update.remoteHandle.type];
     
     [self.provider reportNewIncomingCallWithUUID:conversation.remoteIdentifier
                                           update:update
