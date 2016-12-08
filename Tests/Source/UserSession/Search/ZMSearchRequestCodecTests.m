@@ -133,7 +133,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // when
-    ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession];
+    ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession query:@"query"];
     
     // then
     XCTAssertEqual(result.usersInContacts.count, 1u);
@@ -156,7 +156,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // when
-    ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession];
+    ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession query:@"query"];
     
     // then
     XCTAssertEqual(result.usersInDirectory.count, 1u);
@@ -175,7 +175,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // when
-    ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession];
+    ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession query:@"query"];
     
     // then
     XCTAssertEqual(result.usersInDirectory.count, 0u);
@@ -191,13 +191,74 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     // when
-    ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:ignoredIDs userSession:self.userSession];
+    ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:ignoredIDs userSession:self.userSession query:@"query"];
     
     // then
     XCTAssertEqual(result.usersInDirectory.count, 0u);
     XCTAssertEqual(result.usersInContacts.count, 0u);
 }
 
+- (void)testThatItReturnsAllResultsWhenTheQueryIsNotAHandle
+{
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    NSString *name = @"User";
+    
+    NSDictionary *payload = @{@"documents":
+                                  @[
+                                    @{
+                                        @"id" : NSUUID.createUUID.transportString,
+                                        @"name": name,
+                                        @"accent_id": @4
+                                    },
+                                    @{
+                                        @"id" : NSUUID.createUUID.transportString,
+                                        @"name": @"Fabio",
+                                        @"accent_id": @4,
+                                        @"handle" : [NSString stringWithFormat:@"aa%@", [name lowercaseString]]
+                                    }
+                                ]
+                              };
+    
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
+    
+    // when
+    ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession query:name];
+    
+    // then
+    XCTAssertEqual(result.usersInDirectory.count, 2u);
+}
 
+- (void)testThatItReturnsOnlyMatchingHandleResultsWhenTheQueryIsAHandle
+{
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    NSString *name = @"User";
+    NSString *expectedHandle = [NSString stringWithFormat:@"aa%@", [name lowercaseString]];
+    
+    NSDictionary *payload = @{@"documents":
+                                  @[
+                                      @{
+                                          @"id" : NSUUID.createUUID.transportString,
+                                          @"name": name,
+                                          @"accent_id": @4
+                                          },
+                                      @{
+                                          @"id" : NSUUID.createUUID.transportString,
+                                          @"name": @"Fabio",
+                                          @"accent_id": @4,
+                                          @"handle" : expectedHandle
+                                          }
+                                      ]
+                              };
+    
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
+    
+    // when
+    ZMSearchResult *result = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:nil userSession:self.userSession query:[NSString stringWithFormat:@"@%@", name]];
+    
+    // then
+    XCTAssertEqual(result.usersInDirectory.count, 1u);
+    ZMSearchUser *searchUser = result.usersInDirectory.firstObject;
+    XCTAssertEqualObjects(searchUser.handle, expectedHandle);
+}
 
 @end

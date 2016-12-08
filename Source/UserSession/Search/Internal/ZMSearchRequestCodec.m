@@ -50,8 +50,10 @@ static NSString * const ZMSuggestedSearchEndPoint = @"/search/suggestions";
     
 }
 
-+ (ZMSearchResult *)searchResultFromTransportResponse:(ZMTransportResponse *)response ignoredIDs:(NSArray *)ignoredIDs userSession:(ZMUserSession *)userSession
++ (ZMSearchResult *)searchResultFromTransportResponse:(ZMTransportResponse *)response ignoredIDs:(NSArray *)ignoredIDs userSession:(ZMUserSession *)userSession query:(NSString *)query;
 {
+    BOOL isUsernameQuery = [query hasPrefix:@"@"];
+    NSString *queryWithoutAtSymbol = [(isUsernameQuery ? [query substringFromIndex:1] : query) lowercaseString];
     NSDictionary *payload = [response.payload asDictionary];
     NSArray *users = [payload optionalArrayForKey:@"documents"];
     if (users == nil) {
@@ -68,6 +70,14 @@ static NSString * const ZMSuggestedSearchEndPoint = @"/search/suggestions";
     for (NSDictionary *user in users) {
         NSUUID *identifier = [user optionalUuidForKey:@"id"];
         if (identifier == nil || [ignoredIDs containsObject:identifier] || [selfUser.remoteIdentifier isEqual:identifier]) {
+            continue;
+        }
+        
+        NSString *name = [user optionalStringForKey:@"name"];
+        NSString *handle = [user optionalStringForKey:@"handle"];
+        
+        
+        if (isUsernameQuery && (![name hasPrefix:@"@"] && ![handle containsString:queryWithoutAtSymbol])) {
             continue;
         }
 
