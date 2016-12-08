@@ -209,10 +209,6 @@ _Pragma("clang diagnostic pop")
     return nil;
 }
 
-- (void)setNeedsSlowSync
-{
-    // NO-OP
-}
 
 - (void)checkForOngoingCalls;
 {

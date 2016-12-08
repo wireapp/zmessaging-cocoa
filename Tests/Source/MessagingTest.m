@@ -37,7 +37,7 @@
 
 #import "ZMUserTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
@@ -315,26 +315,18 @@
 {
     id objectDirectory = [OCMockObject mockForProtocol:@protocol(ZMObjectStrategyDirectory)];
     
-    id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
-    [self verifyMockLater:userTranscoder];
-    id conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
-    [self verifyMockLater:conversationTranscoder];
     id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
     [self verifyMockLater:systemMessageTranscoder];
     id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
     [self verifyMockLater:clientMessageTranscoder];
-    id selfTranscoder = [OCMockObject mockForClass:ZMSelfTranscoder.class];
-    [self verifyMockLater:selfTranscoder];
-    id connectionTranscoder = [OCMockObject mockForClass:ZMConnectionTranscoder.class];
-    [self verifyMockLater:connectionTranscoder];
+    id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
+    [self verifyMockLater:selfStrategy];
     id registrationTranscoder = [OCMockObject mockForClass:ZMRegistrationTranscoder.class];
     [self verifyMockLater:registrationTranscoder];
     id phoneNumberVerificationTranscoder = [OCMockObject mockForClass:ZMPhoneNumberVerificationTranscoder.class];
     [self verifyMockLater:phoneNumberVerificationTranscoder];
     id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
     [self verifyMockLater:missingUpdateEventsTranscoder];
-    id lastUpdateEventIDTranscoder = [OCMockObject mockForClass:ZMLastUpdateEventIDTranscoder.class];
-    [self verifyMockLater:lastUpdateEventIDTranscoder];
     id flowTranscoder = [OCMockObject mockForClass:ZMFlowSync.class];
     [self verifyMockLater:flowTranscoder];
     id callStateTranscoder = [OCMockObject mockForClass:ZMCallStateTranscoder.class];
@@ -345,32 +337,24 @@
     [self verifyMockLater:loginCodeRequestTranscoder];
     
     
-    [[[objectDirectory stub] andReturn:userTranscoder] userTranscoder];
-    [[[objectDirectory stub] andReturn:conversationTranscoder] conversationTranscoder];
     [[[objectDirectory stub] andReturn:systemMessageTranscoder] systemMessageTranscoder];
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
-    [[[objectDirectory stub] andReturn:selfTranscoder] selfTranscoder];
-    [[[objectDirectory stub] andReturn:connectionTranscoder] connectionTranscoder];
+    [[[objectDirectory stub] andReturn:selfStrategy] selfStrategy];
     [[[objectDirectory stub] andReturn:registrationTranscoder] registrationTranscoder];
     [[[objectDirectory stub] andReturn:phoneNumberVerificationTranscoder] phoneNumberVerificationTranscoder];
     [[[objectDirectory stub] andReturn:missingUpdateEventsTranscoder] missingUpdateEventsTranscoder];
-    [[[objectDirectory stub] andReturn:lastUpdateEventIDTranscoder] lastUpdateEventIDTranscoder];
     [[[objectDirectory stub] andReturn:flowTranscoder] flowTranscoder];
     [[[objectDirectory stub] andReturn:callStateTranscoder] callStateTranscoder];
     [[[objectDirectory stub] andReturn:loginTranscoder] loginTranscoder];
     [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
     
     [[[objectDirectory stub] andReturn:@[
-                                        userTranscoder,
-                                        conversationTranscoder,
                                         systemMessageTranscoder,
                                         clientMessageTranscoder,
-                                        selfTranscoder,
-                                        connectionTranscoder,
+                                        selfStrategy,
                                         registrationTranscoder,
                                         phoneNumberVerificationTranscoder,
                                         missingUpdateEventsTranscoder,
-                                        lastUpdateEventIDTranscoder,
                                         flowTranscoder,
                                         callStateTranscoder,
                                         loginTranscoder,

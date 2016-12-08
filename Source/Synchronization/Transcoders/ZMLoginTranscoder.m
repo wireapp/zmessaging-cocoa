@@ -129,15 +129,6 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     return request;
 }
 
-- (void)setNeedsSlowSync
-{
-    // no-op
-}
-
-- (BOOL)isSlowSyncDone
-{
-    return YES;
-}
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> __unused *)events
            liveEvents:(BOOL __unused)liveEvents

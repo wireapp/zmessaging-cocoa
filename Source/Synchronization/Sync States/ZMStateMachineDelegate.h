@@ -31,28 +31,13 @@ extern NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName
 @property (nonatomic, readonly) ZMSyncState *unauthenticatedBackgroundState; ///< need to log in, but we are in the background. In background we don't keep trying to login on timer waiting for email verification.
 @property (nonatomic, readonly) ZMSyncState *eventProcessingState; ///< can normally process events
 
-///Hard sync is performd if application was not in use for 3 days (setup on backend) or more and we don't know exact last notification id, so we need to sync everything.
-
-@property (nonatomic, readonly) ZMSyncState *slowSyncPhaseOneState; ///< first part of the hard sync. Gets all conversations (with only last event id and meta data) and connections and builds users lists using conversations and connections meta data.
-@property (nonatomic, readonly) ZMSyncState *slowSyncPhaseTwoState; ///< second part of the hard sync. Fetches all users you are connected with.
-
-@property (nonatomic, readonly) ZMSyncState *updateEventsCatchUpPhaseOneState; ///< start procedure to catch up with missing notifications
-@property (nonatomic, readonly) ZMSyncState *updateEventsCatchUpPhaseTwoState; ///< finish catching up with missing notifications
-
-@property (nonatomic, readonly) ZMSyncState *downloadLastUpdateEventIDState; ///< handle getting the last notification ID. Sent before doing slow sync. After that we don't do slow sync and only update on noe event (updateEventsCatchUpPhaseOneState, updateEventsCatchUpPhaseTwoState).
-
 @property (nonatomic, readonly) ZMSyncState *preBackgroundState; ///< waits until we are ready to go to background
 @property (nonatomic, readonly) ZMSyncState *backgroundState; ///< handles background requests
 
 @property (nonatomic, readonly) ZMSyncState *backgroundFetchState;  ///< does background fetching on iOS. Fetches new notifications since last that we have.
 
-- (void)startQuickSync; ///< go to the first state of the quick sync chain (quick sync = updateEventsCatchUp)
-- (void)startSlowSync; ///< go to the first state of the slow sync chain
-
-@property (nonatomic, readonly) BOOL isUpdateEventStreamActive;
 @property (nonatomic, readonly) ZMSyncState *currentState;
 
 - (void)goToState:(ZMSyncState *)state;
-- (void)didStartSlowSync;
 
 @end

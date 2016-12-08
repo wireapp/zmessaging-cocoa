@@ -71,19 +71,9 @@
     return @[self.registrationSync];
 }
 
-- (BOOL)isSlowSyncDone
-{
-    return YES;
-}
-
 - (NSArray *)contextChangeTrackers
 {
     return [NSArray array];
-}
-
-- (void)setNeedsSlowSync
-{
-    // no op
 }
 
 - (void)resetRegistrationState;

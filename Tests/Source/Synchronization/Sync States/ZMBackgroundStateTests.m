@@ -68,15 +68,6 @@
     XCTAssertEqual(self.sut.updateEventsPolicy, ZMUpdateEventPolicyIgnore);
 }
 
-- (void)testThatItDoesNotSwitchesToSlowSyncState
-{
-    // expectation
-    [[(id)self.stateMachine reject] startQuickSync];
-    
-    // when
-    [self.sut didRequestSynchronization];
-}
-
 - (void)testThatItDoesNotSwitchesToBackgroundState
 {
     // expectation
@@ -89,7 +80,7 @@
 - (void)testThatItDoesSwitchToQuickSyncOnEnteringForeground
 {
     // expectation
-    [[(id)self.stateMachine expect] startQuickSync];
+    [[(id)self.stateMachine expect] goToState:self.stateMachine.eventProcessingState];
     
     // when
     [self.sut didEnterForeground];
@@ -101,7 +92,6 @@
               self.objectDirectory.flowTranscoder,
               self.objectDirectory.systemMessageTranscoder,
               self.objectDirectory.clientMessageTranscoder,
-              self.objectDirectory.selfTranscoder,
               ];
 }
 

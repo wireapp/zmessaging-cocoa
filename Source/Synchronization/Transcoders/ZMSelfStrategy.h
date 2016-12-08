@@ -17,8 +17,24 @@
 // 
 
 
-#import "ZMSyncState.h"
+@import WireRequestStrategy;
 
-@interface ZMDownloadLastUpdateEventIDState : ZMSyncState
+@class NSManagedObjectContext;
+@class NSOperationQueue;
+@class ZMUpstreamModifiedObjectSync;
 
+@class ZMClientRegistrationStatus;
+
+@interface ZMSelfStrategy : ZMObjectSyncStrategy <ZMRequestGenerator, ZMContextChangeTrackerSource>
+
+@property (nonatomic, readonly) BOOL isSelfUserComplete;
+
+- (instancetype)initWithClientRegistrationStatus:(ZMClientRegistrationStatus *)clientStatus
+                            managedObjectContext:(NSManagedObjectContext *)moc;
 @end
+
+
+@interface ZMSelfStrategy (ContextChangeTracker) <ZMContextChangeTracker>
+@end
+
+

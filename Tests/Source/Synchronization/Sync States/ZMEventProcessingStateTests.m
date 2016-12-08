@@ -30,7 +30,7 @@
 @interface ZMEventProcessingStateTests : StateBaseTest
 
 @property (nonatomic) ZMEventProcessingState *sut;
-
+@property (nonatomic) id syncStatus;
 @end
 
 
@@ -40,8 +40,9 @@
 - (void)setUp {
     
     [super setUp];
-    
-    _sut = [[ZMEventProcessingState alloc] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:self.stateMachine];
+    self.syncStatus = [OCMockObject niceMockForClass:[SyncStatus class]];
+    [[[self.syncStatus stub] andReturnValue:OCMOCK_VALUE(SyncPhaseDone)] currentSyncPhase];
+    _sut = [[ZMEventProcessingState alloc] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:self.stateMachine slowSynStatus:self.syncStatus];
 }
 
 - (NSArray *)syncObjectsUsedByState
@@ -49,10 +50,6 @@
     return  @[ /* Note: these must be in the same order as in the class */
         self.objectDirectory.flowTranscoder,
         self.objectDirectory.callStateTranscoder,
-        self.objectDirectory.connectionTranscoder,
-        self.objectDirectory.userTranscoder,
-        self.objectDirectory.selfTranscoder,
-        self.objectDirectory.conversationTranscoder,
         self.objectDirectory.systemMessageTranscoder,
         self.objectDirectory.clientMessageTranscoder,
         ];
@@ -63,10 +60,10 @@
     XCTAssertEqual(self.sut.updateEventsPolicy, ZMUpdateEventPolicyProcess);
 }
 
-- (void)testThatItCallsDidFinishSyncOnEnter
+- (void)testThatItCallsDoesNotCallDidFinishSyncOnEnter
 {
     // expect
-    [[(id)self.stateMachine expect] didFinishSync];
+    [[(id)self.stateMachine reject] didFinishSync];
     [[(id)self.objectDirectory stub] processAllEventsInBuffer];
     
     // when
@@ -82,15 +79,6 @@
     [self.sut didEnterBackground];
 }
 
-- (void)testThatItDoesNotSwitchToQuickSyncOnEnteringForeground
-{
-    // expectation
-    [[(id)self.stateMachine reject] startQuickSync];
-    
-    // when
-    [self.sut didEnterForeground];
-}
-
 - (void)testThatItReturnsTheFirstRequestReturnedByASync
 {
     /*
@@ -100,40 +88,18 @@
      */
     
     [self checkThatItCallsRequestGeneratorsOnObjectsOfClass:[self syncObjectsUsedByState] creationOfStateBlock:^ZMSyncState *(id<ZMObjectStrategyDirectory> directory) {
-        return [[ZMEventProcessingState alloc] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:directory stateMachineDelegate:self.stateMachine];
+        return [[ZMEventProcessingState alloc] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:directory stateMachineDelegate:self.stateMachine slowSynStatus:self.syncStatus];
     }];
 }
 
-- (void)testThatItFlushesTheUpdateEventsBufferOnEnter
+- (void)testThatItDoesNotFlushTheUpdateEventsBufferOnEnter
 {
     // expect
-    [[(id)self.stateMachine stub] didFinishSync];
-    [[(id)self.objectDirectory expect] processAllEventsInBuffer];
+    [[(id)self.objectDirectory reject] processAllEventsInBuffer];
     
     // when
     [self.sut didEnterState];
     
-}
-
-- (void)testThatItNotifiesThatInitialSyncIsComplete
-{
-    // expect
-    [[(id)self.stateMachine stub] didFinishSync];
-    [[(id)self.objectDirectory expect] processAllEventsInBuffer];
-
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMInitialSyncCompletionObserver)];
-    [[observer expect] initialSyncCompleted:OCMOCK_ANY];
-
-    [ZMUserSession addInitalSyncCompletionObserver:observer];
-
-    // when
-    [self.sut didEnterState];
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    // then
-    [ZMUserSession removeInitalSyncCompletionObserver:observer];
-    [observer verify];
-
 }
 
 @end

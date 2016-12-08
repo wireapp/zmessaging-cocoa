@@ -22,5 +22,6 @@
 - (void)didStartSync;
 - (void)didFinishSync;
 
+
 @end
 

@@ -25,13 +25,16 @@
 
 @class ZMAuthenticationStatus;
 @class ZMAccountStatus;
+@class SyncStatus;
 
-@interface ZMConversationTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
+@interface ZMConversationTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator, ZMSyncPhase>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                         authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
                                accountStatus:(ZMAccountStatus *)accountStatus
-                                syncStrategy:(ZMSyncStrategy *)syncStrategy;
+                                syncStrategy:(ZMSyncStrategy *)syncStrategy
+                                  syncStatus:(SyncStatus *)syncStatus
+                  clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
 
 @property (nonatomic) NSUInteger conversationPageSize;
 

@@ -1133,7 +1133,7 @@
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"ZMApplicationDidEnterEventProcessingStateNotification" object:nil];
+    [self.sut didFinishSync];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [mockDelegate verify];
@@ -1154,7 +1154,7 @@
     [self.sut application:self.application didFinishLaunchingWithOptions:launchOptions];
     
     WaitForAllGroupsToBeEmpty(0.5);
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"ZMApplicationDidEnterEventProcessingStateNotification" object:nil];
+    [self.sut didFinishSync];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [mockDelegate verify];
