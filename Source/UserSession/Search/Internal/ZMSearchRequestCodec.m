@@ -36,7 +36,11 @@ static NSString * const ZMSuggestedSearchEndPoint = @"/search/suggestions";
 + (ZMTransportRequest *)searchRequestForQueryString:(NSString *)queryString levels:(int)levels fetchLimit:(int)fetchLimit;
 {
     VerifyAction(queryString != nil, queryString = @"");
-
+    
+    if ([queryString hasPrefix:@"@"]) {
+        queryString = [queryString substringFromIndex:1];
+    }
+    
     NSMutableCharacterSet *set = [[NSCharacterSet URLQueryAllowedCharacterSet] mutableCopy];
     [set removeCharactersInString:@"=&+"];
     NSString *urlEncodedQuery = [queryString stringByAddingPercentEncodingWithAllowedCharacters:set];

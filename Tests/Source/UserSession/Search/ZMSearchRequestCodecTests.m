@@ -100,6 +100,30 @@
     XCTAssertEqualObjects(request.path, @"/search/contacts?q=search%20me&l=1&size=9");
 }
 
+- (void)testThatItRemovesInitialAtSymbol
+{
+    // given
+    NSString *queryString = @"@foo";
+    
+    // when
+    ZMTransportRequest *request = [ZMSearchRequestCodec searchRequestForQueryString:queryString levels:1 fetchLimit:9];
+    
+    // then
+    XCTAssertEqualObjects(request.path, @"/search/contacts?q=foo&l=1&size=9");
+}
+
+- (void)testThatItDoesNotRemovesNonInitialAtSymbol
+{
+    // given
+    NSString *queryString = @"boo@foo";
+    
+    // when
+    ZMTransportRequest *request = [ZMSearchRequestCodec searchRequestForQueryString:queryString levels:1 fetchLimit:9];
+    
+    // then
+    XCTAssertEqualObjects(request.path, @"/search/contacts?q=boo@foo&l=1&size=9");
+}
+
 - (void)testThatItAddsConnectedUsersToSearchResults_UsersInContact
 {
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
