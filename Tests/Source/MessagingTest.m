@@ -205,7 +205,6 @@
     NSManagedObjectContext *refAlternativeTestMOC = self.alternativeTestMOC;
     NSManagedObjectContext *refSearchMoc = self.searchMOC;
     NSManagedObjectContext *refSyncMoc = self.syncMOC;
-    
     WaitForAllGroupsToBeEmpty(2);
     
     self.uiMOC = nil;
@@ -231,12 +230,6 @@
     }];
     [refSearchMoc performBlockAndWait:^{
         // Do nothing
-    }];
-    
-    [refUiMOC.globalManagedObjectContextObserver tearDown];
-
-    [refSyncMoc performGroupedBlockAndWait:^{
-        [refSyncMoc.globalManagedObjectContextObserver tearDown];
     }];
 }
 

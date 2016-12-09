@@ -379,30 +379,6 @@
     XCTAssertEqual(request, [self.sut nextRequest]);
 }
 
-- (void)testThatItForwardsDidStartSyncToSyncStateDelegate
-{
-    // expect
-    [[self.syncStateDelegate expect] didStartSync];
-    
-    // when
-    [self.sut didStartSync];
-    
-    // then
-    [self.syncStateDelegate verify];
-}
-
-- (void)testThatItForwardsDidFinishSyncToSyncStateDelegate
-{
-    // expect
-    [[self.syncStateDelegate expect] didFinishSync];
-    
-    // when
-    [self.sut didFinishSync];
-    
-    // then
-    [self.syncStateDelegate verify];
-}
-
 - (void)testThatItForwardsDidEnterBackgroundToTheCurrentState
 {
     // expect

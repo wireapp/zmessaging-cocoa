@@ -25,7 +25,7 @@
 
 #import "ZMConversationTranscoder.h"
 #import "ZMAuthenticationStatus.h"
-#import "ZMSyncStrategy.h"
+#import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMSimpleListRequestPaginator.h"
 #import <zmessaging/zmessaging-Swift.h>
 

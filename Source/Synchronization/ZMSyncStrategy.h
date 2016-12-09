@@ -46,26 +46,20 @@
 @protocol ApplicationStateOwner;
 
 
-@interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory, ZMUpdateEventConsumer>
+@interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory>
 
-- (instancetype)initWithAuthenticationCenter:(ZMAuthenticationStatus *)authenticationStatus
-                     userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileStatus
-                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
-                          clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
-                        proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
-                               accountStatus:(ZMAccountStatus *)accountStatus
-                backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
-                   topConversationsDirectory:(TopConversationsDirectory *)topConversationsDirectory
-                                mediaManager:(id<AVSMediaManager>)mediaManager
-                         onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-                                     syncMOC:(NSManagedObjectContext *)syncMOC
-                                       uiMOC:(NSManagedObjectContext *)uiMOC
-                           syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
-                       backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
-                localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
-                    taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
-                          appGroupIdentifier:(NSString *)appGroupIdentifier
-                                 application:(id<ZMApplication>)application;
+- (instancetype)initWithSyncManagedObjectContextMOC:(NSManagedObjectContext *)syncMOC
+                             uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
+                                             cookie:(ZMCookie *)cookie
+                          topConversationsDirectory:(TopConversationsDirectory *)topConversationsDirectory
+                                       mediaManager:(id<AVSMediaManager>)mediaManager
+                                onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                                  syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
+                              backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
+                       localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
+                           taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
+                                 appGroupIdentifier:(NSString *)appGroupIdentifier
+                                        application:(id<ZMApplication>)application;
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;
@@ -73,16 +67,18 @@
 - (ZMTransportRequest *)nextRequest;
 - (void)dataDidChange;
 
-/// Process events that are recevied through the notification stream or the websocket
-- (void)processUpdateEvents:(NSArray <ZMUpdateEvent *>*)events ignoreBuffer:(BOOL)ignoreBuffer;
-
-/// Process events that were downloaded as part of the clinet history
-- (void)processDownloadedEvents:(NSArray <ZMUpdateEvent *>*)events;
-
-- (BOOL)processSaveWithInsertedObjects:(NSSet *)insertedObjects updateObjects:(NSSet *)updatedObjects;
 - (void)tearDown;
 
 @property (nonatomic, readonly) NSManagedObjectContext *syncMOC;
+@property (nonatomic, readonly) BackgroundAPNSConfirmationStatus *apnsConfirmationStatus;
+@property (nonatomic, readonly) ZMAuthenticationStatus *authenticationStatus;
+@property (nonatomic, readonly) UserProfileUpdateStatus *userProfileUpdateStatus;
+@property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
+@property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;
+@property (nonatomic, readonly) BackgroundAPNSPingBackStatus *pingBackStatus;
+@property (nonatomic, readonly) ZMAccountStatus *accountStatus;
+@property (nonatomic, readonly) ProxiedRequestsStatus *proxiedRequestStatus;
+@property (nonatomic, readonly) SyncStatus *syncStatus;
 
 - (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
 
