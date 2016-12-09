@@ -157,6 +157,7 @@ _Pragma("clang diagnostic pop")
 {
     self.lastConversation = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [self.gsmCallHandler tearDown];
     [super tearDown];
 }
 

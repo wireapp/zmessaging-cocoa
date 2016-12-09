@@ -41,7 +41,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
 @property (nonatomic) NSManagedObjectID *activeCallUIConversationObjectID;
 
 @property (nonatomic) BOOL canUpdateCallState;
-
+@property (nonatomic) BOOL tornDown;
 @end
 
 
@@ -77,9 +77,17 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     return self;
 }
 
+- (void)tearDown
+{
+    self.tornDown = YES;
+    self.callCenter.callEventHandler = nil;
+    self.callCenter = nil;
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
 - (void)dealloc
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    Require(self.tornDown);
 }
 
 - (void)didFinishSync:(NSNotification *)note

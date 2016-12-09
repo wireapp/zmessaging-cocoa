@@ -44,6 +44,8 @@
 
 - (void)setUp {
     [super setUp];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
     [self.syncMOC performGroupedBlockAndWait:^{
         self.activeSyncCallConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         self.activeSyncCallConversation.conversationType = ZMConversationTypeGroup;
@@ -68,12 +70,13 @@
     self.sut = [[ZMGSMCallHandler alloc] initWithUIManagedObjectContext:self.uiMOC
                                                syncManagedObjectContext:self.syncMOC
                                                         callStateLogger:self.mockCallStateLogger];
+    
     [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
-- (void)tearDown {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
-    [super tearDown];
+- (void)tearDown
+{
     [self.activeUICallConversation.voiceChannel tearDown];
     [self.inactiveSyncCallConversation.voiceChannel tearDown];
 
@@ -81,6 +84,9 @@
     self.activeUICallConversation = nil;
     self.inactiveSyncCallConversation = nil;
     self.inactiveUICallConversation = nil;
+    [self.sut tearDown];
+    self.sut = nil;
+    [super tearDown];
 }
 
 
@@ -397,6 +403,7 @@
     XCTAssertTrue(self.sut.hasStoredInterruptedCallConversation);
     
     // when
+    [self.sut tearDown];
     self.sut = [[ZMGSMCallHandler alloc] initWithUIManagedObjectContext:self.uiMOC
                                                syncManagedObjectContext:self.syncMOC
                                                         callStateLogger:self.mockCallStateLogger];
@@ -421,6 +428,7 @@
     self.sut.callEventHandler(mockCall1);
     WaitForAllGroupsToBeEmpty(0.5);
     
+    [self.sut tearDown];
     self.sut = [[ZMGSMCallHandler alloc] initWithUIManagedObjectContext:self.uiMOC
                                                syncManagedObjectContext:self.syncMOC
                                                         callStateLogger:self.mockCallStateLogger
@@ -468,6 +476,7 @@
     self.sut.callEventHandler(mockCall1);
     WaitForAllGroupsToBeEmpty(0.5);
     
+    [self.sut tearDown];
     self.sut = [[ZMGSMCallHandler alloc] initWithUIManagedObjectContext:self.uiMOC
                                                syncManagedObjectContext:self.syncMOC
                                                         callStateLogger:self.mockCallStateLogger
