@@ -42,7 +42,7 @@ class RandomHandleGeneratorTests : XCTestCase {
     func testHandleGenerationWithValidDisplayName() {
         
         // GIVEN
-        let variations = 4
+        let variations = 3
         let expectedNormalized = "marialarochellevonschw"
         
         // WHEN
@@ -53,6 +53,7 @@ class RandomHandleGeneratorTests : XCTestCase {
         
         // THEN
         XCTAssertGreaterThan(handles.count, 5 * (variations + 1))
+        XCTAssertLessThanOrEqual(handles.count, 50)
         
         // first is normalized name
         XCTAssertEqual(handles.popLast(), expectedNormalized)

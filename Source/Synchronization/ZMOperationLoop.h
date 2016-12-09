@@ -39,6 +39,7 @@
 
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
+@class TopConversationsDirectory;
 @protocol ZMApplication;
 
 extern NSString * const ZMPushChannelStateChangeNotificationName;
@@ -58,6 +59,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
                     proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
                            accountStatus:(ZMAccountStatus *)accountStatus
             backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
+               topConversationsDirectory:(TopConversationsDirectory *)topConversationsDirectory
              localNotificationdispatcher:(ZMLocalNotificationDispatcher *)dispatcher
                             mediaManager:(id<AVSMediaManager>)mediaManager
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager

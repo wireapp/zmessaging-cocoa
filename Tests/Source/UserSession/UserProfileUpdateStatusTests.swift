@@ -30,6 +30,8 @@ class UserProfileUpdateStatusTests : MessagingTest {
     fileprivate var observer : TestUserProfileUpdateObserver! = nil
     
     fileprivate var newRequestObserver : OperationLoopNewRequestObserver!
+
+    fileprivate var mockAnalytics : MockAnalytics!
     
     /// Number of time the new request callback was invoked
     var newRequestCallbackCount : Int {
@@ -40,7 +42,8 @@ class UserProfileUpdateStatusTests : MessagingTest {
         super.setUp()
         self.newRequestObserver = OperationLoopNewRequestObserver()
         self.observer = TestUserProfileUpdateObserver()
-        self.sut = UserProfileUpdateStatus(managedObjectContext: self.uiMOC)
+        self.mockAnalytics = MockAnalytics()
+        self.sut = UserProfileUpdateStatus(managedObjectContext: self.uiMOC, analytics: self.mockAnalytics)
         self.observerToken = self.sut.add(observer: self.observer)
     }
     
@@ -49,6 +52,7 @@ class UserProfileUpdateStatusTests : MessagingTest {
         self.sut.removeObserver(token: self.observerToken!)
         self.sut = nil
         self.observer = nil
+        self.mockAnalytics = nil
         super.tearDown()
     }
 }
@@ -953,6 +957,42 @@ extension UserProfileUpdateStatusTests {
         XCTAssertEqual(self.sut.bestHandleSuggestion, handle)
     }
     
+    func testThatItStopsSearchingForHandleSuggestionsIfItHasHandle() {
+        
+        // GIVEN
+        self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        selfUser.setHandle("cozypanda23")
+        self.sut.didNotFindAvailableHandleSuggestion()
+        
+        // THEN
+        XCTAssertFalse(self.sut.currentlyGeneratingHandleSuggestion)
+        XCTAssertNil(self.sut.bestHandleSuggestion)
+    }
+    
+    func testThatItRestatsSearchingForHandleSuggestionsAfterNotFindingAvailableOne() {
+        
+        // GIVEN
+        self.sut.suggestHandles()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        guard let previousHandle = self.sut.suggestedHandlesToCheck?.first else {
+            XCTFail()
+            return
+        }
+        
+        // WHEN
+        self.sut.didNotFindAvailableHandleSuggestion()
+        
+        // THEN
+        XCTAssertTrue(self.sut.currentlyGeneratingHandleSuggestion)
+        XCTAssertNil(self.sut.bestHandleSuggestion)
+        XCTAssertNotNil(self.sut.suggestedHandlesToCheck?.first)
+        XCTAssertNotEqual(self.sut.suggestedHandlesToCheck?.first, previousHandle)
+    }
+    
     func testThatItFailsGeneratingHandleSuggestionsAndStopsIfItHasHandle() {
         
         // GIVEN
@@ -967,26 +1007,7 @@ extension UserProfileUpdateStatusTests {
         // THEN
         XCTAssertFalse(self.sut.currentlyGeneratingHandleSuggestion)
         XCTAssertNil(self.sut.bestHandleSuggestion)
-    }
-    
-    func testThatItFailsGeneratingHandleSuggestionsAndRestartsIfItHasNoHandle() {
-        
-        // GIVEN
-        self.sut.suggestHandles()
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        guard let previousHandle = self.sut.suggestedHandlesToCheck?.first else {
-            XCTFail()
-            return
-        }
-        
-        // WHEN
-        self.sut.didFailToFindHandleSuggestion()
-        
-        // THEN
-        XCTAssertTrue(self.sut.currentlyGeneratingHandleSuggestion)
-        XCTAssertNil(self.sut.bestHandleSuggestion)
-        XCTAssertNotNil(self.sut.suggestedHandlesToCheck?.first)
-        XCTAssertNotEqual(self.sut.suggestedHandlesToCheck?.first, previousHandle)
+        XCTAssertNil(self.sut.suggestedHandlesToCheck)
     }
     
     func testThatItNotifiesAfterFindingAHandleSuggestion() {
@@ -1039,6 +1060,45 @@ extension UserProfileUpdateStatusTests {
         XCTAssertEqual(self.sut.suggestedHandlesToCheck?.count, 1)
         XCTAssertEqual(self.sut.suggestedHandlesToCheck?.first, handle)
     }
+}
+
+// MARK: - Analytics
+extension UserProfileUpdateStatusTests {
+
+    func testThatItTracksFindingASuggestedHandleOnTheFirstTry() {
+        // GIVEN
+        sut.suggestHandles()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // WHEN
+        sut.didFindHandleSuggestion(handle: "handle")
+
+        // THEN
+        XCTAssertEqual(mockAnalytics.taggedEventsWithAttributes.count, 1)
+        guard let event = mockAnalytics.taggedEventsWithAttributes.first else { return XCTFail() }
+        XCTAssertEqual(event.event, "onboarding.generated_username")
+        XCTAssertEqual(event.attributes["outcome"] as? String, "success")
+        XCTAssertEqual(event.attributes["num_of_attempts"] as? Int, 1)
+    }
+
+    func testThatItTracksFindingASuggestedHandleAfterMultipleAttempts() {
+        // GIVEN
+        sut.suggestHandles()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // WHEN
+        sut.didNotFindAvailableHandleSuggestion()
+        sut.didNotFindAvailableHandleSuggestion()
+        sut.didFindHandleSuggestion(handle: "handle")
+
+        // THEN
+        XCTAssertEqual(mockAnalytics.taggedEventsWithAttributes.count, 1)
+        guard let event = mockAnalytics.taggedEventsWithAttributes.first else { return XCTFail() }
+        XCTAssertEqual(event.event, "onboarding.generated_username")
+        XCTAssertEqual(event.attributes["outcome"] as? String, "success")
+        XCTAssertEqual(event.attributes["num_of_attempts"] as? Int, 3)
+    }
+
 }
 
 // MARK: - Helpers

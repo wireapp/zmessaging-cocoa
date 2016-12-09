@@ -22,7 +22,6 @@
 @import ZMCDataModel;
 
 #import "ZMSearchRequestCodec.h"
-#import "ZMSuggestionResult.h"
 #import "ZMSearchResult+Internal.h"
 #import "ZMUserSession+Internal.h"
 
@@ -37,7 +36,11 @@ static NSString * const ZMSuggestedSearchEndPoint = @"/search/suggestions";
 + (ZMTransportRequest *)searchRequestForQueryString:(NSString *)queryString levels:(int)levels fetchLimit:(int)fetchLimit;
 {
     VerifyAction(queryString != nil, queryString = @"");
-
+    
+    if ([queryString hasPrefix:@"@"]) {
+        queryString = [queryString substringFromIndex:1];
+    }
+    
     NSMutableCharacterSet *set = [[NSCharacterSet URLQueryAllowedCharacterSet] mutableCopy];
     [set removeCharactersInString:@"=&+"];
     NSString *urlEncodedQuery = [queryString stringByAddingPercentEncodingWithAllowedCharacters:set];
@@ -47,20 +50,10 @@ static NSString * const ZMSuggestedSearchEndPoint = @"/search/suggestions";
     
 }
 
-+ (ZMTransportRequest *)searchRequestForTopConversationsWithFetchLimit:(int)fetchLimit;
++ (ZMSearchResult *)searchResultFromTransportResponse:(ZMTransportResponse *)response ignoredIDs:(NSArray *)ignoredIDs userSession:(ZMUserSession *)userSession query:(NSString *)query;
 {
-    NSString *path = [NSString stringWithFormat:@"%@?size=%d", ZMTopSearchEndPoint, fetchLimit];
-    return [ZMTransportRequest requestGetFromPath:path];
-}
-
-+ (ZMTransportRequest *)searchRequestForSuggestedPeopleWithFetchLimit:(int)fetchLimit;
-{
-    NSString *path = [NSString stringWithFormat:@"%@?size=%d", ZMSuggestedSearchEndPoint, fetchLimit];
-    return [ZMTransportRequest requestGetFromPath:path];
-}
-
-+ (ZMSearchResult *)searchResultFromTransportResponse:(ZMTransportResponse *)response ignoredIDs:(NSArray *)ignoredIDs userSession:(ZMUserSession *)userSession
-{
+    BOOL isUsernameQuery = [query hasPrefix:@"@"];
+    NSString *queryWithoutAtSymbol = [(isUsernameQuery ? [query substringFromIndex:1] : query) lowercaseString];
     NSDictionary *payload = [response.payload asDictionary];
     NSArray *users = [payload optionalArrayForKey:@"documents"];
     if (users == nil) {
@@ -77,6 +70,14 @@ static NSString * const ZMSuggestedSearchEndPoint = @"/search/suggestions";
     for (NSDictionary *user in users) {
         NSUUID *identifier = [user optionalUuidForKey:@"id"];
         if (identifier == nil || [ignoredIDs containsObject:identifier] || [selfUser.remoteIdentifier isEqual:identifier]) {
+            continue;
+        }
+        
+        NSString *name = [user optionalStringForKey:@"name"];
+        NSString *handle = [user optionalStringForKey:@"handle"];
+        
+        
+        if (isUsernameQuery && (![name hasPrefix:@"@"] && ![handle containsString:queryWithoutAtSymbol])) {
             continue;
         }
 
@@ -99,32 +100,6 @@ static NSString * const ZMSuggestedSearchEndPoint = @"/search/suggestions";
     [searchResult addUsersInContacts:connectedUsers];
     return searchResult;
 }
-
-+ (NSOrderedSet *)remoteIdentifiersForSuggestedPeopleSearchResponse:(ZMTransportResponse *)response
-{
-    if (response.result != ZMTransportResponseStatusSuccess ||
-        response.transportSessionError != nil )
-    {
-        return nil;
-    }
-    
-    NSDictionary *payload = [response.payload asDictionary];
-    NSArray *users = [payload optionalArrayForKey:@"documents"];
-    if (users == nil) {
-        return nil;
-    }
-    
-    NSMutableOrderedSet *suggestedUsers = [NSMutableOrderedSet orderedSetWithCapacity:users.count];
-    for (NSDictionary *user in users) {
-        ZMSuggestedUserCommonConnections *commonConnections = [[ZMSuggestedUserCommonConnections alloc] initWithPayload:user];
-        NSUUID *identifier = [user optionalUuidForKey:@"id"];
-        if (identifier != nil && commonConnections != nil) {
-            [suggestedUsers addObject:[[ZMSuggestionResult alloc] initWithUserIdentifier:identifier commonConnections:commonConnections]];
-        }
-    }
-    return suggestedUsers;
-}
-
 
 // There is a delay in the search, right after connecting to someone the backend will still say they are unconnected. But this method knows the truth.
 + (BOOL)canonicalIsUserConnected:(ZMSearchUser *)user {

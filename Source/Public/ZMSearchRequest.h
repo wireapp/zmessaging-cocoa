@@ -23,9 +23,13 @@
 
 @interface ZMSearchRequest : NSObject <NSCopying>
 
+/// Whether to include contact in the result
 @property (nonatomic) BOOL includeContacts;
+/// Whether to include address book entries in the result
 @property (nonatomic) BOOL includeAddressBookContacts;
+/// Whether to include group conversations in the result
 @property (nonatomic) BOOL includeGroupConversations;
+/// Whether to include directory results (non-connected users from BE) in the result
 @property (nonatomic) BOOL includeDirectory;
 
 /// If includeRemoteResults is YES contacts & directory results will be fetched from BE.

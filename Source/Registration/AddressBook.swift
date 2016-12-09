@@ -17,78 +17,51 @@
 //
 
 import Foundation
-import AddressBook
+import Contacts
 import libPhoneNumber
+import AddressBook
+
 
 /// Wraps the system address book to return `ZMAddressBookContact` when iterating, filtering out those
 /// without a valid email or phone
-@objc class AddressBook : NSObject {
-    
-    typealias Normalizer = (String)->(String?)
-    typealias AccessCheck = ()->(Bool)
-    
-    /// Reference to the AB
-    let ref : ABAddressBook
-    
-    /// normalizer for phone numbers
-    fileprivate let phoneNormalizer : NBPhoneNumberUtil
-    
-    /// Closure used to generate iterator. Used in testing
-    fileprivate let allPeopleClosure : AllPeopleClosure
-    typealias AllPeopleClosure = (_ ref: ABAddressBook) -> (AnyIterator<ABRecord>)
-    
-    /// Closure to get number of people. Used in testing
-    fileprivate let numberOfPeopleClosure : NumberOfPeopleClosure
-    typealias NumberOfPeopleClosure = (_ ref: ABAddressBook) -> (Int)
-
-    /// Address book. Will fail if it has no authorization to access AB
-    /// - parameter allPeopleClosure: custom function to return an iterator (used for testing)
-    /// - parameter addressBookAccessCheck: custom function to check if user granted access to AB (used for testing)
-    /// - parameter numberOfPeopleClosure: custom function to retrieve the number of people in the AB (used for testing)
-    init?(allPeopleClosure: AllPeopleClosure? = nil,
-          addressBookAccessCheck: AccessCheck? = nil,
-          numberOfPeopleClosure: NumberOfPeopleClosure? = nil) {
-        
-        // fail if no access
-        guard AddressBook.checkAccessToAB(addressBookAccessCheck) else {
-            return nil
-        }
-        self.ref = ABAddressBookCreate().takeRetainedValue()
-        self.allPeopleClosure = AddressBook.customOrDefaultAllPeopleClosure(allPeopleClosure)
-        self.numberOfPeopleClosure = AddressBook.customOrDefaultNumberOfPeopleClosure(numberOfPeopleClosure)
-        self.phoneNormalizer = NBPhoneNumberUtil()
-    }
-}
-
-// MARK: - Debugging
-extension AddressBook {
-    
-    override var description : String {
-        return "AB with \(self.numberOfContacts) contacts"
-    }
-    
-}
-
-// MARK: - Access
-
-extension AddressBook {
-    /// Whether the use authorized access to the AB
-    static var userHasAuthorizedAccess : Bool {
-        return ABAddressBookGetAuthorizationStatus() == .authorized
-    }
-
-}
-
-// MARK: - Iterating contacts
-
-/// Protocol that allow iterating the address book contacts
 protocol AddressBookAccessor {
     
     /// Number of contacts in the address book
     var numberOfContacts : UInt {get}
     
-    /// Iterator for contacts
-    func iterate() -> LazySequence<AnyIterator<ZMAddressBookContact>>
+    /// Enumerates the contacts whitout performing any normalization or validation, invoking the block for each contact.
+    /// If the block returns false, it will stop enumerating them.
+    func enumerateRawContacts(block: @escaping (ContactRecord)->(Bool))
+    
+    /// Returns contacts matching search query
+    func rawContacts(matchingQuery: String) -> [ContactRecord]
+    
+    /// Normalization function for phone numbers
+    var phoneNumberNormalizer : AddressBook.Normalizer { get }
+    
+    /// Gets a specific address book user by the local address book indentifier
+    func contact(identifier: String) -> ContactRecord?
+}
+
+extension AddressBookAccessor {
+    
+    /// Enumerates the contacts, normalized and validated, invoking the block for each contact.
+    /// Non valid contacts (no email nor phone) will be excluded from the enumeration.
+    /// If the block returns true, it will stop enumerating them.
+    func enumerateValidContacts(block: @escaping (ZMAddressBookContact)->(Bool)) {
+        self.enumerateRawContacts {
+            guard let parsed = ZMAddressBookContact(contact: $0, phoneNumberNormalizer: self.phoneNumberNormalizer) else {
+                return false
+            }
+            return block(parsed)
+        }
+    }
+    
+    /// Returns valid contacts matching the search query, with normalized email and phone numbers
+    func contacts(matchingQuery: String) -> [ZMAddressBookContact] {
+        return self.rawContacts(matchingQuery: matchingQuery)
+            .flatMap { ZMAddressBookContact(contact: $0, phoneNumberNormalizer: self.phoneNumberNormalizer) }
+    }
     
     /// Encodes an arbitraty part the address book asynchronously. Will invoke the completion handler when done.
     /// - parameter groupQueue: group queue to enter while executing, and where to invoke callback
@@ -99,37 +72,14 @@ protocol AddressBookAccessor {
     func encodeWithCompletionHandler(_ groupQueue: ZMSGroupQueue,
                                      startingContactIndex: UInt,
                                      maxNumberOfContacts: UInt,
-                                     completion: @escaping (EncodedAddressBookChunk?)->()
-    )
-}
-
-extension AddressBook : AddressBookAccessor {
-
-    /// Number of contacts in the address book
-    var numberOfContacts : UInt {
-        return UInt(self.numberOfPeopleClosure(self.ref))
-    }
-    
-    /// Returns a generator that will generate all elements of the address book
-    func iterate() -> LazySequence<AnyIterator<ZMAddressBookContact>> {
-        return AnyIterator(AddressBookIterator(
-            phoneNumberNormalizer: { self.phoneNormalizer.normalize($0)?.validatedPhoneNumber },
-            emailNormalizer: { $0.validatedEmail },
-            allPeople: self.allPeopleClosure(self.ref)
-        )).lazy
-    }
-    
-    internal func encodeWithCompletionHandler(_ groupQueue: ZMSGroupQueue,
-                                              startingContactIndex: UInt,
-                                              maxNumberOfContacts: UInt,
-                                              completion: @escaping (EncodedAddressBookChunk?) -> ()
+                                     completion: @escaping (EncodedAddressBookChunk?) -> ()
         ) {
         // here we are explicitly capturing self, this is executed on a queue that is
         // never blocked indefinitely as this is the only function using it
         groupQueue.dispatchGroup.async(on: addressBookProcessingQueue) {
             
             let range: Range<UInt> = startingContactIndex..<(startingContactIndex+maxNumberOfContacts)
-            let cards = self.generateContactCards(range)
+            let cards = self.generateContactCards(range: range)
             
             guard cards.count > 0 || startingContactIndex > 0 else {
                 // this should happen if I have zero contacts
@@ -150,116 +100,111 @@ extension AddressBook : AddressBookAccessor {
     }
     
     /// Generate contact cards for the given range of contacts
-    fileprivate func generateContactCards(_ range: Range<UInt>) -> [[String]]
+    fileprivate func generateContactCards(range: Range<UInt>) -> [String: [String]]
     {
-        return self.iterate()
-            .elements(range)
-            .map { (contact: ZMAddressBookContact) -> [String] in
-                return (contact.emailAddresses.map { $0.base64EncodedSHADigest })
-                    + (contact.phoneNumbers.map { $0.base64EncodedSHADigest })
+        var cards = [String:[String]]()
+        
+        self.contacts(range: range).enumerated().forEach {
+            let contact = $0.element
+            cards[contact.localIdentifier ?? "\($0.offset)"] = (contact.emailAddresses.map { $0.base64EncodedSHADigest })
+                + (contact.phoneNumbers.map { $0.base64EncodedSHADigest })
         }
+        return cards
     }
     
+    /// Returns contacts in a specific range
+    func contacts(range: Range<UInt>) -> [ZMAddressBookContact] {
+        var contacts = Array<ZMAddressBookContact>()
+        
+        let maxElements = Int(range.upperBound - range.lowerBound)
+        contacts.reserveCapacity(maxElements)
+        
+        var skipped : UInt = 0
+        self.enumerateValidContacts { (contact) -> (Bool) in
+            if skipped < range.lowerBound {
+                skipped += 1
+                return true
+            }
+            contacts.append(contact)
+            return contacts.count < maxElements
+        }
+        
+        return contacts
+    }
 }
 
-/// Iterator for address book
-public final class AddressBookIterator : Sequence, IteratorProtocol {
-    
-    /// All people in the AB
-    fileprivate let people : AnyIterator<ABRecord>
+/// Common base class between iOS 8 (AddressBook framework) and iOS 9+ (Contacts framework)
+class AddressBook {
     
     /// normalizer for phone numbers
-    fileprivate let phoneNumberNormalizer : AddressBook.Normalizer
+    let phoneNumberNormalizer : AddressBook.Normalizer
     
-    /// normalized for email
-    fileprivate let emailNormalizer: AddressBook.Normalizer
-    
-    public typealias Element = ZMAddressBookContact
-    
-    open func next() -> ZMAddressBookContact? {
-        var recordRef = self.people.next()
-        
-        while recordRef != nil {
-            if let parsed = ZMAddressBookContact(ref: recordRef!,
-                                        phoneNumberNormalizer: self.phoneNumberNormalizer,
-                                        emailNormalizer: self.emailNormalizer) {
-                return parsed
-            } else {
-                recordRef = self.people.next()
-            }
-        }
-        return nil
+    init() {
+        let libPhoneNumber = NBPhoneNumberUtil()
+        self.phoneNumberNormalizer = { libPhoneNumber.normalize($0)?.validatedPhoneNumber }
     }
     
-    fileprivate init(phoneNumberNormalizer: @escaping AddressBook.Normalizer,
-                 emailNormalizer: @escaping AddressBook.Normalizer,
-                 allPeople: AnyIterator<ABRecord>
-    ) {
-        self.people = allPeople
-        self.phoneNumberNormalizer = phoneNumberNormalizer
-        self.emailNormalizer = emailNormalizer
+    typealias Normalizer = (String)->(String?)
+    typealias AccessCheck = ()->(Bool)
+    
+    /// Will return an instance of the address book accessor best suited for the
+    /// current OS version. Will return `nil` if the user did not grant access to the AB
+    static func factory() -> AddressBookAccessor? {
+        guard self.accessGranted() else {
+            return nil
+        }
+        
+        if #available(iOS 9.0, *) {
+            return AddressBookIOS9()
+        } else {
+            return AddressBookIOS8()
+        }
+    }
+    
+    /// Uses the passed in closure, or the standard method if the closure is nil, to
+    /// check if the AB access was granted. Returns whether it was granted.
+    static func accessGranted(_ checkClosure: AccessCheck? = nil) -> Bool {
+        if let closure = checkClosure {
+            return closure()
+        }
+        if #available(iOS 9.0, *) {
+            return CNContactStore.authorizationStatus(for: .contacts) == .authorized
+        } else {
+            return ABAddressBookGetAuthorizationStatus() == .authorized
+        }
     }
 }
 
-// MARK: - Contact parsing
-
-extension ZMAddressBookContact {
+// MARK: - Encoded address book chunk
+struct EncodedAddressBookChunk {
     
-    convenience init?(ref: ABRecord,
-                      phoneNumberNormalizer: AddressBook.Normalizer,
-                      emailNormalizer: AddressBook.Normalizer) {
-        self.init()
-        
-        // names
-        self.firstName = ABRecordCopyValue(ref, kABPersonFirstNameProperty)?.takeRetainedValue() as? String
-        self.lastName = ABRecordCopyValue(ref, kABPersonLastNameProperty)?.takeRetainedValue() as? String
-        self.middleName = ABRecordCopyValue(ref, kABPersonMiddleNameProperty)?.takeRetainedValue() as? String
-        self.nickname = ABRecordCopyValue(ref, kABPersonNicknameProperty)?.takeRetainedValue() as? String
-        self.organization = ABRecordCopyValue(ref, kABPersonOrganizationProperty)?.takeRetainedValue() as? String
-        
-        // email
-        if let emailsRef = ABRecordCopyValue(ref, kABPersonEmailProperty)?.takeRetainedValue() , ABMultiValueGetCount(emailsRef) > 0 {
-            self.emailAddresses = ((ABMultiValueCopyArrayOfAllValues(emailsRef).takeRetainedValue() as NSArray) as! [String])
-                .flatMap { emailNormalizer($0) }
-        } else {
-            self.emailAddresses = []
-        }
-        
-        // phone
-        if let phonesRef = ABRecordCopyValue(ref, kABPersonPhoneProperty)?.takeRetainedValue() , ABMultiValueGetCount(phonesRef) > 0 {
-            self.rawPhoneNumbers = (ABMultiValueCopyArrayOfAllValues(phonesRef).takeRetainedValue() as NSArray) as! [String]
-        } else {
-            self.rawPhoneNumbers = []
-        }
-        
-        // normalize phone
-        self.phoneNumbers = self.rawPhoneNumbers.flatMap { phoneNumberNormalizer($0) }
-        
-        // ignore contacts with no email nor phones
-        guard self.emailAddresses.count > 0 || self.phoneNumbers.count > 0 else {
-            return nil
-        }
-    }
+    /// Total number of contacts in the address book
+    let numberOfTotalContacts : UInt
+    
+    /// Data to upload for contacts other that the self user
+    /// maps from contact ID to hashes
+    let otherContactsHashes : [String : [String]]
+    
+    /// Contacts included in this chunck, according to AB order
+    let includedContacts : CountableRange<UInt>
 }
 
 // MARK: - Phone number and email normalization
-
-
 extension NBPhoneNumberUtil {
     
-    /// Returns a normalized version of the phone number, or nil 
+    /// Returns a normalized version of the phone number, or nil
     /// if the phone number was not normalizable.
     /// - note: numbers starting with "+0", a prefix that is not
     /// assigned to any real number, are considered test numbers
     /// used for QA automation and will always be accepted, without being
-    /// normalized through the normalization library but just sanitized 
+    /// normalized through the normalization library but just sanitized
     /// from any non-numberic character
     func normalize(_ phoneNumber: String) -> String? {
         let testingNumberPrefix = "+0"
         guard !phoneNumber.hasPrefix(testingNumberPrefix) else {
             return phoneNumber.validatedPhoneNumber
         }
-    
+        
         guard let parsedNumber = try? self.parse(withPhoneCarrierRegion: phoneNumber) else {
             return nil
         }
@@ -304,43 +249,6 @@ extension String {
     }
 }
 
-// MARK: - Default behaviour (test injection)
-
-extension AddressBook {
-    
-    /// Uses the passed in closure, or the standard method it the closure is nil, to
-    /// check if the AB access was granted. Returns whether it was granted.
-    static fileprivate func checkAccessToAB(_ checkClosure: (()->(Bool))?) -> Bool {
-        return checkClosure?() ?? AddressBook.userHasAuthorizedAccess
-    }
-    
-    /// Returns either the custom passed closure to get all people or, if the passed generating function is nil,
-    /// the standard function
-    static fileprivate func customOrDefaultAllPeopleClosure(_ custom: AllPeopleClosure?) -> AllPeopleClosure {
-        return custom != nil ? custom! : { AnyIterator((ABAddressBookCopyArrayOfAllPeople($0).takeRetainedValue() as [ABRecord]).makeIterator()) }
-    }
-    
-    /// Returns either the custom passed closure to get the number of people or, if the passed generating function is nil,
-    /// the standard function
-    static fileprivate func customOrDefaultNumberOfPeopleClosure(_ custom: NumberOfPeopleClosure?) -> NumberOfPeopleClosure {
-        return custom != nil ? custom! : { ABAddressBookGetPersonCount($0) }
-    }
-}
-
-// MARK: - Encoded address book chunk
-struct EncodedAddressBookChunk {
-    
-    /// Total number of contacts in the address book
-    let numberOfTotalContacts : UInt
-    
-    /// Data to upload for contacts other that the self user
-    let otherContactsHashes : [[String]]
-    
-    /// Contacts included in this chuck, according to AB order
-    let includedContacts : CountableRange<UInt>
-}
-
-
 // MARK: - Utilities
 extension String {
     
@@ -353,7 +261,7 @@ extension String {
 
 
 /// Private AB processing queue
-private let addressBookProcessingQueue = DispatchQueue(label: "Address book processing", attributes: [])
+let addressBookProcessingQueue = DispatchQueue(label: "Address book processing", attributes: [])
 
 extension Sequence {
     
@@ -378,6 +286,53 @@ extension Sequence {
             }
             count += 1
             return generator.next()
+        }
+    }
+}
+
+// Generic contactto abstract actual address book framework details
+protocol ContactRecord {
+    
+    var rawEmails : [String] { get }
+    var rawPhoneNumbers : [String] { get }
+    var firstName : String { get }
+    var lastName : String { get }
+    var middleName : String { get }
+    var nickname : String { get }
+    var organization : String { get }
+    var localIdentifier : String { get }
+    
+}
+
+extension ContactRecord {
+    
+    var displayName : String {
+        return [self.firstName, self.middleName, self.lastName]
+            .filter { $0 != "" }
+            .joined(separator: " ")
+    }
+}
+
+extension ZMAddressBookContact {
+    
+    convenience init?(contact: ContactRecord,
+                      phoneNumberNormalizer: AddressBook.Normalizer) {
+        self.init()
+        
+        // names
+        self.firstName = contact.firstName
+        self.lastName = contact.lastName
+        self.middleName = contact.middleName
+        self.nickname = contact.nickname
+        self.organization = contact.organization
+        self.emailAddresses = contact.rawEmails.flatMap { $0.validatedEmail }
+        self.rawPhoneNumbers = contact.rawPhoneNumbers
+        self.phoneNumbers = self.rawPhoneNumbers.flatMap { phoneNumberNormalizer($0) }
+        self.localIdentifier = contact.localIdentifier
+        
+        // ignore contacts with no email nor phones
+        guard self.emailAddresses.count > 0 || self.phoneNumbers.count > 0 else {
+            return nil
         }
     }
 }
