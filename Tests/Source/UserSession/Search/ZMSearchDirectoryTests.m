@@ -758,19 +758,19 @@
     XCTAssertEqualObjects(result.groupConversations, expectedResult);
 }
 
-- (void)testThatItFindsNoConversationWhenTheQueryStartsWithAtSymbol
+- (void)testThatItFiltersConversationWhenTheQueryStartsWithAtSymbol
 {
     // given
     [self createGroupConversationWithName:@"New Day Rising"];
-    [self createGroupConversationWithName:@"@Candy Apple Records"];
-    [self createGroupConversationWithName:@"Landspeed @Records"];
+    ZMConversation* conversation = [self createGroupConversationWithName:@"@Candy Apple Records"]; // this should be included because it has a @
+    [self createGroupConversationWithName:@"Landspeed Records"];
     
     // when
     ZMSearchToken token = [self.sut searchForUsersAndConversationsMatchingQueryString:@"@records"];
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
     
     // then
-    [self verifyThatResultWithToken:token containsConversations:@[] failureRecorder:NewFailureRecorder()];
+    [self verifyThatResultWithToken:token containsConversations:@[conversation] failureRecorder:NewFailureRecorder()];
 }
 
 @end
