@@ -90,6 +90,28 @@ class RandomHandleGeneratorTests : XCTestCase {
             XCTAssertFalse($0.hasPrefix(expectedNormalized))
         }
     }
+    
+    func testThatItSuggestsHandlesWithTwoCharacters() {
+        
+        // GIVEN
+        let expectedFirstNormalized = "po"
+        
+        // WHEN
+        let handles : [String] = zmessaging.RandomHandleGenerator.generatePossibleHandles(displayName: "Po", alternativeNames: 0)
+        
+        // THEN
+        XCTAssertEqual(handles.first, expectedFirstNormalized)
+    }
+    
+    func testThatItDoesNotSuggestsHandlesWithOneCharacters() {
+        
+        // WHEN
+        let handles : [String] = zmessaging.RandomHandleGenerator.generatePossibleHandles(displayName: "P", alternativeNames: 0)
+        
+        // THEN
+        guard let handle = handles.first else { XCTFail(); return }
+        XCTAssertGreaterThan(handle.utf8.count, 2)
+    }
 }
 
 // MARK: - Helpers

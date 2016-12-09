@@ -20,7 +20,7 @@ import Foundation
 
 private let maximumUserHandleLength = 21
 
-private let minimumUserHandleLength = 3
+private let minimumUserHandleLength = 2
 
 struct RandomHandleGenerator {
     
