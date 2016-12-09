@@ -47,7 +47,7 @@ extension AddressBookAccessor {
     
     /// Enumerates the contacts, normalized and validated, invoking the block for each contact.
     /// Non valid contacts (no email nor phone) will be excluded from the enumeration.
-    /// If the block returns true, it will stop enumerating them.
+    /// If the block returns false, it will stop enumerating them.
     func enumerateValidContacts(block: @escaping (ZMAddressBookContact)->(Bool)) {
         self.enumerateRawContacts {
             guard let parsed = ZMAddressBookContact(contact: $0, phoneNumberNormalizer: self.phoneNumberNormalizer) else {
