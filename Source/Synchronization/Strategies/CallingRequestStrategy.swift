@@ -1,13 +1,24 @@
 //
-//  CallingRequestStrategy.swift
-//  zmessaging-cocoa
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
 //
-//  Created by Jacob on 06/11/16.
-//  Copyright © 2016 Zeta Project Gmbh. All rights reserved.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
 import Foundation
 import WireMessageStrategy
+import ZMCDataModel
 
 extension ZMConversation {
     @objc (appendCallingMessageWithContent:)
@@ -17,15 +28,18 @@ extension ZMConversation {
     }
 }
 
-
-@objc public final class CallingRequestStrategy : NSObject, RequestStrategy {
+@objc
+public final class CallingRequestStrategy : NSObject, RequestStrategy {
     
     fileprivate let zmLog = ZMSLog(tag: "calling")
+    
     fileprivate var callCenter              : WireCallCenter?
     fileprivate let managedObjectContext    : NSManagedObjectContext
+    fileprivate let genericMessageStrategy  : GenericMessageRequestStrategy
     
-    public init(managedObjectContext: NSManagedObjectContext) {
+    public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate) {
         self.managedObjectContext = managedObjectContext
+        self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
         
         super.init()
         
@@ -37,12 +51,8 @@ extension ZMConversation {
         }
     }
     
-    deinit {
-        print("JCVDay: deinitialisation CallingRequestStrategy")
-    }
-    
     public func nextRequest() -> ZMTransportRequest? {
-        return nil
+        return genericMessageStrategy.nextRequest()
     }
 }
 
@@ -102,7 +112,7 @@ extension CallingRequestStrategy : ZMEventConsumer {
 
 extension CallingRequestStrategy : WireCallCenterTransport {
     
-    public func send(data: Data, conversationId: NSUUID, userId: NSUUID, completionHandler: ((Int) -> Void)) {
+    public func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((Int) -> Void)) {
         
         guard let dataString = String(data: data, encoding: .utf8) else {
             zmLog.error("Not sending calling messsage since it's not UTF-8")
@@ -110,16 +120,19 @@ extension CallingRequestStrategy : WireCallCenterTransport {
             return
         }
         
-        self.managedObjectContext.performGroupedBlock { [unowned self] in
-            if let conversation = ZMConversation(remoteID: UUID(uuidString: conversationId.uuidString)!, createIfNeeded: false, in: self.managedObjectContext) {
-                _ = conversation.appendCallingMessage(content: dataString)
-                
-            }
-            self.managedObjectContext.saveOrRollback()
+        guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: managedObjectContext) else {
+            zmLog.error("Not sending calling messsage since conversation doesn't exist")
+            completionHandler(500)
+            return
         }
         
-        completionHandler(200)
+        let genericMessage = ZMGenericMessage(callingContent: dataString, nonce: NSUUID().transportString())
         
+        genericMessageStrategy.schedule(message: genericMessage, inConversation: conversation) { (response) in
+            
+            completionHandler(response.httpStatus)
+            
+        }
     }
     
 }
