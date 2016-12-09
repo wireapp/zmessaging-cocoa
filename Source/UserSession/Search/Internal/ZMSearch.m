@@ -155,15 +155,17 @@
 
 - (NSArray *)conversationsMatchingSearchString:(NSString *)searchString
 {
-    if([searchString hasPrefix:@"@"]) { // ignore group conversations if query is for usernames
-        return @[];
-    }
     NSFetchRequest *conversationFetchRequest = [ZMConversation sortedFetchRequestWithPredicate:[ZMConversation predicateForSearchString:searchString]];
-    
     NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:ZMNormalizedUserDefinedNameKey ascending:YES];
     conversationFetchRequest.sortDescriptors = @[sortDescriptor];
     
     NSArray *conversationResults = [self.searchContext executeFetchRequestOrAssert:conversationFetchRequest];
+    if([searchString hasPrefix:@"@"]) { // ignore group conversations if query is for usernames
+        conversationResults = [conversationResults filterWithBlock:^BOOL(ZMConversation *conversation) {
+            return [conversation.displayName containsString:@"@"];
+        }];
+    }
+    
     NSArray *sortedConversations = [self sortedConversationResults:conversationResults forSearchString:searchString];
     
     return sortedConversations;
