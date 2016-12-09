@@ -51,7 +51,7 @@ extension AddressBookAccessor {
     func enumerateValidContacts(block: @escaping (ZMAddressBookContact)->(Bool)) {
         self.enumerateRawContacts {
             guard let parsed = ZMAddressBookContact(contact: $0, phoneNumberNormalizer: self.phoneNumberNormalizer) else {
-                return false
+                return true
             }
             return block(parsed)
         }
