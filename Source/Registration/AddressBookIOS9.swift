@@ -43,17 +43,21 @@ extension AddressBookIOS9 : AddressBookAccessor {
     }
     
     func rawContacts(matchingQuery query: String) -> [ContactRecord] {
-        if !AddressBook.accessGranted() {
+        guard AddressBook.accessGranted() else {
             return []
         }
+        
+        guard !query.isEmpty else {
+            return self.firstRawContacts(number: addressBookContactsSearchLimit)
+        }
+        
         let predicate: NSPredicate = CNContact.predicateForContacts(matchingName: query.lowercased())
         guard let foundContacts = try? CNContactStore().unifiedContacts(matching: predicate, keysToFetch: AddressBookIOS9.keysToFetch) else {
             return []
         }
         return foundContacts
     }
-
-
+    
     /// Enumerates the contacts, invoking the block for each contact.
     /// If the block returns false, it will stop enumerating them.
     internal func enumerateRawContacts(block: @escaping (ContactRecord) -> (Bool)) {

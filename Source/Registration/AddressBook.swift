@@ -131,6 +131,19 @@ extension AddressBookAccessor {
         
         return contacts
     }
+    
+    /// Returns the first X raw contacts from the address book
+    func firstRawContacts(number: Int) -> [ContactRecord] {
+        var contacts = Array<ContactRecord>()
+        contacts.reserveCapacity(number)
+        var count = 0
+        self.enumerateRawContacts { record in
+            contacts.append(record)
+            count += 1
+            return count < number
+        }
+        return contacts
+    }
 }
 
 /// Common base class between iOS 8 (AddressBook framework) and iOS 9+ (Contacts framework)
@@ -250,6 +263,9 @@ extension String {
 }
 
 // MARK: - Utilities
+
+let addressBookContactsSearchLimit = 2000
+
 extension String {
     
     /// Returns the base64 encoded string of the SHA hash of the string
