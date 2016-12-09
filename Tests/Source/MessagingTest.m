@@ -261,6 +261,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
     }];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *clientID = [self.uiMOC persistentStoreMetadataForKey:ZMPersistedClientIdKey];
     self.uiMOC = nil;

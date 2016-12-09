@@ -115,23 +115,23 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 - (void)tearDown
 {
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    self.mockLinkPreviewDetector = nil;
     [BackgroundActivityFactory tearDownInstance];
     [LinkPreviewDetectorHelper tearDown];
     
     [self.conversationChangeObserver tearDown];
     [self.userChangeObserver tearDown];
     [self.messageChangeObserver tearDown];
-    
-    [self tearDownUserInfoObjectsOfMOC: self.uiMOC];
-    [self.syncMOC performGroupedBlockAndWait:^{
-        [self tearDownUserInfoObjectsOfMOC: self.syncMOC];
-    }];
 
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMFlowSyncInternalFlowManagerOverride = nil;
     
     [self.userSession tearDown];
+    WaitForAllGroupsToBeEmpty(0.5);
+
     self.userSession = nil;
     
     self.selfUser = nil;

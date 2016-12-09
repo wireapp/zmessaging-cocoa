@@ -422,17 +422,23 @@ ZM_EMPTY_ASSERTING_INIT()
     self.userProfileUpdateStatus = nil;
     self.proxiedRequestStatus = nil;
     
-    for (id obj in self.managedObjectContext.userInfo.allValues) {
+    __block NSMutableArray *keysToRemove = [NSMutableArray array];
+    [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
         if ([obj respondsToSelector:@selector(tearDown)]) {
             [obj tearDown];
+            [keysToRemove addObject:key];
         }
-    }
+    }];
+    [self.managedObjectContext.userInfo removeObjectsForKeys:keysToRemove];
+    [keysToRemove removeAllObjects];
     [self.syncManagedObjectContext performBlockAndWait:^{
-        for (id obj in self.syncManagedObjectContext.userInfo.allValues) {
+        [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
             if ([obj respondsToSelector:@selector(tearDown)]) {
                 [obj tearDown];
             }
-        }
+            [keysToRemove addObject:key];
+        }];
+        [self.syncManagedObjectContext.userInfo removeObjectsForKeys:keysToRemove];
     }];
     
     NSManagedObjectContext *uiMoc = self.managedObjectContext;
