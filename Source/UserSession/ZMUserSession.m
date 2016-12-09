@@ -422,10 +422,20 @@ ZM_EMPTY_ASSERTING_INIT()
     self.userProfileUpdateStatus = nil;
     self.proxiedRequestStatus = nil;
     
-    NSManagedObjectContext *uiMoc = self.managedObjectContext;
+    for (id obj in self.managedObjectContext.userInfo.allValues) {
+        if ([obj respondsToSelector:@selector(tearDown)]) {
+            [obj tearDown];
+        }
+    }
+    [self.syncManagedObjectContext performBlockAndWait:^{
+        for (id obj in self.syncManagedObjectContext.userInfo.allValues) {
+            if ([obj respondsToSelector:@selector(tearDown)]) {
+                [obj tearDown];
+            }
+        }
+    }];
     
-    [self.managedObjectContext.globalManagedObjectContextObserver tearDown];
-    [self.managedObjectContext zm_tearDownCallTimer];
+    NSManagedObjectContext *uiMoc = self.managedObjectContext;
     self.managedObjectContext = nil;
     self.syncManagedObjectContext = nil;
     

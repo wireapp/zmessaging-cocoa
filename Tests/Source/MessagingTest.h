@@ -74,6 +74,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (id<ZMObjectStrategyDirectory>)createMockObjectStrategyDirectoryInMoc:(NSManagedObjectContext *)moc;
 
+/// This tears down all objects in the managedObjectContext's userInfo that respond to the selector tearDown and subsequently removes them from the userInfo
+- (void)tearDownUserInfoObjectsOfMOC:(NSManagedObjectContext *)moc;
+
 @end
 
 

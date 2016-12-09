@@ -48,7 +48,6 @@
 - (void)tearDown
 {
     [super tearDown];
-    [self.syncMOC zm_tearDownCallTimer];
     self.lastReceivedNotification = nil;
 }
 
