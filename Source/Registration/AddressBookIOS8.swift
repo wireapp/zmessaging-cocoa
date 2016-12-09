@@ -73,7 +73,7 @@ extension AddressBookIOS8 : AddressBookAccessor {
             guard !matchingQuery.isEmpty else {
                 return true
             }
-            return $0.displayName.lowercased().contains(matchingQuery)
+            return $0.displayName.range(of: matchingQuery, options: .caseInsensitive) != .none
         }
     }
 
