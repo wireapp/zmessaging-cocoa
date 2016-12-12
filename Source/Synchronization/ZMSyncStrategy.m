@@ -162,9 +162,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                               accountStatus:accountStatus
                                                mediaManager:mediaManager
                                         onDemandFlowManager:onDemandFlowManager
-                                   taskCancellationProvider:taskCancellationProvider
-//                                    callingMessageReception:callingStrategy];
-         ];
+                                   taskCancellationProvider:taskCancellationProvider];
         
         self.stateMachine = [[ZMSyncStateMachine alloc] initWithAuthenticationStatus:authenticationStatus
                                                             clientRegistrationStatus:clientRegistrationStatus

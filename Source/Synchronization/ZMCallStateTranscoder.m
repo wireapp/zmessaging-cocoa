@@ -122,17 +122,9 @@ _Pragma("clang diagnostic pop")
         self.convToSequenceMap = [NSMutableDictionary dictionary];
         self.pushChannelIsOpen = NO;
         
-        
-        //JACOB
-        // Hardcoded to no to prevent syncing of callstate events
         NSPredicate *predicateForObjectsToDownload = [ZMConversation predicateForNeedingCallStateToBeUpdatedFromBackend];
-//        NSPredicate *predicateForObjectsToDownload = [NSPredicate predicateWithValue:NO];
         self.downstreamSync = [[ZMDownstreamObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName predicateForObjectsToDownload:predicateForObjectsToDownload filter:nil managedObjectContext:self.managedObjectContext];
         
-        
-        //JACOB
-        // TODO: remove this, when we need v2
-//        self.upstreamFetchPredicate = [NSPredicate predicateWithValue:NO];
         self.upstreamFetchPredicate = [ZMConversation predicateForObjectsThatNeedCallStateToBeUpdatedUpstream];
         
         NSArray<NSString *> *keysToSync = @[ZMConversationCallDeviceIsActiveKey,
