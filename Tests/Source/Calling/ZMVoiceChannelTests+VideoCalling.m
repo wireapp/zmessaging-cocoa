@@ -19,9 +19,10 @@
 
 @import zmessaging;
 @import ZMCDataModel;
+@import avs;
 
 #import "ZMVoiceChannelTests.h"
-#import "AVSFlowManager.h"
+#import <avs/AVSFlowManager.h> //TODO: remove when new avs framework complete
 #import "ZMUserSession+Internal.h"
 
 @import ZMCMockTransport;
@@ -240,12 +241,6 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     XCTAssertNotNil(error);
     ZMFlowSyncInternalFlowManagerOverride = nil;
 
-}
-
-- (void)testThatQueryingTheCurrentDeviceIDWithoutStartingVideoReturnNil;
-{
-    // when
-    XCTAssertNil(self.conversation.voiceChannel.currentVideoDeviceID);
 }
 
 - (void)testThatItStartingVideoSetsCurrentVideoToDefaultBack;

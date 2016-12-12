@@ -59,8 +59,9 @@
 #import <zmessaging/ZMUserSessionRegistrationNotification.h>
 #import <zmessaging/UILocalNotification+UserInfo.h>
 #import <zmessaging/ZMUserSession+UserNotificationCategories.h>
-#import <zmessaging/ZMVoiceChannel+CallFlowPrivate.h>
 #import <zmessaging/ZMCallKitDelegate.h>
+#import <zmessaging/ZMCallKitDelegate+Internal.h>
+#import <zmessaging/ZMAVSBridge.h>
 #import <zmessaging/ZMPushToken.h>
 #import <zmessaging/ZMTyping.h>
 #import <zmessaging/ZMUserIDsForSearchDirectoryTable.h>

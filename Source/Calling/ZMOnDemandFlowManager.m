@@ -19,8 +19,8 @@
 
 #import "ZMOnDemandFlowManager.h"
 #import "ZMAVSBridge.h"
-#import "AVSMediaManager.h"
-#import "AVSFlowManager.h"
+#import <avs/AVSMediaManager.h>
+#import <avs/AVSFlowManager.h>
 
 NSString *ZMOnDemandFlowManagerDidBecomeAvailableNotification = @"ZMOnDemandFlowManagerDidBecomeAvailableNotification";
 

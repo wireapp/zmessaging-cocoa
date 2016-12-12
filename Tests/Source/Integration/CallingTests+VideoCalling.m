@@ -16,9 +16,10 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
+@import avs;
 
 #import "CallingTests.h"
-#import "AVSFlowManager.h"
+#import <avs/AVSFlowManager.h> // TODO: Remove that
 
 
 @implementation CallingTests (VideoCalling)

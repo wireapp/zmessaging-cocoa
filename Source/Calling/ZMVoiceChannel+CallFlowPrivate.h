@@ -17,7 +17,7 @@
 //
 
 @interface ZMVoiceChannel (CallFlowPrivate)
-- (void)join;
-- (void)leave;
-- (BOOL)joinVideoCall:(NSError **)error;
+//- (void)join;
+//- (void)joinVideoCall;
+//- (void)leave;
 @end

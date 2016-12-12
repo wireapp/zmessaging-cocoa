@@ -53,7 +53,7 @@ extension ZMVoiceChannel {
                 uiConv.callTimedOut = true;
             }
             else if (uiConv.conversationType == .oneOnOne && uiConv.isOutgoingCall) {
-                uiConv.voiceChannel.leave()
+                uiConv.voiceChannel?.v2.leave()
             }
             uiContext?.enqueueDelayedSave()
         }

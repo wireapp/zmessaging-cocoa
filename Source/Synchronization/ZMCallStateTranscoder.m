@@ -185,14 +185,14 @@ _Pragma("clang diagnostic pop")
                 // under bad network conditions we might not be able to send out the request to leave a call,
                 // but we should still be able to stop the audio stream
                 [strongSync updateFlowsForConversation:conv];
-                [conv.voiceChannel resetTimer];
+                [conv.voiceChannel.v2 resetTimer];
             }
             if ([conv hasLocalModificationsForKey:ZMConversationIsSelfAnActiveMemberKey] && !conv.isSelfAnActiveMember) {
                 // when the selfUser leaves a conversation with an ongoing call, we should reset the conversations's state
                 conv.callDeviceIsActive = NO;
                 [strongSync updateFlowsForConversation:conv];
-                [conv.voiceChannel resetCallState];
-                [conv.voiceChannel resetTimer];
+                [conv.voiceChannel.v2 resetCallState];
+                [conv.voiceChannel.v2 resetTimer];
             }
         }
         
@@ -283,8 +283,8 @@ _Pragma("clang diagnostic pop")
 {
     // don't process call state update events when selfUser left the conversation
     if (conversation.conversationType == ZMConversationTypeGroup && !conversation.isSelfAnActiveMember) {
-        [conversation.voiceChannel removeAllCallParticipants];
-        [conversation.voiceChannel updateActiveFlowParticipants:@[]];
+        [conversation.voiceChannel.v2 removeAllCallParticipants];
+        [conversation.voiceChannel.v2 updateActiveFlowParticipants:@[]];
         return;
     }
     
@@ -314,8 +314,8 @@ _Pragma("clang diagnostic pop")
                 // we are not able to set the call state on the be because the be would refuse requests
                 conversation.callDeviceIsActive = NO;
                 [self.flowSync updateFlowsForConversation:conversation];
-                [conversation.voiceChannel resetCallState];
-                [conversation.voiceChannel resetTimer];
+                [conversation.voiceChannel.v2 resetCallState];
+                [conversation.voiceChannel.v2 resetTimer];
             }
             break;
         }
@@ -397,8 +397,8 @@ _Pragma("clang diagnostic pop")
     
     // we don't want to update the voiceChannel once we left the conversation
     if (!conversation.isSelfAnActiveMember) {
-        [conversation.voiceChannel removeAllCallParticipants];
-        [conversation.voiceChannel updateActiveFlowParticipants:@[]];
+        [conversation.voiceChannel.v2 removeAllCallParticipants];
+        [conversation.voiceChannel.v2 updateActiveFlowParticipants:@[]];
         return;
     }
     
@@ -442,7 +442,7 @@ _Pragma("clang diagnostic pop")
             if (uiConversation != nil) {
                 // the backend know which clients are currently joined. Therefore calling this from a clinet that is not currently joined will not cause the call with the other client to drop
                 // however this enables us to rejoin the call if the app crashed or got killed while being in a call
-                [uiConversation.voiceChannel leave];
+                [uiConversation.voiceChannel.v2 leave];
                 [self.uiManagedObjectContext enqueueDelayedSave];
             }
         }];
@@ -590,7 +590,7 @@ _Pragma("clang diagnostic pop")
     
     // remove participants that don't have a state anymore
     for (ZMUser *user in currentParticipants) {
-        [conversation.voiceChannel removeCallParticipant:user];
+        [conversation.voiceChannel.v2 removeCallParticipant:user];
         
     }
     
@@ -604,7 +604,7 @@ _Pragma("clang diagnostic pop")
 
     if (!currentIsVideoCall && isVideoActive) {
         conversation.isVideoCall = YES;
-        [conversation.voiceChannel updateForStateChange];
+        [conversation.voiceChannel.v2 updateForStateChange];
     }
     
     if (conversation.isVideoCall) {
@@ -633,13 +633,13 @@ _Pragma("clang diagnostic pop")
         [[NSNotificationCenter defaultCenter] postNotificationName:ZMConversationCancelNotificationForIncomingCallNotificationName object:conversation];
     }
     if(changeToActive && !participantWasJoined) {
-        [conversation.voiceChannel addCallParticipant:participant];
+        [conversation.voiceChannel.v2 addCallParticipant:participant];
         if (eventSource == ZMCallEventSourceUpstream && conversation.callDeviceIsActive && !participant.isSelfUser) {
             [self.flowSync addJoinedCallParticipant:participant inConversation:conversation];
         }
     }
     else if(changeToIdle && participantWasJoined) {
-        [conversation.voiceChannel removeCallParticipant:participant];
+        [conversation.voiceChannel.v2 removeCallParticipant:participant];
     }
     else if(!changeToIdle && !changeToActive && !isIgnoringCall) {
         VerifyString(NO, "Unknown participant state in transport data.");
@@ -749,8 +749,8 @@ _Pragma("clang diagnostic pop")
             // we send out a leave request in case we are joined on the BE for some reason
             conversation.callDeviceIsActive = NO;
             if (!isVoiceChannelFull) {
-                [conversation.voiceChannel resetCallState];
-                [conversation.voiceChannel resetTimer];
+                [conversation.voiceChannel.v2 resetCallState];
+                [conversation.voiceChannel.v2 resetTimer];
             }
         }
         [self.flowSync updateFlowsForConversation:conversation];
@@ -795,8 +795,8 @@ _Pragma("clang diagnostic pop")
             // (A) the request never reached the BE --> we want to reset the local call state (set callDeviceIsActive to !callDeviceIsActive)
             // (B) the response never reached the device --> we want to reset the call state on the BE (set hasLocalModificationsForCallDeviceIsActive to YES)
             conversation.callDeviceIsActive = NO;
-            [conversation.voiceChannel resetCallState];
-            [conversation.voiceChannel resetTimer];
+            [conversation.voiceChannel.v2 resetCallState];
+            [conversation.voiceChannel.v2 resetTimer];
         } else {
             // we re-add the conversation to the upstream so that it retry to upload changes
             [self.upstreamSync objectsDidChange:[NSSet setWithObject:conversation]];

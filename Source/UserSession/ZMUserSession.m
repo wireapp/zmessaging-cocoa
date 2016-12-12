@@ -333,6 +333,9 @@ ZM_EMPTY_ASSERTING_INIT()
         self.pingBackStatus = [[BackgroundAPNSPingBackStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext
                                                                               authenticationProvider:self.authenticationStatus];
         
+        self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
+                                                                             managedObjectContext:syncManagedObjectContext];
+        
         self.transportSession = session;
         self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
         self.transportSession.networkStateDelegate = self;
@@ -987,6 +990,11 @@ static BOOL ZMUserSessionUseCallKit = NO;
 + (void)setUseCallKit:(BOOL)useCallKit
 {
     ZMUserSessionUseCallKit = useCallKit;
+}
+
++ (void)setEnableCallingV3:(BOOL)enableCallingV3
+{
+    [VoiceChannelRouter setIsCallingV3Enabled:enableCallingV3];
 }
 
 @end

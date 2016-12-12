@@ -19,10 +19,10 @@
 
 @import CoreTelephony;
 @import ZMCDataModel;
+@import avs;
 
 #import "CallingTests.h"
 #import "ZMVoiceChannel+CallFlow.h"
-#import "AVSFlowManager.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMGSMCallHandler.h"
 
@@ -2937,7 +2937,28 @@
 @end
 
 
+@implementation CallingTests (CallingV3)
 
+- (void)testThatItCallingV3SendingMessage;
+{
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    NSUInteger eventCount = self.mockTransportSession.updateEvents.count;
+    
+    // when
+    [self.userSession enqueueChanges:^{
+        [self.conversationUnderTest.voiceChannel joinInUserSession:self.userSession];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    XCTAssertEqual(eventCount + 1, self.mockTransportSession.updateEvents.count);
+    ZMUpdateEvent *event = [self.mockTransportSession.updateEvents lastObject];
+    (void)event;
+}
+
+@end
 
 
 

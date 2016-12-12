@@ -167,6 +167,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 @interface ZMUserSession (Calling)
 + (BOOL)useCallKit;
 + (void)setUseCallKit:(BOOL)useCallKit;
++ (void)setEnableCallingV3:(BOOL)enableCallingV3;
 @end
 
 

@@ -17,10 +17,10 @@
 // 
 
 @import ZMCDataModel;
+@import avs;
 
 #import "ZMVoiceChannel+VideoCalling.h"
 #import "ZMVoiceChannel+CallFlowPrivate.h"
-#import "AVSFlowManager.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMCallKitDelegate.h"
@@ -31,26 +31,8 @@
 
 
 NSString * ZMVoiceChannelVideoCallErrorDomain = @"ZMVoiceChannelVideoCallErrorDomain";
-NSString * const ZMFrontCameraDeviceID = @"com.apple.avfoundation.avcapturedevice.built-in_video:1";
-NSString * const ZMBackCameraDeviceID = @"com.apple.avfoundation.avcapturedevice.built-in_video:0";
 
 @implementation ZMVoiceChannel (VideoCalling)
-
-/// Establishing a video call or join a video call and send video straight away
-- (BOOL)joinVideoCall:(NSError **)error inUserSession:(ZMUserSession *)userSession
-{
-    if ([ZMUserSession useCallKit]) {
-        // Push channel must be open in order to process the call signalling
-        if (!userSession.pushChannelIsOpen) {
-            [userSession.transportSession restartPushChannel];
-        }
-        [userSession.callKitDelegate requestStartCallInConversation:self.conversation videoCall:YES];
-        return YES;
-    }
-    else {
-        return [self joinVideoCall:error];
-    }
-}
 
 - (BOOL)isSendingVideoForParticipant:(ZMUser *)participant error:(NSError **)error
 {
@@ -115,34 +97,11 @@ NSString * const ZMBackCameraDeviceID = @"com.apple.avfoundation.avcapturedevice
     if (error != nil) {
         *error = nil;
     }
-    self.currentVideoDeviceID = state == FLOWMANAGER_VIDEO_SEND_NONE ? nil : ZMFrontCameraDeviceID;
+    
     conversation.isSendingVideo = state == FLOWMANAGER_VIDEO_SEND;
     
     [self.flowManager setVideoSendState:state
                                 forConversation:conversation.remoteIdentifier.transportString];
-    return YES;
-}
-
-- (BOOL)setVideoCaptureDevice:(NSString *)deviceId error:(NSError **)error
-{
-    ZMConversation *conversation = self.conversation;
-    if (self.flowManager == nil || !self.flowManager.isReady) {
-        if (error != nil) {
-            *error = [ZMVoiceChannelError noFlowManagerError];
-        }
-        return NO;
-    }
-
-    if(!conversation.isVideoCall) {
-        if (error != nil) {
-            *error = [ZMVoiceChannelError videoNotActiveError];
-        }
-        return NO;
-    }
-    
-    self.currentVideoDeviceID = deviceId;
-    [self.flowManager setVideoCaptureDevice:deviceId
-                                   forConversation:conversation.remoteIdentifier.transportString];
     return YES;
 }
 

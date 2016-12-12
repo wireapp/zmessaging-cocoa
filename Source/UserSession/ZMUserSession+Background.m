@@ -45,8 +45,6 @@ static NSString *ZMLogTag = @"Push";
 @end
 
 
-
-
 @implementation ZMUserSession (PushReceivers)
 
 - (void)receivedPushNotificationWithPayload:(NSDictionary *)payload completionHandler:(ZMPushNotificationCompletionHandler)handler source:(ZMPushNotficationType)source
@@ -332,12 +330,12 @@ static NSString *ZMLogTag = @"Push";
 - (void)handleCallCategoryNotification:(ZMStoredLocalNotification *)note
 {
     if (note.actionIdentifier == nil || [note.actionIdentifier isEqualToString:ZMCallAcceptAction]) {
-        BOOL callIsStillOngoing = (note.conversation.callParticipants.count > 0);
+        BOOL callIsStillOngoing = (note.conversation.callParticipants.count > 0) || note.conversation.voiceChannel.state == ZMVoiceChannelStateIncomingCall; // FIXME check if this logic works
         BOOL userWantsToCallBack = ([note.category isEqualToString:ZMMissedCallCategory]);
         if ([note.conversation firstOtherConversationWithActiveCall] == nil &&
             (callIsStillOngoing || userWantsToCallBack))
         {
-            [note.conversation.voiceChannel join];
+            [note.conversation.voiceChannel joinWithVideo:NO];
             [note.conversation.managedObjectContext saveOrRollback];
         }
     }
@@ -391,7 +389,6 @@ static NSString *ZMLogTag = @"Push";
     }];
 }
 
-
 - (void)replyToNotification:(UILocalNotification *)notification withReply:(NSString*)reply completionHandler:(void (^)())completionHandler;
 {
     if (reply.length == 0) {
@@ -434,8 +431,6 @@ static NSString *ZMLogTag = @"Push";
 
 
 
-
-
 @implementation ZMUserSession (ZMBackgroundFetch)
 
 - (void)enableBackgroundFetch;
@@ -445,7 +440,3 @@ static NSString *ZMLogTag = @"Push";
 }
 
 @end
-
-
-
-

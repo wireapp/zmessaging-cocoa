@@ -45,8 +45,8 @@
 #import "ZMFlowSync.h"
 #import "ZMCallStateTranscoder.h"
 #import "ZMOperationLoop.h"
-#import "AVSMediaManager.h"
-#import "AVSFlowManager.h"
+#import <avs/AVSMediaManager.h> // TODO: Remove that
+#import <avs/AVSFlowManager.h> // TODO: Remove that
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "MessagingTest+EventFactory.h"
@@ -112,7 +112,7 @@
 
     id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
-    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:self.mockDispatcher clientRegistrationStatus:OCMOCK_ANY apnsConfirmationStatus:OCMOCK_ANY];
+    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:self.mockDispatcher clientRegistrationStatus:OCMOCK_ANY apnsConfirmationStatus:OCMOCK_ANY callingMessageReceptionDelegate:OCMOCK_ANY];
 
     id selfTranscoder = [OCMockObject mockForClass:ZMSelfTranscoder.class];
     [[[[selfTranscoder expect] andReturn:selfTranscoder] classMethod] alloc];
