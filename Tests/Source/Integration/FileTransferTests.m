@@ -3633,11 +3633,14 @@
         return nil;
     };
 
-    [self.userSession performChanges:^{
-        [message requestFileDownload];
-    }];
+    // We log an error when we fail to decrypt the received data
+    [self performIgnoringZMLogError:^{
+        [self.userSession performChanges:^{
+            [message requestFileDownload];
+        }];
 
-    WaitForAllGroupsToBeEmpty(0.5);
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
 
     // then
     ZMTransportRequest *lastRequest = self.mockTransportSession.receivedRequests.lastObject;
