@@ -218,6 +218,7 @@
     }
     
     [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
+        // FIXME we probably need to do this for V3 calls as well.
         [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportSessionShouldKeepWebsocketOpenNotificationName object:self userInfo:@{ZMTransportSessionShouldKeepWebsocketOpenKey: @YES}];
     }];
     
