@@ -168,8 +168,17 @@
 
     [self resetState];
     [MessagingTest deleteAllFilesInCache];
+    [self removeCachesInSharedContainer];
     [super tearDown];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
+}
+
+- (void)removeCachesInSharedContainer
+{
+    NSFileManager *fm = NSFileManager.defaultManager;
+    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
+    NSURL *cachesURL = [sharedContainerURL URLByAppendingPathComponent:@"Library/Caches"];
+    [fm removeItemAtURL:cachesURL error:nil];
 }
 
 - (void)resetState
