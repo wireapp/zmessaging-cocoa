@@ -40,7 +40,7 @@ public protocol CallFlow {
     
     func toggleVideo(active: Bool) throws
     
-    func join(video: Bool)
+    func join(video: Bool) -> Bool
     
     func leave()
     
@@ -64,10 +64,9 @@ extension VoiceChannelRouter : CallFlow {
         }
     }
     
-    public func join(video: Bool) {
-        if let callFlow = currentVoiceChannel as? CallFlow {
-            callFlow.join(video: video)
-        }
+    public func join(video: Bool) -> Bool {
+        guard let callFlow = currentVoiceChannel as? CallFlow else { return false }
+        return callFlow.join(video: video)
     }
     
     public func leave() {
@@ -110,14 +109,16 @@ extension VoiceChannelV3 : CallFlow {
         WireCallCenter.toogleVideo(conversationID: remoteIdentifier, active: active)
     }
     
-    public func join(video: Bool) {
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
+    public func join(video: Bool) -> Bool {
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
         
         if state == .incomingCall {
             _ = WireCallCenter.activeInstance?.answerCall(conversationId: remoteIdentifier)
         } else {
             _ = WireCallCenter.activeInstance?.startCall(conversationId: remoteIdentifier, video: video)
         }
+        
+        return true
     }
     
     public func leave() {
@@ -146,12 +147,16 @@ extension ZMVoiceChannel : CallFlow {
         try setVideoSendActive(active)
     }
     
-    public func join(video: Bool) {
+    public func join(video: Bool) -> Bool {
+        var joined = true
+        
         if video {
-            try? joinVideoCall() // FIXME
+            joined = joinVideoCall()
         } else {
-            join()
+            joined = join()
         }
+        
+        return joined
     }
     
     public func ignore() {

@@ -287,7 +287,6 @@
 		8798607B1C3D48A400218A3E /* DeleteAccountRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8798607A1C3D48A400218A3E /* DeleteAccountRequestStrategy.swift */; };
 		879861C81DA7E11E00152584 /* ZMVoiceChannel+VideoCalling.m in Sources */ = {isa = PBXBuildFile; fileRef = 879861C71DA7E11E00152584 /* ZMVoiceChannel+VideoCalling.m */; };
 		879861CA1DA7E13300152584 /* ZMVoiceChannel+CallFlow.h in Headers */ = {isa = PBXBuildFile; fileRef = 879861C91DA7E12E00152584 /* ZMVoiceChannel+CallFlow.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		879861CC1DA7E17E00152584 /* ZMVoiceChannel+CallFlowPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 879861CB1DA7E17E00152584 /* ZMVoiceChannel+CallFlowPrivate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		87ADCE3B1DA6539F00CC06DC /* ZMCallKitDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 87ADCE391DA6539F00CC06DC /* ZMCallKitDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		87ADCE3C1DA6539F00CC06DC /* ZMCallKitDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 87ADCE3A1DA6539F00CC06DC /* ZMCallKitDelegate.m */; };
 		87D003FF1BB5810D00472E06 /* APSSignalingKeyStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D003FE1BB5810D00472E06 /* APSSignalingKeyStoreTests.swift */; };
@@ -838,7 +837,6 @@
 		8798607A1C3D48A400218A3E /* DeleteAccountRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeleteAccountRequestStrategy.swift; sourceTree = "<group>"; };
 		879861C71DA7E11E00152584 /* ZMVoiceChannel+VideoCalling.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "ZMVoiceChannel+VideoCalling.m"; sourceTree = "<group>"; };
 		879861C91DA7E12E00152584 /* ZMVoiceChannel+CallFlow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ZMVoiceChannel+CallFlow.h"; sourceTree = "<group>"; };
-		879861CB1DA7E17E00152584 /* ZMVoiceChannel+CallFlowPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ZMVoiceChannel+CallFlowPrivate.h"; sourceTree = "<group>"; };
 		87ADCE391DA6539F00CC06DC /* ZMCallKitDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMCallKitDelegate.h; sourceTree = "<group>"; };
 		87ADCE3A1DA6539F00CC06DC /* ZMCallKitDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMCallKitDelegate.m; sourceTree = "<group>"; };
 		87D003FE1BB5810D00472E06 /* APSSignalingKeyStoreTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = APSSignalingKeyStoreTests.swift; sourceTree = "<group>"; };
@@ -1245,7 +1243,6 @@
 				1618B40E1DE5F0A6003F015C /* VoiceChanneRouter+CallFlow.swift */,
 				F991C0AD1CB548A3004D8465 /* ZMVoiceChannel+CallTimer.swift */,
 				3ED03B75196C212D00B40DB0 /* ZMVoiceChannel+CallFlow.m */,
-				879861CB1DA7E17E00152584 /* ZMVoiceChannel+CallFlowPrivate.h */,
 				879861C71DA7E11E00152584 /* ZMVoiceChannel+VideoCalling.m */,
 				F9771AC71B664D1A00BB04EC /* ZMGSMCallHandler.h */,
 				F9771AC81B664D1A00BB04EC /* ZMGSMCallHandler.m */,
@@ -2116,7 +2113,6 @@
 				54CB7B861C3BA7890090EB05 /* ZMCallStateLogger.h in Headers */,
 				1618B4101DE5FAD4003F015C /* ZMUserSession+Internal.h in Headers */,
 				1EB871501BF502A000AF5CE1 /* ZMUserTranscoder.h in Headers */,
-				879861CC1DA7E17E00152584 /* ZMVoiceChannel+CallFlowPrivate.h in Headers */,
 				F9F631431DE3534F00416938 /* ZMTyping.h in Headers */,
 				F9771ACA1B664D1A00BB04EC /* ZMGSMCallHandler.h in Headers */,
 				544BA1231A433DE400D3B852 /* ZMUserSession.h in Headers */,

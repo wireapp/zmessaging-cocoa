@@ -27,6 +27,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ZMVoiceChannel (CallFlow)
 
+- (BOOL)join;
+- (BOOL)joinVideoCall;
+- (void)leave;
 - (void)leaveOnAVSError;
 - (void)ignoreIncomingCall;
 

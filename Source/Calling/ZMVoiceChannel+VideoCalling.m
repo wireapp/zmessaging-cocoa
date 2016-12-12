@@ -34,22 +34,6 @@ NSString * ZMVoiceChannelVideoCallErrorDomain = @"ZMVoiceChannelVideoCallErrorDo
 
 @implementation ZMVoiceChannel (VideoCalling)
 
-/// Establishing a video call or join a video call and send video straight away
-- (BOOL)joinVideoCall:(NSError **)error inUserSession:(ZMUserSession *)userSession
-{
-    if ([ZMUserSession useCallKit]) {
-        // Push channel must be open in order to process the call signalling
-        if (!userSession.pushChannelIsOpen) {
-            [userSession.transportSession restartPushChannel];
-        }
-        [userSession.callKitDelegate requestStartCallInConversation:self.conversation videoCall:YES];
-        return YES;
-    }
-    else {
-        return [self joinVideoCall:error];
-    }
-}
-
 - (BOOL)isSendingVideoForParticipant:(ZMUser *)participant error:(NSError **)error
 {
     ZMConversation *conversation = self.conversation;
