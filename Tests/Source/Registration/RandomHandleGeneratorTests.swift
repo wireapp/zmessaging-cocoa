@@ -34,8 +34,8 @@ class RandomHandleGeneratorTests : XCTestCase {
         XCTAssertEqual("Яблоко".normalizedForUserHandle, "abloko")
         XCTAssertEqual("خطای سطح دسترسی".normalizedForUserHandle, "khtaysthdstrsy")
         XCTAssertEqual("ᑭᒻᒥᓇᐅᔭᖅ".normalizedForUserHandle, "") // unfortunately, Apple's string library can't handle inuktitut
-        XCTAssertEqual("    Maria LaRochelle Von Schwerigstein ".normalizedForUserHandle, "marialarochellevonschw")
-        XCTAssertEqual(" \n\t Maria LaRochelle Von Schwerigstein ".normalizedForUserHandle, "marialarochellevonschw")
+        XCTAssertEqual("    Maria LaRochelle Von Schwerigstein ".normalizedForUserHandle, "marialarochellevonsch")
+        XCTAssertEqual(" \n\t Maria LaRochelle Von Schwerigstein ".normalizedForUserHandle, "marialarochellevonsch")
         XCTAssertEqual("🐙☀️".normalizedForUserHandle, "")
     }
     
@@ -43,7 +43,7 @@ class RandomHandleGeneratorTests : XCTestCase {
         
         // GIVEN
         let variations = 3
-        let expectedNormalized = "marialarochellevonschw"
+        let expectedNormalized = "marialarochellevonsch"
         
         // WHEN
         var handles : [String] = zmessaging.RandomHandleGenerator.generatePossibleHandles(
@@ -54,6 +54,8 @@ class RandomHandleGeneratorTests : XCTestCase {
         // THEN
         XCTAssertGreaterThan(handles.count, 5 * (variations + 1))
         XCTAssertLessThanOrEqual(handles.count, 50)
+        
+        XCTAssertEqual(handles.filter({ $0.utf8.count > 21 }), [])
         
         // first is normalized name
         XCTAssertEqual(handles.popLast(), expectedNormalized)
