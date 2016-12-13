@@ -74,8 +74,8 @@
 - (void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
-    [self.activeUICallConversation.voiceChannel tearDown];
-    [self.inactiveSyncCallConversation.voiceChannel tearDown];
+    [self.activeUICallConversation.voiceChannel.v2 tearDown];
+    [self.inactiveSyncCallConversation.voiceChannel.v2 tearDown];
 
     self.activeSyncCallConversation = nil;
     self.activeUICallConversation = nil;
@@ -163,7 +163,7 @@
     ZMConversation *uiConv = self.activeUICallConversation;
     ZMConversation *syncConv = self.activeSyncCallConversation;
     [self.syncMOC performGroupedBlockAndWait:^{
-        [syncConv.voiceChannel addCallParticipant:[ZMUser insertNewObjectInManagedObjectContext:self.syncMOC]];
+        [syncConv.voiceChannel.v2 addCallParticipant:[ZMUser insertNewObjectInManagedObjectContext:self.syncMOC]];
         [self.syncMOC saveOrRollback];
     }];
     [self.sut setActiveCallSyncConversation:syncConv];
@@ -216,7 +216,7 @@
     __block ZMUser *otherUser;
     [self.syncMOC performGroupedBlockAndWait:^{
         otherUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-        [syncConv.voiceChannel addCallParticipant:otherUser];
+        [syncConv.voiceChannel.v2 addCallParticipant:otherUser];
         [self.syncMOC saveOrRollback];
     }];
     [self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
@@ -254,7 +254,7 @@
         // the BE drops the call because the other user left
         [self.syncMOC performGroupedBlockAndWait:^{
             syncConv.callDeviceIsActive = NO,
-            [syncConv.voiceChannel removeAllCallParticipants];
+            [syncConv.voiceChannel.v2 removeAllCallParticipants];
             [self.syncMOC saveOrRollback];
         }];
         [self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
@@ -291,7 +291,7 @@
     __block ZMUser *otherUser;
     [self.syncMOC performGroupedBlockAndWait:^{
         otherUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-        [syncConv.voiceChannel addCallParticipant:otherUser];
+        [syncConv.voiceChannel.v2 addCallParticipant:otherUser];
         [self.syncMOC saveOrRollback];
     }];
     [self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
@@ -330,7 +330,7 @@
         // the BE drops the call because the other user left
         [self.syncMOC performGroupedBlockAndWait:^{
             // there is no self dictionary in the disconnected force idle event
-            [syncConv.voiceChannel removeAllCallParticipants];
+            [syncConv.voiceChannel.v2 removeAllCallParticipants];
             [self.syncMOC saveOrRollback];
         }];
         [self.uiMOC refreshObject:uiConv mergeChanges:YES];

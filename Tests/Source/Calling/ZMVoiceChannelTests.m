@@ -44,7 +44,7 @@
 - (void)tearDownVoiceChannelForSyncConversation:(ZMConversation *)conversation
 {
     ZMConversation *uiConv = (id)[self.uiMOC objectWithID:conversation.objectID];
-    [uiConv.voiceChannel tearDown];
+    [uiConv.voiceChannel.v2 tearDown];
 }
 
 - (void)testThatItResetsTheFlowManagerCategoryToNormalOnStoreCreationForUIContext;
@@ -216,10 +216,11 @@
 }
 
 
+// FIXME move these three tests
 - (void)testThatItReturnsAVoiceChannelForAOneOnOneConversations;
 {
     // when
-    ZMVoiceChannel *channel = self.conversation.voiceChannel;
+    VoiceChannelRouter *channel = self.conversation.voiceChannel;
 
     // then
     XCTAssertNotNil(channel);
@@ -230,7 +231,7 @@
 - (void)testThatItAlwaysReturnsTheSameVoiceChannelForAOneOnOneConversations;
 {
     // when
-    ZMVoiceChannel *channel = self.conversation.voiceChannel;
+    VoiceChannelRouter *channel = self.conversation.voiceChannel;
 
     XCTAssertEqual(self.conversation.voiceChannel, channel);
 }
@@ -238,7 +239,7 @@
 - (void)testThatItReturnsAVoiceChannelForAGroupConversation;
 {
     // when
-    ZMVoiceChannel *channel = self.groupConversation.voiceChannel;
+    VoiceChannelRouter *channel = self.groupConversation.voiceChannel;
 
     XCTAssertNotNil(channel);
 }
@@ -293,7 +294,7 @@
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.syncOneOnOneConversation.voiceChannel removeAllCallParticipants];
+        [self.syncOneOnOneConversation.voiceChannel.v2 removeAllCallParticipants];
         
         // then
         XCTAssertEqual(self.syncOneOnOneConversation.voiceChannel.state, ZMVoiceChannelStateNoActiveUsers);
@@ -304,7 +305,7 @@
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.syncGroupConversation.voiceChannel removeAllCallParticipants];
+        [self.syncGroupConversation.voiceChannel.v2 removeAllCallParticipants];
         self.syncGroupConversation.isIgnoringCall = YES;
         
         // then
@@ -332,7 +333,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         XCTAssertFalse([self.syncOneOnOneConversation.callParticipants containsObject:self.syncUser1]);
         
         self.syncOneOnOneConversation.isFlowActive = NO;
@@ -349,7 +350,7 @@
         
         // given
         XCTAssertFalse([self.syncOneOnOneConversation.callParticipants containsObject:self.syncSelfUser]);
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         
         self.syncOneOnOneConversation.isFlowActive = NO;
         self.syncOneOnOneConversation.callDeviceIsActive = NO;
@@ -364,8 +365,8 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncSelfUser];
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         
         self.syncOneOnOneConversation.isFlowActive = NO;
         self.syncOneOnOneConversation.callDeviceIsActive = YES;
@@ -380,10 +381,10 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncSelfUser];
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         
-        [self.syncOneOnOneConversation.voiceChannel updateActiveFlowParticipants:@[self.syncUser1]];
+        [self.syncOneOnOneConversation.voiceChannel.v2 updateActiveFlowParticipants:@[self.syncUser1]];
         self.syncOneOnOneConversation.callDeviceIsActive = YES;
         self.syncOneOnOneConversation.isFlowActive = YES;
         
@@ -397,8 +398,8 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncSelfUser];
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         
         [self.uiMOC saveOrRollback];
         
@@ -415,7 +416,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         XCTAssertFalse([self.syncOneOnOneConversation.callParticipants containsObject:self.syncUser1]);
         
         self.syncOneOnOneConversation.isFlowActive = NO;
@@ -443,7 +444,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         
         // then
         XCTAssertEqual(self.syncOneOnOneConversation.voiceChannel.participants.firstObject, self.syncUser1);
@@ -455,7 +456,7 @@
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         XCTAssertFalse([self.syncOneOnOneConversation.callParticipants containsObject:self.syncSelfUser]);
         XCTAssertTrue([self.syncOneOnOneConversation.callParticipants containsObject:self.syncUser1]);
         
@@ -471,7 +472,7 @@
 - (void)testThatItSetsIgnoringCall
 {
     // when
-    [self.conversation.voiceChannel ignoreIncomingCall];
+    [self.conversation.voiceChannel.v2 ignore];
     
     // then
     XCTAssertTrue(self.conversation.isIgnoringCall);
@@ -497,10 +498,10 @@
         ZMConversation *secondCall = self.syncGroupConversation;
         
         // given
-        [firstCall.voiceChannel addCallParticipant:self.syncUser1];
+        [firstCall.voiceChannel.v2 addCallParticipant:self.syncUser1];
         XCTAssertEqual(firstCall.voiceChannelState, ZMVoiceChannelStateIncomingCall);
         
-        [secondCall.voiceChannel addCallParticipant:self.syncUser1];
+        [secondCall.voiceChannel.v2 addCallParticipant:self.syncUser1];
         XCTAssertEqual(secondCall.voiceChannelState, ZMVoiceChannelStateIncomingCall);
         
         // when
@@ -518,11 +519,11 @@
         ZMConversation *secondCall = self.syncGroupConversation;
         
         // given
-        [firstCall.voiceChannel addCallParticipant:self.syncSelfUser];
+        [firstCall.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         firstCall.callDeviceIsActive = YES;
         XCTAssertEqual(firstCall.voiceChannelState, ZMVoiceChannelStateOutgoingCall);
         
-        [secondCall.voiceChannel addCallParticipant:self.syncSelfUser];
+        [secondCall.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         secondCall.callDeviceIsActive = YES;
         XCTAssertEqual(secondCall.voiceChannelState, ZMVoiceChannelStateOutgoingCall);
         
@@ -541,10 +542,10 @@
         ZMConversation *secondCall = self.syncGroupConversation;
         
         // given
-        [firstCall.voiceChannel addCallParticipant:self.syncUser1];
+        [firstCall.voiceChannel.v2 addCallParticipant:self.syncUser1];
         XCTAssertEqual(firstCall.voiceChannelState, ZMVoiceChannelStateIncomingCall);
 
-        [secondCall.voiceChannel addCallParticipant:self.syncUser2];
+        [secondCall.voiceChannel.v2 addCallParticipant:self.syncUser2];
         secondCall.isIgnoringCall = YES;
         XCTAssertEqual(secondCall.voiceChannelState, ZMVoiceChannelStateIncomingCallInactive);
         
@@ -563,11 +564,11 @@
         ZMConversation *secondCall = self.syncGroupConversation;
         
         // given
-        [firstCall.voiceChannel addCallParticipant:self.syncUser2];
+        [firstCall.voiceChannel.v2 addCallParticipant:self.syncUser2];
         XCTAssertEqual(firstCall.voiceChannelState, ZMVoiceChannelStateIncomingCall);
         
-        [secondCall.voiceChannel addCallParticipant:self.syncUser1];
-        [secondCall.voiceChannel addCallParticipant:self.syncSelfUser];
+        [secondCall.voiceChannel.v2 addCallParticipant:self.syncUser1];
+        [secondCall.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         secondCall.callDeviceIsActive = NO;
         secondCall.isIgnoringCall = NO;
         XCTAssertEqual(secondCall.voiceChannelState, ZMVoiceChannelStateDeviceTransferReady);
@@ -586,7 +587,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.selfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.selfUser];
         
         XCTAssertEqual(self.syncOneOnOneConversation.callParticipants.count, 1u);
         XCTAssertEqual(self.syncGroupConversation.callParticipants.count, 0u);
@@ -602,13 +603,13 @@
 - (void)testThatItResetsIsIgnoringCallWhenIgnoringACallAndImmediatelyCallingBack
 {
     // when
-    [self.conversation.voiceChannel ignoreIncomingCall];
+    [self.conversation.voiceChannel.v2 ignore];
 
     // then
     XCTAssertTrue(self.conversation.isIgnoringCall);
 
     // when
-    [self.conversation.voiceChannel join];
+    [self.conversation.voiceChannel.v2 join];
     
     // then
     XCTAssertFalse(self.conversation.isIgnoringCall);
@@ -619,11 +620,11 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
         // other user joins first (calls)
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         
-        [self.syncGroupConversation.voiceChannel join];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncSelfUser];
-        [self.syncGroupConversation.voiceChannel updateActiveFlowParticipants:@[self.syncUser1]];
+        [self.syncGroupConversation.voiceChannel.v2 join];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
+        [self.syncGroupConversation.voiceChannel.v2 updateActiveFlowParticipants:@[self.syncUser1]];
         self.syncGroupConversation.isFlowActive = YES;
         
         // then
@@ -637,10 +638,10 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
         // other user joins first (calls)
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         
-        [self.syncGroupConversation.voiceChannel join];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncGroupConversation.voiceChannel.v2 join];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         
         // then
         XCTAssertFalse(self.syncGroupConversation.isOutgoingCall);
@@ -653,10 +654,10 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
         // selfuser joins first (calls)
-        [self.syncGroupConversation.voiceChannel join];
+        [self.syncGroupConversation.voiceChannel.v2 join];
         
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser1];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         
         // then
         XCTAssertTrue(self.syncGroupConversation.isOutgoingCall);
@@ -669,14 +670,14 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
         // selfuser joins first (calls)
-        [self.syncGroupConversation.voiceChannel join];
+        [self.syncGroupConversation.voiceChannel.v2 join];
         
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser1];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         XCTAssertTrue(self.syncGroupConversation.isOutgoingCall);
 
         // when
-        [self.syncGroupConversation.voiceChannel updateActiveFlowParticipants:@[self.syncUser1]];
+        [self.syncGroupConversation.voiceChannel.v2 updateActiveFlowParticipants:@[self.syncUser1]];
         
         // then
         XCTAssertFalse(self.syncGroupConversation.isOutgoingCall);
@@ -711,12 +712,12 @@
         [conversation.mutableOtherActiveParticipants addObject:self.syncUser1];
         [conversation.mutableOtherActiveParticipants addObject:self.syncUser2];
         
-        [conversation.voiceChannel addCallParticipant:self.syncSelfUser];
-        [conversation.voiceChannel addCallParticipant:self.syncUser1];
-        [conversation.voiceChannel addCallParticipant:self.syncUser2];
+        [conversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
+        [conversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
+        [conversation.voiceChannel.v2 addCallParticipant:self.syncUser2];
         
         // when
-        [conversation.voiceChannel updateActiveFlowParticipants:@[self.syncUser1, self.syncUser2]];
+        [conversation.voiceChannel.v2 updateActiveFlowParticipants:@[self.syncUser1, self.syncUser2]];
         XCTAssertEqual(conversation.activeFlowParticipants.count, 2u);
         
         // then
@@ -735,11 +736,11 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *conv = (id)[self.syncMOC objectWithID:self.conversation.objectID];
         // given
-        [conv.voiceChannel addCallParticipant:self.syncUser1];
-        [conv.voiceChannel updateActiveFlowParticipants:@[self.syncUser1]];
+        [conv.voiceChannel.v2 addCallParticipant:self.syncUser1];
+        [conv.voiceChannel.v2 updateActiveFlowParticipants:@[self.syncUser1]];
         
         // when
-        ZMVoiceChannelParticipantState *state = [conv.voiceChannel participantStateForUser:self.syncUser1];
+        ZMVoiceChannelParticipantState *state = [conv.voiceChannel.v2 stateForParticipant:self.syncUser1];
         
         // then
         XCTAssertEqual(state.connectionState, ZMVoiceChannelConnectionStateConnected);
@@ -752,11 +753,11 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *conv = (id)[self.syncMOC objectWithID:self.conversation.objectID];
         // given
-        [conv.voiceChannel addCallParticipant:self.syncUser1];
+        [conv.voiceChannel.v2 addCallParticipant:self.syncUser1];
         conv.isFlowActive = NO;
         
         // when
-        ZMVoiceChannelConnectionState state = [conv.voiceChannel participantStateForUser:self.syncUser1].connectionState;
+        ZMVoiceChannelConnectionState state = [conv.voiceChannel.v2 stateForParticipant:self.syncUser1].connectionState;
         
         // then
         XCTAssertEqual(state, ZMVoiceChannelConnectionStateConnecting);
@@ -770,21 +771,21 @@
     XCTAssertFalse([self.conversation.callParticipants containsObject:self.otherUser]);
 
     // then
-    XCTAssertEqual([self.conversation.voiceChannel participantStateForUser:self.otherUser].connectionState, ZMVoiceChannelConnectionStateNotConnected);
+    XCTAssertEqual([self.conversation.voiceChannel.v2 stateForParticipant:self.otherUser].connectionState, ZMVoiceChannelConnectionStateNotConnected);
 }
 
 - (void)testThatItCanEnumerateConnectionStatesForParticipants;
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         
         XCTAssertTrue([self.syncOneOnOneConversation.callParticipants containsObject:self.syncUser1]);
         XCTAssertFalse([self.syncOneOnOneConversation.callParticipants containsObject:self.syncSelfUser]);
         
         // when
         NSMutableArray *users = [NSMutableArray array];
-        [self.syncOneOnOneConversation.voiceChannel enumerateParticipantStatesWithBlock:^(ZMUser *user, ZMVoiceChannelConnectionState connectionState, BOOL muted) {
+        [self.syncOneOnOneConversation.voiceChannel.v2 enumerateParticipantStatesWithBlock:^(ZMUser *user, ZMVoiceChannelConnectionState connectionState, BOOL muted) {
             [users addObject:user];
             XCTAssertFalse(muted);
             if (user == self.syncUser1) {
@@ -804,8 +805,8 @@
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncSelfUser];
-        [self.syncOneOnOneConversation.voiceChannel updateActiveFlowParticipants:@[self.syncUser1]];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 updateActiveFlowParticipants:@[self.syncUser1]];
         self.syncOneOnOneConversation.isFlowActive = YES;
         
         XCTAssertTrue([self.syncOneOnOneConversation.callParticipants containsObject:self.syncSelfUser]);
@@ -821,7 +822,7 @@
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         self.syncOneOnOneConversation.isFlowActive = NO;
         
         XCTAssertTrue([self.syncOneOnOneConversation.callParticipants containsObject:self.syncSelfUser]);
@@ -863,7 +864,7 @@
     if(!user.isSelfUser) {
         [conversation.mutableOtherActiveParticipants addObject:user];
     }
-    [conversation.voiceChannel addCallParticipant:user];
+    [conversation.voiceChannel.v2 addCallParticipant:user];
     return user;
 }
 
@@ -876,9 +877,9 @@
         ZMUser *syncOtherUser = (id)[self.syncMOC objectWithID:self.otherUser.objectID];
         activeConversation.callDeviceIsActive = YES;
         activeConversation.isFlowActive = YES;
-        [activeConversation.voiceChannel addCallParticipant:syncOtherUser];
-        [activeConversation.voiceChannel addCallParticipant:syncSelfUser];
-        [activeConversation.voiceChannel updateActiveFlowParticipants:@[syncOtherUser]];
+        [activeConversation.voiceChannel.v2 addCallParticipant:syncOtherUser];
+        [activeConversation.voiceChannel.v2 addCallParticipant:syncSelfUser];
+        [activeConversation.voiceChannel.v2 updateActiveFlowParticipants:@[syncOtherUser]];
         [self.syncMOC saveOrRollback];
         objectID = activeConversation.objectID;
     }];
@@ -919,10 +920,10 @@
     XCTAssertEqual(activeConversation.voiceChannel.state, ZMVoiceChannelStateSelfConnectedToActiveChannel);
 
     // when
-    ZMVoiceChannel *channel = [ZMVoiceChannel activeVoiceChannelInSession:self.mockUserSession];
+    ZMVoiceChannel *channel = [ZMVoiceChannel activeVoiceChannelInSession:self.mockUserSession]; // FIXME who uses this?
 
     // then
-    XCTAssertEqual(channel, activeConversation.voiceChannel);
+    XCTAssertEqual(channel, activeConversation.voiceChannel.v2);
     
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -965,7 +966,7 @@
 - (void)testThatItTimesOutTheCallInAOneOnOneConversation_AndEndsIt
 {
     ZMConversation *uiConv = (id)[self.uiMOC objectWithID:self.syncOneOnOneConversation.objectID];
-    [uiConv.voiceChannel join];
+    [uiConv.voiceChannel.v2 join];
     [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
 
     
@@ -974,13 +975,13 @@
         [ZMCallTimer setTestCallTimeout:0.2];
         
         // when
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         [self.syncGroupConversation resetHasLocalModificationsForCallDeviceIsActive]; // done by the BE, starts the timer
         XCTAssertEqual(self.syncOneOnOneConversation.voiceChannelState, ZMVoiceChannelStateOutgoingCall);
         
         [self spinMainQueueWithTimeout:0.5];
         [self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState]; // callDeviceIsActive is set to NO on the uiContext, therefore need to merge changes
-        [self.syncOneOnOneConversation.voiceChannel removeCallParticipant:self.syncSelfUser]; // done by the BE when syncing callDeviceIsActive
+        [self.syncOneOnOneConversation.voiceChannel.v2 removeCallParticipant:self.syncSelfUser]; // done by the BE when syncing callDeviceIsActive
 
         // then
         XCTAssertFalse(self.syncOneOnOneConversation.isOutgoingCall);
@@ -995,7 +996,7 @@
 - (void)testThatItTimesOutTheCallInAGroupConversation_AndSilencesIt
 {
     ZMConversation *uiConv = (id)[self.uiMOC objectWithID:self.syncGroupConversation.objectID];
-    [uiConv.voiceChannel join];
+    [uiConv.voiceChannel.v2 join];
     [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
 
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -1003,7 +1004,7 @@
         [ZMCallTimer setTestCallTimeout:0.2];
 
         // when
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncSelfUser]; // done by the BE, starts the timer
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser]; // done by the BE, starts the timer
         [self.syncGroupConversation resetHasLocalModificationsForCallDeviceIsActive];
         XCTAssertEqual(self.syncGroupConversation.voiceChannelState, ZMVoiceChannelStateOutgoingCall);
         
@@ -1026,7 +1027,7 @@
     [ZMCallTimer setTestCallTimeout:0.2];
     
     // when
-    [self.groupConversation.voiceChannel join];
+    [self.groupConversation.voiceChannel.v2 join];
     // the BE usually adds the user to the callParticipants
     // however when the BE rejects the request, it just sets callDeviceIsActive to NO
     XCTAssertEqual(self.groupConversation.voiceChannelState, ZMVoiceChannelStateOutgoingCall);
@@ -1045,20 +1046,20 @@
         [ZMCallTimer setTestCallTimeout:0.2];
         
         // (1) when selfUser joins
-        [self.syncGroupConversation.voiceChannel join]; // this does not start the timer
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncSelfUser]; // this starts the timer
+        [self.syncGroupConversation.voiceChannel.v2 join]; // this does not start the timer
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser]; // this starts the timer
         XCTAssertEqual(self.syncGroupConversation.voiceChannelState, ZMVoiceChannelStateOutgoingCall);
         
         // (2) the other user joins, the timer stops
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser1]; // this stops the timer
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser1]; // this stops the timer
         XCTAssertEqual(self.syncGroupConversation.voiceChannelState, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
         
         // (3) both users leave
         // the callstate transcoder removes them one after another
-        [self.syncGroupConversation.voiceChannel removeCallParticipant:self.syncUser1]; // this will start the timer
+        [self.syncGroupConversation.voiceChannel.v2 removeCallParticipant:self.syncUser1]; // this will start the timer
         XCTAssertEqual(self.syncGroupConversation.voiceChannelState, ZMVoiceChannelStateOutgoingCall);
         
-        [self.syncGroupConversation.voiceChannel removeCallParticipant:self.syncSelfUser]; // this should stop the timer
+        [self.syncGroupConversation.voiceChannel.v2 removeCallParticipant:self.syncSelfUser]; // this should stop the timer
         XCTAssertEqual(self.syncGroupConversation.voiceChannelState, ZMVoiceChannelStateOutgoingCall);
         
         // (4) the call state transcoder will set callDeviceIsActive to NO for disconnected events that don't contain a self info
@@ -1069,8 +1070,8 @@
         [self spinMainQueueWithTimeout:0.5];
         
         // (6) we initiate a new call, if the timer was fired, we would be in timedOut state (OutgoingCallInactive)
-        [self.syncGroupConversation.voiceChannel join];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncGroupConversation.voiceChannel.v2 join];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         
         // then
         XCTAssertTrue(self.syncGroupConversation.isOutgoingCall);
@@ -1150,14 +1151,14 @@
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *conversation = self.syncGroupConversation;
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser1];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser2];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser3];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser2];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser3];
         
         conversation.callTimedOut = YES;
         
         // when
-        [conversation.voiceChannel removeAllCallParticipants];
+        [conversation.voiceChannel.v2 removeAllCallParticipants];
         
         // then
         XCTAssertFalse(conversation.callTimedOut);
@@ -1168,21 +1169,21 @@
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *conversation = self.syncGroupConversation;
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser1];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser2];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser3];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser2];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser3];
         
         conversation.callTimedOut = YES;
         
         // when
-        [conversation.voiceChannel removeCallParticipant:self.syncUser1];
-        [conversation.voiceChannel removeCallParticipant:self.syncUser2];
+        [conversation.voiceChannel.v2 removeCallParticipant:self.syncUser1];
+        [conversation.voiceChannel.v2 removeCallParticipant:self.syncUser2];
 
         // then
         XCTAssertTrue(conversation.callTimedOut);
         
         // when
-        [conversation.voiceChannel removeCallParticipant:self.syncUser3];
+        [conversation.voiceChannel.v2 removeCallParticipant:self.syncUser3];
         
         // then
         XCTAssertFalse(conversation.callTimedOut);
@@ -1201,7 +1202,7 @@
     XCTAssertFalse(self.conversation.callDeviceIsActive);
     
     // when
-    [self.conversation.voiceChannel join];
+    [self.conversation.voiceChannel.v2 join];
     
     // then
     XCTAssertTrue(self.conversation.callDeviceIsActive);
@@ -1213,7 +1214,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         self.syncOneOnOneConversation.callDeviceIsActive = YES;
         XCTAssertTrue([self.syncOneOnOneConversation.callParticipants containsObject:self.syncSelfUser]);
         
@@ -1230,7 +1231,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         self.syncOneOnOneConversation.callDeviceIsActive = YES;
         self.syncOneOnOneConversation.reasonToLeave = ZMCallStateReasonToLeaveNone;
         XCTAssertTrue([self.syncOneOnOneConversation.callParticipants containsObject:self.syncSelfUser]);
@@ -1248,13 +1249,13 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         self.syncOneOnOneConversation.callDeviceIsActive = YES;
         self.syncOneOnOneConversation.reasonToLeave = ZMCallStateReasonToLeaveNone;
         XCTAssertTrue([self.syncOneOnOneConversation.callParticipants containsObject:self.syncSelfUser]);
         
         // when
-        [self.syncOneOnOneConversation.voiceChannel leaveOnAVSError];
+        [self.syncOneOnOneConversation.voiceChannel.v2 leaveOnAVSError];
         
         // then
         XCTAssertEqual(self.syncOneOnOneConversation.reasonToLeave, ZMCallStateReasonToLeaveAvsError);
@@ -1268,9 +1269,9 @@
 
         self.syncGroupConversation.callDeviceIsActive = YES;
         
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncSelfUser];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser1];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser2];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser2];
 
         XCTAssertFalse(self.syncGroupConversation.isIgnoringCall);
         XCTAssertEqual(self.syncGroupConversation.voiceChannel.state, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
@@ -1290,8 +1291,8 @@
         
         self.syncGroupConversation.callDeviceIsActive = YES;
         
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncSelfUser];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         
         XCTAssertFalse(self.syncGroupConversation.isIgnoringCall);
         XCTAssertEqual(self.syncGroupConversation.voiceChannel.state, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
@@ -1310,8 +1311,8 @@
         // given
         self.syncGroupConversation.callDeviceIsActive = YES;
         
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncSelfUser];
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         
         XCTAssertFalse(self.syncGroupConversation.isIgnoringCall);
         XCTAssertEqual(self.syncGroupConversation.voiceChannel.state, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
@@ -1331,7 +1332,7 @@
     
     [self.syncMOC performGroupedBlockAndWait:^{
         // this step is done by the transcoder
-        [self.syncGroupConversation.voiceChannel removeAllCallParticipants];
+        [self.syncGroupConversation.voiceChannel.v2 removeAllCallParticipants];
         [self.syncMOC saveOrRollback];
     }];
     [self.uiMOC refreshObject:uiConv mergeChanges:YES];
@@ -1344,12 +1345,12 @@
 - (void)testThatWhenCancellingAnOutgoingCallTheCallParticipantsAreReset
 {
     ZMConversation *uiConv = (id)[self.uiMOC objectWithID:self.syncGroupConversation.objectID];
-    [uiConv.voiceChannel join];
+    [uiConv.voiceChannel.v2 join];
     [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.syncGroupConversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [self.syncGroupConversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         XCTAssertTrue([self.syncGroupConversation.callParticipants containsObject:self.syncSelfUser]);
         XCTAssertFalse(self.syncGroupConversation.isIgnoringCall);
         XCTAssertEqual(self.syncGroupConversation.voiceChannel.state, ZMVoiceChannelStateOutgoingCall);
@@ -1370,7 +1371,7 @@
 - (void)testThatItSets_IsOutgoingCall_JoiningAVoiceChannelOnAOneOnOneConversationWithoutCallParticipants
 {
     // when
-    [self.conversation.voiceChannel join];
+    [self.conversation.voiceChannel.v2 join];
     
     // then
     XCTAssertTrue(self.conversation.isOutgoingCall);
@@ -1380,10 +1381,10 @@
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.syncOneOnOneConversation.voiceChannel addCallParticipant:self.syncUser1];
+        [self.syncOneOnOneConversation.voiceChannel.v2 addCallParticipant:self.syncUser1];
         
         // when
-        [self.syncOneOnOneConversation.voiceChannel join];
+        [self.syncOneOnOneConversation.voiceChannel.v2 join];
         
         // then
         XCTAssertFalse(self.syncOneOnOneConversation.isOutgoingCall);
@@ -1393,7 +1394,7 @@
 - (void)testThatItResetsIsOutgoingCallWhenLeavingAVoiceChannel
 {
     // given
-    [self.conversation.voiceChannel join];
+    [self.conversation.voiceChannel.v2 join];
     XCTAssertTrue(self.conversation.isOutgoingCall);
     
     // when
@@ -1409,7 +1410,7 @@
     // given
     
     // the selfuser calls first
-    [self.conversation.voiceChannel join];
+    [self.conversation.voiceChannel.v2 join];
     [self.uiMOC saveOrRollback];
     [self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState.createCopyAndResetHasChanges];
     XCTAssertTrue(self.conversation.isOutgoingCall);
@@ -1417,9 +1418,9 @@
     // the BE returns and other users join
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *syncConv = (id)[self.syncMOC objectWithID:self.conversation.objectID];
-        [syncConv.voiceChannel addCallParticipant:self.selfUser];
-        [syncConv.voiceChannel addCallParticipant:self.syncUser1];
-        [syncConv.voiceChannel addCallParticipant:self.syncUser2];
+        [syncConv.voiceChannel.v2 addCallParticipant:self.selfUser];
+        [syncConv.voiceChannel.v2 addCallParticipant:self.syncUser1];
+        [syncConv.voiceChannel.v2 addCallParticipant:self.syncUser2];
         [self.syncMOC saveOrRollback];
     }];
     [self.uiMOC mergeCallStateChanges:self.syncMOC.zm_callState.createCopyAndResetHasChanges];
@@ -1428,9 +1429,9 @@
     // (1) when the BE force idles the call
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *syncConv = (id)[self.syncMOC objectWithID:self.conversation.objectID];
-        [syncConv.voiceChannel removeCallParticipant:self.syncUser1];
-        [syncConv.voiceChannel removeCallParticipant:self.syncUser2];
-        [syncConv.voiceChannel removeCallParticipant:self.selfUser];
+        [syncConv.voiceChannel.v2 removeCallParticipant:self.syncUser1];
+        [syncConv.voiceChannel.v2 removeCallParticipant:self.syncUser2];
+        [syncConv.voiceChannel.v2 removeCallParticipant:self.selfUser];
         [self.syncMOC saveOrRollback];
     }];
     [self.uiMOC mergeCallStateChanges:self.syncMOC.zm_callState.createCopyAndResetHasChanges];
@@ -1442,13 +1443,13 @@
     // (2) when the other user calls first
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *syncConv = (id)[self.syncMOC objectWithID:self.conversation.objectID];
-        [syncConv.voiceChannel addCallParticipant:self.syncUser1];
+        [syncConv.voiceChannel.v2 addCallParticipant:self.syncUser1];
         [self.syncMOC saveOrRollback];
     }];
     [self.uiMOC refreshObject:self.conversation mergeChanges:NO];
     [self.uiMOC mergeCallStateChanges:self.syncMOC.zm_callState.createCopyAndResetHasChanges];
 
-    [self.conversation.voiceChannel join];
+    [self.conversation.voiceChannel.v2 join];
     
     // then
     XCTAssertFalse(self.conversation.isOutgoingCall);
@@ -1467,7 +1468,7 @@
     id callCenter = [OCMockObject niceMockForClass:[CTCallCenter class]];
     
     ZMVoiceChannel *voiceChannel = [[ZMVoiceChannel alloc] initWithConversation:self.conversation callCenter:callCenter];
-    id token = [self.conversation.voiceChannel addCallingInitializationObserver:self];
+    id token = [self.conversation.voiceChannel.v2 addCallingInitializationObserver:self];
     // expect
     [[[callCenter expect] andReturn:[NSSet setWithObject:call]] currentCalls];
     
@@ -1482,13 +1483,13 @@
         XCTAssertEqual(receivedError.code, (long)ZMVoiceChannelErrorCodeOngoingGSMCall);
     }
     XCTAssertFalse(self.conversation.callDeviceIsActive);
-    [self.conversation.voiceChannel removeCallingInitialisationObserver:token];
+    [self.conversation.voiceChannel.v2 removeCallingInitialisationObserver:token];
 }
 
 - (void)testThatItDoesNotSendANotificationWhenThereIsAIncomingGSMCall_AndDoesNotJoinTheVoiceChannel
 {
     // given
-    id token = [self.conversation.voiceChannel addCallingInitializationObserver:self];
+    id token = [self.conversation.voiceChannel.v2 addCallingInitializationObserver:self];
     id call1 = [OCMockObject niceMockForClass:[CTCall class]];
     [(CTCall *)[[call1 expect] andReturn:CTCallStateIncoming] callState];
     id call2 = [OCMockObject niceMockForClass:[CTCall class]];
@@ -1510,7 +1511,7 @@
     // then
     XCTAssertEqual(self.receivedErrors.count, 0u);
     XCTAssertTrue(self.conversation.callDeviceIsActive);
-    [self.conversation.voiceChannel removeCallingInitialisationObserver:token];
+    [self.conversation.voiceChannel.v2 removeCallingInitialisationObserver:token];
 }
 
 
@@ -1518,7 +1519,7 @@
 - (void)testThatItDoesNotSendANotificationWhenThereIsNoGSMCall_AndJoinsTheVoiceChannel
 {
     // given
-    id token = [self.conversation.voiceChannel addCallingInitializationObserver:self];
+    id token = [self.conversation.voiceChannel.v2 addCallingInitializationObserver:self];
     id callCenter = [OCMockObject niceMockForClass:[CTCallCenter class]];
     ZMVoiceChannel *voiceChannel = [[ZMVoiceChannel alloc] initWithConversation:self.groupConversation callCenter:callCenter];
     
@@ -1531,7 +1532,7 @@
     // then
     XCTAssertEqual(self.receivedErrors.count, 0u);
     XCTAssertTrue(self.groupConversation.callDeviceIsActive);
-    [self.conversation.voiceChannel removeCallingInitialisationObserver:token];
+    [self.conversation.voiceChannel.v2 removeCallingInitialisationObserver:token];
 }
 
 @end
@@ -1549,7 +1550,7 @@
     }];
     
     //when
-    [self.conversation.voiceChannel join];
+    [self.conversation.voiceChannel.v2 join];
     WaitForAllGroupsToBeEmpty(0.5);
 
     //then
@@ -1561,7 +1562,7 @@
 - (void)testThatItPostsShouldKeepWebsocketOpenNotificationOnLeave
 {
     //given
-    [self.conversation.voiceChannel join];
+    [self.conversation.voiceChannel.v2 join];
     __block BOOL selfJoined = YES;
     
     id observer = [[NSNotificationCenter defaultCenter] addObserverForName:ZMTransportSessionShouldKeepWebsocketOpenNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
@@ -1580,7 +1581,7 @@
 - (void)testThatItPostsShouldKeepWebsocketOpenNotificationOnRemoveCallParticipantIfParticipantIsSelf
 {
     //given
-    [self.conversation.voiceChannel join];
+    [self.conversation.voiceChannel.v2 join];
     WaitForAllGroupsToBeEmpty(0.5);
 
     __block BOOL selfJoined = YES;
@@ -1593,7 +1594,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *syncConv = (id)[self.syncMOC objectWithID:self.conversation.objectID];
         ZMUser *syncSelfUser = (id)[self.syncMOC objectWithID:self.selfUser.objectID];
-        [syncConv.voiceChannel removeCallParticipant:syncSelfUser];
+        [syncConv.voiceChannel.v2 removeCallParticipant:syncSelfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1606,7 +1607,7 @@
 - (void)testThatItDoesNotPostShouldKeepWebsocketOpenNotificationOnRemoveCallParticipantIfParticipnatIsNotSelf
 {
     //given
-    [self.conversation.voiceChannel join];
+    [self.conversation.voiceChannel.v2 join];
     WaitForAllGroupsToBeEmpty(0.5);
 
     __block BOOL selfJoined = YES;
@@ -1621,7 +1622,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *syncConv = (id)[self.syncMOC objectWithID:self.conversation.objectID];
         ZMUser *syncOtherUser = (id)[self.syncMOC objectWithID:self.otherUser.objectID];
-        [syncConv.voiceChannel removeCallParticipant:syncOtherUser];
+        [syncConv.voiceChannel.v2 removeCallParticipant:syncOtherUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

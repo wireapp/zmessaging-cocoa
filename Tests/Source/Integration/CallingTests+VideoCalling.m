@@ -27,7 +27,7 @@
 - (void)selfJoinVideoCall
 {
     [self.userSession enqueueChanges:^{
-        [self.conversationUnderTest.voiceChannel joinVideoCall:nil];
+        [self.conversationUnderTest.voiceChannel joinWithVideo:YES];
     }];
 }
 
@@ -45,13 +45,14 @@
     }];
 }
 
+// NOTE simulate v2 video calling
 - (void)simulateSelfUserActivatesVideo:(BOOL)activates
 {
     [self.mockFlowManager simulateCanSendVideoInConversation:self.mockConversationUnderTest];
     [self.mockFlowManager simulateMediaIsEstablishedInConversation:self.mockConversationUnderTest];
     [self.userSession performChanges:^{
         NSError *error;
-        [self.conversationUnderTest.voiceChannel setVideoSendActive:activates error:&error];
+        [self.conversationUnderTest.voiceChannel.v2 setVideoSendActive:activates error:&error];
         if (error != nil) {
             XCTFail(@"%@", error.description);
         }
@@ -277,7 +278,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *oneToOneConversation = self.conversationUnderTest;
-    id stateToken = [oneToOneConversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:oneToOneConversation];
     [self.mockTransportSession resetReceivedRequests];
     
     // (1) other user joins
@@ -302,7 +303,7 @@
     {
         // when
         [self.userSession performChanges:^{
-            [oneToOneConversation.voiceChannel ignoreIncomingCall];
+            [oneToOneConversation.voiceChannel ignore];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         
@@ -314,7 +315,7 @@
         XCTAssertTrue(self.conversationUnderTest.isIgnoringCall);
     }
     
-    [oneToOneConversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
     [self tearDownVoiceChannelForConversation:oneToOneConversation];
 }
 
@@ -367,8 +368,8 @@
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:otherUser].isSendingVideo);
-        XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:selfUser].isSendingVideo);
+        XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:otherUser].isSendingVideo);
+        XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:selfUser].isSendingVideo);
         XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
         XCTAssertTrue([self lastRequestIsVideoActive:YES]);
         
@@ -386,8 +387,8 @@
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:otherUser].isSendingVideo);
-        XCTAssertFalse([self.conversationUnderTest.voiceChannel participantStateForUser:selfUser].isSendingVideo);
+        XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:otherUser].isSendingVideo);
+        XCTAssertFalse([self.conversationUnderTest.voiceChannel stateForParticipant:selfUser].isSendingVideo);
         XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
         XCTAssertTrue([self lastRequestIsVideoActive:NO]);
         
@@ -405,8 +406,8 @@
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:otherUser].isSendingVideo);
-        XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:selfUser].isSendingVideo);
+        XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:otherUser].isSendingVideo);
+        XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:selfUser].isSendingVideo);
         XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
         XCTAssertTrue([self lastRequestIsVideoActive:YES]);
         
@@ -429,7 +430,7 @@
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     id observer = [OCMockObject niceMockForProtocol:@protocol(CallingInitialisationObserver)];
-    id token = [self.conversationUnderTest.voiceChannel addCallingInitializationObserver:observer];
+    id token = [self.conversationUnderTest.voiceChannel.v2 addCallingInitializationObserver:observer]; // FIXME only work with v2
     
     // when
     [self otherJoinVideoCall];
@@ -472,7 +473,7 @@
     XCTAssertTrue([self didResetCallingStateForConversation:self.conversationUnderTest]);
     
     [observer verify];
-    [self.conversationUnderTest.voiceChannel removeCallingInitialisationObserver:token];
+    [self.conversationUnderTest.voiceChannel.v2 removeCallingInitialisationObserver:token];
 }
 
 
@@ -481,7 +482,8 @@
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     id observer = [OCMockObject niceMockForProtocol:@protocol(ZMVoiceChannelParticipantsObserver)];
-    id token = [self.conversationUnderTest.voiceChannel addCallParticipantsObserver:observer];
+    id token = [ZMVoiceChannel addCallParticipantsObserver:observer inConversation:self.conversationUnderTest voiceChannel:self.conversationUnderTest.voiceChannel];
+//    id token = [self.conversationUnderTest.voiceChannel addCallParticipantsObserver:observer];
     
     ZMUser *otherUser = [self userForMockUser:self.user2];
     ZMUser *selfUser = [self userForMockUser:self.selfUser];
@@ -498,8 +500,8 @@
         XCTAssertEqual(self.conversationUnderTest.otherActiveVideoCallParticipants.count, 0u);
 
         [[observer expect] voiceChannelParticipantsDidChange:[OCMArg checkWithBlock:^BOOL(VoiceChannelParticipantsChangeInfo *changeInfo) {
-            XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:otherUser].isSendingVideo);
-            XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:selfUser].isSendingVideo);
+            XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:otherUser].isSendingVideo);
+            XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:selfUser].isSendingVideo);
             return (changeInfo.otherActiveVideoCallParticipantsChanged);
         }]];
         
@@ -514,8 +516,8 @@
     {
         NSUInteger currentEventCount = self.mockTransportSession.updateEvents.count;
         [[observer expect] voiceChannelParticipantsDidChange:[OCMArg checkWithBlock:^BOOL(VoiceChannelParticipantsChangeInfo *changeInfo) {
-            XCTAssertFalse([self.conversationUnderTest.voiceChannel participantStateForUser:otherUser].isSendingVideo);
-            XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:selfUser].isSendingVideo);
+            XCTAssertFalse([self.conversationUnderTest.voiceChannel stateForParticipant:otherUser].isSendingVideo);
+            XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:selfUser].isSendingVideo);
             return (changeInfo.otherActiveVideoCallParticipantsChanged);
         }]];
         
@@ -533,8 +535,8 @@
     // we receive a push event with video YES
     {
         [[observer expect] voiceChannelParticipantsDidChange:[OCMArg checkWithBlock:^BOOL(VoiceChannelParticipantsChangeInfo *changeInfo) {
-            XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:otherUser].isSendingVideo);
-            XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:selfUser].isSendingVideo);
+            XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:otherUser].isSendingVideo);
+            XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:selfUser].isSendingVideo);
             return (changeInfo.otherActiveVideoCallParticipantsChanged);
         }]];
         NSUInteger currentEventCount1 = self.mockTransportSession.updateEvents.count;
@@ -550,7 +552,7 @@
         XCTAssertEqual(self.conversationUnderTest.otherActiveVideoCallParticipants.count, 1u);
     }
     [observer verify];
-    [self.conversationUnderTest.voiceChannel removeCallParticipantsObserverForToken:token];
+    [ZMVoiceChannel removeCallParticipantsObserverForToken:token inConversation:self.conversationUnderTest];
 
     // (3) other user ends the call
     // everything is reset
@@ -583,7 +585,7 @@
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     id observer = [OCMockObject niceMockForProtocol:@protocol(ZMVoiceChannelParticipantsObserver)];
-    id token = [self.conversationUnderTest.voiceChannel addCallParticipantsObserver:observer];
+    id token = [ZMVoiceChannel addCallParticipantsObserver:observer inConversation:self.conversationUnderTest voiceChannel:self.conversationUnderTest.voiceChannel];
     
     ZMUser *otherUser = [self userForMockUser:self.user2];
     ZMUser *selfUser = [self userForMockUser:self.selfUser];
@@ -600,8 +602,8 @@
         XCTAssertEqual(self.conversationUnderTest.otherActiveVideoCallParticipants.count, 0u);
         
         [[observer expect] voiceChannelParticipantsDidChange:[OCMArg checkWithBlock:^BOOL(VoiceChannelParticipantsChangeInfo *changeInfo) {
-            XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:otherUser].isSendingVideo);
-            XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:selfUser].isSendingVideo);
+            XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:otherUser].isSendingVideo);
+            XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:selfUser].isSendingVideo);
             return (changeInfo.otherActiveVideoCallParticipantsChanged);
         }]];
         
@@ -612,7 +614,7 @@
     }
     
     [observer verify];
-    [self.conversationUnderTest.voiceChannel removeCallParticipantsObserverForToken:token];
+    [ZMVoiceChannel removeCallParticipantsObserverForToken:token inConversation:self.conversationUnderTest];
     
     // (1) other user ends the call
     // everything is reset
@@ -627,7 +629,7 @@
     // (2) re-establish an new call
     // we send an video call request
     
-    token = [self.conversationUnderTest.voiceChannel addCallParticipantsObserver:observer];
+    token = [ZMVoiceChannel addCallParticipantsObserver:observer inConversation:self.conversationUnderTest voiceChannel:self.conversationUnderTest.voiceChannel];
     {
         [self otherJoinVideoCall];
         WaitForEverythingToBeDone();
@@ -639,8 +641,8 @@
         XCTAssertEqual(self.conversationUnderTest.otherActiveVideoCallParticipants.count, 0u);
         
         [[observer expect] voiceChannelParticipantsDidChange:[OCMArg checkWithBlock:^BOOL(VoiceChannelParticipantsChangeInfo *changeInfo) {
-            XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:otherUser].isSendingVideo);
-            XCTAssertTrue([self.conversationUnderTest.voiceChannel participantStateForUser:selfUser].isSendingVideo);
+            XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:otherUser].isSendingVideo);
+            XCTAssertTrue([self.conversationUnderTest.voiceChannel stateForParticipant:selfUser].isSendingVideo);
             return (changeInfo.otherActiveVideoCallParticipantsChanged);
         }]];
         
@@ -649,7 +651,7 @@
         XCTAssertTrue(self.conversationUnderTest.isSendingVideo);
         XCTAssertEqual(self.conversationUnderTest.otherActiveVideoCallParticipants.count, 1u);
     }
-    [self.conversationUnderTest.voiceChannel removeCallParticipantsObserverForToken:token];
+    [ZMVoiceChannel removeCallParticipantsObserverForToken:token inConversation:self.conversationUnderTest];
     [observer verify];
 }
 

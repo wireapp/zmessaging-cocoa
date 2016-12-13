@@ -82,14 +82,10 @@ extension VoiceChannelRouter : CallFlow {
     }
     
     public func setVideoCaptureDevice(device: CaptureDevice) throws {
-        guard flowManager.isReady() else { throw ZMVoiceChannelError.noFlowManagerError() }
+        guard let flowManager = flowManager, flowManager.isReady() else { throw ZMVoiceChannelError.noFlowManagerError() }
         guard let remoteIdentifier = conversation?.remoteIdentifier else { throw ZMVoiceChannelError.switchToVideoNotAllowedError() }
         
         flowManager.setVideoCaptureDevice(device.deviceIdentifier, forConversation: remoteIdentifier.transportString())
-    }
-    
-    private var flowManager : AVSFlowManager {
-        return ZMAVSBridge.flowManagerClass().getInstance() as! AVSFlowManager
     }
     
 }
