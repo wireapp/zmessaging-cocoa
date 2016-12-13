@@ -48,9 +48,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;
 @property (nonatomic, readonly) ZMAccountStatus *accountStatus;
-@end
-
-@interface ZMUserSession (GiphyRequestStatus)
 @property (nonatomic, readonly) ProxiedRequestsStatus *proxiedRequestStatus;
 @end
 
@@ -105,9 +102,9 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 /// Called from ZMUserSession init to initialize the push notification receiving objects
 - (void)enablePushNotifications;
 
-/// Selector for processing ZMApplicationDidLeaveEventProcessingStateNotification
-/// When leaving the event processing state we process pending local notifications to avoid race conditions
-- (void)didEnterEventProcessingState:(NSNotification *)note;
+/// When starting the app due to a push notification action, we store the notification information and wait until sync completed before processing pending local notifications.
+/// This is important for possibly outdated calling notifications for which we need to fetch the call state before joining the call.
+- (void)processPendingNotificationActions;
 
 @end
 

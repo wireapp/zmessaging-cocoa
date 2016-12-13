@@ -21,7 +21,10 @@
 @import Foundation;
 @import WireRequestStrategy;
 
+@class SyncStatus;
 
+@interface ZMConnectionTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator, ZMSyncPhase>
 
-@interface ZMConnectionTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc syncStatus:(SyncStatus *)syncStatus clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
+
 @end

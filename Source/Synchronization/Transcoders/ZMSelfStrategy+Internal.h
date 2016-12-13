@@ -17,15 +17,15 @@
 // 
 
 
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 
-extern NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval;
+extern NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval;
 
 
 
 @class ZMTimedSingleRequestSync;
 
-@interface ZMSelfTranscoder ()
+@interface ZMSelfStrategy ()
 
 - (instancetype)initWithClientRegistrationStatus:(ZMClientRegistrationStatus *)clientStatus
                             managedObjectContext:(NSManagedObjectContext *)moc

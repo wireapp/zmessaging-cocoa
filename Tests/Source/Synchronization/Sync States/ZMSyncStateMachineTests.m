@@ -21,16 +21,11 @@
 
 #import "ZMEventProcessingState.h"
 #import "ZMUnauthenticatedState.h"
-#import "ZMSlowSyncPhaseOneState.h"
-#import "ZMSlowSyncPhaseTwoState.h"
-#import "ZMUpdateEventsCatchUpPhaseOneState.h"
-#import "ZMUpdateEventsCatchUpPhaseTwoState.h"
-#import "ZMDownloadLastUpdateEventIDState.h"
 #import "ZMBackgroundState.h"
 
 #import "ZMUserTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMConnectionTranscoder.h"
 
 #import "ZMObjectStrategyDirectory.h"
@@ -48,16 +43,12 @@
 @property (nonatomic, readonly) id objectDirectory;
 @property (nonatomic, readonly) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
+@property (nonatomic, readonly) SyncStatus *syncStatus;
 @property (nonatomic, readonly) id backgroundableSession;
 @property (nonatomic, readonly) ZMSyncStateMachine *sut;
 
 @property (nonatomic,readonly) id eventProcessingState;
 @property (nonatomic,readonly) id unauthenticatedState;
-@property (nonatomic,readonly) id slowSyncPhaseOneState;
-@property (nonatomic,readonly) id slowSyncPhaseTwoState;
-@property (nonatomic,readonly) id updateEventsCatchUpPhaseOneState;
-@property (nonatomic,readonly) id updateEventsCatchUpPhaseTwoState;
-@property (nonatomic,readonly) id downloadLastUpdateEventIDState;
 @property (nonatomic,readonly) id backgroundState;
 @property (nonatomic,readonly) id backgroundFetchState;
 @property (nonatomic,readonly) id backgroundTaskState;
@@ -85,7 +76,7 @@
     
     _eventProcessingState = [OCMockObject mockForClass:ZMEventProcessingState.class];
     [[[[self.eventProcessingState expect] andReturn:self.eventProcessingState] classMethod] alloc];
-    (void) [[[self.eventProcessingState expect] andReturn:self.eventProcessingState] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:OCMOCK_ANY];
+    (void) [[[self.eventProcessingState expect] andReturn:self.eventProcessingState] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:OCMOCK_ANY slowSynStatus:OCMOCK_ANY];
     [[self.eventProcessingState stub] tearDown];
     [self verifyMockLater:self.eventProcessingState];
     
@@ -94,36 +85,6 @@
     (void) [[[self.unauthenticatedState expect] andReturn:self.unauthenticatedState] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:OCMOCK_ANY application:self.application];
     [[self.unauthenticatedState stub] tearDown];
     [self verifyMockLater:self.unauthenticatedState];
-    
-    _slowSyncPhaseOneState = [OCMockObject mockForClass:ZMSlowSyncPhaseOneState.class];
-    [[[[self.slowSyncPhaseOneState expect] andReturn:self.slowSyncPhaseOneState] classMethod] alloc];
-    (void) [[[self.slowSyncPhaseOneState expect] andReturn:self.slowSyncPhaseOneState] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:OCMOCK_ANY];
-    [[self.slowSyncPhaseOneState stub] tearDown];
-    [self verifyMockLater:self.slowSyncPhaseOneState];
-    
-    _slowSyncPhaseTwoState = [OCMockObject mockForClass:ZMSlowSyncPhaseTwoState.class];
-    [[[[self.slowSyncPhaseTwoState expect] andReturn:self.slowSyncPhaseTwoState] classMethod] alloc];
-    (void) [[[self.slowSyncPhaseTwoState expect] andReturn:self.slowSyncPhaseTwoState] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:OCMOCK_ANY];
-    [[self.slowSyncPhaseTwoState stub] tearDown];
-    [self verifyMockLater:self.slowSyncPhaseTwoState];
-    
-    _updateEventsCatchUpPhaseOneState = [OCMockObject mockForClass:ZMUpdateEventsCatchUpPhaseOneState.class];
-    [[[[self.updateEventsCatchUpPhaseOneState expect] andReturn:self.updateEventsCatchUpPhaseOneState] classMethod] alloc];
-    (void) [[[self.updateEventsCatchUpPhaseOneState expect] andReturn:self.updateEventsCatchUpPhaseOneState] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:OCMOCK_ANY];
-    [[self.updateEventsCatchUpPhaseOneState stub] tearDown];
-    [self verifyMockLater:self.updateEventsCatchUpPhaseOneState];
-    
-    _updateEventsCatchUpPhaseTwoState = [OCMockObject mockForClass:ZMUpdateEventsCatchUpPhaseTwoState.class];
-    [[[[self.updateEventsCatchUpPhaseTwoState expect] andReturn:self.updateEventsCatchUpPhaseTwoState] classMethod] alloc];
-    (void) [[[self.updateEventsCatchUpPhaseTwoState expect] andReturn:self.updateEventsCatchUpPhaseTwoState] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:OCMOCK_ANY];
-    [[self.updateEventsCatchUpPhaseTwoState stub] tearDown];
-    [self verifyMockLater:self.updateEventsCatchUpPhaseTwoState];
-    
-    _downloadLastUpdateEventIDState = [OCMockObject mockForClass:ZMDownloadLastUpdateEventIDState.class];
-    [[[[self.downloadLastUpdateEventIDState expect] andReturn:self.downloadLastUpdateEventIDState] classMethod] alloc];
-    (void) [[[self.downloadLastUpdateEventIDState expect] andReturn:self.downloadLastUpdateEventIDState] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:self.objectDirectory stateMachineDelegate:OCMOCK_ANY];
-    [[self.downloadLastUpdateEventIDState stub] tearDown];
-    [self verifyMockLater:self.downloadLastUpdateEventIDState];
     
     _backgroundState = [OCMockObject mockForClass:ZMBackgroundState.class];
     [[[[self.backgroundState expect] andReturn:self.backgroundState] classMethod] alloc];
@@ -147,13 +108,15 @@
     
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     [self.syncStateDelegate verify];
+    _syncStatus = [[SyncStatus alloc] initWithManagedObjectContext:self.uiMOC syncStateDelegate:self.syncStateDelegate];
     
     _sut = [[ZMSyncStateMachine alloc] initWithAuthenticationStatus:self.authenticationStatus
                                            clientRegistrationStatus:self.clientRegistrationStatus
                                             objectStrategyDirectory:self.objectDirectory
                                                   syncStateDelegate:self.syncStateDelegate
                                               backgroundableSession:self.backgroundableSession
-                                                        application:self.application];
+                                                        application:self.application
+                                                      slowSynStatus:self.syncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
     
     self.dummyState = [OCMockObject mockForClass:ZMSyncState.class];
@@ -163,11 +126,6 @@
 {
     [self.eventProcessingState stopMocking];
     [self.unauthenticatedState stopMocking];
-    [self.slowSyncPhaseOneState stopMocking];
-    [self.slowSyncPhaseTwoState stopMocking];
-    [self.updateEventsCatchUpPhaseOneState stopMocking];
-    [self.updateEventsCatchUpPhaseTwoState stopMocking];
-    [self.downloadLastUpdateEventIDState stopMocking];
     [self.backgroundState stopMocking];
     [self.backgroundFetchState stopMocking];
     [self.backgroundTaskState stopMocking];
@@ -177,11 +135,6 @@
     _clientRegistrationStatus = nil;
     _eventProcessingState = nil;
     _unauthenticatedState = nil;
-    _slowSyncPhaseOneState = nil;
-    _slowSyncPhaseTwoState = nil;
-    _updateEventsCatchUpPhaseOneState = nil;
-    _updateEventsCatchUpPhaseTwoState = nil;
-    _downloadLastUpdateEventIDState = nil;
     _backgroundState = nil;
     
     self.dummyState = nil;
@@ -194,42 +147,10 @@
     [super tearDown];
 }
 
-- (void)testThatIsUpdateEventStreamIsNotActiveAfterInit
-{
-    XCTAssertFalse(self.sut.isUpdateEventStreamActive);
-}
-
-- (void)testThatIsUpdateEventStreamIsActiveAfterCallingDidEstablishUpdateEventsStream
-{
-    // when
-    [self.sut didEstablishUpdateEventsStream];
-    
-    // then
-    XCTAssertTrue(self.sut.isUpdateEventStreamActive);
-}
-
-- (void)testThatIsUpdateEventStreamIsNotActiveAfterCallingDidInterruptUpdateEventsStream
-{
-    // given
-    [[(id)self.sut.currentState stub] didRequestSynchronization];
-    
-    // when
-    [self.sut didEstablishUpdateEventsStream];
-    [self.sut didInterruptUpdateEventsStream];
-    
-    // then
-    XCTAssertFalse(self.sut.isUpdateEventStreamActive);
-}
-
 - (void)testThatItCreatesStates
 {
     XCTAssertEqual(self.sut.eventProcessingState, self.eventProcessingState);
     XCTAssertEqual(self.sut.unauthenticatedState, self.unauthenticatedState);
-    XCTAssertEqual(self.sut.slowSyncPhaseOneState, self.slowSyncPhaseOneState);
-    XCTAssertEqual(self.sut.slowSyncPhaseTwoState, self.slowSyncPhaseTwoState);
-    XCTAssertEqual(self.sut.updateEventsCatchUpPhaseOneState, self.updateEventsCatchUpPhaseOneState);
-    XCTAssertEqual(self.sut.updateEventsCatchUpPhaseTwoState, self.updateEventsCatchUpPhaseTwoState);
-    XCTAssertEqual(self.sut.downloadLastUpdateEventIDState, self.downloadLastUpdateEventIDState);
     XCTAssertEqual(self.sut.backgroundState, self.backgroundState);
 }
 
@@ -242,28 +163,17 @@
 {
     //given
     [[self.unauthenticatedState expect] didLeaveState];
-    [[self.updateEventsCatchUpPhaseOneState expect] didEnterState];
-    [self.sut goToState:self.updateEventsCatchUpPhaseOneState];
+    [[self.eventProcessingState expect] didEnterState];
+    [self.sut goToState:self.eventProcessingState];
     
     //expect
-    [[self.updateEventsCatchUpPhaseOneState expect] didFailAuthentication];
+    [[self.eventProcessingState expect] didFailAuthentication];
     
     //when
     [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError errorWithDomain:@"" code:0 userInfo:nil]];
     
     [self.unauthenticatedState verify];
-    [self.updateEventsCatchUpPhaseOneState verify];
-}
-
-- (void)testThatItCallsDidStartSlowSyncOnAllSyncObjects
-{
-    // expect
-    for(id object in [self.objectDirectory allTranscoders]) {
-        [[object expect] setNeedsSlowSync];
-    }
-    
-    // when
-    [self.sut didStartSlowSync];
+    [self.eventProcessingState verify];
 }
 
 - (void)testThatItStartsBackgroundFetchWhenTheCurrentStateSupportsIt;
@@ -389,16 +299,6 @@
     [self.sut didFailAuthentication];
 }
 
-
-- (void)testThatItCallsDidRequestSynchronizationOnTheCurrentStateWhenInterruptingTheEventStream
-{
-    // expect
-    [[(id)self.sut.currentState expect] didRequestSynchronization];
-    
-    // when
-    [self.sut didInterruptUpdateEventsStream];
-}
-
 - (void)testThatItCallsDidEnterStateWhenSwitchingState
 {
     // expect
@@ -477,56 +377,6 @@
     
     // when
     XCTAssertEqual(request, [self.sut nextRequest]);
-}
-
-- (void)testThatStartingSlowSyncResultsInGoingToDownloadLastUpdateEventState
-{
-    // expect
-    [[self.unauthenticatedState stub] didLeaveState];
-    [[self.downloadLastUpdateEventIDState stub] didEnterState];
-    
-    // when
-    [self.sut startSlowSync];
-    
-    // then
-    XCTAssertEqual(self.sut.currentState, self.downloadLastUpdateEventIDState);
-}
-
-- (void)testThatStartingQuickSyncResultsInGoingToNotificationPhaseOneState
-{
-    // expect
-    [[self.unauthenticatedState stub] didLeaveState];
-    [[self.downloadLastUpdateEventIDState stub] didEnterState];
-    
-    // when
-    [self.sut startSlowSync];
-    
-    // then
-    XCTAssertEqual(self.sut.currentState, self.downloadLastUpdateEventIDState);
-}
-
-- (void)testThatItForwardsDidStartSyncToSyncStateDelegate
-{
-    // expect
-    [[self.syncStateDelegate expect] didStartSync];
-    
-    // when
-    [self.sut didStartSync];
-    
-    // then
-    [self.syncStateDelegate verify];
-}
-
-- (void)testThatItForwardsDidFinishSyncToSyncStateDelegate
-{
-    // expect
-    [[self.syncStateDelegate expect] didFinishSync];
-    
-    // when
-    [self.sut didFinishSync];
-    
-    // then
-    [self.syncStateDelegate verify];
 }
 
 - (void)testThatItForwardsDidEnterBackgroundToTheCurrentState

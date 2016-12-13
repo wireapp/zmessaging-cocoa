@@ -129,7 +129,9 @@ static NSString *ZMLogTag = @"Push";
         }];
     };
     self.pushRegistrant = [[ZMPushRegistrant alloc] initWithDidUpdateCredentials:updatePushKitCredentials didReceivePayload:didReceivePayload didInvalidateToken:didInvalidateToken];
-    self.pushRegistrant.analytics = self.syncManagedObjectContext.analytics;
+    [self.managedObjectContext performGroupedBlock:^{
+        self.pushRegistrant.analytics = self.syncManagedObjectContext.analytics;
+    }];
 }
 
 @end
@@ -214,7 +216,7 @@ static NSString *ZMLogTag = @"Push";
                                                                                actionIdentifier:identifier
                                                                                       textInput:nil];
         if (self.didStartInitialSync && !self.isPerformingSync) {
-            [self didEnterEventProcessingState:nil];
+            [self processPendingNotificationActions];
         }
     }
     if (completionHandler != nil) {
@@ -286,10 +288,8 @@ static NSString *ZMLogTag = @"Push";
 
 @implementation ZMUserSession (NotificationProcessing)
 
-- (void)didEnterEventProcessingState:(NSNotification *)notification
+- (void)processPendingNotificationActions
 {
-    NOT_USED(notification);
-    
     if (self.pendingLocalNotification == nil) {
         return;
     }

@@ -21,7 +21,7 @@
 @import ZMCSystem;
 @import ZMTransport;
 
-#import "ZMSelfTranscoder+Internal.h"
+#import "ZMSelfStrategy+Internal.h"
 #import "ZMSyncStrategy.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMClientRegistrationStatus.h"
@@ -38,9 +38,9 @@ static NSString * const TrackingIdentifierKey = @"tracking_id";
 static NSString * const ImageMediumDataKey = @"imageMediumData";
 static NSString * const ImageSmallProfileDataKey = @"imageSmallProfileData";
 
-NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
+NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 
-@interface ZMSelfTranscoder ()
+@interface ZMSelfStrategy ()
 {
     dispatch_once_t didCheckNeedsToBeUdpatedFromBackend;
 }
@@ -52,15 +52,15 @@ NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
 
 @end
 
-@interface ZMSelfTranscoder (SingleRequestTranscoder) <ZMSingleRequestTranscoder>
+@interface ZMSelfStrategy (SingleRequestTranscoder) <ZMSingleRequestTranscoder>
 @end
 
-@interface ZMSelfTranscoder (UpstreamTranscoder) <ZMUpstreamTranscoder>
+@interface ZMSelfStrategy (UpstreamTranscoder) <ZMUpstreamTranscoder>
 @end
 
 
 
-@implementation ZMSelfTranscoder
+@implementation ZMSelfStrategy
 
 - (instancetype)initWithClientRegistrationStatus:(ZMClientRegistrationStatus *)clientStatus
                             managedObjectContext:(NSManagedObjectContext *)moc
@@ -88,7 +88,7 @@ NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
         self.upstreamObjectSync = upstreamObjectSync;
         self.downstreamSelfUserSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self managedObjectContext:self.managedObjectContext];
         self.needsToBeUdpatedFromBackend = [ZMUser predicateForNeedingToBeUpdatedFromBackend];
-        _timedDownstreamSync = [[ZMTimedSingleRequestSync alloc] initWithSingleRequestTranscoder:self everyTimeInterval:ZMSelfTranscoderPendingValidationRequestInterval managedObjectContext:self.managedObjectContext];
+        _timedDownstreamSync = [[ZMTimedSingleRequestSync alloc] initWithSingleRequestTranscoder:self everyTimeInterval:ZMSelfStrategyPendingValidationRequestInterval managedObjectContext:self.managedObjectContext];
     }
     return self;
 }
@@ -105,16 +105,28 @@ NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
     [super tearDown];
 }
 
-- (NSArray *)requestGenerators;
+- (ZMTransportRequest *)nextRequest;
 {
-    if (self.clientStatus.currentPhase == ZMClientRegistrationPhaseWaitingForEmailVerfication) {
+    ZMClientRegistrationStatus *clientStatus = self.clientStatus;
+    if (clientStatus.currentPhase == ZMClientRegistrationPhaseWaitingForEmailVerfication) {
         [self.timedDownstreamSync readyForNextRequestIfNotBusy];
-        return @[self.timedDownstreamSync];
+        return [self.timedDownstreamSync nextRequest];
     }
-    if (! self.isSlowSyncDone) {
-        return @[self.downstreamSelfUserSync];
+    
+    if (clientStatus.currentPhase == ZMClientRegistrationPhaseWaitingForSelfUser) {
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+        if (!self.isSelfUserComplete && !selfUser.needsToBeUpdatedFromBackend) {
+            selfUser.needsToBeUpdatedFromBackend = YES;
+            [self.downstreamSelfUserSync readyForNextRequestIfNotBusy];
+        }
+        if (! self.isSlowSyncDone) {
+            return [self.downstreamSelfUserSync nextRequest];
+        }
     }
-    return @[self.downstreamSelfUserSync, self.upstreamObjectSync];
+    else if (clientStatus.currentPhase == ZMClientRegistrationPhaseRegistered) {
+        return [@[self.downstreamSelfUserSync, self.upstreamObjectSync] nextRequest];
+    }
+    return nil;
 }
 
 
@@ -133,19 +145,6 @@ NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
     return ![ZMUser selfUserInContext:self.managedObjectContext].needsToBeUpdatedFromBackend;
 }
 
-- (void)setNeedsSlowSync
-{
-    [self.downstreamSelfUserSync readyForNextRequest];
-    [ZMUser selfUserInContext:self.managedObjectContext].needsToBeUpdatedFromBackend = YES;
-}
-
-- (void)processEvents:(NSArray<ZMUpdateEvent *> __unused *)events
-           liveEvents:(BOOL __unused)liveEvents
-       prefetchResult:(__unused ZMFetchRequestBatchResult *)prefetchResult;
-{
-    // no-op
-}
-
 - (BOOL)isSelfUserComplete
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
@@ -156,7 +155,7 @@ NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
 
 
 
-@implementation ZMSelfTranscoder (UpstreamTranscoder)
+@implementation ZMSelfStrategy (UpstreamTranscoder)
 
 - (BOOL)shouldProcessUpdatesBeforeInserts;
 {
@@ -267,7 +266,7 @@ static NSString * const DeletionRequestKey = @"";
 
 
 
-@implementation ZMSelfTranscoder (SingleRequestTranscoder)
+@implementation ZMSelfStrategy (SingleRequestTranscoder)
 
 
 - (ZMTransportRequest *)requestForSingleRequestSync:(ZMSingleRequestSync *)sync;
@@ -301,8 +300,8 @@ static NSString * const DeletionRequestKey = @"";
         
         if (sync == self.timedDownstreamSync) {
             if(!selfUserHasEmail) {
-                if(self.timedDownstreamSync.timeInterval != ZMSelfTranscoderPendingValidationRequestInterval) {
-                    self.timedDownstreamSync.timeInterval = ZMSelfTranscoderPendingValidationRequestInterval;
+                if(self.timedDownstreamSync.timeInterval != ZMSelfStrategyPendingValidationRequestInterval) {
+                    self.timedDownstreamSync.timeInterval = ZMSelfStrategyPendingValidationRequestInterval;
                 }
             }
             else {
@@ -317,7 +316,7 @@ static NSString * const DeletionRequestKey = @"";
     NSString *identifier = [payload optionalStringForKey:TrackingIdentifierKey];
     if (identifier != nil) {
         self.managedObjectContext.userSessionTrackingIdentifier = identifier;
-        ZMSDispatchGroup *group = [ZMSDispatchGroup groupWithLabel:@"ZMSelfTranscoder"];
+        ZMSDispatchGroup *group = [ZMSDispatchGroup groupWithLabel:@"ZMSelfStrategy"];
         [self.managedObjectContext enqueueDelayedSaveWithGroup:group];
         [group notifyOnQueue:dispatch_get_main_queue() block:^{
             [[NSNotificationCenter defaultCenter] postNotificationName:ZMUserSessionTrackingIdentifierDidChangeNotification object:@1];
@@ -329,7 +328,7 @@ static NSString * const DeletionRequestKey = @"";
 
 
 
-@implementation ZMSelfTranscoder (ContextChangeTracker)
+@implementation ZMSelfStrategy (ContextChangeTracker)
 
 - (NSFetchRequest *)fetchRequestForTrackedObjects
 {

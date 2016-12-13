@@ -67,15 +67,6 @@
     XCTAssertEqual(self.sut.updateEventsPolicy, ZMUpdateEventPolicyIgnore);
 }
 
-- (void)testThatItDoesNotSwitchToSlowSyncState
-{
-    // expectation
-    [[(id)self.stateMachine reject] startQuickSync];
-    
-    // when
-    [self.sut didRequestSynchronization];
-}
-
 - (void)testThatItDoesNotSwitchToBackgroundState
 {
     // expectation
@@ -88,7 +79,7 @@
 - (void)testThatItDoesSwitchToQuickSyncOnEnteringForeground
 {
     // expectation
-    [[(id)self.stateMachine expect] startQuickSync];
+    [[(id)self.stateMachine expect] goToState:self.stateMachine.eventProcessingState];
     
     // when
     [self.sut didEnterForeground];

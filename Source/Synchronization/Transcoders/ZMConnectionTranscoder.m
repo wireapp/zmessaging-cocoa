@@ -26,6 +26,7 @@
 #import "ZMOperationLoop.h"
 #import "ZMSimpleListRequestPaginator.h"
 #import "ZMNotifications+UserSessionInternal.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 static NSString *const PathConnections = @"/connections";
 
@@ -36,8 +37,12 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 @property (nonatomic) ZMUpstreamModifiedObjectSync *modifiedObjectSync;
 @property (nonatomic) ZMUpstreamInsertedObjectSync *insertedObjectSync;
 @property (nonatomic) ZMDownstreamObjectSync *downstreamSync;
-
 @property (nonatomic) ZMSimpleListRequestPaginator *conversationsListSync;
+@property (nonatomic) BOOL didStartSlowSync;
+
+@property (nonatomic, weak) SyncStatus *syncStatus;
+@property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
+
 @end
 
 
@@ -49,10 +54,12 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 
 @implementation ZMConnectionTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc syncStatus:(SyncStatus *)syncStatus clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
 {
     self = [super initWithManagedObjectContext:moc];
     if(self) {
+        self.syncStatus = syncStatus;
+        self.clientRegistrationDelegate = clientRegistrationDelegate;
         self.modifiedObjectSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self entityName:ZMConnection.entityName managedObjectContext:self.managedObjectContext];
         self.insertedObjectSync = [[ZMUpstreamInsertedObjectSync alloc] initWithTranscoder:self entityName:ZMConnection.entityName managedObjectContext:self.managedObjectContext];
         self.conversationsListSync = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:PathConnections startKey:@"start" pageSize:ZMConnectionTranscoderPageSize  managedObjectContext:moc includeClientID:NO transcoder:self];
@@ -69,6 +76,35 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 - (BOOL)isSlowSyncDone {
     return ! self.conversationsListSync.hasMoreToFetch;
 }
+
+- (SyncPhase)expectedSyncPhase
+{
+    return SyncPhaseFetchingConnections;
+}
+
+- (ZMTransportRequest *)nextRequest
+{
+    if (!self.clientRegistrationDelegate.clientIsReadyForRequests) {
+        return nil;
+    }
+    
+    SyncStatus *status = self.syncStatus;
+    if (status.currentSyncPhase == self.expectedSyncPhase) {
+        if (!self.didStartSlowSync) {
+            [self setNeedsSlowSync];
+            self.didStartSlowSync = YES;
+            [status didStart:self.expectedSyncPhase];
+        }
+        else if ([self isSlowSyncDone]) {
+            self.didStartSlowSync = NO;
+            [status didFinish:self.expectedSyncPhase];
+            return nil;
+        }
+        return [self.requestGenerators nextRequest];
+    }
+    return [self.requestGenerators nextRequest];
+}
+
 
 - (NSArray *)contextChangeTrackers
 {
@@ -296,6 +332,15 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
         }
     }
     return allUIDs.lastObject;
+}
+
+- (BOOL)shouldParseErrorForResponse:(ZMTransportResponse*)response
+{
+    if (response.result == ZMTransportResponseStatusPermanentError && self.didStartSlowSync) {
+        self.didStartSlowSync = NO;
+        [self.syncStatus didFail:self.expectedSyncPhase];
+    }
+    return NO;
 }
 
 @end

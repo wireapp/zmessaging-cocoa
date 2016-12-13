@@ -20,12 +20,11 @@
 @import ZMTransport;
 @import zmessaging;
 
-#import "MessagingTest.h"
+#import "ObjectTranscoderTests.h"
 #import "ZMLastUpdateEventIDTranscoder+Internal.h"
-#import "ZMSyncStrategy.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @interface ZMLastUpdateEventIDTranscoderTests : MessagingTest
 
@@ -33,6 +32,10 @@
 @property (nonatomic) id<ZMObjectStrategyDirectory> directory;
 @property (nonatomic) ZMSingleRequestSync *downstreamSync;
 @property (nonatomic) ZMSyncStrategy *syncStrategy;
+@property (nonatomic) MockSyncStatus *mockSyncStatus;
+@property (nonatomic) ZMMockClientRegistrationStatus *mockClientRegistrationDelegate;
+@property (nonatomic) id syncStateDelegate;
+
 @end
 
 @implementation ZMLastUpdateEventIDTranscoderTests
@@ -45,14 +48,18 @@
     
     self.directory = [self createMockObjectStrategyDirectoryInMoc:self.uiMOC];
     self.syncStrategy = [OCMockObject mockForClass:ZMSyncStrategy.class];
-    self.sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC objectDirectory:self.directory];
+    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
+    self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
+    self.mockSyncStatus.mockPhase = SyncPhaseDone;
+    self.mockClientRegistrationDelegate = [[ZMMockClientRegistrationStatus alloc] init];
+    self.sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC objectDirectory:self.directory syncStatus:self.mockSyncStatus clientRegistrationDelegate:self.mockClientRegistrationDelegate];
     self.sut.lastUpdateEventIDSync = self.downstreamSync;
     
     [self verifyMockLater:self.syncStrategy];
 }
 
 - (void)tearDown {
-
+    [self.mockClientRegistrationDelegate tearDown];
     self.directory = nil;
     self.syncStrategy = nil;
     [self.sut tearDown];
@@ -116,7 +123,7 @@
 - (void)testThatItCreatesTheRightDownstreamSync
 {
     // when
-    ZMLastUpdateEventIDTranscoder *sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC objectDirectory:self.directory];
+    ZMLastUpdateEventIDTranscoder *sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC objectDirectory:self.directory syncStatus:self.mockSyncStatus clientRegistrationDelegate:self.mockClientRegistrationDelegate];
     id transcoder = sut.lastUpdateEventIDSync.transcoder;
     
     // then
@@ -157,24 +164,33 @@
 
 - (void)testThatItStartsTheSingleRequestWhenAskedToRequestLastUpdateEventID
 {
+    // given
+    [(ZMSingleRequestSync *)[[(id)self.downstreamSync stub] andReturnValue:OCMOCK_VALUE(ZMSingleRequestCompleted)] status];
+
     // expect
     [[(id)self.downstreamSync expect] readyForNextRequest];
     [[(id)self.downstreamSync expect] resetCompletionState];
-    
+    [[(id)self.downstreamSync expect] nextRequest];
+
     // when
-    [self.sut startRequestingLastUpdateEventIDWithoutPersistingIt];
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingLastUpdateEventID;
+    [self.sut nextRequest];
 }
 
 - (void)testThatItForwardsNextRequestToTheSingleRequestSync
 {
     // given
     ZMTransportRequest *dummyRequest = [ZMTransportRequest requestGetFromPath:@"abc"];
-    
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingLastUpdateEventID;
+    [(ZMSingleRequestSync *)[[(id)self.downstreamSync stub] andReturnValue:OCMOCK_VALUE(ZMSingleRequestCompleted)] status];
+
     // expect
+    [[(id)self.downstreamSync expect] readyForNextRequest];
+    [[(id)self.downstreamSync expect] resetCompletionState];
     [[[(id)self.downstreamSync expect] andReturn:dummyRequest] nextRequest];
     
     // when
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertEqual(request, dummyRequest);

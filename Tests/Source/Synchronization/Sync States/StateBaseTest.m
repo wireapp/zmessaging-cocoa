@@ -24,7 +24,7 @@
 
 #import "ZMUserTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
@@ -34,10 +34,6 @@
 #import "ZMEventProcessingState.h"
 #import "ZMUnauthenticatedState.h"
 #import "ZMUnauthenticatedBackgroundState.h"
-#import "ZMSlowSyncPhaseOneState.h"
-#import "ZMSlowSyncPhaseTwoState.h"
-#import "ZMUpdateEventsCatchUpPhaseOneState.h"
-#import "ZMUpdateEventsCatchUpPhaseTwoState.h"
 #import "ZMBackgroundState.h"
 #import "ZMPreBackgroundState.h"
 #import "ZMCookie.h"
@@ -63,14 +59,6 @@
     [self verifyMockLater:unauthenticatedState];
     id unauthenticatedBackgroundState = [OCMockObject mockForClass:ZMUnauthenticatedBackgroundState.class];
     [self verifyMockLater:unauthenticatedBackgroundState];
-    id slowSyncPhaseOneState = [OCMockObject mockForClass:ZMSlowSyncPhaseOneState.class];
-    [self verifyMockLater:slowSyncPhaseOneState];
-    id slowSyncPhaseTwoState = [OCMockObject mockForClass:ZMSlowSyncPhaseTwoState.class];
-    [self verifyMockLater:slowSyncPhaseTwoState];
-    id updateEventsCatchUpPhaseOneState = [OCMockObject mockForClass:ZMUpdateEventsCatchUpPhaseOneState.class];
-    [self verifyMockLater:updateEventsCatchUpPhaseOneState];
-    id updateEventsCatchUpPhaseTwoState = [OCMockObject mockForClass:ZMUpdateEventsCatchUpPhaseTwoState.class];
-    [self verifyMockLater:updateEventsCatchUpPhaseTwoState];
     id backgroundState = [OCMockObject mockForClass:ZMBackgroundState.class];
     [self verifyMockLater:backgroundState];
     id preBackgroundState = [OCMockObject mockForClass:ZMPreBackgroundState.class];
@@ -80,10 +68,6 @@
     [[[(id) self.stateMachine stub] andReturn:eventProcessingState] eventProcessingState];
     [[[(id) self.stateMachine stub] andReturn:unauthenticatedState] unauthenticatedState];
     [[[(id) self.stateMachine stub] andReturn:unauthenticatedBackgroundState] unauthenticatedBackgroundState];
-    [[[(id) self.stateMachine stub] andReturn:slowSyncPhaseOneState] slowSyncPhaseOneState];
-    [[[(id) self.stateMachine stub] andReturn:slowSyncPhaseTwoState] slowSyncPhaseTwoState];
-    [[[(id) self.stateMachine stub] andReturn:updateEventsCatchUpPhaseOneState] updateEventsCatchUpPhaseOneState];
-    [[[(id) self.stateMachine stub] andReturn:updateEventsCatchUpPhaseTwoState] updateEventsCatchUpPhaseTwoState];
     [[[(id) self.stateMachine stub] andReturn:backgroundState] backgroundState];
     [[[(id) self.stateMachine stub] andReturn:preBackgroundState] preBackgroundState];
     

@@ -26,7 +26,7 @@
 #import "ZMStateMachineDelegate.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMSyncStrategy.h"
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMLoginTranscoder+Internal.h"
 #import "ZMLoginCodeRequestTranscoder.h"
@@ -106,17 +106,18 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 - (BOOL)isDoneWithLogin
 {
     return self.isLoggedIn
-        && [self.objectStrategyDirectory.selfTranscoder isSelfUserComplete];
+        && [self.objectStrategyDirectory.selfStrategy isSelfUserComplete];
 }
 
 - (void)dataDidChange
 {
-    if(self.shouldStartQuickSync) {
-        [self.stateMachineDelegate startQuickSync];
+    if(self.shouldEnterEventProcessingState) {
+        id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+        [stateMachine goToState:stateMachine.eventProcessingState];
     }
 }
 
-- (BOOL)shouldStartQuickSync;
+- (BOOL)shouldEnterEventProcessingState
 {
     if (!self.didLaunchInForeground && self.application.applicationState != UIApplicationStateBackground) {
         self.didLaunchInForeground = YES;
@@ -127,8 +128,9 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 - (ZMTransportRequest *)nextRequest
 {
     if([self isDoneWithLogin]) {
-        if (self.shouldStartQuickSync) {
-            [self.stateMachineDelegate startQuickSync];
+        if (self.shouldEnterEventProcessingState) {
+            id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+            [stateMachine goToState:stateMachine.eventProcessingState];
         }
         return nil;
     }
@@ -153,17 +155,8 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
         case ZMAuthenticationPhaseUnauthenticated:
             return [self loginRequest]; // this will, confusingly, also resend verification emails
         case ZMAuthenticationPhaseAuthenticated:
-            if (clientRegPhase == ZMClientRegistrationPhaseWaitingForSelfUser) {
-                return [[directory.selfTranscoder requestGenerators] nextRequest];
-            }
             if (clientRegPhase == ZMClientRegistrationPhaseWaitingForEmailVerfication) {
-                ZMTransportRequest *request =  [self loginRequest];
-                
-                // fetch selfUser with timed downstream sync until user has clicked on link in verification email
-                if (request == nil) {
-                    request = [[directory.selfTranscoder requestGenerators] nextRequest];
-                }
-                return request;
+                return [self loginRequest];
             }
             return nil;
     }
@@ -196,9 +189,6 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     // nop
 }
 
-- (void)didRequestSynchronization {
-    // nop
-}
 
 - (void)didEnterBackground
 {
@@ -211,7 +201,8 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     self.didLaunchInForeground = YES;
 
     if ([self isDoneWithLogin]) {
-        [self.stateMachineDelegate startQuickSync];
+        id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+        [stateMachine goToState:stateMachine.eventProcessingState];
     }
 }
 
@@ -279,7 +270,7 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
             [stateMachine goToState:stateMachine.backgroundState];
         } else {
             ZMLogDebug(@"%@ is already logged in on enter, starting quick sync", self.class);
-            [stateMachine startQuickSync];
+            [stateMachine goToState:stateMachine.eventProcessingState];
         }
         return;
     }
@@ -293,10 +284,6 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     }
     
     [authenticationStatus addAuthenticationCenterObserver:self];
-    
-    if (! directory.selfTranscoder.isSelfUserComplete) {
-        [directory.selfTranscoder setNeedsSlowSync]; // TODO replace this with setting the "need to get from backend" flag on the self user
-    }
 }
 
 - (void)didLeaveState

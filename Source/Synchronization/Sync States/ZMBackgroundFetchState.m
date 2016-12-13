@@ -78,6 +78,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
         [stateMachine goToState:stateMachine.preBackgroundState];
     } else {
         [strongTranscoder startDownloadingMissingNotifications];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
 }
 
@@ -116,12 +117,8 @@ static NSTimeInterval const MaximumTimeInState = 25;
 
 - (void)didEnterForeground
 {
-    [self.stateMachineDelegate startQuickSync];
-}
-
-- (void)didRequestSynchronization
-{
-    // no-op
+    id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+    [stateMachine goToState:stateMachine.eventProcessingState];
 }
 
 - (void)dataDidChange;

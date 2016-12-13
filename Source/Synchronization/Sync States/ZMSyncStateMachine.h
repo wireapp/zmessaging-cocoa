@@ -27,6 +27,7 @@
 @class ZMTransportRequest;
 @class ZMSyncState;
 @class ZMClientRegistrationStatus;
+@class SyncStatus;
 @protocol ZMObjectStrategyDirectory;
 @protocol ZMSyncStateDelegate;
 @class ZMTransportSession;
@@ -43,13 +44,12 @@
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
                            syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                        backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
-                                 application:(id<ZMApplication>)application;
+                                 application:(id<ZMApplication>)application
+                               slowSynStatus:(SyncStatus *)slowSynStatus;
+
 
 - (ZMTransportRequest *)nextRequest;
 
-- (void)didEstablishUpdateEventsStream;
-- (void)didInterruptUpdateEventsStream;
-- (void)didStartSlowSync;
 - (void)didFailAuthentication;
 
 ///called at the beginning of event processing loop if something in data model could change and context was saved

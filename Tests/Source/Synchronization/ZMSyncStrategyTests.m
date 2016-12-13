@@ -26,40 +26,49 @@
 
 #import "MessagingTest.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMConnectionTranscoder.h"
 #import "ZMSyncStrategy+Internal.h"
-#import "ZMUserTranscoder.h"
+#import "ZMSyncStrategy+EventProcessing.h"
+#import "ZMSyncStrategy+ManagedObjectChanges.h"
+#import "ZMUpdateEventsBuffer.h"
+#import "ZMOperationLoop.h"
+#import "AVSMediaManager.h"
+#import "AVSFlowManager.h"
+#import "MessagingTest+EventFactory.h"
+#import "zmessaging_iOS_Tests-Swift.h"
+#import "ZMNotifications+UserSession.h"
+
+// States
+#import "ZMSyncStateMachine.h"
 #import "ZMSyncState.h"
 #import "ZMUnauthenticatedState.h"
 #import "ZMEventProcessingState.h"
-#import "ZMSlowSyncPhaseOneState.h"
-#import "ZMSlowSyncPhaseTwoState.h"
-#import "ZMConversationTranscoder.h"
-#import "ZMSelfTranscoder.h"
-#import "ZMSyncStateMachine.h"
+
+// Statuus
 #import "ZMAuthenticationStatus.h"
 #import "ZMClientRegistrationStatus.h"
-#import "ZMUpdateEventsBuffer.h"
+
+
+// Transcoders & strategies
+#import "ZMUserTranscoder.h"
+#import "ZMConversationTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
 #import "ZMFlowSync.h"
 #import "ZMCallStateTranscoder.h"
-#import "ZMOperationLoop.h"
-#import "AVSMediaManager.h"
-#import "AVSFlowManager.h"
+#import "ZMConnectionTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
-#import "MessagingTest+EventFactory.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+
 
 
 @interface ZMSyncStrategyTests : MessagingTest
 
 @property (nonatomic) ZMSyncStrategy *sut;
-@property (nonatomic) ZMAuthenticationStatus *authenticationStatus;
-@property (nonatomic) UserProfileUpdateStatus *userProfileUpdateStatus;
-@property (nonatomic) ZMClientRegistrationStatus *clientRegistrationStatus;
-@property (nonatomic) ClientUpdateStatus *clientUpdateStatus;
+@property (nonatomic) id authenticationStatus;
+@property (nonatomic) id userProfileUpdateStatus;
+@property (nonatomic) id clientRegistrationStatus;
+@property (nonatomic) id clientUpdateStatus;
 
 @property (nonatomic) id stateMachine;
 @property (nonatomic) NSArray *syncObjects;
@@ -73,7 +82,7 @@
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects1;
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects2;
 @property (nonatomic) id mockDispatcher;
-
+@property (nonatomic) id slowSynStatus;
 @end
 
 
@@ -90,21 +99,41 @@
     [self verifyMockLater:self.mockUpstreamSync1];
     [self verifyMockLater:self.mockUpstreamSync2];
     
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.syncMOC cookie:nil];
-    self.userProfileUpdateStatus = [[UserProfileUpdateStatus alloc] initWithManagedObjectContext:self.syncMOC];
-    self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC loginCredentialProvider:self.authenticationStatus updateCredentialProvider:self.userProfileUpdateStatus cookie:nil registrationStatusDelegate:nil];
-    self.clientUpdateStatus = [[ClientUpdateStatus alloc] initWithSyncManagedObjectContext:self.syncMOC];
+    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
+    
+    self.slowSynStatus = [OCMockObject mockForClass:SyncStatus.class];
+    [[[[self.slowSynStatus expect] andReturn: self.slowSynStatus] classMethod] alloc];
+    (void)[[[self.slowSynStatus expect] andReturn: self.slowSynStatus] initWithManagedObjectContext:self.syncMOC
+                                                                                  syncStateDelegate:OCMOCK_ANY];
+    
+    self.authenticationStatus = [OCMockObject mockForClass:ZMAuthenticationStatus.class];
+    [[[[self.authenticationStatus expect] andReturn:self.authenticationStatus] classMethod] alloc];
+    (void) [[[self.authenticationStatus expect] andReturn:self.authenticationStatus] initWithManagedObjectContext:self.syncMOC cookie:nil];
+    
+    self.userProfileUpdateStatus = [OCMockObject mockForClass:UserProfileUpdateStatus.class];
+    [[[[self.userProfileUpdateStatus expect] andReturn:self.userProfileUpdateStatus] classMethod] alloc];
+    (void) [[[self.userProfileUpdateStatus expect] andReturn:self.userProfileUpdateStatus] initWithManagedObjectContext:self.syncMOC];
+
+    self.clientRegistrationStatus = [OCMockObject mockForClass:ZMClientRegistrationStatus.class];
+    [[[[self.clientRegistrationStatus expect] andReturn:self.clientRegistrationStatus] classMethod] alloc];
+    (void) [[[self.clientRegistrationStatus expect] andReturn:self.clientRegistrationStatus] initWithManagedObjectContext:self.syncMOC loginCredentialProvider:self.authenticationStatus updateCredentialProvider:self.userProfileUpdateStatus cookie:nil registrationStatusDelegate:OCMOCK_ANY];
+    [[self.clientRegistrationStatus expect] tearDown];
+    
+    self.clientUpdateStatus = [OCMockObject mockForClass:ClientUpdateStatus.class];
+    [[[[self.clientUpdateStatus expect] andReturn:self.clientUpdateStatus] classMethod] alloc];
+    (void) [[[self.clientUpdateStatus expect] andReturn:self.clientUpdateStatus] initWithSyncManagedObjectContext:self.syncMOC];
+    [[self.clientUpdateStatus expect] tearDown];
     
     self.backgroundableSession = [OCMockObject mockForProtocol:@protocol(ZMBackgroundable)];
     [self verifyMockLater:self.backgroundableSession];
     
     id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
     [[[[userTranscoder expect] andReturn:userTranscoder] classMethod] alloc];
-    (void) [[[userTranscoder expect] andReturn:userTranscoder] initWithManagedObjectContext:self.syncMOC];
+    (void) [[[userTranscoder expect] andReturn:userTranscoder] initWithManagedObjectContext:self.syncMOC syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
 
     self.conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [[[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] classMethod] alloc];
-    (void) [[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:OCMOCK_ANY accountStatus:OCMOCK_ANY syncStrategy:OCMOCK_ANY];
+    (void) [[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:OCMOCK_ANY accountStatus:OCMOCK_ANY syncStrategy:OCMOCK_ANY syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
 
     id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
     [[[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] classMethod] alloc];
@@ -114,13 +143,15 @@
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
     (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:self.mockDispatcher clientRegistrationStatus:OCMOCK_ANY apnsConfirmationStatus:OCMOCK_ANY];
 
-    id selfTranscoder = [OCMockObject mockForClass:ZMSelfTranscoder.class];
-    [[[[selfTranscoder expect] andReturn:selfTranscoder] classMethod] alloc];
-    (void) [(ZMSelfTranscoder *)[[selfTranscoder expect] andReturn:selfTranscoder] initWithClientRegistrationStatus:OCMOCK_ANY managedObjectContext:self.syncMOC];
+    id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
+    [[[[selfStrategy expect] andReturn:selfStrategy] classMethod] alloc];
+    (void) [(ZMSelfStrategy *)[[selfStrategy expect] andReturn:selfStrategy] initWithClientRegistrationStatus:OCMOCK_ANY managedObjectContext:self.syncMOC];
+    [[selfStrategy stub] contextChangeTrackers];
+    [[selfStrategy expect] tearDown];
 
     id connectionTranscoder = [OCMockObject mockForClass:ZMConnectionTranscoder.class];
     [[[[connectionTranscoder expect] andReturn:connectionTranscoder] classMethod] alloc];
-    (void) [[[connectionTranscoder expect] andReturn:connectionTranscoder] initWithManagedObjectContext:self.syncMOC];
+    (void) [[[connectionTranscoder expect] andReturn:connectionTranscoder] initWithManagedObjectContext:self.syncMOC syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
 
     id registrationTranscoder = [OCMockObject mockForClass:ZMRegistrationTranscoder.class];
     [[[[registrationTranscoder expect] andReturn:registrationTranscoder] classMethod] alloc];
@@ -128,7 +159,7 @@
 
     id missingUpdateEventsTranscoder = [OCMockObject niceMockForClass:ZMMissingUpdateEventsTranscoder.class];
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
-    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY application:OCMOCK_ANY backgroundAPNSPingbackStatus:OCMOCK_ANY];
+    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY application:OCMOCK_ANY backgroundAPNSPingbackStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
     
     id flowTranscoder = [OCMockObject mockForClass:ZMFlowSync.class];
     [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];
@@ -146,16 +177,18 @@
     [[[[phoneNumberVerificationTranscoder expect] andReturn:phoneNumberVerificationTranscoder] classMethod] alloc];
     (void) [[[phoneNumberVerificationTranscoder expect] andReturn:phoneNumberVerificationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.authenticationStatus];
     
+    
     self.stateMachine = [OCMockObject mockForClass:ZMSyncStateMachine.class];
     [[[[self.stateMachine expect] andReturn:self.stateMachine] classMethod] alloc];
     [[self.stateMachine stub] tearDown];
+    
     (void) [[[self.stateMachine expect] andReturn:self.stateMachine] initWithAuthenticationStatus:self.authenticationStatus
                                                                          clientRegistrationStatus:self.clientRegistrationStatus
                                                                           objectStrategyDirectory:OCMOCK_ANY
                                                                                 syncStateDelegate:OCMOCK_ANY
                                                                             backgroundableSession:self.backgroundableSession
                                                                                       application:self.application
-            ];
+                                                                                    slowSynStatus:self.slowSynStatus];
     [self verifyMockLater:self.stateMachine];
     
     self.updateEventsBuffer = [OCMockObject mockForClass:ZMUpdateEventsBuffer.class];
@@ -163,13 +196,11 @@
     (void) [[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] initWithUpdateEventConsumer:OCMOCK_ANY];
     [self verifyMockLater:self.updateEventsBuffer];
     
-    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
 
     self.syncObjects = @[
                          connectionTranscoder,
                          userTranscoder,
                          self.conversationTranscoder,
-                         selfTranscoder,
                          systemMessageTranscoder,
                          clientMessageTranscoder,
                          missingUpdateEventsTranscoder,
@@ -191,30 +222,24 @@
     
     [self stubChangeTrackerBootstrapInitialization];
     
-    self.sut = [[ZMSyncStrategy alloc] initWithAuthenticationCenter:self.authenticationStatus
-                                            userProfileUpdateStatus:self.userProfileUpdateStatus
-                                           clientRegistrationStatus:self.clientRegistrationStatus
-                                                 clientUpdateStatus:self.clientUpdateStatus
-                                               proxiedRequestStatus:nil
-                                                      accountStatus:nil
-                                       backgroundAPNSPingBackStatus:nil
-                                          topConversationsDirectory:nil
-                                                       mediaManager:nil
-                                                onDemandFlowManager:nil
-                                                            syncMOC:self.syncMOC
-                                                              uiMOC:self.uiMOC
-                                                  syncStateDelegate:self.syncStateDelegate
-                                              backgroundableSession:self.backgroundableSession
-                                       localNotificationsDispatcher:self.mockDispatcher
-                                           taskCancellationProvider:OCMOCK_ANY
-                                                 appGroupIdentifier:nil
-                                                        application:self.application];
+    self.sut = [[ZMSyncStrategy alloc] initWithSyncManagedObjectContextMOC:self.syncMOC
+                                                    uiManagedObjectContext:self.uiMOC
+                                                                    cookie:nil
+                                                 topConversationsDirectory:nil
+                                                              mediaManager:nil
+                                                       onDemandFlowManager:nil
+                                                         syncStateDelegate:self.syncStateDelegate
+                                                     backgroundableSession:self.backgroundableSession
+                                              localNotificationsDispatcher:self.mockDispatcher
+                                                  taskCancellationProvider:nil
+                                                        appGroupIdentifier:nil
+                                                               application:self.application];
     
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
     XCTAssertEqual(self.sut.systemMessageTranscoder, systemMessageTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
-    XCTAssertEqual(self.sut.selfTranscoder, selfTranscoder);
+    XCTAssertEqual(self.sut.selfStrategy, selfStrategy);
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
     XCTAssertEqual(self.sut.registrationTranscoder, registrationTranscoder);
     XCTAssertEqual(self.sut.flowTranscoder, flowTranscoder);
@@ -236,8 +261,18 @@
 
 - (void)tearDown;
 {
+    [self.slowSynStatus stopMocking];
+    self.slowSynStatus = nil;
+    [(id)self.authenticationStatus stopMocking];
+    self.authenticationStatus = nil;
+    [(id)self.clientUpdateStatus stopMocking];
+    self.clientUpdateStatus = nil;
+    [(id)self.clientRegistrationStatus stopMocking];
+    self.clientRegistrationStatus = nil;
+    [(id)self.userProfileUpdateStatus stopMocking];
+    self.userProfileUpdateStatus = nil;
+    
     [self.sut tearDown];
-
     for (id syncObject in self.syncObjects) {
         [syncObject stopMocking];
     }
@@ -248,11 +283,6 @@
     self.updateEventsBuffer = nil;
 
     self.sut = nil;
-    self.authenticationStatus = nil;
-    [self.clientRegistrationStatus tearDown];
-    [self.clientUpdateStatus tearDown];
-    self.clientRegistrationStatus = nil;
-    self.clientUpdateStatus = nil;
     self.syncObjects = nil;
     [super tearDown];
 }
@@ -384,6 +414,7 @@
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyProcess)] updateEventsPolicy];
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
     
     // expect
     [self expectSyncObjectsToProcessEvents:YES
@@ -415,7 +446,7 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
     
     // expect
     [self expectSyncObjectsToProcessEvents:NO
@@ -450,7 +481,8 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
+
     // expect
     [self expectSyncObjectsToProcessEvents:YES
                                 liveEvents:YES
@@ -481,7 +513,8 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyIgnore)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
+
     
     // expect
     for(id obj in self.syncObjects) {
@@ -518,6 +551,7 @@
         }
     }
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyProcess)] updateEventsPolicy];
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     // expect
@@ -548,7 +582,8 @@
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyIgnore)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
+
     
     // expect
     [self expectSyncObjectsToProcessEvents:YES
@@ -580,7 +615,7 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
     
     // expect
     [self expectSyncObjectsToProcessEvents:NO
@@ -613,7 +648,7 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyIgnore)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
     
     // expect
     [self expectSyncObjectsToProcessEvents:YES
@@ -1010,7 +1045,8 @@
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
+
     // expect
     for(id obj in events) {
         [[self.updateEventsBuffer expect] addUpdateEvent:obj];
@@ -1056,7 +1092,8 @@
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
+
     // expect
     for(id obj in events) {
         [[self.updateEventsBuffer expect] addUpdateEvent:obj];
@@ -1163,6 +1200,7 @@
 {
     // expect
     [[self.stateMachine expect] enterBackground];
+    [[self.slowSynStatus expect] didEnterBackground];
     
     // when
     [self goToBackground];
@@ -1177,7 +1215,8 @@
 {
     // expect
     [[self.stateMachine expect] enterForeground];
-    
+    [[self.slowSynStatus expect] didEnterForeground];
+
     // when
     [self goToForeground];
     
@@ -1190,6 +1229,9 @@
     // given
     [[self.stateMachine stub] enterBackground];
     [[self.stateMachine stub] enterForeground];
+    [[self.slowSynStatus stub] didEnterBackground];
+    [[self.slowSynStatus stub] didEnterForeground];
+
 
     // expect
     id mockRequestNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
@@ -1208,6 +1250,8 @@
     // given
     [[self.stateMachine stub] enterBackground];
     [[self.stateMachine stub] enterForeground];
+    [[self.slowSynStatus stub] didEnterBackground];
+    [[self.slowSynStatus stub] didEnterForeground];
     
     // expect
     id mockRequestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
@@ -1225,7 +1269,8 @@
 {
     // given
     [[self.stateMachine stub] enterBackground];
-    
+    [[self.slowSynStatus stub] didEnterBackground];
+
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeGroup;
@@ -1264,6 +1309,73 @@
 - (void)forward_startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
 {
     handler(ZMBackgroundFetchResultNewData);
+}
+
+@end
+
+
+@implementation ZMSyncStrategyTests (SyncStateDelegate)
+
+- (void)testThatItNotifiesSyncStateDelegateWhenSyncStarts
+{    
+    // expect
+    [[self.syncStateDelegate expect] didStartSync];
+    
+    // when
+    [self.sut didStartSync];
+    
+    // then
+    [self.syncStateDelegate verify];
+}
+
+
+- (void)testThatItNotifiesSyncObserverWhenSyncCompletes
+{
+    // given
+    [[self.updateEventsBuffer stub] processAllEventsInBuffer];
+
+    id mockObserver = [OCMockObject niceMockForProtocol:@protocol(ZMInitialSyncCompletionObserver)];
+    [ZMUserSession addInitalSyncCompletionObserver:mockObserver];
+
+    // expect
+    [[mockObserver expect] initialSyncCompleted:OCMOCK_ANY];
+    
+    // when
+    [self.sut didFinishSync];
+    
+    // then
+    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
+    
+    // tearDown
+    [ZMUserSession removeInitalSyncCompletionObserver:mockObserver];
+
+}
+
+- (void)testThatItProcessesAllEventsInBufferWhenSyncFinishes
+{
+    // expect
+    [[self.updateEventsBuffer expect] processAllEventsInBuffer];
+
+    // when
+    [self.sut didFinishSync];
+    
+    // then
+    [self.updateEventsBuffer verify];
+}
+
+- (void)testThatItPostsApplicationDidEnterEventProcessingStateNotificationWhenSyncFinishes
+{
+    // given
+    [[self.updateEventsBuffer stub] processAllEventsInBuffer];
+
+    // expect
+    [self expectationForNotification:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil handler:nil];
+    
+    // when
+    [self.sut didFinishSync];
+    
+    // then
+    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 @end

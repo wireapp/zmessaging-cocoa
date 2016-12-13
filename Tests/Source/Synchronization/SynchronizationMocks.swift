@@ -150,3 +150,31 @@ open class FakeKeysStore: UserClientKeysStore {
     
 }
 
+public class MockSyncStatus : SyncStatus {
+
+    public var mockPhase : SyncPhase = .done {
+        didSet {
+            currentSyncPhase = mockPhase
+        }
+    }
+}
+
+public class MockSyncStateDelegate : NSObject, ZMSyncStateDelegate {
+
+    var registeredUserClient : UserClient?
+    var didCallStartSync = false
+    var didCallFinishSync = false
+
+    public func didStartSync() {
+        didCallStartSync = true
+    }
+    
+    public func didFinishSync() {
+        didCallFinishSync = true
+    }
+    
+    public func didRegister(_ userClient: UserClient!) {
+        registeredUserClient = userClient
+    }
+}
+

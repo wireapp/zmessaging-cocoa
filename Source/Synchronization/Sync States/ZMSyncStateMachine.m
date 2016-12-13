@@ -26,11 +26,6 @@
 #import "ZMSyncState.h"
 #import "ZMUnauthenticatedState.h"
 #import "ZMEventProcessingState.h"
-#import "ZMSlowSyncPhaseOneState.h"
-#import "ZMSlowSyncPhaseTwoState.h"
-#import "ZMUpdateEventsCatchUpPhaseOneState.h"
-#import "ZMUpdateEventsCatchUpPhaseTwoState.h"
-#import "ZMDownloadLastUpdateEventIDState.h"
 #import "ZMBackgroundState.h"
 #import "ZMPreBackgroundState.h"
 #import "ZMUnauthenticatedBackgroundState.h"
@@ -45,7 +40,6 @@
 
 NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName = @"ZMApplicationDidEnterEventProcessingStateNotification";
 
-
 static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 
 @interface ZMSyncStateMachine ()
@@ -53,11 +47,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 @property (nonatomic) ZMSyncState *unauthenticatedState; ///< need to log in
 @property (nonatomic) ZMSyncState *unauthenticatedBackgroundState; ///< need to log in, but we are in the background
 @property (nonatomic) ZMSyncState *eventProcessingState; ///< can normally process events
-@property (nonatomic) ZMSyncState *slowSyncPhaseOneState; ///< first part of the hard sync
-@property (nonatomic) ZMSyncState *slowSyncPhaseTwoState; ///< second part of the hard sync
-@property (nonatomic) ZMSyncState *updateEventsCatchUpPhaseOneState; ///< start procedure to catch up with missing notifications
-@property (nonatomic) ZMSyncState *updateEventsCatchUpPhaseTwoState; ///< finish catching up with missing notifications
-@property (nonatomic) ZMSyncState *downloadLastUpdateEventIDState; ///< handle getting the last notification ID
 @property (nonatomic) ZMSyncState *backgroundState; ///< handles background requests
 @property (nonatomic) ZMSyncState *preBackgroundState; ///< waits until we are ready to go to background
 @property (nonatomic) ZMBackgroundFetchState *backgroundFetchState; ///< does background fetching on iOS
@@ -70,12 +59,9 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 @property (nonatomic) BOOL wasLoggedInAtLastRequest;
 @property (nonatomic) ZMSyncState *currentState;
 
-@property (nonatomic) BOOL isUpdateEventStreamActive;
-
 @property (nonatomic, weak) id<ZMSyncStateDelegate> syncStateDelegate;
 
 @property (nonatomic) id authNotificationToken;
-
 @end
 
 
@@ -88,6 +74,8 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
                            syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                             backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
                                  application:(id<ZMApplication>)application
+                               slowSynStatus:(SyncStatus *)slowSynStatus;
+
 {
     self = [super init];
     if(self) {
@@ -102,12 +90,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
                                                                                      application:application
                                      ];
         self.unauthenticatedBackgroundState = [[ZMUnauthenticatedBackgroundState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
-        self.slowSyncPhaseOneState = [[ZMSlowSyncPhaseOneState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
-        self.slowSyncPhaseTwoState = [[ZMSlowSyncPhaseTwoState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
-        self.eventProcessingState = [[ZMEventProcessingState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
-        self.updateEventsCatchUpPhaseOneState = [[ZMUpdateEventsCatchUpPhaseOneState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
-        self.updateEventsCatchUpPhaseTwoState = [[ZMUpdateEventsCatchUpPhaseTwoState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
-        self.downloadLastUpdateEventIDState = [[ZMDownloadLastUpdateEventIDState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
+        self.eventProcessingState = [[ZMEventProcessingState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self slowSynStatus:slowSynStatus];
         self.backgroundState = [[ZMBackgroundState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self backgroundableSession:backgroundableSession];
         self.preBackgroundState = [[ZMPreBackgroundState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
         self.backgroundFetchState = [[ZMBackgroundFetchState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
@@ -137,12 +120,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 
     [self.unauthenticatedState tearDown];
     [self.unauthenticatedBackgroundState tearDown];
-    [self.slowSyncPhaseOneState tearDown];
-    [self.slowSyncPhaseTwoState tearDown];
     [self.eventProcessingState tearDown];
-    [self.updateEventsCatchUpPhaseOneState tearDown];
-    [self.updateEventsCatchUpPhaseTwoState tearDown];
-    [self.downloadLastUpdateEventIDState tearDown];
     [self.backgroundState tearDown];
     [self.preBackgroundState tearDown];
     [self.backgroundFetchState tearDown];
@@ -152,16 +130,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 - (void)dealloc
 {
     [self tearDown];
-}
-
-- (void)didStartSync
-{
-    [self.syncStateDelegate didStartSync];
-}
-
-- (void)didFinishSync
-{
-    [self.syncStateDelegate didFinishSync];
 }
 
 - (void)enterBackground;
@@ -177,16 +145,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 - (void)prepareForSuspendedState;
 {
     // No-op
-}
-
-- (void)startQuickSync
-{
-    [self goToState:self.updateEventsCatchUpPhaseOneState];
-}
-
-- (void)startSlowSync
-{
-    [self goToState:self.downloadLastUpdateEventIDState];
 }
 
 - (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
@@ -242,32 +200,11 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
     [self.currentState didFailAuthentication];
 }
 
-- (void)didStartSlowSync
-{
-    for(id<ZMObjectStrategy> obj in self.directory.allTranscoders) {
-        [obj setNeedsSlowSync];
-    }
-}
-
-- (void)didInterruptUpdateEventsStream
-{
-    self.isUpdateEventStreamActive = NO;
-    [self.currentState didRequestSynchronization];
-}
-
-
-- (void)didEstablishUpdateEventsStream
-{
-    self.isUpdateEventStreamActive = YES;
-}
 
 - (void)dataDidChange
 {
     [self.currentState dataDidChange];
 }
 
-- (void)notifyEnteringEventProcessing
-{
-}
 
 @end
