@@ -668,8 +668,7 @@ NS_ASSUME_NONNULL_END
     case ZMVoiceChannelStateSelfConnectedToActiveChannel:
             [self.provider reportOutgoingCallWithUUID:conversation.remoteIdentifier
                                       connectedAtDate:[NSDate date]];
-            // FIXME
-//            conversation.voiceChannel.callStartDate = [NSDate date];
+            conversation.voiceChannel.v2.callStartDate = [NSDate date]; // FIXME consider moving this to ZMFlowSync
         break;
     case ZMVoiceChannelStateNoActiveUsers:
         [self.lastConversationsState removeObjectForKey:conversation.remoteIdentifier.transportString];
@@ -697,8 +696,7 @@ NS_ASSUME_NONNULL_END
                                       endedAtDate:nil
                                            reason:CallEndedReasonFromZMVoiceChannelState(conversation.voiceChannel.state, prevState)];
             }
-            // FIXME
-//            conversation.voiceChannel.callStartDate = nil;
+            conversation.voiceChannel.v2.callStartDate = nil;
         }
         break;
     default:
