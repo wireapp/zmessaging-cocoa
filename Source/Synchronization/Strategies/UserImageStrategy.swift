@@ -95,8 +95,11 @@ public class UserImageStrategy : NSObject, ZMDownstreamTranscoder, ZMUpstreamTra
                                                                         managedObjectContext:managedObjectContext)
         
         // Self user upstream
-        self.upstreamSync = ZMUpstreamAssetSync(transcoder:self,
+        let filter = NSPredicate(format: "imageCorrelationIdentifier != nil")
+        self.upstreamSync = ZMUpstreamModifiedObjectSync(transcoder:self,
                                                 entityName:ZMUser.entityName(),
+                                                update:nil,
+                                                filter:filter,
                                                 keysToSync:[ImageSmallProfileDataKey, ImageMediumDataKey],
                                                 managedObjectContext:managedObjectContext)
         
