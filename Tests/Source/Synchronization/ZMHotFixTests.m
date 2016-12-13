@@ -580,6 +580,9 @@
     connectedUser.connection.status = ZMConnectionStatusAccepted;
     connectedUser.needsToBeUpdatedFromBackend = NO;
 
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    selfUser.needsToBeUpdatedFromBackend = NO;
+
     ZMUser *unconnectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
     unconnectedUser.needsToBeUpdatedFromBackend = NO;
 
@@ -589,6 +592,7 @@
     XCTAssertFalse(unconnectedUser.isConnected);
     XCTAssertFalse(connectedUser.needsToBeUpdatedFromBackend);
     XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
 
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
@@ -600,6 +604,7 @@
     // then
     XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
     XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
 }
 
 @end

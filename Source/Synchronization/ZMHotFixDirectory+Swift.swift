@@ -101,5 +101,8 @@ extension ZMHotFixDirectory {
         users?.lazy
             .filter { $0.isConnected }
             .forEach { $0.needsToBeUpdatedFromBackend = true }
+
+        ZMUser.selfUser(in: context).needsToBeUpdatedFromBackend = true
+        context.enqueueDelayedSave()
     }
 }
