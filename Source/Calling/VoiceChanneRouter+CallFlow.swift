@@ -102,7 +102,7 @@ extension VoiceChannelV3 : CallFlow {
     public func toggleVideo(active: Bool) throws {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { throw ZMVoiceChannelError.videoNotActiveError() }
         
-        WireCallCenter.toogleVideo(conversationID: remoteIdentifier, active: active)
+        WireCallCenter.activeInstance?.toogleVideo(conversationID: remoteIdentifier, active: active)
     }
     
     public func join(video: Bool) -> Bool {

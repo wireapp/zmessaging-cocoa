@@ -30,6 +30,7 @@
 #import "ZMUserSession+Registration.h"
 #import "ZMCredentials.h"
 #import <zmessaging/ZMAuthenticationStatus+Testing.h>
+#import <zmessaging/zmessaging-Swift.h>
 #import "ZMFlowSync.h"
 #import "ZMGSMCallHandler.h"
 #import "ZMOperationLoop+Private.h"
@@ -96,6 +97,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.mockTransportSession.cryptoboxLocation = [[[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier] URLByAppendingPathComponent:@"otr"];
 
     ZMFlowSyncInternalFlowManagerOverride = self.mockFlowManager;
+    WireCallCenterFactory.wireCallCenterClass = WireCallCenterMock.self;
     
     [self createObjects];
     

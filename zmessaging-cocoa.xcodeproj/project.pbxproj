@@ -58,6 +58,7 @@
 		165911591DF18E9A007FA847 /* ZMCallKitDelegate+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 165911581DF18DBA007FA847 /* ZMCallKitDelegate+Internal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		166A8BF01E00569100F5EEEA /* VoiceChannelRouter+FlowManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 166A8BEE1E00569100F5EEEA /* VoiceChannelRouter+FlowManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		166A8BF11E00569100F5EEEA /* VoiceChannelRouter+FlowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 166A8BEF1E00569100F5EEEA /* VoiceChannelRouter+FlowManager.m */; };
+		166A8BF31E015F3B00F5EEEA /* WireCallCenterFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166A8BF21E015F3B00F5EEEA /* WireCallCenterFactory.swift */; };
 		16C22BA41BF4D5D7007099D9 /* NSError+ZMUserSessionInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3E05F254192A50CC00F22D80 /* NSError+ZMUserSessionInternal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		16DABFAE1DCF98D3001973E3 /* CallingRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DABFAD1DCF98D3001973E3 /* CallingRequestStrategy.swift */; };
 		16DCAD671B0F9447008C1DD9 /* NSURL+LaunchOptions.h in Headers */ = {isa = PBXBuildFile; fileRef = 16DCAD641B0F9447008C1DD9 /* NSURL+LaunchOptions.h */; };
@@ -284,7 +285,7 @@
 		874F142D1C16FD9700C15118 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874F142C1C16FD9700C15118 /* Device.swift */; };
 		87508EA01D08264000162483 /* ZMSound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87508E9F1D08264000162483 /* ZMSound.swift */; };
 		8785CA601C568D1F00FD671C /* ZMVoiceChannel+VideoCalling.h in Headers */ = {isa = PBXBuildFile; fileRef = 8785CA5E1C568D1F00FD671C /* ZMVoiceChannel+VideoCalling.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8795A3D51B2EDE030047A067 /* ZMAVSBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 8795A3D21B2EDE030047A067 /* ZMAVSBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8795A3D51B2EDE030047A067 /* ZMAVSBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 8795A3D21B2EDE030047A067 /* ZMAVSBridge.h */; };
 		8795A3D71B2EDE030047A067 /* ZMAVSBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 8795A3D31B2EDE030047A067 /* ZMAVSBridge.m */; };
 		8798607B1C3D48A400218A3E /* DeleteAccountRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8798607A1C3D48A400218A3E /* DeleteAccountRequestStrategy.swift */; };
 		879861C81DA7E11E00152584 /* ZMVoiceChannel+VideoCalling.m in Sources */ = {isa = PBXBuildFile; fileRef = 879861C71DA7E11E00152584 /* ZMVoiceChannel+VideoCalling.m */; };
@@ -549,6 +550,7 @@
 		165911581DF18DBA007FA847 /* ZMCallKitDelegate+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ZMCallKitDelegate+Internal.h"; sourceTree = "<group>"; };
 		166A8BEE1E00569100F5EEEA /* VoiceChannelRouter+FlowManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "VoiceChannelRouter+FlowManager.h"; sourceTree = "<group>"; };
 		166A8BEF1E00569100F5EEEA /* VoiceChannelRouter+FlowManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "VoiceChannelRouter+FlowManager.m"; sourceTree = "<group>"; };
+		166A8BF21E015F3B00F5EEEA /* WireCallCenterFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WireCallCenterFactory.swift; sourceTree = "<group>"; };
 		16DABFAD1DCF98D3001973E3 /* CallingRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallingRequestStrategy.swift; sourceTree = "<group>"; };
 		16DCAD641B0F9447008C1DD9 /* NSURL+LaunchOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+LaunchOptions.h"; sourceTree = "<group>"; };
 		16DCAD651B0F9447008C1DD9 /* NSURL+LaunchOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+LaunchOptions.m"; sourceTree = "<group>"; };
@@ -1259,6 +1261,7 @@
 				87ADCE3A1DA6539F00CC06DC /* ZMCallKitDelegate.m */,
 				165911561DF18B37007FA847 /* ZMCallKitDelegate+WireCallCenter.swift */,
 				87210C1B1DCA08F500A3FA5F /* ZMCallKitDelegate+TypeConformance.h */,
+				166A8BF21E015F3B00F5EEEA /* WireCallCenterFactory.swift */,
 			);
 			path = Calling;
 			sourceTree = "<group>";
@@ -2616,6 +2619,7 @@
 				549816441A432BC800A7CE2E /* ZMPreBackgroundState.m in Sources */,
 				549AEA3B1D6340BC003C0BEC /* AddressBookUploadRequestStrategy.swift in Sources */,
 				BF7ED2E21DF6BD16003A4397 /* Analytics+HandleSuggestions.swift in Sources */,
+				166A8BF31E015F3B00F5EEEA /* WireCallCenterFactory.swift in Sources */,
 				5498161E1A432BC800A7CE2E /* ZMPushToken.m in Sources */,
 				F959F3131C5B6B9E00820A21 /* ZMBackgroundTaskState.m in Sources */,
 				0932EA481AE5514100D1BFD1 /* ZMPhoneNumberVerificationTranscoder.m in Sources */,
