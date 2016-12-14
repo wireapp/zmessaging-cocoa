@@ -572,7 +572,7 @@
     return url;
 }
 
-- (void)testThatItMarksConnectedUsersToBeUpdatedFromTheBackend_62_0_0
+- (void)testThatItMarksConnectedUsersToBeUpdatedFromTheBackend_62_3_1
 {
     // given
     ZMUser *connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
@@ -596,7 +596,7 @@
 
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"62.0.0"];
+    [self.sut applyPatchesForCurrentVersion:@"62.3.1"];
     WaitForAllGroupsToBeEmpty(0.5);
 
     [self.syncMOC saveOrRollback];
