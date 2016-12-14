@@ -77,9 +77,9 @@
 - (void)tearDown
 {
     WaitForAllGroupsToBeEmpty(0.5);
-    [self.syncGroupConversation.voiceChannel tearDown];
-    [self.syncSelfToUser1Conversation.voiceChannel tearDown];
-    [self.syncSelfToUser2Conversation.voiceChannel tearDown];
+    [self.syncGroupConversation.voiceChannel.v2 tearDown];
+    [self.syncSelfToUser1Conversation.voiceChannel.v2 tearDown];
+    [self.syncSelfToUser2Conversation.voiceChannel.v2 tearDown];
     [ZMCallTimer resetTestCallTimeout];
     
     self.syncGroupConversation = nil;
@@ -108,7 +108,7 @@
 - (void)tearDownVoiceChannelForSyncConversation:(ZMConversation *)syncConversation
 {
     ZMConversation *uiConv = (id)[self.uiMOC objectWithID:syncConversation.objectID];
-    [uiConv.voiceChannel tearDown];
+    [uiConv.voiceChannel.v2 tearDown];
 }
 
 - (void)saveAndMergeCallState:(NSManagedObjectContext *)fromContext intoContext:(NSManagedObjectContext *)intoContext
@@ -524,7 +524,7 @@
         // then
         XCTAssertFalse(syncConversation.callDeviceIsActive);
         
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -969,9 +969,9 @@
         // given
         conversation = self.syncGroupConversation;
         conversation.callDeviceIsActive = YES;
-        [conversation.voiceChannel addCallParticipant:self.syncOtherUser1];
-        [conversation.voiceChannel addCallParticipant:self.syncOtherUser2];
-        [conversation.voiceChannel addCallParticipant:self.syncSelfUser];
+        [conversation.voiceChannel.v2 addCallParticipant:self.syncOtherUser1];
+        [conversation.voiceChannel.v2 addCallParticipant:self.syncOtherUser2];
+        [conversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
         
         NSDictionary *payload = @{@"id" : NSUUID.createUUID.transportString,
                                   @"payload" : @[@{@"type": @"call.state",
@@ -1036,7 +1036,7 @@
 {
     ZMConversation *conversation = self.syncSelfToUser1Conversation;
     
-    [conversation.voiceChannel addCallParticipant:self.syncSelfUser];
+    [conversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
     conversation.callDeviceIsActive = YES;
     return conversation;
 }
@@ -1044,8 +1044,8 @@
 - (ZMConversation *)groupConversationWithIncomingCall
 {
     ZMConversation *conversation = self.syncGroupConversation;
-    [conversation.voiceChannel addCallParticipant:self.syncOtherUser1];
-    [conversation.voiceChannel addCallParticipant:self.syncOtherUser2];
+    [conversation.voiceChannel.v2 addCallParticipant:self.syncOtherUser1];
+    [conversation.voiceChannel.v2 addCallParticipant:self.syncOtherUser2];
 
     return conversation;
 }
@@ -1053,9 +1053,9 @@
 - (ZMConversation *)groupConversationWithConnectingCall
 {
     ZMConversation *conversation = self.syncGroupConversation;
-    [conversation.voiceChannel addCallParticipant:self.syncOtherUser1];
-    [conversation.voiceChannel addCallParticipant:self.syncOtherUser2];
-    [conversation.voiceChannel addCallParticipant:self.syncSelfUser];
+    [conversation.voiceChannel.v2 addCallParticipant:self.syncOtherUser1];
+    [conversation.voiceChannel.v2 addCallParticipant:self.syncOtherUser2];
+    [conversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
     conversation.callDeviceIsActive = YES;
 
     return conversation;
@@ -1065,8 +1065,8 @@
 - (ZMConversation *)selfToUser1SyncConversationWithConnectedCall
 {
     ZMConversation *activeCallConversation = [self selfToUser1SyncConversationWithOutgoingCall];
-    [activeCallConversation.voiceChannel addCallParticipant:self.syncOtherUser1];
-    [activeCallConversation.voiceChannel updateActiveFlowParticipants:@[self.syncOtherUser1]];
+    [activeCallConversation.voiceChannel.v2 addCallParticipant:self.syncOtherUser1];
+    [activeCallConversation.voiceChannel.v2 updateActiveFlowParticipants:@[self.syncOtherUser1]];
     activeCallConversation.isFlowActive = YES;
     return activeCallConversation;
 }
@@ -1460,7 +1460,7 @@
         XCTAssertEqualObjects(request.path, expectedPath);
         XCTAssertEqual(request.method, ZMMethodPUT);
         
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
 
     }];
 }
@@ -1489,7 +1489,7 @@
         XCTAssertEqual(request.transportRequest.method, ZMMethodPUT);
         XCTAssertEqualObjects(request.transportRequest.payload, expectedPayload);
         XCTAssertEqualObjects(request.keys, self.keys);
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -1555,7 +1555,7 @@
         XCTAssertTrue(syncConversation.callDeviceIsActive);
         XCTAssertNil(request);
         
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -1590,7 +1590,7 @@
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
         XCTAssertNil(request);
         
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -1633,7 +1633,7 @@
 
         ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
         XCTAssertNil(request);
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -1812,8 +1812,8 @@
         conversation.callDeviceIsActive = YES;
         XCTAssertFalse(conversation.hasLocalModificationsForCallDeviceIsActive);
 
-        [conversation.voiceChannel addCallParticipant:self.syncSelfUser];
-        [conversation.voiceChannel addCallParticipant:self.syncOtherUser1];
+        [conversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
+        [conversation.voiceChannel.v2 addCallParticipant:self.syncOtherUser1];
         
         NSDictionary *payload = @{
                                   @"id" : NSUUID.createUUID.transportString,
@@ -1856,8 +1856,8 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
         conversation = (id)[self.syncMOC objectWithID:uiConversation.objectID];
-        [conversation.voiceChannel addCallParticipant:self.syncSelfUser];
-        [conversation.voiceChannel addCallParticipant:self.syncOtherUser1];
+        [conversation.voiceChannel.v2 addCallParticipant:self.syncSelfUser];
+        [conversation.voiceChannel.v2 addCallParticipant:self.syncOtherUser1];
         XCTAssertTrue(conversation.hasLocalModificationsForCallDeviceIsActive);
         [self.syncMOC saveOrRollback];
         
@@ -1888,7 +1888,7 @@
         // then
         XCTAssertTrue(conversation.callDeviceIsActive);
         
-        [conversation.voiceChannel tearDown];
+        [conversation.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -1933,7 +1933,7 @@
         // finally
         XCTAssertNoThrow([self.flowTranscoder verify]);
         
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -1963,7 +1963,7 @@
         // finally
         XCTAssertNoThrow([self.flowTranscoder verify]);
         
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -1992,7 +1992,7 @@
         // finally
         XCTAssertNoThrow([self.flowTranscoder verify]);
         
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
     
 }
@@ -2025,7 +2025,7 @@
         
         // finally
         XCTAssertNoThrow([self.flowTranscoder verify]);
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -2065,7 +2065,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         XCTAssertNoThrow([self.flowTranscoder verify]);
         
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.25);
 
@@ -2108,7 +2108,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         XCTAssertNoThrow([self.flowTranscoder verify]);
         
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.25);}
 
@@ -2360,7 +2360,7 @@
 
         // when
         [self.sut setNeedsSlowSync];
-        [conv.voiceChannel tearDown];
+        [conv.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2395,8 +2395,8 @@
         ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
         selfUser.remoteIdentifier = NSUUID.createUUID;
         
-        [conv.voiceChannel addCallParticipant:user1];
-        [conv.voiceChannel addCallParticipant:selfUser];
+        [conv.voiceChannel.v2 addCallParticipant:user1];
+        [conv.voiceChannel.v2 addCallParticipant:selfUser];
         
         [self.syncMOC saveOrRollback];
         
@@ -2406,7 +2406,7 @@
         // when
         [self.sut setNeedsSlowSync];
         
-        [conv.voiceChannel tearDown];
+        [conv.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2556,7 +2556,7 @@
         // then
         XCTAssertTrue(conversation.callStateNeedsToBeUpdatedFromBackend);
         
-        [conversation.voiceChannel tearDown];
+        [conversation.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -2881,7 +2881,7 @@
         
         // then
         XCTAssertTrue([self.upstreamSync hasOutstandingItems]);
-        [syncConv.voiceChannel tearDown];
+        [syncConv.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -2901,7 +2901,7 @@
         
         // then
         XCTAssertFalse([self.upstreamSync hasOutstandingItems]);
-        [syncConv.voiceChannel tearDown];
+        [syncConv.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -2922,7 +2922,7 @@
         
         // then
         XCTAssertFalse([self.upstreamSync hasOutstandingItems]);
-        [syncConv.voiceChannel tearDown];
+        [syncConv.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -2942,7 +2942,7 @@
         
         // then
         XCTAssertFalse(syncConv.hasLocalModificationsForCallDeviceIsActive);
-        [syncConv.voiceChannel tearDown];
+        [syncConv.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -2985,7 +2985,7 @@
         
         // then
         XCTAssertNotNil(nextRequest);
-        [conversation.voiceChannel tearDown];
+        [conversation.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -3026,7 +3026,7 @@
         
         // then
         XCTAssertNotNil(nextRequest);
-        [conversation.voiceChannel tearDown];
+        [conversation.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -3073,7 +3073,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
         XCTAssertFalse([self.upstreamSync hasOutstandingItems]);
-        [conversation.voiceChannel tearDown];
+        [conversation.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -3110,7 +3110,7 @@
         XCTAssertFalse(conversation.callStateNeedsToBeUpdatedFromBackend);
         
         [self.flowTranscoder verify];
-        [conversation.voiceChannel tearDown];
+        [conversation.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -3149,7 +3149,7 @@
         XCTAssertFalse(conversation.isIgnoringCall);
         XCTAssertFalse(conversation.callStateNeedsToBeUpdatedFromBackend);
         
-        [conversation.voiceChannel tearDown];
+        [conversation.voiceChannel.v2 tearDown];
     }];
 }
 
@@ -3296,7 +3296,7 @@
     
     WaitForAllGroupsToBeEmpty(0.5);
     [self.syncMOC performGroupedBlockAndWait:^{
-        [syncConversation.voiceChannel tearDown];
+        [syncConversation.voiceChannel.v2 tearDown];
     }];
     
     [self.flowTranscoder verify];
@@ -3471,7 +3471,7 @@
                                        @"payload" : @[response.payload]};
         ZMUpdateEvent *event = [ZMUpdateEvent eventsArrayFromPushChannelData:eventPayload].firstObject;
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
-        [conv.voiceChannel tearDown];
+        [conv.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -3484,7 +3484,7 @@
     [self checkThatItAppendsTheLogForAllConversations:^(ZMConversation *conversation, ZMTransportResponse *response) {
         conv = conversation;
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
-        [conv.voiceChannel tearDown];
+        [conv.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertEqual(conv.voiceChannel.state, ZMVoiceChannelStateIncomingCallInactive);
@@ -3496,7 +3496,7 @@
     [self checkThatItAppendsTheLogForAllConversations:^(ZMConversation *conversation, ZMTransportResponse *response) {
         conv = conversation;
         [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:[NSSet setWithObject:ZMConversationCallDeviceIsActiveKey]];
-        [conv.voiceChannel tearDown];
+        [conv.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertEqual(conv.voiceChannel.state, ZMVoiceChannelStateIncomingCall);

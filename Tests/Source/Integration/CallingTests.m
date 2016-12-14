@@ -111,7 +111,7 @@
 - (void)tearDownVoiceChannelForConversation:(ZMConversation *)conversation
 {
     ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext existingObjectWithID:conversation.objectID error:nil];
-    [syncConv.voiceChannel tearDown];
+    [syncConv.voiceChannel.v2 tearDown];
 }
 
 - (BOOL)lastRequestContainsSelfStateJoined
@@ -158,7 +158,7 @@
 - (void)selfJoinCall
 {
     [self.userSession enqueueChanges:^{
-        [self.conversationUnderTest.voiceChannel join];
+        [self.conversationUnderTest.voiceChannel joinWithVideo:NO];
     }];
 }
 
@@ -261,7 +261,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMConversation *oneToOneConversation = self.conversationUnderTest;
     
-    id token = [oneToOneConversation.voiceChannel addVoiceChannelStateObserver:self];
+    id token = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:oneToOneConversation];
     
     // when
     {
@@ -298,7 +298,8 @@
         XCTAssertEqual(note.currentState, ZMVoiceChannelStateNoActiveUsers);
 
     }
-    [oneToOneConversation.voiceChannel removeVoiceChannelStateObserverForToken:token];
+    
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:token];
 }
 
 
@@ -310,8 +311,8 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMConversation *oneToOneConversation = self.conversationUnderTest;
     
-    id stateToken = [oneToOneConversation.voiceChannel addVoiceChannelStateObserver:self];
-    id participantToken = [oneToOneConversation.voiceChannel addCallParticipantsObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:oneToOneConversation];
+    id participantToken = [ZMVoiceChannel addCallParticipantsObserver:self inConversation:oneToOneConversation voiceChannel:oneToOneConversation.voiceChannel];
     
     // (1) self calling & backend acknowledges
     //
@@ -386,8 +387,8 @@
     XCTAssertEqualObjects(partInfo4.deletedIndexes, [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 1)]);
     XCTAssertEqualObjects(partInfo4.movedIndexPairs, @[]);
     
-    [oneToOneConversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
-    [oneToOneConversation.voiceChannel removeCallParticipantsObserverForToken:participantToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeCallParticipantsObserverForToken:participantToken inConversation:oneToOneConversation];
 }
 
 - (void)checkNotification:(VoiceChannelStateChangeInfo *)note fromState:(ZMVoiceChannelState)fromState toState:(ZMVoiceChannelState)toState failureRecorder:(ZMTFailureRecorder *)failureRecorder
@@ -407,8 +408,8 @@
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMConversation * NS_VALID_UNTIL_END_OF_SCOPE oneToOneConversation = self.conversationUnderTest;
-    id stateToken = [oneToOneConversation.voiceChannel addVoiceChannelStateObserver:self];
-    id participantsToken = [oneToOneConversation.voiceChannel addCallParticipantsObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:oneToOneConversation];
+    id participantsToken = [ZMVoiceChannel addCallParticipantsObserver:self inConversation:oneToOneConversation voiceChannel:oneToOneConversation.voiceChannel];
 
     // (1) other user joins
     // when
@@ -471,8 +472,9 @@
         XCTAssertEqual(self.voiceChannelParticipantStateDidChangeNotes.count, 1u);
         
     }
-    [oneToOneConversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
-    [oneToOneConversation.voiceChannel removeVoiceChannelStateObserverForToken:participantsToken];
+    
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeCallParticipantsObserverForToken:participantsToken inConversation:oneToOneConversation];
 }
 
 - (void)testThatItCreatesASystemMessageWhenWeMissedACall
@@ -532,7 +534,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     ZMConversation *oneToOneConversation = self.conversationUnderTest;
-    id stateToken = [oneToOneConversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:oneToOneConversation];
 
     // (1) other user joins
     // when
@@ -548,7 +550,7 @@
     // (2) we ignore
     // when
     [self.userSession performChanges:^{
-        [oneToOneConversation.voiceChannel ignoreIncomingCall];
+        [oneToOneConversation.voiceChannel ignore];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -557,7 +559,8 @@
     XCTAssertEqual([self.voiceChannelStateDidChangeNotes.firstObject previousState], ZMVoiceChannelStateIncomingCall);
     XCTAssertEqual([self.voiceChannelStateDidChangeNotes.firstObject currentState], ZMVoiceChannelStateNoActiveUsers);
     
-    [oneToOneConversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    
     [self tearDownVoiceChannelForConversation:oneToOneConversation];
 }
 
@@ -568,7 +571,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     ZMConversation *oneToOneConversation = self.conversationUnderTest;
-    id stateToken = [oneToOneConversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:oneToOneConversation];
 
     // (1) other user joins
     // when
@@ -594,7 +597,7 @@
     ZMConversation *secondCallingConversation = [self conversationForMockConversation:self.selfToUser2Conversation];
     XCTAssertEqual(secondCallingConversation.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
     
-    [oneToOneConversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
     [self tearDownVoiceChannelForConversation:[self conversationForMockConversation:self.selfToUser1Conversation]];
 }
 
@@ -603,7 +606,7 @@
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMConversation *oneToOneConversation = self.conversationUnderTest;
-    id stateToken = [oneToOneConversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:oneToOneConversation];
 
     // (1) other user joins
     // when
@@ -616,7 +619,7 @@
     // (2) we ignore
     // when
     [self.userSession performChanges:^{
-        [oneToOneConversation.voiceChannel ignoreIncomingCall];
+        [oneToOneConversation.voiceChannel ignore];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -636,7 +639,7 @@
     XCTAssertEqual([self.voiceChannelStateDidChangeNotes.firstObject previousState], ZMVoiceChannelStateNoActiveUsers);
     XCTAssertEqual([self.voiceChannelStateDidChangeNotes.firstObject currentState], ZMVoiceChannelStateSelfIsJoiningActiveChannel);
     
-    [oneToOneConversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 @end
@@ -659,7 +662,7 @@
     self.useGroupConversation = YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // when
     [self selfJoinCall];
@@ -676,7 +679,7 @@
     XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
     XCTAssertEqual(lastChange.previousState, ZMVoiceChannelStateOutgoingCall);
 
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatWeAreInThe_JoiningState_AfterJoiningAnd_Not_ActivatingTheFlow_IncomingCall_OneOnOne
@@ -686,7 +689,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // when
     [self otherJoinCall];
@@ -703,7 +706,7 @@
     VoiceChannelStateChangeInfo *lastChange = self.voiceChannelStateDidChangeNotes.lastObject;
     XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatWeAreInThe_JoiningState_AfterJoiningAnd_Not_ActivatingTheFlow_IncomingCall_Group
@@ -713,7 +716,7 @@
     self.useGroupConversation= YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // when
     [self otherJoinCall];
@@ -730,7 +733,7 @@
     VoiceChannelStateChangeInfo *lastChange = self.voiceChannelStateDidChangeNotes.lastObject;
     XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatWeAreInThe_ConnectedState_AfterJoiningAndActivatingTheFlow
@@ -739,7 +742,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
 
     // when
     [self selfJoinCall];
@@ -763,7 +766,7 @@
     VoiceChannelStateChangeInfo *lastChange = self.voiceChannelStateDidChangeNotes.lastObject;
     XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateSelfConnectedToActiveChannel);
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatWhenWeAreConnectedAndTheOtherUserDropsTheCallWeAreInNotConnectedState {
@@ -772,7 +775,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
 
     [self selfJoinCall];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -796,7 +799,7 @@
     VoiceChannelStateChangeInfo *lastChange = self.voiceChannelStateDidChangeNotes.lastObject;
     XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateNoActiveUsers);
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -806,7 +809,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
 
     { // Call 1
         [self.mockTransportSession resetReceivedRequests];
@@ -858,7 +861,7 @@
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateSelfConnectedToActiveChannel);
     }
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -868,7 +871,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
 
     { // Call 1
         
@@ -945,7 +948,8 @@
         XCTAssertEqual(lastChange.previousState, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateSelfConnectedToActiveChannel);
     }
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatWeCanMakeTwoCallsInARowWithADelayOnTheSaveOnOtherUserJoin {
@@ -954,7 +958,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
 
     { // Call 1
         
@@ -1035,7 +1039,7 @@
     
     XCTAssertTrue([self lastRequestContainsSelfStateJoined]);
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -1045,7 +1049,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
 
     { // Call 1
         
@@ -1124,7 +1128,7 @@
     }
     
     XCTAssertTrue([self lastRequestContainsSelfStateJoined]);
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -1136,7 +1140,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
 
     { // Call 1
         
@@ -1212,7 +1216,7 @@
         }
 
     }
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatWeCanMakeTwoCallsInARowWhileObservingTheWindow {
@@ -1221,7 +1225,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
 
     [self registerWindowObserver];
     
@@ -1273,7 +1277,7 @@
         VoiceChannelStateChangeInfo *lastChange = self.voiceChannelStateDidChangeNotes.lastObject;
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateSelfConnectedToActiveChannel);
     }
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -1283,7 +1287,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     { // Call 1
         // when selfUser calls
@@ -1349,7 +1353,7 @@
         XCTAssertEqual(lastChange.previousState, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateSelfConnectedToActiveChannel);
     }
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -1360,7 +1364,7 @@
     
     ZMConversation *conversation = self.conversationUnderTest;
     [ZMCallTimer setTestCallTimeout: 0.2];
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // when selfUser calls
     [self selfJoinCall];
@@ -1398,7 +1402,7 @@
     // then
     XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateNoActiveUsers);
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatItTimesOutCallsAndDropsTheCall_OneOnOne_Outgoing_Second_Incoming
@@ -1408,7 +1412,7 @@
     
     ZMConversation *conversation = self.conversationUnderTest;
     [ZMCallTimer setTestCallTimeout: 0.2];
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // when selfUser calls
     [self selfJoinCall];
@@ -1446,7 +1450,7 @@
     // then
     XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateIncomingCallInactive);
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -1457,7 +1461,7 @@
     
     ZMConversation *conversation = self.conversationUnderTest;
     [ZMCallTimer setTestCallTimeout: 0.2];
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // when other user calls
     [self otherJoinCall];
@@ -1482,7 +1486,7 @@
     // then
     XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -1494,7 +1498,7 @@
     
     ZMConversation *conversation = self.conversationUnderTest;
     [ZMCallTimer setTestCallTimeout: 0.2];
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // when selfUser calls
     [self selfJoinCall];
@@ -1521,7 +1525,7 @@
     // then
     XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateOutgoingCall);
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -1533,7 +1537,7 @@
     
     ZMConversation *conversation = self.conversationUnderTest;
     [ZMCallTimer setTestCallTimeout: 0.2];
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // when selfUser calls
     [self selfJoinCall];
@@ -1560,7 +1564,7 @@
     // then
     XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -1669,7 +1673,7 @@
         ZMConversationList *innerList = changeInfo.conversationList;
         if(changeInfo.insertedIndexes.count == 1u) {
             conversationToObserve = innerList[changeInfo.insertedIndexes.firstIndex];
-            voiceChannelStateToken = [conversationToObserve.voiceChannel addVoiceChannelStateObserver:callObserver];
+            voiceChannelStateToken = [ZMVoiceChannel addVoiceChannelStateObserver:callObserver inConversation:conversationToObserve];
             voiceChannelState = conversationToObserve.voiceChannel.state;
             [conversationListChangedExpectation fulfill];
         }
@@ -1701,7 +1705,7 @@
    
     // after
     [list removeConversationListObserverForToken:listToken];
-    [conversationToObserve.voiceChannel removeVoiceChannelStateObserverForToken:voiceChannelStateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:voiceChannelStateToken];
     [self tearDownVoiceChannelForConversation:conversationToObserve];
 }
 
@@ -1714,7 +1718,7 @@
     
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     {
         //Joining
@@ -1773,7 +1777,7 @@
         lastChange = self.voiceChannelStateDidChangeNotes.lastObject;
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateSelfConnectedToActiveChannel);
     }
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatGroupCallIsDroppedWhenTheLastOtherParticipantLeaves
@@ -1784,7 +1788,7 @@
     
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     {
         //Joining
@@ -1820,7 +1824,7 @@
         lastChange = self.voiceChannelStateDidChangeNotes.lastObject;
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateNoActiveUsers);
     }
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatGroupCallDoesNotDropWhenThereAreTwoParticipantLeft
@@ -1831,7 +1835,7 @@
     
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     {
         //Joining
@@ -1875,7 +1879,7 @@
         lastChange = self.voiceChannelStateDidChangeNotes.lastObject;
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateSelfConnectedToActiveChannel);
     }
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatItSendsCallParticipantsNotification
@@ -1885,7 +1889,7 @@
     self.useGroupConversation = YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id participantsToken = [conversation.voiceChannel addCallParticipantsObserver:self];
+    id participantsToken = [ZMVoiceChannel addCallParticipantsObserver:self inConversation:conversation voiceChannel:conversation.voiceChannel];
     
     NSMutableOrderedSet *joinedUsers = [[[self mockConversationUnderTest] activeUsers] mutableCopy];
     [joinedUsers zm_sortUsingComparator:[MockFlowManager conferenceComparator] valueGetter:^id(MockUser *mockUser) {
@@ -1969,7 +1973,7 @@
         XCTAssertEqual(self.voiceChannelParticipantStateDidChangeNotes.count, 0u);
     }
     
-    [conversation.voiceChannel removeCallParticipantsObserverForToken:participantsToken];
+    [ZMVoiceChannel removeCallParticipantsObserverForToken:participantsToken inConversation:conversation];
 }
 
 - (void)testThatItSendsAJoinCallback
@@ -1992,14 +1996,14 @@
     
     [[(id)mockObserver reject] voiceChannelJoinFailedWithError:OCMOCK_ANY];
     
-    [conversation.voiceChannel addVoiceChannelStateObserver:mockObserver];
+    [ZMVoiceChannel addVoiceChannelStateObserver:mockObserver inConversation:conversation];
     
     // then
     XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
     
     // when
     [self.userSession performChanges:^{
-        [conversation.voiceChannel join];
+        [conversation.voiceChannel joinWithVideo:NO];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5f);
@@ -2059,11 +2063,11 @@
     
     [[(id)mockObserver stub] voiceChannelStateDidChange:OCMOCK_ANY];
     
-    [bigGroupConversation.voiceChannel addVoiceChannelStateObserver:mockObserver];
+    [ZMVoiceChannel addVoiceChannelStateObserver:mockObserver inConversation:bigGroupConversation];
 
     // when
     [self.userSession performChanges:^{
-        [bigGroupConversation.voiceChannel join];
+        [bigGroupConversation.voiceChannel joinWithVideo:NO];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5f);
@@ -2133,11 +2137,11 @@
     
     [[(id)mockObserver stub] voiceChannelStateDidChange:OCMOCK_ANY];
     
-    [bigGroupConversation.voiceChannel addVoiceChannelStateObserver:mockObserver];
+    [ZMVoiceChannel addVoiceChannelStateObserver:mockObserver inConversation:bigGroupConversation];
 
     // when
     [self.userSession performChanges:^{
-        [bigGroupConversation.voiceChannel join];
+        [bigGroupConversation.voiceChannel joinWithVideo:NO];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5f);
@@ -2152,7 +2156,7 @@
     self.useGroupConversation = YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // (1) selfUser initiated a call
     {
@@ -2201,7 +2205,7 @@
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateNoActiveUsers);
     }
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatItDropsTheCallWhenWeAreRemovedFromConversationWithAnActiveCall
@@ -2211,7 +2215,7 @@
     self.useGroupConversation = YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // (1) selfUser initiated a call
     {
@@ -2263,7 +2267,7 @@
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateNoActiveUsers);
     }
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatItReturnsIncomingCallInactiveWhenBeingReaddedToAConversationWithALeftActiveCall_SelfUserLeft
@@ -2273,7 +2277,7 @@
     self.useGroupConversation = YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // (1) selfUser initiated a call
     [self selfJoinCall];
@@ -2316,7 +2320,7 @@
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateIncomingCallInactive);
     }
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatItReturnsIncomingCallInactiveWhenBeingReaddedToAConversationWithALeftActiveCall_SelfUserRemovedRemotely
@@ -2326,7 +2330,7 @@
     self.useGroupConversation = YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // (1) selfUser initiated a call
     [self selfJoinCall];
@@ -2369,7 +2373,7 @@
         XCTAssertEqual(firstChange.currentState, ZMVoiceChannelStateIncomingCallInactive);
     }
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatItReturnsIncomingCallInactiveWhenBeingReaddedToAConversationWithAnActiveCall_SelfUserLeft
@@ -2379,7 +2383,7 @@
     self.useGroupConversation = YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // (1) selfUser initiated a call
     [self selfJoinCall];
@@ -2416,7 +2420,7 @@
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateIncomingCallInactive);
     }
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -2428,7 +2432,7 @@
     self.useGroupConversation = YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // (1) selfUser initiated a call
     [self selfJoinCall];
@@ -2475,7 +2479,7 @@
         XCTAssertTrue(conversation.isIgnoringCall);
     }
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 
@@ -2488,7 +2492,7 @@
     self.useGroupConversation = YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     // (1) selfUser initiated a call
     [self selfJoinCall];
@@ -2519,7 +2523,7 @@
     XCTAssertEqual(self.voiceChannelStateDidChangeNotes.count, 0u);
     XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateNoActiveUsers);
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 }
 
 - (void)testThatItReturnsNoActiveUsersAfterIgnoredCallEnds
@@ -2529,7 +2533,7 @@
     self.useGroupConversation = YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     NSMutableOrderedSet *joinedUsers = [[[self mockConversationUnderTest] activeUsers] mutableCopy];
     [joinedUsers zm_sortUsingComparator:[MockFlowManager conferenceComparator] valueGetter:^id(MockUser *mockUser) {
@@ -2595,7 +2599,7 @@
         XCTAssertEqual(lastChange.currentState, ZMVoiceChannelStateIncomingCall);
     }
     
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
     
 }
 
@@ -2623,7 +2627,7 @@
                                                                       method:ZMMethodPUT
                                                                      payload:@{ @"self" : leaveSelfDict, @"cause" : @"requested"}];
 
-    id stateToken = [conversation.voiceChannel addVoiceChannelStateObserver:self];
+    id stateToken = [ZMVoiceChannel addVoiceChannelStateObserver:self inConversation:conversation];
     
     NSMutableOrderedSet *joinedUsers = [self.mockConversationUnderTest.activeUsers mutableCopy];
     [joinedUsers removeObject:self.selfUser];
@@ -2640,7 +2644,7 @@
     
     // when: it tries to join
     [self.userSession performChanges:^{
-        [conversation.voiceChannel join];
+        [conversation.voiceChannel joinWithVideo:NO];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2655,7 +2659,7 @@
     
     // when: it tries to join again
     [self.userSession performChanges:^{
-        [conversation.voiceChannel join];
+        [conversation.voiceChannel joinWithVideo:NO];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2668,7 +2672,7 @@
     XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
     
     // after
-    [conversation.voiceChannel removeVoiceChannelStateObserverForToken:stateToken];
+    [ZMVoiceChannel removeVoiceChannelStateObserverForToken:stateToken];
 
 }
 
@@ -2799,7 +2803,7 @@
 
     // when
     [self.userSession performChanges:^{
-        [self.conversationUnderTest.voiceChannel ignoreIncomingCall];
+        [self.conversationUnderTest.voiceChannel ignore];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2935,31 +2939,3 @@
 }
 
 @end
-
-
-@implementation CallingTests (CallingV3)
-
-- (void)testThatItCallingV3SendingMessage;
-{
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    NSUInteger eventCount = self.mockTransportSession.updateEvents.count;
-    
-    // when
-    [self.userSession enqueueChanges:^{
-        [self.conversationUnderTest.voiceChannel joinInUserSession:self.userSession];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(eventCount + 1, self.mockTransportSession.updateEvents.count);
-    ZMUpdateEvent *event = [self.mockTransportSession.updateEvents lastObject];
-    (void)event;
-}
-
-@end
-
-
-
-

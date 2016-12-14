@@ -112,7 +112,7 @@
     NSString *expectedLastRequest = [NSString stringWithFormat:@"/notifications?size=%lu&since=%@&client=%@", ZMMissingUpdateEventsTranscoderListPageSize, messageAddLastNotificationID.transportString, self.userSession.selfUserClient.remoteIdentifier];
     XCTAssertEqualObjects([(ZMTransportRequest *)self.mockTransportSession.receivedRequests.lastObject path], expectedLastRequest);
     ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.groupConversation].objectID];
-    [syncConv.voiceChannel tearDown];
+    [syncConv.voiceChannel.v2 tearDown];
 }
 
 

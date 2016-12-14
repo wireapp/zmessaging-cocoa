@@ -61,7 +61,8 @@
                                                                  sharedApplication:self.application
                                                               eventNotificationSet:self.mockEventNotificationSet
                                                              failedNotificationSet:self.mockFailedNotificationSet
-                                                              messageNotifications:nil];
+                                                              messageNotifications:nil
+                                                              callingNotifications:nil];
     
     self.conversation1 = [self insertConversationWithRemoteID:[NSUUID createUUID] name:@"Conversation 1"];
     self.conversation2 = [self insertConversationWithRemoteID:[NSUUID createUUID] name:@"Conversation 2"];
@@ -381,7 +382,8 @@
                                                                  sharedApplication:self.application
                                                               eventNotificationSet:self.mockEventNotificationSet
                                                              failedNotificationSet:self.mockFailedNotificationSet
-                                                              messageNotifications:localNotificationSet];
+                                                              messageNotifications:localNotificationSet
+                                                            callingNotifications:nil]; // FIXME
     
     // given
     ZMClientMessage *message = (id)[self.conversation1 appendMessageWithText:@"foo"];
@@ -422,7 +424,8 @@
                                                                  sharedApplication:self.application
                                                               eventNotificationSet:self.mockEventNotificationSet
                                                              failedNotificationSet:self.mockFailedNotificationSet
-                                                              messageNotifications:localNotificationSet];
+                                                              messageNotifications:localNotificationSet
+                                                              callingNotifications:nil]; // FIXME
     
     // when
     [self.sut processMessage:message];
