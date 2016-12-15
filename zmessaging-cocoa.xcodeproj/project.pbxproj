@@ -876,6 +876,8 @@
 		B40DC79D1D01A61600CEF65C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "pt-BR"; path = "pt-BR.lproj/Push.stringsdict"; sourceTree = "<group>"; };
 		B422BB981DCCC3F60076EAD5 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Push.strings; sourceTree = "<group>"; };
 		B422BB991DCCC3F60076EAD5 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ar; path = ar.lproj/Push.stringsdict; sourceTree = "<group>"; };
+		B432ADBF1E02DE9500147768 /* et */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = et; path = et.lproj/Push.strings; sourceTree = "<group>"; };
+		B432ADC01E02DE9500147768 /* et */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = et; path = et.lproj/Push.stringsdict; sourceTree = "<group>"; };
 		B49AFC271DCCCB3D006B753B /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Push.strings"; sourceTree = "<group>"; };
 		B49AFC281DCCCB3D006B753B /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "zh-Hans"; path = "zh-Hans.lproj/Push.stringsdict"; sourceTree = "<group>"; };
 		B4A124851DDCB58900FD9D66 /* sl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sl; path = sl.lproj/Push.strings; sourceTree = "<group>"; };
@@ -2283,6 +2285,7 @@
 				ar,
 				"zh-Hans",
 				sl,
+				et,
 			);
 			mainGroup = 540029AA1918CA8500578793;
 			productRefGroup = 540029B51918CA8500578793 /* Products */;
@@ -2744,6 +2747,7 @@
 				B422BB981DCCC3F60076EAD5 /* ar */,
 				B49AFC271DCCCB3D006B753B /* zh-Hans */,
 				B4A124851DDCB58900FD9D66 /* sl */,
+				B432ADBF1E02DE9500147768 /* et */,
 			);
 			name = Push.strings;
 			sourceTree = "<group>";
@@ -2766,6 +2770,7 @@
 				B422BB991DCCC3F60076EAD5 /* ar */,
 				B49AFC281DCCCB3D006B753B /* zh-Hans */,
 				B4A124861DDCB58A00FD9D66 /* sl */,
+				B432ADC01E02DE9500147768 /* et */,
 			);
 			name = Push.stringsdict;
 			sourceTree = "<group>";
