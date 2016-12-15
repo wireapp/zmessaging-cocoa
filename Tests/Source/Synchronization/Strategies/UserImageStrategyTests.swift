@@ -488,6 +488,27 @@ extension UserImageStrategyTests {
         XCTAssertTrue(checkImageUpload(with:.medium, modifiedKeys:["imageMediumData"]))
     }
     
+    func testThatItDoesNotUploadMediumImageDataIfThereIsNoCorrelationIdentifier() {
+        // given
+        let selfUserAndSelfConversationID = UUID()
+        let selfUser = ZMUser.selfUser(in: self.syncMOC)
+        setUp(selfUser: selfUser, with: selfUserAndSelfConversationID, formats: [ZMImageFormat.medium], locallyModifiedKeys: ["imageMediumData"])
+        selfUser.imageCorrelationIdentifier = nil
+        MockRequestStrategy.mockRequest = ZMTransportRequest(getFromPath: "/TEST-SUCCESSFUL")
+        
+        // expect
+        var receivedRequest : ZMTransportRequest!
+        syncMOC.performGroupedBlockAndWait{
+            
+            // when
+            receivedRequest = self.sut.nextRequest()
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertNil(receivedRequest)
+    }
+    
     
     func testThatItSetsTheRemoteIdentifierForSmallProfile() {
         // given
