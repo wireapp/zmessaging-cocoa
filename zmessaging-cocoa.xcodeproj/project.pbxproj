@@ -59,6 +59,7 @@
 		166A8BF01E00569100F5EEEA /* VoiceChannelRouter+FlowManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 166A8BEE1E00569100F5EEEA /* VoiceChannelRouter+FlowManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		166A8BF11E00569100F5EEEA /* VoiceChannelRouter+FlowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 166A8BEF1E00569100F5EEEA /* VoiceChannelRouter+FlowManager.m */; };
 		166A8BF31E015F3B00F5EEEA /* WireCallCenterFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166A8BF21E015F3B00F5EEEA /* WireCallCenterFactory.swift */; };
+		166A8BF91E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166A8BF81E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift */; };
 		16C22BA41BF4D5D7007099D9 /* NSError+ZMUserSessionInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3E05F254192A50CC00F22D80 /* NSError+ZMUserSessionInternal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		16DABFAE1DCF98D3001973E3 /* CallingRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DABFAD1DCF98D3001973E3 /* CallingRequestStrategy.swift */; };
 		16DCAD671B0F9447008C1DD9 /* NSURL+LaunchOptions.h in Headers */ = {isa = PBXBuildFile; fileRef = 16DCAD641B0F9447008C1DD9 /* NSURL+LaunchOptions.h */; };
@@ -552,6 +553,8 @@
 		166A8BEF1E00569100F5EEEA /* VoiceChannelRouter+FlowManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "VoiceChannelRouter+FlowManager.m"; sourceTree = "<group>"; };
 		166A8BF21E015F3B00F5EEEA /* WireCallCenterFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WireCallCenterFactory.swift; sourceTree = "<group>"; };
 		16DABFAD1DCF98D3001973E3 /* CallingRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallingRequestStrategy.swift; sourceTree = "<group>"; };
+		166A8BF81E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMHotFix+PendingChanges.swift"; sourceTree = "<group>"; };
+		169AED731C8F09A700E5F17E /* version.buildinfo */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = version.buildinfo; sourceTree = "<group>"; };
 		16DCAD641B0F9447008C1DD9 /* NSURL+LaunchOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+LaunchOptions.h"; sourceTree = "<group>"; };
 		16DCAD651B0F9447008C1DD9 /* NSURL+LaunchOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+LaunchOptions.m"; sourceTree = "<group>"; };
 		16DCAD6D1B1476FE008C1DD9 /* NSURL+LaunchOptionsTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+LaunchOptionsTests.m"; sourceTree = "<group>"; };
@@ -1837,6 +1840,7 @@
 				54DE26B11BC56E62002B5FBC /* ZMHotFixDirectory.h */,
 				54DE26B21BC56E62002B5FBC /* ZMHotFixDirectory.m */,
 				F9245BEC1CBF95A8009D1E85 /* ZMHotFixDirectory+Swift.swift */,
+				166A8BF81E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift */,
 			);
 			path = Synchronization;
 			sourceTree = "<group>";
@@ -2545,6 +2549,7 @@
 			files = (
 				F98EDCD81D82B913001E65CB /* ZMLocalNotificationForMessage.swift in Sources */,
 				3EC499941A92463D003F9E32 /* ZMBackgroundFetchState.m in Sources */,
+				166A8BF91E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift in Sources */,
 				092083401BA95EE100F82B29 /* UserClientRequestFactory.swift in Sources */,
 				F936DB2B1C11DF40005E93AE /* ZMClientUpdateNotification.m in Sources */,
 				F9FD167C1BDFCDAD00725F5C /* ZMClientRegistrationStatus.m in Sources */,
