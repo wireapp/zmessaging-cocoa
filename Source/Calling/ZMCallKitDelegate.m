@@ -512,26 +512,7 @@ NS_ASSUME_NONNULL_END
 
 - (void)configureAudioSession
 {
-    AVAudioSession *sessionInstance = [AVAudioSession sharedInstance];
-    
-    // we are going to play and record so we pick that category
-    NSError *error = nil;
-    [sessionInstance setCategory:AVAudioSessionCategoryPlayAndRecord error:&error];
-    if (error.code != 0) {
-        [self logErrorForConversation:nil line:__LINE__ format:@"couldn't set session's audio category: %ld", (long)error.code];
-    }
-    
-    // set the mode to voice chat
-    [sessionInstance setMode:AVAudioSessionModeVoiceChat error:&error];
-    if (error.code != 0) {
-        [self logErrorForConversation:nil line:__LINE__ format:@"couldn't set session's audio mode: %ld", (long)error.code];
-    }
-    
-    // set the session's sample rate
-    [sessionInstance setPreferredSampleRate:16000 error:&error];
-    if (error.code != 0) {
-        [self logErrorForConversation:nil line:__LINE__ format:@"couldn't set session's preferred sample rate: %ld", (long)error.code];
-    }
+	[self.mediaManager setupAudioDevice];
 }
 
 - (BOOL)continueUserActivity:(NSUserActivity *)userActivity
