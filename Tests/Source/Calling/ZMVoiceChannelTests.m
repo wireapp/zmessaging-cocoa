@@ -193,8 +193,6 @@
 - (void)tearDown
 {
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    [self.syncMOC zm_tearDownCallTimer];
     [ZMCallTimer resetTestCallTimeout];
     
     self.conversation = nil;

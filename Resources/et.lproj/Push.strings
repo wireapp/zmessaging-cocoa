@@ -1,0 +1,175 @@
+// 
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
+//
+
+
+"push.notification.default" = "Uus sõnum";
+"push.notification.ephemeral" = "Keegi saatis sulle sõnumi";
+
+"push.notification.add.message.group" = "%1$@ %2$@ vestluses: %3$@";
+"push.notification.add.message.group.nousername" = "Uus sõnum %1$@ vestluses: %2$@";
+"push.notification.add.message.group.nousername.noconversationname" = "Uus sõnum: %1$@";
+"push.notification.add.message.group.noconversationname" = "%1$@ vestluses: %2$@";
+
+"push.notification.add.message.oneonone" = "%1$@: %2$@";
+"push.notification.add.message.oneonone.nousername" = "Uus sõnum: %1$@";
+
+"push.notification.add.image.group" = "%1$@ jagas vestluses %2$@ pildi";
+"push.notification.add.image.group.nousername" = "Uus pilt vestluses %1$@";
+"push.notification.add.image.group.nousername.noconversationname" = "Vestlusesse on lisatud uus pilt";
+"push.notification.add.image.group.noconversationname" = "%1$@ jagas vestluses ühe pildi";
+
+"push.notification.add.image.oneonone" = "%1$@ jagas ühe pildi";
+"push.notification.add.image.oneonone.nousername" = "Vestlusesse on lisatud uus pilt";
+
+"push.notification.add.video.group" = "%1$@ jagas vestluses %2$@ videoklipi";
+"push.notification.add.video.group.nousername" = "Uus videoklipp vestluses %1$@";
+"push.notification.add.video.group.nousername.noconversationname" = "Vestluses jagati uus videoklipp";
+"push.notification.add.video.group.noconversationname" = "%1$@ jagas vestluses ühe videoklipi";
+
+"push.notification.add.video.oneonone" = "%1$@ jagas videoklipi";
+"push.notification.add.video.oneonone.nousername" = "Vestluses jagati uus videoklipp";
+
+"push.notification.add.audio.group" = "%1$@ jagas vestluses %2$@ häälsõnumi";
+"push.notification.add.audio.group.nousername" = "Uus häälsõnum vestluses %1$@";
+"push.notification.add.audio.group.nousername.noconversationname" = "Vestluses uus häälsõnum";
+"push.notification.add.audio.group.noconversationname" = "%1$@ saatis häälsõnumi vestlusesse";
+
+"push.notification.add.audio.oneonone" = "%1$@ saatis häälsõnumi";
+"push.notification.add.audio.oneonone.nousername" = "Vestluses uus häälsõnum";
+
+"push.notification.add.file.group" = "%1$@ saatis faili vestlusesse %2$@";
+"push.notification.add.file.group.nousername" = "Uus fail vestluses %1$@";
+"push.notification.add.file.group.nousername.noconversationname" = "Uus fail vestluses";
+"push.notification.add.file.group.noconversationname" = "%1$@ saatis faili vestlusesse";
+
+"push.notification.add.file.oneonone" = "%1$@ saatis faili";
+"push.notification.add.file.oneonone.nousername" = "Uus fail vestluses";
+
+"push.notification.add.location.group" = "%1$@ jagas oma asukohta vestluses %2$@";
+"push.notification.add.location.group.nousername" = "Uus asukoht vestluses %1$@";
+"push.notification.add.location.group.nousername.noconversationname" = "Uus asukoht vestluses";
+"push.notification.add.location.group.noconversationname" = "%1$@ saatis asukohta vestluses";
+
+"push.notification.add.location.oneonone" = "%1$@ saatis asukoha";
+"push.notification.add.location.oneonone.nousername" = "Uus asukoht vestluses";
+
+"push.notification.member.join" = "%1$@ lisas vestlusesse %2$@ kasutaja: %3$@";
+"push.notification.member.join.noconversationname" = "%1$@ lisas vestlusesse kasutaja: %2$@";
+"push.notification.member.join.nousername.noconversationname" = "%1$@ lisati veslusesse";
+"push.notification.member.join.nousername" = "%2$@ lisati vestlusesse %1$@";
+
+"push.notification.member.join.many.nootherusername" = "%1$@ lisas inimesi vestlusse %2$@";
+"push.notification.member.join.many.nootherusername.noconversationname" = "%1$@ lisas inimesi vestlusse";
+"push.notification.member.join.many.nootherusername.nousername" = "Inimesi lisati vestlusse %1$@";
+"push.notification.member.join.many.nootherusername.nousername.noconversationname" = "Inimesi lisati vestlusse";
+
+"push.notification.member.join.self" = "%1$@ lisas sind vestlusse %2$@";
+"push.notification.member.join.self.noconversationname" = "%1$@ lisas sind vestlusse";
+"push.notification.member.join.self.nousername.noconversationname" = "Sind lisati vestlusse";
+"push.notification.member.join.self.nousername" = "Sind lisati vestlusse %1$@";
+
+"push.notification.member.join.nootherusername" = "%1$@ lisas inimesi vestlusse %2$@";
+"push.notification.member.join.nootherusername.noconversationname" = "%1$@ lisas inimesi vestlusse";
+"push.notification.member.join.nootherusername.nousername.noconversationname" = "Inimesi lisati vestlusse";
+"push.notification.member.join.nootherusername.nousername" = "Inimesi lisati vestlusse %1$@";
+
+"push.notification.member.leave" = "%1$@ eemaldas kasutaja %3$@ vestlusest %2$@";
+"push.notification.member.leave.noconversationname" = "%1$@ eemaldas kasutaja %2$@ vestlusest";
+"push.notification.member.leave.nousername.noconversationname" = "%1$@ eemaldati vestlusest";
+"push.notification.member.leave.nousername" = "%2$@ eemaldati vestlusest %1$@";
+
+"push.notification.member.leave.many.nootherusername" = "%1$@ eemaldas inimesi vestlusest %2$@";
+"push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@ eemaldas inimesi vestlusest";
+"push.notification.member.leave.many.nootherusername.nousername" = "Inimesi eemaldati vestlusest %1$@";
+"push.notification.member.leave.many.nootherusername.nousername.noconversationname" = "Inimesi eemaldati vestlusest";
+
+"push.notification.member.leave.self" = "%1$@ eemaldas sind vestlusest %2$@";
+"push.notification.member.leave.self.noconversationname" = "%1$@ eemaldas sind vestlusest";
+"push.notification.member.leave.self.nousername.noconversationname" = "Sind eemaldati vestlusest";
+"push.notification.member.leave.self.nousername" = "Sind eemaldati vestlusest %1$@";
+
+"push.notification.member.leave.nootherusername" = "%1$@ eemaldas inimesi vestlusest %2$@";
+"push.notification.member.leave.nootherusername.noconversationname" = "%1$@ eemaldas vestlusest inimesed";
+"push.notification.member.leave.nootherusername.nousername.noconversationname" = "Inimesi eemaldati vestlusest";
+"push.notification.member.leave.nootherusername.nousername" = "Vestlusest  %1$@ eemaldati mõned inimesed";
+
+"push.notification.member.leave.sender.nootherusername" = "%1$@ lahkus vestlusest %2$@";
+"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ lahkus vestlusest";
+"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Inimesi lahkus vestlusest";
+"push.notification.member.leave.sender.nootherusername.nousername" = "Inimesed lahkusid vestlusest %1$@";
+
+
+"push.notification.call.started.video.oneonone" = "%1$@ helistab videoga";
+"push.notification.call.started.video.oneonone.nousername" = "Keegi helistab videoga";
+
+"push.notification.call.started.video.group" = "%1$@ helistab videoga vestluses %2$@";
+"push.notification.call.started.video.group.nousername" = "Keegi helisab videoga vestluses %1$@";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ helistab videoga vestluses";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Keegi helistab videoga vestluses";
+
+"push.notification.call.started.oneonone" = "%1$@ helistab";
+"push.notification.call.started.oneonone.nousername" = "Keegi helistab";
+
+"push.notification.call.started.group" = "%1$@ helistab vestluses %2$@";
+"push.notification.call.started.group.nousername" = "Keegi helistab vestluses %1$@";
+"push.notification.call.started.group.noconversationname" = "%1$@ helistab vestluses";
+"push.notification.call.started.group.nousername.noconversationname" = "Keegi helistab vestluses";
+
+"push.notification.conversation.create" = "%1$@ alustas sinuga grupivestlust";
+"push.notification.conversation.create.nousername" = "Keegi alustas sinuga grupivestlust";
+
+"push.notification.conversation.rename" = "%1$@ muutis vestluse nime: %2$@";
+"push.notification.conversation.rename.nousername" = "Vestlus sai uueks nimeks %1$@";
+
+"push.notification.connection.request" = "%@ soovib sind kontaktiks lisada";
+"push.notification.connection.request.nousername" = "Keegi soovib sinuga ühenduda";
+
+"push.notification.connection.accepted" = "%@ ja sina olete nüüd ühendatud";
+"push.notification.connection.accepted.nousername" = "Sul on uus kontakt";
+
+"push.notification.failed.message.oneonone" = "Kasutajale %1$@ sõnumi saatmine ebaõnnestus";
+"push.notification.failed.message.oneonone.nousername" = "Sõnumi saatmine ebaõnnestus";
+
+"push.notification.failed.message.group" = "Sõnumi saatmine vestlusse %1$@ ebaõnnestus";
+"push.notification.failed.message.group.noconversationname" = "Sõnumi saatmine ebaõnnestus";
+
+"push.notification.reaction.group" = "%1$@ %3$@ sinu sõnumit vestluses %2$@";
+"push.notification.reaction.group.nousername.noconversationname" = "Keegi %@ sinu sõnumit vestluses";
+"push.notification.reaction.group.nousername" = "Keegi %2$@ sinu sõnumit vestluses %1$@";
+"push.notification.reaction.group.noconversationname" = "%@ %@ sinu sõnumit vestluses";
+
+"push.notification.reaction.oneonone" = "%@ %@ sinu sõnumit";
+"push.notification.reaction.oneonone.nousername" = "Keegi %@ sinu sõnumit";
+
+"push.notification.new_user" = "%@ liitus just Wire’ga";
+
+"push.notification.action.message.open" = "Ava";
+"push.notification.action.message.reply" = "Vasta";
+"push.notification.action.message.reply.button.title" = "Saada";
+"push.notification.action.conversation.mute" = "Hääletu";
+
+"push.notification.action.call.accept" = "Kinnita";
+"push.notification.action.call.ignore" = "Keeldu";
+"push.notification.action.call.message" = "Sõnum";
+"push.notification.action.call.callback" = "Helist tagasi";
+"push.notification.action.connection.accept" = "Kinnita";
+
+"push.notification.callkit.call.started.group" = "%1$@ vestluses %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Keegi helistab vestluses";
+"push.notification.callkit.call.started.group.nousername" = "Keegi helistab vestluses %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ helistab vestluses";
