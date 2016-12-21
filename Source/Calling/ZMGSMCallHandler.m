@@ -182,19 +182,19 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     return ([self.syncManagedObjectContext persistentStoreMetadataForKey:ZMInterruptedCallConversationObjectIDKey] != nil);
 }
 
-- (ZMConversation *)storedConversation
+- (ZMConversation *)storedConversationInContext:(NSManagedObjectContext *)moc
 {
-    NSString *objectIDURLString = [self.syncManagedObjectContext persistentStoreMetadataForKey:ZMInterruptedCallConversationObjectIDKey];
+    NSString *objectIDURLString = [moc persistentStoreMetadataForKey:ZMInterruptedCallConversationObjectIDKey];
     if (objectIDURLString == nil) {
         return nil;
     }
-    ZMConversation *conv = [ZMConversation existingObjectWithObjectIdentifier:objectIDURLString inManagedObjectContext:self.syncManagedObjectContext];
+    ZMConversation *conv = [ZMConversation existingObjectWithObjectIdentifier:objectIDURLString inManagedObjectContext:moc];
     return conv;
 }
 
-- (void)setStoredConversation:(ZMConversation *)storedConversation
+- (void)setStoredConversation:(ZMConversation *)storedConversation managedObjectContext:(NSManagedObjectContext *)moc
 {
-    [self.syncManagedObjectContext setPersistentStoreMetadata:[storedConversation objectIDURLString]
+    [moc setPersistentStoreMetadata:[storedConversation objectIDURLString]
                                                      forKey:ZMInterruptedCallConversationObjectIDKey];
 }
 
@@ -214,7 +214,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
         [self.uiManagedObjectContext performGroupedBlock:^{
             // when a wire call ends during a GSM call, we need to reset the storedConversation as well
             // otherwise on next app launch the app might initiate call automatically
-            [self setStoredConversation:nil];
+            [self setStoredConversation:nil managedObjectContext:self.uiManagedObjectContext];
         }];
         return;
     }
