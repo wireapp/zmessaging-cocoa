@@ -204,7 +204,7 @@ public final class Session : NSObject, NSCoding, NSCopying {
     
     /// unarchives previous calls that haven't been cancelled yet
     func unarchiveOldSessions(){
-        guard let archive = managedObjectContext.value(forKey: SessionTracker.ArchivingKey) as? Data,
+        guard let archive = managedObjectContext.storedValue(key: SessionTracker.ArchivingKey) as? Data,
             let archivedSessions =  NSKeyedUnarchiver.unarchiveObject(with: archive) as? [Session]
             else { return }
         self.sessions = archivedSessions
@@ -213,7 +213,7 @@ public final class Session : NSObject, NSCoding, NSCopying {
     /// Archives sessions
     func updateArchive(){
         let data = NSKeyedArchiver.archivedData(withRootObject: sessions)
-        managedObjectContext.setValue(data, forKey: SessionTracker.ArchivingKey)
+        managedObjectContext.store(value: data, key: SessionTracker.ArchivingKey)
         managedObjectContext.saveOrRollback() // we need to save otherwiese changes might not be stored
     }
     

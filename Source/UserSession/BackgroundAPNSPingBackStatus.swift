@@ -20,6 +20,8 @@
 import Foundation
 import ZMCDataModel
 
+
+private let lastUpdateEventIDKey = "LastUpdateEventID"
 private let zmLog = ZMSLog(tag: "Pingback")
 
 // MARK: - AuthenticationStatusProvider
@@ -59,7 +61,7 @@ extension EventsWithIdentifier {
     }
 }
 
-@objc public protocol ZMLastNotificationIDStore: ZMKeyValueStore {
+@objc public protocol ZMLastNotificationIDStore: KeyValueStore {
     var zm_lastNotificationID : UUID? { get set }
     var zm_hasLastNotificationID : Bool { get }
 }
@@ -79,11 +81,11 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
                 return
             }
 
-            setValue(newValue?.uuidString, forKey: "LastUpdateEventID")
+            self.store(value: newValue?.uuidString, key: lastUpdateEventIDKey)
         }
 
         get {
-            guard let uuidString = value(forKey: "LastUpdateEventID") as? String,
+            guard let uuidString = storedValue(key: "LastUpdateEventID") as? String,
                 let uuid = UUID(uuidString: uuidString)
                 else { return nil }
             return uuid

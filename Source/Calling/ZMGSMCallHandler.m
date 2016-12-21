@@ -179,22 +179,22 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
 
 - (BOOL)hasStoredInterruptedCallConversation
 {
-    return ([self.uiManagedObjectContext persistentStoreMetadataForKey:ZMInterruptedCallConversationObjectIDKey] != nil);
+    return ([self.syncManagedObjectContext persistentStoreMetadataForKey:ZMInterruptedCallConversationObjectIDKey] != nil);
 }
 
 - (ZMConversation *)storedConversation
 {
-    NSString *objectIDURLString = [self.uiManagedObjectContext persistentStoreMetadataForKey:ZMInterruptedCallConversationObjectIDKey];
+    NSString *objectIDURLString = [self.syncManagedObjectContext persistentStoreMetadataForKey:ZMInterruptedCallConversationObjectIDKey];
     if (objectIDURLString == nil) {
         return nil;
     }
-    ZMConversation *conv = [ZMConversation existingObjectWithObjectIdentifier:objectIDURLString inManagedObjectContext:self.uiManagedObjectContext];
+    ZMConversation *conv = [ZMConversation existingObjectWithObjectIdentifier:objectIDURLString inManagedObjectContext:self.syncManagedObjectContext];
     return conv;
 }
 
 - (void)setStoredConversation:(ZMConversation *)storedConversation
 {
-    [self.uiManagedObjectContext setPersistentStoreMetadata:[storedConversation objectIDURLString]
+    [self.syncManagedObjectContext setPersistentStoreMetadata:[storedConversation objectIDURLString]
                                                      forKey:ZMInterruptedCallConversationObjectIDKey];
 }
 

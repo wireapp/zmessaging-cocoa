@@ -88,7 +88,9 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         self.authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note){
             ZM_STRONG(self);
             if (note.type == ZMAuthenticationNotificationAuthenticationDidSuceeded) {
-                [self registerSelfUser];
+                [self.managedObjectContext performGroupedBlock:^{
+                    [self registerSelfUser];
+                }];
             }
         }];
         self.pushChannelIsOpen = NO;

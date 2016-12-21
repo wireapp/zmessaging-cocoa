@@ -58,7 +58,9 @@ private let previouslyReceivedEventIDsKey = "zm_previouslyReceivedEventIDsKey"
         self.eventMOC = eventMOC
         self.syncMOC = syncMOC
         super.init()
-        self.createReceivedPushEventIDsStoreIfNecessary()
+        self.eventMOC.performGroupedBlockAndWait {
+            self.createReceivedPushEventIDsStoreIfNecessary()
+        }
     }
 }
 
@@ -70,19 +72,21 @@ extension EventDecoder {
     /// If the app crashes while processing the events, they can be recovered from the database
     public func processEvents(_ events: [ZMUpdateEvent], block: ConsumeBlock) {
      
-        self.storeReceivedPushEventIDs(from: events)
-        let filteredEvents = self.filterAlreadyReceivedEvents(from: events)
         
         var lastIndex: Int64?
         
         eventMOC.performGroupedBlockAndWait {
+            
+            self.storeReceivedPushEventIDs(from: events)
+            let filteredEvents = self.filterAlreadyReceivedEvents(from: events)
+            
             // Get the highest index of events in the DB
             lastIndex = StoredUpdateEvent.highestIndex(self.eventMOC)
+            
+            guard let index = lastIndex else { return }
+            self.storeEvents(filteredEvents, startingAtIndex: index)
         }
         
-        guard let index = lastIndex else { return }
-
-        storeEvents(filteredEvents, startingAtIndex: index)
         process(block, firstCall: true)
     }
     
@@ -202,6 +206,8 @@ extension EventDecoder : PreviouslyReceivedEventIDsCollection {
     
     /// Discards the list of already received events
     public func discardListOfAlreadyReceivedPushEventIDs() {
-        self.eventMOC.setPersistentStoreMetadata(NSArray(), forKey: previouslyReceivedEventIDsKey)
+        self.eventMOC.performGroupedBlockAndWait {
+            self.eventMOC.setPersistentStoreMetadata(NSArray(), forKey: previouslyReceivedEventIDsKey)
+        }
     }
 }
