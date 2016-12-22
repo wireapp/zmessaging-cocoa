@@ -163,11 +163,11 @@
 "push.notification.action.message.reply.button.title" = "Saada";
 "push.notification.action.conversation.mute" = "Hääletu";
 
-"push.notification.action.call.accept" = "Kinnita";
+"push.notification.action.call.accept" = "Vasta";
 "push.notification.action.call.ignore" = "Keeldu";
 "push.notification.action.call.message" = "Sõnum";
 "push.notification.action.call.callback" = "Helist tagasi";
-"push.notification.action.connection.accept" = "Kinnita";
+"push.notification.action.connection.accept" = "Vasta";
 
 "push.notification.callkit.call.started.group" = "%1$@ vestluses %2$@";
 "push.notification.callkit.call.started.group.nousername.noconversationname" = "Keegi helistab vestluses";
