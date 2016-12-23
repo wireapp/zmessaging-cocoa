@@ -421,7 +421,6 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 }
 
 - (BOOL)registeredOnThisDeviceOnContext:(NSManagedObjectContext *)moc;
-
 {
     return ((NSNumber *)[moc persistentStoreMetadataForKey:RegisteredOnThisDeviceKey]).boolValue;
 }
