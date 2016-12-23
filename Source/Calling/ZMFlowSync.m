@@ -88,7 +88,9 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         self.authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note){
             ZM_STRONG(self);
             if (note.type == ZMAuthenticationNotificationAuthenticationDidSuceeded) {
-                [self registerSelfUser];
+                [self.managedObjectContext performGroupedBlock:^{
+                    [self registerSelfUser];
+                }];
             }
         }];
         self.pushChannelIsOpen = NO;
@@ -444,21 +446,23 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 - (void)didEstablishMediaInConversation:(NSString *)conversationIdentifier;
 {    
     NSUUID *conversationUUID = conversationIdentifier.UUID;
-    ZMConversation *conversation = [ZMConversation conversationWithRemoteID:conversationUUID createIfNeeded:NO inContext:self.managedObjectContext];
-    
-    BOOL canSendVideo = NO;
-    if (conversation.isVideoCall) {
-        BOOL useCallKit = [ZMUserSession useCallKit];
-        if ([self.flowManager canSendVideoForConversation:conversationIdentifier] && (!useCallKit || self.application.applicationState == UIApplicationStateActive)) {
-            [self.flowManager setVideoSendState:FLOWMANAGER_VIDEO_SEND forConversation:conversationIdentifier];
-            canSendVideo = YES;
-        } else {
-            // notify UI that a video call can not be established
-            [CallingInitialisationNotification notifyCallingFailedWithErrorCode:ZMVoiceChannelErrorCodeVideoCallingNotSupported];
-        }
-    }
     
     [self.managedObjectContext performGroupedBlock:^{
+        
+        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:conversationUUID createIfNeeded:NO inContext:self.managedObjectContext];
+        
+        BOOL canSendVideo = NO;
+        if (conversation.isVideoCall) {
+            BOOL useCallKit = [ZMUserSession useCallKit];
+            if ([self.flowManager canSendVideoForConversation:conversationIdentifier] && (!useCallKit || self.application.applicationState == UIApplicationStateActive)) {
+                [self.flowManager setVideoSendState:FLOWMANAGER_VIDEO_SEND forConversation:conversationIdentifier];
+                canSendVideo = YES;
+            } else {
+                // notify UI that a video call can not be established
+                [CallingInitialisationNotification notifyCallingFailedWithErrorCode:ZMVoiceChannelErrorCodeVideoCallingNotSupported];
+            }
+        }
+        
         if (conversation.isVideoCall) {
             conversation.isSendingVideo = canSendVideo;
             if (canSendVideo) {

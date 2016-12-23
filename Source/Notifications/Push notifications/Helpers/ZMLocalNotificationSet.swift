@@ -21,7 +21,7 @@ import UIKit
 import ZMTransport
 
 
-@objc public protocol ZMSynchonizableKeyValueStore : ZMKeyValueStore {
+@objc public protocol ZMSynchonizableKeyValueStore : KeyValueStore {
     func enqueueDelayedSave()
 }
 
@@ -50,7 +50,7 @@ import ZMTransport
     
     /// unarchives all previously created notifications that haven't been cancelled yet
     func unarchiveOldNotifications(){
-        guard let archive = keyValueStore.value(forKey: archivingKey) as? Data,
+        guard let archive = keyValueStore.storedValue(key: archivingKey) as? Data,
             let unarchivedNotes =  NSKeyedUnarchiver.unarchiveObject(with: archive) as? [UILocalNotification]
             else { return }
         self.oldNotifications = unarchivedNotes
@@ -65,7 +65,7 @@ import ZMTransport
         }
         uiNotifications = uiNotifications + oldNotifications
         let data = NSKeyedArchiver.archivedData(withRootObject: uiNotifications)
-        keyValueStore.setValue(data, forKey: archivingKey)
+        keyValueStore.store(value: data, key: archivingKey)
         keyValueStore.enqueueDelayedSave() // we need to save otherwiese changes might not be stored
     }
     

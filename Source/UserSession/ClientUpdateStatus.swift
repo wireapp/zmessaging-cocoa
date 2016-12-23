@@ -64,7 +64,9 @@ public enum ClientUpdateError : NSInteger {
         super.init()
         self.authenticationToken = ZMUserSessionAuthenticationNotification.addObserver { [weak self] note in
             if note?.type == .authenticationNotificationAuthenticationDidSuceeded {
-                self?.authenticationDidSucceed()
+                self?.syncManagedObjectContext.performGroupedBlock {
+                    self?.authenticationDidSucceed()
+                }
             }
         }
         self.needsToVerifySelfClientOnAuthenticationDidSucceed = !ZMClientRegistrationStatus.needsToRegisterClient(in: self.syncManagedObjectContext)
