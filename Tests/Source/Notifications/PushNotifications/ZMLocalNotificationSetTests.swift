@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -23,14 +23,14 @@ import ZMCDataModel;
 @testable import zmessaging;
 
 public final class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
-    
+
     var keysAndValues = [String : Any]()
     
-    @objc public override func setValue(_ value: Any?, forKey key: String) {
+    public func store(value: Any?, key: String) {
         keysAndValues[key] = value
     }
     
-    @objc public override func value(forKey key: String) -> Any? {
+    public func storedValue(key: String) -> Any? {
         return keysAndValues[key]
     }
     

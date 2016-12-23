@@ -36,7 +36,6 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
 @property (nonatomic) CTCallCenter *callCenter;
 @property (nonatomic) ZMCallStateLogger *callStateLogger;
 
-@property (nonatomic) ZMConversation *storedConversation;
 @property (nonatomic, readonly) ZMConversation *activeCallUIConversation;
 @property (nonatomic) NSManagedObjectID *activeCallUIConversationObjectID;
 
@@ -71,7 +70,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
         self.callCenter = callCenter ?: [[CTCallCenter alloc] init];
         self.callCenter.callEventHandler = self.callEventHandler;
         self.canUpdateCallState = NO;
-        self.activeCallUIConversationObjectID = self.storedConversation.objectID;
+        self.activeCallUIConversationObjectID = [self storedConversationInContext:self.syncManagedObjectContext].objectID;
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didFinishSync:) name:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
     }
     return self;
@@ -128,7 +127,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
             
             if ((isDialing || isIncoming) &&
                 self.activeCallUIConversationObjectID != nil &&
-                (!self.hasStoredInterruptedCallConversation || ![self.storedConversation.objectID isEqual:self.activeCallUIConversationObjectID])
+                (!self.hasStoredInterruptedCallConversation || ![[self storedConversationInContext:self.uiManagedObjectContext].objectID isEqual:self.activeCallUIConversationObjectID])
                 )
             {
                 [self interruptCall];
@@ -148,7 +147,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     
     // store the conversationObjectID in the persistenStore metaData so when the app restarts
     // because it was killed during the call it can resume / end the active call
-    [self setStoredConversation:self.activeCallUIConversation];
+    [self setStoredConversation:self.activeCallUIConversation managedObjectContext:self.uiManagedObjectContext];
     
     // when the activeCallConversation is set, we need to send a call/state request to the backend with the state
     //  {
@@ -170,7 +169,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     // otherwise the call state transcoder will
     // (1) set the wrong flag for join and
     // (2) not update flows when receiving the response from the BE
-    [self setStoredConversation:nil];
+    [self setStoredConversation:nil managedObjectContext:self.uiManagedObjectContext];
     
     
     if (storedConversation.voiceChannel.participants.count > 0) {
@@ -235,7 +234,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
         return NO;
     }
     
-    return [conversation.objectID isEqual:self.storedConversation.objectID];
+    return [conversation.objectID isEqual:[self storedConversationInContext:self.uiManagedObjectContext].objectID];
 }
 
 - (void)logIsInterrupted:(BOOL)isInterrupted
