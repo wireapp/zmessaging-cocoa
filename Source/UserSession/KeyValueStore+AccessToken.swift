@@ -25,16 +25,16 @@ extension NSManagedObjectContext {
     
     public var accessToken : ZMAccessToken? {
         get {
-            guard let token = self.storedValue(key: lastAccessTokenKey) as? String,
-                let type = self.storedValue(key: lastAccessTokenTypeKey) as? String else {
+            guard let token = self.persistentStoreMetadata(key: lastAccessTokenKey) as? String,
+                let type = self.persistentStoreMetadata(key: lastAccessTokenTypeKey) as? String else {
                     return nil
             }
             return ZMAccessToken(token: token, type: type, expiresInSeconds: 0)
         }
         
         set {
-            self.store(value: newValue?.token, key: lastAccessTokenKey)
-            self.store(value: newValue?.type, key: lastAccessTokenTypeKey)
+            self.setPersistentStoreMetadata(newValue?.token, key: lastAccessTokenKey)
+            self.setPersistentStoreMetadata(newValue?.type, key: lastAccessTokenTypeKey)
         }
     }
 }

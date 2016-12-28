@@ -26,7 +26,7 @@ public final class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
 
     var keysAndValues = [String : Any]()
     
-    public func store(value: Any?, key: String) {
+    public func store(value: PersistableInMetadata?, key: String) {
         keysAndValues[key] = value
     }
     

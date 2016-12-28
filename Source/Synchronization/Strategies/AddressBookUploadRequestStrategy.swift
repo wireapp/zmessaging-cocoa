@@ -298,12 +298,12 @@ extension AddressBook {
     
     /// Sets whether the address book needs to be uploaded
     fileprivate static func markAddressBook(_ moc: NSManagedObjectContext, needsToBeUploaded: Bool) {
-        moc.setPersistentStoreMetadata(NSNumber(value: needsToBeUploaded), forKey: addressBookNeedsToBeUploadedKey)
+        moc.setPersistentStoreMetadata(NSNumber(value: needsToBeUploaded), key: addressBookNeedsToBeUploadedKey)
     }
     
     /// Whether the address book needs to be uploaded
     fileprivate static func addressBookNeedsToBeUploaded(_ moc: NSManagedObjectContext) -> Bool {
-        return (moc.persistentStoreMetadata(forKey: addressBookNeedsToBeUploadedKey) as? NSNumber)?.boolValue == true
+        return (moc.persistentStoreMetadata(key: addressBookNeedsToBeUploadedKey) as? NSNumber)?.boolValue == true
     }
 }
 
@@ -329,11 +329,11 @@ extension AddressBookUploadRequestStrategy {
     fileprivate var lastUploadedCardIndex : UInt {
         get {
             return UInt((self.managedObjectContext
-                .persistentStoreMetadata(forKey: addressBookLastUploadedIndex) as? NSNumber)?.intValue ?? 0)
+                .persistentStoreMetadata(key: addressBookLastUploadedIndex) as? NSNumber)?.intValue ?? 0)
         }
         set {
             self.managedObjectContext
-                .setPersistentStoreMetadata(NSNumber(value: Int(newValue)), forKey: addressBookLastUploadedIndex)
+                .setPersistentStoreMetadata(NSNumber(value: Int(newValue)), key: addressBookLastUploadedIndex)
         }
     }
 }

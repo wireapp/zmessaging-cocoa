@@ -64,9 +64,6 @@ NSString * const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLo
 
 static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-client/id930944768?ls=1&mt=8";
 
-@interface NSManagedObjectContext (KeyValueStore) <ZMKeyValueStore>
-@end
-
 
 @interface ZMUserSession ()
 @property (nonatomic) ZMOperationLoop *operationLoop;
