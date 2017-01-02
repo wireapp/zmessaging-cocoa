@@ -181,25 +181,6 @@
     [self.sut didFailAuthentication];
 }
 
-- (void)testThatWhenWeAreLoggedInWeAskForTheSelfUser
-{
-    // given
-    ZMTransportRequest *selfUserRequest = [ZMTransportRequest requestWithPath:@"/mock/selfUser" method:ZMMethodGET payload:nil];
-    [self.authenticationStatus setAuthenticationCookieData:[@"foo" dataUsingEncoding:NSUTF8StringEncoding]];
-    
-    // expect
-    [[(id)self.stateMachine reject] goToState:OCMOCK_ANY];
-    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@NO] isSelfUserComplete];
-    id<ZMRequestGenerator> generator = [self generatorReturningRequest:selfUserRequest];
-    [[[(id)self.objectDirectory.selfStrategy expect] andReturn:@[generator]] requestGenerators];
-    
-    // when
-    ZMTransportRequest *request = [self.sut nextRequest];
-    
-    // then
-    XCTAssertEqualObjects(request, selfUserRequest);
-}
-
 - (void)testThatWeSwitchToTheEventProcessingStateWhenEnteringTheStateAndAlreadyLoggedIn
 {
     // given
