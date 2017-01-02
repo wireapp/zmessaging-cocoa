@@ -190,7 +190,6 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
             self.didStartSlowSync = NO;
             [status didFinish:self.expectedSyncPhase];
         }
-        return [self.requestGenerators nextRequest];
     }
     return [self.requestGenerators nextRequest];
 }

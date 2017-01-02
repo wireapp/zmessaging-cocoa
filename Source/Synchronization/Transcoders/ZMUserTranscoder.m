@@ -107,7 +107,6 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
             self.didStartSlowSync = NO;
             [status didFinish:self.expectedSyncPhase];
         }
-        return [self.requestGenerators nextRequest];
     }
     return [self.requestGenerators nextRequest];
 }

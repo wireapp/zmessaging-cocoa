@@ -100,7 +100,6 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
             [status didFinish:self.expectedSyncPhase];
             return nil;
         }
-        return [self.requestGenerators nextRequest];
     }
     return [self.requestGenerators nextRequest];
 }
