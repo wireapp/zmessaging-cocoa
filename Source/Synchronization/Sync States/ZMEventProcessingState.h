@@ -19,6 +19,14 @@
 
 #import "ZMSyncState.h"
 
+@class SyncStatus;
+
 @interface ZMEventProcessingState : ZMSyncState
+
+- (instancetype)initWithAuthenticationCenter:(ZMAuthenticationStatus *)authenticationStatus
+                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
+                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
+                        stateMachineDelegate:(id<ZMStateMachineDelegate>)stateMachineDelegate
+                               slowSynStatus:(SyncStatus *)slowSynStatus;
 
 @end

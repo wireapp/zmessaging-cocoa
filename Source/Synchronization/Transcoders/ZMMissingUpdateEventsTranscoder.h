@@ -21,6 +21,7 @@
 @import WireRequestStrategy;
 
 @class BackgroundAPNSPingBackStatus;
+@class SyncStatus;
 @protocol PreviouslyReceivedEventIDsCollection;
 @protocol ZMApplication;
 
@@ -33,7 +34,9 @@
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
 previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
                          application:(id <ZMApplication>)application
-        backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus;
+        backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus
+                          syncStatus:(SyncStatus *)syncStatus
+          clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
 
 - (void)startDownloadingMissingNotifications;
 

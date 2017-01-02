@@ -28,12 +28,13 @@
 #import "ZMSyncStateDelegate.h"
 #import "ZMStateMachineDelegate.h"
 #import "ZMHotFix.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 @interface ZMEventProcessingState ()
 
 @property (nonatomic) NSArray *syncObjects;
 @property (nonatomic) BOOL isSyncing; // Only used to send a notification to UI that syncing finished
-@property (nonatomic) ZMHotFix *hotFix;
+@property (nonatomic) SyncStatus *slowSynStatus;
 
 @end;
 
@@ -50,6 +51,7 @@
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
                         stateMachineDelegate:(id<ZMStateMachineDelegate>)stateMachineDelegate
+                               slowSynStatus:(SyncStatus *)slowSynStatus;
 {
     
     self = [super initWithAuthenticationCenter:authenticationStatus
@@ -57,13 +59,11 @@
                        objectStrategyDirectory:objectStrategyDirectory
                           stateMachineDelegate:stateMachineDelegate];
     if (self) {
+        self.slowSynStatus = slowSynStatus;
         self.syncObjects = @[
                              objectStrategyDirectory.flowTranscoder,
                              objectStrategyDirectory.callStateTranscoder,
-                             objectStrategyDirectory.connectionTranscoder,
-                             objectStrategyDirectory.userTranscoder,
                              objectStrategyDirectory.selfTranscoder,
-                             objectStrategyDirectory.conversationTranscoder,
                              objectStrategyDirectory.systemMessageTranscoder,
                              objectStrategyDirectory.clientMessageTranscoder,
                              ];
@@ -71,15 +71,18 @@
         for (id<ZMObjectStrategy> syncObject in self.syncObjects) {
             Require([syncObject conformsToProtocol:@protocol(ZMObjectStrategy)]);
         }
-        self.hotFix = [[ZMHotFix alloc] initWithSyncMOC:objectStrategyDirectory.moc];
     }
     return self;
 }
 
 - (ZMTransportRequest *)nextRequest
 {
-    ZMTransportRequest *request = [self nextRequestFromTranscoders:self.syncObjects];
+    if (self.slowSynStatus.currentSyncPhase != SyncPhaseDone) {
+        // TODO Sabine: Message related transcoders should probably not send messages at this point in order to not get the enryption keys out of order
+        return nil;
+    }
     
+    ZMTransportRequest *request = [self nextRequestFromTranscoders:self.syncObjects];
     if (self.isSyncing && request == nil) {
         self.isSyncing = NO;
         [[NSNotificationCenter defaultCenter] postNotificationName:ZMTestSynchronizationStoppedNotification object:nil];
@@ -92,16 +95,7 @@
 
 - (void)didEnterState
 {
-    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
-    [directory processAllEventsInBuffer];
-    [self.hotFix applyPatches];
-
     [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
-    [self.stateMachineDelegate didFinishSync];
-
-    [directory.moc.zm_userInterfaceContext performBlock:^{
-        [ZMUserSession notifyInitialSyncCompleted];
-    }];
 }
 
 - (void)tearDown

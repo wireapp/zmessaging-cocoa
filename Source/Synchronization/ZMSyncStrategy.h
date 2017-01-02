@@ -82,7 +82,6 @@
 - (BOOL)processSaveWithInsertedObjects:(NSSet *)insertedObjects updateObjects:(NSSet *)updatedObjects;
 - (void)tearDown;
 
-@property (nonatomic, readonly) BOOL slowSyncInProgress;
 @property (nonatomic, readonly) NSManagedObjectContext *syncMOC;
 
 - (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
@@ -92,4 +91,8 @@
 
 - (void)transportSessionAccessTokenDidSucceedWithToken:(NSString *)token ofType:(NSString *)type;
 
+@end
+
+
+@interface ZMSyncStrategy (SyncStateDelegate) <ZMSyncStateDelegate>
 @end

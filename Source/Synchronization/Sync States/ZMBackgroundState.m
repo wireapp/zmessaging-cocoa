@@ -87,11 +87,6 @@
     [self.backgroundableSession enterForeground];
 }
 
-- (void)didRequestSynchronization
-{
-    // no op
-}
-
 - (void)didEnterBackground
 {
     // no op
@@ -99,7 +94,8 @@
 
 - (void)didEnterForeground
 {
-    [self.stateMachineDelegate startQuickSync];
+    id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+    [stateMachine goToState:stateMachine.eventProcessingState];
 }
 
 - (ZMTransportRequest *)nextRequest

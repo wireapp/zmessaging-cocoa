@@ -44,7 +44,6 @@
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
                         stateMachineDelegate:(id<ZMStateMachineDelegate>)stateMachineDelegate NS_DESIGNATED_INITIALIZER;
 
-- (void)didRequestSynchronization;
 - (void)didFailAuthentication; //we need it in each state cause at some point cookies can become invalid (if future we will clear cookies on logout)
 - (void)didEnterBackground;
 - (void)didEnterForeground;

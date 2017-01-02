@@ -32,8 +32,6 @@
 #import "ZMSyncState.h"
 #import "ZMUnauthenticatedState.h"
 #import "ZMEventProcessingState.h"
-#import "ZMSlowSyncPhaseOneState.h"
-#import "ZMSlowSyncPhaseTwoState.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
 #import "ZMSyncStateMachine.h"
@@ -73,7 +71,7 @@
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects1;
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects2;
 @property (nonatomic) id mockDispatcher;
-
+@property (nonatomic) id slowSynStatus;
 @end
 
 
@@ -100,11 +98,11 @@
     
     id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
     [[[[userTranscoder expect] andReturn:userTranscoder] classMethod] alloc];
-    (void) [[[userTranscoder expect] andReturn:userTranscoder] initWithManagedObjectContext:self.syncMOC];
+    (void) [[[userTranscoder expect] andReturn:userTranscoder] initWithManagedObjectContext:self.syncMOC syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
 
     self.conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [[[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] classMethod] alloc];
-    (void) [[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:OCMOCK_ANY accountStatus:OCMOCK_ANY syncStrategy:OCMOCK_ANY];
+    (void) [[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:OCMOCK_ANY accountStatus:OCMOCK_ANY syncStrategy:OCMOCK_ANY syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
 
     id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
     [[[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] classMethod] alloc];
@@ -120,7 +118,7 @@
 
     id connectionTranscoder = [OCMockObject mockForClass:ZMConnectionTranscoder.class];
     [[[[connectionTranscoder expect] andReturn:connectionTranscoder] classMethod] alloc];
-    (void) [[[connectionTranscoder expect] andReturn:connectionTranscoder] initWithManagedObjectContext:self.syncMOC];
+    (void) [[[connectionTranscoder expect] andReturn:connectionTranscoder] initWithManagedObjectContext:self.syncMOC syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
 
     id registrationTranscoder = [OCMockObject mockForClass:ZMRegistrationTranscoder.class];
     [[[[registrationTranscoder expect] andReturn:registrationTranscoder] classMethod] alloc];
@@ -128,7 +126,7 @@
 
     id missingUpdateEventsTranscoder = [OCMockObject niceMockForClass:ZMMissingUpdateEventsTranscoder.class];
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
-    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY application:OCMOCK_ANY backgroundAPNSPingbackStatus:OCMOCK_ANY];
+    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY application:OCMOCK_ANY backgroundAPNSPingbackStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
     
     id flowTranscoder = [OCMockObject mockForClass:ZMFlowSync.class];
     [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];
@@ -146,6 +144,13 @@
     [[[[phoneNumberVerificationTranscoder expect] andReturn:phoneNumberVerificationTranscoder] classMethod] alloc];
     (void) [[[phoneNumberVerificationTranscoder expect] andReturn:phoneNumberVerificationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.authenticationStatus];
     
+    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
+
+    self.slowSynStatus = [OCMockObject mockForClass:SyncStatus.class];
+    [[[[self.slowSynStatus expect] andReturn: self.slowSynStatus] classMethod] alloc];
+    (void)[[[self.slowSynStatus expect] andReturn: self.slowSynStatus] initWithManagedObjectContext:self.syncMOC
+                                                                             syncStateDelegate:OCMOCK_ANY];
+
     self.stateMachine = [OCMockObject mockForClass:ZMSyncStateMachine.class];
     [[[[self.stateMachine expect] andReturn:self.stateMachine] classMethod] alloc];
     [[self.stateMachine stub] tearDown];
@@ -155,7 +160,7 @@
                                                                                 syncStateDelegate:OCMOCK_ANY
                                                                             backgroundableSession:self.backgroundableSession
                                                                                       application:self.application
-            ];
+                                                                                    slowSynStatus:self.slowSynStatus];
     [self verifyMockLater:self.stateMachine];
     
     self.updateEventsBuffer = [OCMockObject mockForClass:ZMUpdateEventsBuffer.class];
@@ -163,7 +168,6 @@
     (void) [[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] initWithUpdateEventConsumer:OCMOCK_ANY];
     [self verifyMockLater:self.updateEventsBuffer];
     
-    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
 
     self.syncObjects = @[
                          connectionTranscoder,
@@ -237,7 +241,7 @@
 - (void)tearDown;
 {
     [self.sut tearDown];
-
+    [self.slowSynStatus stopMocking];
     for (id syncObject in self.syncObjects) {
         [syncObject stopMocking];
     }
@@ -384,6 +388,7 @@
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyProcess)] updateEventsPolicy];
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
     
     // expect
     [self expectSyncObjectsToProcessEvents:YES
@@ -415,7 +420,7 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
     
     // expect
     [self expectSyncObjectsToProcessEvents:NO
@@ -450,7 +455,8 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
+
     // expect
     [self expectSyncObjectsToProcessEvents:YES
                                 liveEvents:YES
@@ -481,7 +487,8 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyIgnore)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
+
     
     // expect
     for(id obj in self.syncObjects) {
@@ -518,6 +525,7 @@
         }
     }
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyProcess)] updateEventsPolicy];
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     // expect
@@ -548,7 +556,8 @@
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyIgnore)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
+
     
     // expect
     [self expectSyncObjectsToProcessEvents:YES
@@ -580,7 +589,7 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
     
     // expect
     [self expectSyncObjectsToProcessEvents:NO
@@ -613,7 +622,7 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyIgnore)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
     
     // expect
     [self expectSyncObjectsToProcessEvents:YES
@@ -1010,7 +1019,8 @@
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
+
     // expect
     for(id obj in events) {
         [[self.updateEventsBuffer expect] addUpdateEvent:obj];
@@ -1056,7 +1066,8 @@
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    
+    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
+
     // expect
     for(id obj in events) {
         [[self.updateEventsBuffer expect] addUpdateEvent:obj];
@@ -1163,6 +1174,7 @@
 {
     // expect
     [[self.stateMachine expect] enterBackground];
+    [[self.slowSynStatus expect] didEnterBackground];
     
     // when
     [self goToBackground];
@@ -1177,7 +1189,8 @@
 {
     // expect
     [[self.stateMachine expect] enterForeground];
-    
+    [[self.slowSynStatus expect] didEnterForeground];
+
     // when
     [self goToForeground];
     
@@ -1190,6 +1203,9 @@
     // given
     [[self.stateMachine stub] enterBackground];
     [[self.stateMachine stub] enterForeground];
+    [[self.slowSynStatus stub] didEnterBackground];
+    [[self.slowSynStatus stub] didEnterForeground];
+
 
     // expect
     id mockRequestNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
@@ -1208,6 +1224,8 @@
     // given
     [[self.stateMachine stub] enterBackground];
     [[self.stateMachine stub] enterForeground];
+    [[self.slowSynStatus stub] didEnterBackground];
+    [[self.slowSynStatus stub] didEnterForeground];
     
     // expect
     id mockRequestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
@@ -1225,7 +1243,8 @@
 {
     // given
     [[self.stateMachine stub] enterBackground];
-    
+    [[self.slowSynStatus stub] didEnterBackground];
+
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeGroup;
