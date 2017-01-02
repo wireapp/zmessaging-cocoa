@@ -80,11 +80,14 @@
     return self.lastUpdateEventIDSync.status == ZMSingleRequestInProgress;
 }
 
-- (void)setNeedsSlowSync {
-    // no-op
+- (void)setNeedsSlowSync
+{
+    [self startRequestingLastUpdateEventIDWithoutPersistingIt];
+    [self.syncStatus didStart:self.expectedSyncPhase];
 }
 
-- (BOOL)isSlowSyncDone {
+- (BOOL)isSlowSyncDone
+{
     return YES;
 }
 
@@ -100,8 +103,7 @@
     }
     SyncStatus *status = self.syncStatus;
     if (status.currentSyncPhase == self.expectedSyncPhase && !self.isDownloadingLastUpdateEventID) {
-        [self startRequestingLastUpdateEventIDWithoutPersistingIt];
-        [status didStart:self.expectedSyncPhase];
+        [self setNeedsSlowSync];
         return [self.requestGenerators nextRequest];
     }
     return nil;
@@ -140,17 +142,21 @@
 - (void)didReceiveResponse:(ZMTransportResponse *)response forSingleRequest:(ZMSingleRequestSync *)sync
 {
     NOT_USED(sync);
-    if(response.payload != nil) {
-        NSUUID *lastNotificationID = [[response.payload asDictionary] optionalUuidForKey:@"id"];
-        if(lastNotificationID != nil) {
-            self.lastUpdateEventID = lastNotificationID;
-            SyncStatus *status = self.syncStatus;
-            if (status.currentSyncPhase == SyncPhaseFetchingLastUpdateEventID) {
-                [status updateLastUpdateEventIDWithEventID:lastNotificationID];
-                [status didFinish:self.expectedSyncPhase];
-            }
+    SyncStatus *status = self.syncStatus;
+    if(response.payload == nil) {
+        [status didFail:self.expectedSyncPhase];
+        return;
+    }
+    
+    NSUUID *lastNotificationID = [[response.payload asDictionary] optionalUuidForKey:@"id"];
+    if(lastNotificationID != nil) {
+        self.lastUpdateEventID = lastNotificationID;
+        if (status.currentSyncPhase == SyncPhaseFetchingLastUpdateEventID) {
+            [status updateLastUpdateEventIDWithEventID:lastNotificationID];
+            [status didFinish:self.expectedSyncPhase];
         }
     }
+    
 }
 
 @end

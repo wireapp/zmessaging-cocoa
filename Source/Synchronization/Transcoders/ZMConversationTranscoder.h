@@ -27,7 +27,7 @@
 @class ZMAccountStatus;
 @class SyncStatus;
 
-@interface ZMConversationTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator>
+@interface ZMConversationTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator, ZMSyncPhase>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                         authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus

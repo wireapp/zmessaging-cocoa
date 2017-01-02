@@ -27,7 +27,7 @@ extern NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest;
 
 
 
-@interface ZMUserTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator>
+@interface ZMUserTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator, ZMSyncPhase>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                                   syncStatus:(SyncStatus *)syncStatus

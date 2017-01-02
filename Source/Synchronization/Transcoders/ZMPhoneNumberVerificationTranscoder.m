@@ -58,21 +58,11 @@
     return self;
 }
 
-- (void)setNeedsSlowSync;
-{
-    
-}
-
 - (void)processEvents:(NSArray<ZMUpdateEvent *> __unused *)events
            liveEvents:(BOOL __unused)liveEvents
        prefetchResult:(__unused ZMFetchRequestBatchResult *)prefetchResult;
 {
     // no op
-}
-
-- (BOOL)isSlowSyncDone
-{
-    return YES;
 }
 
 - (NSArray *)contextChangeTrackers
