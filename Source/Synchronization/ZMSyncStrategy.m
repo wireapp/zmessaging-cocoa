@@ -231,7 +231,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.lastUpdateEventIDTranscoder,
                                    self.missingUpdateEventsTranscoder,
                                    [[UserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:imageProcessingQueue clientRegistrationDelegate:clientRegistrationStatus],
-                                   [[TopConversationsRequestStrategy alloc] initWithManagedObjectContext:uiMOC authenticationStatus:authenticationStatus conversationDirectory:topConversationsDirectory]
+                                   [[TopConversationsRequestStrategy alloc] initWithManagedObjectContext:uiMOC authenticationStatus:authenticationStatus conversationDirectory:topConversationsDirectory],
                                    self.selfStrategy
                                    ];
 

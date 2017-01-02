@@ -32,7 +32,7 @@
 
 @property (nonatomic) NSArray *syncObjects;
 @property (nonatomic) BOOL isSyncing; // Only used to send a notification to UI that syncing finished
-@property (nonatomic) SyncStatus *slowSynStatus;
+@property (nonatomic) SyncStatus *synStatus;
 
 @end;
 
@@ -49,7 +49,7 @@
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
                         stateMachineDelegate:(id<ZMStateMachineDelegate>)stateMachineDelegate
-                               slowSynStatus:(SyncStatus *)slowSynStatus;
+                               slowSynStatus:(SyncStatus *)synStatus;
 {
     
     self = [super initWithAuthenticationCenter:authenticationStatus
@@ -57,7 +57,7 @@
                        objectStrategyDirectory:objectStrategyDirectory
                           stateMachineDelegate:stateMachineDelegate];
     if (self) {
-        self.slowSynStatus = slowSynStatus;
+        self.synStatus = synStatus;
         self.syncObjects = @[
                              objectStrategyDirectory.flowTranscoder,
                              objectStrategyDirectory.callStateTranscoder,
@@ -74,7 +74,7 @@
 
 - (ZMTransportRequest *)nextRequest
 {
-    if (self.slowSynStatus.currentSyncPhase != SyncPhaseDone) {
+    if (self.synStatus.currentSyncPhase != SyncPhaseDone) {
         // TODO Sabine: Message related transcoders should probably not send messages at this point in order to not get the enryption keys out of order
         return nil;
     }
