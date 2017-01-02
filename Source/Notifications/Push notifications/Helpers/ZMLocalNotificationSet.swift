@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -65,7 +65,7 @@ import ZMTransport
         }
         uiNotifications = uiNotifications + oldNotifications
         let data = NSKeyedArchiver.archivedData(withRootObject: uiNotifications)
-        keyValueStore.store(value: data, key: archivingKey)
+        keyValueStore.store(value: data as NSData, key: archivingKey)
         keyValueStore.enqueueDelayedSave() // we need to save otherwiese changes might not be stored
     }
     

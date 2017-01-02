@@ -17,11 +17,15 @@
 //
 
 import Foundation
+import CoreData
 
-
-@objc(ZMKeyValueStore) public protocol KeyValueStore : NSObjectProtocol {
-
-    func store(value: PersistableInMetadata?, key: String)
-    func storedValue(key: String) -> Any?
+extension NSManagedObjectContext : ZMSynchonizableKeyValueStore {
     
+    public func store(value: PersistableInMetadata?, key: String) {
+        self.setPersistentStoreMetadata(value, key: key)
+    }
+    
+    public func storedValue(key: String) -> Any? {
+        return self.persistentStoreMetadata(key: key)
+    }
 }

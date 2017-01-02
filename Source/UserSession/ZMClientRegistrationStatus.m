@@ -82,18 +82,20 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     ZM_WEAK(self);
     self.clientUpdateToken = [ZMClientUpdateNotification addObserverWithBlock:^(ZMClientUpdateNotification *note) {
         ZM_STRONG(self);
-        if (note.type == ZMClientUpdateNotificationTypeFetchCompleted) {
-            [self didFetchClients:note.clientObjectIDs];
-        }
-        if (note.type == ZMClientUpdateNotificationTypeDeletionCompleted) {
-            [self didDeleteClient];
-        }
-        if (note.type == ZMClientUpdateNotificationTypeDeletionFailed) {
-            [self failedDeletingClient:note.error];
-        }
-        if (note.type == ZMClientUpdateNotificationTypeFetchFailed) {
-            [self failedFetchingClients:note.error];
-        }
+        [self.managedObjectContext performGroupedBlock:^{
+            if (note.type == ZMClientUpdateNotificationTypeFetchCompleted) {
+                [self didFetchClients:note.clientObjectIDs];
+            }
+            if (note.type == ZMClientUpdateNotificationTypeDeletionCompleted) {
+                [self didDeleteClient];
+            }
+            if (note.type == ZMClientUpdateNotificationTypeDeletionFailed) {
+                [self failedDeletingClient:note.error];
+            }
+            if (note.type == ZMClientUpdateNotificationTypeFetchFailed) {
+                [self failedFetchingClients:note.error];
+            }
+        }];
     }];
 }
 

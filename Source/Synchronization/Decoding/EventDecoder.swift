@@ -161,21 +161,21 @@ extension EventDecoder {
     
     /// create event ID store if needed
     fileprivate func createReceivedPushEventIDsStoreIfNecessary() {
-        if self.eventMOC.persistentStoreMetadata(forKey: previouslyReceivedEventIDsKey) as? [String] == nil {
-            self.eventMOC.setPersistentStoreMetadata(NSArray(), forKey: previouslyReceivedEventIDsKey)
+        if self.eventMOC.persistentStoreMetadata(key: previouslyReceivedEventIDsKey) as? [String] == nil {
+            self.eventMOC.setPersistentStoreMetadata(array: [String](), key: previouslyReceivedEventIDsKey)
         }
     }
     
     
     /// List of already received event IDs
     fileprivate var alreadyReceivedPushEventIDs : Set<UUID> {
-        let array = self.eventMOC.persistentStoreMetadata(forKey: previouslyReceivedEventIDsKey) as! [String]
+        let array = self.eventMOC.persistentStoreMetadata(key: previouslyReceivedEventIDsKey) as! [String]
         return Set(array.flatMap { UUID(uuidString: $0) })
     }
     
     /// List of already received event IDs as strings
     fileprivate var alreadyReceivedPushEventIDsStrings : Set<String> {
-        return Set(self.eventMOC.persistentStoreMetadata(forKey: previouslyReceivedEventIDsKey) as! [String])
+        return Set(self.eventMOC.persistentStoreMetadata(key: previouslyReceivedEventIDsKey) as! [String])
     }
     
     /// Store received event IDs 
@@ -186,7 +186,7 @@ extension EventDecoder {
             .map { $0.transportString() }
         let allUuidStrings = self.alreadyReceivedPushEventIDsStrings.union(uuidToAdd)
         
-        self.eventMOC.setPersistentStoreMetadata(Array(allUuidStrings), forKey: previouslyReceivedEventIDsKey)
+        self.eventMOC.setPersistentStoreMetadata(array: Array(allUuidStrings), key: previouslyReceivedEventIDsKey)
     }
     
     /// Filters out events that have been received before
@@ -207,7 +207,7 @@ extension EventDecoder : PreviouslyReceivedEventIDsCollection {
     /// Discards the list of already received events
     public func discardListOfAlreadyReceivedPushEventIDs() {
         self.eventMOC.performGroupedBlockAndWait {
-            self.eventMOC.setPersistentStoreMetadata(NSArray(), forKey: previouslyReceivedEventIDsKey)
+            self.eventMOC.setPersistentStoreMetadata(array: [String](), key: previouslyReceivedEventIDsKey)
         }
     }
 }

@@ -61,7 +61,7 @@ extension EventsWithIdentifier {
     }
 }
 
-@objc public protocol ZMLastNotificationIDStore: KeyValueStore {
+@objc public protocol ZMLastNotificationIDStore {
     var zm_lastNotificationID : UUID? { get set }
     var zm_hasLastNotificationID : Bool { get }
 }
@@ -81,11 +81,11 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
                 return
             }
 
-            self.store(value: newValue?.uuidString, key: lastUpdateEventIDKey)
+            self.setPersistentStoreMetadata(newValue?.uuidString, key: lastUpdateEventIDKey)
         }
 
         get {
-            guard let uuidString = storedValue(key: "LastUpdateEventID") as? String,
+            guard let uuidString = self.persistentStoreMetadata(key: "LastUpdateEventID") as? String,
                 let uuid = UUID(uuidString: uuidString)
                 else { return nil }
             return uuid

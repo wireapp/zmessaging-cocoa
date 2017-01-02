@@ -119,7 +119,7 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
     
     func configureNotification(_ conversation: ZMConversation?) -> UILocalNotification {
         let notification = UILocalNotification()
-        let shouldHideContent = managedObjectContext.storedValue(key: ZMShouldHideNotificationContentKey)
+        let shouldHideContent = managedObjectContext.persistentStoreMetadata(key: ZMShouldHideNotificationContentKey)
         if let shouldHideContent = shouldHideContent as? NSNumber , shouldHideContent.boolValue == true {
             notification.alertBody = ZMPushStringDefault.localized()
             notification.soundName = ZMCustomSound.notificationNewMessageSoundName()
