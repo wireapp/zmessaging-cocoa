@@ -207,6 +207,7 @@ static ZMUserIDsForSearchDirectoryTable *userIDMissingProfileImageBySearch;
     request.includeDirectory = YES;
     request.includeGroupConversations = YES;
     request.includeRemoteResults = YES;
+    request.includeAddressBookContacts = NO;
     
     return [self performRequest:request];
 }

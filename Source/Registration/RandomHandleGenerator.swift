@@ -20,7 +20,7 @@ import Foundation
 
 private let maximumUserHandleLength = 21
 
-private let minimumUserHandleLength = 3
+private let minimumUserHandleLength = 2
 
 struct RandomHandleGenerator {
     
@@ -42,8 +42,8 @@ struct RandomHandleGenerator {
         
         possibleHandles.append(contentsOf: alternativeNames)
         possibleHandles.append(contentsOf: alternativeNames.map { $0.truncated(at: maximumUserHandleLength-2).appendRandomDigits(numberOfDigits: 2, variations: 2) }.flatMap { $0 })
-        possibleHandles.append(contentsOf: alternativeNames.map { $0.truncated(at: maximumUserHandleLength-3).appendRandomDigits(numberOfDigits: 3, variations: 4) }.flatMap { $0 })
-        possibleHandles.append(contentsOf: alternativeNames.map { $0.truncated(at: maximumUserHandleLength-4).appendRandomDigits(numberOfDigits: 4, variations: 6) }.flatMap { $0 })
+        possibleHandles.append(contentsOf: alternativeNames.map { $0.truncated(at: maximumUserHandleLength-3).appendRandomDigits(numberOfDigits: 3, variations: 2) }.flatMap { $0 })
+        possibleHandles.append(contentsOf: alternativeNames.map { $0.truncated(at: maximumUserHandleLength-4).appendRandomDigits(numberOfDigits: 4, variations: 2) }.flatMap { $0 })
         
         return possibleHandles
     }
@@ -166,7 +166,7 @@ extension String {
     
     /// Returns a truncated version of the string
     func truncated(at position: Int) -> String {
-        return self.substring(to: self.index(self.startIndex, offsetBy: min(position+1, self.characters.count)))
+        return self.substring(to: self.index(self.startIndex, offsetBy: min(position, self.characters.count)))
     }
     
     /// Returns the string if its a valid handle, or nil

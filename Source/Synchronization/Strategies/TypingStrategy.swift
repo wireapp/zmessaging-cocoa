@@ -89,6 +89,7 @@ public class TypingStrategy : NSObject {
         let clearIsTyping = (note.userInfo?[ClearIsTypingKey] as? NSNumber)?.boolValue ?? false
         
         add(conversation:conversation, isTyping:isTyping, clearIsTyping:clearIsTyping)
+        RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
     
     fileprivate func shouldClearTypingForConversation(note: Notification) {

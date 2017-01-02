@@ -1301,7 +1301,8 @@
     XCTAssertNotNil(message);
     XCTAssertNotNil(observer);
     XCTAssertNotNil(conversation);
-    
+
+    // when
     [self.userSession performChanges:^{
         [message requestImageDownload];
     }];
@@ -1489,6 +1490,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
+    [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
         [message requestFileDownload];
     }];
@@ -1499,6 +1501,7 @@
     ZMTransportRequest *lastRequest = self.mockTransportSession.receivedRequests.lastObject;
     NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets/%@", conversation.remoteIdentifier.transportString, message.assetId.transportString];
     XCTAssertEqualObjects(lastRequest.path, expectedPath);
+    XCTAssertEqualObjects(lastRequest.methodAsString, @"GET");
     XCTAssertEqual(message.transferState, ZMFileTransferStateDownloaded);
 }
 
@@ -3540,6 +3543,7 @@
     // given
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+
     WaitForAllGroupsToBeEmpty(0.5);
 
     NSUUID *nonce = NSUUID.createUUID;
@@ -3577,6 +3581,8 @@
         return nil;
     };
 
+    // when we request the file download
+    [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
         [message requestFileDownload];
     }];
@@ -3633,11 +3639,14 @@
         return nil;
     };
 
-    [self.userSession performChanges:^{
-        [message requestFileDownload];
-    }];
+    // We log an error when we fail to decrypt the received data
+    [self performIgnoringZMLogError:^{
+        [self.userSession performChanges:^{
+            [message requestFileDownload];
+        }];
 
-    WaitForAllGroupsToBeEmpty(0.5);
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
 
     // then
     ZMTransportRequest *lastRequest = self.mockTransportSession.receivedRequests.lastObject;

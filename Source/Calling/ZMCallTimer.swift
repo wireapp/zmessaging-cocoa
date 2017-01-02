@@ -60,9 +60,8 @@ extension NSManagedObjectContext {
     }
     
     public func zm_tearDownCallTimer() {
-        if let oldTimer = self.userInfo[UserInfoCallTimerKey] as? ZMCallTimer {
-            oldTimer.tearDown()
-        }
+        let oldTimer = self.userInfo[UserInfoCallTimerKey] as? ZMCallTimer
+        oldTimer?.tearDown()
     }
     
     public func zm_hasTimerForConversation(_ conversation: ZMConversation) -> Bool {

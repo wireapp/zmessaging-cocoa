@@ -168,19 +168,38 @@
 
     [self resetState];
     [MessagingTest deleteAllFilesInCache];
+    [self removeCachesInSharedContainer];
     [super tearDown];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
 }
 
+- (void)tearDownUserInfoObjectsOfMOC:(NSManagedObjectContext *)moc
+{
+    NSMutableArray *keysToRemove = [NSMutableArray array];
+    [moc.userInfo enumerateKeysAndObjectsUsingBlock:^(id  key, id  obj, BOOL * ZM_UNUSED stop) {
+        if ([obj respondsToSelector:@selector(tearDown)]) {
+            [obj tearDown];
+            [keysToRemove addObject:key];
+        }
+    }];
+    [moc.userInfo removeObjectsForKeys:keysToRemove];
+}
+
+- (void)removeCachesInSharedContainer
+{
+    NSFileManager *fm = NSFileManager.defaultManager;
+    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
+    NSURL *cachesURL = [sharedContainerURL URLByAppendingPathComponent:@"Library/Caches"];
+    [fm removeItemAtURL:cachesURL error:nil];
+}
+
 - (void)resetState
 {
-    [self.uiMOC.globalManagedObjectContextObserver tearDown];
-    [self.uiMOC zm_tearDownCallTimer];
-    [self.testMOC zm_tearDownCallTimer];
+    [self tearDownUserInfoObjectsOfMOC:self.uiMOC];
+    [self tearDownUserInfoObjectsOfMOC:self.testMOC];
     
     [self.syncMOC performGroupedBlock:^{
-        [self.syncMOC.globalManagedObjectContextObserver tearDown];
-        [self.syncMOC zm_tearDownCallTimer];
+        [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
         [self.syncMOC zm_tearDownCryptKeyStore];
         [self.syncMOC.userInfo removeAllObjects];
     }];
@@ -232,12 +251,6 @@
     [refSearchMoc performBlockAndWait:^{
         // Do nothing
     }];
-    
-    [refUiMOC.globalManagedObjectContextObserver tearDown];
-
-    [refSyncMoc performGroupedBlockAndWait:^{
-        [refSyncMoc.globalManagedObjectContextObserver tearDown];
-    }];
 }
 
 - (void)cleanUpAndVerify {
@@ -253,11 +266,11 @@
 
 - (void)resetUIandSyncContextsAndResetPersistentStore:(BOOL)resetPersistentStore notificationContentHidden:(BOOL)notificationContentVisible;
 {
-    [self.uiMOC zm_tearDownCallTimer];
-    [self.syncMOC zm_tearDownCallTimer];
-    
-    [self.syncMOC.globalManagedObjectContextObserver tearDown];
-    [self.uiMOC.globalManagedObjectContextObserver tearDown];
+    [self tearDownUserInfoObjectsOfMOC:self.uiMOC];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *clientID = [self.uiMOC persistentStoreMetadataForKey:ZMPersistedClientIdKey];
     self.uiMOC = nil;

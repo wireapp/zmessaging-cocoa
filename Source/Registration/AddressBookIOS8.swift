@@ -60,6 +60,7 @@ extension AddressBookIOS8 : CustomStringConvertible {
 // MARK: - Iterating contacts
 
 extension AddressBookIOS8 : AddressBookAccessor {
+    
     /// Gets a specific address book user by the local address book indentifier
     internal func contact(identifier: String) -> ContactRecord? {
         return nil
@@ -68,7 +69,12 @@ extension AddressBookIOS8 : AddressBookAccessor {
     
     /// Returns contacts matching search query
     func rawContacts(matchingQuery: String) -> [ContactRecord] {
-        return []
+        return self.firstRawContacts(number: addressBookContactsSearchLimit).filter {
+            guard !matchingQuery.isEmpty else {
+                return true
+            }
+            return $0.displayName.range(of: matchingQuery, options: .caseInsensitive) != .none
+        }
     }
 
     /// Enumerates the contacts, invoking the block for each contact.

@@ -115,20 +115,23 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 - (void)tearDown
 {
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    self.mockLinkPreviewDetector = nil;
     [BackgroundActivityFactory tearDownInstance];
     [LinkPreviewDetectorHelper tearDown];
-    
-    [self.uiMOC.globalManagedObjectContextObserver tearDown];
-    [self.syncMOC.globalManagedObjectContextObserver tearDown];
-    [self.syncMOC zm_tearDownCryptKeyStore];
     
     [self.conversationChangeObserver tearDown];
     [self.userChangeObserver tearDown];
     [self.messageChangeObserver tearDown];
+
+    WaitForAllGroupsToBeEmpty(0.5);
     
     ZMFlowSyncInternalFlowManagerOverride = nil;
     
     [self.userSession tearDown];
+    WaitForAllGroupsToBeEmpty(0.5);
+
     self.userSession = nil;
     
     self.selfUser = nil;
@@ -309,6 +312,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 - (void)recreateUserSessionAndWipeCache:(BOOL)wipeCache
 {
+    
     [self.userSession tearDown];
     self.userSession = nil;
     

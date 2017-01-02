@@ -177,17 +177,25 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
         var missingIDs = Set(expectedContactIDs)
         cards.forEach {
             guard let userid = ($0["id"] as? String).flatMap({ UUID(uuidString: $0 )}),
-                let contactId = $0["card_id"] as? String,
-                let user = idToUsers[userid]
+                let contactIds = $0["cards"] as? [String]
             else { return }
             
-            missingIDs.remove(contactId)
-            
-            if user.addressBookEntry == nil {
-                user.addressBookEntry = AddressBookEntry.insertNewObject(in: self.managedObjectContext)
+            let user : ZMUser = idToUsers[userid] ?? {
+                let newUser = ZMUser.insertNewObject(in: self.managedObjectContext)
+                newUser.remoteIdentifier = userid
+                newUser.needsToBeUpdatedFromBackend = true
+                return newUser
+            }()
+
+            contactIds.forEach { contactId in
+                missingIDs.remove(contactId)
+
+                if user.addressBookEntry == nil {
+                    user.addressBookEntry = AddressBookEntry.insertNewObject(in: self.managedObjectContext)
+                }
+                user.addressBookEntry.localIdentifier = contactId
+                user.addressBookEntry.cachedName = addressBook.contact(identifier: contactId)?.displayName
             }
-            user.addressBookEntry.localIdentifier = contactId
-            user.addressBookEntry.cachedName = addressBook.contact(identifier: contactId)?.displayName
         }
         
         // now remove all address book entries for those users that were previously using the missing IDs
@@ -290,12 +298,12 @@ extension AddressBook {
     
     /// Sets whether the address book needs to be uploaded
     fileprivate static func markAddressBook(_ moc: NSManagedObjectContext, needsToBeUploaded: Bool) {
-        moc.setPersistentStoreMetadata(NSNumber(value: needsToBeUploaded), forKey: addressBookNeedsToBeUploadedKey)
+        moc.setPersistentStoreMetadata(NSNumber(value: needsToBeUploaded), key: addressBookNeedsToBeUploadedKey)
     }
     
     /// Whether the address book needs to be uploaded
     fileprivate static func addressBookNeedsToBeUploaded(_ moc: NSManagedObjectContext) -> Bool {
-        return (moc.persistentStoreMetadata(forKey: addressBookNeedsToBeUploadedKey) as? NSNumber)?.boolValue == true
+        return (moc.persistentStoreMetadata(key: addressBookNeedsToBeUploadedKey) as? NSNumber)?.boolValue == true
     }
 }
 
@@ -321,11 +329,11 @@ extension AddressBookUploadRequestStrategy {
     fileprivate var lastUploadedCardIndex : UInt {
         get {
             return UInt((self.managedObjectContext
-                .persistentStoreMetadata(forKey: addressBookLastUploadedIndex) as? NSNumber)?.intValue ?? 0)
+                .persistentStoreMetadata(key: addressBookLastUploadedIndex) as? NSNumber)?.intValue ?? 0)
         }
         set {
             self.managedObjectContext
-                .setPersistentStoreMetadata(NSNumber(value: Int(newValue)), forKey: addressBookLastUploadedIndex)
+                .setPersistentStoreMetadata(NSNumber(value: Int(newValue)), key: addressBookLastUploadedIndex)
         }
     }
 }

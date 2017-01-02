@@ -50,9 +50,9 @@ class UserProfileUpdateStatusTests : MessagingTest {
     override func tearDown() {
         self.newRequestObserver = nil
         self.sut.removeObserver(token: self.observerToken!)
-        self.sut = nil
         self.observer = nil
         self.mockAnalytics = nil
+        self.sut = nil
         super.tearDown()
     }
 }
@@ -1087,8 +1087,8 @@ extension UserProfileUpdateStatusTests {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
 
         // WHEN
-        sut.didFailToFindHandleSuggestion()
-        sut.didFailToFindHandleSuggestion()
+        sut.didNotFindAvailableHandleSuggestion()
+        sut.didNotFindAvailableHandleSuggestion()
         sut.didFindHandleSuggestion(handle: "handle")
 
         // THEN

@@ -169,7 +169,7 @@
 "push.notification.action.call.callback" = "Ligue de volta";
 "push.notification.action.connection.accept" = "Aceitar";
 
-"push.notification.callkit.call.started.group" = "%1$@ in %2$@";
-"push.notification.callkit.call.started.group.nousername.noconversationname" = "Someone calling in a conversation";
-"push.notification.callkit.call.started.group.nousername" = "Someone calling in %1$@";
-"push.notification.callkit.call.started.group.noconversationname" = "%@ calling in a conversation";
+"push.notification.callkit.call.started.group" = "%1$@ em %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Alguém está chamando em uma conversa";
+"push.notification.callkit.call.started.group.nousername" = "Alguém está chamando em %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ está chamando em uma conversa";

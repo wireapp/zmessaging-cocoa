@@ -58,8 +58,8 @@ extension ZMSearchResult {
             .filter { $0.connection == nil }
             .flatMap { ZMSearchUser(contact: nil, user: $0, userSession: userSession) }
         
-        return ZMSearchResult(usersInContacts: self.usersInContacts + searchUsersFromAddressBook + additionalConnectedUsers,
-                              usersInDirectory: self.usersInDirectory + additionalNonConnectedUsers,
+        return ZMSearchResult(usersInContacts: self.usersInContacts + additionalConnectedUsers,
+                              usersInDirectory: self.usersInDirectory + additionalNonConnectedUsers + searchUsersFromAddressBook,
                               groupConversations: self.groupConversations)
     }
     

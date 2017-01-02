@@ -45,9 +45,6 @@ NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShou
 @end
 
 
-@interface NSManagedObjectContext (KeyValueStore) <ZMSynchonizableKeyValueStore>
-@end
-
 @implementation ZMLocalNotificationDispatcher
 
 ZM_EMPTY_ASSERTING_INIT();

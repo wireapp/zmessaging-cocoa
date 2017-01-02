@@ -574,7 +574,6 @@
     [self verifyThatResultWithToken:token containsConversations:@[conversation2, conversation3] failureRecorder:NewFailureRecorder()];
 }
 
-
 - (void)testThatConversationSearchIsCaseInsensitive
 {
     // given
@@ -757,6 +756,21 @@
     
     NSArray *expectedResult = @[conversation1, conversation3, conversation4];
     XCTAssertEqualObjects(result.groupConversations, expectedResult);
+}
+
+- (void)testThatItFiltersConversationWhenTheQueryStartsWithAtSymbol
+{
+    // given
+    [self createGroupConversationWithName:@"New Day Rising"];
+    ZMConversation* conversation = [self createGroupConversationWithName:@"@Candy Apple Records"]; // this should be included because it has a @
+    [self createGroupConversationWithName:@"Landspeed Records"];
+    
+    // when
+    ZMSearchToken token = [self.sut searchForUsersAndConversationsMatchingQueryString:@"@records"];
+    [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
+    
+    // then
+    [self verifyThatResultWithToken:token containsConversations:@[conversation] failureRecorder:NewFailureRecorder()];
 }
 
 @end
