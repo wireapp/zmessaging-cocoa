@@ -33,7 +33,7 @@
 #import "ZMUnauthenticatedState.h"
 #import "ZMEventProcessingState.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMClientRegistrationStatus.h"
@@ -112,9 +112,9 @@
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
     (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:self.mockDispatcher clientRegistrationStatus:OCMOCK_ANY apnsConfirmationStatus:OCMOCK_ANY];
 
-    id selfTranscoder = [OCMockObject mockForClass:ZMSelfTranscoder.class];
-    [[[[selfTranscoder expect] andReturn:selfTranscoder] classMethod] alloc];
-    (void) [(ZMSelfTranscoder *)[[selfTranscoder expect] andReturn:selfTranscoder] initWithClientRegistrationStatus:OCMOCK_ANY managedObjectContext:self.syncMOC];
+    id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
+    [[[[selfStrategy expect] andReturn:selfStrategy] classMethod] alloc];
+    (void) [(ZMSelfStrategy *)[[selfStrategy expect] andReturn:selfStrategy] initWithClientRegistrationStatus:OCMOCK_ANY managedObjectContext:self.syncMOC];
 
     id connectionTranscoder = [OCMockObject mockForClass:ZMConnectionTranscoder.class];
     [[[[connectionTranscoder expect] andReturn:connectionTranscoder] classMethod] alloc];
@@ -173,7 +173,7 @@
                          connectionTranscoder,
                          userTranscoder,
                          self.conversationTranscoder,
-                         selfTranscoder,
+                         selfStrategy,
                          systemMessageTranscoder,
                          clientMessageTranscoder,
                          missingUpdateEventsTranscoder,
@@ -218,7 +218,7 @@
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
     XCTAssertEqual(self.sut.systemMessageTranscoder, systemMessageTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
-    XCTAssertEqual(self.sut.selfTranscoder, selfTranscoder);
+    XCTAssertEqual(self.sut.selfStrategy, selfStrategy);
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
     XCTAssertEqual(self.sut.registrationTranscoder, registrationTranscoder);
     XCTAssertEqual(self.sut.flowTranscoder, flowTranscoder);

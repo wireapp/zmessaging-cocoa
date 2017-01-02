@@ -30,7 +30,7 @@
 #import "ZMUserSession+Internal.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMUserTranscoder.h"
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMAuthenticationStatus.h"
@@ -62,7 +62,7 @@
 
 @property (nonatomic) ZMConnectionTranscoder *connectionTranscoder;
 @property (nonatomic) ZMUserTranscoder *userTranscoder;
-@property (nonatomic) ZMSelfTranscoder *selfTranscoder;
+@property (nonatomic) ZMSelfStrategy *selfStrategy;
 @property (nonatomic) ZMConversationTranscoder *conversationTranscoder;
 @property (nonatomic) ZMMessageTranscoder *systemMessageTranscoder;
 @property (nonatomic) ZMMessageTranscoder *clientMessageTranscoder;
@@ -232,6 +232,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.missingUpdateEventsTranscoder,
                                    [[UserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:imageProcessingQueue clientRegistrationDelegate:clientRegistrationStatus],
                                    [[TopConversationsRequestStrategy alloc] initWithManagedObjectContext:uiMOC authenticationStatus:authenticationStatus conversationDirectory:topConversationsDirectory]
+                                   self.selfStrategy
                                    ];
 
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
@@ -261,7 +262,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventMOC syncMOC:self.syncMOC];
     self.connectionTranscoder = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC syncStatus:self.syncStatus clientRegistrationDelegate:clientRegistrationStatus];
     self.userTranscoder = [[ZMUserTranscoder alloc] initWithManagedObjectContext:self.syncMOC syncStatus:self.syncStatus clientRegistrationDelegate:clientRegistrationStatus];
-    self.selfTranscoder = [[ZMSelfTranscoder alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
+    self.selfStrategy = [[ZMSelfStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
     self.conversationTranscoder = [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus accountStatus:accountStatus syncStrategy:self syncStatus:self.syncStatus clientRegistrationDelegate:clientRegistrationStatus];
     self.systemMessageTranscoder = [ZMMessageTranscoder systemMessageTranscoderWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher];
     self.clientMessageTranscoder = [[ZMClientMessageTranscoder alloc ] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher clientRegistrationStatus:clientRegistrationStatus apnsConfirmationStatus: self.apnsConfirmationStatus];
@@ -479,7 +480,6 @@ ZM_EMPTY_ASSERTING_INIT()
 - (NSArray<ZMObjectSyncStrategy *> *)allTranscoders;
 {
     return @[
-             self.selfTranscoder,
              self.systemMessageTranscoder,
              self.clientMessageTranscoder,
              self.registrationTranscoder,

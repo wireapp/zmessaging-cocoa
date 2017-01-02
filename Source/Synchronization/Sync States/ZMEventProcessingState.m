@@ -61,7 +61,6 @@
         self.syncObjects = @[
                              objectStrategyDirectory.flowTranscoder,
                              objectStrategyDirectory.callStateTranscoder,
-                             objectStrategyDirectory.selfTranscoder,
                              objectStrategyDirectory.systemMessageTranscoder,
                              objectStrategyDirectory.clientMessageTranscoder,
                              ];

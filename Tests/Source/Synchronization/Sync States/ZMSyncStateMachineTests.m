@@ -25,7 +25,7 @@
 
 #import "ZMUserTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMConnectionTranscoder.h"
 
 #import "ZMObjectStrategyDirectory.h"
