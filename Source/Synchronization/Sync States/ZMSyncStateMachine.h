@@ -50,7 +50,6 @@
 
 - (ZMTransportRequest *)nextRequest;
 
-- (void)didStartSlowSync;
 - (void)didFailAuthentication;
 
 ///called at the beginning of event processing loop if something in data model could change and context was saved

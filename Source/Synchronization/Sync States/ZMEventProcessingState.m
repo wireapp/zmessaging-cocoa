@@ -24,10 +24,8 @@
 #import "ZMConnectionTranscoder.h"
 #import "ZMUserTranscoder.h"
 #import "ZMSyncStrategy.h"
-#import "ZMTestNotifications.h"
 #import "ZMSyncStateDelegate.h"
 #import "ZMStateMachineDelegate.h"
-#import "ZMHotFix.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 @interface ZMEventProcessingState ()
@@ -85,7 +83,6 @@
     ZMTransportRequest *request = [self nextRequestFromTranscoders:self.syncObjects];
     if (self.isSyncing && request == nil) {
         self.isSyncing = NO;
-        [[NSNotificationCenter defaultCenter] postNotificationName:ZMTestSynchronizationStoppedNotification object:nil];
     }
     
     self.isSyncing = (request != nil);
@@ -95,7 +92,7 @@
 
 - (void)didEnterState
 {
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
+
 }
 
 - (void)tearDown
