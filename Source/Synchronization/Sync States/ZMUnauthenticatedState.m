@@ -164,7 +164,8 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 
 - (ZMTransportRequest *)loginRequest
 {
-    ZMTransportRequest *request = [[self.objectStrategyDirectory.loginTranscoder requestGenerators] nextRequest];
+    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
+    ZMTransportRequest *request = [[directory.loginTranscoder requestGenerators] nextRequest];
     
     if (self.shouldRunTimerForLoginExpiration)
     {
@@ -180,6 +181,13 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
         }
         return nil;
     }
+    
+    ZM_WEAK(self);
+    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:directory.moc block:^(ZMTransportResponse * response) {
+        NOT_USED(response);
+        ZM_STRONG(self);
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
+    }]];
     
     // this could be any other request
     return request;
