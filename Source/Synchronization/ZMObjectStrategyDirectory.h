@@ -22,7 +22,7 @@
 
 @class ZMConnectionTranscoder;
 @class ZMUserTranscoder;
-@class ZMSelfTranscoder;
+@class ZMSelfStrategy;
 @class ZMMessageTranscoder;
 @class ZMConversationTranscoder;
 @class ZMMissingUpdateEventsTranscoder;
@@ -42,7 +42,7 @@
 
 @property (nonatomic, readonly) ZMConnectionTranscoder *connectionTranscoder;
 @property (nonatomic, readonly) ZMUserTranscoder *userTranscoder;
-@property (nonatomic, readonly) ZMSelfTranscoder *selfTranscoder;
+@property (nonatomic, readonly) ZMSelfStrategy *selfStrategy;
 @property (nonatomic, readonly) ZMConversationTranscoder *conversationTranscoder;
 @property (nonatomic, readonly) ZMMessageTranscoder *systemMessageTranscoder;
 @property (nonatomic, readonly) ZMMessageTranscoder *clientMessageTranscoder;

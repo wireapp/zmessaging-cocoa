@@ -23,7 +23,7 @@
 
 @class SyncStatus;
 
-@interface ZMConnectionTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator>
+@interface ZMConnectionTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator, ZMSyncPhase>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc syncStatus:(SyncStatus *)syncStatus clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
 

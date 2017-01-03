@@ -33,7 +33,7 @@
 #import "ZMUnauthenticatedState.h"
 #import "ZMEventProcessingState.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMClientRegistrationStatus.h"
@@ -49,6 +49,7 @@
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "MessagingTest+EventFactory.h"
 #import "zmessaging_iOS_Tests-Swift.h"
+#import "ZMNotifications+UserSession.h"
 
 
 @interface ZMSyncStrategyTests : MessagingTest
@@ -112,9 +113,11 @@
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
     (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:self.mockDispatcher clientRegistrationStatus:OCMOCK_ANY apnsConfirmationStatus:OCMOCK_ANY];
 
-    id selfTranscoder = [OCMockObject mockForClass:ZMSelfTranscoder.class];
-    [[[[selfTranscoder expect] andReturn:selfTranscoder] classMethod] alloc];
-    (void) [(ZMSelfTranscoder *)[[selfTranscoder expect] andReturn:selfTranscoder] initWithClientRegistrationStatus:OCMOCK_ANY managedObjectContext:self.syncMOC];
+    id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
+    [[[[selfStrategy expect] andReturn:selfStrategy] classMethod] alloc];
+    (void) [(ZMSelfStrategy *)[[selfStrategy expect] andReturn:selfStrategy] initWithClientRegistrationStatus:OCMOCK_ANY managedObjectContext:self.syncMOC];
+    [[selfStrategy stub] contextChangeTrackers];
+    [[selfStrategy expect] tearDown];
 
     id connectionTranscoder = [OCMockObject mockForClass:ZMConnectionTranscoder.class];
     [[[[connectionTranscoder expect] andReturn:connectionTranscoder] classMethod] alloc];
@@ -173,7 +176,6 @@
                          connectionTranscoder,
                          userTranscoder,
                          self.conversationTranscoder,
-                         selfTranscoder,
                          systemMessageTranscoder,
                          clientMessageTranscoder,
                          missingUpdateEventsTranscoder,
@@ -218,7 +220,7 @@
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
     XCTAssertEqual(self.sut.systemMessageTranscoder, systemMessageTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
-    XCTAssertEqual(self.sut.selfTranscoder, selfTranscoder);
+    XCTAssertEqual(self.sut.selfStrategy, selfStrategy);
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
     XCTAssertEqual(self.sut.registrationTranscoder, registrationTranscoder);
     XCTAssertEqual(self.sut.flowTranscoder, flowTranscoder);
@@ -1283,6 +1285,73 @@
 - (void)forward_startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
 {
     handler(ZMBackgroundFetchResultNewData);
+}
+
+@end
+
+
+@implementation ZMSyncStrategyTests (SyncStateDelegate)
+
+- (void)testThatItNotifiesSyncStateDelegateWhenSyncStarts
+{    
+    // expect
+    [[self.syncStateDelegate expect] didStartSync];
+    
+    // when
+    [self.sut didStartSync];
+    
+    // then
+    [self.syncStateDelegate verify];
+}
+
+
+- (void)testThatItNotifiesSyncObserverWhenSyncCompletes
+{
+    // given
+    [[self.updateEventsBuffer stub] processAllEventsInBuffer];
+
+    id mockObserver = [OCMockObject niceMockForProtocol:@protocol(ZMInitialSyncCompletionObserver)];
+    [ZMUserSession addInitalSyncCompletionObserver:mockObserver];
+
+    // expect
+    [[mockObserver expect] initialSyncCompleted:OCMOCK_ANY];
+    
+    // when
+    [self.sut didFinishSync];
+    
+    // then
+    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
+    
+    // tearDown
+    [ZMUserSession removeInitalSyncCompletionObserver:mockObserver];
+
+}
+
+- (void)testThatItProcessesAllEventsInBufferWhenSyncFinishes
+{
+    // expect
+    [[self.updateEventsBuffer expect] processAllEventsInBuffer];
+
+    // when
+    [self.sut didFinishSync];
+    
+    // then
+    [self.updateEventsBuffer verify];
+}
+
+- (void)testThatItPostsApplicationDidEnterEventProcessingStateNotificationWhenSyncFinishes
+{
+    // given
+    [[self.updateEventsBuffer stub] processAllEventsInBuffer];
+
+    // expect
+    [self expectationForNotification:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil handler:nil];
+    
+    // when
+    [self.sut didFinishSync];
+    
+    // then
+    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 @end

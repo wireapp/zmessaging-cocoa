@@ -23,12 +23,12 @@
 @import ZMCDataModel;
 
 #import "ObjectTranscoderTests.h"
-#import "ZMSelfTranscoder+Internal.h"
+#import "ZMSelfStrategy+Internal.h"
 #import "ZMUserSession+Internal.h"
 
-@interface ZMSelfTranscoderTests : ObjectTranscoderTests
+@interface ZMSelfStrategyTests : ObjectTranscoderTests
 
-@property (nonatomic) ZMSelfTranscoder<ZMSingleRequestTranscoder> *sut;
+@property (nonatomic) ZMSelfStrategy<ZMSingleRequestTranscoder> *sut;
 @property (nonatomic) ZMUpstreamModifiedObjectSync *upstreamObjectSync;
 @property (nonatomic) NSString *trackingIdentifier;
 @property (nonatomic) id mockClientRegistrationStatus;
@@ -38,12 +38,12 @@
 
 
 
-@implementation ZMSelfTranscoderTests
+@implementation ZMSelfStrategyTests
 
 - (void)setUp
 {
     [super setUp];
-    self.originalRequestInterval = ZMSelfTranscoderPendingValidationRequestInterval;
+    self.originalRequestInterval = ZMSelfStrategyPendingValidationRequestInterval;
     
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
     self.upstreamObjectSync = [OCMockObject niceMockForClass:ZMUpstreamModifiedObjectSync.class];
@@ -51,7 +51,7 @@
         [ZMUser selfUserInContext:self.syncMOC].needsToBeUpdatedFromBackend = NO;
         [self.syncMOC saveOrRollback];
     }];
-    self.sut = (id) [[ZMSelfTranscoder alloc] initWithClientRegistrationStatus:self.mockClientRegistrationStatus
+    self.sut = (id) [[ZMSelfStrategy alloc] initWithClientRegistrationStatus:self.mockClientRegistrationStatus
                                                           managedObjectContext:self.syncMOC
                                                             upstreamObjectSync:self.upstreamObjectSync];
     
@@ -60,7 +60,7 @@
 
 - (void)tearDown
 {
-    ZMSelfTranscoderPendingValidationRequestInterval = self.originalRequestInterval;
+    ZMSelfStrategyPendingValidationRequestInterval = self.originalRequestInterval;
     
     [self.realClientRegistrationStatus tearDown];
     self.realClientRegistrationStatus = nil;
@@ -84,13 +84,23 @@
               } mutableCopy];
 }
 
+- (void)simulateNeedsSlowSync
+{
+    [(ZMClientRegistrationStatus* )[[self.mockClientRegistrationStatus stub] andReturnValue:@(ZMClientRegistrationPhaseWaitingForSelfUser)] currentPhase];
+    [self.syncMOC performBlockAndWait:^{
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.remoteIdentifier = nil;
+        [self.syncMOC saveOrRollback];
+    }];
+}
+
 - (void)testThatItRequestSelfUserIfNeedsSlowSync
 {
     // given
-    [self.sut setNeedsSlowSync];
+    [self simulateNeedsSlowSync];
     
     // when
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertNotNil(request);
@@ -101,19 +111,19 @@
 - (void)testThatItDoesNotRequestSelfUserIfSlowSyncIsDone
 {
     // given
-    [self.sut setNeedsSlowSync];
+    [self simulateNeedsSlowSync];
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
 
     
     // simulate hard sync done
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    request = [self.sut.requestGenerators nextRequest];
+    request = [self.sut nextRequest];
     
     // then
     XCTAssertNil(request);
@@ -123,13 +133,12 @@
 {
     // given
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
-    
+    [self simulateNeedsSlowSync];
+
     __block ZMUser *selfUser;
     [self.syncMOC performGroupedBlockAndWait:^{
-        [self.sut setNeedsSlowSync];
-
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         selfUser = [ZMUser selfUserInContext:self.syncMOC];
         
         // when
@@ -152,11 +161,11 @@
     // The self user is inserted automatically by -[NSManagedObjectContext syncContext]
     //
     
-    ZMTransportRequest *req = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *req = [self.sut nextRequest];
     NOT_USED(req);
     
     // when
-    ZMTransportRequest *nextReq = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *nextReq = [self.sut nextRequest];
     
     // then
     XCTAssertNil(nextReq);
@@ -165,19 +174,19 @@
 - (void)testThatItRequestsTheSelfUserAgain
 {
     // given
-    [self.sut setNeedsSlowSync];
+    [self simulateNeedsSlowSync];
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     
     
     // simulate hard sync done
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    [self.sut setNeedsSlowSync];
-    request = [self.sut.requestGenerators nextRequest];
+    [self simulateNeedsSlowSync];
+    request = [self.sut nextRequest];
     
     // then
     XCTAssertNotNil(request);
@@ -203,12 +212,13 @@
 - (void)testThatItIndicatesThatTheSelfUserIsComplete
 {
     // given
+    [self simulateNeedsSlowSync];
+
     [self.syncMOC performGroupedBlockAndWait:^{
-        [self.sut setNeedsSlowSync];
         NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
         
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
         NOT_USED(selfUser);
 
@@ -226,21 +236,22 @@
 - (void)testThatItRequestsTheSelfUserAfterSetNeedSlowSync
 {
     // given
-    [self.sut setNeedsSlowSync];
-    XCTAssertFalse(self.sut.isSlowSyncDone);
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    [self simulateNeedsSlowSync];
+    XCTAssertFalse(self.sut.isSelfUserComplete);
+    ZMTransportRequest *request = [self.sut nextRequest];
+
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     
     // complete request and hard sync
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertTrue(self.sut.isSlowSyncDone);
+    XCTAssertTrue(self.sut.isSelfUserComplete);
     
     // when
-    [self.sut setNeedsSlowSync];
+    [self simulateNeedsSlowSync];
     
     // then
-    ZMTransportRequest *secondRequest = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *secondRequest = [self.sut nextRequest];
     XCTAssertNotNil(secondRequest);
 
 }
@@ -248,9 +259,10 @@
 - (void)testThatItReturnsSlowSyncDoneAfterCompletingRequest
 {
     // given
-    [self.sut setNeedsSlowSync];
-    XCTAssertFalse(self.sut.isSlowSyncDone);
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    [self simulateNeedsSlowSync];
+    XCTAssertFalse(self.sut.isSelfUserComplete);
+
+    ZMTransportRequest *request = [self.sut nextRequest];
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     
     // when
@@ -258,15 +270,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue(self.sut.isSlowSyncDone);
-    
+    XCTAssertTrue(self.sut.isSelfUserComplete);
 }
-
-- (void)testThatItIsCreatedWithIsSlowSyncDoneTrue
-{
-    XCTAssertTrue(self.sut.isSlowSyncDone);
-}
-
 
 - (void)testThatItCalls_FetchRequestForTrackedObjects_OnUpStreamObjectSync
 {
@@ -296,7 +301,7 @@
 
 
 
-@implementation ZMSelfTranscoderTests (UpstreamSync)
+@implementation ZMSelfStrategyTests (UpstreamSync)
 
 - (void)testThatItGeneratesARequestForUpdatingChangedSelfUser
 {
@@ -407,14 +412,14 @@
 - (void)testThatItReturnsAnPUTRequestForSelf
 {
     // given
-    [self markSlowSyncAsDone];
+    [(ZMClientRegistrationStatus* )[[self.mockClientRegistrationStatus stub] andReturnValue:@(ZMClientRegistrationPhaseRegistered)] currentPhase];
     
     ZMTransportRequest *request = [ZMTransportRequest requestWithPath:@"/self" method:ZMMethodPUT payload:@{}];
     [[[(OCMockObject *)self.upstreamObjectSync expect] andReturn:request] nextRequest];
     [[[(OCMockObject *)self.upstreamObjectSync expect] andReturn:nil] nextRequest];
     
     // when
-    ZMTransportRequest *receivedRequest = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *receivedRequest = [self.sut nextRequest];
     
     // then
     XCTAssertEqual(receivedRequest, request);
@@ -423,7 +428,7 @@
 
 - (void)testThatContextChangeTrackersContainUpstreamObjectSync
 {
-    [self markSlowSyncAsDone];
+    [(ZMClientRegistrationStatus* )[[self.mockClientRegistrationStatus stub] andReturnValue:@(ZMClientRegistrationPhaseRegistered)] currentPhase];
     
     // when
     NSArray *changeTrackers = self.sut.contextChangeTrackers;
@@ -433,24 +438,10 @@
     
 }
 
-
-
-- (void)markSlowSyncAsDone;
-{
-    [self.sut setNeedsSlowSync];
-    NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-    
-    // simulate hard sync done
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    [request completeWithResponse:response];
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
 @end
 
 
-@implementation ZMSelfTranscoderTests (ImageUpload)
+@implementation ZMSelfStrategyTests (ImageUpload)
 
 
 
@@ -485,7 +476,8 @@
 {
     // given
     [self useSUTWithRealDependencies];
-    
+    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus stub] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseRegistered)] currentPhase];
+
     ZMUser *selfUser;
     [self setUpSelfUser:&selfUser];
 
@@ -514,7 +506,7 @@
     block(selfUser);
 
     // next request should set both images to /self
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     NSDictionary *expectedPayload = @{@"picture": @[smallProfileAssetData, mediumAssetData]};
@@ -546,9 +538,7 @@
 - (void)useSUTWithRealDependencies {
     [self.sut tearDown];
     //let it create an actual ZMUpstreamSync, not a mocked one
-    self.realClientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC loginCredentialProvider:nil updateCredentialProvider:nil cookie:nil registrationStatusDelegate:nil];
-    ;
-    self.sut = (id) [[ZMSelfTranscoder alloc] initWithClientRegistrationStatus:self.realClientRegistrationStatus
+    self.sut = (id) [[ZMSelfStrategy alloc] initWithClientRegistrationStatus:self.mockClientRegistrationStatus
                                                           managedObjectContext:self.syncMOC];
 }
 
@@ -556,6 +546,7 @@
 {
     // when
     [self useSUTWithRealDependencies];
+    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus stub] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseRegistered)] currentPhase];
 
     ZMUser *selfUser;
     [self setUpSelfUser:&selfUser];
@@ -569,7 +560,7 @@
     
         // next request should set both images to /self
     block(selfUser);
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     NSDictionary *expectedPayload = @{@"picture": @[]};
@@ -601,7 +592,8 @@
 {
     // given
     [self useSUTWithRealDependencies];
-    
+    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus stub] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseRegistered)] currentPhase];
+
     ZMUser *selfUser;
     [self setUpSelfUser:&selfUser];
     
@@ -617,7 +609,7 @@
     
     // when
     block(selfUser);
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     [self.syncMOC performBlockAndWait:^{
         [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil]];
@@ -667,7 +659,7 @@
     
     // when
     block(selfUser);
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     [self.syncMOC performBlockAndWait:^{
         [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil]];
@@ -701,7 +693,8 @@
     
     // when
     [self useSUTWithRealDependencies];
-    
+    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus stub] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseRegistered)] currentPhase];
+
     ZMUser *selfUser;
     [self setUpSelfUser:&selfUser];
     
@@ -713,7 +706,7 @@
     
     // next request should set both images to /self
     block(selfUser);
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     [self.syncMOC performBlockAndWait:^{
         [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil]];
@@ -784,21 +777,22 @@
 @end
 
 
-@implementation ZMSelfTranscoderTests (ClientRegistrationStatus)
+@implementation ZMSelfStrategyTests (ClientRegistrationStatus)
 
-- (void)testThatItReturnsTheTimedDownstreamSyncWhenTHeClientRegistrationStatusIsWaitingForEmailVerififcation
-{
-    // given
-    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus expect] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseWaitingForEmailVerfication)] currentPhase];
-    
-    // when
-    NSArray *generators = [self.sut requestGenerators];
-    
-    // then
-    XCTAssertEqual(generators.count, 1u);
-    XCTAssertEqual([generators.firstObject class], [ZMTimedSingleRequestSync class]);
-    [self.mockClientRegistrationStatus verify];
-}
+// TODO Sabine:
+//- (void)testThatItReturnsTheTimedDownstreamSyncWhenTHeClientRegistrationStatusIsWaitingForEmailVerififcation
+//{
+//    // given
+//    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus expect] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseWaitingForEmailVerfication)] currentPhase];
+//    
+//    // when
+//    NSArray *generators = [self.sut requestGenerators];
+//    
+//    // then
+//    XCTAssertEqual(generators.count, 1u);
+//    XCTAssertEqual([generators.firstObject class], [ZMTimedSingleRequestSync class]);
+//    [self.mockClientRegistrationStatus verify];
+//}
 
 - (void)testThatItForwardSelfUserUpdatesToTheClientRegsitrationStatus_RemoteIdentifier
 {
@@ -838,7 +832,7 @@
     // given
     [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus stub] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseWaitingForEmailVerfication)] currentPhase];
     [[self.mockClientRegistrationStatus stub] didFetchSelfUser];
-    ZMSelfTranscoderPendingValidationRequestInterval = 5;
+    ZMSelfStrategyPendingValidationRequestInterval = 5;
     
     // when
     NSDictionary *payload = @{@"email": @"my@example.com",
@@ -855,7 +849,7 @@
     // given
     [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus stub] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseWaitingForEmailVerfication)] currentPhase];
     [[self.mockClientRegistrationStatus stub] didFetchSelfUser];
-    ZMSelfTranscoderPendingValidationRequestInterval = 5;
+    ZMSelfStrategyPendingValidationRequestInterval = 5;
     
     // when
     NSDictionary *payload = @{@"email": [NSNull null],

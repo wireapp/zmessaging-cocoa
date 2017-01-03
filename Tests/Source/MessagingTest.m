@@ -37,7 +37,7 @@
 
 #import "ZMUserTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
@@ -332,8 +332,8 @@
     [self verifyMockLater:systemMessageTranscoder];
     id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
     [self verifyMockLater:clientMessageTranscoder];
-    id selfTranscoder = [OCMockObject mockForClass:ZMSelfTranscoder.class];
-    [self verifyMockLater:selfTranscoder];
+    id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
+    [self verifyMockLater:selfStrategy];
     id registrationTranscoder = [OCMockObject mockForClass:ZMRegistrationTranscoder.class];
     [self verifyMockLater:registrationTranscoder];
     id phoneNumberVerificationTranscoder = [OCMockObject mockForClass:ZMPhoneNumberVerificationTranscoder.class];
@@ -352,7 +352,7 @@
     
     [[[objectDirectory stub] andReturn:systemMessageTranscoder] systemMessageTranscoder];
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
-    [[[objectDirectory stub] andReturn:selfTranscoder] selfTranscoder];
+    [[[objectDirectory stub] andReturn:selfStrategy] selfStrategy];
     [[[objectDirectory stub] andReturn:registrationTranscoder] registrationTranscoder];
     [[[objectDirectory stub] andReturn:phoneNumberVerificationTranscoder] phoneNumberVerificationTranscoder];
     [[[objectDirectory stub] andReturn:missingUpdateEventsTranscoder] missingUpdateEventsTranscoder];
@@ -364,7 +364,7 @@
     [[[objectDirectory stub] andReturn:@[
                                         systemMessageTranscoder,
                                         clientMessageTranscoder,
-                                        selfTranscoder,
+                                        selfStrategy,
                                         registrationTranscoder,
                                         phoneNumberVerificationTranscoder,
                                         missingUpdateEventsTranscoder,

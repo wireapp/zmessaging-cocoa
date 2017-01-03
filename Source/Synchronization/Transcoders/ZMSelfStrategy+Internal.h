@@ -17,4 +17,21 @@
 // 
 
 
-extern NSString * const ZMTestSynchronizationStoppedNotification;
+#import "ZMSelfStrategy.h"
+
+extern NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval;
+
+
+
+@class ZMTimedSingleRequestSync;
+
+@interface ZMSelfStrategy ()
+
+- (instancetype)initWithClientRegistrationStatus:(ZMClientRegistrationStatus *)clientStatus
+                            managedObjectContext:(NSManagedObjectContext *)moc
+                              upstreamObjectSync:(ZMUpstreamModifiedObjectSync *)upstreamObjectSync;
+
+
+@property (nonatomic, readonly) ZMTimedSingleRequestSync *timedDownstreamSync;
+
+@end

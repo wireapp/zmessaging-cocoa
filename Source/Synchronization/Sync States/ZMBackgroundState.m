@@ -105,7 +105,6 @@
                             directory.flowTranscoder,
                             directory.systemMessageTranscoder,
                             directory.clientMessageTranscoder,
-                            directory.selfTranscoder,
                             ].mutableCopy;
 
     if ([ZMUserSession useCallKit]) {

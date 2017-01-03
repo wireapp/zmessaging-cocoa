@@ -39,6 +39,5 @@ extern NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName
 @property (nonatomic, readonly) ZMSyncState *currentState;
 
 - (void)goToState:(ZMSyncState *)state;
-- (void)didStartSlowSync;
 
 @end

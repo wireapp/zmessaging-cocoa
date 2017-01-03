@@ -23,7 +23,7 @@
 @protocol ZMObjectStrategyDirectory;
 @class SyncStatus;
 
-@interface ZMLastUpdateEventIDTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator>
+@interface ZMLastUpdateEventIDTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator, ZMSyncPhase>
 
 @property (nonatomic, readonly) BOOL isDownloadingLastUpdateEventID;
 

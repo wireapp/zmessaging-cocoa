@@ -25,7 +25,7 @@
 
 #import "ZMUserTranscoder.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMSelfTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMConnectionTranscoder.h"
 
 #import "ZMObjectStrategyDirectory.h"
@@ -174,17 +174,6 @@
     
     [self.unauthenticatedState verify];
     [self.eventProcessingState verify];
-}
-
-- (void)testThatItCallsDidStartSlowSyncOnAllSyncObjects
-{
-    // expect
-    for(id object in [self.objectDirectory allTranscoders]) {
-        [[object expect] setNeedsSlowSync];
-    }
-    
-    // when
-    [self.sut didStartSlowSync];
 }
 
 - (void)testThatItStartsBackgroundFetchWhenTheCurrentStateSupportsIt;
