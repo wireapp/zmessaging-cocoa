@@ -111,16 +111,22 @@
 - (void)testThatItDoesNotRequestSelfUserIfSlowSyncIsDone
 {
     // given
-    [self simulateNeedsSlowSync];
+    [(ZMClientRegistrationStatus* )[[self.mockClientRegistrationStatus expect] andReturnValue:@(ZMClientRegistrationPhaseWaitingForSelfUser)] currentPhase];
+    [self.syncMOC performBlockAndWait:^{
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.remoteIdentifier = nil;
+        [self.syncMOC saveOrRollback];
+    }];
+    
     NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-
     
     // simulate hard sync done
     ZMTransportRequest *request = [self.sut nextRequest];
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
+    [(ZMClientRegistrationStatus* )[[self.mockClientRegistrationStatus expect] andReturnValue:@(ZMClientRegistrationPhaseRegistered)] currentPhase];
     
     // when
     request = [self.sut nextRequest];
