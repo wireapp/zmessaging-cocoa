@@ -16,6 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
+#import "ZMSyncStateDelegate.h"
 
 @class ZMCredentials;
 @class UserClient;
@@ -24,8 +25,6 @@
 @class ZMCookie;
 
 @protocol ZMCredentialProvider;
-
-
 
 
 typedef NS_ENUM(NSUInteger, ZMClientRegistrationPhase) {
@@ -55,11 +54,7 @@ typedef NS_ENUM(NSUInteger, ZMClientRegistrationPhase) {
 extern NSString *const ZMPersistedClientIdKey;
 
 
-@protocol ZMClientRegistrationStatusDelegate <NSObject>
 
-- (void)didRegisterUserClient:(UserClient *)userClient;
-
-@end
 
 
 @protocol ZMClientClientRegistrationStatusProvider <NSObject>

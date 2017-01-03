@@ -160,6 +160,8 @@ public class MockSyncStatus : SyncStatus {
 }
 
 public class MockSyncStateDelegate : NSObject, ZMSyncStateDelegate {
+
+    var registeredUserClient : UserClient?
     var didCallStartSync = false
     var didCallFinishSync = false
 
@@ -169,6 +171,10 @@ public class MockSyncStateDelegate : NSObject, ZMSyncStateDelegate {
     
     public func didFinishSync() {
         didCallFinishSync = true
+    }
+    
+    public func didRegister(_ userClient: UserClient!) {
+        registeredUserClient = userClient
     }
 }
 

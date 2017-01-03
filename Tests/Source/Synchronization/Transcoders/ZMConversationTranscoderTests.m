@@ -26,7 +26,6 @@
 #import "ObjectTranscoderTests.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMConversationTranscoder+Internal.h"
-#import "ZMSyncStrategy.h"
 #import "ZMSimpleListRequestPaginator.h"
 #import "zmessaging_iOS_Tests-Swift.h"
 

@@ -25,7 +25,7 @@ extern NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName
 
 @class ZMSyncState;
 
-@protocol ZMStateMachineDelegate <ZMSyncStateDelegate>
+@protocol ZMStateMachineDelegate <NSObject>
 
 @property (nonatomic, readonly) ZMSyncState *unauthenticatedState; ///< need to log in. Will sturtup timer to try to login while waiting for email verification.
 @property (nonatomic, readonly) ZMSyncState *unauthenticatedBackgroundState; ///< need to log in, but we are in the background. In background we don't keep trying to login on timer waiting for email verification.

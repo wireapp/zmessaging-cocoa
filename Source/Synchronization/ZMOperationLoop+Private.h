@@ -29,7 +29,7 @@
 @property (nonatomic) EncryptionContext *encryptionContext;
 @property (nonatomic) ZMSyncStrategy *syncStrategy;
 @property (nonatomic) NSManagedObjectContext *syncMOC;
-@property (nonatomic) BackgroundAPNSPingBackStatus *backgroundAPNSPingBackStatus;
+@property (nonatomic, readonly) BackgroundAPNSPingBackStatus *backgroundAPNSPingBackStatus;
 @end
 
 
@@ -38,7 +38,6 @@
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                             syncStrategy:(ZMSyncStrategy *)syncStrategy
                                    uiMOC:(NSManagedObjectContext *)uiMOC
-                                 syncMOC:(NSManagedObjectContext *)syncMOC
-            backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus;
+                                 syncMOC:(NSManagedObjectContext *)syncMOC;
 
 @end

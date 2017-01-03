@@ -23,12 +23,11 @@
 #import <Foundation/Foundation.h>
 
 #import "MessagingTest.h"
-#import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import "ZMSyncStrategy.h"
-#import "ZMSimpleListRequestPaginator.h"
-#import <zmessaging/zmessaging-Swift.h>
-#import "zmessaging_iOS_Tests-Swift.h"
 #import "ZMSyncStateDelegate.h"
+#import "ZMMissingUpdateEventsTranscoder+Internal.h"
+#import "ZMSyncStrategy+EventProcessing.h"
+#import "ZMSimpleListRequestPaginator.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
