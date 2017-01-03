@@ -713,6 +713,7 @@ NS_ASSUME_NONNULL_END
 - (void)providerDidReset:(CXProvider *)provider
 {
     [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ didReset", provider];
+    [self.mediaManager resetAudioDevice];
     [self leaveAllActiveCalls];
 }
 
@@ -756,6 +757,8 @@ NS_ASSUME_NONNULL_END
 
 - (void)provider:(CXProvider *)provider performEndCallAction:(nonnull CXEndCallAction *)action
 {
+    [self.mediaManager resetAudioDevice];
+    
     ZMUserSession *userSession = self.userSession;
 
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
