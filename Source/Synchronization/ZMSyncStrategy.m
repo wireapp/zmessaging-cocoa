@@ -176,7 +176,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                 clientRegistrationStatus:clientRegistrationStatus
                                                                                       clientUpdateStatus:clientUpdateStatus
                                                                                                  context:self.syncMOC];
-        self.fetchingClientRequestStrategy = [[FetchingClientRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus context:self.syncMOC];
+        self.fetchingClientRequestStrategy = [[FetchingClientRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
         self.missingClientsRequestStrategy = [[MissingClientsRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus apnsConfirmationStatus: self.apnsConfirmationStatus managedObjectContext:self.syncMOC];
         
         NSOperationQueue *imageProcessingQueue = [ZMImagePreprocessor createSuitableImagePreprocessingQueue];
