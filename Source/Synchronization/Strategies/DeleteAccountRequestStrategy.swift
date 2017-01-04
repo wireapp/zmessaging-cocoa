@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -39,7 +39,7 @@ import ZMTransport
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        guard let shouldBeDeleted : NSNumber = self.managedObjectContext.persistentStoreMetadata(forKey: type(of: self).userDeletionInitiatedKey) as? NSNumber
+        guard let shouldBeDeleted : NSNumber = self.managedObjectContext.persistentStoreMetadata(key: DeleteAccountRequestStrategy.userDeletionInitiatedKey) as? NSNumber
             , shouldBeDeleted.boolValue
         else {
             return nil
@@ -58,7 +58,7 @@ import ZMTransport
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
         if response.result == .success || response.result == .permanentError {
-            self.managedObjectContext.setPersistentStoreMetadata(NSNumber(value: false), forKey: type(of: self).userDeletionInitiatedKey)
+            self.managedObjectContext.setPersistentStoreMetadata(NSNumber(value: false), key: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
             ZMPersistentCookieStorage.deleteAllKeychainItems()
             OperationQueue.main.addOperation({ () -> Void in
                 ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.accountDeleted, userInfo: .none))

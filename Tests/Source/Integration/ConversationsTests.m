@@ -2587,7 +2587,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(observer.notifications.count, 1lu);
+    XCTAssertGreaterThanOrEqual(observer.notifications.count, 1lu);
     MessageChangeInfo *changes = [observer.notifications lastObject];
     XCTAssertTrue(changes.reactionsChanged);
     

@@ -1695,7 +1695,9 @@
                                   };
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [conversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(conversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
@@ -1723,7 +1725,9 @@
         
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [conversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(conversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -1757,7 +1761,9 @@
         
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [conversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(conversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -1791,7 +1797,9 @@
         
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [conversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(conversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -1834,7 +1842,9 @@
         
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [conversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(conversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -1953,7 +1963,9 @@
         XCTAssertFalse(syncConversation.callDeviceIsActive);
         XCTAssertTrue(syncConversation.hasLocalModificationsForCallDeviceIsActive);
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [syncConversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(syncConversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -1983,7 +1995,9 @@
         
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [syncConversation isEqual:conv] && conv.callDeviceIsActive;
+            XCTAssertEqualObjects(syncConversation, conv);
+            XCTAssertTrue(conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -2014,7 +2028,9 @@
         XCTAssertTrue(syncConversation.hasLocalModificationsForCallDeviceIsActive);
         
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [syncConversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(syncConversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -2048,7 +2064,9 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [syncConversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(syncConversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -2089,7 +2107,9 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [syncConversation isEqual:conv] && conv.callDeviceIsActive;
+            XCTAssertEqualObjects(syncConversation, conv);
+            XCTAssertTrue(conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -2136,7 +2156,9 @@
         // expect
         [[observer expect] didEndCall:[OCMArg checkWithBlock:^BOOL(ZMCallEndedNotification *note) {
             [expectation fulfill];
-            return (note.conversation == conversation && note.reason == ZMVoiceChannelCallEndReasonRequestedSelf);
+            XCTAssertEqualObjects(conversation.objectID, note.conversation.objectID);
+            XCTAssertEqual(note.reason, ZMVoiceChannelCallEndReasonRequestedSelf);
+            return true;
         }]];
         
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{
@@ -2178,7 +2200,9 @@
         // expect
         [[observer expect] didEndCall:[OCMArg checkWithBlock:^BOOL(ZMCallEndedNotification *note) {
             [expectation fulfill];
-            return (note.conversation == conversation && note.reason == ZMVoiceChannelCallEndReasonRequestedAVS);
+            XCTAssertEqualObjects(note.conversation.objectID, conversation.objectID);
+            XCTAssertEqual(note.reason, ZMVoiceChannelCallEndReasonRequestedAVS);
+            return true;
         }]];
         
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{
@@ -2220,7 +2244,9 @@
         // expect
         [[observer expect] didEndCall:[OCMArg checkWithBlock:^BOOL(ZMCallEndedNotification *note) {
             [expectation fulfill];
-            return (note.conversation == conversation && note.reason == ZMVoiceChannelCallEndReasonDisconnected);
+            XCTAssertEqualObjects(note.conversation.objectID, conversation.objectID);
+            XCTAssertEqual(note.reason, ZMVoiceChannelCallEndReasonDisconnected);
+            return true;
         }]];
         
         NSDictionary *payload = @{
@@ -2267,7 +2293,9 @@
         // expect
         [[observer expect] didEndCall:[OCMArg checkWithBlock:^BOOL(ZMCallEndedNotification *note) {
             [expectation fulfill];
-            return (note.conversation == conversation && note.reason == ZMVoiceChannelCallEndReasonRequested);
+            XCTAssertEqualObjects(note.conversation.objectID, conversation.objectID);
+            XCTAssertEqual(note.reason, ZMVoiceChannelCallEndReasonRequested);
+            return true;
         }]];
         
         NSDictionary *payload = @{
@@ -2481,7 +2509,9 @@
                                                                         eventType:@"conversation.member-leave"];
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [conversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(conversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -2617,7 +2647,9 @@
 
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [conversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(conversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -2964,7 +2996,9 @@
         
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [conversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(conversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -3007,7 +3041,9 @@
         
         // expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [conversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(conversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -3093,7 +3129,9 @@
         
         //expect
         [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-            return [conversation isEqual:conv] && !conv.callDeviceIsActive;
+            XCTAssertEqualObjects(conversation, conv);
+            XCTAssertTrue(!conv.callDeviceIsActive);
+            return true;
         }]];
         
         // when
@@ -3644,7 +3682,9 @@
     // expect
     [[[self.gsmCallHandler expect] andReturnValue:OCMOCK_VALUE(NO)] isInterruptedCallConversation:conversation];
     [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
-        return [conversation isEqual:conv] && !conv.callDeviceIsActive;
+        XCTAssertEqualObjects(conversation, conv);
+        XCTAssertTrue(!conv.callDeviceIsActive);
+        return true;
     }]];
     
     // when

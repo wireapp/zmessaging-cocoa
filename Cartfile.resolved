@@ -15,3 +15,4 @@ github "wireapp/wire-ios-data-model" "34.1.1"
 github "wireapp/wire-ios-mocktransport" "13.1.0"
 github "wireapp/wire-ios-request-strategy" "14.0.0"
 github "wireapp/wire-ios-message-strategy" "13.0.0"
+

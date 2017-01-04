@@ -49,7 +49,7 @@
 @implementation ZMUserSession (Registration)
 
 - (BOOL)registeredOnThisDevice {
-    return self.authenticationStatus.registeredOnThisDevice;
+    return [self.authenticationStatus registeredOnThisDeviceOnContext:self.managedObjectContext];
 }
 
 - (void)registerSelfUser:(ZMCompleteRegistrationUser * __unused)registrationUser

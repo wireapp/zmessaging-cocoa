@@ -36,12 +36,11 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
 @property (nonatomic) CTCallCenter *callCenter;
 @property (nonatomic) ZMCallStateLogger *callStateLogger;
 
-@property (nonatomic) ZMConversation *storedConversation;
 @property (nonatomic, readonly) ZMConversation *activeCallUIConversation;
 @property (nonatomic) NSManagedObjectID *activeCallUIConversationObjectID;
 
 @property (nonatomic) BOOL canUpdateCallState;
-
+@property (nonatomic) BOOL tornDown;
 @end
 
 
@@ -71,15 +70,23 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
         self.callCenter = callCenter ?: [[CTCallCenter alloc] init];
         self.callCenter.callEventHandler = self.callEventHandler;
         self.canUpdateCallState = NO;
-        self.activeCallUIConversationObjectID = self.storedConversation.objectID;
+        self.activeCallUIConversationObjectID = [self storedConversationInContext:self.syncManagedObjectContext].objectID;
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didFinishSync:) name:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
     }
     return self;
 }
 
+- (void)tearDown
+{
+    self.tornDown = YES;
+    self.callCenter.callEventHandler = nil;
+    self.callCenter = nil;
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
 - (void)dealloc
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    Require(self.tornDown);
 }
 
 - (void)didFinishSync:(NSNotification *)note
@@ -87,12 +94,17 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     if ([ZMUserSession useCallKit]) {
         return;
     }
-    
+
     NOT_USED(note);
     self.canUpdateCallState = YES;
-    if (self.callCenter.currentCalls.count == 0 && self.hasStoredInterruptedCallConversation) {
-        [self rejoinVoiceChannelAfterGSMInterruption];
-    }
+    
+    [self.uiManagedObjectContext performGroupedBlock:^{
+        if (self.callCenter.currentCalls.count == 0 && self.hasStoredInterruptedCallConversation) {
+            [self rejoinVoiceChannelAfterGSMInterruption];
+        }
+    }];
+    
+    
 }
 
 - (void (^)(CTCall *))callEventHandler
@@ -100,26 +112,32 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     ZM_WEAK(self);
     return ^void(CTCall *call){
         ZM_STRONG(self);
-        if (!self.canUpdateCallState) {
-            return;
-        }
+        BOOL isDialing = [call.callState isEqualToString:CTCallStateDialing];
+        BOOL isIncoming = [call.callState isEqualToString:CTCallStateIncoming];
+        BOOL isDisconnected = [call.callState isEqualToString:CTCallStateDisconnected];
         
-        if ([ZMUserSession useCallKit]) {
-            return;
-        }
-        
-        if (([call.callState isEqualToString:CTCallStateDialing] || [call.callState isEqualToString:CTCallStateIncoming]) &&
-             self.activeCallUIConversationObjectID != nil &&
-             (!self.hasStoredInterruptedCallConversation || ![self.storedConversation.objectID isEqual:self.activeCallUIConversationObjectID])
-            )
-        {
-            [self interruptCall];
-        }
-        
-        else if ([call.callState isEqualToString:CTCallStateDisconnected] && self.hasStoredInterruptedCallConversation)
-        {
-            [self rejoinVoiceChannelAfterGSMInterruption];
-        }
+        [self.uiManagedObjectContext performGroupedBlock:^{
+            if (!self.canUpdateCallState) {
+                return;
+            }
+            
+            if ([ZMUserSession useCallKit]) {
+                return;
+            }
+            
+            if ((isDialing || isIncoming) &&
+                self.activeCallUIConversationObjectID != nil &&
+                (!self.hasStoredInterruptedCallConversation || ![[self storedConversationInContext:self.uiManagedObjectContext].objectID isEqual:self.activeCallUIConversationObjectID])
+                )
+            {
+                [self interruptCall];
+            }
+            
+            else if (isDisconnected && self.hasStoredInterruptedCallConversation)
+            {
+                [self rejoinVoiceChannelAfterGSMInterruption];
+            }
+        }];
     };
 }
 
@@ -127,46 +145,42 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
 {
     [self logIsInterrupted:YES];
     
-    [self.uiManagedObjectContext performGroupedBlock:^{
-        // store the conversationObjectID in the persistenStore metaData so when the app restarts
-        // because it was killed during the call it can resume / end the active call
-        [self setStoredConversation:self.activeCallUIConversation];
-        
-        // when the activeCallConversation is set, we need to send a call/state request to the backend with the state
-        //  {
-        //    self: {state: joined,
-        //           suspended: true},
-        //    cause: interrupted
-        //  }
-        //
-        [self.activeCallUIConversation.voiceChannel join];
-        [self.uiManagedObjectContext saveOrRollback];
-    }];
+    // store the conversationObjectID in the persistenStore metaData so when the app restarts
+    // because it was killed during the call it can resume / end the active call
+    [self setStoredConversation:self.activeCallUIConversation managedObjectContext:self.uiManagedObjectContext];
+    
+    // when the activeCallConversation is set, we need to send a call/state request to the backend with the state
+    //  {
+    //    self: {state: joined,
+    //           suspended: true},
+    //    cause: interrupted
+    //  }
+    //
+    [self.activeCallUIConversation.voiceChannel join];
+    [self.uiManagedObjectContext saveOrRollback];
 }
 
 - (void)rejoinVoiceChannelAfterGSMInterruption
 {
     [self logIsInterrupted:NO];
     
-    [self.uiManagedObjectContext performGroupedBlock:^{
-        ZMConversation *storedConversation = self.activeCallUIConversation;
-        // we need to reset the stored conversation before sending out the next call state request
-        // otherwise the call state transcoder will
-        // (1) set the wrong flag for join and
-        // (2) not update flows when receiving the response from the BE
-        [self setStoredConversation:nil];
-        
-        
-        if (storedConversation.voiceChannel.participants.count > 0) {
-            [storedConversation.voiceChannel join];
-        } else if (storedConversation.callDeviceIsActive) {
-            // in case we received a force idle (disconnected) without the self dictionary (bug on the BE)
-            // we would have no call participants, but callDeviceIsActive would be still set
-            // we need to hang up properly
-            [storedConversation.voiceChannel leave];
-        }
-        [self.uiManagedObjectContext enqueueDelayedSave];
-    }];
+    ZMConversation *storedConversation = self.activeCallUIConversation;
+    // we need to reset the stored conversation before sending out the next call state request
+    // otherwise the call state transcoder will
+    // (1) set the wrong flag for join and
+    // (2) not update flows when receiving the response from the BE
+    [self setStoredConversation:nil managedObjectContext:self.uiManagedObjectContext];
+    
+    
+    if (storedConversation.voiceChannel.participants.count > 0) {
+        [storedConversation.voiceChannel join];
+    } else if (storedConversation.callDeviceIsActive) {
+        // in case we received a force idle (disconnected) without the self dictionary (bug on the BE)
+        // we would have no call participants, but callDeviceIsActive would be still set
+        // we need to hang up properly
+        [storedConversation.voiceChannel leave];
+    }
+    [self.uiManagedObjectContext enqueueDelayedSave];
 }
 
 - (BOOL)hasStoredInterruptedCallConversation
@@ -174,19 +188,19 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     return ([self.uiManagedObjectContext persistentStoreMetadataForKey:ZMInterruptedCallConversationObjectIDKey] != nil);
 }
 
-- (ZMConversation *)storedConversation
+- (ZMConversation *)storedConversationInContext:(NSManagedObjectContext *)moc
 {
-    NSString *objectIDURLString = [self.uiManagedObjectContext persistentStoreMetadataForKey:ZMInterruptedCallConversationObjectIDKey];
+    NSString *objectIDURLString = [moc persistentStoreMetadataForKey:ZMInterruptedCallConversationObjectIDKey];
     if (objectIDURLString == nil) {
         return nil;
     }
-    ZMConversation *conv = [ZMConversation existingObjectWithObjectIdentifier:objectIDURLString inManagedObjectContext:self.uiManagedObjectContext];
+    ZMConversation *conv = [ZMConversation existingObjectWithObjectIdentifier:objectIDURLString inManagedObjectContext:moc];
     return conv;
 }
 
-- (void)setStoredConversation:(ZMConversation *)storedConversation
+- (void)setStoredConversation:(ZMConversation *)storedConversation managedObjectContext:(NSManagedObjectContext *)moc
 {
-    [self.uiManagedObjectContext setPersistentStoreMetadata:[storedConversation objectIDURLString]
+    [moc setPersistentStoreMetadata:[storedConversation objectIDURLString]
                                                      forKey:ZMInterruptedCallConversationObjectIDKey];
 }
 
@@ -206,7 +220,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
         [self.uiManagedObjectContext performGroupedBlock:^{
             // when a wire call ends during a GSM call, we need to reset the storedConversation as well
             // otherwise on next app launch the app might initiate call automatically
-            [self setStoredConversation:nil];
+            [self setStoredConversation:nil managedObjectContext:self.uiManagedObjectContext];
         }];
         return;
     }
@@ -220,14 +234,16 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
         return NO;
     }
     
-    return [conversation.objectID isEqual:self.storedConversation.objectID];
+    return [conversation.objectID isEqual:[self storedConversationInContext:conversation.managedObjectContext].objectID];
 }
 
 - (void)logIsInterrupted:(BOOL)isInterrupted
 {
     if (self.activeCallUIConversation != nil) {
-        ZMConversation *syncConv = (id)[self.syncManagedObjectContext objectWithID:self.activeCallUIConversation.objectID];
-        [self.callStateLogger logCallInterruptionForConversation:syncConv isInterrupted:isInterrupted];
+        [self.syncManagedObjectContext performGroupedBlock:^{
+            ZMConversation *syncConv = (id)[self.syncManagedObjectContext objectWithID:self.activeCallUIConversationObjectID];
+            [self.callStateLogger logCallInterruptionForConversation:syncConv isInterrupted:isInterrupted];
+        }];
     }
 }
 

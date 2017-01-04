@@ -53,12 +53,14 @@
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
     self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com"];
     [[[self.transportSession stub] andReturn:self.cookieStorage] cookieStorage];
+    ZM_WEAK(self);
     [[self.transportSession stub] setAccessTokenRenewalFailureHandler:[OCMArg checkWithBlock:^BOOL(ZMCompletionHandlerBlock obj) {
+        ZM_STRONG(self);
         self.authFailHandler = obj;
         return YES;
     }]];
-    
     [[self.transportSession stub] setAccessTokenRenewalSuccessHandler:[OCMArg checkWithBlock:^BOOL(ZMAccessTokenHandlerBlock obj) {
+        ZM_STRONG(self);
         self.tokenSuccessHandler = obj;
         return YES;
     }]];
@@ -106,15 +108,40 @@
 
 - (void)tearDown
 {
+    [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
+    [self.syncMOC.userInfo removeAllObjects];
+    
+    [self tearDownUserInfoObjectsOfMOC:self.uiMOC];
+    [self.uiMOC.userInfo removeAllObjects];
+    
     [super cleanUpAndVerify];
     [self.sut.authenticationStatus removeAuthenticationCenterObserver:self];
+    self.authFailHandler = nil;
+    self.tokenSuccessHandler = nil;
     self.baseURL = nil;
+    self.cookieStorage = nil;
+    self.validCookie = nil;
+    self.thirdPartyServices = nil;
+    self.sut.thirdPartyServicesDelegate = nil;
+    self.sut.requestToOpenViewDelegate = nil;
+
+    [self.transportSession stopMocking];
     self.transportSession = nil;
+    
     [self.operationLoop stopMocking];
     self.operationLoop = nil;
+    
     [self.requestAvailableNotification stopMocking];
     self.requestAvailableNotification = nil;
-    self.sut.requestToOpenViewDelegate = nil;
+    
+    [self.mediaManager stopMocking];
+    self.mediaManager = nil;
+    
+    [(id)self.syncStrategy stopMocking];
+    self.syncStrategy = nil;
+    
+    [self.apnsEnvironment stopMocking];
+    self.apnsEnvironment = nil;
     
     [self.sut removeAuthenticationObserverForToken:self.authenticationObserverToken];
     self.authenticationObserverToken = nil;

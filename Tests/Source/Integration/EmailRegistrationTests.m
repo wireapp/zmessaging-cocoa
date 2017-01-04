@@ -275,7 +275,10 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     XCTAssertGreaterThan(count, 3u);
     
     [authenticationObserver verify];
+
     [self.userSession removeAuthenticationObserverForToken:authenticationObserverToken];
+    [self.userSession cancelWaitForEmailVerification]; // this cancels the requests
+    XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
 }
 
 
@@ -296,7 +299,8 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self.userSession registerSelfUser:user];
-    
+    WaitForAllGroupsToBeEmpty(1);
+
     // wait for more attempts
     [NSThread sleepForTimeInterval:0.5];
     
@@ -309,7 +313,8 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // then
     XCTAssertLessThanOrEqual(self.mockTransportSession.receivedRequests.count, 1u);
-    
+    XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
+
     [authenticationObserver verify];
     [self.userSession removeAuthenticationObserverForToken:authenticationObserverToken];
 }

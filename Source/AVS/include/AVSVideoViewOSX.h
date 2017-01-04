@@ -16,14 +16,12 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#import <UIKit/UIKit.h>
-#import <QuartzCore/QuartzCore.h>
-#include <OpenGLES/ES2/gl.h>
-#include <OpenGLES/ES2/glext.h>
+#import <Cocoa/Cocoa.h>
+#import <AppKit/AppKit.h>
 
 struct avs_vidframe;
 
-@interface AVSVideoView : UIView
+@interface AVSVideoViewOSX : NSOpenGLView
 
 @property (nonatomic) BOOL shouldFill;
 

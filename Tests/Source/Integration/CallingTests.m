@@ -2741,6 +2741,7 @@
         [self simulateAppRestarted];
         
         // then
+        WaitForAllGroupsToBeEmpty(0.5);
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 4u);
         XCTAssertTrue([self lastRequestContainsSelfStateJoinedWithCauseSuspended: NO]);
         XCTAssertFalse([self lastRequestContainsSelfStateIdle]);
@@ -2782,6 +2783,7 @@
         [(CTCall *)[[call stub] andReturn:CTCallStateDisconnected] callState];
         
         self.gsmCallHandler.callEventHandler(call);
+        [self spinMainQueueWithTimeout:0.3];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then

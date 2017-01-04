@@ -898,16 +898,21 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 - (void)testThatItNotifiesTheUIIfCanNotSendVideoCall;
 {
+    
+    __block id mockObserver = nil;
+    __block id token = nil;
+    __block ZMConversation *conversation;
+    
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
         
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeOneOnOne;
         conversation.remoteIdentifier = [NSUUID createUUID];
         conversation.isVideoCall = YES;
         
-        id mockObserver = [OCMockObject niceMockForProtocol:@protocol(CallingInitialisationObserver)];
-        id token = [conversation.voiceChannel addCallingInitializationObserver:mockObserver];
+        mockObserver = [OCMockObject niceMockForProtocol:@protocol(CallingInitialisationObserver)];
+        token = [conversation.voiceChannel addCallingInitializationObserver:mockObserver];
         [[mockObserver expect] couldNotInitialiseCallWithError:OCMOCK_ANY];
         
         // expect
@@ -916,13 +921,15 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         
         // when
         [self.sut didEstablishMediaInConversation:conversation.remoteIdentifier.transportString];
-        
+    }];
+    
+    // then
+    WaitForAllGroupsToBeEmpty(0.5);
+    [self.syncMOC performGroupedBlockAndWait:^{
         [mockObserver verify];
         [conversation.voiceChannel removeCallingInitialisationObserver:token];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
     [self.internalFlowManager verify];
 }
 
