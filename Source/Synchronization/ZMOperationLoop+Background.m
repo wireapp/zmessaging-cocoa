@@ -22,6 +22,7 @@
 
 #import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
+#import "ZMSyncStrategy+EventProcessing.h"
 
 #import "ZMLocalNotificationDispatcher.h"
 #import "ZMSyncStrategy+Internal.h"

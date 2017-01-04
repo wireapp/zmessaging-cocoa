@@ -224,7 +224,6 @@
     NSManagedObjectContext *refAlternativeTestMOC = self.alternativeTestMOC;
     NSManagedObjectContext *refSearchMoc = self.searchMOC;
     NSManagedObjectContext *refSyncMoc = self.syncMOC;
-    
     WaitForAllGroupsToBeEmpty(2);
     
     self.uiMOC = nil;

@@ -60,16 +60,6 @@
     XCTAssertEqual(self.sut.updateEventsPolicy, ZMUpdateEventPolicyProcess);
 }
 
-- (void)testThatItCallsDoesNotCallDidFinishSyncOnEnter
-{
-    // expect
-    [[(id)self.stateMachine reject] didFinishSync];
-    [[(id)self.objectDirectory stub] processAllEventsInBuffer];
-    
-    // when
-    [self.sut didEnterState];
-}
-
 - (void)testThatItSwitchesToPreBackgroundState
 {
     // expectation

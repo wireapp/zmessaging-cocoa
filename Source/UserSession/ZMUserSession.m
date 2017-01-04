@@ -28,7 +28,6 @@
 
 #import "ZMUserSession+Internal.h"
 #import "ZMSyncStrategy.h"
-//#import "ZMOperationLoop.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
 #import "ZMSearchDirectory+Internal.h"
@@ -75,14 +74,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
-@property (nonatomic) ZMAuthenticationStatus *authenticationStatus;
-@property (nonatomic) UserProfileUpdateStatus *userProfileUpdateStatus;
-@property (nonatomic) ZMClientRegistrationStatus *clientRegistrationStatus;
-@property (nonatomic) ClientUpdateStatus *clientUpdateStatus;
-@property (nonatomic) BackgroundAPNSPingBackStatus *pingBackStatus;
-@property (nonatomic) ZMAccountStatus *accountStatus;
 
-@property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 
 @property (nonatomic) BOOL isVersionBlacklisted;
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
@@ -320,25 +312,8 @@ ZM_EMPTY_ASSERTING_INIT()
             self.syncManagedObjectContext.zm_userImageCache = userImageCache;
             self.syncManagedObjectContext.zm_fileAssetCache = fileAssetCache;
             
-            ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.syncManagedObjectContext cookieStorage:session.cookieStorage];
-            self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:syncManagedObjectContext cookie:cookie];
-            self.userProfileUpdateStatus = [[UserProfileUpdateStatus alloc] initWithManagedObjectContext:syncManagedObjectContext];
-            self.clientUpdateStatus = [[ClientUpdateStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext];
-            
-            self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:syncManagedObjectContext
-                                                                                     loginCredentialProvider:self.authenticationStatus
-                                                                                    updateCredentialProvider:self.userProfileUpdateStatus
-                                                                                                      cookie:cookie
-                                                                                  registrationStatusDelegate:self];
-            self.accountStatus = [[ZMAccountStatus alloc] initWithManagedObjectContext: syncManagedObjectContext cookieStorage: session.cookieStorage];
-            
-            
-            
             self.localNotificationDispatcher =
             [[ZMLocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext sharedApplication:application];
-            
-            self.pingBackStatus = [[BackgroundAPNSPingBackStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext
-                                                                                  authenticationProvider:self.authenticationStatus];
             
             self.transportSession = session;
             self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
@@ -346,22 +321,17 @@ ZM_EMPTY_ASSERTING_INIT()
             self.mediaManager = mediaManager;
             
             self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
-            self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
         }];
-        
+
+
         _application = application;
         self.topConversationsDirectory = [[TopConversationsDirectory alloc] initWithManagedObjectContext:self.managedObjectContext];
         
         [self.syncManagedObjectContext performBlockAndWait:^{
     
+            ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.syncManagedObjectContext cookieStorage:session.cookieStorage];
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
-                                                                               authenticationStatus:self.authenticationStatus
-                                                                            userProfileUpdateStatus:self.userProfileUpdateStatus
-                                                                           clientRegistrationStatus:self.clientRegistrationStatus
-                                                                                 clientUpdateStatus:self.clientUpdateStatus
-                                                                               proxiedRequestStatus:self.proxiedRequestStatus
-                                                                                      accountStatus:self.accountStatus
-                                                                       backgroundAPNSPingBackStatus:self.pingBackStatus
+                                                                                             cookie:cookie
                                                                           topConversationsDirectory:self.topConversationsDirectory
                                                                         localNotificationdispatcher:self.localNotificationDispatcher
                                                                                        mediaManager:mediaManager
@@ -417,6 +387,7 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.application unregisterObserverForStateChange:self];
     self.mediaManager = nil;
     [self.operationLoop tearDown];
+    
     [self.localNotificationDispatcher tearDown];
     self.localNotificationDispatcher = nil;
     [self.blackList teardown];
@@ -425,13 +396,6 @@ ZM_EMPTY_ASSERTING_INIT()
         [self.transportSession tearDown];
         self.transportSession = nil;
     }
-    [self.clientUpdateStatus tearDown];
-    self.clientUpdateStatus = nil;
-    [self.clientRegistrationStatus tearDown];
-    self.clientRegistrationStatus = nil;
-    self.authenticationStatus = nil;
-    self.userProfileUpdateStatus = nil;
-    self.proxiedRequestStatus = nil;
     
     __block NSMutableArray *keysToRemove = [NSMutableArray array];
     [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
@@ -865,6 +829,12 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
 }
 
+- (void)didRegisterUserClient:(UserClient *)userClient
+{
+    self.transportSession.clientID = userClient.remoteIdentifier;
+    [self.transportSession restartPushChannel];
+}
+
 @end
 
 @implementation ZMUserSession(PushChannel)
@@ -1042,12 +1012,38 @@ static BOOL ZMUserSessionUseCallKit = NO;
 
 @end
 
-@implementation ZMUserSession (ClientRegistrationStatus)
 
-- (void)didRegisterUserClient:(UserClient *)userClient
+
+@implementation ZMUserSession (AuthenticationStatus)
+
+- (ZMAuthenticationStatus *)authenticationStatus;
 {
-    self.transportSession.clientID = userClient.remoteIdentifier;
-    [self.transportSession restartPushChannel];
+    return self.operationLoop.syncStrategy.authenticationStatus;
+}
+
+- (UserProfileUpdateStatus *)userProfileUpdateStatus;
+{
+    return self.operationLoop.syncStrategy.userProfileUpdateStatus;
+}
+
+- (ZMClientRegistrationStatus *)clientRegistrationStatus;
+{
+    return self.operationLoop.syncStrategy.clientRegistrationStatus;
+}
+
+- (ClientUpdateStatus *)clientUpdateStatus;
+{
+    return self.operationLoop.syncStrategy.clientUpdateStatus;
+}
+
+- (ZMAccountStatus *)accountStatus;
+{
+    return self.operationLoop.syncStrategy.accountStatus;
+}
+
+- (ProxiedRequestsStatus *)proxiedRequestStatus;
+{
+    return self.operationLoop.syncStrategy.proxiedRequestStatus;
 }
 
 @end

@@ -26,39 +26,49 @@
 
 #import "MessagingTest.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMConnectionTranscoder.h"
 #import "ZMSyncStrategy+Internal.h"
-#import "ZMUserTranscoder.h"
+#import "ZMSyncStrategy+EventProcessing.h"
+#import "ZMSyncStrategy+ManagedObjectChanges.h"
+#import "ZMUpdateEventsBuffer.h"
+#import "ZMOperationLoop.h"
+#import "AVSMediaManager.h"
+#import "AVSFlowManager.h"
+#import "MessagingTest+EventFactory.h"
+#import "zmessaging_iOS_Tests-Swift.h"
+#import "ZMNotifications+UserSession.h"
+
+// States
+#import "ZMSyncStateMachine.h"
 #import "ZMSyncState.h"
 #import "ZMUnauthenticatedState.h"
 #import "ZMEventProcessingState.h"
-#import "ZMConversationTranscoder.h"
-#import "ZMSelfStrategy.h"
-#import "ZMSyncStateMachine.h"
+
+// Statuus
 #import "ZMAuthenticationStatus.h"
 #import "ZMClientRegistrationStatus.h"
-#import "ZMUpdateEventsBuffer.h"
+
+
+// Transcoders & strategies
+#import "ZMUserTranscoder.h"
+#import "ZMConversationTranscoder.h"
+#import "ZMSelfStrategy.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
 #import "ZMFlowSync.h"
 #import "ZMCallStateTranscoder.h"
-#import "ZMOperationLoop.h"
-#import "AVSMediaManager.h"
-#import "AVSFlowManager.h"
+#import "ZMConnectionTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
-#import "MessagingTest+EventFactory.h"
-#import "zmessaging_iOS_Tests-Swift.h"
-#import "ZMNotifications+UserSession.h"
+
 
 
 @interface ZMSyncStrategyTests : MessagingTest
 
 @property (nonatomic) ZMSyncStrategy *sut;
-@property (nonatomic) ZMAuthenticationStatus *authenticationStatus;
-@property (nonatomic) UserProfileUpdateStatus *userProfileUpdateStatus;
-@property (nonatomic) ZMClientRegistrationStatus *clientRegistrationStatus;
-@property (nonatomic) ClientUpdateStatus *clientUpdateStatus;
+@property (nonatomic) id authenticationStatus;
+@property (nonatomic) id userProfileUpdateStatus;
+@property (nonatomic) id clientRegistrationStatus;
+@property (nonatomic) id clientUpdateStatus;
 
 @property (nonatomic) id stateMachine;
 @property (nonatomic) NSArray *syncObjects;
@@ -89,10 +99,30 @@
     [self verifyMockLater:self.mockUpstreamSync1];
     [self verifyMockLater:self.mockUpstreamSync2];
     
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.syncMOC cookie:nil];
-    self.userProfileUpdateStatus = [[UserProfileUpdateStatus alloc] initWithManagedObjectContext:self.syncMOC];
-    self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC loginCredentialProvider:self.authenticationStatus updateCredentialProvider:self.userProfileUpdateStatus cookie:nil registrationStatusDelegate:nil];
-    self.clientUpdateStatus = [[ClientUpdateStatus alloc] initWithSyncManagedObjectContext:self.syncMOC];
+    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
+    
+    self.slowSynStatus = [OCMockObject mockForClass:SyncStatus.class];
+    [[[[self.slowSynStatus expect] andReturn: self.slowSynStatus] classMethod] alloc];
+    (void)[[[self.slowSynStatus expect] andReturn: self.slowSynStatus] initWithManagedObjectContext:self.syncMOC
+                                                                                  syncStateDelegate:OCMOCK_ANY];
+    
+    self.authenticationStatus = [OCMockObject mockForClass:ZMAuthenticationStatus.class];
+    [[[[self.authenticationStatus expect] andReturn:self.authenticationStatus] classMethod] alloc];
+    (void) [[[self.authenticationStatus expect] andReturn:self.authenticationStatus] initWithManagedObjectContext:self.syncMOC cookie:nil];
+    
+    self.userProfileUpdateStatus = [OCMockObject mockForClass:UserProfileUpdateStatus.class];
+    [[[[self.userProfileUpdateStatus expect] andReturn:self.userProfileUpdateStatus] classMethod] alloc];
+    (void) [[[self.userProfileUpdateStatus expect] andReturn:self.userProfileUpdateStatus] initWithManagedObjectContext:self.syncMOC];
+
+    self.clientRegistrationStatus = [OCMockObject mockForClass:ZMClientRegistrationStatus.class];
+    [[[[self.clientRegistrationStatus expect] andReturn:self.clientRegistrationStatus] classMethod] alloc];
+    (void) [[[self.clientRegistrationStatus expect] andReturn:self.clientRegistrationStatus] initWithManagedObjectContext:self.syncMOC loginCredentialProvider:self.authenticationStatus updateCredentialProvider:self.userProfileUpdateStatus cookie:nil registrationStatusDelegate:OCMOCK_ANY];
+    [[self.clientRegistrationStatus expect] tearDown];
+    
+    self.clientUpdateStatus = [OCMockObject mockForClass:ClientUpdateStatus.class];
+    [[[[self.clientUpdateStatus expect] andReturn:self.clientUpdateStatus] classMethod] alloc];
+    (void) [[[self.clientUpdateStatus expect] andReturn:self.clientUpdateStatus] initWithSyncManagedObjectContext:self.syncMOC];
+    [[self.clientUpdateStatus expect] tearDown];
     
     self.backgroundableSession = [OCMockObject mockForProtocol:@protocol(ZMBackgroundable)];
     [self verifyMockLater:self.backgroundableSession];
@@ -147,16 +177,11 @@
     [[[[phoneNumberVerificationTranscoder expect] andReturn:phoneNumberVerificationTranscoder] classMethod] alloc];
     (void) [[[phoneNumberVerificationTranscoder expect] andReturn:phoneNumberVerificationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.authenticationStatus];
     
-    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
-
-    self.slowSynStatus = [OCMockObject mockForClass:SyncStatus.class];
-    [[[[self.slowSynStatus expect] andReturn: self.slowSynStatus] classMethod] alloc];
-    (void)[[[self.slowSynStatus expect] andReturn: self.slowSynStatus] initWithManagedObjectContext:self.syncMOC
-                                                                             syncStateDelegate:OCMOCK_ANY];
-
+    
     self.stateMachine = [OCMockObject mockForClass:ZMSyncStateMachine.class];
     [[[[self.stateMachine expect] andReturn:self.stateMachine] classMethod] alloc];
     [[self.stateMachine stub] tearDown];
+    
     (void) [[[self.stateMachine expect] andReturn:self.stateMachine] initWithAuthenticationStatus:self.authenticationStatus
                                                                          clientRegistrationStatus:self.clientRegistrationStatus
                                                                           objectStrategyDirectory:OCMOCK_ANY
@@ -197,24 +222,18 @@
     
     [self stubChangeTrackerBootstrapInitialization];
     
-    self.sut = [[ZMSyncStrategy alloc] initWithAuthenticationCenter:self.authenticationStatus
-                                            userProfileUpdateStatus:self.userProfileUpdateStatus
-                                           clientRegistrationStatus:self.clientRegistrationStatus
-                                                 clientUpdateStatus:self.clientUpdateStatus
-                                               proxiedRequestStatus:nil
-                                                      accountStatus:nil
-                                       backgroundAPNSPingBackStatus:nil
-                                          topConversationsDirectory:nil
-                                                       mediaManager:nil
-                                                onDemandFlowManager:nil
-                                                            syncMOC:self.syncMOC
-                                                              uiMOC:self.uiMOC
-                                                  syncStateDelegate:self.syncStateDelegate
-                                              backgroundableSession:self.backgroundableSession
-                                       localNotificationsDispatcher:self.mockDispatcher
-                                           taskCancellationProvider:OCMOCK_ANY
-                                                 appGroupIdentifier:nil
-                                                        application:self.application];
+    self.sut = [[ZMSyncStrategy alloc] initWithSyncManagedObjectContextMOC:self.syncMOC
+                                                    uiManagedObjectContext:self.uiMOC
+                                                                    cookie:nil
+                                                 topConversationsDirectory:nil
+                                                              mediaManager:nil
+                                                       onDemandFlowManager:nil
+                                                         syncStateDelegate:self.syncStateDelegate
+                                                     backgroundableSession:self.backgroundableSession
+                                              localNotificationsDispatcher:self.mockDispatcher
+                                                  taskCancellationProvider:nil
+                                                        appGroupIdentifier:nil
+                                                               application:self.application];
     
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
@@ -242,8 +261,18 @@
 
 - (void)tearDown;
 {
-    [self.sut tearDown];
     [self.slowSynStatus stopMocking];
+    self.slowSynStatus = nil;
+    [(id)self.authenticationStatus stopMocking];
+    self.authenticationStatus = nil;
+    [(id)self.clientUpdateStatus stopMocking];
+    self.clientUpdateStatus = nil;
+    [(id)self.clientRegistrationStatus stopMocking];
+    self.clientRegistrationStatus = nil;
+    [(id)self.userProfileUpdateStatus stopMocking];
+    self.userProfileUpdateStatus = nil;
+    
+    [self.sut tearDown];
     for (id syncObject in self.syncObjects) {
         [syncObject stopMocking];
     }
@@ -254,11 +283,6 @@
     self.updateEventsBuffer = nil;
 
     self.sut = nil;
-    self.authenticationStatus = nil;
-    [self.clientRegistrationStatus tearDown];
-    [self.clientUpdateStatus tearDown];
-    self.clientRegistrationStatus = nil;
-    self.clientUpdateStatus = nil;
     self.syncObjects = nil;
     [super tearDown];
 }

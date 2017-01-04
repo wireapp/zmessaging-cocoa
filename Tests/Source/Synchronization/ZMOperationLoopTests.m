@@ -23,16 +23,15 @@
 //@import WireMessageStrategy;
 
 #import "MessagingTest.h"
-#import "ZMSyncStrategy.h"
-#import <zmessaging/ZMUserSession.h>
+#import "ZMUserSession.h"
 #import "MockModelObjectContextFactory.h"
-#import "MockModelObjectContextFactory.h"
-#import "ZMAuthenticationStatus.h"
 #import "AVSMediaManager.h"
 #import "AVSFlowManager.h"
-#import "ZMAuthenticationStatus.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"
+#import "ZMSyncStrategy+ManagedObjectChanges.h"
+#import "ZMSyncStrategy+EventProcessing.h"
+
 #import "ZMLocalNotificationDispatcher.h"
 #import "ZMOperationLoop+Background.h"
 
@@ -64,12 +63,12 @@
     
     // I expect this to be called, at least until we implement the soft sync
     [[[self.syncStrategy stub] andReturn:self.syncMOC] syncMOC];
-    
+    [(ZMSyncStrategy *)[[self.syncStrategy stub] andReturn:self.pingBackStatus] pingBackStatus];
+
     self.sut = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
                                                     syncStrategy:self.syncStrategy
                                                            uiMOC:self.uiMOC
-                                                         syncMOC:self.syncMOC
-                                    backgroundAPNSPingBackStatus:self.pingBackStatus];
+                                                         syncMOC:self.syncMOC];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
 }
 
@@ -137,8 +136,7 @@
     ZMOperationLoop *op = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
                                                                syncStrategy:self.syncStrategy
                                                                       uiMOC:self.uiMOC
-                                                                    syncMOC:self.syncMOC
-                                               backgroundAPNSPingBackStatus:nil];
+                                                                    syncMOC:self.syncMOC];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -724,8 +722,7 @@
     ZMOperationLoop *sut = [[ZMOperationLoop alloc] initWithTransportSession:transportSession
                                                                 syncStrategy:self.syncStrategy
                                                                        uiMOC:self.uiMOC
-                                                                     syncMOC:self.syncMOC
-                                                backgroundAPNSPingBackStatus:nil];
+                                                                     syncMOC:self.syncMOC];
     
     // expect
     [[(id) transportSession expect] closePushChannelAndRemoveConsumer];
@@ -909,6 +906,7 @@
     // expect
     [(ZMSyncStrategy *)[self.syncStrategy expect] consumeUpdateEvents:events];
     [(ZMSyncStrategy *)[self.syncStrategy expect] updateBadgeCount];
+
     [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
         handler(ZMPushPayloadResultSuccess, events);
         return YES;

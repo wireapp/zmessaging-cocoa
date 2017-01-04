@@ -132,16 +132,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
     [self tearDown];
 }
 
-- (void)didStartSync
-{
-    [self.syncStateDelegate didStartSync];
-}
-
-- (void)didFinishSync
-{
-    [self.syncStateDelegate didFinishSync];
-}
-
 - (void)enterBackground;
 {
     [self.currentState didEnterBackground];
@@ -156,11 +146,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 {
     // No-op
 }
-
-//- (void)startQuickSync
-//{
-//    [self goToState:self.updateEventsCatchUpPhaseOneState];
-//}
 
 - (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
 {

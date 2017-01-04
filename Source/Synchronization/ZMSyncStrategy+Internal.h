@@ -18,12 +18,29 @@
 
 
 #import "ZMSyncStrategy.h"
+@class ZMSyncStateMachine;
+
+@interface ZMSyncStrategy (Internal)
+
+@property (atomic, readonly) BOOL tornDown;
+@property (nonatomic, weak, readonly) NSManagedObjectContext *uiMOC;
+@property (nonatomic, readonly) EventDecoder *eventDecoder;
+@property (nonatomic, readonly) ZMSyncStateMachine *stateMachine;
+@property (nonatomic, readonly) ZMUpdateEventsBuffer *eventsBuffer;
+@property (nonatomic, weak, readonly) ZMLocalNotificationDispatcher *localNotificationDispatcher;
+
+@property (nonatomic, readonly) NSArray<ZMObjectSyncStrategy *> *requestStrategies;
+@property (nonatomic, readonly) NSArray<id<ZMContextChangeTracker>> *allChangeTrackers;
+
+@end
+
 
 @interface ZMSyncStrategy (Badge)
 
 - (void)updateBadgeCount;
 
 @end
+
 
 @interface ZMSyncStrategy (AppBackgroundForeground)
 
@@ -33,8 +50,6 @@
 @end
 
 
-
-
 @interface ZMSyncStrategy (Testing)
 
 @property (nonatomic) BOOL contextMergingDisabled;
@@ -42,3 +57,5 @@
 - (ZMFetchRequestBatch *)fetchRequestBatchForEvents:(NSArray<ZMUpdateEvent *> *)events;
 
 @end
+
+

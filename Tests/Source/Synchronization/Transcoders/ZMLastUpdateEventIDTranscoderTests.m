@@ -20,9 +20,8 @@
 @import ZMTransport;
 @import zmessaging;
 
-#import "MessagingTest.h"
+#import "ObjectTranscoderTests.h"
 #import "ZMLastUpdateEventIDTranscoder+Internal.h"
-#import "ZMSyncStrategy.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 #import "zmessaging_iOS_Tests-Swift.h"

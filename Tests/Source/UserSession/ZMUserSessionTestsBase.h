@@ -71,4 +71,7 @@
 @property (nonatomic) id<ZMAuthenticationObserver> authenticationObserver;
 @property (nonatomic) id<ZMRegistrationObserver> registrationObserver;
 
+@property (nonatomic) ZMAuthenticationStatus * authenticationStatus;
+@property (nonatomic) ZMClientRegistrationStatus * clientRegistrationStatus;
+@property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 @end

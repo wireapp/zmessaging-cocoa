@@ -115,11 +115,11 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
     
     if (clientStatus.currentPhase == ZMClientRegistrationPhaseWaitingForSelfUser) {
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-        if (!self.isSelfUserComplete && !selfUser.needsToBeUpdatedFromBackend) {
+        if (! selfUser.needsToBeUpdatedFromBackend) {
             selfUser.needsToBeUpdatedFromBackend = YES;
             [self.downstreamSelfUserSync readyForNextRequestIfNotBusy];
         }
-        if (! self.isSlowSyncDone) {
+        if (selfUser.needsToBeUpdatedFromBackend) {
             return [self.downstreamSelfUserSync nextRequest];
         }
     }
@@ -138,11 +138,6 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
             [self.downstreamSelfUserSync readyForNextRequest];
         }
     });
-}
-
-- (BOOL)isSlowSyncDone;
-{
-    return ![ZMUser selfUserInContext:self.managedObjectContext].needsToBeUpdatedFromBackend;
 }
 
 - (BOOL)isSelfUserComplete

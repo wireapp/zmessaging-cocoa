@@ -60,6 +60,4 @@
 
 - (NSArray *)allTranscoders;
 
-- (NSArray *)conversationIdsThatHaveBufferedUpdatesForCallState;
-
 @end
