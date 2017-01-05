@@ -23,6 +23,7 @@
 
 @import ZMCDataModel;
 @import ZMUtilities;
+@import WireMessageStrategy;
 
 @interface ConversationTestsOTR : ConversationTestsBase
 
@@ -2057,22 +2058,6 @@
     [observer tearDown];
 }
 
-- (void)simulateResponseForFetchingUserClients:(NSArray *)clientIDs userID:(NSUUID *)userID
-{
-    NSMutableArray *payload = [NSMutableArray array];
-    for (NSString *clientID in clientIDs){
-        [payload addObject:@{@"id": clientID}];
-    }
-    
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        NSString *path = [NSString stringWithFormat:@"users/%@/clients", userID.transportString];
-        if ([request.path isEqualToString:path]) {
-            return [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-        }
-        return nil;
-    };
-}
-
 - (void)testThatItInsertsSystemMessageWhenTheOtherUserDeletesAnUntrustedClient
 {
     // given
@@ -2093,22 +2078,20 @@
         trustedRemoteID = [otherUser.clients.anyObject remoteIdentifier];
 
         // then
+        XCTAssertEqual(otherUser.clients.count, 1u);
         XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
     }
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
     
+    __block MockUserClient *additionalUserClient;
     // (2) insert new client for user 1
     {
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-            [session registerClientForUser:self.user1 label:@"other user 1 clients" type:@"permanent"];
+            additionalUserClient = [session registerClientForUser:self.user1 label:@"other user 1 clients" type:@"permanent"];
         }];
         WaitForEverythingToBeDoneWithTimeout(0.5);
         
-        NSSet *clientIDs = [self.user1.clients mapWithBlock:^id(MockUserClient *obj) {
-            return obj.identifier;
-        }];
-        [self simulateResponseForFetchingUserClients:clientIDs.allObjects userID:otherUser.remoteIdentifier];
         [self.userSession performChanges:^{
             [otherUser fetchUserClients];
         }];
@@ -2133,8 +2116,12 @@
     
     // (3) remove inserted client for user1
     {
+        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *__unused session) {
+            [self.user1.clients removeObject:additionalUserClient];
+        }];
+        WaitForEverythingToBeDoneWithTimeout(0.5);
+
         // when
-        [self simulateResponseForFetchingUserClients:@[trustedRemoteID] userID:otherUser.remoteIdentifier];
         [self.userSession performChanges:^{
             [otherUser fetchUserClients];
         }];
@@ -2258,10 +2245,6 @@
     }];
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
-    NSSet *clientIDs = [self.user1.clients mapWithBlock:^id(MockUserClient *obj) {
-        return obj.identifier;
-    }];
-    [self simulateResponseForFetchingUserClients:clientIDs.allObjects userID:user1.remoteIdentifier];
     [self.userSession performChanges:^{
         [user1 fetchUserClients];
     }];
