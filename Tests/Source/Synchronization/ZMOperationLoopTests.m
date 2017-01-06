@@ -34,6 +34,7 @@
 
 #import "ZMLocalNotificationDispatcher.h"
 #import "ZMOperationLoop+Background.h"
+#import "ZMSyncStateManager.h"
 
 @interface ZMOperationLoopTests : MessagingTest
 
@@ -54,6 +55,7 @@
     self.pushChannelNotifications = [NSMutableArray array];
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
     self.syncStrategy = [OCMockObject niceMockForClass:[ZMSyncStrategy class]];
+    id syncStateManager = [OCMockObject niceMockForClass:[ZMSyncStateManager class]];
     
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.transportSession];
@@ -63,7 +65,8 @@
     
     // I expect this to be called, at least until we implement the soft sync
     [[[self.syncStrategy stub] andReturn:self.syncMOC] syncMOC];
-    [(ZMSyncStrategy *)[[self.syncStrategy stub] andReturn:self.pingBackStatus] pingBackStatus];
+    [(ZMSyncStateManager *)[[syncStateManager stub] andReturn:self.pingBackStatus] pingBackStatus];
+    [(ZMSyncStrategy *)[[self.syncStrategy stub] andReturn:syncStateManager] syncStateManager];
 
     self.sut = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
                                                     syncStrategy:self.syncStrategy

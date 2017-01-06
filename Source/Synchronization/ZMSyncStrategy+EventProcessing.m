@@ -9,7 +9,7 @@
 #import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStateMachine.h"
-
+#import "ZMSyncStateManager.h"
 
 @implementation ZMSyncStrategy (EventProcessing)
 
@@ -33,7 +33,7 @@
         return !event.isFlowEvent;
     }];
     
-    if (self.syncStatus.isSyncing) {
+    if (self.syncStateManager.syncStatus.isSyncing) {
         for(ZMUpdateEvent *event in notFlowEvents) {
             [self.eventsBuffer addUpdateEvent:event];
         }

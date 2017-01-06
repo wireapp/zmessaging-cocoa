@@ -137,11 +137,11 @@
 
     id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
     [[[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] classMethod] alloc];
-    (void) [[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] initWithManagedObjectContext:self.syncMOC upstreamInsertedObjectSync:nil localNotificationDispatcher:self.mockDispatcher messageExpirationTimer:nil];
+    (void) [[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY upstreamInsertedObjectSync:nil localNotificationDispatcher:self.mockDispatcher messageExpirationTimer:nil];
 
     id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
-    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:self.mockDispatcher clientRegistrationStatus:OCMOCK_ANY apnsConfirmationStatus:OCMOCK_ANY];
+    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY localNotificationDispatcher:self.mockDispatcher];
 
     id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
     [[[[selfStrategy expect] andReturn:selfStrategy] classMethod] alloc];

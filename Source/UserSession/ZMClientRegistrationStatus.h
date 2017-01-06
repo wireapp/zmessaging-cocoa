@@ -14,8 +14,9 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
-// 
+//
 
+@import WireMessageStrategy;
 #import "ZMSyncStateDelegate.h"
 
 @class ZMCredentials;
@@ -57,13 +58,10 @@ extern NSString *const ZMPersistedClientIdKey;
 
 
 
-@protocol ZMClientClientRegistrationStatusProvider <NSObject>
+@protocol ZMClientClientRegistrationStatusProvider <ClientDeletionDelegate>
 
 /// Whether the current client is ready to use
 @property (nonatomic, readonly) BOOL clientIsReadyForRequests;
-
-/// Notify that the current client was deleted remotely
-- (void)didDetectCurrentClientDeletion;
 
 @end
 

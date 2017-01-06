@@ -25,6 +25,7 @@
 @import CallKit;
 
 #import "ZMUserSession+Background.h"
+#import "ZMSyncStateManager.h"
 
 #import "ZMUserSession+Internal.h"
 #import "ZMSyncStrategy.h"
@@ -1018,32 +1019,32 @@ static BOOL ZMUserSessionUseCallKit = NO;
 
 - (ZMAuthenticationStatus *)authenticationStatus;
 {
-    return self.operationLoop.syncStrategy.authenticationStatus;
+    return self.operationLoop.syncStrategy.syncStateManager.authenticationStatus;
 }
 
 - (UserProfileUpdateStatus *)userProfileUpdateStatus;
 {
-    return self.operationLoop.syncStrategy.userProfileUpdateStatus;
+    return self.operationLoop.syncStrategy.syncStateManager.userProfileUpdateStatus;
 }
 
 - (ZMClientRegistrationStatus *)clientRegistrationStatus;
 {
-    return self.operationLoop.syncStrategy.clientRegistrationStatus;
+    return self.operationLoop.syncStrategy.syncStateManager.clientRegistrationStatus;
 }
 
 - (ClientUpdateStatus *)clientUpdateStatus;
 {
-    return self.operationLoop.syncStrategy.clientUpdateStatus;
+    return self.operationLoop.syncStrategy.syncStateManager.clientUpdateStatus;
 }
 
 - (ZMAccountStatus *)accountStatus;
 {
-    return self.operationLoop.syncStrategy.accountStatus;
+    return self.operationLoop.syncStrategy.syncStateManager.accountStatus;
 }
 
 - (ProxiedRequestsStatus *)proxiedRequestStatus;
 {
-    return self.operationLoop.syncStrategy.proxiedRequestStatus;
+    return self.operationLoop.syncStrategy.syncStateManager.proxiedRequestStatus;
 }
 
 @end

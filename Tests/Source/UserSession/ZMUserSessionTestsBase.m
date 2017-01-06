@@ -20,6 +20,7 @@
 #import <Foundation/Foundation.h>
 #include "ZMUserSessionTestsBase.h"
 #import "zmessaging_iOS_Tests-Swift.h"
+#import "ZMSyncStateManager.h"
 
 @implementation ThirdPartyServices
 
@@ -73,10 +74,13 @@
     self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC loginCredentialProvider:self.authenticationStatus updateCredentialProvider:nil cookie:cookie registrationStatusDelegate:nil];
     self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
     
+    id syncStateManager = [OCMockObject niceMockForClass:[ZMSyncStateManager class]];
+    [(ZMSyncStateManager *)[[(id)syncStateManager stub] andReturn:self.authenticationStatus] authenticationStatus];
+    [(ZMSyncStateManager *)[[(id)syncStateManager stub] andReturn:self.clientRegistrationStatus] clientRegistrationStatus];
+    [(ZMSyncStateManager *)[[(id)syncStateManager stub] andReturn:self.proxiedRequestStatus] proxiedRequestStatus];
+    
     self.syncStrategy = [OCMockObject mockForClass:[ZMSyncStrategy class]];
-    [(ZMSyncStrategy *)[[(id)self.syncStrategy stub] andReturn:self.authenticationStatus] authenticationStatus];
-    [(ZMSyncStrategy *)[[(id)self.syncStrategy stub] andReturn:self.clientRegistrationStatus] clientRegistrationStatus];
-    [(ZMSyncStrategy *)[[(id)self.syncStrategy stub] andReturn:self.proxiedRequestStatus] proxiedRequestStatus];
+    [(ZMSyncStrategy *)[[(id)syncStateManager stub] andReturn:syncStateManager] syncStateManager];
     [self verifyMockLater:self.syncStrategy];
 
     self.operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
