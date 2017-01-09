@@ -181,37 +181,34 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.userClientRequestStrategy,
                                    self.missingClientsRequestStrategy,
                                    self.missingUpdateEventsTranscoder,
-                                   [[ProxiedRequestStrategy alloc] initWithRequestsStatus:self.syncStateManager.proxiedRequestStatus
-                                                                     managedObjectContext:self.syncMOC],
-                                   [[DeleteAccountRequestStrategy alloc] initWithAuthStatus:self.syncStateManager.authenticationStatus
-                                                                       managedObjectContext:self.syncMOC],
+                                   [[ProxiedRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager requestsStatus:self.syncStateManager.proxiedRequestStatus
+                                                                     ],
+                                   [[DeleteAccountRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
                                    [[AssetDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
                                    [[AssetV3DownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
                                    [[AssetClientMessageRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
                                    [[AssetV3ImageUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
                                    [[AssetV3PreviewDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
                                    [[AssetV3FileUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
-                                   [[AddressBookUploadRequestStrategy alloc] initWithAuthenticationStatus:self.syncStateManager.authenticationStatus
-                                                                                 clientRegistrationStatus:self.syncStateManager.clientRegistrationStatus
-                                                                                                      moc:self.syncMOC],
+                                   [[AddressBookUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
                                    [[UserProfileRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC
-                                                                            userProfileUpdateStatus:self.syncStateManager.userProfileUpdateStatus
-                                                                               authenticationStatus:self.syncStateManager.authenticationStatus],
+                                                                            appStateDelegate:self.syncStateManager
+                                                                            userProfileUpdateStatus:self.syncStateManager.userProfileUpdateStatus],
                                    self.fileUploadRequestStrategy,
                                    self.linkPreviewAssetDownloadRequestStrategy,
                                    self.linkPreviewAssetUploadRequestStrategy,
                                    self.imageDownloadRequestStrategy,
                                    self.imageUploadRequestStrategy,
-                                   [[PushTokenStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus],
-                                   [[TypingStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus],
-                                   [[SearchUserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus],
+                                   [[PushTokenStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
+                                   [[TypingStrategy alloc] initWithAppStateDelegate:self.syncStateManager managedObjectContext:self.syncMOC],
+                                   [[SearchUserImageStrategy alloc] initWithAppStateDelegate:self.syncStateManager managedObjectContext:self.syncMOC ],
                                    self.connectionTranscoder,
                                    self.conversationTranscoder,
                                    self.userTranscoder,
                                    self.lastUpdateEventIDTranscoder,
                                    self.missingUpdateEventsTranscoder,
-                                   [[UserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:imageProcessingQueue clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus],
-                                   [[TopConversationsRequestStrategy alloc] initWithManagedObjectContext:uiMOC authenticationStatus:self.syncStateManager.authenticationStatus conversationDirectory:topConversationsDirectory],
+                                   [[UserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager imageProcessingQueue:imageProcessingQueue],
+                                   [[TopConversationsRequestStrategy alloc] initWithManagedObjectContext:uiMOC appStateDelegate:self.syncStateManager conversationDirectory:topConversationsDirectory],
                                    self.selfStrategy,
                                    self.systemMessageTranscoder,
                                    self.clientMessageTranscoder
@@ -237,15 +234,15 @@ ZM_EMPTY_ASSERTING_INIT()
     NSManagedObjectContext *uiMOC = self.uiMOC;
     
     self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventMOC syncMOC:self.syncMOC];
-    self.connectionTranscoder = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC syncStatus:self.syncStateManager.syncStatus clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus];
-    self.userTranscoder = [[ZMUserTranscoder alloc] initWithManagedObjectContext:self.syncMOC syncStatus:self.syncStateManager.syncStatus clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus];
-    self.selfStrategy = [[ZMSelfStrategy alloc] initWithClientRegistrationStatus:self.syncStateManager.clientRegistrationStatus managedObjectContext:self.syncMOC];
-    self.conversationTranscoder = [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.syncStateManager.authenticationStatus accountStatus:self.syncStateManager.accountStatus syncStrategy:self syncStatus:self.syncStateManager.syncStatus clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus];
+    self.connectionTranscoder = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager syncStatus:self.syncStateManager.syncStatus];
+    self.userTranscoder = [[ZMUserTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager syncStatus:self.syncStateManager.syncStatus];
+    self.selfStrategy = [[ZMSelfStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager clientRegistrationStatus:self.syncStateManager.clientRegistrationStatus];
+    self.conversationTranscoder = [[ZMConversationTranscoder alloc] initWithSyncStrategy:self appStateDelegate:self.syncStateManager syncStatus:self.syncStateManager.syncStatus];
     self.systemMessageTranscoder = [ZMMessageTranscoder systemMessageTranscoderWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager localNotificationDispatcher:localNotificationsDispatcher];
     self.clientMessageTranscoder = [[ZMClientMessageTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager localNotificationDispatcher:localNotificationsDispatcher];
     self.registrationTranscoder = [[ZMRegistrationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.syncStateManager.authenticationStatus];
-    self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self previouslyReceivedEventIDsCollection:self.eventDecoder application:self.application backgroundAPNSPingbackStatus:self.syncStateManager.pingBackStatus syncStatus:self.syncStateManager.syncStatus clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus];
-    self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC objectDirectory:self syncStatus:self.syncStateManager.syncStatus clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus];
+    self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self previouslyReceivedEventIDsCollection:self.eventDecoder application:self.application backgroundAPNSPingbackStatus:self.syncStateManager.pingBackStatus syncStatus:self.syncStateManager.syncStatus];
+    self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager syncStatus:self.syncStateManager.syncStatus objectDirectory:self];
     self.flowTranscoder = [[ZMFlowSync alloc] initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC application:self.application];
     self.callStateTranscoder = [[ZMCallStateTranscoder alloc] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC objectStrategyDirectory:self];
     self.loginTranscoder = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.syncStateManager.authenticationStatus clientRegistrationStatus:self.syncStateManager.clientRegistrationStatus];

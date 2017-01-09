@@ -129,11 +129,11 @@
     
     id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
     [[[[userTranscoder expect] andReturn:userTranscoder] classMethod] alloc];
-    (void) [[[userTranscoder expect] andReturn:userTranscoder] initWithManagedObjectContext:self.syncMOC syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
+    (void) [[[userTranscoder expect] andReturn:userTranscoder] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY syncStatus:OCMOCK_ANY];
 
     self.conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [[[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] classMethod] alloc];
-    (void) [[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:OCMOCK_ANY accountStatus:OCMOCK_ANY syncStrategy:OCMOCK_ANY syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
+    (void) [[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] initWithSyncStrategy:OCMOCK_ANY appStateDelegate:OCMOCK_ANY syncStatus:OCMOCK_ANY];
 
     id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
     [[[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] classMethod] alloc];
@@ -145,13 +145,13 @@
 
     id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
     [[[[selfStrategy expect] andReturn:selfStrategy] classMethod] alloc];
-    (void) [(ZMSelfStrategy *)[[selfStrategy expect] andReturn:selfStrategy] initWithClientRegistrationStatus:OCMOCK_ANY managedObjectContext:self.syncMOC];
+    (void) [(ZMSelfStrategy *)[[selfStrategy expect] andReturn:selfStrategy] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY clientRegistrationStatus:OCMOCK_ANY];
     [[selfStrategy stub] contextChangeTrackers];
     [[selfStrategy expect] tearDown];
 
     id connectionTranscoder = [OCMockObject mockForClass:ZMConnectionTranscoder.class];
     [[[[connectionTranscoder expect] andReturn:connectionTranscoder] classMethod] alloc];
-    (void) [[[connectionTranscoder expect] andReturn:connectionTranscoder] initWithManagedObjectContext:self.syncMOC syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
+    (void) [[[connectionTranscoder expect] andReturn:connectionTranscoder] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY syncStatus:OCMOCK_ANY];
 
     id registrationTranscoder = [OCMockObject mockForClass:ZMRegistrationTranscoder.class];
     [[[[registrationTranscoder expect] andReturn:registrationTranscoder] classMethod] alloc];
@@ -159,7 +159,7 @@
 
     id missingUpdateEventsTranscoder = [OCMockObject niceMockForClass:ZMMissingUpdateEventsTranscoder.class];
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
-    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY application:OCMOCK_ANY backgroundAPNSPingbackStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY clientRegistrationDelegate:OCMOCK_ANY];
+    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY application:OCMOCK_ANY backgroundAPNSPingbackStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
     
     id flowTranscoder = [OCMockObject mockForClass:ZMFlowSync.class];
     [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];

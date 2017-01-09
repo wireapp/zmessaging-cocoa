@@ -25,6 +25,7 @@
 #import "ZMSyncStrategy+EventProcessing.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMSimpleListRequestPaginator.h"
+#import "ZMSyncStateManager.h"
 
 
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
@@ -56,21 +57,20 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 @implementation ZMMissingUpdateEventsTranscoder
 
+
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
 previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
                          application:(id <ZMApplication>)application
         backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus
                           syncStatus:(SyncStatus *)syncStatus
-            clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate
 {
-    self = [super initWithManagedObjectContext:strategy.syncMOC];
+    self = [super initWithManagedObjectContext:strategy.syncMOC appStateDelegate:strategy.syncStateManager];
     if(self) {
         _syncStrategy = strategy;
         self.application = application;
         self.previouslyReceivedEventIDsCollection = eventIDsCollection;
         self.pingbackStatus = backgroundAPNSPingbackStatus;
         self.syncStatus = syncStatus;
-        self.clientRegistrationDelegate = clientRegistrationDelegate;
         self.listPaginator = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:NotificationsPath
                                                                            startKey:StartKey
                                                                            pageSize:ZMMissingUpdateEventsTranscoderListPageSize
@@ -79,6 +79,11 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
                                                                          transcoder:self];
     }
     return self;
+}
+
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
 - (BOOL)isDownloadingMissingNotifications
@@ -232,11 +237,8 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     [self.syncStatus didStart:self.expectedSyncPhase];
 }
 
-- (ZMTransportRequest *)nextRequest
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
-    if (!self.clientRegistrationDelegate.clientIsReadyForRequests) {
-        return nil;
-    }
     BOOL fetchingStream = self.isFetchingStreamForAPNS;
     BOOL hasNewNotification = self.pingbackStatus.hasNotificationIDs;
     BOOL inProgress = self.listPaginator.status == ZMSingleRequestInProgress;

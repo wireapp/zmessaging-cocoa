@@ -25,6 +25,7 @@
 #import "ZMSyncStrategy.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMClientRegistrationStatus.h"
+#import "ZMSyncStateManager.h"
 
 static NSString *SelfPath = @"/self";
 
@@ -62,35 +63,39 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 
 @implementation ZMSelfStrategy
 
-- (instancetype)initWithClientRegistrationStatus:(ZMClientRegistrationStatus *)clientStatus
-                            managedObjectContext:(NSManagedObjectContext *)moc
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
 {
-    NSArray<NSString *> *keysToSync = @[NameKey, AccentColorValueKey, SmallProfileRemoteIdentifierDataKey, MediumRemoteIdentifierDataKey];
-    
-    
-    ZMUpstreamModifiedObjectSync *upstreamObjectSync = [[ZMUpstreamModifiedObjectSync alloc]
-                                                        initWithTranscoder:self entityName:ZMUser.entityName
-                                                        keysToSync:keysToSync
-                                                        managedObjectContext:moc];
-    
-    return [self initWithClientRegistrationStatus:clientStatus
-                         managedObjectContext:moc
-                           upstreamObjectSync:upstreamObjectSync];
+    return [self initWithManagedObjectContext:moc appStateDelegate:appStateDelegate clientRegistrationStatus:clientRegistrationStatus upstreamObjectSync:nil];
 }
 
-- (instancetype)initWithClientRegistrationStatus:(ZMClientRegistrationStatus *)clientStatus
-                            managedObjectContext:(NSManagedObjectContext *)moc
-                              upstreamObjectSync:(ZMUpstreamModifiedObjectSync *)upstreamObjectSync
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
+                          upstreamObjectSync:(ZMUpstreamModifiedObjectSync *)upstreamObjectSync
 {
-    self = [super initWithManagedObjectContext:moc];
+    self = [super initWithManagedObjectContext:moc appStateDelegate:appStateDelegate];
     if(self) {
-        self.clientStatus = clientStatus;
+        self.clientStatus = clientRegistrationStatus;
         self.upstreamObjectSync = upstreamObjectSync;
+        if (self.upstreamObjectSync == nil) {
+            NSArray<NSString *> *keysToSync = @[NameKey, AccentColorValueKey, SmallProfileRemoteIdentifierDataKey, MediumRemoteIdentifierDataKey];
+            self.upstreamObjectSync = [[ZMUpstreamModifiedObjectSync alloc]
+                                       initWithTranscoder:self entityName:ZMUser.entityName
+                                       keysToSync:keysToSync
+                                       managedObjectContext:moc];
+        }
         self.downstreamSelfUserSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self managedObjectContext:self.managedObjectContext];
         self.needsToBeUdpatedFromBackend = [ZMUser predicateForNeedingToBeUpdatedFromBackend];
         _timedDownstreamSync = [[ZMTimedSingleRequestSync alloc] initWithSingleRequestTranscoder:self everyTimeInterval:ZMSelfStrategyPendingValidationRequestInterval managedObjectContext:self.managedObjectContext];
     }
     return self;
+}
+
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsWhileUnauthenticated;
 }
 
 - (NSArray *)contextChangeTrackers
@@ -101,11 +106,10 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 - (void)tearDown
 {
     [self.timedDownstreamSync invalidate];
-    self.clientStatus = nil;
     [super tearDown];
 }
 
-- (ZMTransportRequest *)nextRequest;
+- (ZMTransportRequest *)nextRequestIfAllowed;
 {
     ZMClientRegistrationStatus *clientStatus = self.clientStatus;
     if (clientStatus.currentPhase == ZMClientRegistrationPhaseWaitingForEmailVerfication) {

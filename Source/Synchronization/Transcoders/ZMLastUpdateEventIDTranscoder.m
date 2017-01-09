@@ -31,7 +31,6 @@
 @property (nonatomic) NSUUID *lastUpdateEventID;
 
 @property (nonatomic, weak) SyncStatus *syncStatus;
-@property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
 @property (nonatomic) BOOL didStartSlowSync;
 
 @end
@@ -39,25 +38,31 @@
 
 @implementation ZMLastUpdateEventIDTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc {
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+{
     NOT_USED(moc);
+    NOT_USED(appStateDelegate);
     RequireString(NO, "Use the other init");
     return nil;
 }
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                             objectDirectory:(id<ZMObjectStrategyDirectory>)directory
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
                                   syncStatus:(SyncStatus *)syncStatus
-                  clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
+                             objectDirectory:(id<ZMObjectStrategyDirectory>)directory;
 {
-    self = [super initWithManagedObjectContext:moc];
+    self = [super initWithManagedObjectContext:moc appStateDelegate:appStateDelegate];
     if(self) {
         self.syncStatus = syncStatus;
-        self.clientRegistrationDelegate = clientRegistrationDelegate;
         self.directory = directory;
         self.lastUpdateEventIDSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self managedObjectContext:moc];
     }
     return self;
+}
+
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
 }
 
 - (void)startRequestingLastUpdateEventIDWithoutPersistingIt
@@ -96,11 +101,8 @@
     return SyncPhaseFetchingLastUpdateEventID;
 }
 
-- (ZMTransportRequest *)nextRequest
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
-    if (!self.clientRegistrationDelegate.clientIsReadyForRequests) {
-        return nil;
-    }
     SyncStatus *status = self.syncStatus;
     if (status.currentSyncPhase == self.expectedSyncPhase && !self.isDownloadingLastUpdateEventID) {
         [self setNeedsSlowSync];

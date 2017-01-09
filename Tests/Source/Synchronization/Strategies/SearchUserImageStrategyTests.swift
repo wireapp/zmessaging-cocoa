@@ -28,13 +28,14 @@ class SearchUserImageStrategyTests : MessagingTest {
     var userIDsTable: ZMUserIDsForSearchDirectoryTable!
     var imagesCache = NSCache<NSUUID, NSData>()
     var assetIDCache = NSCache<NSUUID, NSUUID>()
-    var clientRegistrationDelegate : ZMMockClientRegistrationStatus!
+    var mockAppStateDelegate : MockAppStateDelegate!
     
     override func setUp() {
         super.setUp()
         userIDsTable = ZMUserIDsForSearchDirectoryTable()
-        clientRegistrationDelegate = ZMMockClientRegistrationStatus()
-        sut = SearchUserImageStrategy(managedObjectContext: uiMOC, clientRegistrationDelegate: clientRegistrationDelegate, imagesByUserIDCache: imagesCache, mediumAssetIDByUserIDCache: assetIDCache, userIDsTable: userIDsTable)
+        mockAppStateDelegate = MockAppStateDelegate()
+        mockAppStateDelegate.mockAppState = .eventProcessing
+        sut = SearchUserImageStrategy(appStateDelegate: mockAppStateDelegate, managedObjectContext: uiMOC, imagesByUserIDCache: imagesCache, mediumAssetIDByUserIDCache: assetIDCache, userIDsTable: userIDsTable)
     }
     
     override func tearDown() {
@@ -97,7 +98,7 @@ extension SearchUserImageStrategyTests {
     
     func testThatTheDefaultInitCreatesTheCorrectTables() {
         // when
-        let strategy = SearchUserImageStrategy(managedObjectContext:self.syncMOC, clientRegistrationDelegate:clientRegistrationDelegate)
+        let strategy = SearchUserImageStrategy(appStateDelegate:mockAppStateDelegate, managedObjectContext:self.syncMOC)
         
         // then
         XCTAssertEqual(strategy.userIDsTable, ZMSearchDirectory.userIDsMissingProfileImage())
@@ -136,7 +137,7 @@ extension SearchUserImageStrategyTests {
     func testThatNextRequestDoesNotCreateARequestClientNotReady(){
         // given
         _ = setupSearchDirectory(userCount: 3)
-        clientRegistrationDelegate.mockReadiness = false
+        mockAppStateDelegate.mockAppState = .unauthenticated
         
         // when
         let request = sut.nextRequest()

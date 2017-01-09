@@ -80,7 +80,7 @@
     [(ZMSyncStateManager *)[[(id)syncStateManager stub] andReturn:self.proxiedRequestStatus] proxiedRequestStatus];
     
     self.syncStrategy = [OCMockObject mockForClass:[ZMSyncStrategy class]];
-    [(ZMSyncStrategy *)[[(id)syncStateManager stub] andReturn:syncStateManager] syncStateManager];
+    [(ZMSyncStrategy *)[[(id)self.syncStrategy stub] andReturn:syncStateManager] syncStateManager];
     [self verifyMockLater:self.syncStrategy];
 
     self.operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];

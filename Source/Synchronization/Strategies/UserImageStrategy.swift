@@ -55,7 +55,7 @@ class ImageRequestFactory : ImageRequestSource {
 }
 
 
-public class UserImageStrategy : NSObject, ZMDownstreamTranscoder, ZMUpstreamTranscoder {
+public class UserImageStrategy : ZMAbstractRequestStrategy, ZMDownstreamTranscoder, ZMUpstreamTranscoder {
     
     var requestFactory : ImageRequestSource
     var smallProfileDownstreamSync: ZMDownstreamObjectSyncWithWhitelist!
@@ -63,20 +63,23 @@ public class UserImageStrategy : NSObject, ZMDownstreamTranscoder, ZMUpstreamTra
     var upstreamSync: ZMUpstreamModifiedObjectSync!
     var assetPreprocessingTracker: ZMImagePreprocessingTracker!
     let imageProcessingQueue: OperationQueue
-    let managedObjectContext: NSManagedObjectContext
-    unowned var clientRegistrationDelegate: ClientRegistrationDelegate
     var tornDown :Bool = false
     
-    @objc public convenience init(managedObjectContext:NSManagedObjectContext, imageProcessingQueue: OperationQueue, clientRegistrationDelegate: ClientRegistrationDelegate) {
-        self.init(managedObjectContext: managedObjectContext, imageProcessingQueue: imageProcessingQueue, clientRegistrationDelegate:clientRegistrationDelegate, requestFactory: nil)
+    public override var configuration: ZMStrategyConfigurationOption { return .allowsRequestsDuringEventProcessing }
+    
+    @available (*, unavailable)
+    override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
+        fatalError()
     }
     
-    init(managedObjectContext:NSManagedObjectContext, imageProcessingQueue: OperationQueue, clientRegistrationDelegate: ClientRegistrationDelegate, requestFactory : ImageRequestSource?) {
+    @objc public convenience init(managedObjectContext:NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate, imageProcessingQueue: OperationQueue) {
+        self.init(managedObjectContext: managedObjectContext, appStateDelegate: appStateDelegate, imageProcessingQueue: imageProcessingQueue, requestFactory: nil)
+    }
+    
+    init(managedObjectContext:NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate, imageProcessingQueue: OperationQueue, requestFactory : ImageRequestSource?) {
         self.imageProcessingQueue = imageProcessingQueue;
-        self.managedObjectContext = managedObjectContext
-        self.clientRegistrationDelegate = clientRegistrationDelegate
         self.requestFactory = requestFactory ?? ImageRequestFactory()
-        super.init()
+        super.init(managedObjectContext: managedObjectContext, appStateDelegate: appStateDelegate)
         
         // Small profiles
         let filterForSmallImage = NSCompoundPredicate(andPredicateWithSubpredicates:[ ZMUser.predicateForSmallImageNeedingToBeUpdatedFromBackend(),
@@ -116,10 +119,12 @@ public class UserImageStrategy : NSObject, ZMDownstreamTranscoder, ZMUpstreamTra
         self.recoverFromInconsistentUserImageStatus()
     }
     
-    public func tearDown() {
+    public override func tearDown() {
+        super.tearDown()
         tornDown = true
         assetPreprocessingTracker.tearDown()
         NotificationCenter.default.removeObserver(self)
+        super.tearDown()
     }
     
     deinit {
@@ -316,14 +321,13 @@ public class UserImageStrategy : NSObject, ZMDownstreamTranscoder, ZMUpstreamTra
     }
 }
 
-extension UserImageStrategy : ZMContextChangeTrackerSource, ZMRequestGenerator {
+extension UserImageStrategy : ZMContextChangeTrackerSource {
 
     public var contextChangeTrackers: [ZMContextChangeTracker] {
         return [self.assetPreprocessingTracker, self.smallProfileDownstreamSync, self.mediumDownstreamSync, self.upstreamSync]
     }
     
-    public func nextRequest() -> ZMTransportRequest? {
-        guard clientRegistrationDelegate.clientIsReadyForRequests else { return nil }
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         for sync in [self.smallProfileDownstreamSync, self.mediumDownstreamSync, self.upstreamSync] as [ZMRequestGenerator] {
             if let request = sync.nextRequest() {
                 return request

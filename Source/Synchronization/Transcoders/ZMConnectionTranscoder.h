@@ -19,12 +19,14 @@
 
 @import CoreData;
 @import Foundation;
-@import WireRequestStrategy;
+@import WireMessageStrategy;
 
 @class SyncStatus;
 
-@interface ZMConnectionTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator, ZMSyncPhase>
+@interface ZMConnectionTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy, ZMSyncPhase>
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc syncStatus:(SyncStatus *)syncStatus clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate NS_UNAVAILABLE;
+
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate syncStatus:(SyncStatus *)syncStatus;
 
 @end

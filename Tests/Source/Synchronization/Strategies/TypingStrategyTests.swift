@@ -65,7 +65,7 @@ class TypingStrategyTests : MessagingTest {
     var sut : TypingStrategy!
     var originalTimeout : TimeInterval = 0.0
     var typing : MockTyping!
-    var clientRegistrationDelegate : MockClientRegistrationDelegate!
+    var mockAppStateDelegate : MockAppStateDelegate!
     var conversationA : ZMConversation!
     var userA: ZMUser!
     
@@ -75,8 +75,10 @@ class TypingStrategyTests : MessagingTest {
         ZMTypingDefaultTimeout = 1.0
         
         self.typing = MockTyping()
-        self.clientRegistrationDelegate = MockClientRegistrationDelegate()
-        self.sut = TypingStrategy(syncContext: syncMOC, uiContext: uiMOC, clientRegistrationDelegate: clientRegistrationDelegate, typing: typing)
+        self.mockAppStateDelegate = MockAppStateDelegate()
+        self.mockAppStateDelegate.mockAppState = .eventProcessing
+
+        self.sut = TypingStrategy(appStateDelegate: mockAppStateDelegate, syncContext: syncMOC, uiContext: uiMOC, typing: typing)
         
         syncMOC.performGroupedBlockAndWait {
             self.conversationA = ZMConversation.insertNewObject(in: self.syncMOC)
@@ -304,7 +306,7 @@ extension TypingStrategyTests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
-        clientRegistrationDelegate.mockReadiness = false
+        mockAppStateDelegate.mockAppState = .unauthenticated
         let request = self.sut.nextRequest()
         
         // then

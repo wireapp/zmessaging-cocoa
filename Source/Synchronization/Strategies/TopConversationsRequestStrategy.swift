@@ -20,25 +20,25 @@ import Foundation
 
 private let topPeopleCount = 24
 
-@objc public class TopConversationsRequestStrategy : NSObject {
-    
-    let managedObjectContext : NSManagedObjectContext
-    
-    let authenticationStatus : AuthenticationStatusProvider
+@objc public class TopConversationsRequestStrategy : ZMAbstractRequestStrategy {
     
     let conversationDirectory : TopConversationsDirectory
-    
     fileprivate var topPeopleSync : ZMSingleRequestSync! = nil
     
+    /// Defines when requests for this Strategy are allowed to be sent
+    public override var configuration: ZMStrategyConfigurationOption { return .allowsRequestsDuringEventProcessing }
+
+    @available (*, unavailable, message: "use `init(managedObjectContext:appStateDelegate:conversationDirectory)`instead")
+    override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
+        fatalError()
+    }
+    
     public init(managedObjectContext: NSManagedObjectContext,
-                authenticationStatus: AuthenticationStatusProvider,
-                conversationDirectory: TopConversationsDirectory
-                ) {
-        self.managedObjectContext = managedObjectContext
-        self.authenticationStatus = authenticationStatus
+                appStateDelegate: ZMAppStateDelegate,
+                conversationDirectory: TopConversationsDirectory)
+    {
         self.conversationDirectory = conversationDirectory
-        super.init()
-        
+        super.init(managedObjectContext: managedObjectContext, appStateDelegate: appStateDelegate)
         self.topPeopleSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
     }
 }
@@ -74,11 +74,7 @@ extension TopConversationsRequestStrategy : ZMSingleRequestTranscoder {
 
 extension TopConversationsRequestStrategy : RequestStrategy {
 
-    public func nextRequest() -> ZMTransportRequest? {
-        guard self.authenticationStatus.currentPhase == .authenticated else {
-            return nil
-        }
-        
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         if self.conversationDirectory.fetchingTopConversations {
             self.topPeopleSync.readyForNextRequestIfNotBusy()
             return self.topPeopleSync.nextRequest()

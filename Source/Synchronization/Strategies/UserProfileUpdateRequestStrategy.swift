@@ -18,14 +18,9 @@
 
 import Foundation
 
-@objc public class UserProfileRequestStrategy : NSObject {
-    
-    let managedObjectContext : NSManagedObjectContext
+@objc public class UserProfileRequestStrategy : ZMAbstractRequestStrategy {
     
     let userProfileUpdateStatus : UserProfileUpdateStatus
-    
-    
-    let authenticationStatus : AuthenticationStatusProvider
     
     fileprivate var phoneCodeRequestSync : ZMSingleRequestSync! = nil
     
@@ -41,13 +36,18 @@ import Foundation
     
     fileprivate var handleSuggestionSearchSync : ZMSingleRequestSync! = nil
     
+    public override var configuration: ZMStrategyConfigurationOption { return [.allowsRequestsWhileUnauthenticated, .allowsRequestsDuringSync, .allowsRequestsDuringEventProcessing] }
+    
+    @available (*, unavailable, message: "use `init(managedObjectContext:appStateDelegate:userProfileUpdateStatus)`instead")
+    override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
+        fatalError()
+    }
+    
     public init(managedObjectContext: NSManagedObjectContext,
-                userProfileUpdateStatus: UserProfileUpdateStatus,
-                authenticationStatus: AuthenticationStatusProvider) {
-        self.managedObjectContext = managedObjectContext
+                appStateDelegate: ZMAppStateDelegate,
+                userProfileUpdateStatus: UserProfileUpdateStatus) {
         self.userProfileUpdateStatus = userProfileUpdateStatus
-        self.authenticationStatus = authenticationStatus
-        super.init()
+        super.init(managedObjectContext: managedObjectContext, appStateDelegate: appStateDelegate)
         
         self.phoneCodeRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.phoneUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
@@ -59,13 +59,9 @@ import Foundation
     }
 }
 
-extension UserProfileRequestStrategy : RequestStrategy {
+extension UserProfileRequestStrategy  {
     
-    @objc public func nextRequest() -> ZMTransportRequest? {
-
-        guard self.authenticationStatus.currentPhase == .authenticated else {
-            return nil
-        }
+    @objc public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         
         if self.userProfileUpdateStatus.currentlyRequestingPhoneVerificationCode {
             self.phoneCodeRequestSync.readyForNextRequestIfNotBusy()

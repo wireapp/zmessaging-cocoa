@@ -64,42 +64,43 @@ struct SearchUserAssetIDs {
 }
 
 
-public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
+public class SearchUserImageStrategy : ZMAbstractRequestStrategy {
 
     fileprivate unowned var uiContext : NSManagedObjectContext
-    fileprivate unowned var syncContext : NSManagedObjectContext
-    fileprivate unowned var clientRegistrationDelegate : ClientRegistrationDelegate
     let imagesByUserIDCache : NSCache<NSUUID, NSData>
     let mediumAssetIDByUserIDCache : NSCache<NSUUID, NSUUID>
     let userIDsTable : ZMUserIDsForSearchDirectoryTable
     fileprivate var userIDsBeingRequested = Set<UUID>()
     fileprivate var assetIDsBeingRequested = Set<ZMSearchUserAndAssetID>()
-    
-    public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate){
-        self.syncContext = managedObjectContext
-        self.uiContext = managedObjectContext.zm_userInterface
-        self.clientRegistrationDelegate = clientRegistrationDelegate
-        self.imagesByUserIDCache = ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>
-        self.mediumAssetIDByUserIDCache = ZMSearchUser.searchUserToMediumAssetIDCache() as! NSCache<NSUUID, NSUUID>
-        self.userIDsTable = ZMSearchDirectory.userIDsMissingProfileImage()
+    public override var configuration: ZMStrategyConfigurationOption { return .allowsRequestsDuringEventProcessing }
+
+    @available (*, unavailable)
+    public override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
+        fatalError()
     }
     
-    init(managedObjectContext: NSManagedObjectContext,
-         clientRegistrationDelegate: ClientRegistrationDelegate,
+    public convenience init(appStateDelegate: ZMAppStateDelegate, managedObjectContext: NSManagedObjectContext){
+        self.init(appStateDelegate: appStateDelegate,
+                  managedObjectContext: managedObjectContext,
+                  imagesByUserIDCache: nil,
+                  mediumAssetIDByUserIDCache: nil,
+                  userIDsTable: nil)
+    }
+    
+    internal init(appStateDelegate: ZMAppStateDelegate,
+         managedObjectContext: NSManagedObjectContext,
          imagesByUserIDCache : NSCache<NSUUID, NSData>?,
          mediumAssetIDByUserIDCache : NSCache<NSUUID, NSUUID>?,
          userIDsTable: ZMUserIDsForSearchDirectoryTable?)
     {
-        self.syncContext = managedObjectContext
         self.uiContext = managedObjectContext.zm_userInterface
-        self.clientRegistrationDelegate = clientRegistrationDelegate
         self.imagesByUserIDCache = imagesByUserIDCache ?? ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>
         self.mediumAssetIDByUserIDCache = mediumAssetIDByUserIDCache ?? ZMSearchUser.searchUserToMediumAssetIDCache() as! NSCache<NSUUID, NSUUID>
         self.userIDsTable = userIDsTable ?? ZMSearchDirectory.userIDsMissingProfileImage()
+        super.init(managedObjectContext: managedObjectContext, appStateDelegate: appStateDelegate)
     }
     
-    public func nextRequest() -> ZMTransportRequest? {
-        guard clientRegistrationDelegate.clientIsReadyForRequests else { return nil }
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         let request = fetchUsersRequest() ?? fetchAssetRequest()
         request?.setDebugInformationTranscoder(self)
         return request
@@ -112,7 +113,7 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
         assetIDsBeingRequested.insert(userAssetID)
         
         let request = UserImageStrategy.requestForFetchingAsset(with:userAssetID.assetID, forUserWith:userAssetID.userID)
-        request?.add(ZMCompletionHandler(on:syncContext){ [weak self] (response) in
+        request?.add(ZMCompletionHandler(on:managedObjectContext){ [weak self] (response) in
             self?.processAsset(response: response, for: userAssetID)
         })
         return request
@@ -140,7 +141,7 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
         else { return nil}
         userIDsBeingRequested.formUnion(userIDsToDownload)
         
-        let completionHandler = ZMCompletionHandler(on :syncContext){ [weak self] (response) in
+        let completionHandler = ZMCompletionHandler(on :managedObjectContext){ [weak self] (response) in
             self?.processUserProfile(response:response, for:userIDsToDownload)
         }
         return SearchUserImageStrategy.requestForFetchingAssets(for:userIDsToDownload, completionHandler:completionHandler)

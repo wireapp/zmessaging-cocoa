@@ -16,6 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
+// TODO Sabine reenable
 
 @import ZMTransport;
 @import WireMessageStrategy;
@@ -85,19 +86,16 @@
     [self.sut didEnterForeground];
 }
 
-- (void)simulateRequestFromGenerator:(id<ZMRequestGenerator>)generator
+- (void)simulateRequest
 {
-    [[[(id)self.objectDirectory.clientMessageTranscoder stub] andReturn:@[generator]] requestGenerators];
-    
     ZMTransportRequest *request = [ZMTransportRequest requestGetFromPath:@"path"];
-    [[[(id)generator expect] andReturn:request] nextRequest];
+    [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturn:request] nextRequest];
 }
 
 - (void)testThatItWaitsForResponse;
 {
     // given
-    id requestGenerator = [OCMockObject niceMockForProtocol:@protocol(ZMRequestGenerator)];
-    [self simulateRequestFromGenerator:requestGenerator];
+    [self simulateRequest];
 
     // expect
     [[(id) self.stateMachine reject] goToState:OCMOCK_ANY];
@@ -110,8 +108,7 @@
 - (void)testThatItTransistionsAfterResponse_Success;
 {
     // given
-    id requestGenerator = [OCMockObject niceMockForProtocol:@protocol(ZMRequestGenerator)];
-    [self simulateRequestFromGenerator:requestGenerator];
+    [self simulateRequest];
     
     // when
     ZMTransportRequest *receivedRequest = [self.sut nextRequest];
@@ -122,7 +119,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
-    [[[requestGenerator expect] andReturn:nil] nextRequest];
+    [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturn:nil] nextRequest];
     [[[(id) self.stateMachine expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.sut didLeaveState];
@@ -141,8 +138,7 @@
 - (void)testThatItTransistionsAfterResponse_PermanentError;
 {
     // given
-    id requestGenerator = [OCMockObject niceMockForProtocol:@protocol(ZMRequestGenerator)];
-    [self simulateRequestFromGenerator:requestGenerator];
+    [self simulateRequest];
     
     // when
     ZMTransportRequest *receivedRequest = [self.sut nextRequest];
@@ -154,7 +150,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
-    [[[requestGenerator expect] andReturn:nil] nextRequest];
+    [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturn:nil] nextRequest];
     [[[(id) self.stateMachine expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.sut didLeaveState];
@@ -172,8 +168,7 @@
 - (void)testThatItDoesNotTransistionsAfterResponse_MissingClients
 {
     // given
-    id requestGenerator = [OCMockObject niceMockForProtocol:@protocol(ZMRequestGenerator)];
-    [self simulateRequestFromGenerator:requestGenerator];
+    [self simulateRequest];
     
     // when
     ZMTransportRequest *receivedRequest = [self.sut nextRequest];
@@ -185,7 +180,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
-    [[[requestGenerator expect] andReturn:nil] nextRequest];
+    [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturn:nil] nextRequest];
     [[(id) self.stateMachine reject] goToState:OCMOCK_ANY];
     
     // when
@@ -202,8 +197,7 @@
 - (void)testThatItTransistionsAfterResponse_Expired;
 {
     // given
-    id requestGenerator = [OCMockObject niceMockForProtocol:@protocol(ZMRequestGenerator)];
-    [self simulateRequestFromGenerator:requestGenerator];
+    [self simulateRequest];
     
     // when
     ZMTransportRequest *receivedRequest = [self.sut nextRequest];
@@ -215,7 +209,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
-    [[[requestGenerator expect] andReturn:nil] nextRequest];
+    [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturn:nil] nextRequest];
     [[[(id) self.stateMachine expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.sut didLeaveState];
@@ -231,11 +225,7 @@
 }
 
 - (void)testThatItTransitionsToThePreBackgroundStateWhenTimerFinishes;
-{
-    // given
-    id requestGenerator = [OCMockObject niceMockForProtocol:@protocol(ZMRequestGenerator)];
-    [self simulateRequestFromGenerator:requestGenerator];
-    
+{    
     // expect
     [[(id) self.stateMachine expect] goToState:self.stateMachine.preBackgroundState];
     [(ZMSyncStateMachine *)[[(id) self.stateMachine expect] andReturn:self.sut] currentState];

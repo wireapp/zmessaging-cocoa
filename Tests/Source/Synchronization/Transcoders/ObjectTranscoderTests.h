@@ -26,5 +26,6 @@
 @interface ObjectTranscoderTests : MessagingTest
 
 @property (nonatomic) ZMSyncStrategy *syncStrategy;
+@property (nonatomic) id mockAppStateDelegate;
 
 @end

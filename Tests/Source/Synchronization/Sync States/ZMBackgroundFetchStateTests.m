@@ -109,11 +109,9 @@
 - (void)testThatItWaitsForMissingUpdateEvents;
 {
     // given
-    for (id transcoder in self.syncObjectsUsedByState) {
-        [[[transcoder stub] andReturn:@[]] requestGenerators];
-    }
     (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturnValue:@(YES)] isDownloadingMissingNotifications];
-    
+    [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturn:nil] nextRequest];
+
     // expect
     [[(id) self.stateMachine reject] goToState:OCMOCK_ANY];
     
@@ -126,11 +124,9 @@
 - (void)testThatItTransitionsToThePreBackgroundStateWhenDone;
 {
     // given
-    for (id transcoder in self.syncObjectsUsedByState) {
-        [[[transcoder stub] andReturn:@[]] requestGenerators];
-    }
     (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturnValue:@(NO)] isDownloadingMissingNotifications];
-    
+    [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturn:nil] nextRequest];
+
     // expect
     [[(id) self.stateMachine expect] goToState:self.stateMachine.preBackgroundState];
     [[(id) self.stateMachine reject] goToState:OCMOCK_ANY];
@@ -172,9 +168,7 @@
     // But we have no asset request.
     [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] startDownloadingMissingNotifications];
     
-    id requestGenerator = [OCMockObject niceMockForProtocol:@protocol(ZMRequestGenerator)];
-    [[[requestGenerator stub] andCall:@selector(nextForwardedRequest) onObject:self] nextRequest];
-    [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturn:@[requestGenerator]] requestGenerators];
+    [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andCall:@selector(nextForwardedRequest) onObject:self] nextRequest];
     id request = [OCMockObject niceMockForClass:ZMTransportRequest.class];
     [self.forwardedRequests addObject:request];
     
@@ -212,7 +206,7 @@
     //
     // 'lastUpdateEventID' does not change. No assets to download.
     [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] startDownloadingMissingNotifications];
-    [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturn:@[]] requestGenerators];
+    [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturn:nil] nextRequest];
     
     (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturnValue:@(NO)] isDownloadingMissingNotifications];
     
@@ -243,10 +237,8 @@
     // 'lastUpdateEventID' changes.
     // But we have no asset request.
     [[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] startDownloadingMissingNotifications];
-    
-    id requestGenerator = [OCMockObject niceMockForProtocol:@protocol(ZMRequestGenerator)];
-    [[[requestGenerator stub] andCall:@selector(nextForwardedRequest) onObject:self] nextRequest];
-    [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andReturn:@[requestGenerator]] requestGenerators];
+    [[[(id) self.objectDirectory.missingUpdateEventsTranscoder stub] andCall:@selector(nextForwardedRequest) onObject:self] nextRequest];
+
     id request = [[ZMTransportRequest alloc] initWithPath:@"/foo" method:ZMMethodPOST payload:@{}];
     [self.forwardedRequests addObject:request];
     NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeAuthenticationFailed userInfo:nil];
@@ -299,21 +291,6 @@
     // then (2)
     XCTAssertEqual(self.results.count, 1u);
     XCTAssertEqual(self.lastResult, ZMBackgroundFetchResultNoData);
-}
-
-- (void)testThatItReturnsTheFirstRequestReturnedByASync
-{
-    /*
-     NOTE: a failure here might mean that you either forgot to add a new sync to
-     self.syncObjectsUsedByThisState, or that the order of that array doesn't match
-     the order used by the ZMEventProcessingState
-     */
-    
-    [self checkThatItCallsRequestGeneratorsOnObjectsOfClass:[self syncObjectsUsedByState] creationOfStateBlock:^ZMSyncState *(id<ZMObjectStrategyDirectory> directory) {
-        [[[(id) directory.missingUpdateEventsTranscoder stub] andCall:@selector(missingUpdateEventsTranscoderLastUpdateEventID) onObject:self] lastUpdateEventID];
-        (void)[(ZMMissingUpdateEventsTranscoder *) [[(id) directory.missingUpdateEventsTranscoder stub] andReturnValue:@(YES)] isDownloadingMissingNotifications];
-        return [[ZMBackgroundFetchState alloc] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:directory stateMachineDelegate:self.stateMachine];
-    }];
 }
 
 - (ZMBackgroundFetchResult)lastResult;

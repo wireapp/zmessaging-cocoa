@@ -33,7 +33,6 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 
 @property (nonatomic) ZMRemoteIdentifierObjectSync *remoteIDObjectSync;
 @property (nonatomic, weak) SyncStatus *syncStatus;
-@property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
 @property (nonatomic) BOOL didStartSlowSync;
 
 @end
@@ -47,17 +46,29 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 
 @implementation ZMUserTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                              syncStatus:(SyncStatus *)syncStatus
-                  clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
 {
-    self = [super initWithManagedObjectContext:moc];
+    NOT_USED(moc);
+    NOT_USED(appStateDelegate);
+    RequireString(NO, "Use the other init");
+    return nil;
+}
+
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                                  syncStatus:(SyncStatus *)syncStatus;
+{
+    self = [super initWithManagedObjectContext:moc appStateDelegate:appStateDelegate];
     if (self) {
         self.syncStatus = syncStatus;
-        self.clientRegistrationDelegate = clientRegistrationDelegate;
         self.remoteIDObjectSync = [[ZMRemoteIdentifierObjectSync alloc] initWithTranscoder:self managedObjectContext:self.managedObjectContext];
     }
     return self;
+}
+
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
 }
 
 - (void)setNeedsSlowSync
@@ -84,18 +95,13 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
     return self.remoteIDObjectSync.isDone;
 }
 
-
 - (SyncPhase)expectedSyncPhase
 {
     return SyncPhaseFetchingUsers;
 }
 
-- (ZMTransportRequest *)nextRequest
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
-    if (!self.clientRegistrationDelegate.clientIsReadyForRequests) {
-        return nil;
-    }
-    
     SyncStatus *status = self.syncStatus;
     if (status.currentSyncPhase == self.expectedSyncPhase) {
         if (!self.didStartSlowSync) {

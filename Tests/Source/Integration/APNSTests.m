@@ -23,7 +23,9 @@
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Background+Testing.h"
 #import "zmessaging_iOS_Tests-Swift.h"
-
+#import "ZMOperationLoop+Private.h"
+#import "ZMSyncStrategy.h"
+#import "ZMSyncStateManager.h"
 
 @interface APNSTests : IntegrationTestBase
 

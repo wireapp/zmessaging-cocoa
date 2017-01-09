@@ -19,7 +19,7 @@
 
 @import Foundation;
 @import CoreData;
-@import WireRequestStrategy;
+@import WireMessageStrategy;
 
 @protocol ZMObjectStrategyDirectory;
 
@@ -27,14 +27,13 @@
 @class ZMAccountStatus;
 @class SyncStatus;
 
-@interface ZMConversationTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator, ZMSyncPhase>
+@interface ZMConversationTranscoder : ZMAbstractRequestStrategy <ZMSyncPhase, ZMObjectStrategy>
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                        authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-                               accountStatus:(ZMAccountStatus *)accountStatus
-                                syncStrategy:(ZMSyncStrategy *)syncStrategy
-                                  syncStatus:(SyncStatus *)syncStatus
-                  clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate NS_UNAVAILABLE;
+
+- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)syncStrategy
+                    appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                          syncStatus:(SyncStatus *)syncStatus;
 
 @property (nonatomic) NSUInteger conversationPageSize;
 

@@ -22,22 +22,21 @@ import Foundation
 class TopConversationsRequestStrategyTests : MessagingTest {
     
     var sut : zmessaging.TopConversationsRequestStrategy!
-    
-    var authenticationStatus : MockAuthenticationStatus!
-
+    var mockAppStateDelegate : MockAppStateDelegate!
     var conversationsDirectory : TopConversationsDirectory!
     
     override func setUp() {
         super.setUp()
-        self.authenticationStatus = MockAuthenticationStatus()
+        self.mockAppStateDelegate = MockAppStateDelegate()
+        self.mockAppStateDelegate.mockAppState = .eventProcessing
         self.conversationsDirectory = TopConversationsDirectory(managedObjectContext: self.uiMOC)
-        self.sut = TopConversationsRequestStrategy(managedObjectContext: self.uiMOC, authenticationStatus: self.authenticationStatus, conversationDirectory: self.conversationsDirectory)
+        self.sut = TopConversationsRequestStrategy(managedObjectContext: self.uiMOC, appStateDelegate: self.mockAppStateDelegate, conversationDirectory: self.conversationsDirectory)
     }
     
     override func tearDown() {
         self.sut = nil
         self.conversationsDirectory = nil
-        self.authenticationStatus = nil
+        self.mockAppStateDelegate = nil
     }
 }
 
@@ -65,7 +64,7 @@ extension TopConversationsRequestStrategyTests {
         
         // GIVEN
         self.conversationsDirectory.refreshTopConversations()
-        self.authenticationStatus.mockPhase = .unauthenticated
+        self.mockAppStateDelegate.mockAppState = .unauthenticated
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // WHEN

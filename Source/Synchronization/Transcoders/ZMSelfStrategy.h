@@ -17,20 +17,23 @@
 // 
 
 
-@import WireRequestStrategy;
+@import WireMessageStrategy;
 
 @class NSManagedObjectContext;
 @class NSOperationQueue;
 @class ZMUpstreamModifiedObjectSync;
-
 @class ZMClientRegistrationStatus;
 
-@interface ZMSelfStrategy : ZMObjectSyncStrategy <ZMRequestGenerator, ZMContextChangeTrackerSource>
+@interface ZMSelfStrategy : ZMAbstractRequestStrategy <ZMContextChangeTrackerSource>
 
 @property (nonatomic, readonly) BOOL isSelfUserComplete;
 
-- (instancetype)initWithClientRegistrationStatus:(ZMClientRegistrationStatus *)clientStatus
-                            managedObjectContext:(NSManagedObjectContext *)moc;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate NS_UNAVAILABLE;
+
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus;
 @end
 
 
