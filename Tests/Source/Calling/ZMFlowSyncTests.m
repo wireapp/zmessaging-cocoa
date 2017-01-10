@@ -35,13 +35,13 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 
 
-@interface ZMFlowSyncTests : MessagingTest <ZMVoiceChannelVoiceGainObserver>
+@interface ZMFlowSyncTests : MessagingTest
 
 @property (nonatomic) ZMFlowSync<AVSFlowManagerDelegate, ZMRequestGenerator> *sut;
 @property (nonatomic) id internalFlowManager;
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
 @property (nonatomic) id deploymentEnvironment;
-@property (nonatomic) NSMutableArray *voiceChannelGainNotifications;
+
 @end
 
 
@@ -64,8 +64,6 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [[[self.deploymentEnvironment stub] andReturnValue:OCMOCK_VALUE(ZMDeploymentEnvironmentTypeInternal)] environmentType];
 
     [self recreateSUT];
-    self.voiceChannelGainNotifications = [NSMutableArray array];
-    [ZMVoiceChannelParticipantVoiceGainChangedNotification addObserver:self];
     
     [[self.internalFlowManager expect] networkChanged]; // this will be caused by "simulatePushChannelOpen"
     [self verifyMockLater:self.internalFlowManager];
@@ -74,9 +72,6 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 - (void)tearDown
 {
-    [ZMVoiceChannelParticipantVoiceGainChangedNotification removeObserver:self];
-    self.voiceChannelGainNotifications = nil;
-    
     [self.sut tearDown];
     self.sut = nil;
     [self.internalFlowManager stopMocking];
@@ -105,11 +100,6 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 {
     [[NSNotificationCenter defaultCenter] postNotificationName:ZMPushChannelStateChangeNotificationName object:nil
                                                       userInfo:@{ZMPushChannelIsOpenKey: @(YES)}];
-}
-
-- (void)voiceChannelParticipantVoiceGainDidChange:(ZMVoiceChannelParticipantVoiceGainChangedNotification *)note;
-{
-    [self.voiceChannelGainNotifications addObject:note];
 }
 
 - (void)testThatItReleasesTheFlowForCallDeviceIsActive_No
@@ -601,6 +591,9 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         [conv.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
+    
+    // expect
+    [self expectationForNotification:VoiceGainNotification.notificationName object:nil handler:nil];
 
     // when
     ZMConversation *conversation = (id) [self.uiMOC objectWithID:conversationID];
@@ -608,20 +601,14 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    ZMUser *user = (id) [self.uiMOC objectWithID:userID];
-    
-    XCTAssertEqual(self.voiceChannelGainNotifications.count, 1u);
-    ZMVoiceChannelParticipantVoiceGainChangedNotification *note = self.voiceChannelGainNotifications.firstObject;
-    XCTAssertEqual(note.voiceChannel, conversation.voiceChannel);
-    XCTAssertEqual(note.participant, user);
-    XCTAssertEqualWithAccuracy(note.voiceGain, 0.4, 0.01);
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
-
 
 - (void)testThatItSendsAVoiceGainNotification_ParticipantUUID;
 {
     __block NSManagedObjectID *conversationID;
     __block NSManagedObjectID *userID;
+    
     // given
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *conv = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
@@ -639,34 +626,28 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    // when
     ZMConversation *conversation = (id) [self.uiMOC objectWithID:conversationID];
     ZMUser *user = (id) [self.uiMOC objectWithID:userID];
-
-    [self.sut didUpdateVolume:0.4 conversationId:conversation.remoteIdentifier.transportString participantId:user.remoteIdentifier.transportString];
+    
+    // expect
+    [self expectationForNotification:VoiceGainNotification.notificationName object:nil handler:^BOOL(NSNotification * _Nonnull notification) {
+        VoiceGainNotification *voiceGainNotification = (VoiceGainNotification *)notification.userInfo[VoiceGainNotification.userInfoKey];
+        
+        XCTAssertEqualWithAccuracy(voiceGainNotification.volume, 0.4, 0.01);
+        XCTAssertEqualObjects(voiceGainNotification.userId, user.remoteIdentifier);
+        XCTAssertEqualObjects(voiceGainNotification.conversationId, conversation.remoteIdentifier);
+        
+        return YES;
+    }];
+    
+    // when
+    [self.syncMOC performGroupedBlock:^{
+        [self.sut didUpdateVolume:0.4 conversationId:conversation.remoteIdentifier.transportString participantId:user.remoteIdentifier.transportString];
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    
-    XCTAssertEqual(self.voiceChannelGainNotifications.count, 1u);
-    ZMVoiceChannelParticipantVoiceGainChangedNotification *note = self.voiceChannelGainNotifications.firstObject;
-    XCTAssertEqual(note.voiceChannel, conversation.voiceChannel);
-    XCTAssertEqual(note.participant, user);
-    XCTAssertEqualWithAccuracy(note.voiceGain, 0.4, 0.01);
-}
-
-- (void)testThatItDoesNotSendNotificationsWhenConversationDoesNotExist;
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // when
-        [self.sut didUpdateVolume:0.4 conversationId:NSUUID.createUUID.transportString participantId:FlowManagerOtherUserParticipantIdentifier];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // then
-        XCTAssertEqual(self.voiceChannelGainNotifications.count, 0u);
-    }];
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 - (void)testThatItDoesNotSendNotificationsWhenTheParticipantIsNotInTheVoiceChannel
@@ -684,15 +665,20 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         user.remoteIdentifier = NSUUID.createUUID;
         [conv.voiceChannel.v2 addCallParticipant:user];
         
-        // when
-        [self.sut didUpdateVolume:0.4 conversationId:conv.remoteIdentifier.transportString participantId:NSUUID.createUUID.transportString];
         [self.syncMOC saveOrRollback];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
+    // expect
+    id token = [NSNotificationCenter.defaultCenter addObserverForName:VoiceGainNotification.notificationName object:nil queue:NSOperationQueue.mainQueue usingBlock:^(__unused NSNotification * _Nonnull note) {
+        XCTFail(@"Did expect to receive a voice gain notification");
+    }];
+    
+    // when
+    [self.sut didUpdateVolume:0.4 conversationId:conv.remoteIdentifier.transportString participantId:NSUUID.createUUID.transportString];
+    
+    [NSNotificationCenter.defaultCenter removeObserver:token];
     [self.syncMOC performGroupedBlockAndWait:^{
-        // then
-        XCTAssertEqual(self.voiceChannelGainNotifications.count, 0u);
         [conv.voiceChannel.v2 tearDown];
     }];
 }

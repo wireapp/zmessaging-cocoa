@@ -48,6 +48,25 @@ public protocol CallFlow {
     
 }
 
+public extension VoiceChannelRouter {
+    
+    func addStateObserver(_ observer: VoiceChannelStateObserver) -> WireCallCenterObserverToken {
+        return WireCallCenterT.addVoiceChannelStateObserver(conversation: conversation!, observer: observer, context: conversation!.managedObjectContext!)
+    }
+    
+    func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> WireCallCenterObserverToken {
+        return WireCallCenterT.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
+    func addVoiceGainObserver(_ observer: VoiceGainObserver) -> WireCallCenterObserverToken {
+        return WireCallCenterT.addVoiceGainObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
+    class func addStateObserver(_ observer: VoiceChannelStateObserver, userSession: ZMUserSession) -> WireCallCenterObserverToken {
+        return WireCallCenterT.addVoiceChannelStateObserver(observer: observer, context: userSession.managedObjectContext!)
+    }
+    
+}
 
 extension VoiceChannelRouter : CallFlow {
     
@@ -82,7 +101,7 @@ extension VoiceChannelRouter : CallFlow {
     }
     
     public func setVideoCaptureDevice(device: CaptureDevice) throws {
-        guard let flowManager = flowManager, flowManager.isReady() else { throw ZMVoiceChannelError.noFlowManagerError() }
+        guard let flowManager = ZMAVSBridge.flowManagerInstance(), flowManager.isReady() else { throw ZMVoiceChannelError.noFlowManagerError() }
         guard let remoteIdentifier = conversation?.remoteIdentifier else { throw ZMVoiceChannelError.switchToVideoNotAllowedError() }
         
         flowManager.setVideoCaptureDevice(device.deviceIdentifier, forConversation: remoteIdentifier.transportString())

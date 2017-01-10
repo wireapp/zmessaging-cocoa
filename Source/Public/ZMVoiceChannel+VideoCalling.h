@@ -19,7 +19,8 @@
 
 @import Foundation;
 @import ZMCDataModel;
-#import <ZMCDataModel/ZMVoiceChannel.h>
+
+#import "ZMVoiceChannel.h"
 
 @class ZMUser;
 @class UIView;

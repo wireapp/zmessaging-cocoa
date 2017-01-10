@@ -24,7 +24,6 @@
 #import <zmessaging/ZMUserSession.h>
 #import <zmessaging/ZMUserSession+Registration.h>
 #import <zmessaging/ZMUserSession+Authentication.h>
-#import <zmessaging/ZMVoiceChannel+VideoCalling.h>
 #import <zmessaging/ZMNetworkState.h>
 #import <zmessaging/ZMCredentials.h>
 #import <zmessaging/ZMUserSession+OTR.h>
@@ -34,6 +33,7 @@
 #import <zmessaging/ZMVoiceChannel+CallFlow.h>
 #import <zmessaging/ZMTypingUsers.h>
 #import <zmessaging/ZMOnDemandFlowManager.h>
+#import <zmessaging/ZMVoiceChannel.h>
 
 
 // PRIVATE
@@ -65,5 +65,7 @@
 #import <zmessaging/ZMTyping.h>
 #import <zmessaging/ZMUserIDsForSearchDirectoryTable.h>
 #import <zmessaging/ZMSearchDirectory+Internal.h>
-#import <zmessaging/VoiceChannelRouter+FlowManager.h>
+#import <zmessaging/ZMVoiceChannel+Internal.h>
+#import <zmessaging/ZMVoiceChannel+VideoCalling.h>
+#import <zmessaging/ZMAVSBridge.h>
 

@@ -553,18 +553,16 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
             return;
         }
         
-        NSManagedObjectID *conversationID = conversation.objectID;
-        NSManagedObjectID *userID = user.objectID;
+        NSUUID *conversationID = conversation.remoteIdentifier;
+        NSUUID *userID = user.remoteIdentifier;
         
+        VoiceGainNotification *voiceGainNotification = [[VoiceGainNotification alloc] initWithVolume:(float)volume conversationId:conversationID userId:userID];
+                
         [self.uiManagedObjectContext performGroupedBlock:^{
-            NSNotificationQueue *queue = self.voiceGainNotificationQueue;
-            
-            ZMConversation *uiConversation = (id) [self.uiManagedObjectContext objectWithID:conversationID];
-            ZMUser *uiUser = (id) [self.uiManagedObjectContext objectWithID:userID];
-            
-            ZMVoiceChannelParticipantVoiceGainChangedNotification *note = [ZMVoiceChannelParticipantVoiceGainChangedNotification notificationWithConversation:uiConversation participant:uiUser voiceGain:volume];
-            
-            [queue enqueueNotification:note postingStyle:NSPostWhenIdle coalesceMask:NSNotificationCoalescingOnSender | NSNotificationCoalescingOnName forModes:nil];
+            [self.voiceGainNotificationQueue enqueueNotification:voiceGainNotification.notification
+                                                    postingStyle:NSPostWhenIdle
+                                                    coalesceMask:NSNotificationCoalescingOnSender | NSNotificationCoalescingOnName
+                                                        forModes:nil];
         }];
     }];
 }

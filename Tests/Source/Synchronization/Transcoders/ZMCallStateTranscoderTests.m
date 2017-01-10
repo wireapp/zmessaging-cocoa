@@ -2140,11 +2140,6 @@
 
 - (void)testThatItFiresANotificationWhenReceivingUpstreamResponseWithCauseRequested_OnUserInitiatedLeave
 {
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMCallEndObserver)];
-    [ZMCallEndedNotification addCallEndObserver:observer];
-    
-    XCTestExpectation *expectation = [self expectationWithDescription:self.name];
-    
     __block ZMConversation *conversation;
     [self.syncMOC performGroupedBlockAndWait:^{
         
@@ -2154,12 +2149,14 @@
         conversation.reasonToLeave = ZMCallStateReasonToLeaveUser;
         
         // expect
-        [[observer expect] didEndCall:[OCMArg checkWithBlock:^BOOL(ZMCallEndedNotification *note) {
-            [expectation fulfill];
-            XCTAssertEqualObjects(conversation.objectID, note.conversation.objectID);
-            XCTAssertEqual(note.reason, ZMVoiceChannelCallEndReasonRequestedSelf);
+        [self expectationForNotification:[CallEndedNotification notificationName] object:nil handler:^BOOL(NSNotification * _Nonnull notification) {
+            CallEndedNotification *callEnded = (CallEndedNotification *)notification.userInfo[CallEndedNotification.userInfoKey];
+            
+            XCTAssertEqualObjects(conversation.remoteIdentifier, callEnded.conversationId);
+            XCTAssertEqual(callEnded.reason, ZMVoiceChannelCallEndReasonRequestedSelf);
+            
             return true;
-        }]];
+        }];
         
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{
                                                                                    @"cause": @"requested",
@@ -2176,19 +2173,11 @@
         
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    [observer verify];
-    [ZMCallEndedNotification removeCallEndObserver:observer];
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 - (void)testThatItFiresANotificationWhenReceivingUpstreamResponseWithCauseRequested_OnAVSInitiatedLeave
 {
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMCallEndObserver)];
-    [ZMCallEndedNotification addCallEndObserver:observer];
-    
-    XCTestExpectation *expectation = [self expectationWithDescription:self.name];
-    
     __block ZMConversation *conversation;
     [self.syncMOC performGroupedBlockAndWait:^{
         
@@ -2198,12 +2187,14 @@
         conversation.reasonToLeave = ZMCallStateReasonToLeaveAvsError;
         
         // expect
-        [[observer expect] didEndCall:[OCMArg checkWithBlock:^BOOL(ZMCallEndedNotification *note) {
-            [expectation fulfill];
-            XCTAssertEqualObjects(note.conversation.objectID, conversation.objectID);
-            XCTAssertEqual(note.reason, ZMVoiceChannelCallEndReasonRequestedAVS);
+        [self expectationForNotification:[CallEndedNotification notificationName] object:nil handler:^BOOL(NSNotification * _Nonnull notification) {
+            CallEndedNotification *callEnded = (CallEndedNotification *)notification.userInfo[CallEndedNotification.userInfoKey];
+            
+            XCTAssertEqualObjects(conversation.remoteIdentifier, callEnded.conversationId);
+            XCTAssertEqual(callEnded.reason, ZMVoiceChannelCallEndReasonRequestedAVS);
+            
             return true;
-        }]];
+        }];
         
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{
                                                                                    @"cause": @"requested",
@@ -2220,19 +2211,12 @@
         
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    [observer verify];
-    [ZMCallEndedNotification removeCallEndObserver:observer];
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 
 - (void)testThatItFiresANotificationWhenReceivingAPushNotificationWithCauseDisconnected
 {
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMCallEndObserver)];
-    [ZMCallEndedNotification addCallEndObserver:observer];
-
-    XCTestExpectation *expectation = [self expectationWithDescription:self.name];
     __block ZMConversation *conversation;
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -2242,12 +2226,14 @@
         conversation.callDeviceIsActive = YES;
         
         // expect
-        [[observer expect] didEndCall:[OCMArg checkWithBlock:^BOOL(ZMCallEndedNotification *note) {
-            [expectation fulfill];
-            XCTAssertEqualObjects(note.conversation.objectID, conversation.objectID);
-            XCTAssertEqual(note.reason, ZMVoiceChannelCallEndReasonDisconnected);
+        [self expectationForNotification:[CallEndedNotification notificationName] object:nil handler:^BOOL(NSNotification * _Nonnull notification) {
+            CallEndedNotification *callEnded = (CallEndedNotification *)notification.userInfo[CallEndedNotification.userInfoKey];
+            
+            XCTAssertEqualObjects(conversation.remoteIdentifier, callEnded.conversationId);
+            XCTAssertEqual(callEnded.reason, ZMVoiceChannelCallEndReasonDisconnected);
+            
             return true;
-        }]];
+        }];
         
         NSDictionary *payload = @{
                                   @"id" : NSUUID.createUUID.transportString,
@@ -2272,17 +2258,11 @@
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     
     // then
-    [observer verify];
-    [ZMCallEndedNotification removeCallEndObserver:observer];
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 - (void)testThatItFiresANotificationWhenReceivingAPushNotificationWithCauseRequested
 {
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMCallEndObserver)];
-    [ZMCallEndedNotification addCallEndObserver:observer];
-    
-    XCTestExpectation *expectation = [self expectationWithDescription:self.name];
-
     __block ZMConversation *conversation;
     [self.syncMOC performGroupedBlockAndWait:^{
         
@@ -2291,12 +2271,14 @@
         conversation.callDeviceIsActive = YES;
         
         // expect
-        [[observer expect] didEndCall:[OCMArg checkWithBlock:^BOOL(ZMCallEndedNotification *note) {
-            [expectation fulfill];
-            XCTAssertEqualObjects(note.conversation.objectID, conversation.objectID);
-            XCTAssertEqual(note.reason, ZMVoiceChannelCallEndReasonRequested);
+        [self expectationForNotification:[CallEndedNotification notificationName] object:nil handler:^BOOL(NSNotification * _Nonnull notification) {
+            CallEndedNotification *callEnded = (CallEndedNotification *)notification.userInfo[CallEndedNotification.userInfoKey];
+            
+            XCTAssertEqualObjects(conversation.remoteIdentifier, callEnded.conversationId);
+            XCTAssertEqual(callEnded.reason, ZMVoiceChannelCallEndReasonRequested);
+            
             return true;
-        }]];
+        }];
         
         NSDictionary *payload = @{
                                   @"id" : NSUUID.createUUID.transportString,
@@ -2318,27 +2300,25 @@
         
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    [observer verify];
-    [ZMCallEndedNotification removeCallEndObserver:observer];
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 - (void)testThatItDoesNotFireANotificationWhenReceivingAPushNotificationWithCauseRequestedWhenCallDeviceIsNotActive
 {
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMCallEndObserver)];
-    [ZMCallEndedNotification addCallEndObserver:observer];
-    
     __block ZMConversation *conversation;
+    __block BOOL didFireNotification = NO;
+    
+    // expect
+    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:CallEndedNotification.notificationName object:nil queue:NSOperationQueue.mainQueue usingBlock:^(__unused NSNotification * _Nonnull note) {
+        didFireNotification = YES;
+    }];
+    
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
         conversation = self.syncGroupConversation;
         conversation.callDeviceIsActive = NO;
         
-        // expect
-        [[observer reject] didEndCall:OCMOCK_ANY];
-        
         NSDictionary *payload = @{
                                   @"id" : NSUUID.createUUID.transportString,
                                   @"payload" : @[
@@ -2358,11 +2338,13 @@
         [self.sut processEvents:[ZMUpdateEvent eventsArrayFromPushChannelData:payload] liveEvents:YES prefetchResult:nil];
         
     }];
+    
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    [observer verify];
-    [ZMCallEndedNotification removeCallEndObserver:observer];
+    XCTAssertFalse(didFireNotification);
+    
+    [NSNotificationCenter.defaultCenter removeObserver:observer];
 }
 
 @end

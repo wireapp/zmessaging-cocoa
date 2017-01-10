@@ -77,3 +77,34 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
     }
     
 }
+
+extension ZMCallKitDelegate : WireCallCenterV2CallStateObserver {
+    
+    public func callCenterDidChange(voiceChannelState: ZMVoiceChannelState, conversation: ZMConversation) {
+        switch voiceChannelState {
+        case .incomingCall:
+            guard let user = conversation.voiceChannel?.v2.participants.firstObject as? ZMUser else { return }
+            indicateIncomingCall(from: user, in: conversation)
+        case .outgoingCall:
+            provider.reportOutgoingCall(with: conversation.remoteIdentifier!, startedConnectingAt: Date())
+        case .selfIsJoiningActiveChannel:
+            connectedCallConversation = conversation
+        case .selfConnectedToActiveChannel:
+            conversation.voiceChannel?.v2.callStartDate = Date()
+            provider.reportOutgoingCall(with: conversation.remoteIdentifier!, connectedAt: Date())
+        case .noActiveUsers:
+            if #available(iOS 10.0, *) {
+                if conversation == connectedCallConversation {
+                    provider.reportCall(with: conversation.remoteIdentifier!, endedAt: nil, reason: UInt(CXCallEndedReason.remoteEnded.rawValue))
+                } else {
+                    provider.reportCall(with: conversation.remoteIdentifier!, endedAt: nil, reason: UInt(CXCallEndedReason.unanswered.rawValue))
+                }
+            }
+            connectedCallConversation = nil
+            conversation.voiceChannel?.v2.callStartDate = nil
+        default:
+            break
+        }
+    }
+    
+}

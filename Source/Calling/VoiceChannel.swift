@@ -15,10 +15,25 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
-#import <ZMCDataModel/ZMCDataModel.h>
 
-@interface VoiceChannelRouter (FlowManager)
+import Foundation
 
-@property (nonatomic, readonly, nullable)  AVSFlowManager *flowManager;
 
-@end
+@objc
+public protocol VoiceChannel : NSObjectProtocol {
+    
+    var state: ZMVoiceChannelState { get }
+    
+    weak var conversation : ZMConversation? { get }
+    
+    /// The date and time of current call start
+    var callStartDate : Date? { get }
+    
+    /// Voice channel participants. May be a subset of conversation participants.
+    var participants : NSOrderedSet { get }
+    
+    var selfUserConnectionState : ZMVoiceChannelConnectionState { get }
+    
+    func state(forParticipant: ZMUser) -> ZMVoiceChannelParticipantState
+    
+}

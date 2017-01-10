@@ -498,12 +498,7 @@ _Pragma("clang diagnostic pop")
         }
     }
     
-    [self.uiManagedObjectContext performGroupedBlock:^{
-
-        ZMConversation *UIConversation = [self.uiManagedObjectContext existingObjectWithID:conversation.objectID error:nil];
-        ZMCallEndedNotification *note = [ZMCallEndedNotification notificationWithConversation:UIConversation reason:endReason];
-        [[NSNotificationCenter defaultCenter] postNotification:note];
-    }];
+    [[[CallEndedNotification alloc] initWithReason:endReason conversationId:conversation.remoteIdentifier] post];
 }
 
 - (ZMVoiceChannelCallEndReason)callEndReasonForStringValue:(NSString *)reasonString;
