@@ -33,7 +33,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     
     fileprivate let zmLog = ZMSLog(tag: "calling")
     
-    fileprivate var callCenter              : WireCallCenter?
+    fileprivate var callCenter              : WireCallCenterV3?
     fileprivate let managedObjectContext    : NSManagedObjectContext
     fileprivate let genericMessageStrategy  : GenericMessageRequestStrategy
     
@@ -46,7 +46,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         
         if let userId = selfUser.remoteIdentifier, let clientId = selfUser.selfClient()?.remoteIdentifier {
-            callCenter = WireCallCenterFactory.callCenter(withUserId: userId, clientId: clientId)
+            callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId)
             callCenter?.transport = self
         }
     }
@@ -76,7 +76,7 @@ extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTracke
         
         for object in objects {
             if let  userClient = object as? UserClient, userClient.isSelfClient(), let clientId = userClient.remoteIdentifier, let userId = userClient.user?.remoteIdentifier {
-                callCenter = WireCallCenterFactory.callCenter(withUserId: userId, clientId: clientId)
+                callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId)
                 callCenter?.transport = self
                 break
             }

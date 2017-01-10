@@ -97,7 +97,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.mockTransportSession.cryptoboxLocation = [[[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier] URLByAppendingPathComponent:@"otr"];
 
     ZMFlowSyncInternalFlowManagerOverride = self.mockFlowManager;
-    WireCallCenterFactory.wireCallCenterClass = WireCallCenterMock.self;
+    WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3Mock.self;
     
     [self createObjects];
     

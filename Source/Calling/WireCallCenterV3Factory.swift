@@ -20,15 +20,15 @@ import Foundation
 import ZMCDataModel
 
 @objc
-public class WireCallCenterFactory : NSObject {
+public class WireCallCenterV3Factory : NSObject {
     
-    public static var wireCallCenterClass : WireCallCenter.Type = WireCallCenter.self
+    public static var wireCallCenterClass : WireCallCenterV3.Type = WireCallCenterV3.self
     
-    public class func callCenter(withUserId userId: UUID, clientId: String) -> WireCallCenter {
-        if let wireCallCenter =  WireCallCenterFactory.wireCallCenterClass.activeInstance {
+    public class func callCenter(withUserId userId: UUID, clientId: String) -> WireCallCenterV3 {
+        if let wireCallCenter =  WireCallCenterV3Factory.wireCallCenterClass.activeInstance {
             return wireCallCenter
         } else {
-            return WireCallCenterFactory.wireCallCenterClass.init(userId: userId, clientId: clientId)
+            return WireCallCenterV3Factory.wireCallCenterClass.init(userId: userId, clientId: clientId)
         }
         
     }

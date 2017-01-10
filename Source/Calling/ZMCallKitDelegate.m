@@ -217,8 +217,8 @@ NS_ASSUME_NONNULL_END
 
 - (void)dealloc
 {
-    [WireCallCenter removeObserverWithToken:self.callStateObserverToken];
-    [WireCallCenter removeObserverWithToken:self.missedCallsObserverToken];
+    [WireCallCenterV3 removeObserverWithToken:self.callStateObserverToken];
+    [WireCallCenterV3 removeObserverWithToken:self.missedCallsObserverToken];
     [WireCallCenterV2 removeObserverWithToken:self.v2CallStateObserverToken];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
@@ -404,7 +404,7 @@ NS_ASSUME_NONNULL_END
 - (void)leaveAllActiveCalls
 {
     ZMUserSession *userSession = self.userSession;
-    NSArray<ZMConversation *> *nonIdleCallConversations = [WireCallCenterT nonIdleCallConversationsInUserSession:userSession];
+    NSArray<ZMConversation *> *nonIdleCallConversations = [WireCallCenter nonIdleCallConversationsInUserSession:userSession];
     
     [userSession enqueueChanges:^{
         for (ZMConversation *conversation in nonIdleCallConversations) {

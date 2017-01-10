@@ -29,7 +29,7 @@ public final class CallStateObserver : NSObject {
     
     deinit {
         if let token = token {
-            WireCallCenter.removeObserver(token: token)
+            WireCallCenterV3.removeObserver(token: token)
         }
     }
     
@@ -39,7 +39,7 @@ public final class CallStateObserver : NSObject {
         
         super.init()
         
-        self.token = WireCallCenter.addCallStateObserver(observer: self)
+        self.token = WireCallCenterV3.addCallStateObserver(observer: self)
     }
     
 }

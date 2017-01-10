@@ -18,7 +18,9 @@
 
 import Foundation
 
-public class WireCallCenterMock : WireCallCenter {
+@testable import zmessaging
+
+public class WireCallCenterV3Mock : WireCallCenterV3 {
     
     public var callState : CallState = .none
     

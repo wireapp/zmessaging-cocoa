@@ -11,7 +11,7 @@ import Foundation
 public class VoiceChannelV3 : NSObject, VoiceChannel {
     
     public var selfUserConnectionState: ZMVoiceChannelConnectionState {
-        if let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = WireCallCenter.activeInstance {
+        if let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = WireCallCenterV3.activeInstance {
             return callCenter.callState(conversationId:remoteIdentifier).connectionState
         } else {
             return .invalid
@@ -20,7 +20,7 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
 
     /// The date and time of current call start
     public var callStartDate: Date? {
-        return WireCallCenter.activeInstance?.establishedDate
+        return WireCallCenterV3.activeInstance?.establishedDate
     }
     
     weak public var conversation: ZMConversation?
@@ -47,7 +47,7 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
     }
 
     public var state: ZMVoiceChannelState {
-        if let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = WireCallCenter.activeInstance {
+        if let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = WireCallCenterV3.activeInstance {
             return callCenter.callState(conversationId:remoteIdentifier).voiceChannelState
         } else {
             return .noActiveUsers

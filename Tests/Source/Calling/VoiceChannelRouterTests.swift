@@ -24,7 +24,7 @@ import XCTest
 
 class VoiceChannelRouterTests : MessagingTest {
     
-    var wireCallCenterMock : WireCallCenterMock? = nil
+    var wireCallCenterMock : WireCallCenterV3Mock? = nil
     var conversation : ZMConversation?
 
     override func setUp() {
@@ -38,7 +38,7 @@ class VoiceChannelRouterTests : MessagingTest {
         conversation = ZMConversation.insertNewObject(in: self.syncMOC)
         conversation?.remoteIdentifier = UUID.create()
         
-        wireCallCenterMock = WireCallCenterMock(userId: selfUser.remoteIdentifier!, clientId: selfClient.remoteIdentifier!, registerObservers: false)
+        wireCallCenterMock = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: selfClient.remoteIdentifier!, registerObservers: false)
     }
     
     override func tearDown() {

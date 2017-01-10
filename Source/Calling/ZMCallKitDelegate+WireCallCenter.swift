@@ -69,11 +69,11 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
     }
     
     public func observeCallState() -> WireCallCenterObserverToken {
-        return WireCallCenter.addCallStateObserver(observer: self)
+        return WireCallCenterV3.addCallStateObserver(observer: self)
     }
     
     public func observeMissedCalls() -> WireCallCenterObserverToken {
-        return WireCallCenter.addMissedCallObserver(observer: self)
+        return WireCallCenterV3.addMissedCallObserver(observer: self)
     }
     
 }
