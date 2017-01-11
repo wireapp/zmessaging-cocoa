@@ -17,27 +17,25 @@
 // 
 
 
-#import "MessagingTest.h"
+@import Foundation;
+@import ZMCDataModel;
 
+#import "VoiceChannelV2.h"
 
-@interface ZMVoiceChannelTests : MessagingTest <CallingInitialisationObserver>
+@class ZMUser;
+@class UIView;
 
-@property (nonatomic) ZMConversation *conversation;
-@property (nonatomic) ZMConversation *otherConversation;
-@property (nonatomic) ZMConversation *groupConversation;
+FOUNDATION_EXPORT NSString * VoiceChannelV2VideoCallErrorDomain;
 
-@property (nonatomic) ZMUser *selfUser;
-@property (nonatomic) ZMUser *otherUser;
+@interface VoiceChannelV2 (VideoCalling)
 
-@property (nonatomic) ZMConversation *syncGroupConversation;
-@property (nonatomic) ZMConversation *syncOneOnOneConversation;
+// Checks if sending of the video is possible for the participant
+- (BOOL)isSendingVideoForParticipant:(ZMUser *)participant error:(NSError **)error;
 
-@property (nonatomic) ZMUser *syncUser1;
-@property (nonatomic) ZMUser *syncUser2;
-@property (nonatomic) ZMUser *syncUser3;
-@property (nonatomic) ZMUser *syncSelfUser;
+// Set video sending active/inactive
+- (BOOL)setVideoSendActive:(BOOL)active error:(NSError **)error;
 
-
-@property (nonatomic) NSMutableArray *receivedErrors;
+#pragma mark - Private
+- (BOOL)setVideoSendState:(int)state error:(NSError **)error;
 
 @end

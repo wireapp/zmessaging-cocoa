@@ -22,4 +22,5 @@
 @interface ZMAVSBridge : NSObject
 + (Class)flowManagerClass;
 + (id)overrideFlowManager;
++ (AVSFlowManager *)flowManagerInstance;
 @end

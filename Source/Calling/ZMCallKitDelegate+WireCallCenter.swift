@@ -69,11 +69,42 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
     }
     
     public func observeCallState() -> WireCallCenterObserverToken {
-        return WireCallCenter.addCallStateObserver(observer: self)
+        return WireCallCenterV3.addCallStateObserver(observer: self)
     }
     
     public func observeMissedCalls() -> WireCallCenterObserverToken {
-        return WireCallCenter.addMissedCallObserver(observer: self)
+        return WireCallCenterV3.addMissedCallObserver(observer: self)
+    }
+    
+}
+
+extension ZMCallKitDelegate : WireCallCenterV2CallStateObserver {
+    
+    public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation) {
+        switch voiceChannelState {
+        case .incomingCall:
+            guard let user = conversation.voiceChannel?.v2.participants.firstObject as? ZMUser else { return }
+            indicateIncomingCall(from: user, in: conversation)
+        case .outgoingCall:
+            provider.reportOutgoingCall(with: conversation.remoteIdentifier!, startedConnectingAt: Date())
+        case .selfIsJoiningActiveChannel:
+            connectedCallConversation = conversation
+        case .selfConnectedToActiveChannel:
+            conversation.voiceChannel?.v2.callStartDate = Date()
+            provider.reportOutgoingCall(with: conversation.remoteIdentifier!, connectedAt: Date())
+        case .noActiveUsers:
+            if #available(iOS 10.0, *) {
+                if conversation == connectedCallConversation {
+                    provider.reportCall(with: conversation.remoteIdentifier!, endedAt: nil, reason: UInt(CXCallEndedReason.remoteEnded.rawValue))
+                } else {
+                    provider.reportCall(with: conversation.remoteIdentifier!, endedAt: nil, reason: UInt(CXCallEndedReason.unanswered.rawValue))
+                }
+            }
+            connectedCallConversation = nil
+            conversation.voiceChannel?.v2.callStartDate = nil
+        default:
+            break
+        }
     }
     
 }

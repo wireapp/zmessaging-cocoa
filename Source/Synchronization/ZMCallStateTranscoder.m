@@ -22,7 +22,7 @@
 @import ZMCDataModel;
 
 #import "ZMCallStateTranscoder.h"
-#import "ZMVoiceChannel+CallFlow.h"
+#import "VoiceChannelV2+CallFlow.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMCallStateLogger.h"
@@ -478,19 +478,19 @@ _Pragma("clang diagnostic pop")
             return;
         }
     }
-    ZMVoiceChannelCallEndReason endReason = [self callEndReasonForStringValue:reason];
+    VoiceChannelV2CallEndReason endReason = [self callEndReasonForStringValue:reason];
     ZMCallStateReasonToLeave reasonToLeave = conversation.reasonToLeave;
     conversation.reasonToLeave = ZMCallStateReasonToLeaveNone;
     
     
-    if (endReason == ZMVoiceChannelCallEndReasonRequested) {
+    if (endReason == VoiceChannelV2CallEndReasonRequested) {
         switch (reasonToLeave) {
             case ZMCallStateReasonToLeaveUser:
-                endReason = ZMVoiceChannelCallEndReasonRequestedSelf;
+                endReason = VoiceChannelV2CallEndReasonRequestedSelf;
                 break;
                 
             case ZMCallStateReasonToLeaveAvsError:
-                endReason = ZMVoiceChannelCallEndReasonRequestedAVS;
+                endReason = VoiceChannelV2CallEndReasonRequestedAVS;
                 break;
                 
             default:
@@ -498,30 +498,25 @@ _Pragma("clang diagnostic pop")
         }
     }
     
-    [self.uiManagedObjectContext performGroupedBlock:^{
-
-        ZMConversation *UIConversation = [self.uiManagedObjectContext existingObjectWithID:conversation.objectID error:nil];
-        ZMCallEndedNotification *note = [ZMCallEndedNotification notificationWithConversation:UIConversation reason:endReason];
-        [[NSNotificationCenter defaultCenter] postNotification:note];
-    }];
+    [[[CallEndedNotification alloc] initWithReason:endReason conversationId:conversation.remoteIdentifier] post];
 }
 
-- (ZMVoiceChannelCallEndReason)callEndReasonForStringValue:(NSString *)reasonString;
+- (VoiceChannelV2CallEndReason)callEndReasonForStringValue:(NSString *)reasonString;
 {
     if ([reasonString isEqualToString:DropCauseDisconnected]){
-        return ZMVoiceChannelCallEndReasonDisconnected;
+        return VoiceChannelV2CallEndReasonDisconnected;
     }
     if ([reasonString isEqualToString:DropCauseInterrupted]) {
-        return ZMVoiceChannelCallEndReasonInterrupted;
+        return VoiceChannelV2CallEndReasonInterrupted;
     }
     if ([reasonString isEqualToString:DropCauseRequested]) {
-        return ZMVoiceChannelCallEndReasonRequested;
+        return VoiceChannelV2CallEndReasonRequested;
     }
     if ([reasonString isEqualToString:DropCauseGone]) {
-        return ZMVoiceChannelCallEndReasonOtherLostMedia;
+        return VoiceChannelV2CallEndReasonOtherLostMedia;
     }
     
-    return ZMVoiceChannelCallEndReasonRequested;
+    return VoiceChannelV2CallEndReasonRequested;
 }
 
 - (BOOL)processSelfInfoFromPayload:(NSDictionary *)payload forConversation:(ZMConversation *)conversation eventSource:(ZMCallEventSource)eventSource

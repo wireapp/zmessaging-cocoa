@@ -21,14 +21,14 @@
 @import ZMCDataModel;
 @import avs;
 
-#import "ZMVoiceChannelTests.h"
+#import "VoiceChannelV2Tests.h"
 #import "ZMUserSession+Internal.h"
 
 @import ZMCMockTransport;
 
 extern id ZMFlowSyncInternalFlowManagerOverride;
 
-@implementation ZMVoiceChannelTests (VideoCalling)
+@implementation VoiceChannelV2Tests (VideoCalling)
 
 
 - (void)testThatItCallsIsSendingVideoForParticipantAndReturnValue_hasFlowManager
@@ -318,8 +318,8 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
 //    
 //    //then
 //    XCTAssertNotNil(error);
-//    XCTAssertEqual(error.code, (long)ZMVoiceChannelErrorCodeVideoNotActive);
-//    XCTAssertEqualObjects(error.domain, ZMVoiceChannelVideoCallErrorDomain);
+//    XCTAssertEqual(error.code, (long)VoiceChannelV2ErrorCodeVideoNotActive);
+//    XCTAssertEqualObjects(error.domain, VoiceChannelV2VideoCallErrorDomain);
 //    ZMFlowSyncInternalFlowManagerOverride = nil;
 //
 //}
@@ -370,7 +370,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     self.conversation.isSendingVideo = YES;
     
     // when
-    ZMVoiceChannelParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.selfUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.selfUser];
     
     // then
     XCTAssertTrue(state.isSendingVideo);
@@ -382,7 +382,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     self.conversation.isSendingVideo = NO;
     
     // when
-    ZMVoiceChannelParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.selfUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.selfUser];
     
     // then
     XCTAssertFalse(state.isSendingVideo);
@@ -396,7 +396,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     [self.conversation addActiveVideoCallParticipant:self.otherUser];
     
     // when
-    ZMVoiceChannelParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.otherUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.otherUser];
     
     // then
     XCTAssertTrue(state.isSendingVideo);
@@ -409,7 +409,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     [self.conversation removeActiveVideoCallParticipant:self.otherUser];
     
     // when
-    ZMVoiceChannelParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.otherUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.otherUser];
     
     // then
     XCTAssertFalse(state.isSendingVideo);

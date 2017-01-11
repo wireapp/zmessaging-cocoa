@@ -17,20 +17,23 @@
 //
 
 import Foundation
-import ZMCDataModel
+
 
 @objc
-public class WireCallCenterFactory : NSObject {
+public protocol VoiceChannel : NSObjectProtocol {
     
-    public static var wireCallCenterClass : WireCallCenter.Type = WireCallCenter.self
+    var state: VoiceChannelV2State { get }
     
-    public class func callCenter(withUserId userId: UUID, clientId: String) -> WireCallCenter {
-        if let wireCallCenter =  WireCallCenterFactory.wireCallCenterClass.activeInstance {
-            return wireCallCenter
-        } else {
-            return WireCallCenterFactory.wireCallCenterClass.init(userId: userId, clientId: clientId)
-        }
-        
-    }
+    weak var conversation : ZMConversation? { get }
+    
+    /// The date and time of current call start
+    var callStartDate : Date? { get }
+    
+    /// Voice channel participants. May be a subset of conversation participants.
+    var participants : NSOrderedSet { get }
+    
+    var selfUserConnectionState : VoiceChannelV2ConnectionState { get }
+    
+    func state(forParticipant: ZMUser) -> VoiceChannelV2ParticipantState
     
 }

@@ -15,10 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
-#import <ZMCDataModel/ZMCDataModel.h>
 
-@interface VoiceChannelRouter (FlowManager)
+import Foundation
+import ZMCDataModel
 
-@property (nonatomic, readonly, nullable)  AVSFlowManager *flowManager;
-
-@end
+@objc
+public class WireCallCenterV3Factory : NSObject {
+    
+    public static var wireCallCenterClass : WireCallCenterV3.Type = WireCallCenterV3.self
+    
+    public class func callCenter(withUserId userId: UUID, clientId: String) -> WireCallCenterV3 {
+        if let wireCallCenter =  WireCallCenterV3Factory.wireCallCenterClass.activeInstance {
+            return wireCallCenter
+        } else {
+            return WireCallCenterV3Factory.wireCallCenterClass.init(userId: userId, clientId: clientId)
+        }
+        
+    }
+    
+}

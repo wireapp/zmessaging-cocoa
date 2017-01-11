@@ -173,7 +173,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     
     
     if (storedConversation.voiceChannel.participants.count > 0) {
-        [storedConversation.voiceChannel join];
+        [storedConversation.voiceChannel.v2 join];
     } else if (storedConversation.callDeviceIsActive) {
         // in case we received a force idle (disconnected) without the self dictionary (bug on the BE)
         // we would have no call participants, but callDeviceIsActive would be still set

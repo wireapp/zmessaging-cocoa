@@ -25,8 +25,7 @@
 #import "ZMCallKitDelegate.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMVoiceChannel+CallFlow.h"
-#import "ZMVoiceChannel+CallFlowPrivate.h"
+#import "VoiceChannelV2+CallFlow.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
 #import <zmessaging/zmessaging-Swift.h>
 
@@ -49,17 +48,17 @@
  
  Flow for receieving the call (I.a):
  1. BE sends the new call state in conversation via push
- 2. @c ZMCallStateTranscoder decode the payload and update the conversation/ZMVoiceChannel fields
- 3. @c ZMVoiceChannel observer sends the update to @c ZMCallKitDelegate -[ZMCallKitDelegate voiceChannelStateDidChange:]
+ 2. @c ZMCallStateTranscoder decode the payload and update the conversation/VoiceChannelV2 fields
+ 3. @c VoiceChannelV2 observer sends the update to @c ZMCallKitDelegate -[ZMCallKitDelegate voiceChannelStateDidChange:]
  4. @c ZMCallKitDelegate indicates the call to CallKit's @c CXProvider in -[ZMCallKitDelegate indicateIncomingCallInConversation:]
  5. @c CXProvider approves the call and informs @c ZMCallKitDelegate that call is possible in -[ZMCallKitDelegate provider:performStartCallAction:]
- 6. @c ZMCallKitDelegate joins the call with -[ZMVoiceChannel join]
+ 6. @c ZMCallKitDelegate joins the call with -[VoiceChannelV2 join]
  
  Flow for sending the call (I.b):
- 1. API consumer (UI app) calls -[ZMVoiceChannel joinInUserSession:]. This call is forwarded to -[ZMCallKitDelegate requestStartCallInConversation:]
+ 1. API consumer (UI app) calls -[VoiceChannelV2 joinInUserSession:]. This call is forwarded to -[ZMCallKitDelegate requestStartCallInConversation:]
  2. @c ZMCallKitDelegate indicates the call to CallKit's @c CXCallController, that asks @c CXProvider if call is possible. 
  3. @c CXProvider is indicating the call is possible with the callback -[ZMCallKitDelegate provider:performStartCallAction:]
- 4. @c ZMCallKitDelegate joins the call with -[ZMVoiceChannel join]
+ 4. @c ZMCallKitDelegate joins the call with -[VoiceChannelV2 join]
  
  Flow for interaction with last calls / Phone app:
  1. The app is launched or brought to foreground
@@ -74,76 +73,26 @@ static NSString * const ZMCallKitDelegateCallStartedInGroup = @"callkit.call.sta
 
 static NSString * const ZMLogTag ZM_UNUSED = @"CallKit";
 
-CXCallEndedReason CallEndedReasonFromZMVoiceChannelState(ZMVoiceChannelState state, ZMVoiceChannelState previousState);
-BOOL IsCallEndedByUserAction(ZMVoiceChannelState state, ZMVoiceChannelState previousState);
-
-CXCallEndedReason CallEndedReasonFromZMVoiceChannelState(ZMVoiceChannelState state, ZMVoiceChannelState previousState)
-{
-    switch (state) {
-        case ZMVoiceChannelStateNoActiveUsers:
-            switch (previousState) {
-                case ZMVoiceChannelStateIncomingCall:
-                    return CXCallEndedReasonRemoteEnded;
-                case ZMVoiceChannelStateOutgoingCall:
-                    return CXCallEndedReasonUnanswered;
-                default:
-                    return CXCallEndedReasonUnanswered;
-            }
-        case ZMVoiceChannelStateInvalid:
-            return CXCallEndedReasonFailed;
-        case ZMVoiceChannelStateDeviceTransferReady:
-            return CXCallEndedReasonAnsweredElsewhere;
-        case ZMVoiceChannelStateIncomingCallInactive:
-        case ZMVoiceChannelStateOutgoingCallInactive:
-            return CXCallEndedReasonUnanswered;
-        default:
-            return CXCallEndedReasonFailed;
-    }
-}
-
-BOOL IsCallEndedByUserAction(ZMVoiceChannelState state, ZMVoiceChannelState previousState)
-{
-    switch (state) {
-        case ZMVoiceChannelStateNoActiveUsers:
-            switch (previousState) {
-                case ZMVoiceChannelStateIncomingCall:
-                case ZMVoiceChannelStateOutgoingCall:
-                    return YES;
-                default:
-                    return NO;
-            }
-        default:
-            return NO;
-    }
-}
-
 NS_ASSUME_NONNULL_BEGIN
 
 @implementation CXProvider (TypeConformance)
 @end
 
-@interface VoiceChannelRouter (NonIdleStates)
-/// Returns the list of @c ZMVoiceChannelState that are considered as an active call.
-+ (NSSet *)nonIdleStates;
-/// Checks if current state of voice channel is one of the active ones.
-- (BOOL)inNonIdleState;
-@end
 
 @interface ZMCallKitDelegate ()
+
 @property (nonatomic) id<CallKitProviderType> provider;
 @property (nonatomic) id<CallKitCallController> callController;
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
 @property (nonatomic, weak) ZMUserSession *userSession;
 @property (nonatomic, weak) AVSMediaManager *mediaManager;
-@property (nonatomic) NSMutableDictionary <NSString *, NSNumber *> *lastConversationsState;
+@property (nonatomic, nullable) ZMConversation *connectedCallConversation;
 @property (nonatomic) id<NSObject> callStateObserverToken;
 @property (nonatomic) id<NSObject> missedCallsObserverToken;
+@property (nonatomic) id<NSObject> v2CallStateObserverToken;
+
 @end
 
-@interface ZMCallKitDelegate (VoiceChannelObserver)
-- (void)managedObjectContextDidSave:(NSNotification *)notification;
-- (void)conversationVoiceChannelStateDidChange:(ZMConversation *)conversation previousState:(ZMVoiceChannelState)prevState;
-@end
 
 NS_ASSUME_NONNULL_END
 
@@ -258,34 +207,18 @@ NS_ASSUME_NONNULL_END
 
 @end
 
-@implementation VoiceChannelRouter (NonIdleStates)
-
-+ (NSSet *)nonIdleStates {
-    return [NSSet setWithObjects:@(ZMVoiceChannelStateOutgoingCall),
-            @(ZMVoiceChannelStateOutgoingCallInactive),
-            @(ZMVoiceChannelStateSelfIsJoiningActiveChannel),
-            @(ZMVoiceChannelStateSelfConnectedToActiveChannel),
-            @(ZMVoiceChannelStateIncomingCall),
-            @(ZMVoiceChannelStateIncomingCallInactive), nil];
-}
-
-- (BOOL)inNonIdleState
-{
-    return [self.class.nonIdleStates containsObject:@(self.state)];
-}
-
-@end
-
 
 @interface ZMCallKitDelegate (ProviderDelegate) <CXProviderDelegate>
 @end
+
 
 @implementation ZMCallKitDelegate
 
 - (void)dealloc
 {
-    [WireCallCenter removeObserverWithToken:self.callStateObserverToken];
-    [WireCallCenter removeObserverWithToken:self.missedCallsObserverToken];
+    [WireCallCenterV3 removeObserverWithToken:self.callStateObserverToken];
+    [WireCallCenterV3 removeObserverWithToken:self.missedCallsObserverToken];
+    [WireCallCenterV2 removeObserverWithToken:self.v2CallStateObserverToken];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -308,31 +241,13 @@ NS_ASSUME_NONNULL_END
         self.userSession = userSession;
         self.mediaManager = mediaManager;
         self.onDemandFlowManager = onDemandFlowManager;
-        
-        self.lastConversationsState = [[NSMutableDictionary alloc] init];
-
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(managedObjectsDidChange:)
-                                                     name:NSManagedObjectContextObjectsDidChangeNotification
-                                                   object:userSession.managedObjectContext];
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(managedObjectContextDidSave:)
-                                                     name:NSManagedObjectContextDidSaveNotification
-                                                   object:userSession.managedObjectContext];
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(applicationDidBecomeActive:)
-                                                     name:UIApplicationDidBecomeActiveNotification
-                                                   object:nil];
-        
+                
+        self.v2CallStateObserverToken = [WireCallCenterV2 addVoiceChannelStateObserverWithObserver:self context:userSession.managedObjectContext];
         self.callStateObserverToken = [self observeCallState];
         self.missedCallsObserverToken = [self observeMissedCalls];
         
         // If we see "ongoing" calls when app starts we need to end them. App cannot have calls when it is not running.
         [self endAllOngoingCallKitCallsExcept:nil];
-        
-        [self updateStateOfOngoingCalls];
     }
     return self;
 }
@@ -406,16 +321,9 @@ NS_ASSUME_NONNULL_END
     }
 }
 
-- (void)updateStateOfOngoingCalls
-{
-    for (ZMConversation *conversation in self.nonIdleCallConversations) {
-        [self conversationVoiceChannelStateDidChange:conversation previousState:ZMVoiceChannelStateNoActiveUsers];
-    }
-}
-
 - (void)requestStartCallInConversation:(ZMConversation *)conversation videoCall:(BOOL)video
 {
-    if (conversation.voiceChannel.state == ZMVoiceChannelStateIncomingCall) {
+    if (conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall) {
         CXAnswerCallAction *answerAction = [[CXAnswerCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
         CXTransaction *callAnswerTransaction = [[CXTransaction alloc] initWithAction:answerAction];
         [self.callController requestTransaction:callAnswerTransaction completion:^(NSError * _Nullable error) {
@@ -457,15 +365,6 @@ NS_ASSUME_NONNULL_END
     }];
 }
 
-- (NSArray<ZMConversation *> *)nonIdleCallConversations
-{
-    ZMConversationList *nonIdleConversations = [ZMConversationList conversationsIncludingArchivedInUserSession:self.userSession];
-    
-    return [nonIdleConversations filterWithBlock:^BOOL(ZMConversation *conversation) {
-        return conversation.voiceChannel.inNonIdleState;
-    }];
-}
-
 - (void)indicateIncomingCallFromUser:(ZMUser *)user inConversation:(ZMConversation *)conversation
 {
     // Construct a CXCallUpdate describing the incoming call, including the caller.
@@ -503,14 +402,12 @@ NS_ASSUME_NONNULL_END
 
 - (void)leaveAllActiveCalls
 {
-    [self.userSession enqueueChanges:^{
-        for (ZMConversation *conversation in [ZMConversationList nonIdleVoiceChannelConversationsInUserSession:self.userSession]) {
-            if (conversation.voiceChannel.state == ZMVoiceChannelStateIncomingCall) {
-                [conversation.voiceChannel ignore];
-            }
-            else if (conversation.voiceChannel.inNonIdleState) {
-                [conversation.voiceChannel leave];
-            }
+    ZMUserSession *userSession = self.userSession;
+    NSArray<ZMConversation *> *nonIdleCallConversations = [WireCallCenter nonIdleCallConversationsInUserSession:userSession];
+    
+    [userSession enqueueChanges:^{
+        for (ZMConversation *conversation in nonIdleCallConversations) {
+            [conversation.voiceChannel leave];
         }
     }];
 }
@@ -566,142 +463,6 @@ NS_ASSUME_NONNULL_END
 
 @end
 
-@implementation ZMCallKitDelegate (VoiceChannelObserver)
-
-- (void)managedObjectsDidChange:(NSNotification *)notification
-{
-    NSSet<ZMManagedObject *> *updateSet   = notification.userInfo[NSUpdatedObjectsKey];
-    NSSet<ZMManagedObject *> *refreshSet  = notification.userInfo[NSRefreshedObjectsKey];
-    NSSet<ZMManagedObject *> *insertedSet = notification.userInfo[NSInsertedObjectsKey];
-
-    void (^handleChangeset)(NSSet <ZMManagedObject *> *changeset) = ^(NSSet <ZMManagedObject *> *changeset) {
-        for (id object in changeset) {
-            if ([object isKindOfClass:[ZMConversation class]]) {
-                [self updateConversationIfNeeded:object];
-            }
-        }
-    };
-    
-    handleChangeset(updateSet);
-    handleChangeset(refreshSet);
-    handleChangeset(insertedSet);
-}
-
-- (void)managedObjectContextDidSave:(NSNotification *)notification
-{
-    NOT_USED(notification);
-    
-    for (NSString *conversationID in self.lastConversationsState.allKeys.copy) {
-        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:conversationID]
-                                                                 createIfNeeded:NO
-                                                                      inContext:self.userSession.managedObjectContext];
-        
-        if (conversation == nil) {
-            [self.lastConversationsState removeObjectForKey:conversationID];
-            continue;
-        }
-
-        [self updateConversationIfNeeded:conversation];
-    }
-}
-
-- (void)updateConversationIfNeeded:(ZMConversation *)conversation
-{
-    if (conversation.remoteIdentifier == nil) {
-        return;
-    }
-    
-    if (conversation.isSilenced) {
-        return;
-    }
-    
-    if (conversation.conversationType != ZMConversationTypeGroup &&
-        conversation.conversationType != ZMConversationTypeOneOnOne) {
-        return;
-    }
-    
-    ZMVoiceChannelState newState = conversation.voiceChannel.state;
-    NSNumber *knownStateNumber = self.lastConversationsState[conversation.remoteIdentifier.transportString];
-    ZMVoiceChannelState knownState = (ZMVoiceChannelState)[knownStateNumber integerValue];
-    
-    BOOL firstKnownIdleState = knownStateNumber == nil && newState == ZMVoiceChannelStateNoActiveUsers;
-    
-    if (!firstKnownIdleState && (knownStateNumber == nil || knownState != newState)) {
-        [self conversationVoiceChannelStateDidChange:conversation previousState:knownState];
-    }
-    
-    self.lastConversationsState[conversation.remoteIdentifier.transportString] = @(newState);
-}
-
-- (void)conversationVoiceChannelStateDidChange:(ZMConversation *)conversation previousState:(ZMVoiceChannelState)prevState
-{
-    [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Call state %d in %@", conversation.voiceChannel.state, conversation.displayName];
-    
-    switch (conversation.voiceChannel.state) {
-    case ZMVoiceChannelStateIncomingCall:
-        [self indicateIncomingCallFromUser:conversation.voiceChannel.participants.firstObject inConversation:conversation];
-        break;
-    case ZMVoiceChannelStateSelfIsJoiningActiveChannel:
-            [self.provider reportOutgoingCallWithUUID:conversation.remoteIdentifier
-                              startedConnectingAtDate:[NSDate date]];
-
-        break;
-    case ZMVoiceChannelStateSelfConnectedToActiveChannel:
-            [self.provider reportOutgoingCallWithUUID:conversation.remoteIdentifier
-                                      connectedAtDate:[NSDate date]];
-            conversation.voiceChannel.v2.callStartDate = [NSDate date]; // FIXME consider moving this to ZMFlowSync
-        break;
-    case ZMVoiceChannelStateNoActiveUsers:
-        [self.lastConversationsState removeObjectForKey:conversation.remoteIdentifier.transportString];
-        // fallthrough
-    case ZMVoiceChannelStateIncomingCallInactive:
-    case ZMVoiceChannelStateOutgoingCallInactive:
-    case ZMVoiceChannelStateDeviceTransferReady:
-        {
-            if (IsCallEndedByUserAction(conversation.voiceChannel.state, prevState)) {
-                [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"requestTransaction:endCallTransaction on %@", conversation.remoteIdentifier];
-                
-                CXEndCallAction *endCallAction = [[CXEndCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
-                
-                CXTransaction *endCallTransaction = [[CXTransaction alloc] initWithActions:@[endCallAction]];
-                
-                [self.callController requestTransaction:endCallTransaction completion:^(NSError * _Nullable error) {
-                    if (nil != error) {
-                        [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot end call in %@: %@", conversation.displayName, error];
-                    }
-                }];
-            }
-            else {
-                [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"reportCallWithUUID:endedAtDate:"];
-                [self.provider reportCallWithUUID:conversation.remoteIdentifier
-                                      endedAtDate:nil
-                                           reason:CallEndedReasonFromZMVoiceChannelState(conversation.voiceChannel.state, prevState)];
-            }
-            conversation.voiceChannel.v2.callStartDate = nil;
-        }
-        break;
-    default:
-        break;
-    }
-}
-
-@end
-
-@implementation ZMCallKitDelegate (ApplicationStateObserver)
-
-- (void)applicationDidBecomeActive:(NSNotification *)notification
-{
-    NOT_USED(notification);
-    // We need to start video in conversation that accepted video call in background but did not start the recording yet
-    ZMConversation *callConversation = [[self nonIdleCallConversations] firstObject];
-    if (callConversation != nil && callConversation.isVideoCall) { // FIXME this doesn't work for V3 calling
-        [self.onDemandFlowManager.flowManager setVideoSendState:FLOWMANAGER_VIDEO_SEND
-                                                forConversation:callConversation.remoteIdentifier.transportString];
-    }
-}
-
-@end
-
 
 @implementation ZMCallKitDelegate (ProviderDelegate)
 
@@ -748,13 +509,13 @@ NS_ASSUME_NONNULL_END
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
     [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider %@ performEndCallAction on %@: current state %ld", provider, callConversation.displayName, (long)callConversation.voiceChannel.state];
     
-    if (callConversation.voiceChannel.state != ZMVoiceChannelStateNoActiveUsers &&
-        callConversation.voiceChannel.state != ZMVoiceChannelStateDeviceTransferReady &&
-        callConversation.voiceChannel.state != ZMVoiceChannelStateIncomingCallInactive &&
-        callConversation.voiceChannel.state != ZMVoiceChannelStateOutgoingCallInactive) {
+    if (callConversation.voiceChannel.state != VoiceChannelV2StateNoActiveUsers &&
+        callConversation.voiceChannel.state != VoiceChannelV2StateDeviceTransferReady &&
+        callConversation.voiceChannel.state != VoiceChannelV2StateIncomingCallInactive &&
+        callConversation.voiceChannel.state != VoiceChannelV2StateOutgoingCallInactive) {
         
         [userSession performChanges:^{
-            if (callConversation.voiceChannel.selfUserConnectionState == ZMVoiceChannelConnectionStateNotConnected) {
+            if (callConversation.voiceChannel.selfUserConnectionState == VoiceChannelV2ConnectionStateNotConnected) {
                 [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: ignore incoming call"];
                 [callConversation.voiceChannel ignore];
             }

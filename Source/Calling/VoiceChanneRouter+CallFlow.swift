@@ -48,6 +48,25 @@ public protocol CallFlow {
     
 }
 
+public extension VoiceChannelRouter {
+    
+    func addStateObserver(_ observer: VoiceChannelStateObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceChannelStateObserver(conversation: conversation!, observer: observer, context: conversation!.managedObjectContext!)
+    }
+    
+    func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
+    func addVoiceGainObserver(_ observer: VoiceGainObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceGainObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
+    class func addStateObserver(_ observer: VoiceChannelStateObserver, userSession: ZMUserSession) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceChannelStateObserver(observer: observer, context: userSession.managedObjectContext!)
+    }
+    
+}
 
 extension VoiceChannelRouter : CallFlow {
     
@@ -82,8 +101,8 @@ extension VoiceChannelRouter : CallFlow {
     }
     
     public func setVideoCaptureDevice(device: CaptureDevice) throws {
-        guard let flowManager = flowManager, flowManager.isReady() else { throw ZMVoiceChannelError.noFlowManagerError() }
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw ZMVoiceChannelError.switchToVideoNotAllowedError() }
+        guard let flowManager = ZMAVSBridge.flowManagerInstance(), flowManager.isReady() else { throw VoiceChannelV2Error.noFlowManagerError() }
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.switchToVideoNotAllowedError() }
         
         flowManager.setVideoCaptureDevice(device.deviceIdentifier, forConversation: remoteIdentifier.transportString())
     }
@@ -95,23 +114,23 @@ extension VoiceChannelV3 : CallFlow {
     public var isVideoCall: Bool {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
         
-        return WireCallCenter.isVideoCall(conversationId: remoteIdentifier)
+        return WireCallCenterV3.isVideoCall(conversationId: remoteIdentifier)
     }
     
     @objc(toggleVideoActive:error:)
     public func toggleVideo(active: Bool) throws {
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw ZMVoiceChannelError.videoNotActiveError() }
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.videoNotActiveError() }
         
-        WireCallCenter.activeInstance?.toogleVideo(conversationID: remoteIdentifier, active: active)
+        WireCallCenterV3.activeInstance?.toogleVideo(conversationID: remoteIdentifier, active: active)
     }
     
     public func join(video: Bool) -> Bool {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
         
         if state == .incomingCall {
-            _ = WireCallCenter.activeInstance?.answerCall(conversationId: remoteIdentifier)
+            _ = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier)
         } else {
-            _ = WireCallCenter.activeInstance?.startCall(conversationId: remoteIdentifier, video: video)
+            _ = WireCallCenterV3.activeInstance?.startCall(conversationId: remoteIdentifier, video: video)
         }
         
         return true
@@ -120,19 +139,19 @@ extension VoiceChannelV3 : CallFlow {
     public func leave() {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
         
-        WireCallCenter.activeInstance?.closeCall(conversationId: remoteIdentifier)
+        WireCallCenterV3.activeInstance?.closeCall(conversationId: remoteIdentifier)
     }
     
     public func ignore() {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
         
-        WireCallCenter.activeInstance?.ignoreCall(conversationId: remoteIdentifier)
+        WireCallCenterV3.activeInstance?.ignoreCall(conversationId: remoteIdentifier)
     }
     
 }
 
 
-extension ZMVoiceChannel : CallFlow {
+extension VoiceChannelV2 : CallFlow {
     
     public var isVideoCall: Bool {
         return conversation?.isVideoCall ?? false

@@ -412,7 +412,9 @@ ZM_EMPTY_ASSERTING_INIT()
         
         NSSet *conversationsWithCallChanges = [callStateChanges allContainedConversationsInContext:strongUiMoc];
         if (conversationsWithCallChanges != nil) {
-            [strongUiMoc.globalManagedObjectContextObserver notifyUpdatedCallState:conversationsWithCallChanges notifyDirectly:YES];
+            [NSNotificationCenter.defaultCenter postNotificationName:WireCallCenterV2.CallStateDidChangeNotification
+                                                              object:nil
+                                                            userInfo:@{ @"updated": conversationsWithCallChanges }];
         }
         
         ZM_WEAK(self);
@@ -438,7 +440,10 @@ ZM_EMPTY_ASSERTING_INIT()
             }
     
             NSSet *changedConversations = [strongUiMoc mergeCallStateChanges:callStateChanges];
-            [strongUiMoc.globalManagedObjectContextObserver notifyUpdatedCallState:changedConversations notifyDirectly:[self shouldForwardCallStateChangeDirectlyForNote:note]];
+            
+            [NSNotificationCenter.defaultCenter postNotificationName:WireCallCenterV2.CallStateDidChangeNotification
+                                                              object:nil
+                                                            userInfo:@{ @"updated": changedConversations }];
            
             [strongUiMoc mergeChangesFromContextDidSaveNotification:note];
             [strongUiMoc processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
@@ -495,7 +500,6 @@ ZM_EMPTY_ASSERTING_INIT()
     
     return _allChangeTrackers;
 }
-
 
 - (BOOL)processSaveWithInsertedObjects:(NSSet *)insertedObjects updateObjects:(NSSet *)updatedObjects
 {

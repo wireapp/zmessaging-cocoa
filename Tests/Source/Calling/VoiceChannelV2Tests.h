@@ -17,37 +17,27 @@
 // 
 
 
-@import ZMCDataModel;
-
-NS_ASSUME_NONNULL_BEGIN
-
-@class ZMCallTimer;
-@class AVSFlowManager;
-@class ZMUserSession;
-
-@interface ZMVoiceChannel (CallFlow)
-
-- (BOOL)join;
-- (BOOL)joinVideoCall;
-- (void)leave;
-- (void)leaveOnAVSError;
-- (void)ignoreIncomingCall;
-
-- (void)updateActiveFlowParticipants:(NSArray<ZMUser *>*)newParticipants;
-- (void)addCallParticipant:(ZMUser *)participant;
-- (void)removeCallParticipant:(ZMUser *)participant;
-- (void)removeAllCallParticipants;
+#import "MessagingTest.h"
 
 
-- (void)updateForStateChange;
-// removes call participants and resets state to no call whatsoever
-- (void)resetCallState;
-- (void)tearDown;
+@interface VoiceChannelV2Tests : MessagingTest <CallingInitialisationObserver>
+
+@property (nonatomic) ZMConversation *conversation;
+@property (nonatomic) ZMConversation *otherConversation;
+@property (nonatomic) ZMConversation *groupConversation;
+
+@property (nonatomic) ZMUser *selfUser;
+@property (nonatomic) ZMUser *otherUser;
+
+@property (nonatomic) ZMConversation *syncGroupConversation;
+@property (nonatomic) ZMConversation *syncOneOnOneConversation;
+
+@property (nonatomic) ZMUser *syncUser1;
+@property (nonatomic) ZMUser *syncUser2;
+@property (nonatomic) ZMUser *syncUser3;
+@property (nonatomic) ZMUser *syncSelfUser;
 
 
-+ (NSComparator)conferenceComparator;
-- (nullable AVSFlowManager *)flowManager;
+@property (nonatomic) NSMutableArray *receivedErrors;
 
 @end
-
-NS_ASSUME_NONNULL_END

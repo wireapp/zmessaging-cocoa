@@ -65,6 +65,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic, readonly) id<ZMApplication> application;
 @property (nonatomic) ZMCallKitDelegate *callKitDelegate;
 @property (nonatomic) ZMCallStateObserver *callStateObserver;
+@property (nonatomic) WireCallCenterV2 *wireCallCenterV2;
 
 - (void)notifyThirdPartyServices;
 - (void)start;

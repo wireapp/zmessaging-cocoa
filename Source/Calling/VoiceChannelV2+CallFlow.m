@@ -24,31 +24,31 @@
 #import "ZMAVSBridge.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMVoiceChannel+CallFlow.h"
-#import "ZMVoiceChannel+VideoCalling.h"
+#import "VoiceChannelV2+CallFlow.h"
+#import "VoiceChannelV2+VideoCalling.h"
 #import "ZMCallKitDelegate.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 
-@implementation ZMVoiceChannel (CallFlow)
+@implementation VoiceChannelV2 (CallFlow)
 
 - (AVSFlowManager *)flowManager
 {
     return [[ZMAVSBridge flowManagerClass] getInstance];
 }
 
-- (void)startOrCancelTimerForState:(ZMVoiceChannelState)state
+- (void)startOrCancelTimerForState:(VoiceChannelV2State)state
 {
     switch (state) {
-        case ZMVoiceChannelStateNoActiveUsers:
-        case ZMVoiceChannelStateSelfConnectedToActiveChannel:
-        case ZMVoiceChannelStateSelfIsJoiningActiveChannel:
-        case ZMVoiceChannelStateDeviceTransferReady:
-        case ZMVoiceChannelStateInvalid:
+        case VoiceChannelV2StateNoActiveUsers:
+        case VoiceChannelV2StateSelfConnectedToActiveChannel:
+        case VoiceChannelV2StateSelfIsJoiningActiveChannel:
+        case VoiceChannelV2StateDeviceTransferReady:
+        case VoiceChannelV2StateInvalid:
             [self resetTimer];
             break;
-        case ZMVoiceChannelStateOutgoingCall:
-        case ZMVoiceChannelStateIncomingCall:
+        case VoiceChannelV2StateOutgoingCall:
+        case VoiceChannelV2StateIncomingCall:
             if (self.conversation.callParticipants.count > 0) {
                 [self startTimer];
             } else {
@@ -57,8 +57,8 @@
                 [self resetTimer];
             }
             break;
-        case ZMVoiceChannelStateIncomingCallInactive:
-        case ZMVoiceChannelStateOutgoingCallInactive:
+        case VoiceChannelV2StateIncomingCallInactive:
+        case VoiceChannelV2StateOutgoingCallInactive:
             break;
     }
 }
@@ -212,7 +212,7 @@
     
     if ([self hasOngoingGSMCall] && ![ZMUserSession useCallKit]) {
         [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
-            [CallingInitialisationNotification notifyCallingFailedWithErrorCode:ZMVoiceChannelErrorCodeOngoingGSMCall];
+            [CallingInitialisationNotification notifyCallingFailedWithErrorCode:VoiceChannelV2ErrorCodeOngoingGSMCall];
         }];
         return NO;
     }
@@ -260,13 +260,13 @@
     
     if (self.conversation.isVideoCall) {
         NSError *error = nil;
-        if (self.state == ZMVoiceChannelStateIncomingCall || self.state == ZMVoiceChannelStateOutgoingCall) {
+        if (self.state == VoiceChannelV2StateIncomingCall || self.state == VoiceChannelV2StateOutgoingCall) {
            
             if (nil != error) {
                 ZMLogError(@"Cannot set video send state: %@", error);
             }
         }
-        else if (self.state == ZMVoiceChannelStateNoActiveUsers) {
+        else if (self.state == VoiceChannelV2StateNoActiveUsers) {
             [self setVideoSendState:FLOWMANAGER_VIDEO_SEND_NONE error:&error];
             
             if (nil != error) {
