@@ -178,6 +178,7 @@ public class WireCallCenter : NSObject {
     }
     
     public class func activeCallConversations(inUserSession userSession: ZMUserSession) -> [ZMConversation] {
+        // FIXME achive this in a more optimized way
         if let conversations = ZMConversationList.conversationsIncludingArchived(inUserSession: userSession).asArray() as? [ZMConversation] {
             return conversations.filter({ (conversation) -> Bool in
                 return conversation.voiceChannel?.state == .selfConnectedToActiveChannel
@@ -188,6 +189,7 @@ public class WireCallCenter : NSObject {
     }
     
     public class func nonIdleCallConversations(inUserSession userSession: ZMUserSession) -> [ZMConversation] {
+        // FIXME achive this in a more optimized way
         if let conversations = ZMConversationList.conversationsIncludingArchived(inUserSession: userSession).asArray() as? [ZMConversation] {
             return conversations.filter({ (conversation) -> Bool in
                 let voiceChannelState = conversation.voiceChannel?.state
