@@ -20,7 +20,7 @@ import Foundation
 
 public class VoiceChannelV3 : NSObject, VoiceChannel {
     
-    public var selfUserConnectionState: ZMVoiceChannelConnectionState {
+    public var selfUserConnectionState: VoiceChannelV2ConnectionState {
         if let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = WireCallCenterV3.activeInstance {
             return callCenter.callState(conversationId:remoteIdentifier).connectionState
         } else {
@@ -46,8 +46,8 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         super.init()
     }
 
-    public func state(forParticipant participant: ZMUser) -> ZMVoiceChannelParticipantState {
-        let participantState = ZMVoiceChannelParticipantState()
+    public func state(forParticipant participant: ZMUser) -> VoiceChannelV2ParticipantState {
+        let participantState = VoiceChannelV2ParticipantState()
         
         participantState.connectionState = .connected
         participantState.muted = false
@@ -56,7 +56,7 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         return participantState
     }
 
-    public var state: ZMVoiceChannelState {
+    public var state: VoiceChannelV2State {
         if let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = WireCallCenterV3.activeInstance {
             return callCenter.callState(conversationId:remoteIdentifier).voiceChannelState
         } else {
@@ -68,7 +68,7 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
 
 public extension CallState {
     
-    var connectionState : ZMVoiceChannelConnectionState {
+    var connectionState : VoiceChannelV2ConnectionState {
         switch self {
         case .unknown, .terminating, .incoming, .none:
             return .notConnected
@@ -79,7 +79,7 @@ public extension CallState {
         }
     }
     
-    var voiceChannelState : ZMVoiceChannelState {
+    var voiceChannelState : VoiceChannelV2State {
         switch self {
         case .none:
             return .noActiveUsers

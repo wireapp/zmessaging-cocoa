@@ -26,7 +26,7 @@
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMOnDemandFlowManager.h"
-#import "ZMVoiceChannel+VideoCalling.h"
+#import "VoiceChannelV2+VideoCalling.h"
 
 static NSString * const DefaultMediaType = @"application/json";
 id ZMFlowSyncInternalDeploymentEnvironmentOverride;
@@ -459,7 +459,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
                 canSendVideo = YES;
             } else {
                 // notify UI that a video call can not be established
-                [CallingInitialisationNotification notifyCallingFailedWithErrorCode:ZMVoiceChannelErrorCodeVideoCallingNotSupported];
+                [CallingInitialisationNotification notifyCallingFailedWithErrorCode:VoiceChannelV2ErrorCodeVideoCallingNotSupported];
             }
         }
         

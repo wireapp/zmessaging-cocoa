@@ -289,7 +289,7 @@
         
         // then
         XCTAssertEqual(observer.changes.count, 1u);
-        XCTAssertEqual(observer.changes.firstObject.state, ZMVoiceChannelStateIncomingCall);
+        XCTAssertEqual(observer.changes.firstObject.state, VoiceChannelV2StateIncomingCall);
         XCTAssertTrue(self.conversationUnderTest.isVideoCall);
         XCTAssertFalse(self.conversationUnderTest.isIgnoringCall);
     }
@@ -306,7 +306,7 @@
         
         // then
         XCTAssertEqual(observer.changes.count, 2u);
-        XCTAssertEqual(observer.changes.lastObject.state, ZMVoiceChannelStateNoActiveUsers);
+        XCTAssertEqual(observer.changes.lastObject.state, VoiceChannelV2StateNoActiveUsers);
         XCTAssertTrue(self.conversationUnderTest.isVideoCall);
         XCTAssertTrue(self.conversationUnderTest.isIgnoringCall);
     }
@@ -444,7 +444,7 @@
     // selfuser establishes media but can not send video
     {
         [[observer expect] couldNotInitialiseCallWithError:[OCMArg checkWithBlock:^BOOL(NSError *error) {
-            return (error.code == ZMVoiceChannelErrorCodeVideoCallingNotSupported);
+            return (error.code == VoiceChannelV2ErrorCodeVideoCallingNotSupported);
         }]];
         
         [self.mockTransportSession resetReceivedRequests];
@@ -477,8 +477,8 @@
 //{
 //    // given
 //    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-//    id observer = [OCMockObject niceMockForProtocol:@protocol(ZMVoiceChannelParticipantsObserver)];
-//    id token = [ZMVoiceChannel addCallParticipantsObserver:observer inConversation:self.conversationUnderTest voiceChannel:self.conversationUnderTest.voiceChannel];
+//    id observer = [OCMockObject niceMockForProtocol:@protocol(VoiceChannelV2ParticipantsObserver)];
+//    id token = [VoiceChannelV2 addCallParticipantsObserver:observer inConversation:self.conversationUnderTest voiceChannel:self.conversationUnderTest.voiceChannel];
 ////    id token = [self.conversationUnderTest.voiceChannel addCallParticipantsObserver:observer];
 //    
 //    ZMUser *otherUser = [self userForMockUser:self.user2];
@@ -548,7 +548,7 @@
 //        XCTAssertEqual(self.conversationUnderTest.otherActiveVideoCallParticipants.count, 1u);
 //    }
 //    [observer verify];
-//    [ZMVoiceChannel removeCallParticipantsObserverForToken:token inConversation:self.conversationUnderTest];
+//    [VoiceChannelV2 removeCallParticipantsObserverForToken:token inConversation:self.conversationUnderTest];
 //
 //    // (3) other user ends the call
 //    // everything is reset
@@ -613,7 +613,7 @@
     // (2) re-establish an new call
     // we send an video call request
     
-//    token = [ZMVoiceChannel addCallParticipantsObserver:observer inConversation:self.conversationUnderTest voiceChannel:self.conversationUnderTest.voiceChannel];
+//    token = [VoiceChannelV2 addCallParticipantsObserver:observer inConversation:self.conversationUnderTest voiceChannel:self.conversationUnderTest.voiceChannel];
     {
         [self otherJoinVideoCall];
         WaitForEverythingToBeDone();

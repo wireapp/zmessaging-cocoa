@@ -80,7 +80,7 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
 
 extension ZMCallKitDelegate : WireCallCenterV2CallStateObserver {
     
-    public func callCenterDidChange(voiceChannelState: ZMVoiceChannelState, conversation: ZMConversation) {
+    public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation) {
         switch voiceChannelState {
         case .incomingCall:
             guard let user = conversation.voiceChannel?.v2.participants.firstObject as? ZMUser else { return }

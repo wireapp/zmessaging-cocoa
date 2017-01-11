@@ -669,10 +669,10 @@
 - (void)testThatItSetsTheSessionDebugInformation
 {
     // given
-    [ZMVoiceChannel setLastSessionIdentifier:nil];
-    [ZMVoiceChannel setLastSessionStartDate:nil];
-    XCTAssertNil([ZMVoiceChannel lastSessionIdentifier]);
-    XCTAssertNil([ZMVoiceChannel lastSessionStartDate]);
+    [VoiceChannelV2 setLastSessionIdentifier:nil];
+    [VoiceChannelV2 setLastSessionStartDate:nil];
+    XCTAssertNil([VoiceChannelV2 lastSessionIdentifier]);
+    XCTAssertNil([VoiceChannelV2 lastSessionStartDate]);
     
     NSString *sessionID = @"foobar-session-id";
     NSDate *sessionDate = [NSDate date];
@@ -699,8 +699,8 @@
     WaitForAllGroupsToBeEmpty(0.1);
     
     // then
-    XCTAssertEqualObjects([ZMVoiceChannel lastSessionIdentifier], sessionID);
-    XCTAssertEqualWithAccuracy([ZMVoiceChannel lastSessionStartDate].timeIntervalSinceReferenceDate, sessionDate.timeIntervalSinceReferenceDate, 0.05);
+    XCTAssertEqualObjects([VoiceChannelV2 lastSessionIdentifier], sessionID);
+    XCTAssertEqualWithAccuracy([VoiceChannelV2 lastSessionStartDate].timeIntervalSinceReferenceDate, sessionDate.timeIntervalSinceReferenceDate, 0.05);
 
 }
 
@@ -1079,10 +1079,10 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
         activeCallConversation = [self selfToUser1SyncConversationWithOutgoingCall];
-        XCTAssertEqual(activeCallConversation.voiceChannel.state, ZMVoiceChannelStateOutgoingCall);
+        XCTAssertEqual(activeCallConversation.voiceChannel.state, VoiceChannelV2StateOutgoingCall);
         
         ZMConversation *incomingCallConversation = self.syncSelfToUser2Conversation;
-        XCTAssertEqual(incomingCallConversation.voiceChannel.state, ZMVoiceChannelStateNoActiveUsers);
+        XCTAssertEqual(incomingCallConversation.voiceChannel.state, VoiceChannelV2StateNoActiveUsers);
 
         NSDictionary *payload = @{@"id" : NSUUID.createUUID.transportString,
                                   @"payload" : @[@{@"type": @"call.state",
@@ -1104,7 +1104,7 @@
         
         // then
         XCTAssertFalse(incomingCallConversation.isIgnoringCall);
-        XCTAssertEqual(incomingCallConversation.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
+        XCTAssertEqual(incomingCallConversation.voiceChannel.state, VoiceChannelV2StateIncomingCall);
 
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1116,10 +1116,10 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
         ZMConversation *activeCallConversation = [self selfToUser1SyncConversationWithConnectedCall];
-        XCTAssertEqual(activeCallConversation.voiceChannel.state, ZMVoiceChannelStateSelfConnectedToActiveChannel);
+        XCTAssertEqual(activeCallConversation.voiceChannel.state, VoiceChannelV2StateSelfConnectedToActiveChannel);
         
         ZMConversation *incomingCallConversation = self.syncSelfToUser2Conversation;
-        XCTAssertEqual(incomingCallConversation.voiceChannel.state, ZMVoiceChannelStateNoActiveUsers);
+        XCTAssertEqual(incomingCallConversation.voiceChannel.state, VoiceChannelV2StateNoActiveUsers);
         
         // when
         NSDictionary *payload = @{@"id" : NSUUID.createUUID.transportString,
@@ -1142,7 +1142,7 @@
         
         // then
         XCTAssertFalse(incomingCallConversation.isIgnoringCall);
-        XCTAssertEqual(incomingCallConversation.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
+        XCTAssertEqual(incomingCallConversation.voiceChannel.state, VoiceChannelV2StateIncomingCall);
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1173,7 +1173,7 @@
         
         // then
         XCTAssertTrue(incomingCallConversation.isIgnoringCall);
-        XCTAssertEqual(incomingCallConversation.voiceChannel.state, ZMVoiceChannelStateIncomingCallInactive);
+        XCTAssertEqual(incomingCallConversation.voiceChannel.state, VoiceChannelV2StateIncomingCallInactive);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -1186,14 +1186,14 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
         ZMConversation *activeCallConversation = [self groupConversationWithConnectingCall];
-        XCTAssertEqual(activeCallConversation.voiceChannel.state, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
+        XCTAssertEqual(activeCallConversation.voiceChannel.state, VoiceChannelV2StateSelfIsJoiningActiveChannel);
         
         //when
         [activeCallConversation.voiceChannel leave];
         XCTAssertTrue(activeCallConversation.isIgnoringCall);
 
         // then
-        XCTAssertEqual(activeCallConversation.voiceChannel.state, ZMVoiceChannelStateIncomingCallInactive);
+        XCTAssertEqual(activeCallConversation.voiceChannel.state, VoiceChannelV2StateIncomingCallInactive);
         
         //and when
         block(activeCallConversation);
@@ -1201,11 +1201,11 @@
         // then
         if (shouldBeIgnoringCall) {
             XCTAssertTrue(activeCallConversation.isIgnoringCall);
-            XCTAssertEqual(activeCallConversation.voiceChannel.state, ZMVoiceChannelStateIncomingCallInactive);
+            XCTAssertEqual(activeCallConversation.voiceChannel.state, VoiceChannelV2StateIncomingCallInactive);
             
         } else {
             XCTAssertFalse(activeCallConversation.isIgnoringCall);
-            XCTAssertEqual(activeCallConversation.voiceChannel.state, ZMVoiceChannelStateNoActiveUsers);
+            XCTAssertEqual(activeCallConversation.voiceChannel.state, VoiceChannelV2StateNoActiveUsers);
         }
         
     }];
@@ -1254,12 +1254,12 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
         activeCallConversation = [self groupConversationWithConnectingCall];
-        XCTAssertEqual(activeCallConversation.voiceChannel.state, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
+        XCTAssertEqual(activeCallConversation.voiceChannel.state, VoiceChannelV2StateSelfIsJoiningActiveChannel);
         
         // when
         block(activeCallConversation);
         XCTAssertTrue(activeCallConversation.isIgnoringCall);
-        XCTAssertEqual(activeCallConversation.voiceChannel.state, ZMVoiceChannelStateIncomingCallInactive);
+        XCTAssertEqual(activeCallConversation.voiceChannel.state, VoiceChannelV2StateIncomingCallInactive);
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1299,7 +1299,7 @@
             conv = self.syncSelfToUser1Conversation;
         }
 
-        XCTAssertEqual(conv.voiceChannel.state, ZMVoiceChannelStateNoActiveUsers);
+        XCTAssertEqual(conv.voiceChannel.state, VoiceChannelV2StateNoActiveUsers);
         XCTAssertFalse(conv.isIgnoringCall);
         
         NSString *otherState = isOtherUserJoined ? @"joined" : @"idle";
@@ -1334,7 +1334,7 @@
 
     // then
     XCTAssertTrue(conversation.isIgnoringCall);
-    XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateIncomingCallInactive);
+    XCTAssertEqual(conversation.voiceChannel.state, VoiceChannelV2StateIncomingCallInactive);
 
 }
 
@@ -1350,7 +1350,7 @@
     
     // then
     XCTAssertFalse(conversation.isIgnoringCall);
-    XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
+    XCTAssertEqual(conversation.voiceChannel.state, VoiceChannelV2StateIncomingCall);
 }
 
 - (void)testThatItDoesNotSetIsIgnoringCallWhenThereAreNoCallParticipants_Group
@@ -1365,7 +1365,7 @@
     
     // then
     XCTAssertFalse(conversation.isIgnoringCall);
-    XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateNoActiveUsers);
+    XCTAssertEqual(conversation.voiceChannel.state, VoiceChannelV2StateNoActiveUsers);
 }
 
 - (void)testThatItDoesNotSetIsIgnoringCallWhenThereAreNoCallParticipants_OneOnOne
@@ -1380,7 +1380,7 @@
 
     // then
     XCTAssertFalse(conversation.isIgnoringCall);
-    XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateNoActiveUsers);
+    XCTAssertEqual(conversation.voiceChannel.state, VoiceChannelV2StateNoActiveUsers);
 }
 
 - (void)testThatItDoesNotSetIsIgnoringCallFromPushEvents_Group
@@ -1398,7 +1398,7 @@
 
     // then
     XCTAssertFalse(conversation.isIgnoringCall);
-    XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
+    XCTAssertEqual(conversation.voiceChannel.state, VoiceChannelV2StateIncomingCall);
 }
 
 - (void)testThatItDoesNotSetIsIgnoringCallFromPushEvents_OneOnOne
@@ -1416,7 +1416,7 @@
 
     // then
     XCTAssertFalse(conversation.isIgnoringCall);
-    XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
+    XCTAssertEqual(conversation.voiceChannel.state, VoiceChannelV2StateIncomingCall);
 }
 
 - (void)testThatItDoesNotSetIsIgnoringCallWhenSyncingCallDeviceIsActive
@@ -1431,7 +1431,7 @@
 
     // then
     XCTAssertFalse(conversation.isIgnoringCall);
-    XCTAssertEqual(conversation.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
+    XCTAssertEqual(conversation.voiceChannel.state, VoiceChannelV2StateIncomingCall);
 }
 
 @end
@@ -2153,7 +2153,7 @@
             CallEndedNotification *callEnded = (CallEndedNotification *)notification.userInfo[CallEndedNotification.userInfoKey];
             
             XCTAssertEqualObjects(conversation.remoteIdentifier, callEnded.conversationId);
-            XCTAssertEqual(callEnded.reason, ZMVoiceChannelCallEndReasonRequestedSelf);
+            XCTAssertEqual(callEnded.reason, VoiceChannelV2CallEndReasonRequestedSelf);
             
             return true;
         }];
@@ -2191,7 +2191,7 @@
             CallEndedNotification *callEnded = (CallEndedNotification *)notification.userInfo[CallEndedNotification.userInfoKey];
             
             XCTAssertEqualObjects(conversation.remoteIdentifier, callEnded.conversationId);
-            XCTAssertEqual(callEnded.reason, ZMVoiceChannelCallEndReasonRequestedAVS);
+            XCTAssertEqual(callEnded.reason, VoiceChannelV2CallEndReasonRequestedAVS);
             
             return true;
         }];
@@ -2230,7 +2230,7 @@
             CallEndedNotification *callEnded = (CallEndedNotification *)notification.userInfo[CallEndedNotification.userInfoKey];
             
             XCTAssertEqualObjects(conversation.remoteIdentifier, callEnded.conversationId);
-            XCTAssertEqual(callEnded.reason, ZMVoiceChannelCallEndReasonDisconnected);
+            XCTAssertEqual(callEnded.reason, VoiceChannelV2CallEndReasonDisconnected);
             
             return true;
         }];
@@ -2275,7 +2275,7 @@
             CallEndedNotification *callEnded = (CallEndedNotification *)notification.userInfo[CallEndedNotification.userInfoKey];
             
             XCTAssertEqualObjects(conversation.remoteIdentifier, callEnded.conversationId);
-            XCTAssertEqual(callEnded.reason, ZMVoiceChannelCallEndReasonRequested);
+            XCTAssertEqual(callEnded.reason, VoiceChannelV2CallEndReasonRequested);
             
             return true;
         }];
@@ -2365,7 +2365,7 @@
         
         XCTAssertFalse(conv.callStateNeedsToBeUpdatedFromBackend);
         if (type == ZMConversationTypeGroup || type == ZMConversationTypeOneOnOne) {
-            XCTAssertEqual(conv.voiceChannel.state, ZMVoiceChannelStateNoActiveUsers);
+            XCTAssertEqual(conv.voiceChannel.state, VoiceChannelV2StateNoActiveUsers);
         }
 
         // when
@@ -2411,7 +2411,7 @@
         [self.syncMOC saveOrRollback];
         
         XCTAssertFalse(conv.callStateNeedsToBeUpdatedFromBackend);
-        XCTAssertNotEqual(conv.voiceChannel.state, ZMVoiceChannelStateNoActiveUsers);
+        XCTAssertNotEqual(conv.voiceChannel.state, VoiceChannelV2StateNoActiveUsers);
 
         // when
         [self.sut setNeedsSlowSync];
@@ -3495,7 +3495,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
-    XCTAssertEqual(conv.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
+    XCTAssertEqual(conv.voiceChannel.state, VoiceChannelV2StateIncomingCall);
 }
 
 - (void)testThatItItAppendsTheLogForAllConversations_Downstream
@@ -3507,7 +3507,7 @@
         [conv.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(conv.voiceChannel.state, ZMVoiceChannelStateIncomingCallInactive);
+    XCTAssertEqual(conv.voiceChannel.state, VoiceChannelV2StateIncomingCallInactive);
 }
 
 - (void)testThatItItAppendsTheLogForAllConversations_Upstream
@@ -3519,7 +3519,7 @@
         [conv.voiceChannel.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(conv.voiceChannel.state, ZMVoiceChannelStateIncomingCall);
+    XCTAssertEqual(conv.voiceChannel.state, VoiceChannelV2StateIncomingCall);
 }
 
 

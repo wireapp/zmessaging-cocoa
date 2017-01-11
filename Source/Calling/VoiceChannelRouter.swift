@@ -19,18 +19,18 @@
 import Foundation
 import avs
 
-extension ZMVoiceChannel : VoiceChannel { }
+extension VoiceChannelV2 : VoiceChannel { }
 
 public class VoiceChannelRouter : NSObject, VoiceChannel {
     
     public static var isCallingV3Enabled : Bool = false
     
     public let v3 : VoiceChannelV3
-    public let v2 : ZMVoiceChannel
+    public let v2 : VoiceChannelV2
     
     public init(conversation: ZMConversation) {
         v3 = VoiceChannelV3(conversation: conversation)
-        v2 = ZMVoiceChannel(conversation: conversation)
+        v2 = VoiceChannelV2(conversation: conversation)
         
         super.init()
     }
@@ -51,7 +51,7 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
         return currentVoiceChannel.conversation
     }
     
-    public var state: ZMVoiceChannelState {
+    public var state: VoiceChannelV2State {
         return currentVoiceChannel.state
     }
         
@@ -63,11 +63,11 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
         return currentVoiceChannel.participants
     }
     
-    public var selfUserConnectionState: ZMVoiceChannelConnectionState {
+    public var selfUserConnectionState: VoiceChannelV2ConnectionState {
         return currentVoiceChannel.selfUserConnectionState
     }
     
-    public func state(forParticipant participant: ZMUser) -> ZMVoiceChannelParticipantState {
+    public func state(forParticipant participant: ZMUser) -> VoiceChannelV2ParticipantState {
         return currentVoiceChannel.state(forParticipant: participant)
     }
     

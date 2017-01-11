@@ -25,7 +25,7 @@ class CallingInitialisationNotificationTests : MessagingTest {
     
     func testThatItSendTheCorrectNotification() {
         
-        func checkThatItNotifiyWithErrorType(_ errorCode: ZMVoiceChannelErrorCode) -> Bool {
+        func checkThatItNotifiyWithErrorType(_ errorCode: VoiceChannelV2ErrorCode) -> Bool {
             var isCorrectErrorType = false
             // given
             NotificationCenter.default.addObserver(forName: Notification.Name(rawValue: CallingInitialisationNotification.Name), object: nil, queue: nil) {

@@ -101,8 +101,8 @@ extension VoiceChannelRouter : CallFlow {
     }
     
     public func setVideoCaptureDevice(device: CaptureDevice) throws {
-        guard let flowManager = ZMAVSBridge.flowManagerInstance(), flowManager.isReady() else { throw ZMVoiceChannelError.noFlowManagerError() }
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw ZMVoiceChannelError.switchToVideoNotAllowedError() }
+        guard let flowManager = ZMAVSBridge.flowManagerInstance(), flowManager.isReady() else { throw VoiceChannelV2Error.noFlowManagerError() }
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.switchToVideoNotAllowedError() }
         
         flowManager.setVideoCaptureDevice(device.deviceIdentifier, forConversation: remoteIdentifier.transportString())
     }
@@ -119,7 +119,7 @@ extension VoiceChannelV3 : CallFlow {
     
     @objc(toggleVideoActive:error:)
     public func toggleVideo(active: Bool) throws {
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw ZMVoiceChannelError.videoNotActiveError() }
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.videoNotActiveError() }
         
         WireCallCenterV3.activeInstance?.toogleVideo(conversationID: remoteIdentifier, active: active)
     }
@@ -151,7 +151,7 @@ extension VoiceChannelV3 : CallFlow {
 }
 
 
-extension ZMVoiceChannel : CallFlow {
+extension VoiceChannelV2 : CallFlow {
     
     public var isVideoCall: Bool {
         return conversation?.isVideoCall ?? false

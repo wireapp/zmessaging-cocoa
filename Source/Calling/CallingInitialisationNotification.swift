@@ -19,10 +19,10 @@
 
 import Foundation
 
-let ZMVoiceChannelVideoCallErrorDomain = "ZMVoiceChannelVideoCallErrorDomain"
+let VoiceChannelV2VideoCallErrorDomain = "VoiceChannelV2VideoCallErrorDomain"
 
 @objc
-public enum ZMVoiceChannelErrorCode : UInt {
+public enum VoiceChannelV2ErrorCode : UInt {
     case ongoingGSMCall
     case switchToAudioNotAllowed
     case switchToVideoNotAllowed
@@ -40,13 +40,13 @@ private class CallingInitialisationObserverTokenImpl : CallingInitialisationObse
     }
 }
 
-open class ZMVoiceChannelError: NSError {
+open class VoiceChannelV2Error: NSError {
     
-    init(errorCode: ZMVoiceChannelErrorCode) {
-        super.init(domain: ZMVoiceChannelVideoCallErrorDomain, code: Int(errorCode.rawValue), userInfo: ZMVoiceChannelError.userInfoForErrorCode(errorCode))
+    init(errorCode: VoiceChannelV2ErrorCode) {
+        super.init(domain: VoiceChannelV2VideoCallErrorDomain, code: Int(errorCode.rawValue), userInfo: VoiceChannelV2Error.userInfoForErrorCode(errorCode))
     }
     
-    static func userInfoForErrorCode(_ errorCode: ZMVoiceChannelErrorCode) -> [String: String] {
+    static func userInfoForErrorCode(_ errorCode: VoiceChannelV2ErrorCode) -> [String: String] {
         switch errorCode {
         case .ongoingGSMCall:
             return [NSLocalizedDescriptionKey: "Cannot get flow manager"]
@@ -69,32 +69,32 @@ open class ZMVoiceChannelError: NSError {
         fatal("init(coder:) has not been implemented")
     }
     
-    open static func noFlowManagerError() -> ZMVoiceChannelError {
-        return ZMVoiceChannelError(errorCode: ZMVoiceChannelErrorCode.noFlowManager)
+    open static func noFlowManagerError() -> VoiceChannelV2Error {
+        return VoiceChannelV2Error(errorCode: VoiceChannelV2ErrorCode.noFlowManager)
     }
     
-    open static func noMediaError() -> ZMVoiceChannelError {
-        return ZMVoiceChannelError(errorCode: ZMVoiceChannelErrorCode.noMedia)
+    open static func noMediaError() -> VoiceChannelV2Error {
+        return VoiceChannelV2Error(errorCode: VoiceChannelV2ErrorCode.noMedia)
     }
     
-    open static func videoCallNotSupportedError() -> ZMVoiceChannelError {
-        return ZMVoiceChannelError(errorCode: ZMVoiceChannelErrorCode.videoCallingNotSupported)
+    open static func videoCallNotSupportedError() -> VoiceChannelV2Error {
+        return VoiceChannelV2Error(errorCode: VoiceChannelV2ErrorCode.videoCallingNotSupported)
     }
     
-    open static func switchToVideoNotAllowedError() -> ZMVoiceChannelError {
-        return ZMVoiceChannelError(errorCode: ZMVoiceChannelErrorCode.switchToVideoNotAllowed)
+    open static func switchToVideoNotAllowedError() -> VoiceChannelV2Error {
+        return VoiceChannelV2Error(errorCode: VoiceChannelV2ErrorCode.switchToVideoNotAllowed)
     }
     
-    open static func switchToAudioNotAllowedError() -> ZMVoiceChannelError {
-        return ZMVoiceChannelError(errorCode: ZMVoiceChannelErrorCode.switchToAudioNotAllowed)
+    open static func switchToAudioNotAllowedError() -> VoiceChannelV2Error {
+        return VoiceChannelV2Error(errorCode: VoiceChannelV2ErrorCode.switchToAudioNotAllowed)
     }
     
-    open static func ongoingGSMCallError() -> ZMVoiceChannelError {
-        return ZMVoiceChannelError(errorCode: ZMVoiceChannelErrorCode.ongoingGSMCall)
+    open static func ongoingGSMCallError() -> VoiceChannelV2Error {
+        return VoiceChannelV2Error(errorCode: VoiceChannelV2ErrorCode.ongoingGSMCall)
     }
     
-    open static func videoNotActiveError() -> ZMVoiceChannelError {
-        return ZMVoiceChannelError(errorCode: ZMVoiceChannelErrorCode.videoNotActive)
+    open static func videoNotActiveError() -> VoiceChannelV2Error {
+        return VoiceChannelV2Error(errorCode: VoiceChannelV2ErrorCode.videoNotActive)
     }
 }
 
@@ -104,17 +104,17 @@ open class ZMVoiceChannelError: NSError {
 public class CallingInitialisationNotification : NSObject  {
     
     public let error : NSError
-    internal let errorCode : ZMVoiceChannelErrorCode
+    internal let errorCode : VoiceChannelV2ErrorCode
     
     public static let Name = "CallingInitialisationNotification"
     
-    init(error: NSError, errorCode: ZMVoiceChannelErrorCode) {
+    init(error: NSError, errorCode: VoiceChannelV2ErrorCode) {
         self.error = error
         self.errorCode = errorCode
     }
     
-    public static func notifyCallingFailedWithErrorCode(_ errorCode: ZMVoiceChannelErrorCode) {
-        let note = CallingInitialisationNotification(error: ZMVoiceChannelError(errorCode: errorCode), errorCode:errorCode)
+    public static func notifyCallingFailedWithErrorCode(_ errorCode: VoiceChannelV2ErrorCode) {
+        let note = CallingInitialisationNotification(error: VoiceChannelV2Error(errorCode: errorCode), errorCode:errorCode)
         NotificationCenter.default.post(name: Notification.Name(rawValue: self.Name), object:note)
     }
     

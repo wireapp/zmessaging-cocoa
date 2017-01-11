@@ -17,20 +17,20 @@
 // 
 
 
-#import "ZMVoiceChannel.h"
+#import "VoiceChannelV2.h"
 @class ZMCallTimer;
 @class AVSFlowManager;
 @class CTCallCenter;
 
 
-@interface ZMVoiceChannel ()
+@interface VoiceChannelV2 ()
 
 @property (nonatomic, copy) NSDate *callStartDate;
 
 - (instancetype)initWithConversation:(ZMConversation *)conversation NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithConversation:(ZMConversation *)conversation callCenter:(CTCallCenter *)callCenter;
-- (ZMVoiceChannelState)stateForIsSelfJoined:(BOOL)selfJoined otherJoined:(BOOL)otherJoined isDeviceActive:(BOOL)isDeviceActive flowActive:(BOOL)flowActive isIgnoringCall:(BOOL)isIgnoringCall;
-+ (ZMVoiceChannelParticipantState *)participantStateForCallUserWithIsJoined:(BOOL)joined flowActive:(BOOL)flowActive;
+- (VoiceChannelV2State)stateForIsSelfJoined:(BOOL)selfJoined otherJoined:(BOOL)otherJoined isDeviceActive:(BOOL)isDeviceActive flowActive:(BOOL)flowActive isIgnoringCall:(BOOL)isIgnoringCall;
++ (VoiceChannelV2ParticipantState *)participantStateForCallUserWithIsJoined:(BOOL)joined flowActive:(BOOL)flowActive;
 
 + (void)setLastSessionIdentifier:(NSString *)sessionID; ///< Thread safe setter
 + (NSString *)lastSessionIdentifier; ///< Thread safe getter
@@ -42,9 +42,9 @@
 @end
 
 
-@interface ZMVoiceChannelParticipantState ()
+@interface VoiceChannelV2ParticipantState ()
 
-@property (nonatomic) ZMVoiceChannelConnectionState connectionState;
+@property (nonatomic) VoiceChannelV2ConnectionState connectionState;
 @property (nonatomic) BOOL muted;
 @property (nonatomic) BOOL isSendingVideo;
 

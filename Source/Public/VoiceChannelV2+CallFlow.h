@@ -17,25 +17,37 @@
 // 
 
 
-@import Foundation;
-@import ZMCDataModel;
+#import "VoiceChannelV2.h"
 
-#import "ZMVoiceChannel.h"
+NS_ASSUME_NONNULL_BEGIN
 
-@class ZMUser;
-@class UIView;
+@class ZMCallTimer;
+@class AVSFlowManager;
+@class ZMUserSession;
 
-FOUNDATION_EXPORT NSString * ZMVoiceChannelVideoCallErrorDomain;
+@interface VoiceChannelV2 (CallFlow)
 
-@interface ZMVoiceChannel (VideoCalling)
+- (BOOL)join;
+- (BOOL)joinVideoCall;
+- (void)leave;
+- (void)leaveOnAVSError;
+- (void)ignoreIncomingCall;
 
-// Checks if sending of the video is possible for the participant
-- (BOOL)isSendingVideoForParticipant:(ZMUser *)participant error:(NSError **)error;
+- (void)updateActiveFlowParticipants:(NSArray<ZMUser *>*)newParticipants;
+- (void)addCallParticipant:(ZMUser *)participant;
+- (void)removeCallParticipant:(ZMUser *)participant;
+- (void)removeAllCallParticipants;
 
-// Set video sending active/inactive
-- (BOOL)setVideoSendActive:(BOOL)active error:(NSError **)error;
 
-#pragma mark - Private
-- (BOOL)setVideoSendState:(int)state error:(NSError **)error;
+- (void)updateForStateChange;
+// removes call participants and resets state to no call whatsoever
+- (void)resetCallState;
+- (void)tearDown;
+
+
++ (NSComparator)conferenceComparator;
+- (nullable AVSFlowManager *)flowManager;
 
 @end
+
+NS_ASSUME_NONNULL_END

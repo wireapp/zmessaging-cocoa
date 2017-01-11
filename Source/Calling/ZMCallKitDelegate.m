@@ -25,8 +25,7 @@
 #import "ZMCallKitDelegate.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMVoiceChannel+CallFlow.h"
-#import "ZMVoiceChannel+CallFlowPrivate.h"
+#import "VoiceChannelV2+CallFlow.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
 #import <zmessaging/zmessaging-Swift.h>
 
@@ -49,17 +48,17 @@
  
  Flow for receieving the call (I.a):
  1. BE sends the new call state in conversation via push
- 2. @c ZMCallStateTranscoder decode the payload and update the conversation/ZMVoiceChannel fields
- 3. @c ZMVoiceChannel observer sends the update to @c ZMCallKitDelegate -[ZMCallKitDelegate voiceChannelStateDidChange:]
+ 2. @c ZMCallStateTranscoder decode the payload and update the conversation/VoiceChannelV2 fields
+ 3. @c VoiceChannelV2 observer sends the update to @c ZMCallKitDelegate -[ZMCallKitDelegate voiceChannelStateDidChange:]
  4. @c ZMCallKitDelegate indicates the call to CallKit's @c CXProvider in -[ZMCallKitDelegate indicateIncomingCallInConversation:]
  5. @c CXProvider approves the call and informs @c ZMCallKitDelegate that call is possible in -[ZMCallKitDelegate provider:performStartCallAction:]
- 6. @c ZMCallKitDelegate joins the call with -[ZMVoiceChannel join]
+ 6. @c ZMCallKitDelegate joins the call with -[VoiceChannelV2 join]
  
  Flow for sending the call (I.b):
- 1. API consumer (UI app) calls -[ZMVoiceChannel joinInUserSession:]. This call is forwarded to -[ZMCallKitDelegate requestStartCallInConversation:]
+ 1. API consumer (UI app) calls -[VoiceChannelV2 joinInUserSession:]. This call is forwarded to -[ZMCallKitDelegate requestStartCallInConversation:]
  2. @c ZMCallKitDelegate indicates the call to CallKit's @c CXCallController, that asks @c CXProvider if call is possible. 
  3. @c CXProvider is indicating the call is possible with the callback -[ZMCallKitDelegate provider:performStartCallAction:]
- 4. @c ZMCallKitDelegate joins the call with -[ZMVoiceChannel join]
+ 4. @c ZMCallKitDelegate joins the call with -[VoiceChannelV2 join]
  
  Flow for interaction with last calls / Phone app:
  1. The app is launched or brought to foreground
@@ -324,7 +323,7 @@ NS_ASSUME_NONNULL_END
 
 - (void)requestStartCallInConversation:(ZMConversation *)conversation videoCall:(BOOL)video
 {
-    if (conversation.voiceChannel.state == ZMVoiceChannelStateIncomingCall) {
+    if (conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall) {
         CXAnswerCallAction *answerAction = [[CXAnswerCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
         CXTransaction *callAnswerTransaction = [[CXTransaction alloc] initWithAction:answerAction];
         [self.callController requestTransaction:callAnswerTransaction completion:^(NSError * _Nullable error) {
@@ -510,13 +509,13 @@ NS_ASSUME_NONNULL_END
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
     [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider %@ performEndCallAction on %@: current state %ld", provider, callConversation.displayName, (long)callConversation.voiceChannel.state];
     
-    if (callConversation.voiceChannel.state != ZMVoiceChannelStateNoActiveUsers &&
-        callConversation.voiceChannel.state != ZMVoiceChannelStateDeviceTransferReady &&
-        callConversation.voiceChannel.state != ZMVoiceChannelStateIncomingCallInactive &&
-        callConversation.voiceChannel.state != ZMVoiceChannelStateOutgoingCallInactive) {
+    if (callConversation.voiceChannel.state != VoiceChannelV2StateNoActiveUsers &&
+        callConversation.voiceChannel.state != VoiceChannelV2StateDeviceTransferReady &&
+        callConversation.voiceChannel.state != VoiceChannelV2StateIncomingCallInactive &&
+        callConversation.voiceChannel.state != VoiceChannelV2StateOutgoingCallInactive) {
         
         [userSession performChanges:^{
-            if (callConversation.voiceChannel.selfUserConnectionState == ZMVoiceChannelConnectionStateNotConnected) {
+            if (callConversation.voiceChannel.selfUserConnectionState == VoiceChannelV2ConnectionStateNotConnected) {
                 [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: ignore incoming call"];
                 [callConversation.voiceChannel ignore];
             }

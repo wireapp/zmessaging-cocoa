@@ -54,10 +54,10 @@ public class CallEndedNotification : NSObject {
     public static let notificationName = Notification.Name("CallEndedNotification")
     public static let userInfoKey = notificationName.rawValue
     
-    public let reason : ZMVoiceChannelCallEndReason
+    public let reason : VoiceChannelV2CallEndReason
     public let conversationId : UUID
     
-    public init(reason: ZMVoiceChannelCallEndReason, conversationId: UUID) {
+    public init(reason: VoiceChannelV2CallEndReason, conversationId: UUID) {
         self.reason = reason
         self.conversationId = conversationId
         
@@ -76,7 +76,7 @@ public class CallEndedNotification : NSObject {
 public protocol WireCallCenterV2CallStateObserver : class {
     
     @objc(callCenterDidChangeVoiceChannelState:conversation:)
-    func callCenterDidChange(voiceChannelState: ZMVoiceChannelState, conversation: ZMConversation)
+    func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation)
 }
 
 @objc
@@ -98,7 +98,7 @@ struct VoiceChannelStateNotification {
     static let notificationName = Notification.Name("VoiceChannelStateNotification")
     static let userInfoKey = notificationName.rawValue
     
-    let voiceChannelState : ZMVoiceChannelState
+    let voiceChannelState : VoiceChannelV2State
     let conversationId : NSManagedObjectID
     
     func post() {
@@ -212,7 +212,7 @@ public class WireCallCenterV2 : NSObject {
     public static let CallStateDidChangeNotification = Notification.Name("CallStateDidChangeNotification")
     
     let context : NSManagedObjectContext
-    var voiceChannelStates : [ZMConversation : ZMVoiceChannelState] = [:]
+    var voiceChannelStates : [ZMConversation : VoiceChannelV2State] = [:]
 
     
     public init(context: NSManagedObjectContext) {
@@ -297,8 +297,8 @@ public class WireCallCenterV2 : NSObject {
     }
     
     func updateVoiceChannelState(forConversation conversation: ZMConversation) {
-        let newState = conversation.voiceChannel?.v2.state ?? ZMVoiceChannelState.invalid
-        let previousState = voiceChannelStates[conversation] ?? ZMVoiceChannelState.noActiveUsers
+        let newState = conversation.voiceChannel?.v2.state ?? VoiceChannelV2State.invalid
+        let previousState = voiceChannelStates[conversation] ?? VoiceChannelV2State.noActiveUsers
         
         if newState != previousState {
             voiceChannelStates[conversation] = newState
@@ -306,8 +306,8 @@ public class WireCallCenterV2 : NSObject {
         }
     }
     
-    func conversations(withVoiceChannelState expectedState: ZMVoiceChannelState) -> [ZMConversation] {
-        return voiceChannelStates.flatMap { (conversation: ZMConversation, state: ZMVoiceChannelState) -> ZMConversation? in
+    func conversations(withVoiceChannelState expectedState: VoiceChannelV2State) -> [ZMConversation] {
+        return voiceChannelStates.flatMap { (conversation: ZMConversation, state: VoiceChannelV2State) -> ZMConversation? in
             return expectedState == state ? conversation : nil
         }
     }

@@ -24,30 +24,30 @@ import Foundation
 public protocol VoiceChannelStateObserver : class {
     
     @objc(callCenterDidChangeVoiceChannelState:conversation:)
-    func callCenterDidChange(voiceChannelState: ZMVoiceChannelState, conversation: ZMConversation)
+    func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation)
     
     func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation)
     
-    func callCenterDidEndCall(reason: ZMVoiceChannelCallEndReason, conversation: ZMConversation)
+    func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation)
     
 }
 
 extension CallClosedReason {
     
-    var voiceChannelCallEndReason : ZMVoiceChannelCallEndReason {
+    var voiceChannelCallEndReason : VoiceChannelV2CallEndReason {
         switch self {
         case .lostMedia:
-            return ZMVoiceChannelCallEndReason.disconnected
+            return VoiceChannelV2CallEndReason.disconnected
         case .normal:
-            return ZMVoiceChannelCallEndReason.requested
+            return VoiceChannelV2CallEndReason.requested
         case .normalSelf:
-            return ZMVoiceChannelCallEndReason.requestedSelf
+            return VoiceChannelV2CallEndReason.requestedSelf
         case .timeout:
-            return ZMVoiceChannelCallEndReason.requestedAVS
+            return VoiceChannelV2CallEndReason.requestedAVS
         case .internalError:
-            return ZMVoiceChannelCallEndReason.interrupted
+            return VoiceChannelV2CallEndReason.interrupted
         case .unknown:
-            return ZMVoiceChannelCallEndReason.interrupted
+            return VoiceChannelV2CallEndReason.interrupted
         }
     }
     
@@ -117,7 +117,7 @@ class VoiceChannelStateObserverToken : NSObject, WireCallCenterV2CallStateObserv
         }
     }
     
-    func callCenterDidChange(voiceChannelState: ZMVoiceChannelState, conversation: ZMConversation) {
+    func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation) {
         observer?.callCenterDidChange(voiceChannelState: voiceChannelState, conversation: conversation)
     }
     
@@ -138,7 +138,7 @@ class VoiceChannelStateObserverFilter : NSObject,  VoiceChannelStateObserver {
         self.token = VoiceChannelStateObserverToken(context: context, observer: self)
     }
     
-    func callCenterDidChange(voiceChannelState: ZMVoiceChannelState, conversation: ZMConversation) {
+    func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation) {
         if conversation == observedConversation {
             observer?.callCenterDidChange(voiceChannelState: voiceChannelState, conversation: conversation)
         }
@@ -150,7 +150,7 @@ class VoiceChannelStateObserverFilter : NSObject,  VoiceChannelStateObserver {
         }
     }
     
-    func callCenterDidEndCall(reason: ZMVoiceChannelCallEndReason, conversation: ZMConversation) {
+    func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation) {
         if conversation == observedConversation {
             observer?.callCenterDidEndCall(reason: reason, conversation: conversation)
         }

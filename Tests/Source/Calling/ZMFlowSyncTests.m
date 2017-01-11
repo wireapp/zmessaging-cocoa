@@ -699,7 +699,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         
         conv.callDeviceIsActive = YES;
         [conv.voiceChannel.v2 addCallParticipant:user];
-        XCTAssertEqual(conv.voiceChannel.state, ZMVoiceChannelStateSelfIsJoiningActiveChannel);
+        XCTAssertEqual(conv.voiceChannel.state, VoiceChannelV2StateSelfIsJoiningActiveChannel);
         [self.syncMOC saveOrRollback];
     }];
     [self.uiMOC.zm_callState mergeChangesFromState:self.syncMOC.zm_callState]; // This is done by ZMSyncStrategy when merging contexts

@@ -48,7 +48,7 @@
 
 @interface V2CallStateChange : NSObject
 
-@property (nonatomic) ZMVoiceChannelState state;
+@property (nonatomic) VoiceChannelV2State state;
 @property (nonatomic) ZMConversation *conversation;
 
 @end

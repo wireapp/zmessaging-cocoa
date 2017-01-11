@@ -20,7 +20,7 @@
 import Foundation
 
 
-extension ZMVoiceChannel {
+extension VoiceChannelV2 {
 
     public func startTimer(){
         guard let conversation = conversation,

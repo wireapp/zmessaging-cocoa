@@ -22,7 +22,7 @@ import Foundation
 @objc
 public protocol VoiceChannel : NSObjectProtocol {
     
-    var state: ZMVoiceChannelState { get }
+    var state: VoiceChannelV2State { get }
     
     weak var conversation : ZMConversation? { get }
     
@@ -32,8 +32,8 @@ public protocol VoiceChannel : NSObjectProtocol {
     /// Voice channel participants. May be a subset of conversation participants.
     var participants : NSOrderedSet { get }
     
-    var selfUserConnectionState : ZMVoiceChannelConnectionState { get }
+    var selfUserConnectionState : VoiceChannelV2ConnectionState { get }
     
-    func state(forParticipant: ZMUser) -> ZMVoiceChannelParticipantState
+    func state(forParticipant: ZMUser) -> VoiceChannelV2ParticipantState
     
 }

@@ -17,36 +17,34 @@
 // 
 
 @import ZMCDataModel;
+@import ZMTransport;
 @import avs;
 
-#import "ZMVoiceChannel+VideoCalling.h"
-#import "ZMVoiceChannel+CallFlowPrivate.h"
+#import "VoiceChannelV2+VideoCalling.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMCallKitDelegate.h"
 #import "ZMAVSBridge.h"
 #import <zmessaging/zmessaging-Swift.h>
 
-@import ZMTransport;
 
+NSString * VoiceChannelV2VideoCallErrorDomain = @"VoiceChannelV2VideoCallErrorDomain";
 
-NSString * ZMVoiceChannelVideoCallErrorDomain = @"ZMVoiceChannelVideoCallErrorDomain";
-
-@implementation ZMVoiceChannel (VideoCalling)
+@implementation VoiceChannelV2 (VideoCalling)
 
 - (BOOL)isSendingVideoForParticipant:(ZMUser *)participant error:(NSError **)error
 {
     ZMConversation *conversation = self.conversation;
     if (self.flowManager == nil || !self.flowManager.isReady) {
         if (error != nil) {
-            *error = [ZMVoiceChannelError noFlowManagerError];
+            *error = [VoiceChannelV2Error noFlowManagerError];
         }
         return NO;
     }
     
     if(!conversation.isVideoCall) {
         if (error != nil) {
-            *error = [ZMVoiceChannelError videoNotActiveError];
+            *error = [VoiceChannelV2Error videoNotActiveError];
         }
         return NO;
     }
@@ -59,21 +57,21 @@ NSString * ZMVoiceChannelVideoCallErrorDomain = @"ZMVoiceChannelVideoCallErrorDo
 {
     if (self.flowManager == nil || !self.flowManager.isReady) {
         if (error != nil) {
-            *error = [ZMVoiceChannelError noFlowManagerError];
+            *error = [VoiceChannelV2Error noFlowManagerError];
         }
         return NO;
     }
     
     if (! [self.flowManager isMediaEstablishedInConversation:conversation.remoteIdentifier.transportString]) {
         if (error != nil) {
-            *error = [ZMVoiceChannelError noMediaError];
+            *error = [VoiceChannelV2Error noMediaError];
         }
         return NO;
     }
     
     if (! [self.flowManager canSendVideoForConversation:conversation.remoteIdentifier.transportString]) {
         if (error != nil) {
-            *error = [ZMVoiceChannelError videoCallNotSupportedError];
+            *error = [VoiceChannelV2Error videoCallNotSupportedError];
         }
         return NO;
     }

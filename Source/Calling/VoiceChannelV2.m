@@ -23,19 +23,19 @@
 @import ZMCSystem;
 @import ZMTransport;
 
-#import "ZMVoiceChannel+Internal.h"
-#import "ZMVoiceChannel+Testing.h"
+#import "VoiceChannelV2+Internal.h"
+#import "VoiceChannelV2+Testing.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 
-@implementation ZMVoiceChannelParticipantState
+@implementation VoiceChannelV2ParticipantState
 
 - (BOOL)isEqual:(id)object;
 {
-    if (! [object isKindOfClass:[ZMVoiceChannelParticipantState class]]) {
+    if (! [object isKindOfClass:[VoiceChannelV2ParticipantState class]]) {
         return NO;
     }
-    ZMVoiceChannelParticipantState *other = object;
+    VoiceChannelV2ParticipantState *other = object;
     return ((other.connectionState == self.connectionState) &&
             (other.muted == self.muted));
 }
@@ -45,16 +45,16 @@
     NSString *d;
     switch (self.connectionState) {
         default:
-        case ZMVoiceChannelConnectionStateInvalid:
+        case VoiceChannelV2ConnectionStateInvalid:
             d = @"Invalid";
             break;
-        case ZMVoiceChannelConnectionStateNotConnected:
+        case VoiceChannelV2ConnectionStateNotConnected:
             d = @"NotConnected";
             break;
-        case ZMVoiceChannelConnectionStateConnecting:
+        case VoiceChannelV2ConnectionStateConnecting:
             d = @"Connecting";
             break;
-        case ZMVoiceChannelConnectionStateConnected:
+        case VoiceChannelV2ConnectionStateConnected:
             d = @"Connected";
             break;
     }
@@ -68,9 +68,9 @@
 
 
 
-@interface ZMVoiceChannel ()
+@interface VoiceChannelV2 ()
 
-- (ZMVoiceChannelState)stateForIsSelfJoined:(BOOL)selfJoined otherJoined:(BOOL)otherJoined isDeviceActive:(BOOL)isDeviceActive flowActive:(BOOL)flowActive isIgnoringCall:(BOOL)isIgnoringCall;
+- (VoiceChannelV2State)stateForIsSelfJoined:(BOOL)selfJoined otherJoined:(BOOL)otherJoined isDeviceActive:(BOOL)isDeviceActive flowActive:(BOOL)flowActive isIgnoringCall:(BOOL)isIgnoringCall;
 
 
 @property (nonatomic) ZMTimer *timer;
@@ -81,7 +81,7 @@
 
 
 
-@implementation ZMVoiceChannel
+@implementation VoiceChannelV2
 
 - (instancetype)initWithConversation:(ZMConversation *)conversation;
 {
@@ -111,7 +111,7 @@ static dispatch_queue_t lastSessionIdentifierIsolation(void)
     static dispatch_once_t onceToken;
     static dispatch_queue_t queue;
     dispatch_once(&onceToken, ^{
-        queue = dispatch_queue_create("ZMVoiceChannel.lastSessionIdentifier", DISPATCH_QUEUE_CONCURRENT);
+        queue = dispatch_queue_create("VoiceChannelV2.lastSessionIdentifier", DISPATCH_QUEUE_CONCURRENT);
     });
     return queue;
 }
@@ -151,31 +151,31 @@ static dispatch_queue_t lastSessionIdentifierIsolation(void)
 }
 
 
-- (ZMVoiceChannelState)stateForIsSelfJoined:(BOOL)selfJoined otherJoined:(BOOL)otherJoined isDeviceActive:(BOOL)isDeviceActive flowActive:(BOOL)flowActive isIgnoringCall:(BOOL)isIgnoringCall
+- (VoiceChannelV2State)stateForIsSelfJoined:(BOOL)selfJoined otherJoined:(BOOL)otherJoined isDeviceActive:(BOOL)isDeviceActive flowActive:(BOOL)flowActive isIgnoringCall:(BOOL)isIgnoringCall
 {
     const BOOL selfActiveInCall = selfJoined || isDeviceActive;
     ZMConversation *conversation = self.conversation;
     
     if (!conversation.isSelfAnActiveMember) {
-        return ZMVoiceChannelStateNoActiveUsers;
+        return VoiceChannelV2StateNoActiveUsers;
     }
     else if (isIgnoringCall) {
         if (conversation.conversationType == ZMConversationTypeOneOnOne ||
             (conversation.isOutgoingCall && !otherJoined)) // we cancelled an outgoing call
         {
-            return ZMVoiceChannelStateNoActiveUsers;
+            return VoiceChannelV2StateNoActiveUsers;
         }
         
         if (otherJoined) {
-            return ZMVoiceChannelStateIncomingCallInactive;
+            return VoiceChannelV2StateIncomingCallInactive;
         }
         else {
-            return ZMVoiceChannelStateNoActiveUsers;
+            return VoiceChannelV2StateNoActiveUsers;
         }
     }
     else if (selfJoined && !isDeviceActive && !conversation.isOutgoingCall)
     {
-        return ZMVoiceChannelStateDeviceTransferReady;
+        return VoiceChannelV2StateDeviceTransferReady;
     }
     else if(selfActiveInCall && !otherJoined) {
         return [self currentOutgoingCallState];
@@ -185,33 +185,33 @@ static dispatch_queue_t lastSessionIdentifierIsolation(void)
     }
     else if (selfActiveInCall && otherJoined) {
         if (flowActive) {
-            return ZMVoiceChannelStateSelfConnectedToActiveChannel;
+            return VoiceChannelV2StateSelfConnectedToActiveChannel;
         } else {
-            return ZMVoiceChannelStateSelfIsJoiningActiveChannel;
+            return VoiceChannelV2StateSelfIsJoiningActiveChannel;
         }
     } else {
-        return  ZMVoiceChannelStateNoActiveUsers;
+        return  VoiceChannelV2StateNoActiveUsers;
     }
     
 }
 
 
-- (ZMVoiceChannelState)currentOutgoingCallState
+- (VoiceChannelV2State)currentOutgoingCallState
 {
-    return self.conversation.callTimedOut ? ZMVoiceChannelStateOutgoingCallInactive :ZMVoiceChannelStateOutgoingCall;
+    return self.conversation.callTimedOut ? VoiceChannelV2StateOutgoingCallInactive :VoiceChannelV2StateOutgoingCall;
 }
 
-- (ZMVoiceChannelState)currentIncomingCallState
+- (VoiceChannelV2State)currentIncomingCallState
 {
-    return self.conversation.callTimedOut ? ZMVoiceChannelStateIncomingCallInactive : ZMVoiceChannelStateIncomingCall;
+    return self.conversation.callTimedOut ? VoiceChannelV2StateIncomingCallInactive : VoiceChannelV2StateIncomingCall;
     
 }
 
-- (ZMVoiceChannelState)state;
+- (VoiceChannelV2State)state;
 {
     ZMConversation *conversation = self.conversation;
     
-    VerifyReturnValue(conversation.managedObjectContext != nil, ZMVoiceChannelStateInvalid);
+    VerifyReturnValue(conversation.managedObjectContext != nil, VoiceChannelV2StateInvalid);
     
     ZMUser *selfUser = [ZMUser selfUserInContext:conversation.managedObjectContext];
     ZMUser *otherUser = [conversation.callParticipants.array firstObjectMatchingWithBlock:^BOOL(ZMUser *user) {
@@ -239,11 +239,11 @@ static dispatch_queue_t lastSessionIdentifierIsolation(void)
 
 
 
-- (void)enumerateParticipantStatesWithBlock:(void(^)(ZMUser *user, ZMVoiceChannelConnectionState connectionState, BOOL muted))block;
+- (void)enumerateParticipantStatesWithBlock:(void(^)(ZMUser *user, VoiceChannelV2ConnectionState connectionState, BOOL muted))block;
 {
     [self.conversation.callParticipants.array enumerateObjectsUsingBlock:^(ZMUser *user, ZM_UNUSED NSUInteger idx, ZM_UNUSED BOOL *stop) {
         if(block) {
-            ZMVoiceChannelParticipantState *state = [self stateForParticipant:user];
+            VoiceChannelV2ParticipantState *state = [self stateForParticipant:user];
             block(user, state.connectionState, state.muted);
         }
     }];
@@ -258,34 +258,34 @@ static dispatch_queue_t lastSessionIdentifierIsolation(void)
     return participants;
 }
 
-+ (ZMVoiceChannelParticipantState *)participantStateForCallUserWithIsJoined:(BOOL)joined flowActive:(BOOL)flowActive
++ (VoiceChannelV2ParticipantState *)participantStateForCallUserWithIsJoined:(BOOL)joined flowActive:(BOOL)flowActive
 {
-    ZMVoiceChannelParticipantState *state = [[ZMVoiceChannelParticipantState alloc] init];
+    VoiceChannelV2ParticipantState *state = [[VoiceChannelV2ParticipantState alloc] init];
     if (! joined) {
-        state.connectionState = ZMVoiceChannelConnectionStateNotConnected;
+        state.connectionState = VoiceChannelV2ConnectionStateNotConnected;
     } else if (flowActive) {
-        state.connectionState = ZMVoiceChannelConnectionStateConnected;
+        state.connectionState = VoiceChannelV2ConnectionStateConnected;
     } else {
-        state.connectionState = ZMVoiceChannelConnectionStateConnecting;
+        state.connectionState = VoiceChannelV2ConnectionStateConnecting;
     }
     return state;
 }
 
 
-- (ZMVoiceChannelParticipantState *)stateForParticipant:(ZMUser *)user
+- (VoiceChannelV2ParticipantState *)stateForParticipant:(ZMUser *)user
 {
     ZMConversation *conversation = self.conversation;
     const BOOL joined = [conversation.callParticipants containsObject:user];
     const BOOL flowActive = user.isSelfUser ? conversation.isFlowActive : [conversation.activeFlowParticipants containsObject:user];
-    ZMVoiceChannelParticipantState *state = [self.class participantStateForCallUserWithIsJoined:joined flowActive:flowActive];
+    VoiceChannelV2ParticipantState *state = [self.class participantStateForCallUserWithIsJoined:joined flowActive:flowActive];
     state.isSendingVideo = user.isSelfUser ? conversation.isSendingVideo : [conversation.otherActiveVideoCallParticipants containsObject:user];
     return state;
 }
 
-- (ZMVoiceChannelConnectionState)selfUserConnectionState;
+- (VoiceChannelV2ConnectionState)selfUserConnectionState;
 {
     ZMConversation *conv = self.conversation;
-    ZMVoiceChannelParticipantState *state = [self stateForParticipant:[ZMUser selfUserInContext:conv.managedObjectContext]];
+    VoiceChannelV2ParticipantState *state = [self stateForParticipant:[ZMUser selfUserInContext:conv.managedObjectContext]];
     return state.connectionState;
 }
 
@@ -311,7 +311,7 @@ static dispatch_queue_t lastSessionIdentifierIsolation(void)
 
 
 
-@implementation ZMVoiceChannel (ZMDebug)
+@implementation VoiceChannelV2 (ZMDebug)
 
 
 + (NSAttributedString *)voiceChannelDebugInformation;
