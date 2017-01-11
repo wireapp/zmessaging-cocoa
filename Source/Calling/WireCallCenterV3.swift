@@ -63,7 +63,7 @@ public enum CallState : Equatable {
 }
 
 @objc(AVSVideoReceiveState)
-public enum VideoReceiveState : UInt32 {
+public enum VideoReceiveState : Int32 {
     /// Sender is not sending video
     case stopped
     /// Sender is sending video
@@ -272,7 +272,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
             }
             
             wcall_set_video_state_handler({ (state, _) in
-                guard let state = VideoReceiveState(rawValue: state.rawValue) else { return }
+                guard let state = VideoReceiveState(rawValue: state) else { return }
                 
                 DispatchQueue.main.async {
                     WireCallCenterVideoNotification(videoReceiveState: state).post()
