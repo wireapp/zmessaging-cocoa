@@ -44,9 +44,6 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
     public var requestsFactory: UserClientRequestFactory = UserClientRequestFactory()
     public var minNumberOfRemainingKeys: UInt = 20
     
-    fileprivate(set) var userClientsObserverToken: NSObjectProtocol!
-    fileprivate(set) var userClientsSync: ZMRemoteIdentifierObjectSync!
-    
     fileprivate var insertSyncFilter: NSPredicate {
         return NSPredicate { [unowned self] object, _ -> Bool in
             guard let client = object as? UserClient else { return false }
@@ -73,22 +70,6 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
         self.insertSync = ZMUpstreamInsertedObjectSync(transcoder: self, entityName: UserClient.entityName(), filter: insertSyncFilter, managedObjectContext: context)
         
         self.fetchAllClientsSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: context)
-        
-        self.userClientsSync = ZMRemoteIdentifierObjectSync(transcoder: self, managedObjectContext: self.managedObjectContext)
-        
-        self.userClientsObserverToken = NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: ZMNeedsToUpdateUserClientsNotificationName), object: nil, queue: .main) { [unowned self] note in
-
-            let objectID = note.userInfo?[ZMNeedsToUpdateUserClientsNotificationUserObjectIDKey] as? NSManagedObjectID
-            self.managedObjectContext.performGroupedBlock {
-                guard let optionalUser = try? objectID.flatMap(self.managedObjectContext.existingObject(with:)), let user = optionalUser as? ZMUser  else { return }
-                self.userClientsSync.setRemoteIdentifiersAsNeedingDownload(Set(arrayLiteral: user.remoteIdentifier!))
-                RequestAvailableNotification.notifyNewRequestsAvailable(self)
-            }
-        }
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self.userClientsObserverToken)
     }
     
     func modifiedPredicate() -> NSPredicate {
@@ -134,7 +115,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
             return request
         }
         
-        return userClientsSync.nextRequest()
+        return nil
     }
     
     //we don;t use this method but it's required by ZMObjectStrategy protocol
@@ -406,56 +387,5 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
             
         default: break
         }
-    }
-}
-
-
-
-
-// Used to fetch clients of particluar user when ui asks for them
-extension UserClientRequestStrategy: ZMRemoteIdentifierObjectTranscoder {
-    
-    public func maximumRemoteIdentifiersPerRequest(for sync: ZMRemoteIdentifierObjectSync!) -> UInt {
-        return 1
-    }
-    
-    public func request(for sync: ZMRemoteIdentifierObjectSync!, remoteIdentifiers identifiers: Set<UUID>!) -> ZMTransportRequest! {
-        
-        guard let userId = (identifiers.first as NSUUID?)?.transportString() else { return nil }
-
-        //GET /users/<user-id>/clients
-        let path = NSString.path(withComponents: ["users", "\(userId)", "clients"])
-        return ZMTransportRequest(path: path, method: .methodGET, payload: nil)
-    }
-    
-    public func didReceive(_ response: ZMTransportResponse!, remoteIdentifierObjectSync sync: ZMRemoteIdentifierObjectSync!, forRemoteIdentifiers remoteIdentifiers: Set<UUID>!) {
-        
-        guard let identifier = remoteIdentifiers.first,
-              let user = ZMUser(remoteID: identifier, createIfNeeded: true, in: managedObjectContext),
-              let selfClient = ZMUser.selfUser(in: managedObjectContext).selfClient()
-        else { return }
-        
-        // Create clients from the response
-        guard let arrayPayload = response.payload?.asArray() else { return }
-        let clients: [UserClient] = arrayPayload.flatMap {
-            guard let dict = $0 as? [String: AnyObject], let identifier = dict["id"] as? String else { return nil }
-            let client = UserClient.fetchUserClient(withRemoteId: identifier, forUser:user, createIfNeeded: true)
-            client?.deviceClass = dict["class"] as? String
-            return client
-        }
-        
-        // Remove clients that have not been included in the response
-        let deletedClients = Set(user.clients).subtracting(Set(clients))
-        deletedClients.forEach {
-            $0.deleteClientAndEndSession()
-        }
-        
-        // Add clients without a session to missed clients
-        let newClients = clients.filter { !$0.hasSessionWithSelfClient }
-        guard newClients.count > 0 else { return }
-        selfClient.missesClients(Set(newClients))
-        
-        // add missing clients to ignored clients
-        selfClient.addNewClientsToIgnored(Set(newClients))
     }
 }

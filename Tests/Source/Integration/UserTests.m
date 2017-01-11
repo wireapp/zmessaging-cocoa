@@ -21,6 +21,7 @@
 @import ZMTesting;
 @import zmessaging;
 @import ZMCDataModel;
+@import WireMessageStrategy;
 
 #import "IntegrationTestBase.h"
 #import "ZMUserSession.h"
