@@ -62,6 +62,10 @@ public extension VoiceChannelRouter {
         return WireCallCenter.addVoiceGainObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
     }
     
+    func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addReceivedVideoObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
     class func addStateObserver(_ observer: VoiceChannelStateObserver, userSession: ZMUserSession) -> WireCallCenterObserverToken {
         return WireCallCenter.addVoiceChannelStateObserver(observer: observer, context: userSession.managedObjectContext!)
     }

@@ -18,6 +18,24 @@
 
 import Foundation
 
+@objc
+public enum ReceivedVideoState : UInt {
+    /// Sender is not sending video
+    case stopped
+    /// Sender is sending video
+    case started
+    /// Sender is sending video but currently has a bad connection
+    case badConnection
+}
+
+@objc
+public protocol ReceivedVideoObserver : class {
+    
+    @objc(callCenterDidChangeReceivedVideoState:)
+    func callCenterDidChange(receivedVideoState: ReceivedVideoState)
+    
+}
+
 
 
 @objc
@@ -157,6 +175,24 @@ class VoiceChannelStateObserverFilter : NSObject,  VoiceChannelStateObserver {
     }
 }
 
+class ReceivedVideoObserverToken : NSObject {
+    
+    var tokenV2 : WireCallCenterObserverToken?
+    var tokenV3 : WireCallCenterObserverToken?
+    
+    deinit {
+        if let token = tokenV3 {
+            WireCallCenterV3.removeObserver(token: token)
+        }
+    }
+    
+    init(context: NSManagedObjectContext, observer: ReceivedVideoObserver, conversation: ZMConversation) {
+        tokenV2 = WireCallCenterV2.addReceivedVideoObserver(observer: observer, forConversation: conversation, context: context)
+        tokenV3 = WireCallCenterV3.addReceivedVideoObserver(observer: observer)
+    }
+    
+}
+
 
 @objc
 public class WireCallCenter : NSObject {
@@ -175,6 +211,10 @@ public class WireCallCenter : NSObject {
     
     public class func addVoiceGainObserver(observer: VoiceGainObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         return WireCallCenterV2.addVoiceGainObserver(observer: observer, forConversation: conversation, context: context)
+    }
+    
+    public class func addReceivedVideoObserver(observer: ReceivedVideoObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
+        return ReceivedVideoObserverToken(context: context, observer: observer, conversation: conversation)
     }
     
     public class func activeCallConversations(inUserSession userSession: ZMUserSession) -> [ZMConversation] {
