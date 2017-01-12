@@ -20,7 +20,7 @@
 "push.notification.default" = "Uus sõnum";
 "push.notification.ephemeral" = "Keegi saatis sulle sõnumi";
 
-"push.notification.add.message.group" = "%1$@ %2$@ vestluses: %3$@";
+"push.notification.add.message.group" = "%1$@ vestluses %2$@: %3$@";
 "push.notification.add.message.group.nousername" = "Uus sõnum %1$@ vestluses: %2$@";
 "push.notification.add.message.group.nousername.noconversationname" = "Uus sõnum: %1$@";
 "push.notification.add.message.group.noconversationname" = "%1$@ vestluses: %2$@";
@@ -28,42 +28,42 @@
 "push.notification.add.message.oneonone" = "%1$@: %2$@";
 "push.notification.add.message.oneonone.nousername" = "Uus sõnum: %1$@";
 
-"push.notification.add.image.group" = "%1$@ jagas vestluses %2$@ pildi";
+"push.notification.add.image.group" = "%1$@ jagas pildi vestluses %2$@";
 "push.notification.add.image.group.nousername" = "Uus pilt vestluses %1$@";
-"push.notification.add.image.group.nousername.noconversationname" = "Vestlusesse on lisatud uus pilt";
+"push.notification.add.image.group.nousername.noconversationname" = "Uus pilt vestluses";
 "push.notification.add.image.group.noconversationname" = "%1$@ jagas vestluses ühe pildi";
 
 "push.notification.add.image.oneonone" = "%1$@ jagas ühe pildi";
-"push.notification.add.image.oneonone.nousername" = "Vestlusesse on lisatud uus pilt";
+"push.notification.add.image.oneonone.nousername" = "Uus pilt vestluses";
 
-"push.notification.add.video.group" = "%1$@ jagas vestluses %2$@ videoklipi";
+"push.notification.add.video.group" = "%1$@ jagas videoklipi vestluses %2$@";
 "push.notification.add.video.group.nousername" = "Uus videoklipp vestluses %1$@";
-"push.notification.add.video.group.nousername.noconversationname" = "Vestluses jagati uus videoklipp";
+"push.notification.add.video.group.nousername.noconversationname" = "Uus videoklipp vestluses";
 "push.notification.add.video.group.noconversationname" = "%1$@ jagas vestluses ühe videoklipi";
 
 "push.notification.add.video.oneonone" = "%1$@ jagas videoklipi";
-"push.notification.add.video.oneonone.nousername" = "Vestluses jagati uus videoklipp";
+"push.notification.add.video.oneonone.nousername" = "Uus videoklipp vestluses";
 
 "push.notification.add.audio.group" = "%1$@ jagas vestluses %2$@ häälsõnumi";
 "push.notification.add.audio.group.nousername" = "Uus häälsõnum vestluses %1$@";
 "push.notification.add.audio.group.nousername.noconversationname" = "Vestluses uus häälsõnum";
-"push.notification.add.audio.group.noconversationname" = "%1$@ saatis häälsõnumi vestlusesse";
+"push.notification.add.audio.group.noconversationname" = "%1$@ saatis vestlusesse häälsõnumi";
 
 "push.notification.add.audio.oneonone" = "%1$@ saatis häälsõnumi";
 "push.notification.add.audio.oneonone.nousername" = "Vestluses uus häälsõnum";
 
-"push.notification.add.file.group" = "%1$@ saatis faili vestlusesse %2$@";
+"push.notification.add.file.group" = "%1$@ jagas vestluses %2$@ faili";
 "push.notification.add.file.group.nousername" = "Uus fail vestluses %1$@";
-"push.notification.add.file.group.nousername.noconversationname" = "Uus fail vestluses";
-"push.notification.add.file.group.noconversationname" = "%1$@ saatis faili vestlusesse";
+"push.notification.add.file.group.nousername.noconversationname" = "Vestluses uus fail";
+"push.notification.add.file.group.noconversationname" = "%1$@ saatis vestlusesse faili";
 
 "push.notification.add.file.oneonone" = "%1$@ saatis faili";
-"push.notification.add.file.oneonone.nousername" = "Uus fail vestluses";
+"push.notification.add.file.oneonone.nousername" = "Vestluses uus fail";
 
 "push.notification.add.location.group" = "%1$@ jagas oma asukohta vestluses %2$@";
 "push.notification.add.location.group.nousername" = "Uus asukoht vestluses %1$@";
 "push.notification.add.location.group.nousername.noconversationname" = "Uus asukoht vestluses";
-"push.notification.add.location.group.noconversationname" = "%1$@ saatis asukohta vestluses";
+"push.notification.add.location.group.noconversationname" = "%1$@ jagas vestluses oma asukohta";
 
 "push.notification.add.location.oneonone" = "%1$@ saatis asukoha";
 "push.notification.add.location.oneonone.nousername" = "Uus asukoht vestluses";
@@ -139,7 +139,7 @@
 "push.notification.connection.request" = "%@ soovib sind kontaktiks lisada";
 "push.notification.connection.request.nousername" = "Keegi soovib sinuga ühenduda";
 
-"push.notification.connection.accepted" = "%@ ja sina olete nüüd ühendatud";
+"push.notification.connection.accepted" = "%@ on nüüd sinu kontakt.";
 "push.notification.connection.accepted.nousername" = "Sul on uus kontakt";
 
 "push.notification.failed.message.oneonone" = "Kasutajale %1$@ sõnumi saatmine ebaõnnestus";
