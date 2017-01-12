@@ -327,6 +327,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     // MARK - Observer
     
     /// Register observer of the call center call state. This will inform you when there's an incoming call etc.
+    /// Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
     public class func addCallStateObserver(observer: WireCallCenterCallStateObserver) -> WireCallCenterObserverToken  {
         return NotificationCenter.default.addObserver(forName: WireCallCenterCallStateNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
             if let note = note.userInfo?[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification {
@@ -336,6 +337,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     }
     
     /// Register observer of missed calls.
+    /// Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
     public class func addMissedCallObserver(observer: WireCallCenterMissedCallObserver) -> WireCallCenterObserverToken  {
         return NotificationCenter.default.addObserver(forName: WireCallCenterMissedCallNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
             if let note = note.userInfo?[WireCallCenterMissedCallNotification.userInfoKey] as? WireCallCenterMissedCallNotification {
@@ -345,6 +347,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     }
     
     /// Register observer of the video state. This will inform you when the remote caller starts, stops sending video.
+    /// Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
     public class func addReceivedVideoObserver(observer: ReceivedVideoObserver) -> WireCallCenterObserverToken {
         return NotificationCenter.default.addObserver(forName: WireCallCenterV3VideoNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
             if let note = note.userInfo?[WireCallCenterV3VideoNotification.userInfoKey] as? WireCallCenterV3VideoNotification {

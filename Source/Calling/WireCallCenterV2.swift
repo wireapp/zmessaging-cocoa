@@ -311,6 +311,7 @@ public class WireCallCenterV2 : NSObject {
                                                object: nil)
     }
     
+    /// Add observer of the state of all voice channels. Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
     public class func addVoiceChannelStateObserver(observer: WireCallCenterV2CallStateObserver, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         return NotificationCenter.default.addObserver(forName: VoiceChannelStateNotification.notificationName, object: nil, queue: nil) { [weak observer] (note) in
             if let note = note.userInfo?[VoiceChannelStateNotification.userInfoKey] as? VoiceChannelStateNotification {
@@ -323,14 +324,17 @@ public class WireCallCenterV2 : NSObject {
         }
     }
     
+    /// Add observer of particpants in a voice channel. Returns a token which needs to be retained as long as the observer should be active.
     public class func addVoiceChannelParticipantObserver(observer: VoiceChannelParticipantObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         return VoiceChannelParticipantsObserverToken(context: context, conversation: conversation, observer: observer)
     }
     
+    /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
     public class func addVoiceGainObserver(observer: VoiceGainObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         return VoiceGainObserverToken(context: context, conversationId: conversation.remoteIdentifier!, observer: observer)
     }
     
+    /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
     public class func addReceivedVideoObserver(observer: ReceivedVideoObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         return WireCallCenterV2ReceivedVideoObserverToken(context: context, conversation: conversation, observer: observer)
     }
