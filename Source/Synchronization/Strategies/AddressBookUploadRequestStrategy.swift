@@ -126,7 +126,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
         }
         
         let allLocalContactIDs = Set(encodedChunk.otherContactsHashes.keys)
-        let payload = ["cards" : contactCards, "self" : []]
+        let payload : [String: Any] = ["cards" : contactCards, "self" : self.selfHashes()]
         self.tracker.tagAddressBookUploadStarted(encodedChunk.numberOfTotalContacts)
         let request = ZMTransportRequest(path: onboardingEndpoint, method: .methodPOST, payload: payload as ZMTransportData?, shouldCompress: true)
         request.add(ZMCompletionHandler(on: self.managedObjectContext, block: {
@@ -135,6 +135,15 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
             })
         )
         return request
+    }
+    
+    /// Returns a list of the hashes for the current user
+    private func selfHashes() -> [String] {
+        let user = ZMUser.selfUser(in: self.managedObjectContext)
+        return [user.normalizedEmailAddress, user.phoneNumber]
+            .flatMap { $0 }
+            .filter { !$0.isEmpty }
+            .map { $0.base64EncodedSHADigest }
     }
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
