@@ -81,6 +81,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ClientUpdateStatus *clientUpdateStatus;
 @property (nonatomic) BackgroundAPNSPingBackStatus *pingBackStatus;
 @property (nonatomic) ZMAccountStatus *accountStatus;
+@property (nonatomic) SharedModifiedConversationsList *modifiedConversations;
 
 @property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 
@@ -237,6 +238,7 @@ ZM_EMPTY_ASSERTING_INIT()
         syncMOC.analytics = analytics;
     }];
 
+    self.modifiedConversations = [[SharedModifiedConversationsList alloc] init];
     UIApplication *application = [UIApplication sharedApplication];
     
     ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL
@@ -291,7 +293,9 @@ ZM_EMPTY_ASSERTING_INIT()
         [ZMUserAgent setWireAppVersion:appVersion];
         self.didStartInitialSync = NO;
         self.pushChannelIsOpen = NO;
+
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
         
         self.apnsEnvironment = apnsEnvironment;
         self.networkIsOnline = YES;
@@ -709,6 +713,18 @@ ZM_EMPTY_ASSERTING_INIT()
 - (AVSFlowManager *)flowManager
 {
     return self.onDemandFlowManager.flowManager;
+}
+
+- (void)willEnterForeground:(__unused NSNotification *)note
+{
+    NSSet<NSUUID *> *conversationIdentifiers = self.modifiedConversations.storedIdentifiers.copy;
+    [self.modifiedConversations clear];
+
+    [self.managedObjectContext notifyMessagesChangedInConversationWithRemoteIdentifiers:conversationIdentifiers];
+
+    [self.syncManagedObjectContext performGroupedBlock:^{
+        [self.syncManagedObjectContext notifyMessagesChangedInConversationWithRemoteIdentifiers:conversationIdentifiers];
+    }];
 }
 
 @end
