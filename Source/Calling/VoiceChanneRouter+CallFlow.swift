@@ -50,18 +50,27 @@ public protocol CallFlow {
 
 public extension VoiceChannelRouter {
     
+    /// Add observer of voice channel state. Returns a token which needs to be retained as long as the observer should be active.
     func addStateObserver(_ observer: VoiceChannelStateObserver) -> WireCallCenterObserverToken {
         return WireCallCenter.addVoiceChannelStateObserver(conversation: conversation!, observer: observer, context: conversation!.managedObjectContext!)
     }
     
+    /// Add observer of voice channel participants. Returns a token which needs to be retained as long as the observer should be active.
     func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> WireCallCenterObserverToken {
         return WireCallCenter.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
     }
     
+    /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
     func addVoiceGainObserver(_ observer: VoiceGainObserver) -> WireCallCenterObserverToken {
         return WireCallCenter.addVoiceGainObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
     }
     
+    /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
+    func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addReceivedVideoObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
+    /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
     class func addStateObserver(_ observer: VoiceChannelStateObserver, userSession: ZMUserSession) -> WireCallCenterObserverToken {
         return WireCallCenter.addVoiceChannelStateObserver(observer: observer, context: userSession.managedObjectContext!)
     }

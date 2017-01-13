@@ -18,6 +18,7 @@
 
 import Foundation
 import ZMUtilities
+import avs
 
 @objc
 public class VoiceGainNotification : NSObject  {
@@ -148,6 +149,10 @@ class VoiceChannelParticipantsObserverToken : NSObject {
     fileprivate let conversation : ZMConversation
     fileprivate weak var observer : VoiceChannelParticipantObserver?
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     init(context: NSManagedObjectContext, conversation: ZMConversation, observer : VoiceChannelParticipantObserver) {
         self.context = context
         self.conversation = conversation
@@ -204,6 +209,74 @@ class VoiceChannelParticipantsObserverToken : NSObject {
     
 }
 
+class WireCallCenterV2ReceivedVideoObserverToken : NSObject {
+    
+    fileprivate let conversation : ZMConversation
+    fileprivate let context: NSManagedObjectContext
+    fileprivate weak var observer : ReceivedVideoObserver?
+    
+    /// remote side has the intent to send video
+    fileprivate var isVideoEnabled = false
+    // remote side does send video
+    fileprivate var isVideoStarted = true
+    // remote side has a bad connection
+    fileprivate var isBadConnection = false
+    
+    fileprivate var previousState : ReceivedVideoState = .stopped
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    init(context: NSManagedObjectContext, conversation: ZMConversation, observer: ReceivedVideoObserver) {
+        self.context = context
+        self.conversation = conversation
+        self.observer = observer
+        
+        super.init()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(callStateDidChange(note:)), name: WireCallCenterV2.CallStateDidChangeNotification, object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(flowManagerDidChangeReceivedVideoState(note:)), name: NSNotification.Name(rawValue: FlowManagerVideoReceiveStateNotification), object: nil)
+    }
+    
+    func flowManagerDidChangeReceivedVideoState(note: Notification) {
+        if let changeInfo = note.object as? AVSVideoStateChangeInfo {
+            isVideoStarted = changeInfo.state == .FLOWMANAGER_VIDEO_RECEIVE_STARTED
+            isBadConnection = changeInfo.reason == .FLOWMANAGER_VIDEO_BAD_CONNECTION
+            notifyObserverIfStateChanged()
+        }
+    }
+    
+    func callStateDidChange(note: Notification) {
+        if let conversations = note.userInfo?["updated"] as? Set<ZMConversation>, conversations.contains(conversation) {
+            isVideoEnabled = !conversation.otherActiveVideoCallParticipants.isEmpty
+            notifyObserverIfStateChanged()
+        }
+    }
+    
+    var state : ReceivedVideoState {
+        
+        if !isVideoEnabled {
+            return .stopped
+        }
+        
+        if isBadConnection {
+            return .badConnection
+        }
+        
+        return isVideoStarted ? .started : .stopped
+    }
+    
+    func notifyObserverIfStateChanged() {
+        if state != previousState {
+            previousState = state
+            observer?.callCenterDidChange(receivedVideoState: state)
+        }
+    }
+    
+}
+
 
 @objc
 public class WireCallCenterV2 : NSObject {
@@ -214,6 +287,9 @@ public class WireCallCenterV2 : NSObject {
     let context : NSManagedObjectContext
     var voiceChannelStates : [ZMConversation : VoiceChannelV2State] = [:]
 
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
     
     public init(context: NSManagedObjectContext) {
         self.context = context
@@ -235,6 +311,7 @@ public class WireCallCenterV2 : NSObject {
                                                object: nil)
     }
     
+    /// Add observer of the state of all voice channels. Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
     public class func addVoiceChannelStateObserver(observer: WireCallCenterV2CallStateObserver, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         return NotificationCenter.default.addObserver(forName: VoiceChannelStateNotification.notificationName, object: nil, queue: nil) { [weak observer] (note) in
             if let note = note.userInfo?[VoiceChannelStateNotification.userInfoKey] as? VoiceChannelStateNotification {
@@ -247,12 +324,19 @@ public class WireCallCenterV2 : NSObject {
         }
     }
     
+    /// Add observer of particpants in a voice channel. Returns a token which needs to be retained as long as the observer should be active.
     public class func addVoiceChannelParticipantObserver(observer: VoiceChannelParticipantObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         return VoiceChannelParticipantsObserverToken(context: context, conversation: conversation, observer: observer)
     }
     
+    /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
     public class func addVoiceGainObserver(observer: VoiceGainObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         return VoiceGainObserverToken(context: context, conversationId: conversation.remoteIdentifier!, observer: observer)
+    }
+    
+    /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
+    public class func addReceivedVideoObserver(observer: ReceivedVideoObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
+        return WireCallCenterV2ReceivedVideoObserverToken(context: context, conversation: conversation, observer: observer)
     }
     
     public class func removeObserver(token: WireCallCenterObserverToken) {

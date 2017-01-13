@@ -62,42 +62,23 @@ public enum CallState : Equatable {
     }
 }
 
-@objc(AVSVideoReceiveState)
-public enum VideoReceiveState : Int32 {
-    /// Sender is not sending video
-    case stopped
-    /// Sender is sending video
-    case started
-    /// Sender is sending video but currently has a bad connection
-    case badConnection
-}
-
 public typealias WireCallCenterObserverToken = NSObjectProtocol
 
-/// MARK - Video State Observer
-
-@objc
-public protocol WireCallCenterVideoObserver : class {
-    
-    func receivingVideoDidChange(state: VideoReceiveState)
-    
-}
-
-struct WireCallCenterVideoNotification {
+struct WireCallCenterV3VideoNotification {
     
     static let notificationName = Notification.Name("WireCallCenterVideoNotification")
     static let userInfoKey = notificationName.rawValue
     
-    let videoReceiveState : VideoReceiveState
+    let receivedVideoState : ReceivedVideoState
     
-    init(videoReceiveState: VideoReceiveState) {
-        self.videoReceiveState = videoReceiveState
+    init(receivedVideoState: ReceivedVideoState) {
+        self.receivedVideoState = receivedVideoState
     }
     
     func post() {
-        NotificationCenter.default.post(name: WireCallCenterVideoNotification.notificationName,
+        NotificationCenter.default.post(name: WireCallCenterV3VideoNotification.notificationName,
                                         object: nil,
-                                        userInfo: [WireCallCenterVideoNotification.userInfoKey : self])
+                                        userInfo: [WireCallCenterV3VideoNotification.userInfoKey : self])
     }
 }
 
@@ -272,10 +253,10 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
             }
             
             wcall_set_video_state_handler({ (state, _) in
-                guard let state = VideoReceiveState(rawValue: state) else { return }
+                guard let state = ReceivedVideoState(rawValue: UInt(state)) else { return }
                 
                 DispatchQueue.main.async {
-                    WireCallCenterVideoNotification(videoReceiveState: state).post()
+                    WireCallCenterV3VideoNotification(receivedVideoState: state).post()
                 }
             })
         }
@@ -346,6 +327,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     // MARK - Observer
     
     /// Register observer of the call center call state. This will inform you when there's an incoming call etc.
+    /// Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
     public class func addCallStateObserver(observer: WireCallCenterCallStateObserver) -> WireCallCenterObserverToken  {
         return NotificationCenter.default.addObserver(forName: WireCallCenterCallStateNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
             if let note = note.userInfo?[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification {
@@ -355,6 +337,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     }
     
     /// Register observer of missed calls.
+    /// Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
     public class func addMissedCallObserver(observer: WireCallCenterMissedCallObserver) -> WireCallCenterObserverToken  {
         return NotificationCenter.default.addObserver(forName: WireCallCenterMissedCallNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
             if let note = note.userInfo?[WireCallCenterMissedCallNotification.userInfoKey] as? WireCallCenterMissedCallNotification {
@@ -364,10 +347,11 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     }
     
     /// Register observer of the video state. This will inform you when the remote caller starts, stops sending video.
-    public class func addVideoObserver(observer: WireCallCenterVideoObserver) -> WireCallCenterObserverToken {
-        return NotificationCenter.default.addObserver(forName: WireCallCenterVideoNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
-            if let note = note.userInfo?[WireCallCenterVideoNotification.userInfoKey] as? WireCallCenterVideoNotification {
-                observer?.receivingVideoDidChange(state: note.videoReceiveState)
+    /// Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
+    public class func addReceivedVideoObserver(observer: ReceivedVideoObserver) -> WireCallCenterObserverToken {
+        return NotificationCenter.default.addObserver(forName: WireCallCenterV3VideoNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
+            if let note = note.userInfo?[WireCallCenterV3VideoNotification.userInfoKey] as? WireCallCenterV3VideoNotification {
+                observer?.callCenterDidChange(receivedVideoState: note.receivedVideoState)
             }
         }
     }
