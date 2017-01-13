@@ -52,6 +52,8 @@ extension SelfContactCardUploadStrategyTests {
     func testThatItReturnsNoRequestWhenTheCardIsNotMarkedForUpload() {
         
         // given
+        self.syncMOC.hasEverUploadedSelfCard = true
+        self.syncMOC.selfContactCardNeedsToBeUploaded = false
         
         // when
         let request = sut.nextRequest() // this will return nil and start async processing
@@ -64,7 +66,8 @@ extension SelfContactCardUploadStrategyTests {
     func testThatItReturnsARequestWhenTheCardIsMarkedForUpload() {
         
         // given
-        zmessaging.AddressBook.markSelfContactCardToBeUploaded(self.syncMOC)
+                self.syncMOC.hasEverUploadedSelfCard = false
+        self.syncMOC.selfContactCardNeedsToBeUploaded = true
         
         // when
         let request = sut.nextRequest() // this will return nil and start async processing
@@ -84,10 +87,35 @@ extension SelfContactCardUploadStrategyTests {
         }
     }
     
+    func testThatItReturnsARequestWhenTheCardWasNeverUpload() {
+        
+        // given
+        self.syncMOC.hasEverUploadedSelfCard = false
+        self.syncMOC.selfContactCardNeedsToBeUploaded = false
+        
+        // when
+        let request = sut.nextRequest()
+        
+        // then
+        XCTAssertNotNil(request)
+        if let request = request {
+            XCTAssertEqual(request.path, "/onboarding/v3")
+            XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST)
+            if let payload = request.payload as? [String:[Any]] {
+                XCTAssertNotNil(payload["cards"])
+                XCTAssertNotNil(payload["self"])
+            } else {
+                XCTFail()
+            }
+            XCTAssertTrue(request.shouldCompress)
+        }
+    }
+    
     func testThatItIncludesSelfCardWithPhoneNumber() {
         
         // given
-        zmessaging.AddressBook.markSelfContactCardToBeUploaded(self.syncMOC)
+        self.syncMOC.hasEverUploadedSelfCard = false
+        self.syncMOC.selfContactCardNeedsToBeUploaded = true
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
         selfUser.phoneNumber = "+155534534566"
         
@@ -107,7 +135,8 @@ extension SelfContactCardUploadStrategyTests {
     func testThatItIncludesSelfCardWithEmail() {
         
         // given
-        zmessaging.AddressBook.markSelfContactCardToBeUploaded(self.syncMOC)
+        self.syncMOC.hasEverUploadedSelfCard = false
+        self.syncMOC.selfContactCardNeedsToBeUploaded = true
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
         selfUser.emailAddress = "me@example.com"
         
@@ -127,7 +156,8 @@ extension SelfContactCardUploadStrategyTests {
     func testThatItUploadsOnlyOnceWhenNotAskedAgain() {
         
         // given
-        zmessaging.AddressBook.markSelfContactCardToBeUploaded(self.syncMOC)
+        self.syncMOC.hasEverUploadedSelfCard = true
+        self.syncMOC.selfContactCardNeedsToBeUploaded = true
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
         selfUser.emailAddress = "me@example.com"
         
@@ -139,13 +169,15 @@ extension SelfContactCardUploadStrategyTests {
         
         // then
         XCTAssertNil(sut.nextRequest())
-        
+        XCTAssertTrue(self.syncMOC.hasEverUploadedSelfCard)
+        XCTAssertFalse(self.syncMOC.selfContactCardNeedsToBeUploaded)
     }
     
     func testThatItUploadsMultipleTimesWhenAskedAgain() {
         
         // given
-        zmessaging.AddressBook.markSelfContactCardToBeUploaded(self.syncMOC)
+        self.syncMOC.hasEverUploadedSelfCard = false
+        self.syncMOC.selfContactCardNeedsToBeUploaded = true
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
         selfUser.emailAddress = "me@example.com"
         
@@ -160,7 +192,7 @@ extension SelfContactCardUploadStrategyTests {
         firstRequest?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        zmessaging.AddressBook.markSelfContactCardToBeUploaded(self.syncMOC)
+        self.syncMOC.selfContactCardNeedsToBeUploaded = true
 
         // then
         XCTAssertNotNil(sut.nextRequest())

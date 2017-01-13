@@ -193,6 +193,7 @@ extension UserProfileUpdateStatus {
     /// Invoked when changing the phone number succeeded
     func didChangePhoneSuccesfully() {
         self.phoneNumberToSet = nil
+        self.managedObjectContext.selfContactCardNeedsToBeUploaded = true
     }
     
     /// Invoked when changing the phone number failed
@@ -218,6 +219,7 @@ extension UserProfileUpdateStatus {
     func didUpdateEmailSuccessfully() {
         self.emailToSet = nil
         UserProfileUpdateNotification.post(type: .emailDidSendVerification)
+        self.managedObjectContext.selfContactCardNeedsToBeUploaded = true
     }
     
     /// Invoked when the request to change email failed

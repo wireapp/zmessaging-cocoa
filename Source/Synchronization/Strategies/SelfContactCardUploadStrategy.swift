@@ -21,8 +21,6 @@ import Foundation
 /// BE onboarding endpoint
 private let onboardingEndpoint = "/onboarding/v3"
 
-/// Key to mark the address book as uploadable
-private let selfContactCardNeedsToBeUploadedKey = "ZMselfContactCardNeedsToBeUploaded"
 
 /// This request sync generates request to upload the address book
 /// It will upload only after `markAddressBookAsNeedingToBeUploaded` is called
@@ -44,7 +42,7 @@ private let selfContactCardNeedsToBeUploadedKey = "ZMselfContactCardNeedsToBeUpl
          clientRegistrationStatus: ZMClientClientRegistrationStatusProvider,
          managedObjectContext: NSManagedObjectContext)
     {
-        
+
         self.authenticationStatus = authenticationStatus
         self.clientRegistrationStatus = clientRegistrationStatus
         self.managedObjectContext = managedObjectContext
@@ -62,7 +60,8 @@ extension SelfContactCardUploadStrategy : RequestStrategy, ZMSingleRequestTransc
                 return nil
         }
         
-        if AddressBook.selfContactCardNeedsToBeUploaded(self.managedObjectContext) {
+        if self.managedObjectContext.selfContactCardNeedsToBeUploaded
+            || !self.managedObjectContext.hasEverUploadedSelfCard {
             self.requestSync.readyForNextRequestIfNotBusy()
         }
         return self.requestSync.nextRequest()
@@ -79,20 +78,44 @@ extension SelfContactCardUploadStrategy : RequestStrategy, ZMSingleRequestTransc
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
         if response.result == .success {
-            AddressBook.markSelfContactCardToBeUploaded(self.managedObjectContext, needToUpload: false)
+            self.managedObjectContext.selfContactCardNeedsToBeUploaded = false
+            self.managedObjectContext.hasEverUploadedSelfCard = true
         }
     }
 }
 
 // MARK: - Marking for upload
-extension AddressBook {
-    /// Sets the address book as needing to be uploaded
-    static func markSelfContactCardToBeUploaded(_ moc: NSManagedObjectContext, needToUpload : Bool = true) {
-        moc.setPersistentStoreMetadata(NSNumber(value: needToUpload), key: selfContactCardNeedsToBeUploadedKey)
+
+/// Whether the self card was ever uploaded from this client
+private let hasEverUploadedCardKey = "ZMhasEverUploadedSelfCard"
+
+/// Key to mark the address book as uploadable
+private let selfContactCardNeedsToBeUploadedKey = "ZMselfContactCardNeedsToBeUploaded"
+
+extension NSManagedObjectContext {
+    
+    public var selfContactCardNeedsToBeUploaded : Bool {
+        get {
+            guard let uploaded = self.persistentStoreMetadata(key: selfContactCardNeedsToBeUploadedKey) as? NSNumber else {
+                return false
+            }
+            return uploaded.boolValue
+        }
+        set {
+            self.setPersistentStoreMetadata(NSNumber(value: newValue), key: selfContactCardNeedsToBeUploadedKey)
+        }
     }
     
-    /// Whether the address book needs to be uploaded
-    fileprivate static func selfContactCardNeedsToBeUploaded(_ moc: NSManagedObjectContext) -> Bool {
-        return (moc.persistentStoreMetadata(key: selfContactCardNeedsToBeUploadedKey) as? NSNumber)?.boolValue == true
+    var hasEverUploadedSelfCard : Bool {
+        get {
+            guard let uploaded = self.persistentStoreMetadata(key: hasEverUploadedCardKey) as? NSNumber else {
+                return false
+            }
+            return uploaded.boolValue
+        }
+        set {
+            self.setPersistentStoreMetadata(NSNumber(value: newValue), key: hasEverUploadedCardKey)
+        }
     }
+    
 }
