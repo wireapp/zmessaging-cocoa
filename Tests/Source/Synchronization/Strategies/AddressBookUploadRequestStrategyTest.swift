@@ -102,6 +102,52 @@ extension AddressBookUploadRequestStrategyTest {
         }
     }
     
+    func testThatItIncludesSelfCardWithPhoneNumber() {
+        
+        // given
+        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        let selfUser = ZMUser.selfUser(in: self.syncMOC)
+        selfUser.phoneNumber = "+155534534566"
+        
+        // when
+        let nilRequest = sut.nextRequest() // this will return nil and start async processing
+        
+        // then
+        XCTAssertNil(nilRequest)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        let request = sut.nextRequest()
+        XCTAssertNotNil(request)
+        if let request = request {
+            let selfArray = (request.payload as? [String : AnyObject])?["self"] as? [String] ?? []
+            XCTAssertEqual(selfArray, [selfUser.phoneNumber.base64EncodedSHADigest])
+        } else {
+            XCTFail()
+        }
+    }
+    
+    func testThatItIncludesSelfCardWithEmail() {
+        
+        // given
+        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        let selfUser = ZMUser.selfUser(in: self.syncMOC)
+        selfUser.emailAddress = "me@example.com"
+        
+        // when
+        let nilRequest = sut.nextRequest() // this will return nil and start async processing
+        
+        // then
+        XCTAssertNil(nilRequest)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        let request = sut.nextRequest()
+        XCTAssertNotNil(request)
+        if let request = request {
+            let selfArray = (request.payload as? [String : AnyObject])?["self"] as? [String] ?? []
+            XCTAssertEqual(selfArray, [selfUser.emailAddress.base64EncodedSHADigest])
+        } else {
+            XCTFail()
+        }
+    }
+    
     func testThatItUploadsOnlyOnceWhenNotAskedAgain() {
         
         // given
