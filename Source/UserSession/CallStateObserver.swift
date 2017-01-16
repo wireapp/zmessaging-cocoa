@@ -46,15 +46,18 @@ public final class CallStateObserver : NSObject {
 
 extension CallStateObserver : WireCallCenterCallStateObserver {
     
-    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID) {
-        guard
-            let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: managedObjectContext),
-            let caller = ZMUser(remoteID: userId, createIfNeeded: false, in: managedObjectContext)
-            else {
-                return
+    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
+        managedObjectContext.performGroupedBlock {
+            guard
+                let userId = userId,
+                let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.managedObjectContext),
+                let caller = ZMUser(remoteID: userId, createIfNeeded: false, in: self.managedObjectContext)
+                else {
+                    return
+            }
+            
+            self.localNotificationDispatcher.process(callState: callState, in: conversation, sender: caller)
         }
-        
-        localNotificationDispatcher.process(callState: callState, in: conversation, sender: caller)
     }
     
 }

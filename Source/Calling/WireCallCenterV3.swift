@@ -19,6 +19,29 @@
 import Foundation
 import avs
 
+private extension String {
+    
+    init?(cString: UnsafePointer<Int8>?) {
+        if let cString = cString {
+            self.init(cString: cString)
+        } else {
+            return nil
+        }
+    }
+    
+}
+
+private extension UUID {
+    
+    init?(uuidString: String?) {
+        if let uuidString = uuidString {
+            self.init(uuidString: uuidString)
+        } else {
+            return nil
+        }
+    }
+}
+
 public enum CallClosedReason : Int32 {
     case normal
     case normalSelf
@@ -35,6 +58,8 @@ public enum CallState : Equatable {
     case outgoing
     /// Incoming call is pending
     case incoming(video: Bool)
+    /// Call is answered
+    case answered
     /// Established call
     case established
     /// Call in process of being terminated
@@ -86,7 +111,7 @@ struct WireCallCenterV3VideoNotification {
 
 public protocol WireCallCenterCallStateObserver : class {
     
-    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID)
+    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?)
     
 }
 
@@ -97,7 +122,7 @@ struct WireCallCenterCallStateNotification {
     
     let callState : CallState
     let conversationId : UUID
-    let userId : UUID
+    let userId : UUID?
     
     func post() {
         NotificationCenter.default.post(name: WireCallCenterCallStateNotification.notificationName,
@@ -196,8 +221,8 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                     
                     return selfReference.send(token: token,
                                               conversationId: String.init(cString: conversationId),
-                                              userId: String.init(cString: userId),
-                                              clientId: String.init(cString: clientId),
+                                              userId: String(cString: userId),
+                                              clientId: String(cString: clientId),
                                               data: data,
                                               dataLength: dataLength)
                 },
@@ -208,8 +233,8 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                     
                     let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
                     
-                    selfReference.incoming(conversationId: String.init(cString: conversationId),
-                                           userId: String.init(cString: userId),
+                    selfReference.incoming(conversationId: String(cString: conversationId),
+                                           userId: String(cString: userId),
                                            isVideoCall: isVideoCall != 0)
                 },
                 { (conversationId, messageTime, userId, isVideoCall, context) in
@@ -220,8 +245,8 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                     let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
                     let timestamp = Date(timeIntervalSince1970: TimeInterval(messageTime))
                     
-                    selfReference.missed(conversationId: String.init(cString: conversationId),
-                                         userId: String.init(cString: userId),
+                    selfReference.missed(conversationId: String(cString: conversationId),
+                                         userId: String(cString: userId),
                                          timestamp: timestamp,
                                          isVideoCall: isVideoCall != 0)
                 },
@@ -232,18 +257,18 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                     
                     let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
                     
-                    selfReference.established(conversationId: String.init(cString: conversationId),
-                                              userId: String.init(cString: userId))
+                    selfReference.established(conversationId: String(cString: conversationId),
+                                              userId: String(cString: userId))
                 },
                 { (reason, conversationId, userId, metrics, context) in
-                    guard let context = context, let conversationId = conversationId, let userId = userId else {
+                    guard let context = context, let conversationId = conversationId else {
                         return
                     }
                     
                     let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
                     
-                    selfReference.closed(conversationId: String.init(cString: conversationId),
-                                         userId: String.init(cString: userId),
+                    selfReference.closed(conversationId: String(cString: conversationId),
+                                         userId: String(cString: userId),
                                          reason: CallClosedReason(rawValue: reason) ?? .internalError)
                 },
                 observer)
@@ -306,11 +331,11 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
         }
     }
     
-    private func closed(conversationId: String, userId: String, reason: CallClosedReason) {
+    private func closed(conversationId: String, userId: String?, reason: CallClosedReason) {
         zmLog.debug("closed call")
         
         DispatchQueue.main.async {
-            WireCallCenterCallStateNotification(callState: .terminating(reason: reason), conversationId: UUID(uuidString: conversationId)!, userId: UUID(uuidString: userId)!).post()
+            WireCallCenterCallStateNotification(callState: .terminating(reason: reason), conversationId: UUID(uuidString: conversationId)!, userId: UUID(uuidString: userId)).post()
         }
     }
     
@@ -364,7 +389,17 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     
     @objc(answerCallForConversationID:)
     public func answerCall(conversationId: UUID) -> Bool {
-        return wcall_answer(conversationId.transportString()) == 0
+        let answered =  wcall_answer(conversationId.transportString()) == 0
+        
+        if answered {
+        
+            // FIXME ugly hack until AUDIO-1149 is fixed
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500), execute: {
+                WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.userId).post()
+            })
+        }
+        
+        return answered
     }
     
     @objc(startCallForConversationID:video:)

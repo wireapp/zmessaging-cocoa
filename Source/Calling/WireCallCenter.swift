@@ -125,7 +125,7 @@ class VoiceChannelStateObserverToken : NSObject, WireCallCenterV2CallStateObserv
         })
     }
     
-    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID) {
+    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
         guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: context) else { return }
         
         observer?.callCenterDidChange(voiceChannelState: callState.voiceChannelState, conversation: conversation)
