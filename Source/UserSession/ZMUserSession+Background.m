@@ -228,7 +228,7 @@ static NSString *ZMLogTag = @"Push";
     // Wrap the handler:
     ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult const result){
         ZM_STRONG(self);
-        [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
+        [self.managedObjectContext performGroupedBlock:^{
             switch (result) {
                 case ZMBackgroundFetchResultNewData:
                     completionHandler(UIBackgroundFetchResultNewData);
@@ -273,6 +273,21 @@ static NSString *ZMLogTag = @"Push";
     NOT_USED(note);
     self.didNotifyThirdPartyServices = NO;
     self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = YES;
+
+    [self mergeChangesFromStoredSaveNotificationsIfNeeded];
+}
+
+- (void)mergeChangesFromStoredSaveNotificationsIfNeeded
+{
+    NSArray *storedNotifications = self.storedDidSaveNotifications.storedNotifications.copy;
+    [self.storedDidSaveNotifications clear];
+
+    for (NSDictionary *changes in storedNotifications) {
+        [NSManagedObjectContext mergeChangesFromRemoteContextSave:changes intoContexts:@[self.managedObjectContext]];
+        [self.syncManagedObjectContext performGroupedBlock:^{
+            [NSManagedObjectContext mergeChangesFromRemoteContextSave:changes intoContexts:@[self.syncManagedObjectContext]];
+        }];
+    }
 }
 
 @end

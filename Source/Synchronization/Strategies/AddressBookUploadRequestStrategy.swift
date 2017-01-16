@@ -139,11 +139,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
     
     /// Returns a list of the hashes for the current user
     private func selfHashes() -> [String] {
-        let user = ZMUser.selfUser(in: self.managedObjectContext)
-        return [user.normalizedEmailAddress, user.phoneNumber]
-            .flatMap { $0 }
-            .filter { !$0.isEmpty }
-            .map { $0.base64EncodedSHADigest }
+        return ZMUser.selfUser(in: self.managedObjectContext).contactHashes
     }
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
@@ -345,4 +341,17 @@ extension AddressBookUploadRequestStrategy {
                 .setPersistentStoreMetadata(NSNumber(value: Int(newValue)), key: addressBookLastUploadedIndex)
         }
     }
+}
+
+
+extension ZMUser {
+    
+    /// Returns a list of the hashes for the current user
+    var contactHashes : [String] {
+        return [self.normalizedEmailAddress, self.phoneNumber]
+            .flatMap { $0 }
+            .filter { !$0.isEmpty }
+            .map { $0.base64EncodedSHADigest }
+    }
+    
 }

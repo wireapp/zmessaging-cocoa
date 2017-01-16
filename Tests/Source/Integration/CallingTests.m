@@ -158,6 +158,9 @@
 {
     ZMTransportRequest *joinRequest = [self.mockTransportSession.receivedRequests firstObjectMatchingWithBlock:^BOOL(ZMTransportRequest *request) {
         BOOL rightPath = [request.path hasPrefix:@"/conversations/"] && [request.path hasSuffix:@"/call/state"];
+        if (!rightPath) {
+            return NO;
+        }
         NSDictionary *selfDict = [[request.payload asDictionary] optionalDictionaryForKey:@"self"];
         BOOL stateJoined = [[selfDict optionalStringForKey:@"state"] isEqualToString:@"joined"];
         if (causeIsIntertupted) {
@@ -180,6 +183,9 @@
 {
     ZMTransportRequest *idleRequest = [self.mockTransportSession.receivedRequests firstObjectMatchingWithBlock:^BOOL(ZMTransportRequest *request) {
         BOOL rightPath = [request.path hasPrefix:@"/conversations/"] && [request.path hasSuffix:@"/call/state"];
+        if (!rightPath) {
+            return NO;
+        }
         NSDictionary *selfDict = [[request.payload asDictionary] optionalDictionaryForKey:@"self"];
 
         BOOL stateIdle = [[selfDict optionalStringForKey:@"state"] isEqualToString:@"idle"];

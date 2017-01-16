@@ -185,7 +185,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
+    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 3u);
     XCTAssertEqualObjects(selfUser.phoneNumber, phone);
     
     // after
@@ -399,7 +399,7 @@
 - (void)testThatItCanSetEmailAndPassword
 {
     // given
-    NSString *email = @"foobar@geraterwerwer.dsf";
+    NSString *email = @"foobar@geraterwerwer.dsf.example.com";
     XCTAssertTrue([self loginWithPhoneAndRemoveEmail]);
     ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:@"ds4rgsdg"];
     [self.mockTransportSession resetReceivedRequests];
@@ -431,7 +431,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
+    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 3u);
     XCTAssertEqualObjects(selfUser.emailAddress, email);
     
     // after
@@ -443,7 +443,7 @@
 - (void)testThatItNotifiesWhenFailingToSetThePasswordForNetworkError
 {
     // given
-    NSString *email = @"foobar@geraterwerwer.dsf";
+    NSString *email = @"foobar@geraterwerwer.dsf.example.com";
     XCTAssertTrue([self loginWithPhoneAndRemoveEmail]);
     ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:@"ds4rgsdg"];
     [self.mockTransportSession resetReceivedRequests];
@@ -479,7 +479,7 @@
 - (void)testThatItSilentlyIgnoreWhenFailingToSetThePasswordBecauseThePasswordWasAlreadyThere
 {
     // given
-    NSString *email = @"foobar@geraterwerwer.dsf";
+    NSString *email = @"foobar@geraterwerwer.dsf.example.com";
     XCTAssertTrue([self loginWithPhoneAndRemoveEmail]);
     ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:@"ds4rgsdg"];
     [self.mockTransportSession resetReceivedRequests];
@@ -517,7 +517,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
+    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 3u);
     XCTAssertEqualObjects(selfUser.emailAddress, email);
     
     // after
@@ -529,7 +529,7 @@
 - (void)testThatItNotifiesWhenFailingToSetTheEmailBecauseOfGenericError
 {
     // given
-    NSString *email = @"foobar@geraterwerwer.dsf";
+    NSString *email = @"foobar@geraterwerwer.dsf.example.com";
     XCTAssertTrue([self loginWithPhoneAndRemoveEmail]);
     ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:@"ds4rgsdg"];
     [self.mockTransportSession resetReceivedRequests];
@@ -566,7 +566,7 @@
 - (void)testThatItNotifiesWhenFailingToSetTheEmailBecauseOfInvalidEmail
 {
     // given
-    NSString *email = @"foobar@geraterwerwer.dsf";
+    NSString *email = @"foobar@geraterwerwer.dsf.example.com";
     XCTAssertTrue([self loginWithPhoneAndRemoveEmail]);
     ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:@"ds4rgsdg"];
     [self.mockTransportSession resetReceivedRequests];
@@ -603,7 +603,7 @@
 - (void)testThatItNotifiesWhenFailingToSetTheEmailBecauseOfEmailAlreadyInUse
 {
     // given
-    NSString *email = @"foobar@geraterwerwer.dsf";
+    NSString *email = @"foobar@geraterwerwer.dsf.example.com";
     XCTAssertTrue([self loginWithPhoneAndRemoveEmail]);
     ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:@"ds4rgsdg"];
     [self.mockTransportSession resetReceivedRequests];
