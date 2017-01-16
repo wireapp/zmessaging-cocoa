@@ -230,7 +230,7 @@ static NSString *ZMLogTag = @"Push";
     // Wrap the handler:
     ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult const result){
         ZM_STRONG(self);
-        [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
+        [self.managedObjectContext performGroupedBlock:^{
             switch (result) {
                 case ZMBackgroundFetchResultNewData:
                     completionHandler(UIBackgroundFetchResultNewData);
