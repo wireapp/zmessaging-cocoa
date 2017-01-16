@@ -43,10 +43,9 @@ extension VoiceChannelV2 {
         else { return }
         let uiContext = context.zm_userInterface
         
-        guard let uiConv = (try? uiContext?.existingObject(with: conversation.objectID)) as? ZMConversation , !uiConv.isZombieObject
-        else { return }
-        
         uiContext?.performGroupedBlock { () -> Void in
+            guard let uiConv = (try? uiContext?.existingObject(with: conversation.objectID)) as? ZMConversation , !uiConv.isZombieObject else { return }
+            
             if  uiConv.conversationType == .group ||
                 (uiConv.conversationType == .oneOnOne && !uiConv.isOutgoingCall)
             {
