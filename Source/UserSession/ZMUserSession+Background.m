@@ -275,6 +275,21 @@ static NSString *ZMLogTag = @"Push";
     NOT_USED(note);
     self.didNotifyThirdPartyServices = NO;
     self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = YES;
+
+    [self mergeChangesFromStoredSaveNotificationsIfNeeded];
+}
+
+- (void)mergeChangesFromStoredSaveNotificationsIfNeeded
+{
+    NSArray *storedNotifications = self.storedDidSaveNotifications.storedNotifications.copy;
+    [self.storedDidSaveNotifications clear];
+
+    for (NSDictionary *changes in storedNotifications) {
+        [NSManagedObjectContext mergeChangesFromRemoteContextSave:changes intoContexts:@[self.managedObjectContext]];
+        [self.syncManagedObjectContext performGroupedBlock:^{
+            [NSManagedObjectContext mergeChangesFromRemoteContextSave:changes intoContexts:@[self.syncManagedObjectContext]];
+        }];
+    }
 }
 
 @end
