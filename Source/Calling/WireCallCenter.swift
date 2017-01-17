@@ -222,27 +222,48 @@ public class WireCallCenter : NSObject {
         return ReceivedVideoObserverToken(context: context, observer: observer, conversation: conversation)
     }
     
+    /// Returns conversations with active calls
     public class func activeCallConversations(inUserSession userSession: ZMUserSession) -> [ZMConversation] {
-        // FIXME achive this in a more optimized way
-        if let conversations = ZMConversationList.conversationsIncludingArchived(inUserSession: userSession).asArray() as? [ZMConversation] {
-            return conversations.filter({ (conversation) -> Bool in
-                return conversation.voiceChannel?.state == .selfConnectedToActiveChannel
-            })
-        } else {
-            return []
-        }
+        var activeConversations : Set<ZMConversation> = Set()
+        
+        let conversationsV3 = WireCallCenterV3.nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
+            if value == CallState.established {
+                return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
+            } else {
+                return nil
+            }
+        })
+        
+        let conversationsV2 = userSession.wireCallCenterV2.conversations(withVoiceChannelStates: [.selfConnectedToActiveChannel])
+        
+        activeConversations.formUnion(conversationsV3)
+        activeConversations.formUnion(conversationsV2)
+        
+        return Array(activeConversations)
     }
     
+    // Returns conversations with a non idle call state
     public class func nonIdleCallConversations(inUserSession userSession: ZMUserSession) -> [ZMConversation] {
-        // FIXME achive this in a more optimized way
-        if let conversations = ZMConversationList.conversationsIncludingArchived(inUserSession: userSession).asArray() as? [ZMConversation] {
-            return conversations.filter({ (conversation) -> Bool in
-                let voiceChannelState = conversation.voiceChannel?.state
-                return voiceChannelState != .noActiveUsers && voiceChannelState != .invalid
-            })
-        } else {
-            return []
-        }
+        var nonIdleConversations : Set<ZMConversation> = Set()
+        
+        let conversationsV3 = WireCallCenterV3.nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
+            return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
+        })
+        
+        let idleStates : [VoiceChannelV2State] = [.deviceTransferReady,
+                                                  .incomingCall,
+                                                  .incomingCallInactive,
+                                                  .outgoingCall,
+                                                  .outgoingCallInactive,
+                                                  .selfIsJoiningActiveChannel,
+                                                  .selfConnectedToActiveChannel]
+        
+        let conversationsV2 = userSession.wireCallCenterV2.conversations(withVoiceChannelStates: idleStates)
+        
+        nonIdleConversations.formUnion(conversationsV3)
+        nonIdleConversations.formUnion(conversationsV2)
+        
+        return Array(nonIdleConversations)
     }
     
 }

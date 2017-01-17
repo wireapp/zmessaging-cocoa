@@ -60,7 +60,7 @@ public enum CallState : Equatable {
     case incoming(video: Bool)
     /// Call is answered
     case answered
-    /// Established call
+    /// Call is established (media is flowing)
     case established
     /// Call in process of being terminated
     case terminating(reason: CallClosedReason)
@@ -75,6 +75,8 @@ public enum CallState : Equatable {
             fallthrough
         case (.incoming, .incoming):
             fallthrough
+        case (.answered, .answered):
+            fallthrough
         case (.established, .established):
             fallthrough
         case (.terminating, .terminating):
@@ -83,6 +85,25 @@ public enum CallState : Equatable {
             return true
         default:
             return false
+        }
+    }
+    
+    init(wcallState: Int32) {
+        switch wcallState {
+        case WCALL_STATE_NONE:
+            self =  .none
+        case WCALL_STATE_INCOMING:
+            self = .incoming(video: false)
+        case WCALL_STATE_OUTGOING:
+            self =  .outgoing
+        case WCALL_STATE_ANSWERED:
+            self = .answered
+        case WCALL_STATE_MEDIA_ESTAB:
+            self = .established
+        case WCALL_STATE_TERMINATING:
+            self = .terminating(reason: .unknown)
+        default:
+            self = .unknown
         }
     }
 }
@@ -392,11 +413,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
         let answered =  wcall_answer(conversationId.transportString()) == 0
         
         if answered {
-        
-            // FIXME ugly hack until AUDIO-1149 is fixed
-            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500), execute: {
-                WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.userId).post()
-            })
+            WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.userId).post()
         }
         
         return answered
@@ -434,21 +451,35 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     public class func isVideoCall(conversationId: UUID) -> Bool {
         return wcall_is_video_call(conversationId.transportString()) == 1 ? true : false
     }
+    
+    /// nonIdleCalls maps all non idle conversations to their corresponding call state
+    public class var nonIdleCalls : [UUID : CallState] {
+        
+        typealias CallStateDictionary = [UUID : CallState]
+        
+        class Box<T : Any> {
+            var value : T
+            
+            init(value: T) {
+                self.value = value
+            }
+        }
+        
+        let box = Box<CallStateDictionary>(value: [:])
+        let pointer = Unmanaged<Box<CallStateDictionary>>.passUnretained(box).toOpaque()
+        
+        wcall_iterate_state({ (conversationId, state, pointer) in
+            guard let conversationId = conversationId, let pointer = pointer else { return }
+            guard let uuid = UUID(uuidString: String(cString: conversationId)) else { return }
+            
+            let box = Unmanaged<Box<CallStateDictionary>>.fromOpaque(pointer).takeUnretainedValue()
+            box.value[uuid] = CallState(wcallState: state)
+        }, pointer)
+        
+        return box.value
+    }
  
     public func callState(conversationId: UUID) -> CallState {
-        switch wcall_get_state(conversationId.transportString()) {
-        case WCALL_STATE_NONE:
-            return .none
-        case WCALL_STATE_INCOMING:
-            return .incoming(video: false)
-        case WCALL_STATE_OUTGOING:
-            return .outgoing
-        case WCALL_STATE_ESTABLISHED:
-            return .established
-        case WCALL_STATE_TERMINATING:
-            return .terminating(reason: .unknown)
-        default:
-            return .unknown
-        }
+        return CallState(wcallState: wcall_get_state(conversationId.transportString()))
     }
 }
