@@ -27,8 +27,10 @@ extension CallClosedReason {
         switch self {
         case .timeout:
             return .unanswered
-        case .normal:
+        case .normal, .canceled:
             return .remoteEnded
+        case .anweredElsewhere:
+            return .answeredElsewhere
         default:
             return .failed
         }

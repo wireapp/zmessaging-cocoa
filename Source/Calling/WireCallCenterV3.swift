@@ -48,7 +48,28 @@ public enum CallClosedReason : Int32 {
     case internalError
     case timeout
     case lostMedia
+    case canceled
+    case anweredElsewhere
     case unknown
+    
+    init(reason: Int32) {
+        switch reason {
+        case WCALL_REASON_NORMAL:
+            self = .normal
+        case WCALL_REASON_CANCELED:
+            self = .canceled
+        case WCALL_REASON_ANSWERED_ELSEWHERE:
+            self = .anweredElsewhere
+        case WCALL_REASON_TIMEOUT:
+            self = .timeout
+        case WCALL_REASON_LOST_MEDIA:
+            self = .lostMedia
+        case WCALL_REASON_ERROR:
+            self = .internalError
+        default:
+            self = .unknown
+        }
+    }
 }
 
 public enum CallState : Equatable {
@@ -290,7 +311,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                     
                     selfReference.closed(conversationId: String(cString: conversationId),
                                          userId: String(cString: userId),
-                                         reason: CallClosedReason(rawValue: reason) ?? .internalError)
+                                         reason: CallClosedReason(reason: reason))
                 },
                 observer)
             
@@ -353,7 +374,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     }
     
     private func closed(conversationId: String, userId: String?, reason: CallClosedReason) {
-        zmLog.debug("closed call")
+        zmLog.debug("closed call, reason = \(reason)")
         
         DispatchQueue.main.async {
             WireCallCenterCallStateNotification(callState: .terminating(reason: reason), conversationId: UUID(uuidString: conversationId)!, userId: UUID(uuidString: userId)).post()
