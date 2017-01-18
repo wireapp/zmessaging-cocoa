@@ -307,7 +307,7 @@ static NSString *ZMLogTag = @"Push";
         return;
     }
     
-    [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
+    [self.managedObjectContext performGroupedBlock: ^{
         ZMStoredLocalNotification *note = self.pendingLocalNotification;
         
         if ([note.category isEqualToString:ZMConnectCategory]) {
@@ -417,7 +417,7 @@ static NSString *ZMLogTag = @"Push";
         ZM_WEAK(self);
         [self.operationLoop startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
             ZM_STRONG(self);
-            [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
+            [self.managedObjectContext performGroupedBlock: ^{
                 if (result == ZMBackgroundTaskResultFailed) {
                     [self.localNotificationDispatcher didFailToSendMessageInConversation:conversation];
                 }
