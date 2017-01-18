@@ -60,6 +60,10 @@ extension CallClosedReason {
             return VoiceChannelV2CallEndReason.requested
         case .normalSelf:
             return VoiceChannelV2CallEndReason.requestedSelf
+        case .anweredElsewhere:
+            return VoiceChannelV2CallEndReason.requested
+        case .canceled:
+            return VoiceChannelV2CallEndReason.requested
         case .timeout:
             return VoiceChannelV2CallEndReason.requestedAVS
         case .internalError:

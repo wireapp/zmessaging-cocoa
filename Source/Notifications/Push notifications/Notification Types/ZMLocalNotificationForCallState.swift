@@ -20,7 +20,8 @@ import Foundation
 
 final public class ZMLocalNotificationForCallState : ZMLocalNotification {
     
-    var callState : CallState
+    var callState : CallState = .none
+    var numberOfMissedCalls = 0
     let sender : ZMUser
     let conversation: ZMConversation
     
@@ -30,14 +31,30 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
         return notifications
     }
     
-    public init?(callState: CallState, conversation: ZMConversation, sender: ZMUser) {
-        guard ZMLocalNotificationForCallState.shouldCreateNotificationFor(callState: callState) else { return nil }
+    public init(conversation: ZMConversation, sender: ZMUser) {
         
-        self.callState = callState
         self.conversation = conversation
         self.sender = sender
         
         super.init(conversationID: conversation.remoteIdentifier)
+    }
+    
+    public func update(forCallState callState: CallState) {
+        self.callState = callState
+        
+        notifications.removeAll()
+        
+        guard shouldCreateNotificationFor(callState: callState) else { return }
+        
+        let notification = configureNotification()
+        notifications.append(notification)
+    }
+    
+    public func updateForMissedCall() {
+        self.callState = .none
+        self.numberOfMissedCalls += 1
+        
+        notifications.removeAll()
         
         let notification = configureNotification()
         notifications.append(notification)
@@ -48,17 +65,45 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
         case .incoming(let video):
             let baseString = video ? ZMPushStringVideoCallStarts : ZMPushStringCallStarts
             return baseString.localizedString(with: sender, conversation: conversation, count: nil)
+        case .terminating(reason: .timeout), 
+             .none where numberOfMissedCalls > 0:
+            return ZMPushStringCallMissed.localizedString(with: sender, conversation: conversation, count: NSNumber(value: numberOfMissedCalls))
         default :
             return ""
         }
     }
     
     var soundName : String {
-        return ZMCustomSound.notificationRingingSoundName()
+        if case .incoming = callState {
+            return ZMCustomSound.notificationRingingSoundName()
+        } else {
+            return ZMCustomSound.notificationNewMessageSoundName()
+        }
     }
     
-    class func shouldCreateNotificationFor(callState: CallState) -> Bool {
-        return .incoming(video: false) == callState
+    var category : String {
+        switch (callState) {
+        case .incoming:
+            return ZMIncomingCallCategory
+        case .terminating(reason: .timeout),
+             .none where numberOfMissedCalls > 0:
+            return ZMMissedCallCategory
+        default :
+            return ZMConversationCategory
+        }
+    }
+    
+    func shouldCreateNotificationFor(callState: CallState) -> Bool {
+        switch callState {
+        case .terminating(reason: .anweredElsewhere):
+            return false
+        case .incoming,
+             .terminating,
+             .none where numberOfMissedCalls > 0:
+            return true
+        default:
+            return false
+        }
     }
     
     public func configureNotification() -> UILocalNotification {
@@ -66,7 +111,7 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
         
         notification.alertBody = configureAlertBody().escapingPercentageSymbols()
         notification.soundName = soundName
-        notification.category = ZMIncomingCallCategory
+        notification.category = category
         notification.setupUserInfo(conversation, sender: sender)
         return notification
     }
