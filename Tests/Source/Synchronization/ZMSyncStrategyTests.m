@@ -1095,6 +1095,7 @@
         // WHEN
         [self.syncMOC saveOrRollback];
     }];
+    [self spinMainQueueWithTimeout:0.2];
     
     // THEN
     ZMOTRMessage *uiMessage = [self.uiMOC existingObjectWithID:message.objectID error:nil];
