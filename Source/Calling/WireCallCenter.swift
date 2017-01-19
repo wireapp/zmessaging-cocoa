@@ -56,19 +56,13 @@ extension CallClosedReason {
         switch self {
         case .lostMedia:
             return VoiceChannelV2CallEndReason.disconnected
-        case .normal:
-            return VoiceChannelV2CallEndReason.requested
         case .normalSelf:
             return VoiceChannelV2CallEndReason.requestedSelf
-        case .anweredElsewhere:
-            return VoiceChannelV2CallEndReason.requested
-        case .canceled:
+        case .normal, .anweredElsewhere, .canceled:
             return VoiceChannelV2CallEndReason.requested
         case .timeout:
             return VoiceChannelV2CallEndReason.requestedAVS
-        case .internalError:
-            return VoiceChannelV2CallEndReason.interrupted
-        case .unknown:
+        case .internalError, .unknown:
             return VoiceChannelV2CallEndReason.interrupted
         }
     }
