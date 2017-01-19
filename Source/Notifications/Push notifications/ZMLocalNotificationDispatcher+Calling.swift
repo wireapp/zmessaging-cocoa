@@ -21,18 +21,37 @@ import Foundation
 public extension ZMLocalNotificationDispatcher {
     
     public func process(callState: CallState, in conversation: ZMConversation, sender: ZMUser) {
-        if let note = localNotification(for: callState, in: conversation, sender: sender), let uiNote = note.uiNotifications.last {
+        
+        let note =  notification(for: conversation, sender: sender)
+        
+        callingNotifications.cancelNotifications(conversation)
+        
+        note.update(forCallState: callState)
+        scheduleNotification(note)
+    }
+    
+    public func processMissedCall(in conversation: ZMConversation, sender: ZMUser) {
+        let note =  notification(for: conversation, sender: sender)
+        
+        callingNotifications.cancelNotifications(conversation)
+        
+        note.updateForMissedCall()
+        scheduleNotification(note)
+    }
+    
+    private func scheduleNotification(_ note: ZMLocalNotification) {
+        if let uiNote = note.uiNotifications.first {
+            callingNotifications.addObject(note)
             (sharedApplicationForSwift as! Application).scheduleLocalNotification(uiNote)
         }
     }
     
-    private func localNotification(for callState: CallState, in conversation: ZMConversation, sender: ZMUser) -> ZMLocalNotification? {
-        
-        if let newNote = ZMLocalNotificationForCallState(callState: callState, conversation: conversation, sender: sender) {
-            callingNotifications.addObject(newNote)
-            return newNote
+    private func notification(for conversation: ZMConversation, sender: ZMUser) -> ZMLocalNotificationForCallState {
+        if let existingNote = callingNotifications.notifications.first(where: { (note) -> Bool in note.conversationID == conversation.remoteIdentifier }), let callStateNote = existingNote as? ZMLocalNotificationForCallState {
+            return callStateNote
         }
         
-        return nil
+        return ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
     }
+    
 }

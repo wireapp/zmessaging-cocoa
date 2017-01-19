@@ -382,7 +382,7 @@
                                                               eventNotificationSet:self.mockEventNotificationSet
                                                              failedNotificationSet:self.mockFailedNotificationSet
                                                               messageNotifications:localNotificationSet
-                                                            callingNotifications:nil]; // FIXME
+                                                            callingNotifications:nil];
     
     // given
     ZMClientMessage *message = (id)[self.conversation1 appendMessageWithText:@"foo"];
@@ -424,7 +424,7 @@
                                                               eventNotificationSet:self.mockEventNotificationSet
                                                              failedNotificationSet:self.mockFailedNotificationSet
                                                               messageNotifications:localNotificationSet
-                                                              callingNotifications:nil]; // FIXME
+                                                              callingNotifications:nil];
     
     // when
     [self.sut processMessage:message];

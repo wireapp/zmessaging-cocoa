@@ -25,10 +25,14 @@ public final class CallStateObserver : NSObject {
     
     let localNotificationDispatcher : ZMLocalNotificationDispatcher
     let managedObjectContext : NSManagedObjectContext
-    var token : WireCallCenterObserverToken? = nil
+    var callStateToken : WireCallCenterObserverToken? = nil
+    var missedCalltoken : WireCallCenterObserverToken? = nil
     
     deinit {
-        if let token = token {
+        if let token = callStateToken {
+            WireCallCenterV3.removeObserver(token: token)
+        }
+        if let token = missedCalltoken {
             WireCallCenterV3.removeObserver(token: token)
         }
     }
@@ -39,22 +43,44 @@ public final class CallStateObserver : NSObject {
         
         super.init()
         
-        self.token = WireCallCenterV3.addCallStateObserver(observer: self)
+        self.callStateToken = WireCallCenterV3.addCallStateObserver(observer: self)
+        self.missedCalltoken = WireCallCenterV3.addMissedCallObserver(observer: self)
     }
     
 }
 
-extension CallStateObserver : WireCallCenterCallStateObserver {
+extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
-    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID) {
-        guard
-            let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: managedObjectContext),
-            let caller = ZMUser(remoteID: userId, createIfNeeded: false, in: managedObjectContext)
-            else {
-                return
-        }
+    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
+        guard !ZMUserSession.useCallKit() else { return }
         
-        localNotificationDispatcher.process(callState: callState, in: conversation, sender: caller)
+        managedObjectContext.performGroupedBlock {
+            guard
+                let userId = userId,
+                let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.managedObjectContext),
+                let caller = ZMUser(remoteID: userId, createIfNeeded: false, in: self.managedObjectContext)
+                else {
+                    return
+            }
+            
+            self.localNotificationDispatcher.process(callState: callState, in: conversation, sender: caller)
+        }
     }
+    
+    public func callCenterMissedCall(conversationId: UUID, userId: UUID, timestamp: Date, video: Bool) {
+        guard !ZMUserSession.useCallKit() else { return }
+        
+        managedObjectContext.performGroupedBlock {
+            guard
+                let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.managedObjectContext),
+                let caller = ZMUser(remoteID: userId, createIfNeeded: false, in: self.managedObjectContext)
+                else {
+                    return
+            }
+            
+            self.localNotificationDispatcher.processMissedCall(in: conversation, sender: caller)
+        }
+    }
+    
     
 }

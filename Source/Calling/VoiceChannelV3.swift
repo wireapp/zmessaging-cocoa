@@ -74,7 +74,7 @@ public extension CallState {
             return .notConnected
         case .established:
             return .connected
-        case .outgoing:
+        case .outgoing, .answered:
             return .connecting
         }
     }
@@ -85,6 +85,8 @@ public extension CallState {
             return .noActiveUsers
         case .incoming:
             return .incomingCall
+        case .answered:
+            return .selfIsJoiningActiveChannel
         case .established:
             return .selfConnectedToActiveChannel
         case .outgoing:

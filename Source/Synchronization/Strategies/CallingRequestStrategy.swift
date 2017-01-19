@@ -121,18 +121,20 @@ extension CallingRequestStrategy : WireCallCenterTransport {
             return
         }
         
-        guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: managedObjectContext) else {
-            zmLog.error("Not sending calling messsage since conversation doesn't exist")
-            completionHandler(500)
-            return
-        }
-        
-        let genericMessage = ZMGenericMessage(callingContent: dataString, nonce: NSUUID().transportString())
-        
-        genericMessageStrategy.schedule(message: genericMessage, inConversation: conversation) { (response) in
+        managedObjectContext.performGroupedBlock {
+            guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.managedObjectContext) else {
+                self.zmLog.error("Not sending calling messsage since conversation doesn't exist")
+                completionHandler(500)
+                return
+            }
             
-            completionHandler(response.httpStatus)
+            let genericMessage = ZMGenericMessage(callingContent: dataString, nonce: NSUUID().transportString())
             
+            self.genericMessageStrategy.schedule(message: genericMessage, inConversation: conversation) { (response) in
+                
+                completionHandler(response.httpStatus)
+                
+            }
         }
     }
     

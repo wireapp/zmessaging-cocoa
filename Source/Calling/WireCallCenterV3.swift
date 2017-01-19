@@ -19,13 +19,65 @@
 import Foundation
 import avs
 
+private extension String {
+    
+    init?(cString: UnsafePointer<Int8>?) {
+        if let cString = cString {
+            self.init(cString: cString)
+        } else {
+            return nil
+        }
+    }
+    
+}
+
+private extension UUID {
+    
+    init?(uuidString: String?) {
+        if let uuidString = uuidString {
+            self.init(uuidString: uuidString)
+        } else {
+            return nil
+        }
+    }
+}
+
 public enum CallClosedReason : Int32 {
+    /// Ongoing call was closed by remote
     case normal
+    /// Ongoing call was closed by self
     case normalSelf
+    /// Call was closed because of internal error in AVS
     case internalError
+    /// Outgoing call timed out
     case timeout
+    /// Ongoing call lost media and was closed
     case lostMedia
+    /// Incoming call was canceled by remote
+    case canceled
+    /// Incoming call was answered on another device
+    case anweredElsewhere
+    /// Call was closed for an unknown reason. This is most likely a bug.
     case unknown
+    
+    init(reason: Int32) {
+        switch reason {
+        case WCALL_REASON_NORMAL:
+            self = .normal
+        case WCALL_REASON_CANCELED:
+            self = .canceled
+        case WCALL_REASON_ANSWERED_ELSEWHERE:
+            self = .anweredElsewhere
+        case WCALL_REASON_TIMEOUT:
+            self = .timeout
+        case WCALL_REASON_LOST_MEDIA:
+            self = .lostMedia
+        case WCALL_REASON_ERROR:
+            self = .internalError
+        default:
+            self = .unknown
+        }
+    }
 }
 
 public enum CallState : Equatable {
@@ -35,7 +87,9 @@ public enum CallState : Equatable {
     case outgoing
     /// Incoming call is pending
     case incoming(video: Bool)
-    /// Established call
+    /// Call is answered
+    case answered
+    /// Call is established (media is flowing)
     case established
     /// Call in process of being terminated
     case terminating(reason: CallClosedReason)
@@ -50,6 +104,8 @@ public enum CallState : Equatable {
             fallthrough
         case (.incoming, .incoming):
             fallthrough
+        case (.answered, .answered):
+            fallthrough
         case (.established, .established):
             fallthrough
         case (.terminating, .terminating):
@@ -58,6 +114,25 @@ public enum CallState : Equatable {
             return true
         default:
             return false
+        }
+    }
+    
+    init(wcallState: Int32) {
+        switch wcallState {
+        case WCALL_STATE_NONE:
+            self =  .none
+        case WCALL_STATE_INCOMING:
+            self = .incoming(video: false)
+        case WCALL_STATE_OUTGOING:
+            self =  .outgoing
+        case WCALL_STATE_ANSWERED:
+            self = .answered
+        case WCALL_STATE_MEDIA_ESTAB:
+            self = .established
+        case WCALL_STATE_TERMINATING:
+            self = .terminating(reason: .unknown)
+        default:
+            self = .unknown
         }
     }
 }
@@ -86,7 +161,7 @@ struct WireCallCenterV3VideoNotification {
 
 public protocol WireCallCenterCallStateObserver : class {
     
-    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID)
+    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?)
     
 }
 
@@ -97,7 +172,7 @@ struct WireCallCenterCallStateNotification {
     
     let callState : CallState
     let conversationId : UUID
-    let userId : UUID
+    let userId : UUID?
     
     func post() {
         NotificationCenter.default.post(name: WireCallCenterCallStateNotification.notificationName,
@@ -196,8 +271,8 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                     
                     return selfReference.send(token: token,
                                               conversationId: String.init(cString: conversationId),
-                                              userId: String.init(cString: userId),
-                                              clientId: String.init(cString: clientId),
+                                              userId: String(cString: userId),
+                                              clientId: String(cString: clientId),
                                               data: data,
                                               dataLength: dataLength)
                 },
@@ -208,8 +283,8 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                     
                     let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
                     
-                    selfReference.incoming(conversationId: String.init(cString: conversationId),
-                                           userId: String.init(cString: userId),
+                    selfReference.incoming(conversationId: String(cString: conversationId),
+                                           userId: String(cString: userId),
                                            isVideoCall: isVideoCall != 0)
                 },
                 { (conversationId, messageTime, userId, isVideoCall, context) in
@@ -220,8 +295,8 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                     let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
                     let timestamp = Date(timeIntervalSince1970: TimeInterval(messageTime))
                     
-                    selfReference.missed(conversationId: String.init(cString: conversationId),
-                                         userId: String.init(cString: userId),
+                    selfReference.missed(conversationId: String(cString: conversationId),
+                                         userId: String(cString: userId),
                                          timestamp: timestamp,
                                          isVideoCall: isVideoCall != 0)
                 },
@@ -232,19 +307,19 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                     
                     let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
                     
-                    selfReference.established(conversationId: String.init(cString: conversationId),
-                                              userId: String.init(cString: userId))
+                    selfReference.established(conversationId: String(cString: conversationId),
+                                              userId: String(cString: userId))
                 },
                 { (reason, conversationId, userId, metrics, context) in
-                    guard let context = context, let conversationId = conversationId, let userId = userId else {
+                    guard let context = context, let conversationId = conversationId else {
                         return
                     }
                     
                     let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
                     
-                    selfReference.closed(conversationId: String.init(cString: conversationId),
-                                         userId: String.init(cString: userId),
-                                         reason: CallClosedReason(rawValue: reason) ?? .internalError)
+                    selfReference.closed(conversationId: String(cString: conversationId),
+                                         userId: String(cString: userId),
+                                         reason: CallClosedReason(reason: reason))
                 },
                 observer)
             
@@ -306,11 +381,11 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
         }
     }
     
-    private func closed(conversationId: String, userId: String, reason: CallClosedReason) {
-        zmLog.debug("closed call")
+    private func closed(conversationId: String, userId: String?, reason: CallClosedReason) {
+        zmLog.debug("closed call, reason = \(reason)")
         
         DispatchQueue.main.async {
-            WireCallCenterCallStateNotification(callState: .terminating(reason: reason), conversationId: UUID(uuidString: conversationId)!, userId: UUID(uuidString: userId)!).post()
+            WireCallCenterCallStateNotification(callState: .terminating(reason: reason), conversationId: UUID(uuidString: conversationId)!, userId: UUID(uuidString: userId)).post()
         }
     }
     
@@ -364,7 +439,13 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     
     @objc(answerCallForConversationID:)
     public func answerCall(conversationId: UUID) -> Bool {
-        return wcall_answer(conversationId.transportString()) == 0
+        let answered =  wcall_answer(conversationId.transportString()) == 0
+        
+        if answered {
+            WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.userId).post()
+        }
+        
+        return answered
     }
     
     @objc(startCallForConversationID:video:)
@@ -399,21 +480,35 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     public class func isVideoCall(conversationId: UUID) -> Bool {
         return wcall_is_video_call(conversationId.transportString()) == 1 ? true : false
     }
+    
+    /// nonIdleCalls maps all non idle conversations to their corresponding call state
+    public class var nonIdleCalls : [UUID : CallState] {
+        
+        typealias CallStateDictionary = [UUID : CallState]
+        
+        class Box<T : Any> {
+            var value : T
+            
+            init(value: T) {
+                self.value = value
+            }
+        }
+        
+        let box = Box<CallStateDictionary>(value: [:])
+        let pointer = Unmanaged<Box<CallStateDictionary>>.passUnretained(box).toOpaque()
+        
+        wcall_iterate_state({ (conversationId, state, pointer) in
+            guard let conversationId = conversationId, let pointer = pointer else { return }
+            guard let uuid = UUID(uuidString: String(cString: conversationId)) else { return }
+            
+            let box = Unmanaged<Box<CallStateDictionary>>.fromOpaque(pointer).takeUnretainedValue()
+            box.value[uuid] = CallState(wcallState: state)
+        }, pointer)
+        
+        return box.value
+    }
  
     public func callState(conversationId: UUID) -> CallState {
-        switch wcall_get_state(conversationId.transportString()) {
-        case WCALL_STATE_NONE:
-            return .none
-        case WCALL_STATE_INCOMING:
-            return .incoming(video: false)
-        case WCALL_STATE_OUTGOING:
-            return .outgoing
-        case WCALL_STATE_ESTABLISHED:
-            return .established
-        case WCALL_STATE_TERMINATING:
-            return .terminating(reason: .unknown)
-        default:
-            return .unknown
-        }
+        return CallState(wcallState: wcall_get_state(conversationId.transportString()))
     }
 }

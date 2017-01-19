@@ -27,8 +27,10 @@ extension CallClosedReason {
         switch self {
         case .timeout:
             return .unanswered
-        case .normal:
+        case .normal, .canceled:
             return .remoteEnded
+        case .anweredElsewhere:
+            return .answeredElsewhere
         default:
             return .failed
         }
@@ -38,21 +40,24 @@ extension CallClosedReason {
 
 extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
-    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID) {
+    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
         
         switch callState {
         case .incoming(video: _):
             guard
+                let userId = userId,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext),
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: userSession.managedObjectContext) else {
                     break
             }
             
             indicateIncomingCall(from: user, in: conversation)
-        case .terminating(reason: let reason):
+        case let .terminating(reason: reason) where reason != .normalSelf:
             if #available(iOS 10.0, *) {
                 provider.reportCall(with: conversationId, endedAt: nil, reason: UInt(reason.CXCallEndedReason.rawValue))
             }
+        case .answered:
+            provider.reportOutgoingCall(with: conversationId, startedConnectingAt: Date())
         case .established:
             provider.reportOutgoingCall(with: conversationId, connectedAt: Date())
         case .outgoing:

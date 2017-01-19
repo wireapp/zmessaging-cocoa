@@ -390,9 +390,9 @@ public class WireCallCenterV2 : NSObject {
         }
     }
     
-    func conversations(withVoiceChannelState expectedState: VoiceChannelV2State) -> [ZMConversation] {
+    func conversations(withVoiceChannelStates expectedStates: [VoiceChannelV2State]) -> [ZMConversation] {
         return voiceChannelStates.flatMap { (conversation: ZMConversation, state: VoiceChannelV2State) -> ZMConversation? in
-            return expectedState == state ? conversation : nil
+            return expectedStates.contains(state) ? conversation : nil
         }
     }
     
@@ -402,7 +402,7 @@ extension WireCallCenterV2 {
     
     @objc
     func applicationDidBecomeActive(note: Notification) {
-        if let connectedCallConversation =  conversations(withVoiceChannelState: .selfConnectedToActiveChannel).first, connectedCallConversation.isVideoCall {
+        if let connectedCallConversation =  conversations(withVoiceChannelStates: [.selfConnectedToActiveChannel]).first, connectedCallConversation.isVideoCall {
             // We need to start video in conversation that accepted video call in background but did not start the recording yet
             try? connectedCallConversation.voiceChannel?.v2.setVideoSendActive(true) // FIXME should this also be done for V3?
         }
