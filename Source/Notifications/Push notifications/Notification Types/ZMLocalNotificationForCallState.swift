@@ -65,9 +65,9 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
         case .incoming(let video):
             let baseString = video ? ZMPushStringVideoCallStarts : ZMPushStringCallStarts
             return baseString.localizedString(with: sender, conversation: conversation, count: nil)
-        case .terminating(reason: .timeout), 
+        case .terminating,
              .none where numberOfMissedCalls > 0:
-            return ZMPushStringCallMissed.localizedString(with: sender, conversation: conversation, count: NSNumber(value: numberOfMissedCalls))
+            return ZMPushStringCallMissed.localizedString(with: sender, conversation: conversation, count: NSNumber(value: max(numberOfMissedCalls, 1)))
         default :
             return ""
         }
