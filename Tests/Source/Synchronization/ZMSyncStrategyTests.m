@@ -1079,6 +1079,27 @@
     XCTAssertFalse([ids containsObject:remoteId]);
 }
 
+- (void)testThatItMergesTheUserInfoOfContexts {
+    
+    // The security level degradation info is stored in the user info. I'm using this one to verify that it is merged correcly
+    // GIVEN
+    __block ZMOTRMessage *message;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMConversationTypeGroup;
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        
+        message = (ZMOTRMessage *)[conversation appendMessageWithText:@"foo bar bar bar"];
+        message.causedSecurityLevelDegradation = YES;
+        
+        // WHEN
+        [self.syncMOC saveOrRollback];
+    }];
+    
+    // THEN
+    ZMOTRMessage *uiMessage = [self.uiMOC existingObjectWithID:message.objectID error:nil];
+    XCTAssertTrue(uiMessage.causedSecurityLevelDegradation);
+}
 #pragma mark - Helper
 
 - (NSSet <Class> *)transcodersExpectedToReturnNonces
