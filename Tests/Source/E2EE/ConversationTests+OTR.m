@@ -1602,12 +1602,12 @@
 
 }
 
-- (void)testThatItChangesSecurityLevelToInsecureCauseFailedMessageAttemptWhenSelfTriesToSendMessageInDegradingConversation
+- (void)testThatItChangesSecurityLevelToInsecureBecauseFailedMessageAttemptWhenSelfTriesToSendMessageInDegradingConversation
 {
     [self testThatItChangesSecurityLevelToCorrectSubtypeSendingMessageFromSelfClient:YES];
 }
 
-- (void)testThatItChangesSecurityLevelToInsecureCauseOtherWhenOtherClientTriesToSendMessageAndDegradesDegradingConversation
+- (void)testThatItChangesSecurityLevelToInsecureBecauseOtherWhenOtherClientTriesToSendMessageAndDegradesDegradingConversation
 {
     [self testThatItChangesSecurityLevelToCorrectSubtypeSendingMessageFromSelfClient:NO];
 }
