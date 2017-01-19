@@ -43,13 +43,21 @@ private extension UUID {
 }
 
 public enum CallClosedReason : Int32 {
+    /// Ongoing call was closed by remote
     case normal
+    /// Ongoing call was closed by self
     case normalSelf
+    /// Call was closed because of internal error in AVS
     case internalError
+    /// Outgoing call timed out
     case timeout
+    /// Ongoing call lost media and was closed
     case lostMedia
+    /// Incoming call was canceled by remote
     case canceled
+    /// Incoming call was answered on another device
     case anweredElsewhere
+    /// Call was closed for an unknown reason. This is most likely a bug.
     case unknown
     
     init(reason: Int32) {
