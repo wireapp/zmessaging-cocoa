@@ -42,6 +42,14 @@ private extension UUID {
     }
 }
 
+private class Box<T : Any> {
+    var value : T
+    
+    init(value: T) {
+        self.value = value
+    }
+}
+
 public enum CallClosedReason : Int32 {
     /// Ongoing call was closed by remote
     case normal
@@ -485,14 +493,6 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     public class var nonIdleCalls : [UUID : CallState] {
         
         typealias CallStateDictionary = [UUID : CallState]
-        
-        class Box<T : Any> {
-            var value : T
-            
-            init(value: T) {
-                self.value = value
-            }
-        }
         
         let box = Box<CallStateDictionary>(value: [:])
         let pointer = Unmanaged<Box<CallStateDictionary>>.passUnretained(box).toOpaque()
