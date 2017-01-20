@@ -290,6 +290,12 @@ static NSString *ZMLogTag = @"Push";
             [NSManagedObjectContext mergeChangesFromRemoteContextSave:changes intoContexts:@[self.syncManagedObjectContext]];
         }];
     }
+
+    [self.managedObjectContext processPendingChanges];
+
+    [self.syncManagedObjectContext performGroupedBlock:^{
+        [self.syncManagedObjectContext processPendingChanges];
+    }];
 }
 
 @end
