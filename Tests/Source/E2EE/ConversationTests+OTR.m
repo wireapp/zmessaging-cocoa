@@ -1097,7 +1097,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertTrue(conversation.trusted);
+    XCTAssertTrue(conversation.allUsersTrusted);
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
 }
 
@@ -1237,7 +1237,7 @@
     XCTAssertTrue([conversation.otherActiveParticipants containsObject:addedUser]);
     XCTAssertNil(addedUser.connection);
     
-    XCTAssertFalse(conversation.trusted);
+    XCTAssertFalse(conversation.allUsersTrusted);
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
     
     // when
@@ -1263,7 +1263,7 @@
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
     // then
-    XCTAssertTrue(conversation.trusted);
+    XCTAssertTrue(conversation.allUsersTrusted);
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
 }
 
@@ -1340,7 +1340,7 @@
             XCTAssertTrue(changeInfo.didDegradeSecurityLevelBecauseOfMissingClients);
             [self.userSession performChanges:^{
                 if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
-                    [changeInfo.conversation resendLastUnsentMessages];
+                    [changeInfo.conversation resendMessagesThatCausedConversationSecurityDegradation];
                 }
             }];
         }
@@ -1458,7 +1458,7 @@
             if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
                 XCTAssertTrue(changeInfo.didDegradeSecurityLevelBecauseOfMissingClients);
                 [self.userSession performChanges:^{
-                    [changeInfo.conversation resendLastUnsentMessages];
+                    [changeInfo.conversation resendMessagesThatCausedConversationSecurityDegradation];
                 }];
             }
         }
@@ -1602,12 +1602,12 @@
 
 }
 
-- (void)testThatItChangesSecurityLevelToInsecureCauseFailedMessageAttemptWhenSelfTriesToSendMessageInDegradingConversation
+- (void)testThatItChangesSecurityLevelToInsecureBecauseFailedMessageAttemptWhenSelfTriesToSendMessageInDegradingConversation
 {
     [self testThatItChangesSecurityLevelToCorrectSubtypeSendingMessageFromSelfClient:YES];
 }
 
-- (void)testThatItChangesSecurityLevelToInsecureCauseOtherWhenOtherClientTriesToSendMessageAndDegradesDegradingConversation
+- (void)testThatItChangesSecurityLevelToInsecureBecauseOtherWhenOtherClientTriesToSendMessageAndDegradesDegradingConversation
 {
     [self testThatItChangesSecurityLevelToCorrectSubtypeSendingMessageFromSelfClient:NO];
 }

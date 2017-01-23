@@ -20,8 +20,8 @@
 
 @import Foundation;
 @import ZMCSystem;
+@import ZMCDataModel;
 
-#import <ZMCDataModel/ZMManagedObjectContextProvider.h>
 #import <zmessaging/ZMNetworkState.h>
 #import <ZMTransport/ZMTransportRequest.h>
 

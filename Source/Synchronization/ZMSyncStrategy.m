@@ -410,6 +410,7 @@ ZM_EMPTY_ASSERTING_INIT()
     NSManagedObjectContext *mocThatSaved = note.object;
     NSManagedObjectContext *strongUiMoc = self.uiMOC;
     ZMCallState *callStateChanges = mocThatSaved.zm_callState.createCopyAndResetHasChanges;
+    NSDictionary *userInfo = [mocThatSaved.userInfo copy];
     
     if (mocThatSaved.zm_isUserInterfaceContext && strongUiMoc != nil) {
         if(mocThatSaved != strongUiMoc) {
@@ -431,8 +432,8 @@ ZM_EMPTY_ASSERTING_INIT()
             }
             NSSet *changedConversations = [self.syncMOC mergeCallStateChanges:callStateChanges];
             [self.syncMOC mergeChangesFromContextDidSaveNotification:note];
-            
             [self processSaveWithInsertedObjects:[NSSet set] updateObjects:changedConversations];
+            [self.syncMOC mergeUserInfoFromUserInfo:userInfo];
             [self.syncMOC processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
         }];
     } else if (mocThatSaved.zm_isSyncContext) {
@@ -452,6 +453,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                             userInfo:@{ @"updated": changedConversations }];
            
             [strongUiMoc mergeChangesFromContextDidSaveNotification:note];
+            [self.uiMOC mergeUserInfoFromUserInfo:userInfo];
             [strongUiMoc processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
         }];
     }
