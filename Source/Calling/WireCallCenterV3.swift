@@ -469,14 +469,9 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     
     @objc(closeCallForConversationID:)
     public func closeCall(conversationId: UUID) {
+        let started = callState(conversationId: conversationId) == .established
         wcall_end(conversationId.transportString())
-        WireCallCenterCallStateNotification(callState: .terminating(reason: .normalSelf), conversationId: conversationId, userId: userId).post()
-    }
-    
-    @objc(ignoreCallForConversationID:)
-    public func ignoreCall(conversationId: UUID) {
-        wcall_end(conversationId.transportString())
-        WireCallCenterCallStateNotification(callState: .terminating(reason: .normalSelf), conversationId: conversationId, userId: userId).post()
+        WireCallCenterCallStateNotification(callState: .terminating(reason: started ? .normalSelf : .canceled), conversationId: conversationId, userId: userId).post()
     }
     
     @objc(toogleVideoForConversationID:isActive:)

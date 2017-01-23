@@ -154,7 +154,7 @@ extension VoiceChannelV3 : CallFlow {
     public func ignore() {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
         
-        WireCallCenterV3.activeInstance?.ignoreCall(conversationId: remoteIdentifier)
+        WireCallCenterV3.activeInstance?.closeCall(conversationId: remoteIdentifier)
     }
     
 }

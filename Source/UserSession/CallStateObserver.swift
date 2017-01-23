@@ -64,6 +64,10 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             }
             
             self.localNotificationDispatcher.process(callState: callState, in: conversation, sender: caller)
+            
+            if case .terminating(let reason) = callState, reason == .canceled || reason == .timeout {
+                conversation.appendMissedCallMessage(fromUser: caller, at: Date())
+            }
         }
     }
     
@@ -79,6 +83,8 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             }
             
             self.localNotificationDispatcher.processMissedCall(in: conversation, sender: caller)
+            
+            conversation.appendMissedCallMessage(fromUser: caller, at: timestamp)
         }
     }
     
