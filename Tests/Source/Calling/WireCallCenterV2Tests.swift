@@ -86,32 +86,24 @@ class WireCallCenterV2Tests : MessagingTest {
     override func setUp() {
         super.setUp()
         
-        uiMOC.performGroupedBlockAndWait {
-            let user1 = ZMUser.insertNewObject(in: self.uiMOC)
-            user1.name = "User 1"
-            user1.remoteIdentifier = UUID()
-            
-            self.user1 = user1
-            
-            let user2 = ZMUser.insertNewObject(in: self.uiMOC)
-            user2.name = "User 2"
-            user2.remoteIdentifier = UUID()
-            
-            self.user2 = user2
-            
-            let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
-            conversation.conversationType = .oneOnOne
-            conversation.remoteIdentifier = UUID()
-            conversation.internalAddParticipant(user1, isAuthoritative: true)
-            
-            self.conversation = conversation
-            
-            self.uiMOC.saveOrRollback()
-        }
+        user1 = ZMUser.insertNewObject(in: self.uiMOC)
+        user1.name = "User 1"
+        user1.remoteIdentifier = UUID()
+        
+        user2 = ZMUser.insertNewObject(in: self.uiMOC)
+        user2.name = "User 2"
+        user2.remoteIdentifier = UUID()
+        
+        conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.conversationType = .oneOnOne
+        conversation.remoteIdentifier = UUID()
+        conversation.internalAddParticipant(user1, isAuthoritative: true)
+        
+        self.uiMOC.saveOrRollback()
         
         sut = WireCallCenterV2(context: uiMOC)
     }
-    
+
     override func tearDown() {
         super.tearDown()
         
