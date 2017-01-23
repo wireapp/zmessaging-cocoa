@@ -129,11 +129,11 @@ class VoiceGainObserverToken : NSObject {
         
         super.init()
         
-        token = NotificationCenter.default.addObserver(forName: VoiceGainNotification.notificationName, object: nil, queue: .main) { (note) in
+        token = NotificationCenter.default.addObserver(forName: VoiceGainNotification.notificationName, object: nil, queue: .main) { [weak self] (note) in
             guard let note = note.userInfo?[VoiceGainNotification.userInfoKey] as? VoiceGainNotification else { return }
             guard let user = ZMUser(remoteID: note.userId, createIfNeeded: false, in: context), conversationId == note.conversationId  else { return }
             
-            observer.voiceGainDidChange(forParticipant: user, volume: note.volume)
+            self?.observer?.voiceGainDidChange(forParticipant: user, volume: note.volume)
         }
     }
     
@@ -166,6 +166,10 @@ class VoiceChannelParticipantsObserverToken : NSObject {
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(managedObjectContextDidChange(note:)),
                                                name: Notification.Name.NSManagedObjectContextObjectsDidChange, object: context)
+        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(callStateDidChange(note:)),
+                                               name: WireCallCenterV2.CallStateDidChangeNotification, object: nil)
     }
     
     @objc
@@ -177,6 +181,13 @@ class VoiceChannelParticipantsObserverToken : NSObject {
             if changedKeys.contains("callParticipants") || changedKeys.isEmpty {
                 recalculateSet()
             }
+        }
+    }
+    
+    @objc
+    func callStateDidChange(note: Notification) {
+        if let conversations = note.userInfo?["updated"] as? Set<ZMConversation>, conversations.contains(conversation), conversations.contains(conversation) {
+            recalculateSet()
         }
     }
     
@@ -269,10 +280,31 @@ class WireCallCenterV2ReceivedVideoObserverToken : NSObject {
     }
     
     func notifyObserverIfStateChanged() {
-        if state != previousState {
-            previousState = state
-            observer?.callCenterDidChange(receivedVideoState: state)
+        let newState = state
+        
+        if newState != previousState {
+            previousState = newState
+            context.performGroupedBlock {
+                self.observer?.callCenterDidChange(receivedVideoState: newState)
+            }
+            
         }
+    }
+    
+}
+
+class NotificationCenterObserverToken : NSObject {
+    
+    var token : AnyObject?
+    
+    deinit {
+        if let token = token {
+            NotificationCenter.default.removeObserver(token)
+        }
+    }
+    
+    init(name: NSNotification.Name, object: AnyObject?, queue: OperationQueue?, block: @escaping (_ note: Notification) -> Void) {
+        token = NotificationCenter.default.addObserver(forName: name, object: object, queue: queue, using: block)
     }
     
 }
@@ -311,9 +343,9 @@ public class WireCallCenterV2 : NSObject {
                                                object: nil)
     }
     
-    /// Add observer of the state of all voice channels. Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
+    /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
     public class func addVoiceChannelStateObserver(observer: WireCallCenterV2CallStateObserver, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
-        return NotificationCenter.default.addObserver(forName: VoiceChannelStateNotification.notificationName, object: nil, queue: nil) { [weak observer] (note) in
+        return NotificationCenterObserverToken(name: VoiceChannelStateNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
             if let note = note.userInfo?[VoiceChannelStateNotification.userInfoKey] as? VoiceChannelStateNotification {
                 context.performGroupedBlock {
                     guard let optionalConversation = try? context.existingObject(with: note.conversationId) as? ZMConversation, let conversation = optionalConversation else { return }

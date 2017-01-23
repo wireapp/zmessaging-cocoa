@@ -85,10 +85,6 @@ class VoiceChannelStateObserverToken : NSObject, WireCallCenterV2CallStateObserv
             WireCallCenterV3.removeObserver(token: token)
         }
         
-        if let token = tokenV2 {
-            WireCallCenterV2.removeObserver(token: token)
-        }
-        
         if let token = tokenJoinFailedV2 {
             NotificationCenter.default.removeObserver(token)
         }
