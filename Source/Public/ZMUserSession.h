@@ -24,6 +24,7 @@
 
 #import <zmessaging/ZMNetworkState.h>
 #import <ZMTransport/ZMTransportRequest.h>
+#import <zmessaging/CallingProtocol.h>
 
 @class ZMTransportSession;
 @class ZMSearchDirectory;
@@ -169,9 +170,10 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 
 
 @interface ZMUserSession (Calling)
-+ (BOOL)useCallKit;
-+ (void)setUseCallKit:(BOOL)useCallKit;
-+ (void)setEnableCallingV3:(BOOL)enableCallingV3;
+
+@property (class) BOOL useCallKit;
+@property (class) CallingProtocol callingProtocol;
+
 @end
 
 

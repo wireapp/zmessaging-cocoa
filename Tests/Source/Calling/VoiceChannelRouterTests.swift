@@ -44,55 +44,93 @@ class VoiceChannelRouterTests : MessagingTest {
     override func tearDown() {
         super.tearDown()
         
-        VoiceChannelRouter.isCallingV3Enabled = false
+        ZMUserSession.callingProtocol = .negotiate
         wireCallCenterMock = nil
     }
     
-    func testCurrenVoiceChannel_oneToOne_idle_callingV3Disabled() {
+    func testCurrenVoiceChannel_oneToOne_idle_version2Selected() {
         // given
         let sut = VoiceChannelRouter(conversation: conversation!)
         conversation?.conversationType = .oneOnOne
+        
+        // when
+        ZMUserSession.callingProtocol = .version2
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v2)
     }
     
-    func testCurrenVoiceChannel_oneToOne_idle_callingV3Enabled() {
+    func testCurrenVoiceChannel_oneToOne_idle_version3Selected() {
         // given
         let sut = VoiceChannelRouter(conversation: conversation!)
         conversation?.conversationType = .oneOnOne
-        VoiceChannelRouter.isCallingV3Enabled = true
+        
+        // when
+        ZMUserSession.callingProtocol = .version3
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v3)
     }
     
-    func testCurrenVoiceChannel_group_idle_callingV3Enabled() {
+    func testCurrenVoiceChannel_group_idle_version3Selected() {
         // given
         let sut = VoiceChannelRouter(conversation: conversation!)
         conversation?.conversationType = .group
-        VoiceChannelRouter.isCallingV3Enabled = true
+        
+        // when
+        ZMUserSession.callingProtocol = .version3
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v2)
     }
     
-    func testCurrenVoiceChannel_oneToOne_incomingV2Call_callingV3Enabled() {
+    func testCurrenVoiceChannel_oneToOne_incomingV2Call_version3Selected() {
         // given
         let sut = VoiceChannelRouter(conversation: conversation!)
         conversation?.conversationType = .oneOnOne
+        
+        // when
         conversation?.callDeviceIsActive = true
-        VoiceChannelRouter.isCallingV3Enabled = true
+        ZMUserSession.callingProtocol = .version3
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v2)
     }
     
-    func testCurrenVoiceChannel_oneToOne_incomingV3Call_callingV3Disabled() {
+    func testCurrenVoiceChannel_oneToOne_incomingV3Call_callingV2Selected() {
         // given
         let sut = VoiceChannelRouter(conversation: conversation!)
         conversation?.conversationType = .oneOnOne
+        
+        // when
         wireCallCenterMock?.callState = .incoming(video: false)
+        ZMUserSession.callingProtocol = .version2
+        
+        // then
+        XCTAssertTrue(sut.currentVoiceChannel === sut.v3)
+    }
+    
+    func testCurrenVoiceChannel_oneToOne_idle_version2Negotiated() {
+        // given
+        let sut = VoiceChannelRouter(conversation: conversation!)
+        conversation?.conversationType = .oneOnOne
+        
+        // when
+        ZMUserSession.callingProtocol = .negotiate
+        wireCallCenterMock?.overridenProtocolVersion = .version2
+        
+        // then
+        XCTAssertTrue(sut.currentVoiceChannel === sut.v2)
+    }
+    
+    func testCurrenVoiceChannel_oneToOne_idle_version3Negotiated() {
+        // given
+        let sut = VoiceChannelRouter(conversation: conversation!)
+        conversation?.conversationType = .oneOnOne
+        
+        // when
+        ZMUserSession.callingProtocol = .negotiate
+        wireCallCenterMock?.overridenProtocolVersion = .version3
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v3)

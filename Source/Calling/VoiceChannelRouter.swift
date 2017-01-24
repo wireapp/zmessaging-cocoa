@@ -23,7 +23,7 @@ extension VoiceChannelV2 : VoiceChannel { }
 
 public class VoiceChannelRouter : NSObject, VoiceChannel {
     
-    public static var isCallingV3Enabled : Bool = false
+    private let zmLog = ZMSLog(tag: "calling")
     
     public let v3 : VoiceChannelV3
     public let v2 : VoiceChannelV2
@@ -44,7 +44,20 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
             return v3
         }
         
-        return VoiceChannelRouter.isCallingV3Enabled ? v3 : v2
+        switch ZMUserSession.callingProtocol {
+        case .negotiate:
+            guard let protocolVersion = WireCallCenterV3.activeInstance?.protocolVersion else {
+                zmLog.warn("Attempt to use voice channel without an active call center")
+                return v2
+            }
+            
+            switch protocolVersion {
+            case .version2: return v2
+            case .version3: return v3
+            }
+        case .version2: return v2
+        case .version3: return v3
+        }
     }
     
     public var conversation: ZMConversation? {

@@ -36,8 +36,6 @@ public protocol ReceivedVideoObserver : class {
     
 }
 
-
-
 @objc
 public protocol VoiceChannelStateObserver : class {
     

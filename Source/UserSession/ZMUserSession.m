@@ -53,6 +53,7 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMLocalNotificationDispatcher.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
+#import "CallingProtocol.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
@@ -1032,9 +1033,16 @@ static BOOL ZMUserSessionUseCallKit = NO;
     ZMUserSessionUseCallKit = useCallKit;
 }
 
-+ (void)setEnableCallingV3:(BOOL)enableCallingV3
+static CallingProtocol ZMUserSessionCallingProtocol = CallingProtocolNegotiate;
+
++ (CallingProtocol)callingProtocol
 {
-    [VoiceChannelRouter setIsCallingV3Enabled:enableCallingV3];
+    return ZMUserSessionCallingProtocol;
+}
+
++ (void)setCallingProtocol:(CallingProtocol)callingProtocol
+{
+    ZMUserSessionCallingProtocol = callingProtocol;
 }
 
 @end

@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -57,7 +57,7 @@ public extension ZMLocalNotificationForEvent {
         case .userContactJoin:
             return ZMLocalNotificationForNewUserEvent(events: [event], conversation: conversation,  managedObjectContext: managedObjectContext, application: application)
         case .callState:
-            if !ZMUserSession.useCallKit() {
+            if !ZMUserSession.useCallKit {
                 return ZMLocalNotificationForCallEvent(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application: application, sessionTracker: sessionTracker)
             }
             else {
