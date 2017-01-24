@@ -1075,11 +1075,14 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
                               @"notifications" : @[]};
     
     // when
-    [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil] forSingleRequest:nil];
-    
+    [self performPretendingUiMocIsSyncMoc:^{
+        [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil] forSingleRequest:nil];
+    }];
     
     // then
-    XCTAssertEqualWithAccuracy(self.sut.managedObjectContext.serverTimeDelta, delta, 1);
+    [self performPretendingUiMocIsSyncMoc:^{
+        XCTAssertEqualWithAccuracy(self.sut.managedObjectContext.serverTimeDelta, delta, 1);
+    }];
 }
 
 @end
