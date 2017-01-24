@@ -39,11 +39,7 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     override public func closeCall(conversationId: UUID) {
         
     }
-    
-    override public func ignoreCall(conversationId: UUID) {
         
-    }
-    
     override public func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
         
     }
