@@ -99,13 +99,21 @@ extension UserProfileUpdateStatusTests {
         // WHEN
         do {
             try self.sut.requestSettingEmailAndPassword(credentials: credentials)
-            XCTFail("Should have thrown")
         } catch {
+            XCTFail("Should not throw")
             return
         }
-        
-        // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
+        XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
+        guard let first = self.observer.invokedCallbacks.first else { return }
+        switch first {
+        case .emailUpdateDidFail(error: UserProfileUpdateError.emailAlreadySet):
+            break
+        default:
+            XCTFail()
+        }
     }
     
     func testThatItCanCancelSettingEmailAndPassword() {

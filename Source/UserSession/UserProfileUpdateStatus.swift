@@ -103,17 +103,13 @@ extension UserProfileUpdateStatus : UserProfile {
             throw UserProfileUpdateError.missingArgument
         }
         
-        
-        let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
-        guard selfUser.emailAddress == nil else {
-            self.managedObjectContext.performGroupedBlock {
-                self.emailToSet = nil
-                self.passwordToSet = nil
-            }
-            throw UserProfileUpdateError.emailAlreadySet
-        }
-
         self.managedObjectContext.performGroupedBlock {
+            let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
+            guard selfUser.emailAddress == nil else {
+                self.didFailEmailUpdate(error: UserProfileUpdateError.emailAlreadySet)
+                return
+            }
+            
             self.lastEmailAndPassword = credentials
             
             self.emailToSet = email
