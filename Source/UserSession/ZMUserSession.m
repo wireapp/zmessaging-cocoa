@@ -237,7 +237,8 @@ ZM_EMPTY_ASSERTING_INIT()
         syncMOC.analytics = analytics;
     }];
 
-    self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] init];
+    NSURL *sharedContainerURL = [self.class sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
+    self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithSharedContainerURL:sharedContainerURL];
     UIApplication *application = [UIApplication sharedApplication];
     
     ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL
