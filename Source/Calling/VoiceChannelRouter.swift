@@ -44,14 +44,14 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
             return v3
         }
         
-        switch ZMUserSession.callingProtocol {
+        switch ZMUserSession.callingProtocolStrategy {
         case .negotiate:
-            guard let protocolVersion = WireCallCenterV3.activeInstance?.protocolVersion else {
+            guard let callingProtocol = WireCallCenterV3.activeInstance?.callingProtocol else {
                 zmLog.warn("Attempt to use voice channel without an active call center")
                 return v2
             }
             
-            switch protocolVersion {
+            switch callingProtocol {
             case .version2: return v2
             case .version3: return v3
             }

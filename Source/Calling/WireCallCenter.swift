@@ -19,6 +19,12 @@
 import Foundation
 
 @objc
+public enum CallingProtocol : Int {
+    case version2 = 2
+    case version3 = 3
+}
+
+@objc
 public enum ReceivedVideoState : UInt {
     /// Sender is not sending video
     case stopped
@@ -39,12 +45,12 @@ public protocol ReceivedVideoObserver : class {
 @objc
 public protocol VoiceChannelStateObserver : class {
     
-    @objc(callCenterDidChangeVoiceChannelState:conversation:)
-    func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation)
+    @objc(callCenterDidChangeVoiceChannelState:conversation:callingProtocol:)
+    func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol)
     
     func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation)
     
-    func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation)
+    func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol)
     
 }
 
@@ -112,7 +118,7 @@ class VoiceChannelStateObserverToken : NSObject, WireCallCenterV2CallStateObserv
             guard let note = note.userInfo?[CallEndedNotification.userInfoKey] as? CallEndedNotification else { return }
             
             if let conversation = ZMConversation(remoteID: note.conversationId, createIfNeeded: false, in: context) {
-                observer?.callCenterDidEndCall(reason: note.reason, conversation: conversation)
+                observer?.callCenterDidEndCall(reason: note.reason, conversation: conversation, callingProtocol: .version2)
             }
         })
     }
@@ -120,15 +126,15 @@ class VoiceChannelStateObserverToken : NSObject, WireCallCenterV2CallStateObserv
     func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
         guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: context) else { return }
         
-        observer?.callCenterDidChange(voiceChannelState: callState.voiceChannelState, conversation: conversation)
+        observer?.callCenterDidChange(voiceChannelState: callState.voiceChannelState, conversation: conversation, callingProtocol: .version3)
         
         if case let .terminating(reason: reason) = callState {
-            observer?.callCenterDidEndCall(reason: reason.voiceChannelCallEndReason, conversation: conversation)
+            observer?.callCenterDidEndCall(reason: reason.voiceChannelCallEndReason, conversation: conversation, callingProtocol: .version3)
         }
     }
     
     func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation) {
-        observer?.callCenterDidChange(voiceChannelState: voiceChannelState, conversation: conversation)
+        observer?.callCenterDidChange(voiceChannelState: voiceChannelState, conversation: conversation, callingProtocol: .version2)
     }
     
 }
@@ -148,9 +154,9 @@ class VoiceChannelStateObserverFilter : NSObject,  VoiceChannelStateObserver {
         self.token = VoiceChannelStateObserverToken(context: context, observer: self)
     }
     
-    func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation) {
+    func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
         if conversation == observedConversation {
-            observer?.callCenterDidChange(voiceChannelState: voiceChannelState, conversation: conversation)
+            observer?.callCenterDidChange(voiceChannelState: voiceChannelState, conversation: conversation, callingProtocol: callingProtocol)
         }
     }
     
@@ -160,9 +166,9 @@ class VoiceChannelStateObserverFilter : NSObject,  VoiceChannelStateObserver {
         }
     }
     
-    func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation) {
+    func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol) {
         if conversation == observedConversation {
-            observer?.callCenterDidEndCall(reason: reason, conversation: conversation)
+            observer?.callCenterDidEndCall(reason: reason, conversation: conversation, callingProtocol: callingProtocol)
         }
     }
 }
