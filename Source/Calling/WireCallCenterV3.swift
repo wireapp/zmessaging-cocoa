@@ -50,6 +50,11 @@ private class Box<T : Any> {
     }
 }
 
+public enum CallingProtocolVersion : Int {
+    case version2 = 2
+    case version3 = 3
+}
+
 public enum CallClosedReason : Int32 {
     /// Ongoing call was closed by remote
     case normal
@@ -243,6 +248,8 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     
     public weak var transport : WireCallCenterTransport? = nil
     
+    public private(set) var protocolVersion : CallingProtocolVersion = .version2
+    
     deinit {
         wcall_close()
     }
@@ -265,9 +272,13 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                 clientId,
                 { (version, context) in
                     if let context = context {
-                        _ = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
+                        let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
                         
-                        
+                        if let protocolVersion = CallingProtocolVersion(rawValue: Int(version)) {
+                            selfReference.protocolVersion = protocolVersion
+                        } else {
+                            selfReference.zmLog.error("wcall initialized with unknown protocol version: \(version)")
+                        }
                     }
                 },
                 { (token, conversationId, userId, clientId, data, dataLength, context) in

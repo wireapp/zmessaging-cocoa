@@ -52,7 +52,7 @@ public final class CallStateObserver : NSObject {
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
-        guard !ZMUserSession.useCallKit() else { return }
+        guard !ZMUserSession.useCallKit else { return }
         
         managedObjectContext.performGroupedBlock {
             guard
@@ -72,7 +72,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
     }
     
     public func callCenterMissedCall(conversationId: UUID, userId: UUID, timestamp: Date, video: Bool) {
-        guard !ZMUserSession.useCallKit() else { return }
+        guard !ZMUserSession.useCallKit else { return }
         
         managedObjectContext.performGroupedBlock {
             guard

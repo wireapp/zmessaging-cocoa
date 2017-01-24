@@ -113,7 +113,7 @@ class ZMCallKitDelegateTest: MessagingTest { // FIXME update these test for v2 a
     
     override func setUp() {
         super.setUp()
-        ZMUserSession.setUseCallKit(true)
+        ZMUserSession.useCallKit = true
         
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
         selfUser.emailAddress = "self@user.mail"
@@ -133,7 +133,7 @@ class ZMCallKitDelegateTest: MessagingTest { // FIXME update these test for v2 a
     
     override func tearDown() {
         super.tearDown()
-        ZMUserSession.setUseCallKit(false)
+        ZMUserSession.useCallKit = false
         self.sut = nil
     }
     
