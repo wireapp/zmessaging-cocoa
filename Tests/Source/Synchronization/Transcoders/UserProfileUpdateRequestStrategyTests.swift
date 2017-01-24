@@ -121,7 +121,7 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertEqual(request, expected)
     }
     
-    func tetThatItCreatesARequestToUpdateEmailAfterUpdatingPassword() {
+    func testThatItCreatesARequestToUpdateEmailAfterUpdatingPassword() {
         
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")
