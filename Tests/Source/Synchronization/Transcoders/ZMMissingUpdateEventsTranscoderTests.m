@@ -1060,3 +1060,26 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 }
 
 @end
+
+
+@implementation ZMMissingUpdateEventsTranscoderTests (ServerTimeDelta)
+
+- (void)testThatServerTimeDeltaIsUpdatedWhenTimeFieldIsPresent
+{
+    // given
+    NSTimeInterval delta = 500;
+    NSDate *localTime = [NSDate date];
+    NSDate *serverTime = [localTime dateByAddingTimeInterval:delta];
+    
+    NSDictionary *payload = @{@"time": [serverTime transportString],
+                              @"notifications" : @[]};
+    
+    // when
+    [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil] forSingleRequest:nil];
+    
+    
+    // then
+    XCTAssertEqualWithAccuracy(self.sut.managedObjectContext.serverTimeDelta, delta, 1);
+}
+
+@end

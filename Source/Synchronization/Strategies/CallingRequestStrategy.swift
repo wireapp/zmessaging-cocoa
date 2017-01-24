@@ -88,6 +88,9 @@ extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTracke
 extension CallingRequestStrategy : ZMEventConsumer {
     
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
+        
+        let serverTimeDelta = managedObjectContext.serverTimeDelta
+        
         for event in events {
             guard event.type == .conversationOtrMessageAdd else { continue }
             
@@ -104,7 +107,12 @@ extension CallingRequestStrategy : ZMEventConsumer {
                     continue
                 }
                 
-                callCenter?.received(data: payload, currentTimestamp: Date(), serverTimestamp: eventTimestamp, conversationId: conversationUUID, userId: senderUUID, clientId: clientId)
+                callCenter?.received(data: payload,
+                                     currentTimestamp: Date().addingTimeInterval(serverTimeDelta),
+                                     serverTimestamp: eventTimestamp,
+                                     conversationId: conversationUUID,
+                                     userId: senderUUID,
+                                     clientId: clientId)
             }
         }
     }
