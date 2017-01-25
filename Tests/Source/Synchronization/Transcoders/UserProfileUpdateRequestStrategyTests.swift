@@ -121,6 +121,26 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertEqual(request, expected)
     }
     
+    func testThatItCreatesARequestToChangeEmail() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.emailAddress = "foo@email.com"
+
+        let newEmail = "mario@example.com"
+        try! self.userProfileUpdateStatus.requestEmailChange(email: newEmail)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        
+        // THEN
+        XCTAssertEqual(request?.path, "/self/email")
+        XCTAssertEqual(request?.method, .methodPUT)
+        let emailInPayload = request?.payload?.asDictionary()?["email"] as? String
+        XCTAssertEqual(emailInPayload, newEmail)
+    }
+    
     func testThatItCreatesARequestToUpdateEmailAfterUpdatingPassword() {
         
         // GIVEN
