@@ -34,6 +34,9 @@ import Foundation
     /// - throws: if the email is not already set, or if empty email is passed
     func requestEmailChange(email: String) throws
     
+    /// Requests email removal
+    func requestEmailRemoval()
+
     /// Requests to set an email and password, for a user that does not have either.
     /// Once this is called, we expect the user to eventually verify the email externally.
     /// - throws: if the email was already set, or if empty credentials are passed
