@@ -147,7 +147,7 @@
 - (void)tearDownVoiceChannelForConversation:(ZMConversation *)conversation
 {
     ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext existingObjectWithID:conversation.objectID error:nil];
-    [syncConv.voiceChannel.v2 tearDown];
+    [syncConv.voiceChannelRouter.v2 tearDown];
 }
 
 - (BOOL)lastRequestContainsSelfStateJoined
@@ -200,14 +200,14 @@
 - (void)selfJoinCall
 {
     [self.userSession enqueueChanges:^{
-        [self.conversationUnderTest.voiceChannel joinWithVideo:NO];
+        [self.conversationUnderTest.voiceChannelRouter.v2 joinWithVideo:NO];
     }];
 }
 
 - (void)selfDropCall
 {
     [self.userSession enqueueChanges:^{
-        [self.conversationUnderTest.voiceChannel leave];
+        [self.conversationUnderTest.voiceChannelRouter.v2 leave];
     }];
 }
 
@@ -547,7 +547,7 @@
     // (2) we ignore
     // when
     [self.userSession performChanges:^{
-        [oneToOneConversation.voiceChannel ignore];
+        [oneToOneConversation.voiceChannelRouter.v2 ignore];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -610,7 +610,7 @@
     // (2) we ignore
     // when
     [self.userSession performChanges:^{
-        [oneToOneConversation.voiceChannel ignore];
+        [oneToOneConversation.voiceChannelRouter.v2 ignore];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1955,7 +1955,7 @@
 
     // when
     [self.userSession performChanges:^{
-        [bigGroupConversation.voiceChannel joinWithVideo:NO];
+        [bigGroupConversation.voiceChannelRouter.v2 joinWithVideo:NO];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5f);
@@ -2023,7 +2023,7 @@
     
     // when
     [self.userSession performChanges:^{
-        [bigGroupConversation.voiceChannel joinWithVideo:NO];
+        [bigGroupConversation.voiceChannelRouter.v2 joinWithVideo:NO];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5f);
@@ -2496,7 +2496,7 @@
     
     // when: it tries to join
     [self.userSession performChanges:^{
-        [conversation.voiceChannel joinWithVideo:NO];
+        [conversation.voiceChannelRouter.v2 joinWithVideo:NO];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2511,7 +2511,7 @@
     
     // when: it tries to join again
     [self.userSession performChanges:^{
-        [conversation.voiceChannel joinWithVideo:NO];
+        [conversation.voiceChannelRouter.v2 joinWithVideo:NO];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2653,7 +2653,7 @@
 
     // when
     [self.userSession performChanges:^{
-        [self.conversationUnderTest.voiceChannel ignore];
+        [self.conversationUnderTest.voiceChannelRouter.v2 ignore];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

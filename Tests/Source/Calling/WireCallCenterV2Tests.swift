@@ -143,7 +143,7 @@ class WireCallCenterV2Tests : MessagingTest {
         token = WireCallCenterV2.addVoiceChannelStateObserver(observer: observer, context: uiMOC)
         
         // when
-        conversation.voiceChannel?.v2.addCallParticipant(user1)
+        conversation.voiceChannelRouter?.v2.addCallParticipant(user1)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -156,10 +156,10 @@ class WireCallCenterV2Tests : MessagingTest {
         token = WireCallCenterV2.addVoiceChannelStateObserver(observer: observer, context: uiMOC)
         
         // when
-        conversation.voiceChannel?.v2.addCallParticipant(user1)
+        conversation.voiceChannelRouter?.v2.addCallParticipant(user1)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        conversation.voiceChannel?.v2.addCallParticipant(user2)
+        conversation.voiceChannelRouter?.v2.addCallParticipant(user2)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -174,7 +174,7 @@ class WireCallCenterV2Tests : MessagingTest {
         token = WireCallCenterV2.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation, context: uiMOC)
         
         // when
-        conversation.voiceChannel?.v2.addCallParticipant(user1)
+        conversation.voiceChannelRouter?.v2.addCallParticipant(user1)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -187,10 +187,10 @@ class WireCallCenterV2Tests : MessagingTest {
         token = WireCallCenterV2.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation, context: uiMOC)
         
         // when
-        conversation.voiceChannel?.v2.addCallParticipant(user1)
+        conversation.voiceChannelRouter?.v2.addCallParticipant(user1)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        conversation.voiceChannel?.v2.removeCallParticipant(user1)
+        conversation.voiceChannelRouter?.v2.removeCallParticipant(user1)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -204,7 +204,7 @@ class WireCallCenterV2Tests : MessagingTest {
         token = WireCallCenterV2.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation, context: uiMOC)
         
         // when
-        conversation.voiceChannel?.v2.addCallParticipant(user1)
+        conversation.voiceChannelRouter?.v2.addCallParticipant(user1)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         conversation.activeFlowParticipants = NSOrderedSet(array: [user1])

@@ -25,14 +25,14 @@
 - (void)selfJoinVideoCall
 {
     [self.userSession enqueueChanges:^{
-        [self.conversationUnderTest.voiceChannel joinWithVideo:YES];
+        [self.conversationUnderTest.voiceChannelRouter.v2 joinWithVideo:YES];
     }];
 }
 
 - (void)selfDropVideoCall
 {
     [self.userSession enqueueChanges:^{
-        [self.conversationUnderTest.voiceChannel leave];
+        [self.conversationUnderTest.voiceChannelRouter.v2 leave];
     }];
 }
 
@@ -50,7 +50,7 @@
     [self.mockFlowManager simulateMediaIsEstablishedInConversation:self.mockConversationUnderTest];
     [self.userSession performChanges:^{
         NSError *error;
-        [self.conversationUnderTest.voiceChannel.v2 setVideoSendActive:activates error:&error];
+        [self.conversationUnderTest.voiceChannelRouter.v2 setVideoSendActive:activates error:&error];
         if (error != nil) {
             XCTFail(@"%@", error.description);
         }
@@ -300,7 +300,7 @@
     {
         // when
         [self.userSession performChanges:^{
-            [oneToOneConversation.voiceChannel ignore];
+            [oneToOneConversation.voiceChannelRouter.v2 ignore];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         
@@ -426,7 +426,7 @@
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     id observer = [OCMockObject niceMockForProtocol:@protocol(CallingInitialisationObserver)];
-    id token = [self.conversationUnderTest.voiceChannel.v2 addCallingInitializationObserver:observer]; // FIXME only work with v2
+    id token = [self.conversationUnderTest.voiceChannelRouter.v2 addCallingInitializationObserver:observer]; // FIXME only work with v2
     
     // when
     [self otherJoinVideoCall];
@@ -469,7 +469,7 @@
     XCTAssertTrue([self didResetCallingStateForConversation:self.conversationUnderTest]);
     
     [observer verify];
-    [self.conversationUnderTest.voiceChannel.v2 removeCallingInitialisationObserver:token];
+    [self.conversationUnderTest.voiceChannelRouter.v2 removeCallingInitialisationObserver:token];
 }
 
 // FIXME

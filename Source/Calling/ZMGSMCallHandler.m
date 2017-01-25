@@ -156,7 +156,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     //    cause: interrupted
     //  }
     //
-    [self.activeCallUIConversation.voiceChannel.v2 join];
+    [self.activeCallUIConversation.voiceChannelRouter.v2 join];
     [self.uiManagedObjectContext saveOrRollback];
 }
 
@@ -173,12 +173,12 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     
     
     if (storedConversation.voiceChannel.participants.count > 0) {
-        [storedConversation.voiceChannel.v2 join];
+        [storedConversation.voiceChannelRouter.v2 join];
     } else if (storedConversation.callDeviceIsActive) {
         // in case we received a force idle (disconnected) without the self dictionary (bug on the BE)
         // we would have no call participants, but callDeviceIsActive would be still set
         // we need to hang up properly
-        [storedConversation.voiceChannel.v2 leave];
+        [storedConversation.voiceChannelRouter.v2 leave];
     }
     [self.uiManagedObjectContext enqueueDelayedSave];
 }

@@ -30,10 +30,8 @@
 #import <zmessaging/ZMSearchRequest.h>
 #import <zmessaging/ZMBareUser+UserSession.h>
 #import <zmessaging/ZMSearchDirectory.h>
-#import <zmessaging/VoiceChannelV2+CallFlow.h>
 #import <zmessaging/ZMTypingUsers.h>
 #import <zmessaging/ZMOnDemandFlowManager.h>
-#import <zmessaging/VoiceChannelV2.h>
 #import <zmessaging/CallingProtocolStrategy.h>
 
 
@@ -66,7 +64,9 @@
 #import <zmessaging/ZMTyping.h>
 #import <zmessaging/ZMUserIDsForSearchDirectoryTable.h>
 #import <zmessaging/ZMSearchDirectory+Internal.h>
+#import <zmessaging/VoiceChannelV2.h>
 #import <zmessaging/VoiceChannelV2+Internal.h>
 #import <zmessaging/VoiceChannelV2+VideoCalling.h>
+#import <zmessaging/VoiceChannelV2+CallFlow.h>
 #import <zmessaging/ZMAVSBridge.h>
 

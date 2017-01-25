@@ -52,7 +52,7 @@ extension VoiceChannelV2 {
                 uiConv.callTimedOut = true;
             }
             else if (uiConv.conversationType == .oneOnOne && uiConv.isOutgoingCall) {
-                uiConv.voiceChannel?.v2.leave()
+                uiConv.voiceChannelRouter?.v2.leave()
             }
             uiContext?.enqueueDelayedSave()
         }

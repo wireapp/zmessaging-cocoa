@@ -19,7 +19,24 @@
 import Foundation
 import avs
 
-extension VoiceChannelV2 : VoiceChannel { }
+@objc(ZMCaptureDevice)
+public enum CaptureDevice : Int {
+    case front
+    case back
+    
+    var deviceIdentifier : String {
+        switch  self {
+        case .front:
+            return "com.apple.avfoundation.avcapturedevice.built-in_video:1"
+        case .back:
+            return "com.apple.avfoundation.avcapturedevice.built-in_video:0"
+        }
+    }
+}
+
+extension VoiceChannelV2 : VoiceChannelInternal { }
+
+extension VoiceChannelV3 : VoiceChannelInternal { }
 
 public class VoiceChannelRouter : NSObject, VoiceChannel {
     
@@ -35,7 +52,7 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
         super.init()
     }
     
-    public var currentVoiceChannel : VoiceChannel {
+    public var currentVoiceChannel : VoiceChannelInternal {
         if v2.state != .noActiveUsers || v2.conversation?.conversationType != .oneOnOne {
             return v2
         }
@@ -82,6 +99,79 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
     
     public func state(forParticipant participant: ZMUser) -> VoiceChannelV2ParticipantState {
         return currentVoiceChannel.state(forParticipant: participant)
+    }
+    
+    public var isVideoCall: Bool {
+        return currentVoiceChannel.isVideoCall
+    }
+    
+    public func toggleVideo(active: Bool) throws {
+        try currentVoiceChannel.toggleVideo(active: active)
+    }
+    
+    public func setVideoCaptureDevice(device: CaptureDevice) throws {
+        guard let flowManager = ZMAVSBridge.flowManagerInstance(), flowManager.isReady() else { throw VoiceChannelV2Error.noFlowManagerError() }
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.switchToVideoNotAllowedError() }
+        
+        flowManager.setVideoCaptureDevice(device.deviceIdentifier, forConversation: remoteIdentifier.transportString())
+    }
+    
+}
+
+extension VoiceChannelRouter : CallObservers {
+    
+    /// Add observer of voice channel state. Returns a token which needs to be retained as long as the observer should be active.
+    public func addStateObserver(_ observer: VoiceChannelStateObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceChannelStateObserver(conversation: conversation!, observer: observer, context: conversation!.managedObjectContext!)
+    }
+    
+    /// Add observer of voice channel participants. Returns a token which needs to be retained as long as the observer should be active.
+    public func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
+    /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
+    public func addVoiceGainObserver(_ observer: VoiceGainObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceGainObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
+    /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
+    public func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addReceivedVideoObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
+    /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
+    public class func addStateObserver(_ observer: VoiceChannelStateObserver, userSession: ZMUserSession) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceChannelStateObserver(observer: observer, context: userSession.managedObjectContext!)
+    }
+    
+}
+
+extension VoiceChannelRouter : CallActions {
+    
+    public func join(video: Bool, userSession: ZMUserSession) -> Bool {
+        if ZMUserSession.useCallKit {
+            userSession.callKitDelegate.requestStartCall(in: conversation!, videoCall: video)
+            return true
+        } else {
+            return currentVoiceChannel.join(video: video)
+        }
+    }
+    
+    public func leave(userSession: ZMUserSession) {
+        if ZMUserSession.useCallKit {
+            userSession.callKitDelegate.requestEndCall(in: conversation!)
+        } else {
+            return currentVoiceChannel.leave()
+        }
+    }
+    
+    public func ignore(userSession: ZMUserSession) {
+        if ZMUserSession.useCallKit {
+            userSession.callKitDelegate.requestEndCall(in: conversation!)
+        } else {
+            return currentVoiceChannel.ignore()
+        }
     }
     
 }
