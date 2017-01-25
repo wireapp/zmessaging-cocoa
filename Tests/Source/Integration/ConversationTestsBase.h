@@ -49,6 +49,8 @@
                         onRemoteMessageCreatedWith:(void(^)())createMessage
                                 verifyWithObserver:(void(^)(ZMConversation *, ConversationChangeObserver *))verifyConversation;
 
+- (NSURL *)createTestFile:(NSString *)name;
+
 @property (nonatomic) MockConversation *groupConversationWithOnlyConnected;
 @property (nonatomic) NSMutableArray *receivedConversationWindowChangeNotifications;
 

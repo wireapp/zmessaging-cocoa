@@ -1484,8 +1484,40 @@
     XCTAssertEqual(message2.conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
     
     XCTAssertEqual(message1.deliveryState, ZMDeliveryStateFailedToSend);
+}
+
+- (void)testThatItDoesNotSendAnUploadedFailedMessageForFileMessagesUploadingThePlaceholderWhenDegrading
+{
+    // Given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+
+    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+
+    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    WaitForEverythingToBeDoneWithTimeout(0.5);
 
 
+    [self makeConversationSecured:conversation];
+
+    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:NO];
+    WaitForEverythingToBeDoneWithTimeout(0.5);
+
+    // When
+    __block ZMAssetClientMessage *message;
+    [self.userSession performChanges:^{
+        NSURL *fileURL = [self createTestFile:self.name];
+        ZMFileMetadata *fileMetadata = [[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil];
+        message = (ZMAssetClientMessage *)[conversation appendMessageWithFileMetadata:fileMetadata];
+    }];
+
+    WaitForEverythingToBeDoneWithTimeout(0.5);
+
+    // Then
+    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+    XCTAssert(message.isExpired);
+    XCTAssertEqual(message.uploadState, ZMAssetUploadStateDone);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateFailedUpload);
 }
 
 - (void)testThatItInsertsNewClientSystemMessageWhenReceivedMissingClients
