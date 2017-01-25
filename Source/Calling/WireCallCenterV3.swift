@@ -140,7 +140,7 @@ public enum CallState : Equatable {
         case WCALL_STATE_TERMINATING:
             self = .terminating(reason: .unknown)
         default:
-            self = .none
+            self = .none // FIXME check with AVS when WCALL_STATE_UNKNOWN can happen
         }
     }
 }
