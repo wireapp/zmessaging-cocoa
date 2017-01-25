@@ -23,10 +23,10 @@ import Foundation
 public class WireCallCenterV3Mock : WireCallCenterV3 {
     
     public var callState : CallState = .none
-    public var overridenProtocolVersion : CallingProtocolVersion = .version2
+    public var overridenCallingProtocol : CallingProtocol = .version2
     
-    public override var protocolVersion: CallingProtocolVersion {
-        return overridenProtocolVersion
+    public override var callingProtocol: CallingProtocol {
+        return overridenCallingProtocol
     }
     
     public required init(userId: UUID, clientId: String, registerObservers: Bool) {

@@ -16,8 +16,8 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-typedef NS_ENUM(NSUInteger, CallingProtocol) {
-    CallingProtocolNegotiate = 0,
-    CallingProtocolVersion2,
-    CallingProtocolVersion3
+typedef NS_ENUM(NSUInteger, CallingProtocolStrategy) {
+    CallingProtocolStrategyNegotiate = 0,
+    CallingProtocolStrategyVersion2,
+    CallingProtocolStrategyVersion3
 };

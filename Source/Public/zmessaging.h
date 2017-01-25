@@ -34,7 +34,7 @@
 #import <zmessaging/ZMTypingUsers.h>
 #import <zmessaging/ZMOnDemandFlowManager.h>
 #import <zmessaging/VoiceChannelV2.h>
-#import <zmessaging/CallingProtocol.h>
+#import <zmessaging/CallingProtocolStrategy.h>
 
 
 // PRIVATE

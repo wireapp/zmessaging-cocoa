@@ -44,7 +44,7 @@ class VoiceChannelRouterTests : MessagingTest {
     override func tearDown() {
         super.tearDown()
         
-        ZMUserSession.callingProtocol = .negotiate
+        ZMUserSession.callingProtocolStrategy = .negotiate
         wireCallCenterMock = nil
     }
     
@@ -54,7 +54,7 @@ class VoiceChannelRouterTests : MessagingTest {
         conversation?.conversationType = .oneOnOne
         
         // when
-        ZMUserSession.callingProtocol = .version2
+        ZMUserSession.callingProtocolStrategy = .version2
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v2)
@@ -66,7 +66,7 @@ class VoiceChannelRouterTests : MessagingTest {
         conversation?.conversationType = .oneOnOne
         
         // when
-        ZMUserSession.callingProtocol = .version3
+        ZMUserSession.callingProtocolStrategy = .version3
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v3)
@@ -78,7 +78,7 @@ class VoiceChannelRouterTests : MessagingTest {
         conversation?.conversationType = .group
         
         // when
-        ZMUserSession.callingProtocol = .version3
+        ZMUserSession.callingProtocolStrategy = .version3
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v2)
@@ -91,7 +91,7 @@ class VoiceChannelRouterTests : MessagingTest {
         
         // when
         conversation?.callDeviceIsActive = true
-        ZMUserSession.callingProtocol = .version3
+        ZMUserSession.callingProtocolStrategy = .version3
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v2)
@@ -104,7 +104,7 @@ class VoiceChannelRouterTests : MessagingTest {
         
         // when
         wireCallCenterMock?.callState = .incoming(video: false)
-        ZMUserSession.callingProtocol = .version2
+        ZMUserSession.callingProtocolStrategy = .version2
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v3)
@@ -116,8 +116,8 @@ class VoiceChannelRouterTests : MessagingTest {
         conversation?.conversationType = .oneOnOne
         
         // when
-        ZMUserSession.callingProtocol = .negotiate
-        wireCallCenterMock?.overridenProtocolVersion = .version2
+        ZMUserSession.callingProtocolStrategy = .negotiate
+        wireCallCenterMock?.overridenCallingProtocol = .version2
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v2)
@@ -129,8 +129,8 @@ class VoiceChannelRouterTests : MessagingTest {
         conversation?.conversationType = .oneOnOne
         
         // when
-        ZMUserSession.callingProtocol = .negotiate
-        wireCallCenterMock?.overridenProtocolVersion = .version3
+        ZMUserSession.callingProtocolStrategy = .negotiate
+        wireCallCenterMock?.overridenCallingProtocol = .version3
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v3)

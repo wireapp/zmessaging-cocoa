@@ -28,7 +28,6 @@
 
 #import "ZMUserSession+Internal.h"
 #import "ZMSyncStrategy.h"
-//#import "ZMOperationLoop.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
 #import "ZMSearchDirectory+Internal.h"
@@ -53,7 +52,7 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMLocalNotificationDispatcher.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
-#import "CallingProtocol.h"
+#import "CallingProtocolStrategy.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
@@ -1033,16 +1032,16 @@ static BOOL ZMUserSessionUseCallKit = NO;
     ZMUserSessionUseCallKit = useCallKit;
 }
 
-static CallingProtocol ZMUserSessionCallingProtocol = CallingProtocolNegotiate;
+static CallingProtocolStrategy ZMUserSessionCallingProtocolStrategy = CallingProtocolStrategyNegotiate;
 
-+ (CallingProtocol)callingProtocol
++ (CallingProtocolStrategy)callingProtocolStrategy
 {
-    return ZMUserSessionCallingProtocol;
+    return ZMUserSessionCallingProtocolStrategy;
 }
 
-+ (void)setCallingProtocol:(CallingProtocol)callingProtocol
++ (void)setCallingProtocolStrategy:(CallingProtocolStrategy)callingProtocolStrategy
 {
-    ZMUserSessionCallingProtocol = callingProtocol;
+    ZMUserSessionCallingProtocolStrategy = callingProtocolStrategy;
 }
 
 @end
