@@ -128,11 +128,11 @@ public enum CallState : Equatable {
     init(wcallState: Int32) {
         switch wcallState {
         case WCALL_STATE_NONE:
-            self =  .none
+            self = .none
         case WCALL_STATE_INCOMING:
             self = .incoming(video: false)
         case WCALL_STATE_OUTGOING:
-            self =  .outgoing
+            self = .outgoing
         case WCALL_STATE_ANSWERED:
             self = .answered
         case WCALL_STATE_MEDIA_ESTAB:
@@ -140,7 +140,7 @@ public enum CallState : Equatable {
         case WCALL_STATE_TERMINATING:
             self = .terminating(reason: .unknown)
         default:
-            self = .unknown
+            self = .none // FIXME check with AVS when WCALL_STATE_UNKNOWN can happen
         }
     }
 }
