@@ -1,2 +1,2 @@
-github "wireapp/wire-ios-message-strategy" "5.1.3-migrate-sessions-a831cb8"
+github "wireapp/wire-ios-message-strategy" "fix/session-identifier"
 
