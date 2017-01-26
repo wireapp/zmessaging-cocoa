@@ -59,8 +59,7 @@ extension ZMHotFixDirectory {
         context.enqueueDelayedSave()
     }
     
-    public static func insertNewConversationSystemMessage(_ context: NSManagedObjectContext)
-    {
+    public static func insertNewConversationSystemMessage(_ context: NSManagedObjectContext) {
         let fetchRequest = ZMConversation.sortedFetchRequest()
         guard let conversations = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation] else { return }
         
@@ -76,8 +75,34 @@ extension ZMHotFixDirectory {
         let filteredConversations =  conversations.filter{ $0.conversationType == .oneOnOne || $0.conversationType == .group }
         
         // update "you are using this device" message
-        filteredConversations.forEach{
+        filteredConversations.forEach {
             $0.replaceNewClientMessageIfNeededWithNewDeviceMesssage()
         }
+    }
+    
+    public static func purgePINCachesInHostBundle() {
+        let fileManager = FileManager.default
+        guard let cachesDirectory = try? fileManager.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false) else { return }
+        let PINCacheFolders = ["com.pinterest.PINDiskCache.images", "com.pinterest.PINDiskCache.largeUserImages", "com.pinterest.PINDiskCache.smallUserImages"]
+        
+        PINCacheFolders.forEach { PINCacheFolder in
+            let cacheDirectory =  cachesDirectory.appendingPathComponent(PINCacheFolder, isDirectory: true)
+            try? fileManager.removeItem(at: cacheDirectory)
+        }
+    }
+
+    /// We need to refetch all connected users as they might alreday have updated their username before we updated to
+    /// a version supporting them. Unconnected users are refreshed with a call to `refreshData` when information is displayed.
+    public static func refetchConnectedUsers(_ context: NSManagedObjectContext) {
+        let predicate = NSPredicate(format: "connection != nil")
+        let request = ZMUser.sortedFetchRequest(with: predicate)
+        let users = context.executeFetchRequestOrAssert(request) as? [ZMUser]
+
+        users?.lazy
+            .filter { $0.isConnected }
+            .forEach { $0.needsToBeUpdatedFromBackend = true }
+
+        ZMUser.selfUser(in: context).needsToBeUpdatedFromBackend = true
+        context.enqueueDelayedSave()
     }
 }

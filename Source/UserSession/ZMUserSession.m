@@ -39,7 +39,6 @@
 #import "ZMBlacklistVerificator.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMUserSessionAuthenticationNotification.h"
-#import "ZMUserProfileUpdateStatus.h"
 #import "NSURL+LaunchOptions.h"
 #import "ZMessagingLogs.h"
 #import "ZMAVSBridge.h"
@@ -66,10 +65,6 @@ NSString * const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLo
 static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-client/id930944768?ls=1&mt=8";
 
 
-@interface NSManagedObjectContext (KeyValueStore) <ZMKeyValueStore>
-@end
-
-
 @interface ZMUserSession ()
 @property (nonatomic) ZMOperationLoop *operationLoop;
 @property (nonatomic) ZMTransportRequest *runningLoginRequest;
@@ -81,7 +76,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
 @property (nonatomic) ZMAuthenticationStatus *authenticationStatus;
-@property (nonatomic) ZMUserProfileUpdateStatus *userProfileUpdateStatus;
+@property (nonatomic) UserProfileUpdateStatus *userProfileUpdateStatus;
 @property (nonatomic) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic) ClientUpdateStatus *clientUpdateStatus;
 @property (nonatomic) BackgroundAPNSPingBackStatus *pingBackStatus;
@@ -97,7 +92,9 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 @property (nonatomic) ZMLocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSString *applicationGroupIdentifier;
-@property (nonatomic) NSURL *databaseDirectoryURL;
+@property (nonatomic) NSURL *storeURL;
+@property (nonatomic) NSURL *keyStoreURL;
+@property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 
 
 /// Build number of the Wire app
@@ -168,19 +165,44 @@ ZM_EMPTY_ASSERTING_INIT()
     return sharedContainerURL;
 }
 
++ (NSURL *)cachesURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
+{
+    NSFileManager *fm = NSFileManager.defaultManager;
+    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:appGroupIdentifier];
+    
+    if (sharedContainerURL != nil) {
+        return [[sharedContainerURL URLByAppendingPathComponent:@"Library" isDirectory:YES] URLByAppendingPathComponent:@"Caches" isDirectory:YES];
+    }
+    
+    return nil;
+}
+
++ (NSURL *)keyStoreURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
+{
+    return [self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
+}
+
++ (NSURL *)storeURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
+{
+    return [[[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]
+             URLByAppendingPathComponent:[NSBundle mainBundle].bundleIdentifier isDirectory:YES]
+             URLByAppendingPathComponent:@"store.wiredatabase"];
+}
+
 + (BOOL)needsToPrepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier
 {
-    return [NSManagedObjectContext needsToPrepareLocalStoreInDirectory:[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]];
+    return [NSManagedObjectContext needsToPrepareLocalStoreAtURL:[self storeURLForAppGroupIdentifier:appGroupIdentifier]];
 }
 
 + (void)prepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier completion:(void (^)())completionHandler
 {
     ZMDeploymentEnvironmentType environment = [[ZMDeploymentEnvironment alloc] init].environmentType;
     BOOL shouldBackupCorruptedDatabase = environment == ZMDeploymentEnvironmentTypeInternal || DEBUG;
-    [NSManagedObjectContext prepareLocalStoreSync:NO
-                                      inDirectory:[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]
-                       backingUpCorruptedDatabase:shouldBackupCorruptedDatabase
-                                completionHandler:completionHandler];
+    
+    [NSManagedObjectContext prepareLocalStoreAtURL:[self storeURLForAppGroupIdentifier:appGroupIdentifier]
+                           backupCorruptedDatabase:shouldBackupCorruptedDatabase
+                                       synchronous:NO
+                                 completionHandler:completionHandler];
 }
 
 + (BOOL)storeIsReady
@@ -199,22 +221,31 @@ ZM_EMPTY_ASSERTING_INIT()
                   appGroupIdentifier:(NSString *)appGroupIdentifier;
 {
     zmSetupEnvironments();
-    ZMBackendEnvironment *environment = [[ZMBackendEnvironment alloc] init];
+    ZMBackendEnvironment *environment = [[ZMBackendEnvironment alloc] initWithUserDefaults:NSUserDefaults.standardUserDefaults];
     NSURL *backendURL = environment.backendURL;
     NSURL *websocketURL = environment.backendWSURL;
     self.applicationGroupIdentifier = appGroupIdentifier;
 
     ZMAPNSEnvironment *apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
     
-    self.databaseDirectoryURL = [self.class sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
-    RequireString(nil != self.databaseDirectoryURL, "Unable to get a container URL using group identifier: %s", appGroupIdentifier.UTF8String);
-    NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContextWithStoreDirectory:self.databaseDirectoryURL];
-    NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectoryURL];
-    syncMOC.analytics = analytics;
+    self.storeURL = [self.class storeURLForAppGroupIdentifier:appGroupIdentifier];
+    self.keyStoreURL = [self.class keyStoreURLForAppGroupIdentifier:appGroupIdentifier];
+    RequireString(nil != self.storeURL, "Unable to get a store URL using group identifier: %s", appGroupIdentifier.UTF8String);
+    NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContextWithStoreAtURL:self.storeURL];
+    NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreAtURL:self.storeURL keyStoreURL:self.keyStoreURL];
+    [syncMOC performBlockAndWait:^{
+        syncMOC.analytics = analytics;
+    }];
 
+    self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] init];
     UIApplication *application = [UIApplication sharedApplication];
     
-    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL websocketURL:websocketURL keyValueStore:syncMOC mainGroupQueue:userInterfaceContext application:application];
+    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL
+                                                                 websocketURL:websocketURL
+                                                               mainGroupQueue:userInterfaceContext
+                                                           initialAccessToken:[userInterfaceContext accessToken]
+                                                                  application:application
+                                                    sharedContainerIdentifier:nil];
     
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
     session.requestLoopDetectionCallback = ^(NSString *path) {
@@ -261,6 +292,7 @@ ZM_EMPTY_ASSERTING_INIT()
         [ZMUserAgent setWireAppVersion:appVersion];
         self.didStartInitialSync = NO;
         self.pushChannelIsOpen = NO;
+
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
         
         self.apnsEnvironment = apnsEnvironment;
@@ -269,77 +301,89 @@ ZM_EMPTY_ASSERTING_INIT()
         self.managedObjectContext.isOffline = NO;
         self.syncManagedObjectContext = syncManagedObjectContext;
         
-        self.syncManagedObjectContext.zm_userInterfaceContext = self.managedObjectContext;
+        [self.syncManagedObjectContext performBlockAndWait:^{
+            self.syncManagedObjectContext.zm_userInterfaceContext = self.managedObjectContext;
+        }];
         self.managedObjectContext.zm_syncContext = self.syncManagedObjectContext;
         
-        UserImageLocalCache *userImageCache = [[UserImageLocalCache alloc] init];
-        self.syncManagedObjectContext.zm_userImageCache = userImageCache;
+        NSURL *cacheLocation = [self.class cachesURLForAppGroupIdentifier:appGroupIdentifier];
+        
+        UserImageLocalCache *userImageCache = [[UserImageLocalCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_userImageCache = userImageCache;
         
-        ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100];
-        self.syncManagedObjectContext.zm_imageAssetCache = imageAssetCache;
+        ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100 location:cacheLocation];
         self.managedObjectContext.zm_imageAssetCache = imageAssetCache;
         
-        FileAssetCache *fileAssetCache = [[FileAssetCache alloc] init];
-        self.syncManagedObjectContext.zm_fileAssetCache = fileAssetCache;
+        FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_fileAssetCache = fileAssetCache;
-
-        ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.managedObjectContext cookieStorage:session.cookieStorage];
-        self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:syncManagedObjectContext cookie:cookie];
-        self.userProfileUpdateStatus = [[ZMUserProfileUpdateStatus alloc] initWithManagedObjectContext:syncManagedObjectContext];
-        self.clientUpdateStatus = [[ClientUpdateStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext];
         
-        self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:syncManagedObjectContext
-                                                                                 loginCredentialProvider:self.authenticationStatus
-                                                                                updateCredentialProvider:self.userProfileUpdateStatus
-                                                                                                  cookie:cookie
-                                                                              registrationStatusDelegate:self];
-        self.accountStatus = [[ZMAccountStatus alloc] initWithManagedObjectContext: syncManagedObjectContext cookieStorage: session.cookieStorage];
-        
-        
-
-        self.localNotificationDispatcher =
-        [[ZMLocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext sharedApplication:application];
-        
-        self.pingBackStatus = [[BackgroundAPNSPingBackStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext
-                                                                              authenticationProvider:self.authenticationStatus];
-        
-        self.transportSession = session;
-        self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
-        self.transportSession.networkStateDelegate = self;
-        self.mediaManager = mediaManager;
-        
-        self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
-        self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
+        [self.syncManagedObjectContext performBlockAndWait:^{
+            self.syncManagedObjectContext.zm_imageAssetCache = imageAssetCache;
+            self.syncManagedObjectContext.zm_userImageCache = userImageCache;
+            self.syncManagedObjectContext.zm_fileAssetCache = fileAssetCache;
+            
+            ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.syncManagedObjectContext cookieStorage:session.cookieStorage];
+            self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:syncManagedObjectContext cookie:cookie];
+            self.userProfileUpdateStatus = [[UserProfileUpdateStatus alloc] initWithManagedObjectContext:syncManagedObjectContext];
+            self.clientUpdateStatus = [[ClientUpdateStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext];
+            
+            self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:syncManagedObjectContext
+                                                                                     loginCredentialProvider:self.authenticationStatus
+                                                                                    updateCredentialProvider:self.userProfileUpdateStatus
+                                                                                                      cookie:cookie
+                                                                                  registrationStatusDelegate:self];
+            self.accountStatus = [[ZMAccountStatus alloc] initWithManagedObjectContext: syncManagedObjectContext cookieStorage: session.cookieStorage];
+            
+            
+            
+            self.localNotificationDispatcher =
+            [[ZMLocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext sharedApplication:application];
+            
+            self.pingBackStatus = [[BackgroundAPNSPingBackStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext
+                                                                                  authenticationProvider:self.authenticationStatus];
+            
+            self.transportSession = session;
+            self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
+            self.transportSession.networkStateDelegate = self;
+            self.mediaManager = mediaManager;
+            
+            self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
+            self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
+        }];
         
         _application = application;
+        self.topConversationsDirectory = [[TopConversationsDirectory alloc] initWithManagedObjectContext:self.managedObjectContext];
         
-        self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
-                                                                            authenticationStatus:self.authenticationStatus
-                                                                         userProfileUpdateStatus:self.userProfileUpdateStatus
-                                                                        clientRegistrationStatus:self.clientRegistrationStatus
-                                                                              clientUpdateStatus:self.clientUpdateStatus
-                                                                            proxiedRequestStatus:self.proxiedRequestStatus
-                                                                                   accountStatus:self.accountStatus
-                                                                    backgroundAPNSPingBackStatus:self.pingBackStatus
-                                                                     localNotificationdispatcher:self.localNotificationDispatcher
-                                                                                    mediaManager:mediaManager
-                                                                             onDemandFlowManager:self.onDemandFlowManager
-                                                                                           uiMOC:self.managedObjectContext
-                                                                                         syncMOC:self.syncManagedObjectContext
-                                                                               syncStateDelegate:self
-                                                                              appGroupIdentifier:appGroupIdentifier
-                                                                                     application:application];
-        
-        __weak id weakSelf = self;
-        session.accessTokenRenewalFailureHandler = ^(ZMTransportResponse *response) {
-            ZMUserSession *strongSelf = weakSelf;
-            [strongSelf transportSessionAccessTokenDidFail:response];
-        };
-        session.accessTokenRenewalSuccessHandler = ^(NSString *token, NSString *type) {
-            ZMUserSession *strongSelf = weakSelf;
-            [strongSelf transportSessionAccessTokenDidSucceedWithToken:token ofType:type];
-        };
+        [self.syncManagedObjectContext performBlockAndWait:^{
+    
+            self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
+                                                                               authenticationStatus:self.authenticationStatus
+                                                                            userProfileUpdateStatus:self.userProfileUpdateStatus
+                                                                           clientRegistrationStatus:self.clientRegistrationStatus
+                                                                                 clientUpdateStatus:self.clientUpdateStatus
+                                                                               proxiedRequestStatus:self.proxiedRequestStatus
+                                                                                      accountStatus:self.accountStatus
+                                                                       backgroundAPNSPingBackStatus:self.pingBackStatus
+                                                                          topConversationsDirectory:self.topConversationsDirectory
+                                                                        localNotificationdispatcher:self.localNotificationDispatcher
+                                                                                       mediaManager:mediaManager
+                                                                                onDemandFlowManager:self.onDemandFlowManager
+                                                                                              uiMOC:self.managedObjectContext
+                                                                                            syncMOC:self.syncManagedObjectContext
+                                                                                  syncStateDelegate:self
+                                                                                 appGroupIdentifier:appGroupIdentifier
+                                                                                        application:application];
+            
+            __weak id weakSelf = self;
+            session.accessTokenRenewalFailureHandler = ^(ZMTransportResponse *response) {
+                ZMUserSession *strongSelf = weakSelf;
+                [strongSelf transportSessionAccessTokenDidFail:response];
+            };
+            session.accessTokenRenewalSuccessHandler = ^(NSString *token, NSString *type) {
+                ZMUserSession *strongSelf = weakSelf;
+                [strongSelf transportSessionAccessTokenDidSucceedWithToken:token ofType:type];
+            };
+        }];
         
         self.commonContactsCache = [[NSCache alloc] init];
         self.commonContactsCache.name = @"ZMUserSession commonContactsCache";
@@ -347,8 +391,12 @@ ZM_EMPTY_ASSERTING_INIT()
         [self registerForResetPushTokensNotification];
         [self registerForBackgroundNotifications];
         [self registerForRequestToOpenConversationNotification];
-        [self enablePushNotifications];
+        
+        [self.syncManagedObjectContext performBlockAndWait:^{
+            [self enablePushNotifications];
+        }];
         [self enableBackgroundFetch];
+
         
         self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = self.application.applicationState != UIApplicationStateBackground;
         ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self
@@ -390,10 +438,26 @@ ZM_EMPTY_ASSERTING_INIT()
     self.userProfileUpdateStatus = nil;
     self.proxiedRequestStatus = nil;
     
-    NSManagedObjectContext *uiMoc = self.managedObjectContext;
+    __block NSMutableArray *keysToRemove = [NSMutableArray array];
+    [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
+        if ([obj respondsToSelector:@selector(tearDown)]) {
+            [obj tearDown];
+            [keysToRemove addObject:key];
+        }
+    }];
+    [self.managedObjectContext.userInfo removeObjectsForKeys:keysToRemove];
+    [keysToRemove removeAllObjects];
+    [self.syncManagedObjectContext performBlockAndWait:^{
+        [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
+            if ([obj respondsToSelector:@selector(tearDown)]) {
+                [obj tearDown];
+            }
+            [keysToRemove addObject:key];
+        }];
+        [self.syncManagedObjectContext.userInfo removeObjectsForKeys:keysToRemove];
+    }];
     
-    [self.managedObjectContext.globalManagedObjectContextObserver tearDown];
-    [self.managedObjectContext zm_tearDownCallTimer];
+    NSManagedObjectContext *uiMoc = self.managedObjectContext;
     self.managedObjectContext = nil;
     self.syncManagedObjectContext = nil;
     
@@ -610,6 +674,11 @@ ZM_EMPTY_ASSERTING_INIT()
     ZMLogWithLevelAndTag(ZMLogLevelDebug, ZMTAG_NETWORK, @"Access token fail in %@: %@", self.class, NSStringFromSelector(_cmd));
     NOT_USED(response);
     
+    [self.syncManagedObjectContext performGroupedBlock:^{
+        self.syncManagedObjectContext.accessToken = nil;
+    }];
+
+    
     [self.managedObjectContext performGroupedBlock:^{
         [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials userInfo:nil]];
     }];
@@ -620,6 +689,8 @@ ZM_EMPTY_ASSERTING_INIT()
     ZMLogWithLevelAndTag(ZMLogLevelDebug, ZMTAG_NETWORK, @"Access token succeeded in %@: %@", self.class, NSStringFromSelector(_cmd));
     
     [self.syncManagedObjectContext performGroupedBlock:^{
+        self.syncManagedObjectContext.accessToken = [[ZMAccessToken alloc] initWithToken:token type:type expiresInSeconds:0];
+        
         [self.operationLoop accessTokenDidChangeWithToken:token ofType:type];
     }];
 }
@@ -961,23 +1032,12 @@ static BOOL ZMUserSessionUseCallKit = NO;
 
 
 
-@implementation NSManagedObjectContext (KeyValueStore)
-
-- (void)setValue:(id)value forKey:(NSString *)key
-{
-    [self setPersistentStoreMetadata:value forKey:key];
-}
-
-- (id)valueForKey:(NSString *)key
-{
-    return [self persistentStoreMetadataForKey:key];
-}
-
-@end
-
-
-
 @implementation ZMUserSession (SelfUserClient)
+
+- (id<UserProfile>)userProfile
+{
+    return self.userProfileUpdateStatus;
+}
 
 - (UserClient *)selfUserClient
 {

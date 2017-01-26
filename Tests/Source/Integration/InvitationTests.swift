@@ -23,15 +23,14 @@ class InvitationsTests : IntegrationTestBase {
     
     var searchDirectory : ZMSearchDirectory!
     
-    var addressBook : AddressBookContactsFake!
+    var addressBook : AddressBookFake!
     
     override func setUp() {
         super.setUp()
-        self.addressBook = AddressBookContactsFake()
+        self.addressBook = AddressBookFake()
         self.updateDisplayNameGenerator(withUsers: self.allUsers)
         self.searchDirectory = ZMSearchDirectory(userSession: self.userSession)
-        self.addressBook = AddressBookContactsFake()
-        zmessaging.debug_searchResultAddressBookOverride = self.addressBook.addressBook()
+        zmessaging.debug_searchResultAddressBookOverride = self.addressBook
     }
     
     override func tearDown() {
@@ -57,70 +56,6 @@ extension InvitationsTests {
         let observer = SearchResultOberserverMock(callback: { result, token in
             XCTAssertNotNil(result)
             XCTAssertEqual(result?.usersInContacts.count, 2)
-            XCTAssertNotNil(token)
-            expectation.fulfill()
-        })
-        
-        self.searchDirectory.add(observer)
-        defer { self.searchDirectory.remove(observer) }
-        
-        // when
-        let token = self.searchDirectory.perform(request)
-        
-        // then
-        XCTAssertNotNil(token)
-        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
-    }
-    
-    func testThatWeAreFetchingUsersContactAndAddressBook() {
-        
-        // given
-        XCTAssertTrue(self.logInAndWaitForSyncToBeComplete())
-        self.addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: "Mario", emailAddresses: ["mm@example.com"], phoneNumbers: [])
-        ]
-        let expectation = self.expectation(description: "Observer called")
-        let request = ZMSearchRequest()
-        request.query = ""
-        request.includeContacts = true
-        request.includeAddressBookContacts = true
-        
-        let observer = SearchResultOberserverMock(callback: { result, token in
-            XCTAssertNotNil(result)
-            XCTAssertEqual(result?.usersInContacts.count, self.connectedUsers.count + self.addressBook.contacts.count)
-            XCTAssertNotNil(token)
-            expectation.fulfill()
-        })
-        
-        self.searchDirectory.add(observer)
-        defer { self.searchDirectory.remove(observer) }
-        
-        // when
-        let token = self.searchDirectory.perform(request)
-        
-        // then
-        XCTAssertNotNil(token)
-        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
-    }
-    
-    func testThatFetchingContactDoesntDuplicateWireAndAddressBookContact() {
-        
-        //given
-        XCTAssertTrue(self.logInAndWaitForSyncToBeComplete())
-        self.addressBook.contacts = [
-            AddressBookContactsFake.Contact(firstName: self.user1.name!, emailAddresses: [self.user1.email!], phoneNumbers: [String]()),
-            AddressBookContactsFake.Contact(firstName: "Mario", emailAddresses: ["mm@example.com"], phoneNumbers: [String]())
-        ]
-        
-        let expectation = self.expectation(description: "Observer called")
-        let request = ZMSearchRequest()
-        request.query = ""
-        request.includeContacts = true
-        request.includeAddressBookContacts = true
-        
-        let observer = SearchResultOberserverMock(callback: { result, token in
-            XCTAssertNotNil(result)
-            XCTAssertEqual(result?.usersInContacts.count, self.connectedUsers.count + self.addressBook.contacts.count - 1)
             XCTAssertNotNil(token)
             expectation.fulfill()
         })

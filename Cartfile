@@ -1,2 +1,2 @@
-github "wireapp/wire-ios-message-strategy" "fix/session-identifier"
+github "wireapp/wire-ios-message-strategy" ~> 19.0
 

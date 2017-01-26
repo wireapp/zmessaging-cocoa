@@ -24,7 +24,6 @@
 #import "ZMStateMachineDelegate.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMLastUpdateEventIDTranscoder.h"
-#import "ZMuserProfileUpdateTranscoder.h"
 #import "ZMCallStateTranscoder.h"
 
 @implementation ZMSlowSyncPhaseTwoState
@@ -43,7 +42,7 @@
 {
     id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
 
-    return [self nextRequestFromTranscoders:@[directory.userTranscoder, directory.userProfileUpdateTranscoder]];
+    return [self nextRequestFromTranscoders:@[directory.userTranscoder]];
 }
 
 - (void)didLeaveState

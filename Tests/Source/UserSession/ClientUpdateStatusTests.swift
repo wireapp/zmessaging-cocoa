@@ -63,7 +63,7 @@ class ClientUpdateStatusTests: MessagingTest {
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         if isSelfClient {
-            self.syncMOC.setPersistentStoreMetadata(client.remoteIdentifier, forKey: "PersistedClientId")
+            self.syncMOC.setPersistentStoreMetadata(client.remoteIdentifier, key: "PersistedClientId")
         }
         return client
     }

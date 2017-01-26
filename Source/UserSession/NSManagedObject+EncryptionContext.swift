@@ -22,6 +22,6 @@ import ZMCDataModel
 extension NSManagedObjectContext {
     
     @objc public func deleteAndCreateNewEncryptionContext() {
-        self.zm_cryptKeyStore.deleteAndCreateNewIdentity()
+        self.zm_cryptKeyStore.deleteAndCreateNewBox()
     }
 }

@@ -78,7 +78,6 @@
 
 - (void)tearDown
 {
-    [self.syncMOC zm_tearDownCallTimer];
     self.mockFailedNotificationSet = nil;
     self.mockEventNotificationSet = nil;
     self.mockMessageNotificationSet = nil;

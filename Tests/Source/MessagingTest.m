@@ -36,7 +36,6 @@
 #import "ZMObjectStrategyDirectory.h"
 
 #import "ZMUserTranscoder.h"
-#import "ZMUserImageTranscoder.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
 #import "ZMConnectionTranscoder.h"
@@ -46,14 +45,9 @@
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMFlowSync.h"
 #import "ZMCallStateTranscoder.h"
-#import "ZMPushTokenTranscoder.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
-#import "ZMSearchUserImageTranscoder.h"
-#import "ZMTypingTranscoder.h"
-#import "ZMRemovedSuggestedPeopleTranscoder.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMUserProfileUpdateTranscoder.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "zmessaging_iOS_Tests-Swift.h"
 
@@ -66,8 +60,9 @@
 @property (nonatomic) NSManagedObjectContext *alternativeTestMOC;
 @property (nonatomic) NSManagedObjectContext *searchMOC;
 
-@property (nonatomic) NSString *groupIdentifier;
-@property (nonatomic) NSURL *databaseDirectory;
+@property (nonatomic) NSString *groupIdentifier;;
+@property (nonatomic) NSURL *storeURL;
+@property (nonatomic) NSURL *keyStoreURL;
 @property (nonatomic) MockTransportSession *mockTransportSession;
 
 @property (nonatomic) NSTimeInterval originalConversationLastReadTimestampTimerValue; // this will speed up the tests A LOT
@@ -112,8 +107,13 @@
     [super setUp];
     
     NSFileManager *fm = NSFileManager.defaultManager;
-    self.groupIdentifier = [@"group." stringByAppendingString:[NSBundle bundleForClass:self.class].bundleIdentifier];
-    self.databaseDirectory = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
+    NSString *bundleIdentifier = [NSBundle bundleForClass:self.class].bundleIdentifier;
+    self.groupIdentifier = [@"group." stringByAppendingString:bundleIdentifier];
+    
+    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
+    self.storeURL = [[sharedContainerURL URLByAppendingPathComponent:bundleIdentifier] URLByAppendingPathComponent:@"store.wiredatabase"];
+    self.keyStoreURL = sharedContainerURL;
+    
     _application = [[ApplicationMock alloc] init];
     
     self.originalConversationLastReadTimestampTimerValue = ZMConversationDefaultLastReadTimestampSaveDelay;
@@ -152,7 +152,7 @@
     [self.testMOC addGroup:self.dispatchGroup];
     self.alternativeTestMOC = [MockModelObjectContextFactory alternativeMocForPSC:self.testMOC.persistentStoreCoordinator];
     [self.alternativeTestMOC addGroup:self.dispatchGroup];
-    self.searchMOC = [NSManagedObjectContext createSearchContextWithStoreDirectory:self.databaseDirectory];
+    self.searchMOC = [NSManagedObjectContext createSearchContextWithStoreAtURL:self.storeURL];
     [self.searchMOC addGroup:self.dispatchGroup];
     self.mockTransportSession = [[MockTransportSession alloc] initWithDispatchGroup:self.dispatchGroup];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
@@ -167,19 +167,38 @@
 
     [self resetState];
     [MessagingTest deleteAllFilesInCache];
+    [self removeCachesInSharedContainer];
     [super tearDown];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
 }
 
+- (void)tearDownUserInfoObjectsOfMOC:(NSManagedObjectContext *)moc
+{
+    NSMutableArray *keysToRemove = [NSMutableArray array];
+    [moc.userInfo enumerateKeysAndObjectsUsingBlock:^(id  key, id  obj, BOOL * ZM_UNUSED stop) {
+        if ([obj respondsToSelector:@selector(tearDown)]) {
+            [obj tearDown];
+            [keysToRemove addObject:key];
+        }
+    }];
+    [moc.userInfo removeObjectsForKeys:keysToRemove];
+}
+
+- (void)removeCachesInSharedContainer
+{
+    NSFileManager *fm = NSFileManager.defaultManager;
+    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
+    NSURL *cachesURL = [sharedContainerURL URLByAppendingPathComponent:@"Library/Caches"];
+    [fm removeItemAtURL:cachesURL error:nil];
+}
+
 - (void)resetState
 {
-    [self.uiMOC.globalManagedObjectContextObserver tearDown];
-    [self.uiMOC zm_tearDownCallTimer];
-    [self.testMOC zm_tearDownCallTimer];
+    [self tearDownUserInfoObjectsOfMOC:self.uiMOC];
+    [self tearDownUserInfoObjectsOfMOC:self.testMOC];
     
     [self.syncMOC performGroupedBlock:^{
-        [self.syncMOC.globalManagedObjectContextObserver tearDown];
-        [self.syncMOC zm_tearDownCallTimer];
+        [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
         [self.syncMOC zm_tearDownCryptKeyStore];
         [self.syncMOC.userInfo removeAllObjects];
     }];
@@ -231,12 +250,6 @@
     [refSearchMoc performBlockAndWait:^{
         // Do nothing
     }];
-    
-    [refUiMOC.globalManagedObjectContextObserver tearDown];
-
-    [refSyncMoc performGroupedBlockAndWait:^{
-        [refSyncMoc.globalManagedObjectContextObserver tearDown];
-    }];
 }
 
 - (void)cleanUpAndVerify {
@@ -252,11 +265,11 @@
 
 - (void)resetUIandSyncContextsAndResetPersistentStore:(BOOL)resetPersistentStore notificationContentHidden:(BOOL)notificationContentVisible;
 {
-    [self.uiMOC zm_tearDownCallTimer];
-    [self.syncMOC zm_tearDownCallTimer];
-    
-    [self.syncMOC.globalManagedObjectContextObserver tearDown];
-    [self.uiMOC.globalManagedObjectContextObserver tearDown];
+    [self tearDownUserInfoObjectsOfMOC:self.uiMOC];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *clientID = [self.uiMOC persistentStoreMetadataForKey:ZMPersistedClientIdKey];
     self.uiMOC = nil;
@@ -270,17 +283,17 @@
         [NSManagedObjectContext resetSharedPersistentStoreCoordinator];
     }
     [self performIgnoringZMLogError:^{
-        self.uiMOC = [NSManagedObjectContext createUserInterfaceContextWithStoreDirectory:self.databaseDirectory];
+        self.uiMOC = [NSManagedObjectContext createUserInterfaceContextWithStoreAtURL:self.storeURL];
         self.uiMOC.globalManagedObjectContextObserver.propagateChanges = YES;
     }];
     
-    ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100];
-    FileAssetCache *fileAssetCache = [[FileAssetCache alloc] init];
+    ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100 location:nil];
+    FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:nil];
     
     [self.uiMOC addGroup:self.dispatchGroup];
     self.uiMOC.userInfo[@"TestName"] = self.name;
     
-    self.syncMOC = [NSManagedObjectContext createSyncContextWithStoreDirectory:self.databaseDirectory];
+    self.syncMOC = [NSManagedObjectContext createSyncContextWithStoreAtURL:self.storeURL keyStoreURL:self.keyStoreURL];
     [self.syncMOC performGroupedBlockAndWait:^{
         self.syncMOC.userInfo[@"TestName"] = self.name;
         [self.syncMOC addGroup:self.dispatchGroup];
@@ -295,7 +308,7 @@
     WaitForAllGroupsToBeEmpty(2);
     
     [self performPretendingUiMocIsSyncMoc:^{
-        [self.uiMOC setupUserKeyStoreForDirectory:self.databaseDirectory];
+        [self.uiMOC setupUserKeyStoreForDirectory:self.keyStoreURL];
     }];
     
     [self.uiMOC setPersistentStoreMetadata:clientID forKey:ZMPersistedClientIdKey];
@@ -316,8 +329,6 @@
     
     id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
     [self verifyMockLater:userTranscoder];
-    id userImageTranscoder = [OCMockObject mockForClass:ZMUserImageTranscoder.class];
-    [self verifyMockLater:userImageTranscoder];
     id conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [self verifyMockLater:conversationTranscoder];
     id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
@@ -340,24 +351,13 @@
     [self verifyMockLater:flowTranscoder];
     id callStateTranscoder = [OCMockObject mockForClass:ZMCallStateTranscoder.class];
     [self verifyMockLater:callStateTranscoder];
-    id pushTokenTranscoder = [OCMockObject mockForClass:ZMPushTokenTranscoder.class];
-    [self verifyMockLater:pushTokenTranscoder];
     id loginTranscoder = [OCMockObject mockForClass:ZMLoginTranscoder.class];
     [self verifyMockLater:loginTranscoder];
     id loginCodeRequestTranscoder = [OCMockObject mockForClass:ZMLoginCodeRequestTranscoder.class];
     [self verifyMockLater:loginCodeRequestTranscoder];
-    id searchUserImageTranscoder = [OCMockObject mockForClass:ZMSearchUserImageTranscoder.class];
-    [self verifyMockLater:searchUserImageTranscoder];
-    id typingTranscoder = [OCMockObject mockForClass:ZMTypingTranscoder.class];
-    [self verifyMockLater:typingTranscoder];
-    id removedSuggestedPeopleTranscoder = [OCMockObject mockForClass:ZMRemovedSuggestedPeopleTranscoder.class];
-    [self verifyMockLater:removedSuggestedPeopleTranscoder];
-    id userProfileUpdateTranscoder = [OCMockObject mockForClass:ZMUserProfileUpdateTranscoder.class];
-    [self verifyMockLater:userProfileUpdateTranscoder];
     
     
     [[[objectDirectory stub] andReturn:userTranscoder] userTranscoder];
-    [[[objectDirectory stub] andReturn:userImageTranscoder] userImageTranscoder];
     [[[objectDirectory stub] andReturn:conversationTranscoder] conversationTranscoder];
     [[[objectDirectory stub] andReturn:systemMessageTranscoder] systemMessageTranscoder];
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
@@ -369,17 +369,11 @@
     [[[objectDirectory stub] andReturn:lastUpdateEventIDTranscoder] lastUpdateEventIDTranscoder];
     [[[objectDirectory stub] andReturn:flowTranscoder] flowTranscoder];
     [[[objectDirectory stub] andReturn:callStateTranscoder] callStateTranscoder];
-    [[[objectDirectory stub] andReturn:pushTokenTranscoder] pushTokenTranscoder];
     [[[objectDirectory stub] andReturn:loginTranscoder] loginTranscoder];
     [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
-    [[[objectDirectory stub] andReturn:searchUserImageTranscoder] searchUserImageTranscoder];
-    [[[objectDirectory stub] andReturn:typingTranscoder] typingTranscoder];
-    [[[objectDirectory stub] andReturn:removedSuggestedPeopleTranscoder] removedSuggestedPeopleTranscoder];
-    [[[objectDirectory stub] andReturn:userProfileUpdateTranscoder] userProfileUpdateTranscoder];
     
     [[[objectDirectory stub] andReturn:@[
                                         userTranscoder,
-                                        userImageTranscoder,
                                         conversationTranscoder,
                                         systemMessageTranscoder,
                                         clientMessageTranscoder,
@@ -391,13 +385,8 @@
                                         lastUpdateEventIDTranscoder,
                                         flowTranscoder,
                                         callStateTranscoder,
-                                        pushTokenTranscoder,
                                         loginTranscoder,
                                         loginCodeRequestTranscoder,
-                                        searchUserImageTranscoder,
-                                        typingTranscoder,
-                                        removedSuggestedPeopleTranscoder,
-                                        userProfileUpdateTranscoder
                                         ]] allTranscoders];
     
     

@@ -156,11 +156,16 @@
 - (NSArray *)conversationsMatchingSearchString:(NSString *)searchString
 {
     NSFetchRequest *conversationFetchRequest = [ZMConversation sortedFetchRequestWithPredicate:[ZMConversation predicateForSearchString:searchString]];
-    
     NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:ZMNormalizedUserDefinedNameKey ascending:YES];
     conversationFetchRequest.sortDescriptors = @[sortDescriptor];
     
     NSArray *conversationResults = [self.searchContext executeFetchRequestOrAssert:conversationFetchRequest];
+    if([searchString hasPrefix:@"@"]) { // ignore group conversations if query is for usernames
+        conversationResults = [conversationResults filterWithBlock:^BOOL(ZMConversation *conversation) {
+            return [conversation.displayName containsString:@"@"];
+        }];
+    }
+    
     NSArray *sortedConversations = [self sortedConversationResults:conversationResults forSearchString:searchString];
     
     return sortedConversations;
@@ -326,7 +331,7 @@
             return;
         }
 
-        ZMSearchResult *searchResult = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:self.request.ignoredIDs userSession:self.userSession];
+        ZMSearchResult *searchResult = [ZMSearchRequestCodec searchResultFromTransportResponse:response ignoredIDs:self.request.ignoredIDs userSession:self.userSession query:self.request.query];
 
         if (response.result != ZMTransportResponseStatusSuccess) {
             [self.timeoutTimer fire];

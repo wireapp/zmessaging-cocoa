@@ -122,6 +122,9 @@
 {
     ZMTransportRequest *joinRequest = [self.mockTransportSession.receivedRequests firstObjectMatchingWithBlock:^BOOL(ZMTransportRequest *request) {
         BOOL rightPath = [request.path hasPrefix:@"/conversations/"] && [request.path hasSuffix:@"/call/state"];
+        if (!rightPath) {
+            return NO;
+        }
         NSDictionary *selfDict = [[request.payload asDictionary] optionalDictionaryForKey:@"self"];
         BOOL stateJoined = [[selfDict optionalStringForKey:@"state"] isEqualToString:@"joined"];
         if (causeIsIntertupted) {
@@ -144,6 +147,9 @@
 {
     ZMTransportRequest *idleRequest = [self.mockTransportSession.receivedRequests firstObjectMatchingWithBlock:^BOOL(ZMTransportRequest *request) {
         BOOL rightPath = [request.path hasPrefix:@"/conversations/"] && [request.path hasSuffix:@"/call/state"];
+        if (!rightPath) {
+            return NO;
+        }
         NSDictionary *selfDict = [[request.payload asDictionary] optionalDictionaryForKey:@"self"];
 
         BOOL stateIdle = [[selfDict optionalStringForKey:@"state"] isEqualToString:@"idle"];
@@ -2741,6 +2747,7 @@
         [self simulateAppRestarted];
         
         // then
+        WaitForAllGroupsToBeEmpty(0.5);
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 4u);
         XCTAssertTrue([self lastRequestContainsSelfStateJoinedWithCauseSuspended: NO]);
         XCTAssertFalse([self lastRequestContainsSelfStateIdle]);
@@ -2782,6 +2789,7 @@
         [(CTCall *)[[call stub] andReturn:CTCallStateDisconnected] callState];
         
         self.gsmCallHandler.callEventHandler(call);
+        [self spinMainQueueWithTimeout:0.3];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then

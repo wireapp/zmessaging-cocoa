@@ -240,12 +240,7 @@
 {
     NOT_USED(conversation);
     NOT_USED(eventSource);
-    BOOL isActive = NO;
-    if ([state isEqualToString:@"joined"]) {
-        isActive = YES;
-    } else if( ![state isEqualToString:@"idle"]) {
-        return;
-    }
+    NOT_USED(state);
 }
 
 - (void)logFinalStateOfConversation:(ZMConversation *)conversation forEventSource:(ZMCallEventSource)eventSource

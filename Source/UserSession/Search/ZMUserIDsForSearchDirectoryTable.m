@@ -132,7 +132,7 @@
     return allAssetIDs;
 }
 
-- (void)setSearchUsers:(NSSet *)searchUsers forSearchDirectory:(ZMSearchDirectory *)directory
+- (void)setSearchUsers:(NSSet *)searchUsers forSearchDirectory:(id<ZMSearchResultStore>)directory
 {
     dispatch_barrier_async(self.isolation, ^{
         NSValue *valueNoReference = [NSValue valueWithNonretainedObject:directory];

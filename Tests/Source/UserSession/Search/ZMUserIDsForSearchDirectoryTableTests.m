@@ -54,7 +54,13 @@
 
 - (ZMSearchUser *)createSearchUser
 {
-    return [[ZMSearchUser alloc] initWithName:@"foo" accentColor:ZMAccentColorBrightOrange remoteID:[NSUUID createUUID] user:nil syncManagedObjectContext: self.syncMOC uiManagedObjectContext:self.uiMOC];
+    return [[ZMSearchUser alloc] initWithName:@"foo"
+                                       handle:@"foo"
+                                  accentColor:ZMAccentColorBrightOrange
+                                     remoteID:[NSUUID createUUID]
+                                         user:nil
+                     syncManagedObjectContext:self.syncMOC
+                       uiManagedObjectContext:self.uiMOC];
 
 }
 
@@ -115,7 +121,7 @@
         
         id mockUserSession = [OCMockObject mockForClass:ZMUserSession.class];
         [[[mockUserSession stub] andReturn:self.syncMOC] syncManagedObjectContext];
-        [[mockUserSession expect] databaseDirectoryURL];
+        [[mockUserSession expect] storeURL];
         [[mockUserSession expect] managedObjectContext];
 
         ZMSearchDirectory *directory = [[ZMSearchDirectory alloc] initWithUserSession:mockUserSession];

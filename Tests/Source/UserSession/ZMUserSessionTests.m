@@ -49,7 +49,6 @@
 - (void)tearDown
 {
     [super tearDown];
-    [self.syncMOC zm_tearDownCallTimer];
     self.lastReceivedNotification = nil;
 }
 
@@ -85,7 +84,7 @@
     NSString *version = @"The-version-123";
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     [[[[transportSession stub] classMethod] andReturn:transportSession] alloc];
-    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY keyValueStore:OCMOCK_ANY mainGroupQueue:OCMOCK_ANY application:OCMOCK_ANY];
+    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY mainGroupQueue:OCMOCK_ANY initialAccessToken:OCMOCK_ANY application:OCMOCK_ANY sharedContainerIdentifier:OCMOCK_ANY];
     [[[transportSession stub] andReturn:[OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]]] cookieStorage];
     
     // expect

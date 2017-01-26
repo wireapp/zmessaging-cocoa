@@ -71,6 +71,8 @@ extern NSString *const ZMInterruptedCallConversationObjectIDKey;
 @property (nonatomic, readonly) ZMConversation *activeCallUIConversation;
 @property (nonatomic, readonly, copy) void (^callEventHandler)(CTCall *);
 
+- (void)tearDown;
+
 @end
 
 #endif

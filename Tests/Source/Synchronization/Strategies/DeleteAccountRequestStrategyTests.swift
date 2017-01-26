@@ -45,7 +45,7 @@ class DeleteAccountRequestStrategyTests: MessagingTest {
     func testThatItGeneratesARequest() {
         
         // given
-        self.uiMOC.setPersistentStoreMetadata(NSNumber(value: true), forKey: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
+        self.uiMOC.setPersistentStoreMetadata(NSNumber(value: true), key: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
         
         // when
         let request : ZMTransportRequest? = self.sut.nextRequest()
@@ -63,7 +63,7 @@ class DeleteAccountRequestStrategyTests: MessagingTest {
     func testThatItGeneratesARequestOnlyOnce() {
         
         // given
-        self.uiMOC.setPersistentStoreMetadata(NSNumber(value: true), forKey: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
+        self.uiMOC.setPersistentStoreMetadata(NSNumber(value: true), key: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
         
         // when
         let request1 : ZMTransportRequest? = self.sut.nextRequest()
@@ -77,7 +77,7 @@ class DeleteAccountRequestStrategyTests: MessagingTest {
     
     func testThatItSignsUserOutWhenSuccessful() {
         // given
-        self.uiMOC.setPersistentStoreMetadata(NSNumber(value: true), forKey: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
+        self.uiMOC.setPersistentStoreMetadata(NSNumber(value: true), key: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
         let notificationExpectation = self.expectation(description: "Notification fired")
         
         let _ = NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil, queue: .main) { _ in

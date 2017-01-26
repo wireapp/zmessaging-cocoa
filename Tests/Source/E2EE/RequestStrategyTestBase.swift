@@ -50,14 +50,12 @@ class RequestStrategyTestBase : MessagingTest {
         var mockClient: MockUserClient!
         
         self.mockTransportSession.performRemoteChanges { (session) -> Void in
-            if let session = session as? MockTransportSessionObjectCreation {
-                mockUser = session.insertUser(withName: "foo")
-                if let preKeys = preKeys, let lastKey = lastKey {
-                    mockClient = session.registerClient(for: mockUser, label: mockUser.name!, type: "permanent", preKeys: preKeys, lastPreKey: lastKey)
-                }
-                else {
-                    mockClient = session.registerClient(for: mockUser, label: mockUser.name!, type: "permanent")
-                }
+            mockUser = session.insertUser(withName: "foo")
+            if let preKeys = preKeys, let lastKey = lastKey {
+                mockClient = session.registerClient(for: mockUser, label: mockUser.name!, type: "permanent", preKeys: preKeys, lastPreKey: lastKey)
+            }
+            else {
+                mockClient = session.registerClient(for: mockUser, label: mockUser.name!, type: "permanent")
             }
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

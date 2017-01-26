@@ -101,7 +101,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (BOOL)registeredOnThisDevice
 {
-    return ((NSNumber *)[self.moc persistentStoreMetadataForKey:RegisteredOnThisDeviceKey]).boolValue;
+    return [self registeredOnThisDeviceOnContext:self.moc];
 }
 
 - (ZMCompleteRegistrationUser *)registrationUser
@@ -418,6 +418,11 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
                                                password:self.loginCredentials.password];
     }
     return nil;
+}
+
+- (BOOL)registeredOnThisDeviceOnContext:(NSManagedObjectContext *)moc;
+{
+    return ((NSNumber *)[moc persistentStoreMetadataForKey:RegisteredOnThisDeviceKey]).boolValue;
 }
 
 @end

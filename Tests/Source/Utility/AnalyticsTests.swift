@@ -29,9 +29,10 @@ class AnalyticsTests: XCTestCase {
     var analytics: MockAnalytics!
     
     func createSyncMOC() -> NSManagedObjectContext {
-        let fm = FileManager.default
-        let url = try! fm.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create:true)
-        return .createSyncContext(withStoreDirectory: url)
+        let storeURL = PersistentStoreRelocator.storeURL(in: .documentDirectory)
+        let keyStoreURL = storeURL?.deletingLastPathComponent()
+        
+        return NSManagedObjectContext.createSyncContextWithStore(at: storeURL, keyStore: keyStoreURL)
     }
     
     override func setUp() {
@@ -132,7 +133,7 @@ extension AnalyticsTests {
         XCTAssertEqual(analytics.taggedEventsWithAttributes.count, 2)
         let eventWithAtributes = analytics.taggedEventsWithAttributes.last!
         XCTAssertEqual(eventWithAtributes.event, "connect.completed_addressbook_search")
-        XCTAssertEqual(eventWithAtributes.attributes["interval"] as? Int, 0)
+        XCTAssertEqual((eventWithAtributes.attributes["interval"] as? NSNumber)?.intValue, 0)
     }
     
     func testThatItTracksAddresBookUploadStarted() {

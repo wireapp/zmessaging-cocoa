@@ -1,0 +1,175 @@
+// 
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
+//
+
+
+"push.notification.default" = "Novo sporočilo";
+"push.notification.ephemeral" = "Nekdo ti je poslal sporočilo";
+
+"push.notification.add.message.group" = "%1$@ v %2$@: %3$@";
+"push.notification.add.message.group.nousername" = "Novo sporočilo v %1$@: %2$@";
+"push.notification.add.message.group.nousername.noconversationname" = "Novo sporočilo: %1$@";
+"push.notification.add.message.group.noconversationname" = "%1$@ v pogovoru: %2$@";
+
+"push.notification.add.message.oneonone" = "%1$@: %2$@";
+"push.notification.add.message.oneonone.nousername" = "Novo sporočilo: %1$@";
+
+"push.notification.add.image.group" = "%1$@ je delil(-a) sliko v %2$@";
+"push.notification.add.image.group.nousername" = "Nova slika v %1$@";
+"push.notification.add.image.group.nousername.noconversationname" = "Nova slika v pogovoru";
+"push.notification.add.image.group.noconversationname" = "%1$@ je delil(-a) sliko v pogovoru";
+
+"push.notification.add.image.oneonone" = "%1$@ je delil(-a) sliko";
+"push.notification.add.image.oneonone.nousername" = "Nova slika v pogovoru";
+
+"push.notification.add.video.group" = "%1$@ je delil(-a) video v %2$@";
+"push.notification.add.video.group.nousername" = "Nov video v %1$@";
+"push.notification.add.video.group.nousername.noconversationname" = "Nov video v pogovoru";
+"push.notification.add.video.group.noconversationname" = "%1$@ je delil(-a) video v pogovoru";
+
+"push.notification.add.video.oneonone" = "%1$@ je delil(-a) video";
+"push.notification.add.video.oneonone.nousername" = "Nov video v pogovoru";
+
+"push.notification.add.audio.group" = "%1$@ je delil(-a) zvočno sporočilo v %2$@";
+"push.notification.add.audio.group.nousername" = "Novo zvočno sporočilo v %1$@";
+"push.notification.add.audio.group.nousername.noconversationname" = "Novo zvočno sporočilo v pogovoru";
+"push.notification.add.audio.group.noconversationname" = "%1$@ je delil(-a) zvočno sporočilo v pogovoru";
+
+"push.notification.add.audio.oneonone" = "%1$@ je delil(-a) zvočno sporočilo";
+"push.notification.add.audio.oneonone.nousername" = "Novo zvočno sporočilo v pogovoru";
+
+"push.notification.add.file.group" = "%1$@ je delil(-a) zbirko v %2$@";
+"push.notification.add.file.group.nousername" = "Nova zbirka v %1$@";
+"push.notification.add.file.group.nousername.noconversationname" = "Nova zbirka v pogovoru";
+"push.notification.add.file.group.noconversationname" = "%1$@ je delil(-a) zbirko v pogovoru";
+
+"push.notification.add.file.oneonone" = "%1$@ je delil(-a) zbirko";
+"push.notification.add.file.oneonone.nousername" = "Nova zbirka v pogovoru";
+
+"push.notification.add.location.group" = "%1$@ je delil(-a) lokacijo v %2$@";
+"push.notification.add.location.group.nousername" = "Nova lokacija v %1$@";
+"push.notification.add.location.group.nousername.noconversationname" = "Nova lokacija v pogovoru";
+"push.notification.add.location.group.noconversationname" = "%1$@ je delil(-a) lokacijo v pogovoru";
+
+"push.notification.add.location.oneonone" = "%1$@ je delil(-a) lokacijo";
+"push.notification.add.location.oneonone.nousername" = "Nova lokacija v pogovoru";
+
+"push.notification.member.join" = "%1$@ je dodal(-a) %3$@ v %2$@";
+"push.notification.member.join.noconversationname" = "%1$@ je dodal(-a) %2$@ v pogovor";
+"push.notification.member.join.nousername.noconversationname" = "%1$@ je bil(-a) dodan(-a) v pogovor";
+"push.notification.member.join.nousername" = "%2$@ je bil(-a) dodan(-a) v %1$@";
+
+"push.notification.member.join.many.nootherusername" = "%1$@ je dodal(-a) osebe v %2$@";
+"push.notification.member.join.many.nootherusername.noconversationname" = "%1$@ je dodal(-a) osebe v pogovor";
+"push.notification.member.join.many.nootherusername.nousername" = "Osebe so bile dodane v %1$@";
+"push.notification.member.join.many.nootherusername.nousername.noconversationname" = "Osebe so bile dodane v pogovor";
+
+"push.notification.member.join.self" = "%1$@ te je dodal(-a) v %2$@";
+"push.notification.member.join.self.noconversationname" = "%1$@ te je dodal(-a) v pogovor";
+"push.notification.member.join.self.nousername.noconversationname" = "Ti si bil(-a) dodan(-a) v pogovor";
+"push.notification.member.join.self.nousername" = "Ti si bil(-a) dodan(-a) v %1$@";
+
+"push.notification.member.join.nootherusername" = "%1$@ je dodal(-a) osebe v %2$@";
+"push.notification.member.join.nootherusername.noconversationname" = "%1$@ je dodal(-a) osebe v pogovor";
+"push.notification.member.join.nootherusername.nousername.noconversationname" = "Osebe so bile dodane v pogovor";
+"push.notification.member.join.nootherusername.nousername" = "Osebe so bile dodane v %1$@";
+
+"push.notification.member.leave" = "%1$@ je odstranil(-a) %3$@ iz %2$@";
+"push.notification.member.leave.noconversationname" = "%1$@ je odstranil(-a) %2$@ iz pogovora";
+"push.notification.member.leave.nousername.noconversationname" = "%1$@ je bil(-a) odstranjen(-a) iz pogovora";
+"push.notification.member.leave.nousername" = "%2$@ je bil(-a) odstranjen(-a) iz %1$@";
+
+"push.notification.member.leave.many.nootherusername" = "%1$@ je odstranil(-a) osebe iz %2$@";
+"push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@ je odstranil(-a) osebe iz pogovora";
+"push.notification.member.leave.many.nootherusername.nousername" = "Osebe so bile odstranjene iz %1$@";
+"push.notification.member.leave.many.nootherusername.nousername.noconversationname" = "Osebe so bile odstranjene iz pogovora";
+
+"push.notification.member.leave.self" = "%1$@ te je odstranil(-a) iz %2$@";
+"push.notification.member.leave.self.noconversationname" = "%1$@ te je odstranil(-a) iz pogovora";
+"push.notification.member.leave.self.nousername.noconversationname" = "Ti si bil(-a) odstranjen(-a) iz pogovora";
+"push.notification.member.leave.self.nousername" = "Ti si bil(-a) odstranjen(-a) iz %1$@";
+
+"push.notification.member.leave.nootherusername" = "%1$@ je odstranil(-a) osebe iz %2$@";
+"push.notification.member.leave.nootherusername.noconversationname" = "%1$@ je odstranil(-a) osebe iz pogovora";
+"push.notification.member.leave.nootherusername.nousername.noconversationname" = "Osebe so bile odstranjene iz pogovora";
+"push.notification.member.leave.nootherusername.nousername" = "Osebe so bile odstranjene iz %1$@";
+
+"push.notification.member.leave.sender.nootherusername" = "%1$@ je zapustil(-a) %2$@";
+"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ je zapustil(-a) pogovor";
+"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Osebe so zapustile pogovor";
+"push.notification.member.leave.sender.nootherusername.nousername" = "Osebe so zapustile %1$@";
+
+
+"push.notification.call.started.video.oneonone" = "%1$@ kliče z videoklicem";
+"push.notification.call.started.video.oneonone.nousername" = "Nekdo kliče z videoklicem";
+
+"push.notification.call.started.video.group" = "%1$@ kliče z videoklicem v %2$@";
+"push.notification.call.started.video.group.nousername" = "Nekdo kliče z videoklicem v %1$@";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ kliče z videoklicem v pogovoru";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Nekdo kliče z videoklicem v pogovoru";
+
+"push.notification.call.started.oneonone" = "%1$@ kliče";
+"push.notification.call.started.oneonone.nousername" = "Nekdo kliče";
+
+"push.notification.call.started.group" = "%1$@ kliče v %2$@";
+"push.notification.call.started.group.nousername" = "Nekdo kliče v %1$@";
+"push.notification.call.started.group.noconversationname" = "%1$@ kliče v pogovoru";
+"push.notification.call.started.group.nousername.noconversationname" = "Nekdo kliče v pogovoru";
+
+"push.notification.conversation.create" = "%1$@ je ustvaril(-a) skupinski pogovor s teboj";
+"push.notification.conversation.create.nousername" = "Nekdo je ustvaril(-a) skupinski pogovor s teboj";
+
+"push.notification.conversation.rename" = "%1$@ je preimenoval(-a) pogovor v %2$@";
+"push.notification.conversation.rename.nousername" = "Pogovor je bil preimenovan v %1$@";
+
+"push.notification.connection.request" = "%@ si želi povezati";
+"push.notification.connection.request.nousername" = "Nekdo si želi povezati";
+
+"push.notification.connection.accepted" = "%@ in ti sta zdaj povezana";
+"push.notification.connection.accepted.nousername" = "Imaš novo povezavo";
+
+"push.notification.failed.message.oneonone" = "Ni mogoče poslati sporočila v %1$@";
+"push.notification.failed.message.oneonone.nousername" = "Ni mogoče poslati sporočila";
+
+"push.notification.failed.message.group" = "Ni mogoče poslati sporočila v %1$@";
+"push.notification.failed.message.group.noconversationname" = "Ni mogoče poslati sporočila";
+
+"push.notification.reaction.group" = "%1$@ %3$@ tvoje sporočilo v %2$@";
+"push.notification.reaction.group.nousername.noconversationname" = "Nekdo %@ tvoje sporočilo v pogovoru";
+"push.notification.reaction.group.nousername" = "Nekdo %2$@ tvoje sporočilo v %1$@";
+"push.notification.reaction.group.noconversationname" = "%@ %@ tvoje sporočilo v pogovoru";
+
+"push.notification.reaction.oneonone" = "%@ %@ tvoje sporočilo";
+"push.notification.reaction.oneonone.nousername" = "Nekdo %@ tvoje sporočilo";
+
+"push.notification.new_user" = "%@ se je ravnokar pridružil(-a) Wire";
+
+"push.notification.action.message.open" = "Odpri";
+"push.notification.action.message.reply" = "Odgovori";
+"push.notification.action.message.reply.button.title" = "Pošlji";
+"push.notification.action.conversation.mute" = "Utišaj";
+
+"push.notification.action.call.accept" = "Sprejmi";
+"push.notification.action.call.ignore" = "Zavrni";
+"push.notification.action.call.message" = "Sporočilo";
+"push.notification.action.call.callback" = "Kliči nazaj";
+"push.notification.action.connection.accept" = "Sprejmi";
+
+"push.notification.callkit.call.started.group" = "%1$@ v %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Nekdo kliče v pogovoru";
+"push.notification.callkit.call.started.group.nousername" = "Nekdo kliče v %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ kliče v pogovoru";

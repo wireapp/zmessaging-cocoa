@@ -22,7 +22,6 @@
 
 #import "MessagingTest.h"
 #import "ZMBareUser+UserSession.h"
-#import "ZMUserImageTranscoder.h"
 #import "ZMUserSession+Internal.h"
 
 static NSString * const InvitationToConnectBaseURL = @"https://www.wire.com/c/";
@@ -36,7 +35,7 @@ static NSString * const InvitationToConnectBaseURL = @"https://www.wire.com/c/";
 - (void)setUp {
     [super setUp];
     
-    self.syncMOC.zm_userImageCache = [[UserImageLocalCache alloc] init];
+    self.syncMOC.zm_userImageCache = [[UserImageLocalCache alloc] initWithLocation:nil];
     self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache;
 
 }
@@ -51,16 +50,11 @@ static NSString * const InvitationToConnectBaseURL = @"https://www.wire.com/c/";
     id mockRequestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     [[mockRequestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
 
-    id mockUserImageTranscoder = [OCMockObject mockForClass:ZMUserImageTranscoder.class];
-    [[mockUserImageTranscoder expect] requestAssetForUserWithObjectID:OCMOCK_ANY];
-
-
     // when
     [user requestMediumProfileImageInUserSession:nil];
 
     // then
     [mockRequestAvailableNotification verify];
-    [mockUserImageTranscoder verify];
 }
 
 - (void)testThatTheCommonContactsSearchIsForwardedToTheUserSession

@@ -36,7 +36,6 @@
 #import "ZMSlowSyncPhaseTwoState.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfTranscoder.h"
-#import "ZMUserImageTranscoder.h"
 #import "ZMSyncStateMachine.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMClientRegistrationStatus.h"
@@ -44,17 +43,12 @@
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
 #import "ZMFlowSync.h"
-#import "ZMPushTokenTranscoder.h"
 #import "ZMCallStateTranscoder.h"
 #import "ZMOperationLoop.h"
-#import "ZMTypingTranscoder.h"
-#import "ZMRemovedSuggestedPeopleTranscoder.h"
 #import "AVSMediaManager.h"
 #import "AVSFlowManager.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
-#import "ZMUserProfileUpdateTranscoder.h"
-#import "ZMUserProfileUpdateStatus.h"
 #import "MessagingTest+EventFactory.h"
 #import "zmessaging_iOS_Tests-Swift.h"
 
@@ -63,7 +57,7 @@
 
 @property (nonatomic) ZMSyncStrategy *sut;
 @property (nonatomic) ZMAuthenticationStatus *authenticationStatus;
-@property (nonatomic) ZMUserProfileUpdateStatus *userProfileUpdateStatus;
+@property (nonatomic) UserProfileUpdateStatus *userProfileUpdateStatus;
 @property (nonatomic) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic) ClientUpdateStatus *clientUpdateStatus;
 
@@ -97,7 +91,7 @@
     [self verifyMockLater:self.mockUpstreamSync2];
     
     self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.syncMOC cookie:nil];
-    self.userProfileUpdateStatus = [[ZMUserProfileUpdateStatus alloc] initWithManagedObjectContext:self.syncMOC];
+    self.userProfileUpdateStatus = [[UserProfileUpdateStatus alloc] initWithManagedObjectContext:self.syncMOC];
     self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC loginCredentialProvider:self.authenticationStatus updateCredentialProvider:self.userProfileUpdateStatus cookie:nil registrationStatusDelegate:nil];
     self.clientUpdateStatus = [[ClientUpdateStatus alloc] initWithSyncManagedObjectContext:self.syncMOC];
     
@@ -140,26 +134,10 @@
     [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];
     (void)[[[flowTranscoder expect] andReturn:flowTranscoder] initWithMediaManager:nil onDemandFlowManager:nil syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
 
-    id userImageTranscoder = [OCMockObject mockForClass:ZMUserImageTranscoder.class];
-    [[[[userImageTranscoder expect] andReturn:userImageTranscoder] classMethod] alloc];
-    (void) [[[userImageTranscoder expect] andReturn:userImageTranscoder] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:OCMOCK_ANY];
-
-    id pushTokenTranscoder = [OCMockObject mockForClass:ZMPushTokenTranscoder.class];
-    [[[[pushTokenTranscoder expect] andReturn:pushTokenTranscoder] classMethod] alloc];
-    (void) [[[pushTokenTranscoder expect] andReturn:pushTokenTranscoder] initWithManagedObjectContext:self.syncMOC clientRegistrationStatus:OCMOCK_ANY];
-
     id callStateTranscoder = [OCMockObject mockForClass:ZMCallStateTranscoder.class];
     [[[[callStateTranscoder expect] andReturn:callStateTranscoder] classMethod] alloc];
     (void) [[[callStateTranscoder expect] andReturn:callStateTranscoder] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC objectStrategyDirectory:OCMOCK_ANY];
-    
-    id typingTranscoder = [OCMockObject mockForClass:ZMTypingTranscoder.class];
-    [[[[typingTranscoder expect] andReturn:typingTranscoder] classMethod] alloc];
-    (void) [[[typingTranscoder expect] andReturn:typingTranscoder] initWithManagedObjectContext:self.syncMOC userInterfaceContext:self.uiMOC];
-    
-    id removedSuggestedPeopleTranscoder = [OCMockObject mockForClass:ZMRemovedSuggestedPeopleTranscoder.class];
-    [[[[removedSuggestedPeopleTranscoder expect] andReturn:removedSuggestedPeopleTranscoder] classMethod] alloc];
-    (void) [[[removedSuggestedPeopleTranscoder expect] andReturn:removedSuggestedPeopleTranscoder] initWithManagedObjectContext:self.syncMOC];
-    
+        
     id loginCodeRequestTranscoder = [OCMockObject mockForClass:ZMLoginCodeRequestTranscoder.class];
     [[[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] classMethod] alloc];
     (void) [[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.authenticationStatus];
@@ -167,10 +145,6 @@
     id phoneNumberVerificationTranscoder = [OCMockObject mockForClass:ZMPhoneNumberVerificationTranscoder.class];
     [[[[phoneNumberVerificationTranscoder expect] andReturn:phoneNumberVerificationTranscoder] classMethod] alloc];
     (void) [[[phoneNumberVerificationTranscoder expect] andReturn:phoneNumberVerificationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.authenticationStatus];
-    
-    id userProfileUpdateTranscoder = [OCMockObject mockForClass:ZMUserProfileUpdateTranscoder.class];
-    [[[[userProfileUpdateTranscoder expect] andReturn:userProfileUpdateTranscoder] classMethod] alloc];
-    (void) [[[userProfileUpdateTranscoder expect] andReturn:userProfileUpdateTranscoder] initWithManagedObjectContext:self.syncMOC userProfileUpdateStatus:self.userProfileUpdateStatus];
     
     self.stateMachine = [OCMockObject mockForClass:ZMSyncStateMachine.class];
     [[[[self.stateMachine expect] andReturn:self.stateMachine] classMethod] alloc];
@@ -198,18 +172,13 @@
                          selfTranscoder,
                          systemMessageTranscoder,
                          clientMessageTranscoder,
-                         userImageTranscoder,
                          missingUpdateEventsTranscoder,
                          registrationTranscoder,
                          flowTranscoder,
-                         pushTokenTranscoder,
                          callStateTranscoder,
-                         typingTranscoder,
-                         removedSuggestedPeopleTranscoder,
                          loginCodeRequestTranscoder,
-                         phoneNumberVerificationTranscoder,
-                         userProfileUpdateTranscoder
-                         ];
+                         phoneNumberVerificationTranscoder
+    ];
     
     for(ZMObjectSyncStrategy *strategy in self.syncObjects) {
         [[(id) strategy stub] tearDown];
@@ -229,6 +198,7 @@
                                                proxiedRequestStatus:nil
                                                       accountStatus:nil
                                        backgroundAPNSPingBackStatus:nil
+                                          topConversationsDirectory:nil
                                                        mediaManager:nil
                                                 onDemandFlowManager:nil
                                                             syncMOC:self.syncMOC
@@ -241,7 +211,6 @@
                                                         application:self.application];
     
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
-    XCTAssertEqual(self.sut.userImageTranscoder, userImageTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
     XCTAssertEqual(self.sut.systemMessageTranscoder, systemMessageTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
@@ -249,13 +218,9 @@
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
     XCTAssertEqual(self.sut.registrationTranscoder, registrationTranscoder);
     XCTAssertEqual(self.sut.flowTranscoder, flowTranscoder);
-    XCTAssertEqual(self.sut.pushTokenTranscoder, pushTokenTranscoder);
     XCTAssertEqual(self.sut.callStateTranscoder, callStateTranscoder);
-    XCTAssertEqual(self.sut.typingTranscoder, typingTranscoder);
-    XCTAssertEqual(self.sut.removedSuggestedPeopleTranscoder, removedSuggestedPeopleTranscoder);
     XCTAssertEqual(self.sut.loginCodeRequestTranscoder, loginCodeRequestTranscoder);
     XCTAssertEqual(self.sut.phoneNumberVerificationTranscoder, phoneNumberVerificationTranscoder);
-    XCTAssertEqual(self.sut.userProfileUpdateTranscoder, userProfileUpdateTranscoder);
     
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -1114,6 +1079,28 @@
     XCTAssertFalse([ids containsObject:remoteId]);
 }
 
+- (void)testThatItMergesTheUserInfoOfContexts {
+    
+    // The security level degradation info is stored in the user info. I'm using this one to verify that it is merged correcly
+    // GIVEN
+    __block ZMOTRMessage *message;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMConversationTypeGroup;
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        
+        message = (ZMOTRMessage *)[conversation appendMessageWithText:@"foo bar bar bar"];
+        message.causedSecurityLevelDegradation = YES;
+        
+        // WHEN
+        [self.syncMOC saveOrRollback];
+    }];
+    [self spinMainQueueWithTimeout:0.2];
+    
+    // THEN
+    ZMOTRMessage *uiMessage = [self.uiMOC existingObjectWithID:message.objectID error:nil];
+    XCTAssertTrue(uiMessage.causedSecurityLevelDegradation);
+}
 #pragma mark - Helper
 
 - (NSSet <Class> *)transcodersExpectedToReturnNonces

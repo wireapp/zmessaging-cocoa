@@ -230,7 +230,7 @@ static NSString *ZMLogTag = @"Push";
     // Wrap the handler:
     ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult const result){
         ZM_STRONG(self);
-        [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
+        [self.managedObjectContext performGroupedBlock:^{
             switch (result) {
                 case ZMBackgroundFetchResultNewData:
                     completionHandler(UIBackgroundFetchResultNewData);
@@ -275,6 +275,27 @@ static NSString *ZMLogTag = @"Push";
     NOT_USED(note);
     self.didNotifyThirdPartyServices = NO;
     self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = YES;
+
+    [self mergeChangesFromStoredSaveNotificationsIfNeeded];
+}
+
+- (void)mergeChangesFromStoredSaveNotificationsIfNeeded
+{
+    NSArray *storedNotifications = self.storedDidSaveNotifications.storedNotifications.copy;
+    [self.storedDidSaveNotifications clear];
+
+    for (NSDictionary *changes in storedNotifications) {
+        [NSManagedObjectContext mergeChangesFromRemoteContextSave:changes intoContexts:@[self.managedObjectContext]];
+        [self.syncManagedObjectContext performGroupedBlock:^{
+            [NSManagedObjectContext mergeChangesFromRemoteContextSave:changes intoContexts:@[self.syncManagedObjectContext]];
+        }];
+    }
+
+    [self.managedObjectContext processPendingChanges];
+
+    [self.syncManagedObjectContext performGroupedBlock:^{
+        [self.syncManagedObjectContext processPendingChanges];
+    }];
 }
 
 @end
@@ -294,7 +315,7 @@ static NSString *ZMLogTag = @"Push";
         return;
     }
     
-    [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
+    [self.managedObjectContext performGroupedBlock: ^{
         ZMStoredLocalNotification *note = self.pendingLocalNotification;
         
         if ([note.category isEqualToString:ZMConnectCategory]) {
@@ -406,7 +427,7 @@ static NSString *ZMLogTag = @"Push";
         ZM_WEAK(self);
         [self.operationLoop startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
             ZM_STRONG(self);
-            [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
+            [self.managedObjectContext performGroupedBlock: ^{
                 if (result == ZMBackgroundTaskResultFailed) {
                     [self.localNotificationDispatcher didFailToSendMessageInConversation:conversation];
                 }

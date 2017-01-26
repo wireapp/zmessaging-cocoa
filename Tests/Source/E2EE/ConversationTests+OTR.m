@@ -23,6 +23,7 @@
 
 @import ZMCDataModel;
 @import ZMUtilities;
+@import WireMessageStrategy;
 
 @interface ConversationTestsOTR : ConversationTestsBase
 
@@ -144,14 +145,14 @@
     
     //this fetch the missing client
     [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithText:@"Bonsoir, je voudrais un croissant" nonce:[NSUUID createUUID]];
+        message = [conversation appendOTRMessageWithText:@"Bonsoir, je voudrais un croissant" nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     WaitForEverythingToBeDoneWithTimeout(1.0);
     
     
     // when
     [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithText:messageText nonce:[NSUUID createUUID]];
+        message = [conversation appendOTRMessageWithText:messageText nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     WaitForEverythingToBeDoneWithTimeout(1.0);
     
@@ -225,7 +226,7 @@
     __block ZMMessage *message;
     // when
     [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithText:messageText nonce:[NSUUID createUUID]];
+        message = [conversation appendOTRMessageWithText:messageText nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     
     WaitForEverythingToBeDoneWithTimeout(1.0);
@@ -319,7 +320,7 @@
     
     // when
     [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithText:messageText nonce:[NSUUID createUUID]];
+        message = [conversation appendOTRMessageWithText:messageText nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     WaitForEverythingToBeDoneWithTimeout(1.0);
     
@@ -414,7 +415,7 @@
     [self testThatOtrMessageIsDelivered:YES
      shouldEstablishSessionBetweenUsers:YES
                           createMessage:^ ZMMessage *(ZMConversation *conversation){
-                              return [conversation appendOTRMessageWithText:@"Hey!" nonce:[NSUUID createUUID]];
+                              return [conversation appendOTRMessageWithText:@"Hey!" nonce:[NSUUID createUUID] fetchLinkPreview:YES];
                           }
                    withReadMessageBlock:^(__unused MockPushEvent *lastEvent,__unused EncryptionContext *user1Box) {
                        XCTAssertTrue([observer.notifications.firstObject clientsChanged]);
@@ -452,7 +453,7 @@
     
     __block ZMMessage *textMessage;
     [self.userSession performChanges:^{
-        textMessage = [conversation appendOTRMessageWithText:@"foobar" nonce:[NSUUID createUUID]];
+        textMessage = [conversation appendOTRMessageWithText:@"foobar" nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     
     __block ZMMessage *imageMessage2;
@@ -555,7 +556,7 @@
     
     // when
     [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithText:@"I can't hear you, Claudy" nonce:[NSUUID createUUID]];
+        message = [conversation appendOTRMessageWithText:@"I can't hear you, Claudy" nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     
     XCTAssertTrue([self waitOnMainLoopUntilBlock:^BOOL{
@@ -616,7 +617,7 @@
     
     // fail to send
     [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithText:@"Where's everyone?" nonce:[NSUUID createUUID]];
+        message = [conversation appendOTRMessageWithText:@"Where's everyone?" nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     
     XCTAssertTrue([self waitOnMainLoopUntilBlock:^BOOL{
@@ -823,7 +824,7 @@
     __block ZMClientMessage *message;
     // when
     [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithText:text nonce:NSUUID.createUUID];
+        message = [conversation appendOTRMessageWithText:text nonce:NSUUID.createUUID fetchLinkPreview:YES];
     }];
     WaitForEverythingToBeDoneWithTimeout(1.0);
     
@@ -1059,7 +1060,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertTrue(conversation.trusted);
+    XCTAssertTrue(conversation.allUsersTrusted);
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
 }
 
@@ -1160,7 +1161,7 @@
     __block ZMClientMessage* message;
     [self.userSession performChanges:^{
         for (NSUInteger i = 0; i < numberOfMessages; i++) {
-            message = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+            message = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
             [NSThread sleepForTimeInterval:0.1];
         }
     }];
@@ -1199,7 +1200,7 @@
     XCTAssertTrue([conversation.otherActiveParticipants containsObject:addedUser]);
     XCTAssertNil(addedUser.connection);
     
-    XCTAssertFalse(conversation.trusted);
+    XCTAssertFalse(conversation.allUsersTrusted);
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
     
     // when
@@ -1225,7 +1226,7 @@
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
     // then
-    XCTAssertTrue(conversation.trusted);
+    XCTAssertTrue(conversation.allUsersTrusted);
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
 }
 
@@ -1241,7 +1242,7 @@
     {
         // send a message to fetch all the missing client
         [self.userSession performChanges:^{
-            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
     }
@@ -1251,7 +1252,7 @@
     // when
     __block ZMClientMessage* message;
     [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+        message = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     
     [message.managedObjectContext saveOrRollback];
@@ -1281,7 +1282,7 @@
     {
         // send a message to fetch all the missing client
         [self.userSession performChanges:^{
-            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
     }
@@ -1302,7 +1303,7 @@
             XCTAssertTrue(changeInfo.didDegradeSecurityLevelBecauseOfMissingClients);
             [self.userSession performChanges:^{
                 if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
-                    [changeInfo.conversation resendLastUnsentMessages];
+                    [changeInfo.conversation resendMessagesThatCausedConversationSecurityDegradation];
                 }
             }];
         }
@@ -1313,7 +1314,7 @@
     // when
     __block ZMClientMessage* message;
     [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+        message = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     
     [observer tearDown];
@@ -1364,7 +1365,7 @@
     // Setup security level
     
     [self.userSession performChanges:^ {
-        [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+        [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     WaitForEverythingToBeDone();
     [self makeConversationSecured:conversation];
@@ -1393,7 +1394,7 @@
     // when
     __block ZMClientMessage* message1;
     [self.userSession performChanges:^{
-        message1 = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+        message1 = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     WaitForEverythingToBeDone();
     
@@ -1420,7 +1421,7 @@
             if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
                 XCTAssertTrue(changeInfo.didDegradeSecurityLevelBecauseOfMissingClients);
                 [self.userSession performChanges:^{
-                    [changeInfo.conversation resendLastUnsentMessages];
+                    [changeInfo.conversation resendMessagesThatCausedConversationSecurityDegradation];
                 }];
             }
         }
@@ -1431,7 +1432,7 @@
     // when
     __block ZMClientMessage* message2;
     [self.userSession performChanges:^{
-        message2 = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+        message2 = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     WaitForEverythingToBeDone();
     
@@ -1498,7 +1499,7 @@
     void (^secureConversationBlock)(ZMConversation *) = ^(ZMConversation *conversation) {
         // send a message to fetch all the missing client
         [self.userSession performChanges:^{
-            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         [self makeConversationSecured:conversation];
@@ -1518,7 +1519,7 @@
     // when
     __block ZMClientMessage* message;
     [self.userSession performChanges:^{
-        message = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+        message = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     [message.managedObjectContext saveOrRollback];
     WaitForEverythingToBeDone();
@@ -1564,12 +1565,12 @@
 
 }
 
-- (void)testThatItChangesSecurityLevelToInsecureCauseFailedMessageAttemptWhenSelfTriesToSendMessageInDegradingConversation
+- (void)testThatItChangesSecurityLevelToInsecureBecauseFailedMessageAttemptWhenSelfTriesToSendMessageInDegradingConversation
 {
     [self testThatItChangesSecurityLevelToCorrectSubtypeSendingMessageFromSelfClient:YES];
 }
 
-- (void)testThatItChangesSecurityLevelToInsecureCauseOtherWhenOtherClientTriesToSendMessageAndDegradesDegradingConversation
+- (void)testThatItChangesSecurityLevelToInsecureBecauseOtherWhenOtherClientTriesToSendMessageAndDegradesDegradingConversation
 {
     [self testThatItChangesSecurityLevelToCorrectSubtypeSendingMessageFromSelfClient:NO];
 }
@@ -1596,7 +1597,7 @@
         
         // when
         [self.userSession performChanges:^{
-            [conversation appendOTRMessageWithText:@"Hello" nonce:NSUUID.createUUID];
+            [conversation appendOTRMessageWithText:@"Hello" nonce:NSUUID.createUUID fetchLinkPreview:YES];
         }];
         
         WaitForEverythingToBeDone();
@@ -1947,7 +1948,7 @@
     {
         // adding a message to fetch client
         [self.userSession performChanges:^{
-            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
         }];
         WaitForEverythingToBeDone();
         
@@ -2003,22 +2004,6 @@
     [observer tearDown];
 }
 
-- (void)simulateResponseForFetchingUserClients:(NSArray *)clientIDs userID:(NSUUID *)userID
-{
-    NSMutableArray *payload = [NSMutableArray array];
-    for (NSString *clientID in clientIDs){
-        [payload addObject:@{@"id": clientID}];
-    }
-    
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        NSString *path = [NSString stringWithFormat:@"users/%@/clients", userID.transportString];
-        if ([request.path isEqualToString:path]) {
-            return [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-        }
-        return nil;
-    };
-}
-
 - (void)testThatItInsertsSystemMessageWhenTheOtherUserDeletesAnUntrustedClient
 {
     // given
@@ -2032,29 +2017,27 @@
     {
         // adding a message
         [self.userSession performChanges:^{
-            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
         }];
         WaitForEverythingToBeDone();
         [self makeConversationSecured:conversation];
         trustedRemoteID = [otherUser.clients.anyObject remoteIdentifier];
 
         // then
+        XCTAssertEqual(otherUser.clients.count, 1u);
         XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
     }
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
     
+    __block MockUserClient *additionalUserClient;
     // (2) insert new client for user 1
     {
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-            [session registerClientForUser:self.user1 label:@"other user 1 clients" type:@"permanent"];
+            additionalUserClient = [session registerClientForUser:self.user1 label:@"other user 1 clients" type:@"permanent"];
         }];
         WaitForEverythingToBeDoneWithTimeout(0.5);
         
-        NSSet *clientIDs = [self.user1.clients mapWithBlock:^id(MockUserClient *obj) {
-            return obj.identifier;
-        }];
-        [self simulateResponseForFetchingUserClients:clientIDs.allObjects userID:otherUser.remoteIdentifier];
         [self.userSession performChanges:^{
             [otherUser fetchUserClients];
         }];
@@ -2079,8 +2062,12 @@
     
     // (3) remove inserted client for user1
     {
+        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *__unused session) {
+            [self.user1.clients removeObject:additionalUserClient];
+        }];
+        WaitForEverythingToBeDoneWithTimeout(0.5);
+
         // when
-        [self simulateResponseForFetchingUserClients:@[trustedRemoteID] userID:otherUser.remoteIdentifier];
         [self.userSession performChanges:^{
             [otherUser fetchUserClients];
         }];
@@ -2190,7 +2177,7 @@
     void (^secureConversationBlock)(ZMConversation *) = ^(ZMConversation *conversation) {
         // send a message to fetch all the missing client
         [self.userSession performChanges:^{
-            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID]];
+            [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         [self makeConversationSecured:conversation];
@@ -2211,10 +2198,6 @@
     }];
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
-    NSSet *clientIDs = [self.user1.clients mapWithBlock:^id(MockUserClient *obj) {
-        return obj.identifier;
-    }];
-    [self simulateResponseForFetchingUserClients:clientIDs.allObjects userID:user1.remoteIdentifier];
     [self.userSession performChanges:^{
         [user1 fetchUserClients];
     }];

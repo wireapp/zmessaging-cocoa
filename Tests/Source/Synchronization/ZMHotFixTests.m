@@ -526,6 +526,43 @@
     XCTAssertNil(confirmation.managedObjectContext);
 }
 
+- (void)testThatItPurgesPinCachesInHostBundle_60_0_0
+{
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    // given
+    NSURL *cachesDirectory = [fileManager URLForDirectory:NSCachesDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil];
+    NSArray *PINCaches = @[@"com.pinterest.PINDiskCache.images", @"com.pinterest.PINDiskCache.largeUserImages", @"com.pinterest.PINDiskCache.smallUserImages"];
+    
+    // Create expected PINCache folders
+    for (NSString *cache in PINCaches) {
+        NSURL *cacheURL = [cachesDirectory URLByAppendingPathComponent:cache isDirectory:YES];
+        XCTAssertTrue([fileManager createDirectoryAtURL:cacheURL withIntermediateDirectories:YES attributes:nil error:nil]);
+    }
+    
+    // Create folder which shouldn't be deleted
+    NSURL *directoryNotBeDeleted = [cachesDirectory URLByAppendingPathComponent:@"dontDeleteMe" isDirectory:YES];
+    XCTAssertTrue([fileManager createDirectoryAtURL:directoryNotBeDeleted withIntermediateDirectories:YES attributes:nil error:nil]);
+    
+    // when
+    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+    [self.sut applyPatchesForCurrentVersion:@"61.0.0"];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self.syncMOC saveOrRollback];
+    
+    // then
+    for (NSString *cache in PINCaches) {
+        NSURL *cacheURL = [cachesDirectory URLByAppendingPathComponent:cache isDirectory:YES];
+        XCTAssertFalse([fileManager fileExistsAtPath:cacheURL.path]);
+    }
+    
+    XCTAssertTrue([fileManager fileExistsAtPath:directoryNotBeDeleted.path]);
+    
+    // clean up
+    XCTAssertTrue([fileManager removeItemAtURL:directoryNotBeDeleted error:nil]);
+}
+
 - (NSURL *)testVideoFileURL
 {
     NSBundle *bundle = [NSBundle bundleForClass:self.class];
@@ -533,6 +570,41 @@
     NSURL *url = [bundle URLForResource:@"video" withExtension:@"mp4"];
     if (nil == url) XCTFail("Unable to load video fixture from disk");
     return url;
+}
+
+- (void)testThatItMarksConnectedUsersToBeUpdatedFromTheBackend_62_3_1
+{
+    // given
+    ZMUser *connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+    connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+    connectedUser.connection.status = ZMConnectionStatusAccepted;
+    connectedUser.needsToBeUpdatedFromBackend = NO;
+
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    selfUser.needsToBeUpdatedFromBackend = NO;
+
+    ZMUser *unconnectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+    unconnectedUser.needsToBeUpdatedFromBackend = NO;
+
+    [self.syncMOC saveOrRollback];
+
+    XCTAssertTrue(connectedUser.isConnected);
+    XCTAssertFalse(unconnectedUser.isConnected);
+    XCTAssertFalse(connectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
+
+    // when
+    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+    [self.sut applyPatchesForCurrentVersion:@"62.3.1"];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    [self.syncMOC saveOrRollback];
+
+    // then
+    XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
 }
 
 @end

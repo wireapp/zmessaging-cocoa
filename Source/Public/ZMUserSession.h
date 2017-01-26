@@ -20,8 +20,8 @@
 
 @import Foundation;
 @import ZMCSystem;
+@import ZMCDataModel;
 
-#import <ZMCDataModel/ZMManagedObjectContextProvider.h>
 #import <zmessaging/ZMNetworkState.h>
 #import <ZMTransport/ZMTransportRequest.h>
 
@@ -32,11 +32,13 @@
 @class UserClient;
 @class ZMProxyRequest;
 
+@protocol UserProfile;
 @protocol AnalyticsType;
 @protocol AVSMediaManager;
 @protocol ZMNetworkAvailabilityObserver;
 @protocol ZMRequestsToOpenViewsDelegate;
 @protocol ZMThirdPartyServicesDelegate;
+@class TopConversationsDirectory;
 
 @protocol ZMAVSLogObserver <NSObject>
 @required
@@ -124,6 +126,9 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 /// Initiates the deletion process for the current signed in user
 - (void)initiateUserDeletion;
 
+/// Top conversation directory
+@property (nonatomic, readonly) TopConversationsDirectory *topConversationsDirectory;
+
 @end
 
 
@@ -200,5 +205,9 @@ typedef NS_ENUM (NSInteger, ProxiedRequestType){
 
 @interface ZMUserSession (SelfUserClient)
 
+/// Object for updating profile
+@property (nonatomic, readonly) id<UserProfile> userProfile;
+
 - (UserClient *)selfUserClient;
 @end
+

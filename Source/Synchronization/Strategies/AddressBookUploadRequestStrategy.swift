@@ -72,7 +72,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
     init(authenticationStatus: AuthenticationStatusProvider,
                 clientRegistrationStatus: ZMClientClientRegistrationStatusProvider,
                 managedObjectContext: NSManagedObjectContext,
-                addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook() },
+                addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook.factory() },
                 tracker: AddressBookTracker? = nil
                 )
     {
@@ -114,39 +114,111 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
         guard sync == self.requestSync, let encodedChunk = self.encodedAddressBookChunkToUpload else {
             return nil
         }
-        let contactCards = encodedChunk.otherContactsHashes
-            .enumerated()
-            .map { (index, hashes) -> [String:AnyObject] in
+        let contactCards : [[String: AnyObject]] = encodedChunk.otherContactsHashes
+            .keys
+            .sorted()
+            .map { index -> [String:AnyObject] in
+                let hashes = encodedChunk.otherContactsHashes[index]!
                 return [
-                    "card_id" : "\(encodedChunk.includedContacts.lowerBound + UInt(index))" as AnyObject,
-                    "contact" : hashes as AnyObject
+                    "card_id" : index as NSString,
+                    "contact" : hashes as NSArray
                 ]
         }
-        let payload = ["cards" : contactCards, "self" : []]
+        
+        let allLocalContactIDs = Set(encodedChunk.otherContactsHashes.keys)
+        let payload : [String: Any] = ["cards" : contactCards, "self" : self.selfHashes()]
         self.tracker.tagAddressBookUploadStarted(encodedChunk.numberOfTotalContacts)
-        return ZMTransportRequest(path: onboardingEndpoint, method: .methodPOST, payload: payload as ZMTransportData?, shouldCompress: true)
+        let request = ZMTransportRequest(path: onboardingEndpoint, method: .methodPOST, payload: payload as ZMTransportData?, shouldCompress: true)
+        request.add(ZMCompletionHandler(on: self.managedObjectContext, block: {
+            [weak self] response in
+            self?.parse(addressBookResponse: response, expectedContactIDs: allLocalContactIDs)
+            })
+        )
+        return request
+    }
+    
+    /// Returns a list of the hashes for the current user
+    private func selfHashes() -> [String] {
+        return ZMUser.selfUser(in: self.managedObjectContext).contactHashes
     }
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
+        // no op
+    }
+    
+    private func parse(addressBookResponse response: ZMTransportResponse, expectedContactIDs: Set<String>) {
         if response.result == .success {
-
+            
             if let payload = response.payload as? [String: AnyObject],
                 let results = payload["results"] as? [[String: AnyObject]]
             {
-                let suggestedIds = results.flatMap { $0["id"] as? String }
-                // XXX: this will always overwrite previous ones, effectively linking the suggestion to
-                // the batch size, i.e. only AB with less contacts than the batch size will have reliable
-                // suggestions. On the other hand, appending instead of replacing could cause infinite 
-                // growth. For the moment, we will live with having suggestions only from the last batch
-                self.managedObjectContext.suggestedUsersForUser = NSOrderedSet(array: suggestedIds)
+                self.updateLocalUsers(cards: results, expectedContactIDs: expectedContactIDs)
             }
             
-            self.managedObjectContext.commonConnectionsForUsers = [:]
             self.addressBookNeedsToBeUploaded = false
             self.encodedAddressBookChunkToUpload = nil
             
             // tracking
             self.tracker.tagAddressBookUploadSuccess()
+        }
+    }
+    
+    /// Parse the cards response and updates the local users
+    private func updateLocalUsers(cards: [[String:AnyObject]], expectedContactIDs: Set<String>) {
+        
+        // do a single fetch for all users
+        let userIds = cards.flatMap { ($0["id"] as? String).flatMap { UUID(uuidString: $0 ) } }
+        let users = ZMUser.fetchObjects(withRemoteIdentifiers: NSOrderedSet(array: userIds), in: self.managedObjectContext)!.array as! [ZMUser]
+        
+        let idToUsers = users.dictionary {
+            return (key: $0.remoteIdentifier!, value: $0)
+        }
+        
+        guard let addressBook = self.addressBookGenerator() else {
+            return
+        }
+        
+        // add new matches
+        var missingIDs = Set(expectedContactIDs)
+        cards.forEach {
+            guard let userid = ($0["id"] as? String).flatMap({ UUID(uuidString: $0 )}),
+                let contactIds = $0["cards"] as? [String]
+            else { return }
+            
+            let user : ZMUser = idToUsers[userid] ?? {
+                let newUser = ZMUser.insertNewObject(in: self.managedObjectContext)
+                newUser.remoteIdentifier = userid
+                newUser.needsToBeUpdatedFromBackend = true
+                return newUser
+            }()
+
+            contactIds.forEach { contactId in
+                missingIDs.remove(contactId)
+
+                if user.addressBookEntry == nil {
+                    user.addressBookEntry = AddressBookEntry.insertNewObject(in: self.managedObjectContext)
+                }
+                user.addressBookEntry.localIdentifier = contactId
+                user.addressBookEntry.cachedName = addressBook.contact(identifier: contactId)?.displayName
+            }
+        }
+        
+        // now remove all address book entries for those users that were previously using the missing IDs
+        if #available(iOS 10.0, *) {
+            self.deleteEntriesForUsers(contactIDs: missingIDs)
+        }
+    }
+    
+    /// Remove address book entries for users previously matching the given contact IDs
+    @available(iOS 10.0, *)
+    private func deleteEntriesForUsers(contactIDs: Set<String>) {
+        let fetch = AddressBookEntry.fetchRequest()
+        fetch.predicate = NSPredicate(format: "%K IN %@", AddressBookEntry.Fields.localIdentifier.rawValue, contactIDs)
+        guard let entries = (try? self.managedObjectContext.fetch(fetch) as? [AddressBookEntry]) else {
+            return
+        }
+        entries?.forEach {
+            self.managedObjectContext.delete($0)
         }
     }
     
@@ -231,12 +303,12 @@ extension AddressBook {
     
     /// Sets whether the address book needs to be uploaded
     fileprivate static func markAddressBook(_ moc: NSManagedObjectContext, needsToBeUploaded: Bool) {
-        moc.setPersistentStoreMetadata(NSNumber(value: needsToBeUploaded), forKey: addressBookNeedsToBeUploadedKey)
+        moc.setPersistentStoreMetadata(NSNumber(value: needsToBeUploaded), key: addressBookNeedsToBeUploadedKey)
     }
     
     /// Whether the address book needs to be uploaded
     fileprivate static func addressBookNeedsToBeUploaded(_ moc: NSManagedObjectContext) -> Bool {
-        return (moc.persistentStoreMetadata(forKey: addressBookNeedsToBeUploadedKey) as? NSNumber)?.boolValue == true
+        return (moc.persistentStoreMetadata(key: addressBookNeedsToBeUploadedKey) as? NSNumber)?.boolValue == true
     }
 }
 
@@ -262,11 +334,24 @@ extension AddressBookUploadRequestStrategy {
     fileprivate var lastUploadedCardIndex : UInt {
         get {
             return UInt((self.managedObjectContext
-                .persistentStoreMetadata(forKey: addressBookLastUploadedIndex) as? NSNumber)?.intValue ?? 0)
+                .persistentStoreMetadata(key: addressBookLastUploadedIndex) as? NSNumber)?.intValue ?? 0)
         }
         set {
             self.managedObjectContext
-                .setPersistentStoreMetadata(NSNumber(value: Int(newValue)), forKey: addressBookLastUploadedIndex)
+                .setPersistentStoreMetadata(NSNumber(value: Int(newValue)), key: addressBookLastUploadedIndex)
         }
     }
+}
+
+
+extension ZMUser {
+    
+    /// Returns a list of the hashes for the current user
+    var contactHashes : [String] {
+        return [self.normalizedEmailAddress, self.phoneNumber]
+            .flatMap { $0 }
+            .filter { !$0.isEmpty }
+            .map { $0.base64EncodedSHADigest }
+    }
+    
 }

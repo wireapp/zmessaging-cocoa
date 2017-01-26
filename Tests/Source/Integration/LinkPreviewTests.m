@@ -212,7 +212,7 @@
     
     ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
+        encryptedData = [MockUserClient encryptedWithData:linkPreviewMessage.data from:senderClient to:selfClient];
         [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -229,7 +229,7 @@
     linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
+        encryptedData = [MockUserClient encryptedWithData:linkPreviewMessage.data from:senderClient to:selfClient];
         [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -258,7 +258,7 @@
     
     ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
+        encryptedData = [MockUserClient encryptedWithData:linkPreviewMessage.data from:senderClient to:selfClient];
         [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -285,7 +285,7 @@
     linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
+        encryptedData = [MockUserClient encryptedWithData:linkPreviewMessage.data from:senderClient to:selfClient];
         [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -329,7 +329,7 @@
     
     ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
+        encryptedData = [MockUserClient encryptedWithData:linkPreviewMessage.data from:senderClient to:selfClient];
         [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -346,7 +346,7 @@
     linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
+        encryptedData = [MockUserClient encryptedWithData:linkPreviewMessage.data from:senderClient to:selfClient];
         [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
     }];
     WaitForAllGroupsToBeEmpty(0.5);

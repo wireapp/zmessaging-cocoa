@@ -23,7 +23,6 @@
 @class ZMTransportSession;
 @class ZMSyncStrategy;
 @class ZMAuthenticationStatus;
-@class ZMUserProfileUpdateStatus;
 @class ZMClientRegistrationStatus;
 @class NSManagedObjectContext;
 @class ZMLocalNotificationDispatcher;
@@ -36,9 +35,11 @@
 @class ZMOnDemandFlowManager;
 @class ProxiedRequestsStatus;
 @class ClientUpdateStatus;
+@class UserProfileUpdateStatus;
 
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
+@class TopConversationsDirectory;
 @protocol ZMApplication;
 
 extern NSString * const ZMPushChannelStateChangeNotificationName;
@@ -52,12 +53,13 @@ extern NSString * const ZMPushChannelResponseStatusKey;
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                     authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-                 userProfileUpdateStatus:(ZMUserProfileUpdateStatus *)userProfileUpdateStatus
+                 userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileUpdateStatus
                 clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                       clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
                     proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
                            accountStatus:(ZMAccountStatus *)accountStatus
             backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
+               topConversationsDirectory:(TopConversationsDirectory *)topConversationsDirectory
              localNotificationdispatcher:(ZMLocalNotificationDispatcher *)dispatcher
                             mediaManager:(id<AVSMediaManager>)mediaManager
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
