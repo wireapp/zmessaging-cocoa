@@ -23,6 +23,7 @@ class CallStateObserverTests : MessagingTest {
     
     var sut : CallStateObserver!
     var sender : ZMUser!
+    var receiver : ZMUser!
     var conversation : ZMConversation!
     var localNotificationDispatcher : ZMLocalNotificationDispatcher!
     
@@ -31,15 +32,22 @@ class CallStateObserverTests : MessagingTest {
         
         syncMOC.performGroupedBlockAndWait {
             let sender = ZMUser.insertNewObject(in: self.syncMOC)
-            sender.name = "Callie"
+            sender.name = "Sender"
             sender.remoteIdentifier = UUID()
             
             self.sender = sender
+            
+            let receiver = ZMUser.insertNewObject(in: self.syncMOC)
+            receiver.name = "Receiver"
+            receiver.remoteIdentifier = UUID()
+            
+            self.receiver = receiver
             
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .oneOnOne
             conversation.remoteIdentifier = UUID()
             conversation.internalAddParticipant(sender, isAuthoritative: true)
+            conversation.internalAddParticipant(receiver, isAuthoritative: true)
             
             self.conversation = conversation
         }
@@ -59,9 +67,26 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertNil(instance)
     }
     
-    func testThatMissedCallMessageIsAppendedForCanceledCalls() {
+    func testThatMissedCallMessageIsAppendedForCanceledCallByReceiver() {
         
         // given when
+        sut.callCenterDidChange(callState: .incoming(video: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversationId: conversation.remoteIdentifier!, userId: receiver.remoteIdentifier!)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        if let message =  conversation.messages.lastObject as? ZMSystemMessage {
+            XCTAssertEqual(message.systemMessageType, .missedCall)
+            XCTAssertEqual(message.sender, sender)
+        } else {
+            XCTFail()
+        }
+    }
+    
+    func testThatMissedCallMessageIsAppendedForCanceledCallBySender() {
+        
+        // given when
+        sut.callCenterDidChange(callState: .incoming(video: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
         sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         

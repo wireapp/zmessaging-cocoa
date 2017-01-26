@@ -23,10 +23,11 @@ import CoreData
 @objc(ZMCallStateObserver)
 public final class CallStateObserver : NSObject {
     
-    let localNotificationDispatcher : ZMLocalNotificationDispatcher
-    let managedObjectContext : NSManagedObjectContext
-    var callStateToken : WireCallCenterObserverToken? = nil
-    var missedCalltoken : WireCallCenterObserverToken? = nil
+    fileprivate let localNotificationDispatcher : ZMLocalNotificationDispatcher
+    fileprivate let callingSystemMessageGenerator = CallingSystemMessageGenerator()
+    fileprivate let managedObjectContext : NSManagedObjectContext
+    fileprivate var callStateToken : WireCallCenterObserverToken? = nil
+    fileprivate var missedCalltoken : WireCallCenterObserverToken? = nil
     
     deinit {
         if let token = callStateToken {
@@ -52,41 +53,67 @@ public final class CallStateObserver : NSObject {
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
-        guard !ZMUserSession.useCallKit else { return }
-        
         managedObjectContext.performGroupedBlock {
             guard
                 let userId = userId,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.managedObjectContext),
-                let caller = ZMUser(remoteID: userId, createIfNeeded: false, in: self.managedObjectContext)
+                let user = ZMUser(remoteID: userId, createIfNeeded: false, in: self.managedObjectContext)
                 else {
                     return
             }
             
-            self.localNotificationDispatcher.process(callState: callState, in: conversation, sender: caller)
-            
-            if case .terminating(let reason) = callState, reason == .canceled || reason == .timeout {
-                conversation.appendMissedCallMessage(fromUser: caller, at: Date())
+            if !ZMUserSession.useCallKit {
+                self.localNotificationDispatcher.process(callState: callState, in: conversation, sender: user)
             }
+            
+            self.callingSystemMessageGenerator.process(callState: callState, in: conversation, sender: user)
         }
     }
     
     public func callCenterMissedCall(conversationId: UUID, userId: UUID, timestamp: Date, video: Bool) {
-        guard !ZMUserSession.useCallKit else { return }
-        
         managedObjectContext.performGroupedBlock {
             guard
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.managedObjectContext),
-                let caller = ZMUser(remoteID: userId, createIfNeeded: false, in: self.managedObjectContext)
+                let user = ZMUser(remoteID: userId, createIfNeeded: false, in: self.managedObjectContext)
                 else {
                     return
             }
             
-            self.localNotificationDispatcher.processMissedCall(in: conversation, sender: caller)
+            if !ZMUserSession.useCallKit {
+                self.localNotificationDispatcher.processMissedCall(in: conversation, sender: user)
+            }
             
-            conversation.appendMissedCallMessage(fromUser: caller, at: timestamp)
+            self.callingSystemMessageGenerator.processMissedCall(in: conversation, from: user, at: timestamp)
         }
     }
     
+}
+
+private final class CallingSystemMessageGenerator {
+    
+    var callers : [ZMConversation : ZMUser] = [:]
+    
+    func process(callState: CallState, in conversation: ZMConversation, sender: ZMUser) {
+        
+        switch callState {
+        case .incoming:
+            callers[conversation] = sender
+        case .terminating(reason: .canceled):
+            let caller = callers[conversation] ?? sender
+            conversation.appendMissedCallMessage(fromUser: caller, at: Date())
+        case .terminating(reason: .timeout):
+            conversation.appendMissedCallMessage(fromUser: sender, at: Date())
+        default:
+            break
+        }
+        
+        if case .terminating = callState {
+            callers.removeValue(forKey: conversation)
+        }
+    }
+    
+    func processMissedCall(in conversation: ZMConversation, from user: ZMUser, at timestamp: Date) {
+        conversation.appendMissedCallMessage(fromUser: user, at: timestamp)
+    }
     
 }
