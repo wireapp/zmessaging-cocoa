@@ -33,6 +33,7 @@
 @class UserClient;
 @class ZMProxyRequest;
 @class WireCallCenterV2;
+@class ZMCallKitDelegate;
 
 @protocol UserProfile;
 @protocol AnalyticsType;
@@ -133,6 +134,9 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 
 /// CallCenter for V2 calls
 @property (nonatomic, readonly) WireCallCenterV2 *wireCallCenterV2;
+
+/// CallKit delegate
+@property (nonatomic, readonly) ZMCallKitDelegate *callKitDelegate;
 
 @end
 

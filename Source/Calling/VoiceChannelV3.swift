@@ -18,7 +18,7 @@
 
 import Foundation
 
-public class VoiceChannelV3 : NSObject, VoiceChannel {
+public class VoiceChannelV3 : NSObject, CallProperties {
     
     public var selfUserConnectionState: VoiceChannelV2ConnectionState {
         if let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = WireCallCenterV3.activeInstance {
@@ -62,6 +62,46 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         } else {
             return .noActiveUsers
         }
+    }
+    
+    public var isVideoCall: Bool {
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
+        
+        return WireCallCenterV3.isVideoCall(conversationId: remoteIdentifier)
+    }
+    
+    public func toggleVideo(active: Bool) throws {
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.videoNotActiveError() }
+        
+        WireCallCenterV3.activeInstance?.toogleVideo(conversationID: remoteIdentifier, active: active)
+    }
+    
+}
+
+extension VoiceChannelV3 : CallActionsInternal {
+    
+    public func join(video: Bool) -> Bool {
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
+        
+        if state == .incomingCall {
+            _ = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier)
+        } else {
+            _ = WireCallCenterV3.activeInstance?.startCall(conversationId: remoteIdentifier, video: video)
+        }
+        
+        return true
+    }
+    
+    public func leave() {
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
+        
+        WireCallCenterV3.activeInstance?.closeCall(conversationId: remoteIdentifier)
+    }
+    
+    public func ignore() {
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
+        
+        WireCallCenterV3.activeInstance?.closeCall(conversationId: remoteIdentifier)
     }
     
 }

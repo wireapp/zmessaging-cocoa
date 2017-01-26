@@ -23,7 +23,12 @@ private var voiceChannelAssociatedKey: UInt8 = 0
 public extension ZMConversation {
     
     /// NOTE: this object is transient, and will be re-created periodically. Do not hold on to this object, hold on to the owning conversation instead.
-    var voiceChannel : VoiceChannelRouter? {
+    var voiceChannel : VoiceChannel? {
+        return voiceChannelRouter
+    }
+    
+    /// NOTE: this object is transient, and will be re-created periodically. Do not hold on to this object, hold on to the owning conversation instead.
+    var voiceChannelRouter : VoiceChannelRouter? {
         
         get {
             guard conversationType == .oneOnOne || conversationType == .group else { return nil }

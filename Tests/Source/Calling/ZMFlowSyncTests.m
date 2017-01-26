@@ -121,7 +121,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         
         // then
         [self.internalFlowManager verify];
-        [conv.voiceChannel.v2 tearDown];
+        [conv.voiceChannelRouter.v2 tearDown];
     }];
 }
 
@@ -144,7 +144,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         
         // then
         [self.internalFlowManager verify];
-        [conv.voiceChannel.v2 tearDown];
+        [conv.voiceChannelRouter.v2 tearDown];
     }];
 }
 
@@ -584,11 +584,11 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user.connection = conv.connection;
         user.remoteIdentifier = NSUUID.createUUID;
-        [conv.voiceChannel.v2 addCallParticipant:user];
+        [conv.voiceChannelRouter.v2 addCallParticipant:user];
         XCTAssert([self.syncMOC saveOrRollback]);
         conversationID = conv.objectID;
         userID = user.objectID;
-        [conv.voiceChannel.v2 tearDown];
+        [conv.voiceChannelRouter.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -618,11 +618,11 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user.connection = conv.connection;
         user.remoteIdentifier = NSUUID.createUUID;
-        [conv.voiceChannel.v2 addCallParticipant:user];
+        [conv.voiceChannelRouter.v2 addCallParticipant:user];
         XCTAssert([self.syncMOC saveOrRollback]);
         conversationID = conv.objectID;
         userID = user.objectID;
-        [conv.voiceChannel.v2 tearDown];
+        [conv.voiceChannelRouter.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -663,7 +663,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user.connection = conv.connection;
         user.remoteIdentifier = NSUUID.createUUID;
-        [conv.voiceChannel.v2 addCallParticipant:user];
+        [conv.voiceChannelRouter.v2 addCallParticipant:user];
         
         [self.syncMOC saveOrRollback];
     }];
@@ -679,7 +679,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     
     [NSNotificationCenter.defaultCenter removeObserver:token];
     [self.syncMOC performGroupedBlockAndWait:^{
-        [conv.voiceChannel.v2 tearDown];
+        [conv.voiceChannelRouter.v2 tearDown];
     }];
 }
 
@@ -698,7 +698,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         user.remoteIdentifier = NSUUID.createUUID;
         
         conv.callDeviceIsActive = YES;
-        [conv.voiceChannel.v2 addCallParticipant:user];
+        [conv.voiceChannelRouter.v2 addCallParticipant:user];
         XCTAssertEqual(conv.voiceChannel.state, VoiceChannelV2StateSelfIsJoiningActiveChannel);
         [self.syncMOC saveOrRollback];
     }];
@@ -712,7 +712,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     // when
     [self.syncMOC performGroupedBlockAndWait:^{
         [self.sut mediaWarningOnConversation:conv.remoteIdentifier.transportString];
-        [conv.voiceChannel.v2 tearDown];
+        [conv.voiceChannelRouter.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     [self.syncMOC.zm_callState mergeChangesFromState:self.uiMOC.zm_callState]; // This is done by ZMSyncStrategy when merging contexts
@@ -898,7 +898,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         conversation.isVideoCall = YES;
         
         mockObserver = [OCMockObject niceMockForProtocol:@protocol(CallingInitialisationObserver)];
-        token = [conversation.voiceChannel.v2 addCallingInitializationObserver:mockObserver];
+        token = [conversation.voiceChannelRouter.v2 addCallingInitializationObserver:mockObserver];
         [[mockObserver expect] couldNotInitialiseCallWithError:OCMOCK_ANY];
         
         // expect
@@ -913,7 +913,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     WaitForAllGroupsToBeEmpty(0.5);
     [self.syncMOC performGroupedBlockAndWait:^{
         [mockObserver verify];
-        [conversation.voiceChannel.v2 removeCallingInitialisationObserver:token];
+        [conversation.voiceChannelRouter.v2 removeCallingInitialisationObserver:token];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     [self.internalFlowManager verify];

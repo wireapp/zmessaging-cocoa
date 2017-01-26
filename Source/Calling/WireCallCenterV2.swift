@@ -158,7 +158,7 @@ class VoiceChannelParticipantsObserverToken : NSObject {
         self.conversation = conversation
         self.observer = observer
         
-        state = SetSnapshot(set: conversation.voiceChannel!.v2.participants, moveType: .uiCollectionView)
+        state = SetSnapshot(set: conversation.voiceChannelRouter!.v2.participants, moveType: .uiCollectionView)
         activeFlowParticipantsState = conversation.activeFlowParticipants.copy() as! NSOrderedSet
         
         super.init()
@@ -413,7 +413,7 @@ public class WireCallCenterV2 : NSObject {
     }
     
     func updateVoiceChannelState(forConversation conversation: ZMConversation) {
-        let newState = conversation.voiceChannel?.v2.state ?? VoiceChannelV2State.invalid
+        let newState = conversation.voiceChannelRouter?.v2.state ?? VoiceChannelV2State.invalid
         let previousState = voiceChannelStates[conversation] ?? VoiceChannelV2State.noActiveUsers
         
         if newState != previousState {
@@ -436,7 +436,7 @@ extension WireCallCenterV2 {
     func applicationDidBecomeActive(note: Notification) {
         if let connectedCallConversation =  conversations(withVoiceChannelStates: [.selfConnectedToActiveChannel]).first, connectedCallConversation.isVideoCall {
             // We need to start video in conversation that accepted video call in background but did not start the recording yet
-            try? connectedCallConversation.voiceChannel?.v2.setVideoSendActive(true) // FIXME should this also be done for V3?
+            try? connectedCallConversation.voiceChannelRouter?.v2.setVideoSendActive(true) // FIXME should this also be done for V3?
         }
     }
     

@@ -334,7 +334,7 @@ NS_ASSUME_NONNULL_END
     }
     else {
         [self endAllOngoingCallKitCallsExcept:conversation];
-        
+                
         ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
         
         CXStartCallAction *startCallAction = [[CXStartCallAction alloc] initWithCallUUID:conversation.remoteIdentifier
@@ -361,7 +361,8 @@ NS_ASSUME_NONNULL_END
         if (nil != error) {
             [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot end call: %@", error];
         }
-        [conversation.voiceChannel leave];
+
+        [conversation.voiceChannelRouter.currentVoiceChannel leave];
     }];
 }
 
@@ -392,7 +393,7 @@ NS_ASSUME_NONNULL_END
                                           update:update
                                       completion:^(NSError * _Nullable error) {
                                           if (nil != error) {
-                                              [conversation.voiceChannel leave];
+                                              [conversation.voiceChannelRouter.currentVoiceChannel leave];
                                               [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot report incoming call: %@", error];
                                           } else {
                                               [self configureAudioSession];
@@ -407,7 +408,7 @@ NS_ASSUME_NONNULL_END
     
     [userSession enqueueChanges:^{
         for (ZMConversation *conversation in nonIdleCallConversations) {
-            [conversation.voiceChannel leave];
+            [conversation.voiceChannelRouter.currentVoiceChannel leave];
         }
     }];
 }
@@ -485,7 +486,7 @@ NS_ASSUME_NONNULL_END
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
     [userSession performChanges:^{
         [self configureAudioSession];
-        [callConversation.voiceChannel joinWithVideo:action.video];
+        [callConversation.voiceChannelRouter.currentVoiceChannel joinWithVideo:action.video];
     }];
     
     [action fulfill];
@@ -495,7 +496,7 @@ NS_ASSUME_NONNULL_END
 {
     [self.userSession performChanges:^{
         ZMConversation *callConversation = [action conversationInContext:self.userSession.managedObjectContext];
-        [callConversation.voiceChannel joinWithVideo:NO]; // FIXME video argument is not relevant when answering a call
+        [callConversation.voiceChannelRouter.currentVoiceChannel joinWithVideo:NO];
     }];
     [action fulfill];
 }
@@ -517,11 +518,11 @@ NS_ASSUME_NONNULL_END
         [userSession performChanges:^{
             if (callConversation.voiceChannel.selfUserConnectionState == VoiceChannelV2ConnectionStateNotConnected) {
                 [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: ignore incoming call"];
-                [callConversation.voiceChannel ignore];
+                [callConversation.voiceChannelRouter.currentVoiceChannel ignore];
             }
             else {
                 [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: leave"];
-                [callConversation.voiceChannel leave];
+                [callConversation.voiceChannelRouter.currentVoiceChannel leave];
             }
         }];
     }

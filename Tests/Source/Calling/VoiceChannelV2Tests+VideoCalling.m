@@ -53,7 +53,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel.v2 isSendingVideoForParticipant:self.conversation.connection.to error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 isSendingVideoForParticipant:self.conversation.connection.to error:&error];
     
     // then
     XCTAssertTrue(result);
@@ -69,7 +69,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     ZMFlowSyncInternalFlowManagerOverride = nil;
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel.v2 isSendingVideoForParticipant:self.conversation.connection.to error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 isSendingVideoForParticipant:self.conversation.connection.to error:&error];
     
     // then
     XCTAssertFalse(result);
@@ -87,7 +87,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
 
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel.v2 isSendingVideoForParticipant:self.conversation.connection.to error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 isSendingVideoForParticipant:self.conversation.connection.to error:&error];
     
     // then
     XCTAssertFalse(result);
@@ -119,7 +119,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
     
     // then
     XCTAssertTrue(result);
@@ -136,7 +136,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
     
     // then
     XCTAssertFalse(result);
@@ -157,7 +157,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
     
     // then
     XCTAssertFalse(result);
@@ -179,7 +179,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
     
     // then
     XCTAssertFalse(result);
@@ -328,7 +328,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
 {
     // when
     NSError *error;
-    [self.conversation.voiceChannel.v2 joinVideoCall];
+    [self.conversation.voiceChannelRouter.v2 joinVideoCall];
     
     // then
     XCTAssertTrue(self.conversation.isVideoCall);
@@ -339,11 +339,11 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
 {
     // givne
     NSError *error;
-    [self.conversation.voiceChannel.v2 joinVideoCall];
+    [self.conversation.voiceChannelRouter.v2 joinVideoCall];
     XCTAssertNil(error);
 
     // when
-    [self.conversation.voiceChannel leave];
+    [self.conversation.voiceChannelRouter.v2 leave];
     
     // then
     XCTAssertFalse(self.conversation.isVideoCall);
@@ -352,12 +352,12 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
 - (void)testThatItFailsToStartVideoCallWhenAudioCallIsStarted;
 {
     //given
-    [self.conversation.voiceChannel.v2 join];
+    [self.conversation.voiceChannelRouter.v2 join];
     
     // when
     __block BOOL didJoin;
     [self performIgnoringZMLogError:^{
-        didJoin = [self.conversation.voiceChannel.v2 joinVideoCall];
+        didJoin = [self.conversation.voiceChannelRouter.v2 joinVideoCall];
     }];
     
     // then
@@ -370,7 +370,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     self.conversation.isSendingVideo = YES;
     
     // when
-    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.selfUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannelRouter.v2 stateForParticipant:self.selfUser];
     
     // then
     XCTAssertTrue(state.isSendingVideo);
@@ -382,7 +382,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     self.conversation.isSendingVideo = NO;
     
     // when
-    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.selfUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannelRouter.v2 stateForParticipant:self.selfUser];
     
     // then
     XCTAssertFalse(state.isSendingVideo);
@@ -396,7 +396,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     [self.conversation addActiveVideoCallParticipant:self.otherUser];
     
     // when
-    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.otherUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannelRouter.v2 stateForParticipant:self.otherUser];
     
     // then
     XCTAssertTrue(state.isSendingVideo);
@@ -409,7 +409,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     [self.conversation removeActiveVideoCallParticipant:self.otherUser];
     
     // when
-    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannel.v2 stateForParticipant:self.otherUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannelRouter.v2 stateForParticipant:self.otherUser];
     
     // then
     XCTAssertFalse(state.isSendingVideo);

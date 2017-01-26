@@ -355,7 +355,7 @@ static NSString *ZMLogTag = @"Push";
         BOOL userWantsToCallBack = ([note.category isEqualToString:ZMMissedCallCategory]);
         
         if ([WireCallCenter activeCallConversationsInUserSession:self].count == 0 && (callIsStillOngoing || userWantsToCallBack)) {
-            [note.conversation.voiceChannel joinWithVideo:NO];
+            [note.conversation.voiceChannel joinWithVideo:NO userSession:self];
             [note.conversation.managedObjectContext saveOrRollback];
         }
     }

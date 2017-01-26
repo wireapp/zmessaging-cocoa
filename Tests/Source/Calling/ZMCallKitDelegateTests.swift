@@ -444,7 +444,7 @@ class ZMCallKitDelegateTest: MessagingTest { // FIXME update these test for v2 a
         mutableCallParticipants.add(ZMUser.selfUser(in: self.uiMOC))
         self.uiMOC.saveOrRollback()
         
-        XCTAssertEqual(conversation.voiceChannel!.v2.state, .selfIsJoiningActiveChannel)
+        XCTAssertEqual(conversation.voiceChannelRouter!.v2.state, .selfIsJoiningActiveChannel)
         // when
         
         self.uiMOC.saveOrRollback()
@@ -469,7 +469,7 @@ class ZMCallKitDelegateTest: MessagingTest { // FIXME update these test for v2 a
         mutableCallParticipants.add(ZMUser.selfUser(in: self.uiMOC))
         self.uiMOC.saveOrRollback()
         
-        XCTAssertEqual(conversation.voiceChannel!.v2.state, .selfIsJoiningActiveChannel)
+        XCTAssertEqual(conversation.voiceChannelRouter!.v2.state, .selfIsJoiningActiveChannel)
         // when
         
         self.uiMOC.saveOrRollback()
@@ -490,7 +490,7 @@ class ZMCallKitDelegateTest: MessagingTest { // FIXME update these test for v2 a
         let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
         mutableCallParticipants.add(ZMUser.selfUser(in: self.uiMOC))
         self.uiMOC.saveOrRollback()
-        XCTAssertEqual(conversation.voiceChannel!.v2.state, .outgoingCall)
+        XCTAssertEqual(conversation.voiceChannelRouter!.v2.state, .outgoingCall)
 
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
@@ -659,7 +659,7 @@ class ZMCallKitDelegateTest: MessagingTest { // FIXME update these test for v2 a
         
         self.callKitController.timesRequestTransactionCalled = 0
 
-        XCTAssertEqual(conversation.voiceChannel!.v2.state, .selfIsJoiningActiveChannel)
+        XCTAssertEqual(conversation.voiceChannelRouter!.v2.state, .selfIsJoiningActiveChannel)
         
         // when
         conversation.callDeviceIsActive = false
@@ -667,7 +667,7 @@ class ZMCallKitDelegateTest: MessagingTest { // FIXME update these test for v2 a
         newMutableCallParticipants.removeAllObjects()
         self.uiMOC.saveOrRollback()
         
-        XCTAssertEqual(conversation.voiceChannel!.v2.state, .noActiveUsers)
+        XCTAssertEqual(conversation.voiceChannelRouter!.v2.state, .noActiveUsers)
         // then
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 1)
     }
@@ -684,11 +684,11 @@ class ZMCallKitDelegateTest: MessagingTest { // FIXME update these test for v2 a
         
         self.callKitController.timesRequestTransactionCalled = 0
         
-        XCTAssertEqual(conversation.voiceChannel!.v2.state, .incomingCall)
+        XCTAssertEqual(conversation.voiceChannelRouter!.v2.state, .incomingCall)
         
         // when
         conversation.callTimedOut = true
-        XCTAssertEqual(conversation.voiceChannel!.v2.state, .incomingCallInactive)
+        XCTAssertEqual(conversation.voiceChannelRouter!.v2.state, .incomingCallInactive)
         self.uiMOC.saveOrRollback()
         
         // then
@@ -708,14 +708,14 @@ class ZMCallKitDelegateTest: MessagingTest { // FIXME update these test for v2 a
         
         self.callKitController.timesRequestTransactionCalled = 0
 
-        XCTAssertEqual(conversation.voiceChannel!.v2.state, .outgoingCall)
+        XCTAssertEqual(conversation.voiceChannelRouter!.v2.state, .outgoingCall)
         
         conversation.callDeviceIsActive = false
         conversation.isOutgoingCall = false
         let newMutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
         newMutableCallParticipants.removeAllObjects()
         self.uiMOC.saveOrRollback()
-        XCTAssertEqual(conversation.voiceChannel!.v2.state, .noActiveUsers)
+        XCTAssertEqual(conversation.voiceChannelRouter!.v2.state, .noActiveUsers)
 
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
@@ -731,11 +731,11 @@ class ZMCallKitDelegateTest: MessagingTest { // FIXME update these test for v2 a
         self.uiMOC.saveOrRollback()
         self.callKitController.timesRequestTransactionCalled = 0
 
-        XCTAssertEqual(conversation.voiceChannel!.v2.state, .incomingCall)
+        XCTAssertEqual(conversation.voiceChannelRouter!.v2.state, .incomingCall)
         let newMutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
         newMutableCallParticipants.removeAllObjects()
         self.uiMOC.saveOrRollback()
-        XCTAssertEqual(conversation.voiceChannel!.v2.state, .noActiveUsers)
+        XCTAssertEqual(conversation.voiceChannelRouter!.v2.state, .noActiveUsers)
         
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
