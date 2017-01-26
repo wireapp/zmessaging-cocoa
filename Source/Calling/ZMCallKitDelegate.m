@@ -458,7 +458,7 @@ NS_ASSUME_NONNULL_END
             }
 
             [self configureAudioSession];
-            [self requestStartCallInConversation:callConversation videoCall:isVideo]; // FIXME is this enough?
+            [self requestStartCallInConversation:callConversation videoCall:isVideo];
             return YES;
         }
         else {

@@ -217,35 +217,6 @@
     [self.receivedErrors addObject:error];
 }
 
-
-// FIXME move these three tests
-- (void)testThatItReturnsAVoiceChannelForAOneOnOneConversations;
-{
-    // when
-    VoiceChannelRouter *channel = self.conversation.voiceChannel;
-
-    // then
-    XCTAssertNotNil(channel);
-    ZMConversation *c = channel.conversation;
-    XCTAssertEqual(c, self.conversation);
-}
-
-- (void)testThatItAlwaysReturnsTheSameVoiceChannelForAOneOnOneConversations;
-{
-    // when
-    VoiceChannelRouter *channel = self.conversation.voiceChannel;
-
-    XCTAssertEqual(self.conversation.voiceChannel, channel);
-}
-
-- (void)testThatItReturnsAVoiceChannelForAGroupConversation;
-{
-    // when
-    VoiceChannelRouter *channel = self.groupConversation.voiceChannel;
-
-    XCTAssertNotNil(channel);
-}
-
 @end
 
 
