@@ -1590,14 +1590,14 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *__unused session) {
-        NSData *messageData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:original.data];
+        NSData *messageData = [MockUserClient encryptedWithData:original.data from:senderClient to:selfClient];
         [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:messageData];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession performRemoteChanges:^(__unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        NSData *updateMessageData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:updateMessage.data];
+        NSData *updateMessageData = [MockUserClient encryptedWithData:updateMessage.data from:senderClient to:selfClient];
         insertBlock(updateMessageData, mockConversation, senderClient, selfClient);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2568,10 +2568,9 @@
 
     // when
     // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        [session registerClientForUser:self.user1 label:@"Android!" type:@"permanent"];
+    }];
     __block ZMMessage *fileMessage;
 
     [self.mockTransportSession resetReceivedRequests];
@@ -3368,10 +3367,9 @@
 
     // when
     // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        [session registerClientForUser:self.user1 label:@"Android!" type:@"permanent"];
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
 
     __block ZMMessage *fileMessage;

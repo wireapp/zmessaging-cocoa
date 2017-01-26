@@ -742,7 +742,7 @@
     
     ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"this should be inserted after the system message"
                                                             nonce:lastMessageNonce.transportString expiresAfter:nil];
-    NSData *encryptedData = [MockUserClient encryptedDataFromClient:fromClient toClient:toClient data:message.data];
+    NSData *encryptedData = [MockUserClient encryptedWithData:message.data from:fromClient to:toClient];
     
     // when
     NSDictionary *payload = @{

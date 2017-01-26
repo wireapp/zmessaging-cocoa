@@ -45,13 +45,13 @@
         // send new message remotely
         ZMGenericMessage *message = [ZMGenericMessage messageWithText:testMessage1 nonce:NSUUID.createUUID.transportString expiresAfter:nil];
         MockUserClient *fromClient = self.user1.clients.anyObject, *toClient = self.selfUser.clients.anyObject;
-        NSData *firstMessageData = [MockUserClient encryptedDataFromClient:fromClient toClient:toClient data:message.data];
+        NSData *firstMessageData = [MockUserClient encryptedWithData:message.data from:fromClient to:toClient];
         
         [self.groupConversation insertOTRMessageFromClient:fromClient toClient:toClient data:firstMessageData];
         [self spinMainQueueWithTimeout:0.2];
         
         ZMGenericMessage *secondMessage = [ZMGenericMessage messageWithText:testMessage2 nonce:NSUUID.createUUID.transportString expiresAfter:nil];
-        NSData *secondtMessageData = [MockUserClient encryptedDataFromClient:fromClient toClient:toClient data:secondMessage.data];
+        NSData *secondtMessageData = [MockUserClient encryptedWithData:secondMessage.data from:fromClient to:toClient];
         [self.groupConversation insertOTRMessageFromClient:fromClient toClient:toClient data:secondtMessageData];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
