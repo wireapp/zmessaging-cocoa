@@ -43,7 +43,7 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
         
         switch callState {
-        case .incoming(video: _):
+        case .incoming(video: let video):
             guard
                 let userId = userId,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext),
@@ -51,7 +51,7 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
                     break
             }
             
-            indicateIncomingCall(from: user, in: conversation)
+            indicateIncomingCall(from: user, in: conversation, video: video)
         case let .terminating(reason: reason) where reason != .normalSelf:
             if #available(iOS 10.0, *) {
                 provider.reportCall(with: conversationId, endedAt: nil, reason: UInt(reason.CXCallEndedReason.rawValue))
@@ -89,7 +89,7 @@ extension ZMCallKitDelegate : WireCallCenterV2CallStateObserver {
         switch voiceChannelState {
         case .incomingCall:
             guard let user = conversation.voiceChannelRouter?.v2.participants.firstObject as? ZMUser else { return }
-            indicateIncomingCall(from: user, in: conversation)
+            indicateIncomingCall(from: user, in: conversation, video: conversation.voiceChannelRouter?.v2.isVideoCall ?? false)
         case .outgoingCall:
             provider.reportOutgoingCall(with: conversation.remoteIdentifier!, startedConnectingAt: Date())
         case .selfIsJoiningActiveChannel:

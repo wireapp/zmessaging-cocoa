@@ -30,6 +30,6 @@
 @property (nonatomic, readonly, nonnull) ZMUserSession *userSession;
 @property (nonatomic, nullable) ZMConversation *connectedCallConversation;
 
-- (void)indicateIncomingCallFromUser:(nonnull ZMUser *)user inConversation:(nonnull ZMConversation *)conversation;
+- (void)indicateIncomingCallFromUser:(nonnull ZMUser *)user inConversation:(nonnull ZMConversation *)conversation video:(BOOL)video;
 
 @end
