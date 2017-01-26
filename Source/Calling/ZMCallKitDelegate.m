@@ -106,6 +106,9 @@ NS_ASSUME_NONNULL_END
     else if (0 != self.emailAddress.length) {
         return [[CXHandle alloc] initWithType:CXHandleTypeEmailAddress value:self.emailAddress];
     }
+    else if (nil != self.oneToOneConversation.remoteIdentifier) {
+        return [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:self.oneToOneConversation.remoteIdentifier.transportString];
+    }
     else {
         RequireString(1, "Cannot create CXHandle: user has neither email nor phone number");
     }
@@ -133,6 +136,15 @@ NS_ASSUME_NONNULL_END
     }
     
     return nil;
+}
+
+- (NSString *)localizedCallerNameWithCallFromUser:(ZMUser *)user
+{
+    if (self.conversationType == ZMConversationTypeGroup) {
+        return [ZMCallKitDelegateCallStartedInGroup localizedStringWithUser:user conversation:self count:0];
+    } else {
+        return self.connectedUser.displayName;
+    }
 }
 
 + (nullable instancetype)resolveConversationForPersons:(NSArray<INPerson *> *)persons
@@ -334,11 +346,9 @@ NS_ASSUME_NONNULL_END
     }
     else {
         [self endAllOngoingCallKitCallsExcept:conversation];
-                
-        ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
         
         CXStartCallAction *startCallAction = [[CXStartCallAction alloc] initWithCallUUID:conversation.remoteIdentifier
-                                                                                  handle:selfUser.callKitHandle];
+                                                                                  handle:conversation.callKitHandle];
         startCallAction.video = video;
         
         CXTransaction *startCallTransaction = [[CXTransaction alloc] initWithAction:startCallAction];
@@ -348,6 +358,12 @@ NS_ASSUME_NONNULL_END
                 [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot start call: %@", error];
             }
         }];
+        
+        CXCallUpdate *update = [[CXCallUpdate alloc] init];
+        update.remoteHandle = conversation.callKitHandle;
+        update.localizedCallerName = [conversation localizedCallerNameWithCallFromUser:[ZMUser selfUserInUserSession:self.userSession]];
+        
+        [self.provider reportCallWithUUID:conversation.remoteIdentifier updated:update];
     }
 }
 
@@ -366,7 +382,7 @@ NS_ASSUME_NONNULL_END
     }];
 }
 
-- (void)indicateIncomingCallFromUser:(ZMUser *)user inConversation:(ZMConversation *)conversation
+- (void)indicateIncomingCallFromUser:(ZMUser *)user inConversation:(ZMConversation *)conversation video:(BOOL)video
 {
     // Construct a CXCallUpdate describing the incoming call, including the caller.
     CXCallUpdate* update = [[CXCallUpdate alloc] init];
@@ -374,18 +390,9 @@ NS_ASSUME_NONNULL_END
     update.supportsDTMF = NO;
     update.supportsGrouping = NO;
     update.supportsUngrouping = NO;
-    
-    if (conversation.conversationType == ZMConversationTypeGroup) {
-        update.localizedCallerName = [ZMCallKitDelegateCallStartedInGroup localizedStringWithUser:user
-                                                                                     conversation:conversation
-                                                                                            count:0];
-    }
-    else {
-        update.localizedCallerName = user.displayName;
-    }
-    
+    update.localizedCallerName = [conversation localizedCallerNameWithCallFromUser:user];
     update.remoteHandle = conversation.callKitHandle;
-    update.hasVideo = conversation.voiceChannel.isVideoCall;
+    update.hasVideo = video;
     
     [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"CallKit: reportNewIncomingCallWithUUID remoteHandle.type = %ld", (long)update.remoteHandle.type];
     

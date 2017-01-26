@@ -40,6 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)reportNewIncomingCallWithUUID:(NSUUID *)UUID
                                update:(CXCallUpdate *)update
                            completion:(void (^)(NSError *_Nullable error))completion;
+- (void)reportCallWithUUID:(NSUUID *)UUID updated:(CXCallUpdate *)update;
 - (void)reportCallWithUUID:(NSUUID *)UUID endedAtDate:(nullable NSDate *)dateEnded reason:(NSUInteger)endedReason;
 - (void)reportOutgoingCallWithUUID:(NSUUID *)UUID startedConnectingAtDate:(nullable NSDate *)dateStartedConnecting;
 - (void)reportOutgoingCallWithUUID:(NSUUID *)UUID connectedAtDate:(nullable NSDate *)dateConnected;
