@@ -311,7 +311,7 @@ ZM_EMPTY_ASSERTING_INIT()
         UserImageLocalCache *userImageCache = [[UserImageLocalCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_userImageCache = userImageCache;
         
-        ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100 location:cacheLocation];
+        ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:500 location:cacheLocation];
         self.managedObjectContext.zm_imageAssetCache = imageAssetCache;
         
         FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:cacheLocation];
