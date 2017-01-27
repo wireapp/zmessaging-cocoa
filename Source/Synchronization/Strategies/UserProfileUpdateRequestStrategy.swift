@@ -218,6 +218,7 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             
         case self.emailDeleteSync:
             if response.result == .success {
+                ZMUser.selfUser(in: managedObjectContext).emailAddress = nil
                 self.userProfileUpdateStatus.didRemoveEmailSuccessfully()
             } else {
                 let error : Error = NSError.lastUserIdentityCantBeRemoved(with: response) ??

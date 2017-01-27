@@ -509,6 +509,7 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertNil(ZMUser.selfUser(in: self.uiMOC).emailAddress)
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidRemoveEmailSuccessfully , 1)
     }
     
