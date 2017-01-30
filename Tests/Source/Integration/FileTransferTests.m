@@ -1590,8 +1590,7 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *__unused session) {
-        NSData *messageData = [MockUserClient encryptedWithData:original.data from:senderClient to:selfClient];
-        [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:messageData];
+        [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:original.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1697,7 +1696,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self setupOTREnvironmentForUser:self.user1 establishSessionWithSelfUser:YES];
+    [self establishSessionBetweenSelfUserAndMockUser:self.user1];
     WaitForAllGroupsToBeEmpty(0.5);
 
     NSUUID *nonce = NSUUID.createUUID;

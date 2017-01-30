@@ -70,11 +70,14 @@ class UserClientRequestFactoryTests: MessagingTest {
         guard let type = payload["type"] as? String, type == ZMUserClientTypePermanent else { return XCTFail("Client type should be 'permanent'") }
         guard let password = payload["password"] as? String, password == credentials.password else { return XCTFail("Payload should contain password") }
         
-        let lastPreKey = self.spyKeyStore.lastGeneratedLastPrekey!
+        guard let lastPreKey = self.spyKeyStore.lastGeneratedLastPrekey else {
+            XCTFail()
+            return
+        }
         
         guard let lastKeyPayload = payload["lastkey"] as? [String: Any] else { return XCTFail() }
         XCTAssertEqual(lastKeyPayload["key"] as? String, lastPreKey)
-        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: CBOX_LAST_PREKEY_ID + 1))
+        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: CBOX_LAST_PREKEY_ID))
 
         guard let preKeysPayloadData = payload["prekeys"] as? [[String: Any]] else  { return XCTFail("Payload should contain prekeys") }
         zip(preKeysPayloadData, expectedKeyPayloadForClientPreKeys(client)).forEach { (lhs, rhs) in
@@ -112,7 +115,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         
         guard let lastKeyPayload = payload["lastkey"] as? [String: Any] else { return XCTFail("Payload should contain last prekey") }
         XCTAssertEqual(lastKeyPayload["key"] as? String, lastPreKey)
-        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: CBOX_LAST_PREKEY_ID + 1))
+        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: CBOX_LAST_PREKEY_ID))
         
         guard let preKeysPayloadData = payload["prekeys"] as? [[String: Any]] else { return XCTFail("Payload should contain prekeys") }
         

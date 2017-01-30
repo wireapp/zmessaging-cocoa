@@ -625,51 +625,18 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-- (MockUserClient *)remotelyRegisterClientForUser:(MockUser *)mockUser preKeys:(NSArray *)preKeys lastPreKey:(NSString *)lastPreKey
+- (void)establishSessionBetweenSelfUserAndMockUser:(MockUser *)mockUser
 {
-    __block MockUserClient *remoteUserClient;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        remoteUserClient = [session registerClientForUser:mockUser label:mockUser.name type:@"permanent" preKeys:preKeys lastPreKey:lastPreKey];
-    }];
-    
-    return remoteUserClient;
-}
-
-- (void)setupOTREnvironmentForUser:(MockUser *)mockUser establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser
-{
-    ZMUser *realUser = [self userForMockUser:mockUser];
-    
-    __block MockUserClient *remoteUserClient;
-    if (isSelfClient && mockUser.clients.count != 0) {
-        NSString *selfClientID = [self.syncMOC persistentStoreMetadataForKey:ZMPersistedClientIdKey];
-        remoteUserClient = [mockUser.clients.allObjects firstObjectMatchingWithBlock:^BOOL(MockUserClient *obj) {
-            return ![obj.identifier isEqualToString:selfClientID];
-        }];
-    }
-    if (remoteUserClient == nil) {
-        remoteUserClient  = [self remotelyRegisterClientForUser:mockUser preKeys:userPreKeys lastPreKey:userLastKey];
-    }
-    
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:realUser.remoteIdentifier inManagedObjectContext:self.syncMOC];
-        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-        if (!isSelfClient || (isSelfClient && selfUser.selfClient == nil)) {
-            UserClient *localUserClient = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
-            localUserClient.remoteIdentifier = remoteUserClient.identifier;
-            localUserClient.user = user;
-            
-            if (isSelfClient) {
-                [self.syncMOC setPersistentStoreMetadata:remoteUserClient.identifier forKey:ZMPersistedClientIdKey];
-            }
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        if (mockUser.clients.count == 0) {
+            [session registerClientForUser:mockUser label:@"Wire for MS-DOS" type:@"permanent"];
         }
-        
-        if (establishSessionWithSelfUser && ! isSelfClient) {
-            //session from selfClient to userClient
-            UserClient *selfClient = selfUser.clients.anyObject;
-            [selfClient establishSessionWithClient:user.clients.anyObject usingPreKey:remoteUserClient.prekeys.anyObject];
+       
+        for (MockUserClient* client in mockUser.clients) {
+            [self.syncMOC performGroupedBlockAndWait:^{
+                [self establishSessionFromSelfToRemoteClient:client];
+            }];
         }
-        
-        [self.syncMOC saveOrRollback];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }

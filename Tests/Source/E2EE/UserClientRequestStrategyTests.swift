@@ -141,7 +141,7 @@ extension UserClientRequestStrategyTests {
         XCTAssertNotNil(client.remoteIdentifier, "Should store remoteIdentifier provided by response")
         XCTAssertEqual(client.remoteIdentifier, remoteIdentifier)
         
-        let storedRemoteIdentifier = self.syncMOC.persistentStoreMetadata(key: ZMPersistedClientIdKey) as? String
+        let storedRemoteIdentifier = self.syncMOC.persistentStoreMetadata(forKey: ZMPersistedClientIdKey) as? String
         AssertOptionalEqual(storedRemoteIdentifier, expression2: remoteIdentifier)
         self.syncMOC.setPersistentStoreMetadata(nil as String?, key: ZMPersistedClientIdKey)
     }
@@ -697,7 +697,7 @@ extension UserClientRequestStrategyTests {
         XCTAssertNotNil(newFingerprint)
         XCTAssertNotEqual(fingerprint, newFingerprint)
         XCTAssertNil(selfUser.clients.first?.remoteIdentifier)
-        XCTAssertNil(syncMOC.persistentStoreMetadata(key: ZMPersistedClientIdKey))
+        XCTAssertNil(syncMOC.persistentStoreMetadata(forKey: ZMPersistedClientIdKey))
         XCTAssertNotNil(fingerprint)
         XCTAssertNotNil(newFingerprint)
         XCTAssertNotEqual(previousLastPrekey, newLastPrekey)

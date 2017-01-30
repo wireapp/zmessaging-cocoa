@@ -105,7 +105,6 @@
 - (void)setUp;
 {
     [super setUp];
-    
     NSFileManager *fm = NSFileManager.defaultManager;
     NSString *bundleIdentifier = [NSBundle bundleForClass:self.class].bundleIdentifier;
     self.groupIdentifier = [@"group." stringByAppendingString:bundleIdentifier];
@@ -113,6 +112,9 @@
     NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
     self.storeURL = [[sharedContainerURL URLByAppendingPathComponent:bundleIdentifier] URLByAppendingPathComponent:@"store.wiredatabase"];
     self.keyStoreURL = sharedContainerURL;
+    
+    NSURL *otrFolder = [self.keyStoreURL URLByAppendingPathComponent:@"otr"];
+    [fm removeItemAtURL:otrFolder error: nil];
     
     _application = [[ApplicationMock alloc] init];
     

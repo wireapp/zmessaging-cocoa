@@ -752,6 +752,7 @@
                                                                @{
                                                                    @"conversation": groupConversation.remoteIdentifier.transportString,
                                                                    @"type": @"conversation.otr-message-add",
+                                                                   @"from": fromClient.user.identifier,
                                                                    // We use a later date to simulate the time between the last message
                                                                    @"time": messageTimeStamp.transportString,
                                                                    @"data": @{

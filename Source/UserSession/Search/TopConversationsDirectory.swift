@@ -70,7 +70,7 @@ extension TopConversationsDirectory {
 
     /// Load list from persistent store
     fileprivate func loadList() {
-        guard let ids = self.managedObjectContext.persistentStoreMetadata(key: topConversationsObjectIDKey) as? [String] else {
+        guard let ids = self.managedObjectContext.persistentStoreMetadata(forKey: topConversationsObjectIDKey) as? [String] else {
             return
         }
         let managedObjectIDs = ids.flatMap(URL.init).flatMap { self.managedObjectContext.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: $0) }

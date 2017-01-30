@@ -109,7 +109,7 @@ public final class UserClientRequestFactory {
             let lastPreKeyString = lastKey
             let lastPreKeyPayloadData : [String: Any] = [
                 "key": lastPreKeyString,
-                "id": NSNumber(value: CBOX_LAST_PREKEY_ID + 1)
+                "id": NSNumber(value: CBOX_LAST_PREKEY_ID)
             ]
             return lastPreKeyPayloadData
         } catch  {
