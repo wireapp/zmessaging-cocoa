@@ -94,7 +94,7 @@
 {
     id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
     [directory processAllEventsInBuffer];
-    [self.hotFix applyPatches];
+    [self.hotFix applyPatchesAfterSyncCompleted];
 
     [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
     [self.stateMachineDelegate didFinishSync];

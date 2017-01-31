@@ -38,7 +38,10 @@ typedef void(^ZMHotFixPatchCode)(NSManagedObjectContext *moc);
 /// List of hot fixes to run on the data organized by version
 @interface ZMHotFixDirectory : NSObject
 
-/// List of ZMHotFixPatch that can be applied, ordered by version
-@property (nonatomic, readonly) NSArray *patches;
+/// List of ZMHotFixPatch that can be applied after sync, ordered by version
+@property (nonatomic, readonly) NSArray *patchesAfterSync;
+
+/// List of ZMHotFixPatch that can be applied at startup, ordered by version
+@property (nonatomic, readonly) NSArray *patchesAtStartup;
 
 @end

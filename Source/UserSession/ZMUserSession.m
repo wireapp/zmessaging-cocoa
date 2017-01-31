@@ -28,7 +28,7 @@
 
 #import "ZMUserSession+Internal.h"
 #import "ZMSyncStrategy.h"
-//#import "ZMOperationLoop.h"
+#import "ZMHotFix.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
 #import "ZMSearchDirectory+Internal.h"
@@ -356,6 +356,9 @@ ZM_EMPTY_ASSERTING_INIT()
         
         [self.syncManagedObjectContext performBlockAndWait:^{
     
+            // patch to be executed at start
+            [[[ZMHotFix alloc] initWithSyncMOC:self.syncManagedObjectContext] applyPatchesAtStartup];
+            
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
                                                                                authenticationStatus:self.authenticationStatus
                                                                             userProfileUpdateStatus:self.userProfileUpdateStatus
