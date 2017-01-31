@@ -1253,7 +1253,7 @@
     XCTAssertEqual(message.conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
 }
 
-- (void)testThatItDoesNotDeliveresOTRMessageAfterIgnoringExpiring
+- (void)testThatItDoesNotDeliversOTRMessageAfterIgnoringExpiring
 {
     __block BOOL notificationRecieved = NO;
     
