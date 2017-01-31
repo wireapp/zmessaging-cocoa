@@ -34,7 +34,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         super.setUp()
         self.spyKeyStore = SpyUserClientKeyStore(in: UserClientKeysStore.otrDirectoryURL)
         self.authenticationStatus = MockAuthenticationStatus(cookie: nil);
-        self.sut = UserClientRequestFactory()
+        self.sut = UserClientRequestFactory(keysStore: self.spyKeyStore)
     }
     
     override func tearDown() {
