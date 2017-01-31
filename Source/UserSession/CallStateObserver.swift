@@ -53,6 +53,8 @@ public final class CallStateObserver : NSObject {
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
+        notifyIfWebsocketShouldBeOpen(forCallState: callState)
+        
         managedObjectContext.performGroupedBlock {
             guard
                 let userId = userId,
@@ -84,6 +86,20 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             }
             
             self.callingSystemMessageGenerator.processMissedCall(in: conversation, from: user, at: timestamp)
+        }
+    }
+    
+    private func notifyIfWebsocketShouldBeOpen(forCallState callState: CallState) {
+        
+        let notificationName = Notification.Name(rawValue: ZMTransportSessionShouldKeepWebsocketOpenNotificationName)
+        
+        switch callState {
+        case .terminating:
+            NotificationCenter.default.post(name: notificationName, object: nil, userInfo: [ZMTransportSessionShouldKeepWebsocketOpenKey : false])
+        case .outgoing, .incoming:
+            NotificationCenter.default.post(name: notificationName, object: nil, userInfo: [ZMTransportSessionShouldKeepWebsocketOpenKey : true])
+        default:
+            break
         }
     }
     
