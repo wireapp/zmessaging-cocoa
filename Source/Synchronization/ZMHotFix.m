@@ -27,7 +27,6 @@
 #import "ZMUserSession.h"
 
 static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
-static NSString * const LastSavedVersionKey = @"lastSavedVersion";
 NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
 
 @interface ZMHotFix ()
@@ -37,7 +36,6 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
 
 
 @implementation ZMHotFix
-
 
 - (instancetype)initWithSyncMOC:(NSManagedObjectContext *)syncMOC
 {
@@ -54,7 +52,7 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
     return self;
 }
 
-- (void)applyPatches
+- (void)applyPatchesAfterSyncCompleted
 {
     if ([[self.syncMOC persistentStoreMetadataForKey:ZMSkipHotfix] boolValue]) {
         ZMLogDebug(@"Skipping applying HotFix");
@@ -62,16 +60,27 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
     }
     
     NSString * currentVersionString = [[[NSBundle bundleForClass:ZMUserSession.class] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
-    [self applyPatchesForCurrentVersion:currentVersionString];
+    [self applyPatchesForCurrentVersion:currentVersionString afterSync:YES];
 }
 
-- (void)applyPatchesForCurrentVersion:(NSString *)currentVersionString;
+- (void)applyPatchesAtStartup
+{
+    if ([[self.syncMOC persistentStoreMetadataForKey:ZMSkipHotfix] boolValue]) {
+        ZMLogDebug(@"Skipping applying HotFix");
+        return;
+    }
+    
+    NSString * currentVersionString = [[[NSBundle bundleForClass:ZMUserSession.class] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
+    [self applyPatchesForCurrentVersion:currentVersionString afterSync:NO];
+}
+
+- (void)applyPatchesForCurrentVersion:(NSString *)currentVersionString afterSync:(BOOL)afterSync;
 {
     if (currentVersionString.length == 0) {
         ZMLogDebug(@"Invalid version string, skipping HotFix");
         return;
     }
-    ZMVersion *lastSavedVersion = [self lastSavedVersion];
+    ZMVersion *lastSavedVersion = [self lastSavedVersionAfterSync:afterSync];
     ZMVersion *currentVersion = [[ZMVersion alloc] initWithVersionString:currentVersionString];
     if ([currentVersion compareWithVersion:lastSavedVersion] == NSOrderedSame) {
         ZMLogDebug(@"Current version equal to last saved version (%@). Not applying any HotFix.", lastSavedVersion.versionString);
@@ -80,29 +89,30 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
     
     ZMLogDebug(@"Applying HotFix with last saved version %@, current version %@.", lastSavedVersion.versionString, currentVersion.versionString);
     [self.syncMOC performGroupedBlock:^{
-        [self applyFixesSinceVersion:lastSavedVersion];
-        [self saveNewVersion:currentVersionString];
+        [self applyFixesSinceVersion:lastSavedVersion afterSync:afterSync];
+        [self saveNewVersion:currentVersionString afterSync:afterSync];
         [self.syncMOC saveOrRollback];
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
 }
 
-- (ZMVersion *)lastSavedVersion
+- (ZMVersion *)lastSavedVersionAfterSync:(BOOL)afterSync
 {
-    NSString *versionString = [self.syncMOC persistentStoreMetadataForKey:LastSavedVersionKey];
+    NSString *versionString = [self.syncMOC persistentStoreMetadataForKey:[self lastVersionKeyAfterSync:afterSync]];
     return [[ZMVersion alloc] initWithVersionString:versionString];
 }
 
 
-- (void)saveNewVersion:(NSString *)version
+- (void)saveNewVersion:(NSString *)version afterSync:(BOOL)afterSync;
 {
-    [self.syncMOC setPersistentStoreMetadata:version forKey:LastSavedVersionKey];
+    [self.syncMOC setPersistentStoreMetadata:version forKey:[self lastVersionKeyAfterSync:afterSync]];
     ZMLogDebug(@"Saved new HotFix version %@", version);
 }
 
-- (void)applyFixesSinceVersion:(ZMVersion *)lastSavedVersion
+- (void)applyFixesSinceVersion:(ZMVersion *)lastSavedVersion afterSync:(BOOL)afterSync
 {
-    for(ZMHotFixPatch *patch in self.hotFixDirectory.patches) {
+    NSArray *patches = afterSync ? self.hotFixDirectory.patchesAfterSync : self.hotFixDirectory.patchesAtStartup;
+    for(ZMHotFixPatch *patch in patches) {
         ZMVersion *version = [[ZMVersion alloc] initWithVersionString:patch.version];
         if (
             (lastSavedVersion == nil || [version compareWithVersion:lastSavedVersion] == NSOrderedDescending)
@@ -110,6 +120,15 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
             ) {
             patch.code(self.syncMOC);
         }
+    }
+}
+
+/// Key used to store the last updated version
+- (NSString *)lastVersionKeyAfterSync:(BOOL)afterSync {
+    if (afterSync) {
+        return @"lastSavedVersion";
+    } else {
+        return @"lastSavedVersion_atStartup";
     }
 }
 

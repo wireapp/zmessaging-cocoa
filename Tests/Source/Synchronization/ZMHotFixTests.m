@@ -190,7 +190,7 @@
     [self saveNewVersion];
 
     // when
-    [self.sut applyPatchesForCurrentVersion:@"1.0"];
+    [self.sut applyPatchesForCurrentVersion:@"1.0" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -202,7 +202,7 @@
 - (void)testThatItCallsAllMethodsIfThereIsNoLastSavedVersion
 {
     // when
-    [self.sut applyPatchesForCurrentVersion:@"1.0"];
+    [self.sut applyPatchesForCurrentVersion:@"1.0" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -217,14 +217,14 @@
     [self saveNewVersion];
     
     // when
-    [self.sut applyPatchesForCurrentVersion:@"1.0"];
+    [self.sut applyPatchesForCurrentVersion:@"1.0" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.fakeHotFixDirectory.method1CallCount, 1u);
     
     // and when
-    [self.sut applyPatchesForCurrentVersion:@"1.0"];
+    [self.sut applyPatchesForCurrentVersion:@"1.0" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -237,7 +237,7 @@
     [self saveNewVersion];
     
     // when
-    [self.sut applyPatchesForCurrentVersion:@"1.2"];
+    [self.sut applyPatchesForCurrentVersion:@"1.2" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -260,20 +260,20 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"40.4"];
+    [self.sut applyPatchesForCurrentVersion:@"40.4" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
 
     NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
     XCTAssertEqualObjects(newVersion, @"40.4");
     
-    [self.sut applyPatchesForCurrentVersion:@"40.4"];
+    [self.sut applyPatchesForCurrentVersion:@"40.4" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(observer.notificationCount, 1lu);
     
     // when
-    [self.sut applyPatchesForCurrentVersion:@"40.5"];
+    [self.sut applyPatchesForCurrentVersion:@"40.5" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -295,7 +295,7 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"40.23"];
+    [self.sut applyPatchesForCurrentVersion:@"40.23" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -315,7 +315,7 @@
 
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"41.42"];
+    [self.sut applyPatchesForCurrentVersion:@"41.42" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
@@ -332,7 +332,7 @@
     userClient.apsDecryptionKey = [NSData randomEncryptionKey];
     userClient.apsVerificationKey = [NSData randomEncryptionKey];
     
-    [self.sut applyPatchesForCurrentVersion:@"41.43"];
+    [self.sut applyPatchesForCurrentVersion:@"41.43" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *newVersion2 = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
@@ -356,7 +356,7 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"41.42"];
+    [self.sut applyPatchesForCurrentVersion:@"41.42" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
@@ -372,7 +372,7 @@
     userClient.needsToUploadSignalingKeys = NO;
     [userClient resetLocallyModifiedKeys:[NSSet setWithObject:@"needsToUploadSignalingKeys"]];
     
-    [self.sut applyPatchesForCurrentVersion:@"41.43"];
+    [self.sut applyPatchesForCurrentVersion:@"41.43" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *newVersion2 = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
@@ -424,7 +424,7 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"42.11"];
+    [self.sut applyPatchesForCurrentVersion:@"42.11" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
@@ -474,7 +474,7 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"44.4"];
+    [self.sut applyPatchesForCurrentVersion:@"44.4" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
@@ -517,7 +517,7 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"54.0.1"];
+    [self.sut applyPatchesForCurrentVersion:@"54.0.1" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.syncMOC saveOrRollback];
@@ -546,7 +546,7 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"61.0.0"];
+    [self.sut applyPatchesForCurrentVersion:@"61.0.0" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.syncMOC saveOrRollback];
@@ -596,7 +596,7 @@
 
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"62.3.1"];
+    [self.sut applyPatchesForCurrentVersion:@"62.3.1" afterSync:YES];
     WaitForAllGroupsToBeEmpty(0.5);
 
     [self.syncMOC saveOrRollback];
@@ -607,5 +607,44 @@
     XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
 }
 
+- (void)testThatItMigrateClientSessionsIdentifier_67_0_0
+{
+    // GIVEN
+    UserClient *client = [self createSelfClient];
+    
+    ZMUser *newUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+    newUser.remoteIdentifier = [NSUUID createUUID];
+    UserClient *newClient = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
+    newClient.user = newUser;
+    newClient.remoteIdentifier = @"aabbccdd";
+    NSURL *otrURL = client.keysStore.encryptionContext.path;
+    
+    [client establishSessionWithClient:newClient usingPreKey:@"pQABAQUCoQBYIEIir0myj5MJTvs19t585RfVi1dtmL2nJsImTaNXszRwA6EAoQBYIGpa1sQFpCugwFJRfD18d9+TNJN2ZL3H0Mfj/0qZw0ruBPY="];
+    [self.syncMOC saveOrRollback];
+    
+    NSURL *sessionsURL = [otrURL URLByAppendingPathComponent:@"sessions"];
+    NSURL *oldSession = [sessionsURL URLByAppendingPathComponent:newClient.remoteIdentifier];
+    NSURL *newSession = [sessionsURL URLByAppendingPathComponent:
+                         [NSString stringWithFormat:@"%@_%@", newUser.remoteIdentifier, newClient.remoteIdentifier]
+                         ];
+    XCTAssertTrue([NSFileManager.defaultManager fileExistsAtPath:newSession.path]);
+    NSData *previousData = [NSData dataWithContentsOfFile:newSession.path];
+    
+    // move to fake old session
+    XCTAssertTrue([NSFileManager.defaultManager moveItemAtURL:newSession toURL:oldSession error:nil]);
+    XCTAssertFalse([NSFileManager.defaultManager fileExistsAtPath:newSession.path]);
+    XCTAssertTrue([NSFileManager.defaultManager fileExistsAtPath:oldSession.path]);
+    
+    // WHEN
+    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+    [self.sut applyPatchesForCurrentVersion:@"67.0.0" afterSync:NO];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // THEN
+    
+    NSData *readData = [NSData dataWithContentsOfFile:newSession.path];
+    XCTAssertEqualObjects(readData, previousData);
+    XCTAssertFalse([NSFileManager.defaultManager fileExistsAtPath:oldSession.path]);
+}
 @end
 

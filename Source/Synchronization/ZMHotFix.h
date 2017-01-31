@@ -40,9 +40,13 @@ extern NSString * const ZMSkipHotfix;
 
 - (instancetype)initWithSyncMOC:(NSManagedObjectContext *)syncMOC;
 
-/// This method is supposed to be called once on startup
+/// It checks if there is a last version stored in the persistentStore and then applies patches (once) for older versions and saves the current version in the persistentStore.
+/// This executes only the patches that are supposed to be executed at startup (as soon as the database is loaded)
+- (void)applyPatchesAtStartup;
+
 /// It checks if there is a last version stored in the persistentStore and then applies patches (once) for older versions and saves the current version in the persistentStore
-- (void)applyPatches;
+/// This executes only the patches that are supposed to be executed after processing the notification stream
+- (void)applyPatchesAfterSyncCompleted;
 
 
 @end
@@ -51,7 +55,7 @@ extern NSString * const ZMSkipHotfix;
 @interface ZMHotFix (Testing)
 
 - (instancetype)initWithHotFixDirectory:(ZMHotFixDirectory *)hotFixDirectory syncMOC:(NSManagedObjectContext *)syncMOC;
-- (void)applyPatchesForCurrentVersion:(NSString *)currentVersion;
+- (void)applyPatchesForCurrentVersion:(NSString *)currentVersion afterSync:(BOOL)afterSync;
 
 @end
 

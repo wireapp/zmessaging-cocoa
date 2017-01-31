@@ -44,7 +44,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
 
 @implementation ZMHotFixDirectory
 
-- (NSArray *)patches
+- (NSArray *)patchesAfterSync
 {
     static dispatch_once_t onceToken;
     static NSArray *patches;
@@ -95,12 +95,26 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchConnectedUsers:context];
                      }]
-                    ]
-                    ;
+                    ];
     });
     return patches;
 }
 
+- (NSArray *)patchesAtStartup
+{
+    static dispatch_once_t onceToken;
+    static NSArray *patches;
+    dispatch_once(&onceToken, ^{
+        patches = @[
+                    [ZMHotFixPatch
+                     patchWithVersion:@"67.0.0"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory migrateClientSessionIdentfiersInMOC:context];
+                     }]
+                    ];
+    });
+    return patches;
+}
 
 + (void)resetPushTokens
 {

@@ -105,4 +105,22 @@ extension ZMHotFixDirectory {
         ZMUser.selfUser(in: context).needsToBeUpdatedFromBackend = true
         context.enqueueDelayedSave()
     }
+    
+    /// Migrate client sessions from old identifiers (only client remote identifier) 
+    /// to new safer identifiers (user remote identifier + client remote identifier)
+    /// that have less chances of collision
+    @objc(migrateClientSessionIdentfiersInMOC:)
+    public static func migrateClientSessionIdentifiers(in moc: NSManagedObjectContext) {
+        guard let selfClient = ZMUser.selfUser(in: moc).selfClient() else {
+            // no client? no migration needed
+            return
+        }
+        let request = UserClient.sortedFetchRequest()
+        let allClients = moc.executeFetchRequestOrAssert(request) as! [UserClient]
+        selfClient.keysStore.encryptionContext.perform { (session) in
+            for client in allClients {
+                client.migrateSessionIdentifierFromV1IfNeeded(sessionDirectory: session)
+            }
+        }
+    }
 }
