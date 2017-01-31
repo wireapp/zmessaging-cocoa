@@ -70,7 +70,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-- (void)testThatItDeliveresOTRMessageIfNoMissingClients
+- (void)testThatItDeliversOTRMessageIfNoMissingClients
 {
     //given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
@@ -102,7 +102,7 @@
     XCTAssertEqualObjects(genericMessage.text.content, messageText);
 }
 
-- (void)testThatItDeliveresOTRAssetIfNoMissingClients
+- (void)testThatItDeliversOTRAssetIfNoMissingClients
 {
     __block ZMAssetClientMessage *message;
     
@@ -237,7 +237,7 @@
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
 }
 
-- (void)testThatItDeliveresOTRMessageAfterMissingClientsAreFetched
+- (void)testThatItDeliversOTRMessageAfterMissingClientsAreFetched
 {
     NSString *messageText = @"Hey!";
     __block ZMClientMessage *message;
@@ -262,7 +262,7 @@
     XCTAssertEqualObjects(genericMessage.text.content, messageText);
 }
 
-- (void)testThatItDeliveresOTRAssetAfterMissingClientsAreFetched
+- (void)testThatItDeliversOTRAssetAfterMissingClientsAreFetched
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
@@ -1194,7 +1194,7 @@
 }
 
 
-- (void)testThatItDeliveresOTRMessageAfterIgnoringAndResending
+- (void)testThatItDeliversOTRMessageAfterIgnoringAndResending
 {
     __block BOOL notificationRecieved = NO;
     //given
@@ -1223,9 +1223,8 @@
     observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     observer.notificationCallback = ^(NSObject *note) {
         ConversationChangeInfo *changeInfo = (ConversationChangeInfo *)note;
-        if ([changeInfo securityLevelChanged]) {
+        if (changeInfo.securityLevelChanged && changeInfo.didDegradeSecurityLevelBecauseOfMissingClients) {
             notificationRecieved = YES;
-            XCTAssertTrue(changeInfo.didDegradeSecurityLevelBecauseOfMissingClients);
             [self.userSession performChanges:^{
                 if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
                     [changeInfo.conversation resendMessagesThatCausedConversationSecurityDegradation];
@@ -1242,10 +1241,10 @@
         message = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
     
-    [observer tearDown];
     [message.managedObjectContext saveOrRollback];
     WaitForEverythingToBeDone();
     
+    [observer tearDown];
     XCTAssertTrue(notificationRecieved);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
@@ -1278,16 +1277,13 @@
 }
 
 
-// TODO(Florian): clean up setup code, while still being clear on the test intention
 - (void)testThatItDoesNotDeliverOriginalOTRMessageAfterIgnoringExpiringAndThenSendingAnotherOne
 {
+    // GIVEN
     __block BOOL notificationRecieved = NO;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
-    
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    
-    // Setup security level
     
     [self.userSession performChanges:^ {
         [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
@@ -1295,7 +1291,7 @@
     WaitForEverythingToBeDone();
     [self makeConversationSecured:conversation];
     
-    // make secondary group conversation trusted if needed
+    // add extra user, that will cause conversation degradation
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session) {
         [session registerClientForUser:self.user1 label:@"remote client" type:@"permanent"];
     }];
@@ -1312,33 +1308,23 @@
             }
         }
     };
-    
-    [observer clearNotifications];
     [conversation addConversationObserver:observer];
     
-    // when
+    // WHEN
     __block ZMClientMessage* message1;
-    [self.userSession performChanges:^{
+    [self.userSession performChanges:^{ // this should cause conversation to degrade
         message1 = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
-    WaitForEverythingToBeDone();
     
-    [observer tearDown];
-    [message1.managedObjectContext saveOrRollback];
+    // THEN
     WaitForEverythingToBeDone();
-    
     XCTAssertTrue(notificationRecieved);
     XCTAssertNotNil(message1);
     XCTAssertEqual(message1.deliveryState, ZMDeliveryStateFailedToSend);
-    
     XCTAssertEqual(message1.conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
-    
-    // make secondary group conversation trusted if needed
-    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session) {
-        [session registerClientForUser:self.user1 label:@"remote client" type:@"permanent"];
-    }];
     WaitForEverythingToBeDone();
     
+    // GIVEN
     observer.notificationCallback = ^(NSObject *note) {
         ConversationChangeInfo *changeInfo = (ConversationChangeInfo *)note;
         if ([changeInfo securityLevelChanged]) {
@@ -1351,29 +1337,23 @@
             }
         }
     };
-    
     [conversation addConversationObserver:observer];
     
-    // when
+    // WHEN
     __block ZMClientMessage* message2;
     [self.userSession performChanges:^{
         message2 = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
+
+    
+    // THEN
     WaitForEverythingToBeDone();
-    
     [observer tearDown];
-    [message2.managedObjectContext saveOrRollback];
-    
-    // then
     XCTAssertTrue(notificationRecieved);
-    
     XCTAssertEqual(message2.deliveryState, ZMDeliveryStateSent);
     XCTAssertNotNil(message2);
     XCTAssertEqual(message2.conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
-    
     XCTAssertEqual(message1.deliveryState, ZMDeliveryStateFailedToSend);
-
-
 }
 
 - (void)testThatItInsertsNewClientSystemMessageWhenReceivedMissingClients
