@@ -67,6 +67,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             }
             
             self.callingSystemMessageGenerator.process(callState: callState, in: conversation, sender: user)
+            self.managedObjectContext.enqueueDelayedSave()
         }
     }
     
@@ -84,6 +85,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             }
             
             self.callingSystemMessageGenerator.processMissedCall(in: conversation, from: user, at: timestamp)
+            self.managedObjectContext.enqueueDelayedSave()
         }
     }
     
