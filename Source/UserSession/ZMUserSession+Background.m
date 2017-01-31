@@ -351,7 +351,7 @@ static NSString *ZMLogTag = @"Push";
 - (void)handleCallCategoryNotification:(ZMStoredLocalNotification *)note
 {
     if (note.actionIdentifier == nil || [note.actionIdentifier isEqualToString:ZMCallAcceptAction]) {
-        BOOL callIsStillOngoing = (note.conversation.callParticipants.count > 0) || note.conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall; // FIXME check if this logic works
+        BOOL callIsStillOngoing = (note.conversation.callParticipants.count > 0) || note.conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall;
         BOOL userWantsToCallBack = ([note.category isEqualToString:ZMMissedCallCategory]);
         
         if ([WireCallCenter activeCallConversationsInUserSession:self].count == 0 && (callIsStillOngoing || userWantsToCallBack)) {

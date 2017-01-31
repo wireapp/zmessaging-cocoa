@@ -436,7 +436,7 @@ extension WireCallCenterV2 {
     func applicationDidBecomeActive(note: Notification) {
         if let connectedCallConversation =  conversations(withVoiceChannelStates: [.selfConnectedToActiveChannel]).first, connectedCallConversation.isVideoCall {
             // We need to start video in conversation that accepted video call in background but did not start the recording yet
-            try? connectedCallConversation.voiceChannelRouter?.v2.setVideoSendActive(true) // FIXME should this also be done for V3?
+            try? connectedCallConversation.voiceChannelRouter?.v2.setVideoSendActive(true)
         }
     }
     
