@@ -1472,59 +1472,52 @@
 
 - (void)testThatItChangesSecurityLevelToInsecureBecauseFailedMessageAttemptWhenSelfTriesToSendMessageInDegradingConversation
 {
-    [self testThatItChangesSecurityLevelToCorrectSubtypeSendingMessageFromSelfClient:YES];
+    // GIVEN
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    [self establishSessionBetweenSelfUserAndMockUser:self.user1];
+    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+    [self makeConversationSecured:conversation];
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        [session registerClientForUser:self.user1 label:@"iPod Touch" type:@"permanent"];
+    }];
+    WaitForEverythingToBeDone();
+    
+    // WHEN
+    [self.userSession performChanges:^{
+        [conversation appendOTRMessageWithText:@"Hello" nonce:NSUUID.createUUID fetchLinkPreview:YES];
+    }];
+    WaitForEverythingToBeDone();
+    
+    // THEN
+    ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:conversation.messages.count - 2];
+    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+    XCTAssertEqual(conversation.messages.count, 4lu); // 3x system message (new device & secured & new client) + appended client message
+    XCTAssertEqual(lastMessage.systemMessageData.systemMessageType, ZMSystemMessageTypeNewClient);
 }
 
 - (void)testThatItChangesSecurityLevelToInsecureBecauseOtherWhenOtherClientTriesToSendMessageAndDegradesDegradingConversation
 {
-    [self testThatItChangesSecurityLevelToCorrectSubtypeSendingMessageFromSelfClient:NO];
-}
-
-- (void)testThatItChangesSecurityLevelToCorrectSubtypeSendingMessageFromSelfClient:(BOOL)sendingFromSelfCLient
-{
-    self.registeredOnThisDevice = YES;
+    // GIVEN
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    
-    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-
     [self establishSessionBetweenSelfUserAndMockUser:self.user1];
-    WaitForEverythingToBeDoneWithTimeout(0.5);
-    
-
+    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     [self makeConversationSecured:conversation];
+    WaitForEverythingToBeDone();
     
-    // Make sure this relationship is not a fault:
-    for (id obj in conversation.messages) {
-        (void) obj;
-    }
+    // WHEN
+    ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Test" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused transportSession) {
+        MockUserClient *newClient = [transportSession registerClientForUser:self.user1 label:@"test-it" type:@"permanent"];
+        [self.selfToUser1Conversation encryptAndInsertDataFromClient:newClient toClient:self.selfUser.clients.anyObject data:message.data];
+    }];
     
-    if (sendingFromSelfCLient) {
-        
-        // when
-        [self.userSession performChanges:^{
-            [conversation appendOTRMessageWithText:@"Hello" nonce:NSUUID.createUUID fetchLinkPreview:YES];
-        }];
-        
-        WaitForEverythingToBeDone();
-    } else {
-        
-        // when
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Test" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused transportSession) {
-            MockUserClient *newClient = [transportSession registerClientForUser:self.user1 label:@"test-it" type:@"permanent"];
-            [self.selfToUser1Conversation encryptAndInsertDataFromClient:newClient toClient:self.selfUser.clients.anyObject data:message.data];
-        }];
-        
-        WaitForEverythingToBeDone();
-    }
+    WaitForEverythingToBeDone();
     
-    // then
+    // THEN
     ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:conversation.messages.count - 2];
-    ZMConversationSecurityLevel expectedLevel = ZMConversationSecurityLevelSecureWithIgnored;
-    XCTAssertEqual(conversation.securityLevel, expectedLevel);
+    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
     XCTAssertEqual(conversation.messages.count, 4lu); // 3x system message (new device & secured & new client) + appended client message
     XCTAssertEqual(lastMessage.systemMessageData.systemMessageType, ZMSystemMessageTypeNewClient);
-
 }
 
 - (void)checkThatItShouldInsertSecurityLevelSystemMessageAfterSendingMessage:(BOOL)shouldInsert
