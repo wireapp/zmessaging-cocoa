@@ -23,6 +23,7 @@
 @import ZMUtilities;
 @import ZMCDataModel;
 @import CallKit;
+@import CoreTelephony;
 
 #import "ZMUserSession+Background.h"
 
@@ -316,6 +317,9 @@ ZM_EMPTY_ASSERTING_INIT()
         
         FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_fileAssetCache = fileAssetCache;
+        
+        CTCallCenter *callCenter = [[CTCallCenter alloc] init];
+        self.managedObjectContext.zm_callCenter = callCenter;
         
         [self.syncManagedObjectContext performBlockAndWait:^{
             self.syncManagedObjectContext.zm_imageAssetCache = imageAssetCache;
