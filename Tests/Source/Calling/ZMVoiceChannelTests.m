@@ -977,6 +977,10 @@
         XCTAssertEqual(self.syncOneOnOneConversation.voiceChannelState, ZMVoiceChannelStateOutgoingCall);
         
         [self spinMainQueueWithTimeout:0.5];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+     
+    [self.syncMOC performGroupedBlockAndWait:^{
         [self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState]; // callDeviceIsActive is set to NO on the uiContext, therefore need to merge changes
         [self.syncOneOnOneConversation.voiceChannel removeCallParticipant:self.syncSelfUser]; // done by the BE when syncing callDeviceIsActive
 
@@ -1006,6 +1010,10 @@
         XCTAssertEqual(self.syncGroupConversation.voiceChannelState, ZMVoiceChannelStateOutgoingCall);
         
         [self spinMainQueueWithTimeout:0.5];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    [self.syncMOC performGroupedBlockAndWait:^{
         [self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState]; // callTimedOut is set to YES on the uiContext, therefore need to merge changes
 
         // then
@@ -1090,10 +1098,14 @@
         // when
         [self.syncMOC zm_addAndStartCallTimer:conversation];
         [self spinMainQueueWithTimeout:0.5];
-        
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self.syncMOC performGroupedBlockAndWait:^{
         [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
         
         // then
+        ZMConversation *conversation = self.syncGroupConversation;
         XCTAssertTrue(conversation.callTimedOut);
     }];
 }
@@ -1113,10 +1125,14 @@
         // when
         [self.syncMOC zm_addAndStartCallTimer:conversation];
         [self spinMainQueueWithTimeout:0.5];
-        
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self.syncMOC performGroupedBlockAndWait:^{
         [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
         
         // then
+        ZMConversation *conversation = self.syncOneOnOneConversation;
         XCTAssertTrue(conversation.callTimedOut);
     }];
 }
