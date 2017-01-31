@@ -427,10 +427,10 @@ ZM_EMPTY_ASSERTING_INIT()
             if(self == nil || self.tornDown) {
                 return;
             }
+            [self.syncMOC mergeUserInfoFromUserInfo:userInfo];
             NSSet *changedConversations = [self.syncMOC mergeCallStateChanges:callStateChanges];
             [self.syncMOC mergeChangesFromContextDidSaveNotification:note];
             [self processSaveWithInsertedObjects:[NSSet set] updateObjects:changedConversations];
-            [self.syncMOC mergeUserInfoFromUserInfo:userInfo];
             [self.syncMOC processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
         }];
     } else if (mocThatSaved.zm_isSyncContext) {
@@ -442,12 +442,11 @@ ZM_EMPTY_ASSERTING_INIT()
             if(self == nil || self.tornDown) {
                 return;
             }
-    
+
+            [self.uiMOC mergeUserInfoFromUserInfo:userInfo];
             NSSet *changedConversations = [strongUiMoc mergeCallStateChanges:callStateChanges];
             [strongUiMoc.globalManagedObjectContextObserver notifyUpdatedCallState:changedConversations notifyDirectly:[self shouldForwardCallStateChangeDirectlyForNote:note]];
-           
             [strongUiMoc mergeChangesFromContextDidSaveNotification:note];
-            [self.uiMOC mergeUserInfoFromUserInfo:userInfo];
             [strongUiMoc processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
         }];
     }
