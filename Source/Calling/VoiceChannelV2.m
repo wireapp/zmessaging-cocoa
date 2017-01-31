@@ -91,7 +91,7 @@
         _conversation = conversation;
         NSManagedObjectContext *context = self.conversation.managedObjectContext;
         if (context.zm_isUserInterfaceContext) {
-            self.callCenter = context.globalManagedObjectContextObserver.callCenter;
+            self.callCenter = context.zm_callCenter;
         }
     }
     return self;
