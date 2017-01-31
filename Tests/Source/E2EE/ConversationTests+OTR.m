@@ -890,6 +890,7 @@
 
 - (void)testThatAssetMediumIsRedownloadedIfNoMessageDataIsStored
 {
+    // GIVEN
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
 
     NSData *encryptedImageData;
@@ -899,36 +900,33 @@
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
         
-        [self.groupConversation insertOTRAssetFromClient:self.user1.clients.anyObject
-                                                toClient:self.selfUser.clients.anyObject
-                                                metaData:message.data
-                                               imageData:encryptedImageData
-                                                 assetId:assetId
-                                                isInline:NO];
+        MockUserClient *senderClient = self.user1.clients.anyObject;
+        MockUserClient *toClient = self.selfUser.clients.anyObject;
+        NSData *messageData = [MockUserClient encryptedWithData:message.data from:senderClient to:toClient];
+        [self.groupConversation insertOTRAssetFromClient:senderClient toClient:toClient metaData:messageData imageData:encryptedImageData assetId:assetId isInline:NO];
         [session createAssetWithData:encryptedImageData identifier:assetId.transportString contentType:@"" forConversation:self.groupConversation.identifier];
-        
     }];
-    
     WaitForAllGroupsToBeEmpty(0.5);
-
+    
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     ZMAssetClientMessage *imageMessageData = (ZMAssetClientMessage *)conversation.messages.lastObject;
 
+    // WHEN
     // remove all stored data, like cache is cleared
     [self.uiMOC.zm_imageAssetCache deleteAssetData:imageMessageData.nonce format:ZMImageFormatMedium encrypted:YES];
     [self.uiMOC.zm_imageAssetCache deleteAssetData:imageMessageData.nonce format:ZMImageFormatMedium encrypted:NO];
     
     
+    // THEN
     XCTAssertNil([[imageMessageData imageMessageData] mediumData]);
-    
     [imageMessageData requestImageDownload];
     WaitForAllGroupsToBeEmpty(0.5);
-
     XCTAssertNotNil([[imageMessageData imageMessageData] mediumData]);
 }
 
 - (void)testThatAssetMediumIsRedownloadedIfNoDecryptedMessageDataIsStored
 {
+    // GIVEN
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     NSData *encryptedImageData;
@@ -937,29 +935,26 @@
     NSUUID *assetId = [NSUUID createUUID];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
-        
-        [self.groupConversation insertOTRAssetFromClient:self.user1.clients.anyObject
-                                                toClient:self.selfUser.clients.anyObject
-                                                metaData:message.data
-                                               imageData:encryptedImageData
-                                                 assetId:assetId
-                                                isInline:NO];
+        MockUserClient *senderClient = self.user1.clients.anyObject;
+        MockUserClient *toClient = self.selfUser.clients.anyObject;
+        NSData *messageData = [MockUserClient encryptedWithData:message.data from:senderClient to:toClient];
+        [self.groupConversation insertOTRAssetFromClient:senderClient toClient:toClient metaData:messageData imageData:encryptedImageData assetId:assetId isInline:NO];
         [session createAssetWithData:encryptedImageData identifier:assetId.transportString contentType:@"" forConversation:self.groupConversation.identifier];
     }];
-    
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     ZMAssetClientMessage *imageMessageData = (ZMAssetClientMessage *)conversation.messages.lastObject;
     
+    // WHEN
     // remove decrypted data, but keep encrypted, like we crashed during decryption
     [self.uiMOC.zm_imageAssetCache storeAssetData:imageMessageData.nonce format:ZMImageFormatMedium encrypted:YES data:encryptedImageData];
     [self.uiMOC.zm_imageAssetCache deleteAssetData:imageMessageData.nonce format:ZMImageFormatMedium encrypted:NO];
     
+    // THEN
     XCTAssertNil([[imageMessageData imageMessageData] mediumData]);
     [imageMessageData requestImageDownload];
     WaitForAllGroupsToBeEmpty(0.5);
-    
     XCTAssertNotNil([[imageMessageData imageMessageData] mediumData]);
 }
 
