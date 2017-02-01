@@ -132,7 +132,7 @@ public final class ZMCallTimer : NSObject, ZMTimerClient {
             managedObjectContext?.performGroupedBlock {
                 let object = try? self.managedObjectContext?.existingObject(with: conversationID)
                 guard let conversation =  object as? ZMConversation, !conversation.isZombieObject else { return }
-                conversation.voiceChannel?.callTimerDidFire(self)
+                conversation.voiceChannelRouter?.v2.callTimerDidFire(self)
             }
             
             break;

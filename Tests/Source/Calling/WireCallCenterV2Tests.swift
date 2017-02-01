@@ -99,6 +99,8 @@ class WireCallCenterV2Tests : MessagingTest {
         conversation.remoteIdentifier = UUID()
         conversation.internalAddParticipant(user1, isAuthoritative: true)
         
+        ZMUserSession.callingProtocolStrategy = .version2
+        
         self.uiMOC.saveOrRollback()
         
         sut = WireCallCenterV2(context: uiMOC)
@@ -107,6 +109,7 @@ class WireCallCenterV2Tests : MessagingTest {
     override func tearDown() {
         super.tearDown()
         
+        ZMUserSession.callingProtocolStrategy = .negotiate
         token = nil
         sut = nil
     }
