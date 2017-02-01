@@ -36,13 +36,14 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     var updateProvider: FakeCredentialProvider!
     var cookieStorage : ZMPersistentCookieStorage!
     
+    var spyKeyStore: SpyUserClientKeyStore!
+    
     var receivedAuthenticationNotifications : [ZMUserSessionAuthenticationNotification] = []
     
     override func setUp() {
         super.setUp()
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-        let newKeyStore = FakeKeysStore(in: FakeKeysStore.testDirectory)
-        self.syncMOC.userInfo.setObject(newKeyStore, forKey: "ZMUserClientKeysStore" as NSCopying)
+
+        self.spyKeyStore = SpyUserClientKeyStore(in: UserClientKeysStore.otrDirectoryURL)
         cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer")
         let cookie = ZMCookie(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage)
         loginProvider = FakeCredentialProvider()
@@ -50,7 +51,7 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
         clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, loginCredentialProvider:loginProvider, update:updateProvider, cookie:cookie, registrationStatusDelegate: nil)
         authenticationStatus = MockAuthenticationStatus(cookie: cookie);
         clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
-        sut = UserClientRequestStrategy(authenticationStatus:authenticationStatus, clientRegistrationStatus: clientRegistrationStatus, clientUpdateStatus:clientUpdateStatus, context: self.syncMOC)
+        sut = UserClientRequestStrategy(authenticationStatus:authenticationStatus, clientRegistrationStatus: clientRegistrationStatus, clientUpdateStatus:clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
         NotificationCenter.default.addObserver(self, selector: #selector(UserClientRequestStrategyTests.didReceiveAuthenticationNotification(_:)), name: NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil)
     }
     
@@ -60,13 +61,13 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     }
     
     override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-        clientRegistrationStatus.tearDown()
-        clientRegistrationStatus = nil
-        clientUpdateStatus.tearDown()
-        clientUpdateStatus = nil
-        sut.tearDown()
-        sut = nil
+        self.clientRegistrationStatus.tearDown()
+        self.clientRegistrationStatus = nil
+        self.clientUpdateStatus.tearDown()
+        self.clientUpdateStatus = nil
+        self.spyKeyStore = nil
+        self.sut.tearDown()
+        self.sut = nil
         receivedAuthenticationNotifications = []
         NotificationCenter.default.removeObserver(self)
         super.tearDown()
@@ -140,7 +141,7 @@ extension UserClientRequestStrategyTests {
         XCTAssertNotNil(client.remoteIdentifier, "Should store remoteIdentifier provided by response")
         XCTAssertEqual(client.remoteIdentifier, remoteIdentifier)
         
-        let storedRemoteIdentifier = self.syncMOC.persistentStoreMetadata(key: ZMPersistedClientIdKey) as? String
+        let storedRemoteIdentifier = self.syncMOC.persistentStoreMetadata(forKey: ZMPersistedClientIdKey) as? String
         AssertOptionalEqual(storedRemoteIdentifier, expression2: remoteIdentifier)
         self.syncMOC.setPersistentStoreMetadata(nil as String?, key: ZMPersistedClientIdKey)
     }
@@ -164,7 +165,7 @@ extension UserClientRequestStrategyTests {
         
         // then
         let maxID_after = UInt16(client.preKeysRangeMax)
-        let expectedMaxID = (client.keysStore as! FakeKeysStore).lastGeneratedKeys.last?.id
+        let expectedMaxID = self.spyKeyStore.lastGeneratedKeys.last?.id
         
         XCTAssertNotEqual(maxID_after, maxID_before)
         XCTAssertEqual(maxID_after, expectedMaxID)
@@ -626,7 +627,10 @@ extension UserClientRequestStrategyTests {
         // given
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
         let existingClient1 = self.createSelfClient()
-        let existingClient2 = self.createClient(for: selfUser, createSessionWithSelfUser:false)
+        let existingClient2 = UserClient.insertNewObject(in: self.syncMOC)
+        existingClient2.user = selfUser
+        existingClient2.remoteIdentifier = "aabbcc112233"
+        self.syncMOC.saveOrRollback()
         
         XCTAssertEqual(selfUser.clients.count, 2)
         let payload: [String: Any] = [
@@ -693,7 +697,7 @@ extension UserClientRequestStrategyTests {
         XCTAssertNotNil(newFingerprint)
         XCTAssertNotEqual(fingerprint, newFingerprint)
         XCTAssertNil(selfUser.clients.first?.remoteIdentifier)
-        XCTAssertNil(syncMOC.persistentStoreMetadata(key: ZMPersistedClientIdKey))
+        XCTAssertNil(syncMOC.persistentStoreMetadata(forKey: ZMPersistedClientIdKey))
         XCTAssertNotNil(fingerprint)
         XCTAssertNotNil(newFingerprint)
         XCTAssertNotEqual(previousLastPrekey, newLastPrekey)

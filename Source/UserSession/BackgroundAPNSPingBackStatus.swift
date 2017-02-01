@@ -85,7 +85,7 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
         }
 
         get {
-            guard let uuidString = self.persistentStoreMetadata(key: "LastUpdateEventID") as? String,
+            guard let uuidString = self.persistentStoreMetadata(forKey: "LastUpdateEventID") as? String,
                 let uuid = UUID(uuidString: uuidString)
                 else { return nil }
             return uuid

@@ -1,0 +1,175 @@
+// 
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
+//
+
+
+"push.notification.default" = "Uusi viesti";
+"push.notification.ephemeral" = "Joku lähetti sinulle viestin";
+
+"push.notification.add.message.group" = "%1$@ keskustelussa %2$@:%3$@";
+"push.notification.add.message.group.nousername" = "Uusi viesti keskustelussa %1$@: %2$@";
+"push.notification.add.message.group.nousername.noconversationname" = "Uusi viesti: %1$@";
+"push.notification.add.message.group.noconversationname" = "%1$@ keskustelussa: %2$@";
+
+"push.notification.add.message.oneonone" = "%1$@: %2$@";
+"push.notification.add.message.oneonone.nousername" = "Uusi viesti: %1$@";
+
+"push.notification.add.image.group" = "%1$@ jakoi kuvan keskustelussa %2$@";
+"push.notification.add.image.group.nousername" = "Uusi kuva keskustelussa %1$@";
+"push.notification.add.image.group.nousername.noconversationname" = "Uusi kuva keskustelussa";
+"push.notification.add.image.group.noconversationname" = "%1$@ jakoi kuvan keskustelussa";
+
+"push.notification.add.image.oneonone" = "%1$@ jakoi kuvan";
+"push.notification.add.image.oneonone.nousername" = "Uusi kuva keskustelussa";
+
+"push.notification.add.video.group" = "%1$@ jakoi videon keskustelussa %2$@";
+"push.notification.add.video.group.nousername" = "Uusi video keskustelussa %1$@";
+"push.notification.add.video.group.nousername.noconversationname" = "Uusi video keskustelussa";
+"push.notification.add.video.group.noconversationname" = "%1$@ jakoi videon keskustelussa";
+
+"push.notification.add.video.oneonone" = "%1$@ jakoi videon";
+"push.notification.add.video.oneonone.nousername" = "Uusi video keskustelussa";
+
+"push.notification.add.audio.group" = "%1$@ jakoi ääniviestin keskustelussa %2$@";
+"push.notification.add.audio.group.nousername" = "Uusi ääniviesti keskustelussa %1$@";
+"push.notification.add.audio.group.nousername.noconversationname" = "Uusi ääniviesti keskustelussa";
+"push.notification.add.audio.group.noconversationname" = "%1$@ jakoi ääniviestin keskustelussa";
+
+"push.notification.add.audio.oneonone" = "%1$@ jakoi ääniviestin";
+"push.notification.add.audio.oneonone.nousername" = "Uusi ääniviesti keskustelussa";
+
+"push.notification.add.file.group" = "%1$@ jakoi tiedoston keskustelussa %2$@";
+"push.notification.add.file.group.nousername" = "Uusi tiedosto keskustelussa %1$@";
+"push.notification.add.file.group.nousername.noconversationname" = "Uusi tiedosto keskustelussa";
+"push.notification.add.file.group.noconversationname" = "%1$@ jakoi tiedoston keskustelussa";
+
+"push.notification.add.file.oneonone" = "%1$@ jakoi tiedoston";
+"push.notification.add.file.oneonone.nousername" = "Uusi tiedosto keskustelussa";
+
+"push.notification.add.location.group" = "%1$@ jakoi sijainnin keskustelussa %2$@";
+"push.notification.add.location.group.nousername" = "Uusi sijainti keskustelussa %1$@";
+"push.notification.add.location.group.nousername.noconversationname" = "Uusi sijainti keskustelussa";
+"push.notification.add.location.group.noconversationname" = "%1$@ jakoi sijainnin keskustelussa";
+
+"push.notification.add.location.oneonone" = "%1$@ jakoi sijainnin";
+"push.notification.add.location.oneonone.nousername" = "Uusi sijainti keskustelussa";
+
+"push.notification.member.join" = "%1$@ lisäsi käyttäjän %3$@ %2$@ keskusteluun";
+"push.notification.member.join.noconversationname" = "%1$@ lisäsi käyttäjän %2$@ keskusteluun";
+"push.notification.member.join.nousername.noconversationname" = "%1$@ lisättiin keskusteluun";
+"push.notification.member.join.nousername" = "%2$@ lisättiin keskusteluun %1$@";
+
+"push.notification.member.join.many.nootherusername" = "%1$@ lisäsi käyttäjiä keskusteluun %2$@";
+"push.notification.member.join.many.nootherusername.noconversationname" = "%1$@ lisäsi käyttäjiä keskusteluun";
+"push.notification.member.join.many.nootherusername.nousername" = "Käyttäjiä lisättiin keskusteluun %1$@";
+"push.notification.member.join.many.nootherusername.nousername.noconversationname" = "Käyttäjiä lisättiin keskusteluun";
+
+"push.notification.member.join.self" = "%1$@ lisäsi sinut keskusteluun %2$@";
+"push.notification.member.join.self.noconversationname" = "%1$@ lisäsi sinut keskusteluun";
+"push.notification.member.join.self.nousername.noconversationname" = "Sinut lisättiin keskusteluun";
+"push.notification.member.join.self.nousername" = "Sinut lisättiin keskusteluun %1$@";
+
+"push.notification.member.join.nootherusername" = "%1$@ lisäsi käyttäjiä keskusteluun %2$@";
+"push.notification.member.join.nootherusername.noconversationname" = "%1$@ lisäsi käyttäjiä keskusteluun";
+"push.notification.member.join.nootherusername.nousername.noconversationname" = "Käyttäjiä lisättiin keskusteluun";
+"push.notification.member.join.nootherusername.nousername" = "Käyttäjiä lisättiin keskusteluun %1$@";
+
+"push.notification.member.leave" = "%1$@ poisti %3$@ keskustelusta %2$@";
+"push.notification.member.leave.noconversationname" = "%1$@ poisti %2$@ keskustelusta";
+"push.notification.member.leave.nousername.noconversationname" = "%1$@ poistettiin keskustelusta";
+"push.notification.member.leave.nousername" = "%2$@ poistettiin keskustelusta %1$@";
+
+"push.notification.member.leave.many.nootherusername" = "%1$@ poisti käyttäjiä keskustelusta %2$@";
+"push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@ poisti käyttäjiä keskustelusta";
+"push.notification.member.leave.many.nootherusername.nousername" = "Käyttäjiä poistettiin keskustelusta %1$@";
+"push.notification.member.leave.many.nootherusername.nousername.noconversationname" = "Käyttäjiä poistettiin keskustelusta";
+
+"push.notification.member.leave.self" = "%1$@ poisti sinut keskustelusta %2$@";
+"push.notification.member.leave.self.noconversationname" = "%1$@ poisti sinut keskustelusta";
+"push.notification.member.leave.self.nousername.noconversationname" = "Sinut poistettin keskustelusta";
+"push.notification.member.leave.self.nousername" = "Sinut poistettiin keskustelusta %1$@";
+
+"push.notification.member.leave.nootherusername" = "%1$@ poisti käyttäjiä keskustelusta %2$@";
+"push.notification.member.leave.nootherusername.noconversationname" = "%1$@ poisti käyttäjiä keskustelusta";
+"push.notification.member.leave.nootherusername.nousername.noconversationname" = "Käyttäjiä poistettiin keskustelusta";
+"push.notification.member.leave.nootherusername.nousername" = "Käyttäjiä poistettiin keskustelusta %1$@";
+
+"push.notification.member.leave.sender.nootherusername" = "%1$@ lähti keskustelusta %2$@";
+"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ lähti keskustelusta";
+"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Käyttäjiä poistui keskustelusta";
+"push.notification.member.leave.sender.nootherusername.nousername" = "Käyttäjiä lähti keskustelusta %1$@";
+
+
+"push.notification.call.started.video.oneonone" = "%1$@ soittaa videopuhelun";
+"push.notification.call.started.video.oneonone.nousername" = "Joku soittaa videopuhelun";
+
+"push.notification.call.started.video.group" = "%1$@ soittaa videopuhelun keskustelussa %2$@";
+"push.notification.call.started.video.group.nousername" = "Joku soittaa videopuhelun keskustelussa %1$@";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ soittaa videopuhelua keskustelussa";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Joku soittaa videopuhelua keskustelussa";
+
+"push.notification.call.started.oneonone" = "%1$@ soittaa";
+"push.notification.call.started.oneonone.nousername" = "Joku soittaa";
+
+"push.notification.call.started.group" = "%1$@ soittaa keskustelussa %2$@";
+"push.notification.call.started.group.nousername" = "Joku soittaa keskustelussa %1$@";
+"push.notification.call.started.group.noconversationname" = "%1$@ soittaa keskustelussa";
+"push.notification.call.started.group.nousername.noconversationname" = "Joku soittaa keskustelussa";
+
+"push.notification.conversation.create" = "%1$@ loi ryhmäkeskustelun sinun kanssasi";
+"push.notification.conversation.create.nousername" = "Joku loi ryhmäkeskustelun kanssasi";
+
+"push.notification.conversation.rename" = "%1$@ nimesi keskustelun uudestaan: %2$@";
+"push.notification.conversation.rename.nousername" = "Keskustelu nimettiin uudelleen: %1$@";
+
+"push.notification.connection.request" = "%@ haluaa luoda kontaktin";
+"push.notification.connection.request.nousername" = "Joku haluaa luoda kontaktin";
+
+"push.notification.connection.accepted" = "Sinä ja %@ olette nyt kontaktissa";
+"push.notification.connection.accepted.nousername" = "Sinulla on uusi kontakti";
+
+"push.notification.failed.message.oneonone" = "Ei pysty lähettämään viestiä käyttäjälle: %1$@";
+"push.notification.failed.message.oneonone.nousername" = "Ei pysty lähettämään viestiä";
+
+"push.notification.failed.message.group" = "Ei pysty lähettämään viestiä keskustelussa: %1$@";
+"push.notification.failed.message.group.noconversationname" = "Ei pysty lähettämään viestiä";
+
+"push.notification.reaction.group" = "%1$@ %3$@ viestistäsi keskustelussa: %2$@";
+"push.notification.reaction.group.nousername.noconversationname" = "Joku %@ viestistäsi keskustelussa";
+"push.notification.reaction.group.nousername" = "Joku %2$@ viestistäsi keskustelussa: %1$@";
+"push.notification.reaction.group.noconversationname" = "%@ %@ viestistäsi keskustelussa";
+
+"push.notification.reaction.oneonone" = "%@ %@ sinun viestistä";
+"push.notification.reaction.oneonone.nousername" = "Joku %@ sinun viestistä";
+
+"push.notification.new_user" = "%@ liittyi juuri Wireen";
+
+"push.notification.action.message.open" = "Avaa";
+"push.notification.action.message.reply" = "Vastaa";
+"push.notification.action.message.reply.button.title" = "Lähetä";
+"push.notification.action.conversation.mute" = "Mykistä";
+
+"push.notification.action.call.accept" = "Hyväksy";
+"push.notification.action.call.ignore" = "Kieltäydy";
+"push.notification.action.call.message" = "Viesti";
+"push.notification.action.call.callback" = "Soita takaisin";
+"push.notification.action.connection.accept" = "Hyväksy";
+
+"push.notification.callkit.call.started.group" = "%1$@ %2$@ :ssa";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Joku soittaa sinulle keskustelussa";
+"push.notification.callkit.call.started.group.nousername" = "Joku soittaa sinulle keskustelussa %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ soittaa keskustelussa";

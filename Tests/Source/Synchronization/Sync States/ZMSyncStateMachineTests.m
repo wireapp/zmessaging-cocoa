@@ -250,6 +250,7 @@
     
     //when
     [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError errorWithDomain:@"" code:0 userInfo:nil]];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     [self.unauthenticatedState verify];
     [self.updateEventsCatchUpPhaseOneState verify];

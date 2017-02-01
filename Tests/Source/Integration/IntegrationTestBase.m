@@ -94,7 +94,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     
     self.mockObjectIDToRemoteID = [NSMutableDictionary dictionary];
     self.mockFlowManager = self.mockTransportSession.mockFlowManager;
-    self.mockTransportSession.cryptoboxLocation = [[[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier] URLByAppendingPathComponent:@"otr"];
 
     ZMFlowSyncInternalFlowManagerOverride = self.mockFlowManager;
     WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3Mock.self;
@@ -628,110 +627,21 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-- (MockUserClient *)remotelyRegisterClientForUser:(MockUser *)mockUser preKeys:(NSArray *)preKeys lastPreKey:(NSString *)lastPreKey
+- (void)establishSessionBetweenSelfUserAndMockUser:(MockUser *)mockUser
 {
-    __block MockUserClient *remoteUserClient;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        remoteUserClient = [session registerClientForUser:mockUser label:mockUser.name type:@"permanent" preKeys:preKeys lastPreKey:lastPreKey];
-    }];
-    
-    return remoteUserClient;
-}
-
-- (EncryptionContext *)setupOTREnvironmentForUser:(MockUser *)mockUser isSelfClient:(BOOL)isSelfClient numberOfKeys:(UInt16)numberOfKeys establishSessionWithSelfUser:(BOOL)establishSessionWithSelfUser
-{
-    NSURL *url = [self.mockTransportSession.cryptoboxLocation URLByAppendingPathComponent:mockUser.identifier];
-    [[NSFileManager defaultManager] createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
-    
-    EncryptionContext *encryptionContext = [[EncryptionContext alloc] initWithPath:url];
-    __block NSString *userLastKey;
-    __block NSMutableArray *userPreKeys = [NSMutableArray array];
-    [encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        NSError *error;
-        for (UInt16 i = 0; i < numberOfKeys; i++)  {
-            NSString *prekey = [sessionsDirectory generatePrekey:i error:&error];
-            XCTAssertNil(error, @"Error creating prekeys");
-            [userPreKeys addObject:prekey];
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        if (mockUser.clients.count == 0) {
+            [session registerClientForUser:mockUser label:@"Wire for MS-DOS" type:@"permanent"];
         }
-        NSError *lastKeyError;
-        userLastKey = [sessionsDirectory generateLastPrekeyAndReturnError:&lastKeyError];
-        XCTAssertNil(lastKeyError, @"Error creating last key");
-    }];
-    
-    ZMUser *realUser = [self userForMockUser:mockUser];
-    
-    MockUserClient *remoteUserClient;
-    if (isSelfClient && mockUser.clients.count != 0) {
-        NSString *selfClientID = [self.syncMOC persistentStoreMetadataForKey:ZMPersistedClientIdKey];
-        remoteUserClient = [mockUser.clients.allObjects firstObjectMatchingWithBlock:^BOOL(MockUserClient *obj) {
-            return ![obj.identifier isEqualToString:selfClientID];
-        }];
-    }
-    if (remoteUserClient == nil) {
-        remoteUserClient  = [self remotelyRegisterClientForUser:mockUser preKeys:userPreKeys lastPreKey:userLastKey];
-    }
-    
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:realUser.remoteIdentifier inManagedObjectContext:self.syncMOC];
-        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-        if (!isSelfClient || (isSelfClient && selfUser.selfClient == nil)) {
-            UserClient *localUserClient = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
-            localUserClient.remoteIdentifier = remoteUserClient.identifier;
-            localUserClient.user = user;
-            
-            if (isSelfClient) {
-                [self.syncMOC setPersistentStoreMetadata:remoteUserClient.identifier forKey:ZMPersistedClientIdKey];
-            }
-        }
-        
-        if (establishSessionWithSelfUser && ! isSelfClient) {
-            //session from selfClient to userClient
-            [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-                NSError *error;
-                [sessionsDirectory createClientSession:remoteUserClient.identifier base64PreKeyString:userPreKeys.firstObject error:&error];
-                XCTAssertNil(error, @"Error creating session");
+       
+        for (MockUserClient* client in mockUser.clients) {
+            [self.syncMOC performGroupedBlockAndWait:^{
+                [self establishSessionFromSelfToRemoteClient:client];
             }];
         }
-        
-        [self.syncMOC saveOrRollback];
     }];
-    return encryptionContext;
+    WaitForAllGroupsToBeEmpty(0.5);
 }
-
-- (void)inserOTRMessage:(ZMGenericMessage *)message
-         inConversation:(MockConversation *)conversation
-               fromUser:(MockUser *)sender
-               toClient:(MockUserClient *)recipient
-         usingStringKey:(NSString *)preKey
-                session:(MockTransportSession<MockTransportSessionObjectCreation> *)session
-{
-    [self inserOTRMessage:message inConversation:conversation fromUser:sender toClient:recipient usingKey:preKey session:session];
-}
-
-- (EncryptionContext *)inserOTRMessage:(ZMGenericMessage *)message
-                        inConversation:(MockConversation *)conversation
-                              fromUser:(MockUser *)sender
-                              toClient:(MockUserClient *)recipient
-                              usingKey:(NSString *)preKey
-                               session:(MockTransportSession<MockTransportSessionObjectCreation> *)session
-{
-    MockUserClient *senderClient = [session registerClientForUser:sender label:sender.name type:@"permanent"];
-    __block NSError *error;
-    
-    NSURL *url = [self.mockTransportSession.cryptoboxLocation URLByAppendingPathComponent:senderClient.label];
-    [[NSFileManager defaultManager] createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
-    EncryptionContext *senderBox = [[EncryptionContext alloc] initWithPath:url];
-    
-    __block NSData *encryptedData;
-    [senderBox perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        [sessionsDirectory createClientSession:recipient.identifier base64PreKeyString:preKey error:&error];
-        encryptedData = [sessionsDirectory encrypt:message.data recipientClientId:recipient.identifier error:&error];
-    }];
-    
-    [conversation insertOTRMessageFromClient:senderClient toClient:recipient data:encryptedData];
-    return senderBox;
-}
-
 
 - (void)remotelyAppendSelfConversationWithZMClearedForMockConversation:(MockConversation *)mockConversation
                                                                 atTime:(NSDate *)newClearedTimeStamp

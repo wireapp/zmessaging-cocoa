@@ -208,12 +208,10 @@
     
     NSUUID *messageNonce = [NSUUID createUUID];
     NSString *urlText = ZMTestURLArticleWithoutPictureString;
-    __block NSData *encryptedData = nil;
     
     ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
-        [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
+        [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -229,8 +227,7 @@
     linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
-        [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
+        [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -254,12 +251,10 @@
     
     NSUUID *messageNonce = [NSUUID createUUID];
     NSString *urlText = ZMTestURLArticleWithoutPictureString;
-    __block NSData *encryptedData = nil;
     
     ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
-        [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
+        [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -285,8 +280,7 @@
     linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
-        [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
+        [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -313,7 +307,6 @@
     NSUUID *messageNonce = [NSUUID createUUID];
     NSUUID *assetID = [NSUUID createUUID];
     NSString *urlText = ZMTestURLArticleWithPictureString;
-    __block NSData *encryptedData = nil;
 
     NSData *encryptedImageData, *otrKey, *sha256;
     [self createEncryptionDataWithOrignalAssetData:[self mediumJPEGData]
@@ -329,8 +322,7 @@
     
     ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
-        [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
+        [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -346,8 +338,7 @@
     linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
-        encryptedData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
-        [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:encryptedData];
+        [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

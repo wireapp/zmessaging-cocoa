@@ -26,8 +26,13 @@ import Foundation
     /// and call `requestPhoneNumberChange` with that PIN
     func requestPhoneVerificationCode(phoneNumber: String)
     
-    /// Requests phone number changed, with a PIN received earlier
+    /// Requests phone number change, with a PIN received earlier
     func requestPhoneNumberChange(credentials: ZMPhoneCredentials)
+
+    /// Requests email change
+    /// The email will need to be verified externally
+    /// - throws: if the email is not already set, or if empty email is passed
+    func requestEmailChange(email: String) throws
     
     /// Requests to set an email and password, for a user that does not have either.
     /// Once this is called, we expect the user to eventually verify the email externally.

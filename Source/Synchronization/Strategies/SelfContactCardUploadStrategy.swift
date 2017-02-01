@@ -96,7 +96,7 @@ extension NSManagedObjectContext {
     
     public var selfContactCardNeedsToBeUploaded : Bool {
         get {
-            guard let uploaded = self.persistentStoreMetadata(key: selfContactCardNeedsToBeUploadedKey) as? NSNumber else {
+            guard let uploaded = self.persistentStoreMetadata(forKey: selfContactCardNeedsToBeUploadedKey) as? NSNumber else {
                 return false
             }
             return uploaded.boolValue
@@ -108,7 +108,7 @@ extension NSManagedObjectContext {
     
     var hasEverUploadedSelfCard : Bool {
         get {
-            guard let uploaded = self.persistentStoreMetadata(key: hasEverUploadedCardKey) as? NSNumber else {
+            guard let uploaded = self.persistentStoreMetadata(forKey: hasEverUploadedCardKey) as? NSNumber else {
                 return false
             }
             return uploaded.boolValue

@@ -18,7 +18,7 @@
 
 import Foundation
 import Contacts
-import libPhoneNumber
+import libPhoneNumberiOS
 import AddressBook
 
 
@@ -154,7 +154,7 @@ class AddressBook {
     
     init() {
         let libPhoneNumber = NBPhoneNumberUtil()
-        self.phoneNumberNormalizer = { libPhoneNumber.normalize($0)?.validatedPhoneNumber }
+        self.phoneNumberNormalizer = { libPhoneNumber.normalize(phoneNumber: $0)?.validatedPhoneNumber }
     }
     
     typealias Normalizer = (String)->(String?)
@@ -212,7 +212,7 @@ extension NBPhoneNumberUtil {
     /// used for QA automation and will always be accepted, without being
     /// normalized through the normalization library but just sanitized
     /// from any non-numberic character
-    func normalize(_ phoneNumber: String) -> String? {
+    fileprivate func normalize(phoneNumber: String) -> String? {
         let testingNumberPrefix = "+0"
         guard !phoneNumber.hasPrefix(testingNumberPrefix) else {
             return phoneNumber.validatedPhoneNumber

@@ -1138,31 +1138,6 @@
     }
 }
 
-- (ZMUpdateEvent *)otrMessageAddPayloadFromClient:(UserClient *)client text:(NSString *)text nonce:(NSUUID *)nonce
-{
-    ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:nonce.transportString expiresAfter:nil];
-    __block NSError *error;
-    __block NSData *encryptedData;
-    
-    [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        encryptedData =  [sessionsDirectory encrypt:message.data recipientClientId:client.remoteIdentifier error:&error];
-    }];
-    XCTAssertNil(error);
-    
-    NSDictionary *payload = @{
-                              @"type" : @"conversation.otr-message-add",
-                              @"data" : @{
-                                      @"recipient" : client.remoteIdentifier,
-                                      @"sender" : client.remoteIdentifier,
-                                      @"text" : encryptedData.base64String
-                                      },
-                              @"conversation": NSUUID.createUUID.transportString,
-                              @"time" : [NSDate dateWithTimeIntervalSince1970:555555].transportString
-                              };
-    
-    return [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-}
-
 @end
 
 

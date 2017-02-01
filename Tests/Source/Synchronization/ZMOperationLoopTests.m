@@ -950,8 +950,6 @@
 {
     // given
     self.sut.apsSignalKeyStore = [self prepareSelfClientForAPSSignalingStore];
-    id encryptionContext = [OCMockObject niceMockForClass:[EncryptionContext class]];
-    self.sut.encryptionContext = encryptionContext;
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessageBuilder *builder = [[ZMGenericMessageBuilder alloc] init];
@@ -994,7 +992,6 @@
     // then
     [self.syncStrategy verify];
     [self.pingBackStatus verify];
-    [encryptionContext verify];
     [self clearKeyChainData];
 }
 

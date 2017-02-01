@@ -398,7 +398,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         [client deleteClientAndEndSession];
     }
     
-    [self.managedObjectContext.zm_cryptKeyStore deleteAndCreateNewBox];
+    [self.managedObjectContext deleteAndCreateNewEncryptionContext];
 }
 
 - (BOOL)clientIsReadyForRequests {

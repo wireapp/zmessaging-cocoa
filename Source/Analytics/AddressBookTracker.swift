@@ -26,7 +26,7 @@ extension NSManagedObjectContext {
 
     var lastAddressBookUploadDate: Date? {
         set { self.setPersistentStoreMetadata(newValue, key: NSManagedObjectContext.lastAddressBookUploadDateKey) }
-        get { return self.persistentStoreMetadata(key: NSManagedObjectContext.lastAddressBookUploadDateKey) as? Date }
+        get { return self.persistentStoreMetadata(forKey: NSManagedObjectContext.lastAddressBookUploadDateKey) as? Date }
     }
 }
 
