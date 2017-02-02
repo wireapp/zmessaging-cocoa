@@ -377,8 +377,6 @@ NS_ASSUME_NONNULL_END
         if (nil != error) {
             [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot end call: %@", error];
         }
-
-        [conversation.voiceChannelRouter.currentVoiceChannel leave];
     }];
 }
 
