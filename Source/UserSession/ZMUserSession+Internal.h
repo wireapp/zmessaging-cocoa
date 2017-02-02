@@ -64,6 +64,8 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic) BOOL didNotifyThirdPartyServices;
 @property (nonatomic, readonly) id<ZMApplication> application;
 @property (nonatomic) ZMCallKitDelegate *callKitDelegate;
+@property (nonatomic) ZMCallStateObserver *callStateObserver;
+@property (nonatomic) WireCallCenterV2 *wireCallCenterV2;
 @property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 
 - (void)notifyThirdPartyServices;
@@ -174,11 +176,9 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 
 
-
 @interface ZMUserSession (ZMBackgroundFetch)
 
 - (void)enableBackgroundFetch;
 
 @end
-
 

@@ -126,6 +126,12 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     }
 }
 
+- (void)updateServerTimeDeltaWithTimestamp:(NSString *)timestamp {
+    NSDate *serverTime = [NSDate dateWithTransportString:timestamp];
+    NSTimeInterval serverTimeDelta = [serverTime timeIntervalSinceNow];
+    self.managedObjectContext.serverTimeDelta = serverTimeDelta;
+}
+
 + (NSArray<NSDictionary *> *)eventDictionariesFromPayload:(id<ZMTransportData>)payload
 {
     return [payload.asDictionary optionalArrayForKey:@"notifications"].asDictionaries;
@@ -270,6 +276,11 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 - (NSUUID *)nextUUIDFromResponse:(ZMTransportResponse *)response forListPaginator:(ZMSimpleListRequestPaginator *)paginator
 {
     NOT_USED(paginator);
+    
+    NSString *timestamp = ((NSString *) response.payload.asDictionary[@"time"]);
+    if (timestamp) {
+        [self updateServerTimeDeltaWithTimestamp:timestamp];
+    }
     
     NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
     if (latestEventId != nil) {

@@ -88,6 +88,8 @@
 @property (nonatomic) PushTokenStrategy *pushTokenStrategy;
 @property (nonatomic) SearchUserImageStrategy *searchUserImageStrategy;
 
+@property (nonatomic) CallingRequestStrategy *callingRequestStrategy;
+
 @property (nonatomic) NSManagedObjectContext *eventMOC;
 @property (nonatomic) EventDecoder *eventDecoder;
 @property (nonatomic, weak) ZMLocalNotificationDispatcher *localNotificationDispatcher;
@@ -153,7 +155,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.apnsConfirmationStatus = [[BackgroundAPNSConfirmationStatus alloc] initWithApplication:application
                                                                                managedObjectContext:self.syncMOC
                                                                           backgroundActivityFactory:[BackgroundActivityFactory sharedInstance]];
-
+        
         [self createTranscodersWithClientRegistrationStatus:clientRegistrationStatus
                                localNotificationsDispatcher:localNotificationsDispatcher
                                        authenticationStatus:authenticationStatus
@@ -175,7 +177,9 @@ ZM_EMPTY_ASSERTING_INIT()
         self.userClientRequestStrategy = [[UserClientRequestStrategy alloc] initWithAuthenticationStatus:authenticationStatus
                                                                                 clientRegistrationStatus:clientRegistrationStatus
                                                                                       clientUpdateStatus:clientUpdateStatus
-                                                                                                 context:self.syncMOC];
+                                                                                                 context:self.syncMOC
+                                                                                                userKeysStore:self.syncMOC.zm_cryptKeyStore
+                                          ];
         self.fetchingClientRequestStrategy = [[FetchingClientRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
         self.missingClientsRequestStrategy = [[MissingClientsRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus apnsConfirmationStatus: self.apnsConfirmationStatus managedObjectContext:self.syncMOC];
         
@@ -219,6 +223,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.linkPreviewAssetUploadRequestStrategy,
                                    self.imageDownloadRequestStrategy,
                                    self.imageUploadRequestStrategy,
+                                   self.callingRequestStrategy,
                                    [[PushTokenStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[TypingStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[SearchUserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
@@ -246,7 +251,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                          mediaManager:(id<AVSMediaManager>)mediaManager
                                   onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                              taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
-
 {
     NSManagedObjectContext *uiMOC = self.uiMOC;
 
@@ -261,6 +265,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self previouslyReceivedEventIDsCollection:self.eventDecoder application:self.application backgroundAPNSPingbackStatus:backgroundAPNSPingBackStatus];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC objectDirectory:self];
     self.flowTranscoder = [[ZMFlowSync alloc] initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC application:self.application];
+    self.callingRequestStrategy = [[CallingRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus];
     self.callStateTranscoder = [[ZMCallStateTranscoder alloc] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC objectStrategyDirectory:self];
     self.loginTranscoder = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus clientRegistrationStatus:clientRegistrationStatus];
     self.loginCodeRequestTranscoder = [[ZMLoginCodeRequestTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
@@ -416,7 +421,9 @@ ZM_EMPTY_ASSERTING_INIT()
         
         NSSet *conversationsWithCallChanges = [callStateChanges allContainedConversationsInContext:strongUiMoc];
         if (conversationsWithCallChanges != nil) {
-            [strongUiMoc.globalManagedObjectContextObserver notifyUpdatedCallState:conversationsWithCallChanges notifyDirectly:YES];
+            [NSNotificationCenter.defaultCenter postNotificationName:WireCallCenterV2.CallStateDidChangeNotification
+                                                              object:nil
+                                                            userInfo:@{ @"updated": conversationsWithCallChanges }];
         }
         
         ZM_WEAK(self);
@@ -425,10 +432,10 @@ ZM_EMPTY_ASSERTING_INIT()
             if(self == nil || self.tornDown) {
                 return;
             }
+            [self.syncMOC mergeUserInfoFromUserInfo:userInfo];
             NSSet *changedConversations = [self.syncMOC mergeCallStateChanges:callStateChanges];
             [self.syncMOC mergeChangesFromContextDidSaveNotification:note];
             [self processSaveWithInsertedObjects:[NSSet set] updateObjects:changedConversations];
-            [self.syncMOC mergeUserInfoFromUserInfo:userInfo];
             [self.syncMOC processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
         }];
     } else if (mocThatSaved.zm_isSyncContext) {
@@ -440,12 +447,15 @@ ZM_EMPTY_ASSERTING_INIT()
             if(self == nil || self.tornDown) {
                 return;
             }
-    
+
+            [self.uiMOC mergeUserInfoFromUserInfo:userInfo];
             NSSet *changedConversations = [strongUiMoc mergeCallStateChanges:callStateChanges];
-            [strongUiMoc.globalManagedObjectContextObserver notifyUpdatedCallState:changedConversations notifyDirectly:[self shouldForwardCallStateChangeDirectlyForNote:note]];
+            
+            [NSNotificationCenter.defaultCenter postNotificationName:WireCallCenterV2.CallStateDidChangeNotification
+                                                              object:nil
+                                                            userInfo:@{ @"updated": changedConversations }];
            
             [strongUiMoc mergeChangesFromContextDidSaveNotification:note];
-            [self.uiMOC mergeUserInfoFromUserInfo:userInfo];
             [strongUiMoc processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
         }];
     }
@@ -500,7 +510,6 @@ ZM_EMPTY_ASSERTING_INIT()
     
     return _allChangeTrackers;
 }
-
 
 - (BOOL)processSaveWithInsertedObjects:(NSSet *)insertedObjects updateObjects:(NSSet *)updatedObjects
 {
@@ -580,7 +589,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
     NSArray *allObjectStrategies = [self.allTranscoders arrayByAddingObjectsFromArray:self.requestStrategies];
     
-    for(id<ZMObjectStrategy> obj in allObjectStrategies) {
+    for(id<ZMEventConsumer> obj in allObjectStrategies) {
         @autoreleasepool {
             if ([obj respondsToSelector:@selector(messageNoncesToPrefetchToProcessEvents:)]) {
                 [nonces unionSet:[obj messageNoncesToPrefetchToProcessEvents:events]];
@@ -635,7 +644,7 @@ ZM_EMPTY_ASSERTING_INIT()
         ZMFetchRequestBatch *fetchRequest = [self fetchRequestBatchForEvents:decryptedEvents];
         ZMFetchRequestBatchResult *prefetchResult = [self.moc executeFetchRequestBatchOrAssert:fetchRequest];
         
-        for(id<ZMObjectStrategy> obj in self.allTranscoders) {
+        for(id<ZMEventConsumer> obj in self.allTranscoders) {
             @autoreleasepool {
                 ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:5 label:[NSString stringWithFormat:@"Processing downloaded events in %@", [obj class]]];
                 [obj processEvents:decryptedEvents liveEvents:NO prefetchResult:prefetchResult];

@@ -24,9 +24,9 @@ import ZMCSystem
 
 private let zmLog = ZMSLog(tag: "Calling")
 
-private let ZMVoiceChannelTimerTimeOutGroup : TimeInterval = 30;
-private let ZMVoiceChannelTimerTimeOutOneOnOne : TimeInterval = 60;
-private var ZMVoiceChannelTimerTestTimeout : TimeInterval = 0;
+private let VoiceChannelV2TimerTimeOutGroup : TimeInterval = 30;
+private let VoiceChannelV2TimerTimeOutOneOnOne : TimeInterval = 60;
+private var VoiceChannelV2TimerTestTimeout : TimeInterval = 0;
 
 private let UserInfoCallTimerKey = "ZMCallTimer"
 
@@ -81,7 +81,7 @@ public final class ZMCallTimer : NSObject, ZMTimerClient {
     
     public var testDelegate: ZMCallTimerClient?
     fileprivate var testTimeout : TimeInterval {
-        return ZMVoiceChannelTimerTestTimeout
+        return VoiceChannelV2TimerTestTimeout
     }
     
     public init(managedObjectContext: NSManagedObjectContext) {
@@ -89,17 +89,17 @@ public final class ZMCallTimer : NSObject, ZMTimerClient {
     }
     
     public class func setTestCallTimeout(_ timeout: TimeInterval) {
-        ZMVoiceChannelTimerTestTimeout = timeout
+        VoiceChannelV2TimerTestTimeout = timeout
     }
     
     public class func resetTestCallTimeout() {
-        ZMVoiceChannelTimerTestTimeout = 0
+        VoiceChannelV2TimerTestTimeout = 0
     }
     
     public func addAndStartTimer(_ conversation: ZMConversation) {
         let objectID = conversation.objectID
         if conversationIDToTimerMap[objectID] == nil && !conversation.callTimedOut {
-            let timeOut = (testTimeout > 0) ? testTimeout : conversation.conversationType == .group ? ZMVoiceChannelTimerTimeOutGroup : ZMVoiceChannelTimerTimeOutOneOnOne
+            let timeOut = (testTimeout > 0) ? testTimeout : conversation.conversationType == .group ? VoiceChannelV2TimerTimeOutGroup : VoiceChannelV2TimerTimeOutOneOnOne
             let timer = ZMTimer(target: self)
             timer?.fire(at: Date().addingTimeInterval(timeOut))
             conversationIDToTimerMap[objectID] = timer
@@ -123,13 +123,17 @@ public final class ZMCallTimer : NSObject, ZMTimerClient {
             if timer != aTimer {
                 return
             }
+            
             self.cancelAndRemoveTimer(conversationID)
             if let testDelegate = self.testDelegate {
                 testDelegate.callTimerDidFire(self)
             }
-            guard let conversation = self.managedObjectContext?.object(with: conversationID) as? ZMConversation , !conversation.isZombieObject
-            else { return }
-            conversation.voiceChannel?.callTimerDidFire(self)
+
+            managedObjectContext?.performGroupedBlock {
+                let object = try? self.managedObjectContext?.existingObject(with: conversationID)
+                guard let conversation =  object as? ZMConversation, !conversation.isZombieObject else { return }
+                conversation.voiceChannelRouter?.v2.callTimerDidFire(self)
+            }
             
             break;
         }

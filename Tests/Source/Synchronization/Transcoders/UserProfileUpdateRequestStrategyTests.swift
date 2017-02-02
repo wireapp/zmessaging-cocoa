@@ -121,7 +121,27 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertEqual(request, expected)
     }
     
-    func tetThatItCreatesARequestToUpdateEmailAfterUpdatingPassword() {
+    func testThatItCreatesARequestToChangeEmail() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.emailAddress = "foo@email.com"
+
+        let newEmail = "mario@example.com"
+        try! self.userProfileUpdateStatus.requestEmailChange(email: newEmail)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        
+        // THEN
+        XCTAssertEqual(request?.path, "/self/email")
+        XCTAssertEqual(request?.method, .methodPUT)
+        let emailInPayload = request?.payload?.asDictionary()?["email"] as? String
+        XCTAssertEqual(emailInPayload, newEmail)
+    }
+    
+    func testThatItCreatesARequestToUpdateEmailAfterUpdatingPassword() {
         
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")
@@ -358,7 +378,24 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailPasswordUpdate , 1)
     }
     
-    func testThatItCallsDidUpdateEmailSuccessfully() {
+    func testThatItCallsDidUpdateEmailSuccessfullyWhenChangingEmail() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.emailAddress = "foo@email.com"
+        try! self.userProfileUpdateStatus.requestEmailChange(email: "mario@example.com")
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.successResponse())
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidUpdateEmailSuccessfully , 1)
+    }
+    
+    func testThatItCallsDidUpdateEmailSuccessfullyWhenSettingEmailAndPassword() {
         
         // GIVEN
         let credentials = ZMEmailCredentials(email: "mario@example.com", password: "princess")

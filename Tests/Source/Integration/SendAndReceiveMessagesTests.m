@@ -742,7 +742,7 @@
     
     ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"this should be inserted after the system message"
                                                             nonce:lastMessageNonce.transportString expiresAfter:nil];
-    NSData *encryptedData = [MockUserClient encryptedDataFromClient:fromClient toClient:toClient data:message.data];
+    NSData *encryptedData = [MockUserClient encryptedWithData:message.data from:fromClient to:toClient];
     
     // when
     NSDictionary *payload = @{
@@ -752,6 +752,7 @@
                                                                @{
                                                                    @"conversation": groupConversation.remoteIdentifier.transportString,
                                                                    @"type": @"conversation.otr-message-add",
+                                                                   @"from": fromClient.user.identifier,
                                                                    // We use a later date to simulate the time between the last message
                                                                    @"time": messageTimeStamp.transportString,
                                                                    @"data": @{

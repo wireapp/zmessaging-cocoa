@@ -72,7 +72,7 @@ class TypingStrategyTests : MessagingTest {
     override func setUp() {
         super.setUp()
         originalTimeout = ZMTypingDefaultTimeout
-        ZMTypingDefaultTimeout = 1.0
+        ZMTypingDefaultTimeout = 3.0
         
         self.typing = MockTyping()
         self.clientRegistrationDelegate = MockClientRegistrationDelegate()
@@ -88,13 +88,13 @@ class TypingStrategyTests : MessagingTest {
     }
     
     override func tearDown() {
-        conversationA = nil;
-        userA = nil;
+        self.conversationA = nil;
+        self.userA = nil;
         
-        sut.tearDown()
+        self.sut.tearDown()
         XCTAssertTrue(typing.didTearDown)
-        typing = nil;
-        sut = nil;
+        self.typing = nil;
+        self.sut = nil;
         
         ZMTypingDefaultTimeout = originalTimeout;
         super.tearDown()

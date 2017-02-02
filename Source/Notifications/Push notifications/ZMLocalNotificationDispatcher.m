@@ -38,6 +38,7 @@ NSString * _Null_unspecified const ZMShouldHideNotificationContentKey = @"ZMShou
 @property (nonatomic) ZMLocalNotificationSet *failedMessageNotifications;
 @property (nonatomic) ZMLocalNotificationSet *eventsNotifications;
 @property (nonatomic) ZMLocalNotificationSet *messageNotifications;
+@property (nonatomic) ZMLocalNotificationSet *callingNotifications;
 @property (nonatomic) SessionTracker *sessionTracker;
 @property (nonatomic) id<ZMApplication> sharedApplication;
 @property (nonatomic) BOOL isTornDown;
@@ -52,7 +53,7 @@ ZM_EMPTY_ASSERTING_INIT();
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                            sharedApplication:(id<ZMApplication>)sharedApplication
 {
-    return [self initWithManagedObjectContext:moc sharedApplication:sharedApplication eventNotificationSet:nil failedNotificationSet:nil messageNotifications:nil];
+    return [self initWithManagedObjectContext:moc sharedApplication:sharedApplication eventNotificationSet:nil failedNotificationSet:nil messageNotifications:nil callingNotifications:nil];
 }
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
@@ -60,12 +61,14 @@ ZM_EMPTY_ASSERTING_INIT();
                         eventNotificationSet:(ZMLocalNotificationSet *)eventNotificationSet
                        failedNotificationSet:(ZMLocalNotificationSet *)failedNotificationSet
                         messageNotifications:(ZMLocalNotificationSet *)messageNotifications
+                        callingNotifications:(ZMLocalNotificationSet *)callingNotifications
 {
     self = [super init];
     if (self) {
         self.syncMOC = moc;
         self.eventsNotifications = eventNotificationSet ?:  [[ZMLocalNotificationSet alloc] initWithApplication:sharedApplication archivingKey:@"ZMLocalNotificationDispatcherEventNotificationsKey" keyValueStore:moc];
         self.messageNotifications = messageNotifications ?:  [[ZMLocalNotificationSet alloc] initWithApplication:sharedApplication archivingKey:@"ZMLocalNotificationDispatcherMessageNotificationsKey" keyValueStore:moc];
+        self.callingNotifications = callingNotifications ?:  [[ZMLocalNotificationSet alloc] initWithApplication:sharedApplication archivingKey:@"ZMLocalNotificationDispatcherCallingNotificationsKey" keyValueStore:moc];
         self.failedMessageNotifications = failedNotificationSet ?: [[ZMLocalNotificationSet alloc] initWithApplication:sharedApplication archivingKey:@"ZMLocalNotificationDispatcherFailedNotificationsKey" keyValueStore:moc];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(cancelNotificationForIncomingCallInConversation:) name:ZMConversationCancelNotificationForIncomingCallNotificationName object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(cancelNotificationForLastReadChangedNotification:) name:ZMConversationLastReadDidChangeNotificationName object:nil];
@@ -130,6 +133,7 @@ ZM_EMPTY_ASSERTING_INIT();
     [self.eventsNotifications cancelAllNotifications];
     [self.failedMessageNotifications cancelAllNotifications];
     [self.messageNotifications cancelAllNotifications];
+    [self.callingNotifications cancelAllNotifications];
 }
 
 - (void)cancelNotificationForConversation:(ZMConversation *)conversation
@@ -138,6 +142,7 @@ ZM_EMPTY_ASSERTING_INIT();
     [self.eventsNotifications cancelNotifications:conversation];
     [self.failedMessageNotifications cancelNotifications:conversation];
     [self.messageNotifications cancelNotifications:conversation];
+    [self.callingNotifications cancelNotifications:conversation];
 }
 
 @end

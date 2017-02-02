@@ -20,7 +20,7 @@
 import Foundation
 
 
-extension ZMVoiceChannel {
+extension VoiceChannelV2 {
 
     public func startTimer(){
         guard let conversation = conversation,
@@ -43,17 +43,17 @@ extension ZMVoiceChannel {
         else { return }
         let uiContext = context.zm_userInterface
         
-        guard let uiConv = (try? uiContext?.existingObject(with: conversation.objectID)) as? ZMConversation , !uiConv.isZombieObject
-        else { return }
-        
         uiContext?.performGroupedBlock { () -> Void in
+            guard let uiConv = (try? uiContext?.existingObject(with: conversation.objectID)) as? ZMConversation, !uiConv.isZombieObject
+                else { return }
+
             if  uiConv.conversationType == .group ||
                 (uiConv.conversationType == .oneOnOne && !uiConv.isOutgoingCall)
             {
                 uiConv.callTimedOut = true;
             }
             else if (uiConv.conversationType == .oneOnOne && uiConv.isOutgoingCall) {
-                uiConv.voiceChannel.leave()
+                uiConv.voiceChannelRouter?.v2.leave()
             }
             uiContext?.enqueueDelayedSave()
         }

@@ -20,6 +20,7 @@
 @import ZMTransport;
 @import Cryptobox;
 @import ZMCDataModel;
+@import avs;
 //@import WireMessageStrategy;
 
 #import "MessagingTest.h"
@@ -28,8 +29,8 @@
 #import "MockModelObjectContextFactory.h"
 #import "MockModelObjectContextFactory.h"
 #import "ZMAuthenticationStatus.h"
-#import "AVSMediaManager.h"
-#import "AVSFlowManager.h"
+#import <avs/AVSMediaManager.h>
+#import <avs/AVSFlowManager.h>
 #import "ZMAuthenticationStatus.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"
@@ -949,8 +950,6 @@
 {
     // given
     self.sut.apsSignalKeyStore = [self prepareSelfClientForAPSSignalingStore];
-    id encryptionContext = [OCMockObject niceMockForClass:[EncryptionContext class]];
-    self.sut.encryptionContext = encryptionContext;
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessageBuilder *builder = [[ZMGenericMessageBuilder alloc] init];
@@ -993,7 +992,6 @@
     // then
     [self.syncStrategy verify];
     [self.pingBackStatus verify];
-    [encryptionContext verify];
     [self clearKeyChainData];
 }
 

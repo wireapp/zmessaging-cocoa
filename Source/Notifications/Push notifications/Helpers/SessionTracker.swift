@@ -204,7 +204,7 @@ public final class Session : NSObject, NSCoding, NSCopying {
     
     /// unarchives previous calls that haven't been cancelled yet
     func unarchiveOldSessions(){
-        guard let archive = managedObjectContext.persistentStoreMetadata(key: SessionTracker.ArchivingKey) as? Data,
+        guard let archive = managedObjectContext.persistentStoreMetadata(forKey: SessionTracker.ArchivingKey) as? Data,
             let archivedSessions =  NSKeyedUnarchiver.unarchiveObject(with: archive) as? [Session]
             else { return }
         self.sessions = archivedSessions

@@ -17,14 +17,11 @@
 // 
 
 
-AVS_ROOT = $(PROJECT_DIR)/Source/AVS
-AVS_LIB = $(AVS_ROOT)/lib
-
 CRYPTO_ROOT = $(PROJECT_DIR)/Carthage/Checkouts/cryptobox-ios/build
 CRYPTO_INCLUDE = $(CRYPTO_ROOT)/include
 CRYPTO_LIB = $(CRYPTO_ROOT)/lib
 
-LIBRARY_SEARCH_PATHS = $(inherited) $(AVS_LIB)
+LIBRARY_SEARCH_PATHS = $(inherited)
 HEADER_SEARCH_PATHS = $(inherited) $(CRYPTO_INCLUDE)
 
 

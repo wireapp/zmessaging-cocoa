@@ -114,7 +114,6 @@
     XCTAssertFalse(convInfo.connectionStateChanged);
     XCTAssertFalse(convInfo.isSilencedChanged);
     XCTAssertFalse(convInfo.conversationListIndicatorChanged);
-    XCTAssertFalse(convInfo.voiceChannelStateChanged);
     XCTAssertFalse(convInfo.clearedChanged);
     XCTAssertFalse(convInfo.securityLevelChanged);
     
@@ -364,7 +363,6 @@
     XCTAssertFalse(convInfo.connectionStateChanged);
     XCTAssertFalse(convInfo.isSilencedChanged);
     XCTAssertFalse(convInfo.conversationListIndicatorChanged);
-    XCTAssertFalse(convInfo.voiceChannelStateChanged);
     XCTAssertFalse(convInfo.clearedChanged);
     XCTAssertFalse(convInfo.securityLevelChanged);
 

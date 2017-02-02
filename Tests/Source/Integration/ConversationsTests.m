@@ -1612,7 +1612,7 @@
     }];
     
     ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-    [syncConv.voiceChannel tearDown];
+    [syncConv.voiceChannelRouter.v2 tearDown];
 }
 
 - (void)testThatCallingAnArchivedConversation_Unarchives_ThisConversation
@@ -1625,7 +1625,7 @@
         [self.selfToUser1Conversation addUserToCall:self.user1];
     }];
     ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-    [syncConv.voiceChannel tearDown];
+    [syncConv.voiceChannelRouter.v2 tearDown];
 }
 
 - (void)testThatAcceptingArchivedOutgoingRequest_Unarchives_ThisConversation
@@ -1750,7 +1750,7 @@
     XCTAssertEqual(conversation.estimatedUnreadCount, 1u);
 
     ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-    [syncConv.voiceChannel tearDown];
+    [syncConv.voiceChannelRouter.v2 tearDown];
 }
 
 - (void)testThatItDoesNotSendALastReadEventWhenInsertingAMessage

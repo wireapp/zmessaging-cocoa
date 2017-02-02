@@ -40,8 +40,9 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
     fileprivate(set) var insertSync: ZMUpstreamInsertedObjectSync! = nil
     fileprivate(set) var fetchAllClientsSync: ZMSingleRequestSync! = nil
     fileprivate var didRetryRegisteringSignalingKeys : Bool = false
+    fileprivate let userKeysStore: UserClientKeysStore
     
-    public var requestsFactory: UserClientRequestFactory = UserClientRequestFactory()
+    public var requestsFactory: UserClientRequestFactory
     public var minNumberOfRemainingKeys: UInt = 20
     
     fileprivate var insertSyncFilter: NSPredicate {
@@ -54,12 +55,14 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
     public init(authenticationStatus:ZMAuthenticationStatus,
                 clientRegistrationStatus:ZMClientRegistrationStatus,
                 clientUpdateStatus:ClientUpdateStatus,
-                context: NSManagedObjectContext)
+                context: NSManagedObjectContext,
+                userKeysStore: UserClientKeysStore)
     {
         self.authenticationStatus = authenticationStatus
         self.clientRegistrationStatus = clientRegistrationStatus
         self.clientUpdateStatus = clientUpdateStatus
-        
+        self.userKeysStore = userKeysStore
+        self.requestsFactory = UserClientRequestFactory(keysStore: userKeysStore)
         super.init(managedObjectContext: context)
         
         let deletePredicate = NSPredicate(format: "\(ZMUserClientMarkedToDeleteKey) == YES")

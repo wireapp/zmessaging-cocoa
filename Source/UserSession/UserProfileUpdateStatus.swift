@@ -98,22 +98,35 @@ extension UserProfileUpdateStatus : UserProfile {
 
     }
     
+    public func requestEmailChange(email: String) throws {
+        guard !email.isEmpty else {
+            throw UserProfileUpdateError.missingArgument
+        }
+        
+        self.managedObjectContext.performGroupedBlock {
+            let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
+            guard selfUser.emailAddress != nil else {
+                self.didFailEmailUpdate(error: UserProfileUpdateError.emailNotSet)
+                return
+            }
+            
+            self.emailToSet = email
+            self.newRequestCallback()
+        }
+    }
+    
     public func requestSettingEmailAndPassword(credentials: ZMEmailCredentials) throws {
         guard let email = credentials.email, let password = credentials.password else {
             throw UserProfileUpdateError.missingArgument
         }
         
-        
-        let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
-        guard selfUser.emailAddress == nil else {
-            self.managedObjectContext.performGroupedBlock {
-                self.emailToSet = nil
-                self.passwordToSet = nil
-            }
-            throw UserProfileUpdateError.emailAlreadySet
-        }
-
         self.managedObjectContext.performGroupedBlock {
+            let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
+            guard selfUser.emailAddress == nil else {
+                self.didFailEmailUpdate(error: UserProfileUpdateError.emailAlreadySet)
+                return
+            }
+            
             self.lastEmailAndPassword = credentials
             
             self.emailToSet = email
@@ -337,8 +350,15 @@ extension UserProfileUpdateStatus {
         return selfUser.phoneNumber != nil && selfUser.phoneNumber != ""
     }
     
+    /// Whether we are currently changing email
+    public var currentlyChangingEmail : Bool {
+        guard self.selfUserHasEmail else {
+            return false
+        }
+        return self.emailToSet != nil
+    }
+    
     /// Whether we are currently setting the email.
-    /// If the app starts and this is set, the app is waiting for the user to confirm her email
     public var currentlySettingEmail : Bool {
         
         guard !self.selfUserHasEmail else {
@@ -393,5 +413,6 @@ extension UserProfileUpdateStatus {
 @objc public enum UserProfileUpdateError: Int, Error {
     case missingArgument
     case emailAlreadySet
+    case emailNotSet
 }
 

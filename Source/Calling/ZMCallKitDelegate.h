@@ -40,6 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)reportNewIncomingCallWithUUID:(NSUUID *)UUID
                                update:(CXCallUpdate *)update
                            completion:(void (^)(NSError *_Nullable error))completion;
+- (void)reportCallWithUUID:(NSUUID *)UUID updated:(CXCallUpdate *)update;
 - (void)reportCallWithUUID:(NSUUID *)UUID endedAtDate:(nullable NSDate *)dateEnded reason:(NSUInteger)endedReason;
 - (void)reportOutgoingCallWithUUID:(NSUUID *)UUID startedConnectingAtDate:(nullable NSDate *)dateStartedConnecting;
 - (void)reportOutgoingCallWithUUID:(NSUUID *)UUID connectedAtDate:(nullable NSDate *)dateConnected;
@@ -82,10 +83,10 @@ NS_ASSUME_NONNULL_BEGIN
 + (CXProviderConfiguration *)providerConfiguration;
 
 /// Must be called in order to start the call. It checks with CallKit if the call can be started at the point of time
-/// and if it is possible starts the call (calling `-[ZMVoiceChannel join]` or `-[ZMVoiceChannel joinVideoCall:]`).
+/// and if it is possible starts the call (calling `-[VoiceChannelV2 join]` or `-[VoiceChannelV2 joinVideoCall:]`).
 - (void)requestStartCallInConversation:(ZMConversation *)conversation videoCall:(BOOL)video;
 /// Must be called in order to end the call. It checks with CallKit if the call can be ended and end the call
-/// (calling `-[ZMVoiceChannel leave]`).
+/// (calling `-[VoiceChannelV2 leave]`).
 - (void)requestEndCallInConversation:(ZMConversation *)conversation;
 
 /// Must be called with the @c NSUserActivity that is provided to the application via @c UIApplicationDelegate protocol.

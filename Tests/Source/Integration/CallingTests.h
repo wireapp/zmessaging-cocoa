@@ -39,10 +39,30 @@
 @end
 
 
-@interface CallingTests : IntegrationTestBase <ZMVoiceChannelStateObserver, ZMVoiceChannelParticipantsObserver>
+@interface V2VoiceChannelParticipantTestObserver : NSObject <VoiceChannelParticipantObserver>
 
-@property (nonatomic) NSMutableArray *voiceChannelStateDidChangeNotes;
-@property (nonatomic) NSMutableArray *voiceChannelParticipantStateDidChangeNotes;
+@property (nonatomic) NSMutableArray<SetChangeInfo *> *changes;
+
+@end
+
+
+@interface V2CallStateChange : NSObject
+
+@property (nonatomic) VoiceChannelV2State state;
+@property (nonatomic) ZMConversation *conversation;
+
+@end
+
+
+@interface V2CallStateTestObserver : NSObject <WireCallCenterV2CallStateObserver>
+
+@property (nonatomic) NSMutableArray<V2CallStateChange *> *changes;
+
+@end
+
+
+@interface CallingTests : IntegrationTestBase
+
 @property (nonatomic) TestWindowObserver *windowObserver;
 @property (nonatomic) BOOL useGroupConversation;
 @property (nonatomic) MockConversation *mockConversationUnderTest;

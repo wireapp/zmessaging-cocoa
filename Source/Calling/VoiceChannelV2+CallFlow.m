@@ -19,38 +19,36 @@
 
 @import CoreTelephony;
 @import ZMCDataModel;
-
+@import avs;
 #import "ZMOnDemandFlowManager.h"
 #import "ZMAVSBridge.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMVoiceChannel+CallFlow.h"
-#import "ZMVoiceChannel+CallFlowPrivate.h"
-#import "ZMVoiceChannel+VideoCalling.h"
-#import "AVSFlowManager.h"
+#import "VoiceChannelV2+CallFlow.h"
+#import "VoiceChannelV2+VideoCalling.h"
 #import "ZMCallKitDelegate.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 
-@implementation ZMVoiceChannel (CallFlow)
+@implementation VoiceChannelV2 (CallFlow)
 
 - (AVSFlowManager *)flowManager
 {
     return [[ZMAVSBridge flowManagerClass] getInstance];
 }
 
-- (void)startOrCancelTimerForState:(ZMVoiceChannelState)state
+- (void)startOrCancelTimerForState:(VoiceChannelV2State)state
 {
     switch (state) {
-        case ZMVoiceChannelStateNoActiveUsers:
-        case ZMVoiceChannelStateSelfConnectedToActiveChannel:
-        case ZMVoiceChannelStateSelfIsJoiningActiveChannel:
-        case ZMVoiceChannelStateDeviceTransferReady:
-        case ZMVoiceChannelStateInvalid:
+        case VoiceChannelV2StateNoActiveUsers:
+        case VoiceChannelV2StateSelfConnectedToActiveChannel:
+        case VoiceChannelV2StateSelfIsJoiningActiveChannel:
+        case VoiceChannelV2StateDeviceTransferReady:
+        case VoiceChannelV2StateInvalid:
             [self resetTimer];
             break;
-        case ZMVoiceChannelStateOutgoingCall:
-        case ZMVoiceChannelStateIncomingCall:
+        case VoiceChannelV2StateOutgoingCall:
+        case VoiceChannelV2StateIncomingCall:
             if (self.conversation.callParticipants.count > 0) {
                 [self startTimer];
             } else {
@@ -59,34 +57,9 @@
                 [self resetTimer];
             }
             break;
-        case ZMVoiceChannelStateIncomingCallInactive:
-        case ZMVoiceChannelStateOutgoingCallInactive:
+        case VoiceChannelV2StateIncomingCallInactive:
+        case VoiceChannelV2StateOutgoingCallInactive:
             break;
-    }
-}
-
-
-- (void)joinInUserSession:(ZMUserSession *)userSession
-{
-    if ([ZMUserSession useCallKit]) {
-        // Push channel must be open in order to process the call signalling
-        if (!userSession.pushChannelIsOpen) {
-            [userSession.transportSession restartPushChannel];
-        }
-        [userSession.callKitDelegate requestStartCallInConversation:self.conversation videoCall:NO];
-    }
-    else {
-        [self join];
-    }
-}
-
-- (void)leaveInUserSession:(ZMUserSession *)userSession
-{
-    if ([ZMUserSession useCallKit]) {
-        [userSession.callKitDelegate requestEndCallInConversation:self.conversation];
-    }
-    else {
-        [self leave];
     }
 }
 
@@ -233,19 +206,66 @@
     conv.isIgnoringCall = YES;
 }
 
+- (BOOL)join
+{
+    ZMConversation *conv = self.conversation;
+    
+    if ([self hasOngoingGSMCall] && ![ZMUserSession useCallKit]) {
+        [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
+            [CallingInitialisationNotification notifyCallingFailedWithErrorCode:VoiceChannelV2ErrorCodeOngoingGSMCall];
+        }];
+        return NO;
+    }
+    
+    [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportSessionShouldKeepWebsocketOpenNotificationName object:self userInfo:@{ZMTransportSessionShouldKeepWebsocketOpenKey: @YES}];
+    }];
+    
+    if(!conv.callDeviceIsActive) {
+        [ZMUserSession appendAVSLogMessageForConversation:conv withMessage:@"Self user wants to join voice channel"];
+    }
+    conv.isOutgoingCall = (conv.callParticipants.count == 0);
+    conv.isIgnoringCall = NO;
+    conv.callDeviceIsActive = YES;
+    
+    return YES;
+}
+
+- (BOOL)joinVideoCall
+{
+    ZMConversation *strongConversation = self.conversation;
+    
+    // if there is already an ongoing audioCall we can not switch to videoCall
+    if (strongConversation.callDeviceIsActive && !strongConversation.isVideoCall) {
+        ZMLogError(@"Can't start video call because there's already an ongoing audio call");
+        return NO;
+    }
+    
+    strongConversation.isVideoCall = YES;
+    
+    [self join];
+    
+    return YES;
+}
+
+- (void)leave
+{
+    [self leaveWithReason:ZMCallStateReasonToLeaveUser];
+}
+
 - (void)updateForStateChange
 {
     [self startOrCancelTimerForState:self.state];
     
     if (self.conversation.isVideoCall) {
         NSError *error = nil;
-        if (self.state == ZMVoiceChannelStateIncomingCall || self.state == ZMVoiceChannelStateOutgoingCall) {
+        if (self.state == VoiceChannelV2StateIncomingCall || self.state == VoiceChannelV2StateOutgoingCall) {
            
             if (nil != error) {
                 ZMLogError(@"Cannot set video send state: %@", error);
             }
         }
-        else if (self.state == ZMVoiceChannelStateNoActiveUsers) {
+        else if (self.state == VoiceChannelV2StateNoActiveUsers) {
             [self setVideoSendState:FLOWMANAGER_VIDEO_SEND_NONE error:&error];
             
             if (nil != error) {
@@ -278,53 +298,3 @@
 }
 
 @end
-
-@implementation ZMVoiceChannel (CallFlowPrivate)
-
-- (void)join
-{
-    ZMConversation *conv = self.conversation;
-    
-    if ([self hasOngoingGSMCall] && ![ZMUserSession useCallKit]) {
-        [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
-            [CallingInitialisationNotification notifyCallingFailedWithErrorCode:ZMVoiceChannelErrorCodeOngoingGSMCall];
-        }];
-        return;
-    }
-    
-    [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
-        [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportSessionShouldKeepWebsocketOpenNotificationName object:self userInfo:@{ZMTransportSessionShouldKeepWebsocketOpenKey: @YES}];
-    }];
-    
-    if(!conv.callDeviceIsActive) {
-        [ZMUserSession appendAVSLogMessageForConversation:conv withMessage:@"Self user wants to join voice channel"];
-    }
-    conv.isOutgoingCall = (conv.callParticipants.count == 0);
-    conv.isIgnoringCall = NO;
-    conv.callDeviceIsActive = YES;
-}
-
-- (BOOL)joinVideoCall:(NSError **)error
-{
-    ZMConversation *strongConversation = self.conversation;
-    if (strongConversation.callDeviceIsActive && !strongConversation.isVideoCall) {
-        // if there is already an ongoing audioCall we can not switch to videoCall
-        if (error != nil) {
-            *error = [ZMVoiceChannelError switchToVideoNotAllowedError];
-        }
-        return NO;
-    }
-    
-    strongConversation.isVideoCall = YES;
-    [self join];
-    
-    return YES;
-}
-
-- (void)leave
-{
-    [self leaveWithReason:ZMCallStateReasonToLeaveUser];
-}
-
-@end
-
