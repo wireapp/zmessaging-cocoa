@@ -1870,41 +1870,6 @@
     [WireCallCenterV2 removeObserverWithToken:participantsToken];
 }
 
-
-// FIXME what is this testing
-//- (void)testThatItSendsAJoinCallback
-//{
-//    // given
-//    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);  
-//
-//    self.useGroupConversation = YES;
-//    
-//    ZMConversation *conversation = self.conversationUnderTest;
-//    
-//    // when remotes join
-//    NSMutableOrderedSet *joinedUsers = [[[self mockConversationUnderTest] activeUsers] mutableCopy];
-//    [joinedUsers removeObject:self.selfUser];
-//    [self usersJoinGroupCall:joinedUsers];
-//    [self simulateParticipantsChanged:joinedUsers.array onConversation:self.conversationUnderTest];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//
-//    id<VoiceChannelV2StateObserver> mockObserver = [OCMockObject mockForProtocol:@protocol(VoiceChannelV2StateObserver)];
-//    
-//    [[(id)mockObserver reject] voiceChannelJoinFailedWithError:OCMOCK_ANY];
-//    
-//    [VoiceChannelV2 addVoiceChannelStateObserver:mockObserver inConversation:conversation];
-//    
-//    // then
-//    XCTAssertEqual(conversation.voiceChannel.state, VoiceChannelV2StateIncomingCall);
-//    
-//    // when
-//    [self.userSession performChanges:^{
-//        [conversation.voiceChannel joinWithVideo:NO];
-//    }];
-//    
-//    WaitForAllGroupsToBeEmpty(0.5f);
-//}
-
 - (void)testThatItSendsAJoinCallbackWithErrorWhenTooManyMembers
 {
     // given

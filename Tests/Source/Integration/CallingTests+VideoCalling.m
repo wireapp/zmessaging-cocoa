@@ -426,7 +426,7 @@
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     id observer = [OCMockObject niceMockForProtocol:@protocol(CallingInitialisationObserver)];
-    id token = [self.conversationUnderTest.voiceChannelRouter.v2 addCallingInitializationObserver:observer]; // FIXME only work with v2
+    id token = [self.conversationUnderTest.voiceChannelRouter.v2 addCallingInitializationObserver:observer];
     
     // when
     [self otherJoinVideoCall];

@@ -403,7 +403,6 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
         }
     }
     
-    // TODO find a better place for this method
     public func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
         data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
             let currentTime = UInt32(currentTimestamp.timeIntervalSince1970)

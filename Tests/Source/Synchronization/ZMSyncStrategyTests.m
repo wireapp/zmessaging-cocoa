@@ -45,8 +45,8 @@
 #import "ZMFlowSync.h"
 #import "ZMCallStateTranscoder.h"
 #import "ZMOperationLoop.h"
-#import <avs/AVSMediaManager.h> // TODO: Remove that
-#import <avs/AVSFlowManager.h> // TODO: Remove that
+#import <avs/AVSMediaManager.h>
+#import <avs/AVSFlowManager.h>
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "MessagingTest+EventFactory.h"
