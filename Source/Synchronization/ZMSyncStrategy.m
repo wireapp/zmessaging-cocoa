@@ -146,6 +146,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if (self) {
         self.notificationDispatcher = [[NotificationDispatcher alloc] initWithManagedObjectContext: uiMOC];
+        [self.notificationDispatcher addChangeInfoConsumer:uiMOC.wireCallCenterV2];
         self.application = application;
         self.localNotificationDispatcher = localNotificationsDispatcher;
         self.authenticationStatus = authenticationStatus;
@@ -425,9 +426,7 @@ ZM_EMPTY_ASSERTING_INIT()
         
         NSSet *conversationsWithCallChanges = [callStateChanges allContainedConversationsInContext:strongUiMoc];
         if (conversationsWithCallChanges != nil) {
-            [NSNotificationCenter.defaultCenter postNotificationName:WireCallCenterV2.CallStateDidChangeNotification
-                                                              object:nil
-                                                            userInfo:@{ @"updated": conversationsWithCallChanges }];
+            [strongUiMoc.wireCallCenterV2 callStateDidChangeWithConversations:conversationsWithCallChanges];
         }
         
         ZM_WEAK(self);
@@ -456,14 +455,12 @@ ZM_EMPTY_ASSERTING_INIT()
 
             [self.uiMOC mergeUserInfoFromUserInfo:userInfo];
             NSSet *changedConversations = [strongUiMoc mergeCallStateChanges:callStateChanges];
-            
-            [NSNotificationCenter.defaultCenter postNotificationName:WireCallCenterV2.CallStateDidChangeNotification
-                                                              object:nil
-                                                            userInfo:@{ @"updated": changedConversations }];
+            if (changedConversations != nil) {
+                [strongUiMoc.wireCallCenterV2 callStateDidChangeWithConversations: changedConversations];
+            }
            
             [self.notificationDispatcher willMergeChanges:changedObjectsIDs];
             [strongUiMoc mergeChangesFromContextDidSaveNotification:note];
-            [strongUiMoc mergeUserInfoFromUserInfo:userInfo];
             
             [strongUiMoc processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
             [self.notificationDispatcher didMergeChanges];

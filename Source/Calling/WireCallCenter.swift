@@ -230,7 +230,7 @@ public class WireCallCenter : NSObject {
             }
         })
         
-        let conversationsV2 = userSession.wireCallCenterV2.conversations(withVoiceChannelStates: [.selfConnectedToActiveChannel])
+        let conversationsV2 = userSession.managedObjectContext.wireCallCenterV2.conversations(withVoiceChannelStates: [.selfConnectedToActiveChannel])
         
         activeConversations.formUnion(conversationsV3)
         activeConversations.formUnion(conversationsV2)
@@ -254,7 +254,7 @@ public class WireCallCenter : NSObject {
                                                   .selfIsJoiningActiveChannel,
                                                   .selfConnectedToActiveChannel]
         
-        let conversationsV2 = userSession.wireCallCenterV2.conversations(withVoiceChannelStates: idleStates)
+        let conversationsV2 = userSession.managedObjectContext.wireCallCenterV2.conversations(withVoiceChannelStates: idleStates)
         
         nonIdleConversations.formUnion(conversationsV3)
         nonIdleConversations.formUnion(conversationsV2)

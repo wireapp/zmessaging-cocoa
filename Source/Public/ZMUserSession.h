@@ -32,7 +32,7 @@
 @class ZMConversation;
 @class UserClient;
 @class ZMProxyRequest;
-@class WireCallCenterV2;
+//@class WireCallCenterV2;
 @class ZMCallKitDelegate;
 
 @protocol UserProfile;
@@ -133,7 +133,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 @property (nonatomic, readonly) TopConversationsDirectory *topConversationsDirectory;
 
 /// CallCenter for V2 calls
-@property (nonatomic, readonly) WireCallCenterV2 *wireCallCenterV2;
+//@property (nonatomic, readonly) WireCallCenterV2 *wireCallCenterV2;
 
 /// CallKit delegate
 @property (nonatomic, readonly) ZMCallKitDelegate *callKitDelegate;
