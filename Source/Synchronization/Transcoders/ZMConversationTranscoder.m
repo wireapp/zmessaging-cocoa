@@ -812,7 +812,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
         [remainingKeys removeObject:ZMConversationIsSelfAnActiveMemberKey];
     }
     if (remainingKeys.count < keys.count) {
-        [sync objectsDidChange:[NSSet setWithObject:conversation]];
+        [(id<ZMContextChangeTracker>)sync objectsDidChange:[NSSet setWithObject:conversation]];
         [self.managedObjectContext enqueueDelayedSave];
     }
     return (remainingKeys.count > 0);

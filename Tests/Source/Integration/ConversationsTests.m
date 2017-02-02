@@ -701,6 +701,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
+    NSLog(@"%@", conversationList.identifier);
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
         [groupConversation addUsersByUser:self.user1 addedUsers:@[self.selfUser]];
@@ -756,7 +757,7 @@
     XCTAssertNotNil(groupConversation);
     
     ZMConversationMessageWindow *conversationWindow = [groupConversation conversationWindowWithSize:5];
-    id token = [conversationWindow addConversationWindowObserver:self];
+    id token = [MessageWindowChangeInfo addObserver: self forWindow:conversationWindow];
     
     // correct window?
     XCTAssertEqual(conversationWindow.messages.count, 5u);
@@ -787,7 +788,7 @@
     }
     
     // finally
-    [conversationWindow removeConversationWindowObserverToken:token];
+    [MessageWindowChangeInfo removeObserver:token forWindow:conversationWindow];
 }
 
 - (void)testThatTheMessageWindowIsUpdatedProperlyWithLocalMessages
@@ -857,6 +858,7 @@
     MockConversationWindowObserver *observer = [self windowObserverAfterLogginInAndInsertingMessagesInMockConversation:self.groupConversation];
     
     NSOrderedSet *initialMessageSet = observer.computedMessages;
+    XCTAssertEqualObjects(observer.computedMessages, observer.window.messages);
     
     // when
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
@@ -870,7 +872,7 @@
     
     [self.uiMOC saveOrRollback];
     WaitForAllGroupsToBeEmpty(0.5);
-    
+
     // then
     NSArray *currentMessageSet = observer.computedMessages.array;
     NSArray *windowMessageSet = observer.window.messages.array ;
@@ -884,14 +886,12 @@
     
     XCTAssertEqualObjects(currentTexts, windowTexts);
     
-    
-    
     NSArray *originalFirstPart = [initialMessageSet.array subarrayWithRange:NSMakeRange(0, observer.window.size - 2)];
     NSArray *currentFirstPart = [currentMessageSet subarrayWithRange:NSMakeRange(2, observer.window.size - 2)];
     
     XCTAssertEqualObjects(originalFirstPart, currentFirstPart);
-    XCTAssertEqualObjects([[(id<ZMConversationMessage>)currentMessageSet[0] textMessageData] messageText], expectedTextLocal);
-    XCTAssertEqualObjects([[(id<ZMConversationMessage>)currentMessageSet[1] textMessageData] messageText], expectedTextRemote);
+    XCTAssertEqualObjects([[(id<ZMConversationMessage>)currentMessageSet[0] textMessageData] messageText], expectedTextRemote);
+    XCTAssertEqualObjects([[(id<ZMConversationMessage>)currentMessageSet[1] textMessageData] messageText], expectedTextLocal);
 }
 
 @end
@@ -1172,7 +1172,7 @@
         XCTAssertEqual(note.deletedIndexes.count, 0u);
         XCTAssertEqual(note.insertedIndexes.count, 0u);
     }
-    XCTAssertEqual(updatesCount, 1);
+    XCTAssertEqual(updatesCount, 2);
     XCTAssertEqual(moves.count, 1u);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject from], from);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject to], 0u);
@@ -1878,7 +1878,7 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     {
         ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
-        MessageWindowChangeToken *token = (id)[window addConversationWindowObserver:self];
+        id token = [MessageWindowChangeInfo addObserver: self forWindow:window];
         [self.mockTransportSession resetReceivedRequests];
         [self.receivedConversationWindowChangeNotifications removeAllObjects];
         
@@ -1912,7 +1912,7 @@
         XCTAssertEqualObjects(lastRequest.path, selfConversationPath);
         XCTAssertEqual(lastRequest.method, ZMMethodPOST);
         
-        [window removeConversationWindowObserverToken:(id)token];
+        [MessageWindowChangeInfo removeObserver:(id)token forWindow:window];
     }
     
     [self recreateUserSessionAndWipeCache:YES];
@@ -1953,7 +1953,7 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
-    MessageWindowChangeToken *token = (id)[window addConversationWindowObserver:self];
+    id token = [MessageWindowChangeInfo addObserver: self forWindow:window];
     
     ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectory];
     NSManagedObjectID *conversationID = conversation.objectID;
@@ -1986,7 +1986,7 @@
     XCTAssertEqual(conversation.messages.count, 1u);
     XCTAssertEqual(window.messages.count, 1u); // new message
     
-    [window removeConversationWindowObserverToken:(id)token];
+    [MessageWindowChangeInfo removeObserver:(id)token forWindow:window];
     
     [self recreateUserSessionAndWipeCache:YES];
     WaitForEverythingToBeDone();
@@ -2016,7 +2016,7 @@
     XCTAssertEqual(conversation.messages.count, 5lu);
     
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
-    MessageWindowChangeToken *token = (id)[window addConversationWindowObserver:self];
+    id token = [MessageWindowChangeInfo addObserver: self forWindow:window];
     
     ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectory];
     NSManagedObjectID *conversationID = conversation.objectID;
@@ -2040,7 +2040,7 @@
         [self.receivedConversationWindowChangeNotifications removeAllObjects];
     }
     
-    [window removeConversationWindowObserverToken:(id)token];
+    [MessageWindowChangeInfo removeObserver:(id)token forWindow:window];
     [self recreateUserSessionAndWipeCache:YES];
     WaitForEverythingToBeDone();
     
@@ -2491,8 +2491,11 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    MessageChangeObserver *observer = [[MessageChangeObserver alloc] initWithMessage:message];
-    
+    __block MessageChangeObserver *observer;
+    [self performIgnoringZMLogError:^{
+        observer = [[MessageChangeObserver alloc] initWithMessage:message];
+    }];
+
     // when
     NSString *reactionEmoji = @"❤️";
     [self.userSession performChanges:^{
@@ -2505,7 +2508,9 @@
     MessageChangeInfo *changes = [observer.notifications lastObject];
     XCTAssertTrue(changes.reactionsChanged);
     
-    [observer tearDown];
+    [self performIgnoringZMLogError:^{
+        [observer tearDown];
+    }];
 }
 
 - (void)testThatAppendingAReactionNotifiesObserverOfChangesInReactions;
@@ -2532,8 +2537,10 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    
-    MessageChangeObserver *observer = [[MessageChangeObserver alloc] initWithMessage:message];
+    __block MessageChangeObserver *observer;
+    [self performIgnoringZMLogError:^{
+        observer = [[MessageChangeObserver alloc] initWithMessage:message];
+    }];
     
     [self.userSession performChanges:^{
         // removes reaction for self user
@@ -2546,7 +2553,9 @@
     MessageChangeInfo *changes = [observer.notifications lastObject];
     XCTAssertTrue(changes.reactionsChanged);
     
-    [observer tearDown];
+    [self performIgnoringZMLogError:^{
+        [observer tearDown];
+    }];
 }
 
 - (void)testThatAppendingAReactionNotifiesObserverOfChangesInReactionsWhenExternalUserReact;
@@ -2573,9 +2582,10 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    
-    MessageChangeObserver *observer = [[MessageChangeObserver alloc] initWithMessage:message];
-    
+    __block MessageChangeObserver *observer;
+    [self performIgnoringZMLogError:^{
+        observer = [[MessageChangeObserver alloc] initWithMessage:message];
+    }];
     ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:message.nonce.transportString nonce:[NSUUID UUID].transportString];
     MockUserClient *fromClient = [self.user1.clients anyObject];
     MockUserClient *toClient = [self.selfUser.clients anyObject];
@@ -2591,7 +2601,9 @@
     MessageChangeInfo *changes = [observer.notifications lastObject];
     XCTAssertTrue(changes.reactionsChanged);
     
-    [observer tearDown];
+    [self performIgnoringZMLogError:^{
+        [observer tearDown];
+    }];
 }
 
 - (void)testThatReceivingAReactionThatIsNotHandledDoesntSaveIt;

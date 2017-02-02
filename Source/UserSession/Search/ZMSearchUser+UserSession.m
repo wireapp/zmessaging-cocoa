@@ -61,7 +61,7 @@
 - (void)privateRequestMediumProfileImageInUserSession:(ZMUserSession *)userSession;
 {
     if (self.imageMediumData != nil) {
-        [self setAndNotifyNewMediumImageData:self.imageMediumData managedObjectContextObserver:userSession.managedObjectContext.globalManagedObjectContextObserver];
+        [self setAndNotifyNewMediumImageData:self.imageMediumData searchUserObserverCenter:userSession.managedObjectContext.searchUserObserverCenter];
         return;
     }
     
@@ -112,7 +112,7 @@
         if(response.imageData != 0) {
             [[ZMSearchUser searchUserToMediumImageCache] setObject:response.imageData forKey:self.remoteIdentifier];
             [userSession.managedObjectContext performGroupedBlock:^{
-                [self setAndNotifyNewMediumImageData:response.imageData managedObjectContextObserver:userSession.managedObjectContext.globalManagedObjectContextObserver];
+                [self setAndNotifyNewMediumImageData:response.imageData searchUserObserverCenter:userSession.managedObjectContext.searchUserObserverCenter];
             }];
         }
     }

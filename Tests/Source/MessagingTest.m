@@ -286,7 +286,6 @@
     }
     [self performIgnoringZMLogError:^{
         self.uiMOC = [NSManagedObjectContext createUserInterfaceContextWithStoreAtURL:self.storeURL];
-        self.uiMOC.globalManagedObjectContextObserver.propagateChanges = YES;
     }];
     
     ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100 location:nil];
@@ -510,12 +509,7 @@
 - (void)updateDisplayNameGeneratorWithUsers:(NSArray *)users;
 {
     [self.uiMOC saveOrRollback];
-    NSNotification *note = [NSNotification notificationWithName:@"TestNotification" object:nil userInfo:@{
-                                                                                              NSInsertedObjectsKey : [NSSet setWithArray:users],
-                                                                                              NSUpdatedObjectsKey :[NSSet set],
-                                                                                              NSDeletedObjectsKey : [NSSet set]
-                                                                                              }];
-    [self.uiMOC updateDisplayNameGeneratorWithChanges:note];
+    [self.uiMOC updateDisplayNameGeneratorWithUpdatedUsers:[NSSet set] insertedUsers:[NSSet setWithArray:users] deletedUsers:[NSSet set]];
 }
 
 @end

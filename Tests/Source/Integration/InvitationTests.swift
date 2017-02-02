@@ -28,13 +28,14 @@ class InvitationsTests : IntegrationTestBase {
     override func setUp() {
         super.setUp()
         self.addressBook = AddressBookFake()
-        self.updateDisplayNameGenerator(withUsers: self.allUsers)
+        let users : [ZMUser] = (self.allUsers as! [MockUser]).flatMap{user(for: $0)}
+        self.updateDisplayNameGenerator(withUsers: users)
         self.searchDirectory = ZMSearchDirectory(userSession: self.userSession)
         zmessaging.debug_searchResultAddressBookOverride = self.addressBook
     }
     
     override func tearDown() {
-        self.searchDirectory.tearDown()
+        self.searchDirectory?.tearDown()
         self.searchDirectory = nil
         zmessaging.debug_searchResultAddressBookOverride = nil
         super.tearDown()

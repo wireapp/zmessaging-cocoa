@@ -75,7 +75,7 @@
     self = [super init];
     if(self) {
         self.conversation = conversation;
-        self.token = [conversation addConversationObserver:self];
+        self.token = [ConversationChangeInfo addObserver:self forConversation:conversation];
     }
     return self;
 }
@@ -90,7 +90,7 @@
 
 - (void)tearDown
 {
-    [ZMConversation removeConversationObserverForToken:self.token];
+    [ConversationChangeInfo removeObserver:self.token forConversation:self.conversation];
     self.token = nil;
     self.tornDown = YES;
 }
@@ -113,7 +113,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if(self) {
         self.conversationList = conversationList;
-        self.token = [conversationList addConversationListObserver:self];
+        self.token = [ConversationListChangeInfo addObserver:self forList:conversationList];
     }
     return self;
 }
@@ -121,7 +121,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)tearDown
 {
-    [self.conversationList removeConversationListObserverForToken:self.token];
+    [ConversationListChangeInfo removeObserver:self.token forList:self.conversationList];
     self.token = nil;
     self.tornDown = YES;
 }
@@ -151,22 +151,12 @@ ZM_EMPTY_ASSERTING_INIT()
 
 @implementation UserChangeObserver
 
-- (instancetype)initWithUser:(ZMUser *)user;
+- (instancetype)initWithUser:(id<ZMBareUser>)user;
 {
     self = [super init];
     if(self) {
         self.user = user;
-        self.token = [ZMUser addUserObserver:self forUsers:@[user] managedObjectContext:user.managedObjectContext];
-    }
-    return self;
-}
-
-- (instancetype)initWithSearchUser:(ZMSearchUser *)searchUser managedObjectContext:(NSManagedObjectContext *)context;
-{
-    self = [super init];
-    if(self) {
-        self.user = searchUser;
-        self.token = [ZMUser addUserObserver:self forUsers:@[searchUser] managedObjectContext:context];
+        self.token = [UserChangeInfo addObserver:self forBareUser:user];
     }
     return self;
 }
@@ -189,7 +179,8 @@ ZM_EMPTY_ASSERTING_INIT()
 
 -(void)tearDown
 {
-    [ZMUser removeUserObserverForToken:self.token];
+    id strongUser = self.user;
+    [UserChangeInfo removeObserver:self.token forBareUser:strongUser];
     self.token = nil;
     self.tornDown = YES;
 }
@@ -215,7 +206,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if(self) {
         self.message = message;
-        self.token = [ZMMessageNotification addMessageObserver:self forMessage:message];
+        self.token = [MessageChangeInfo addObserver:self forMessage:message];
     }
     return self;
 }
@@ -223,7 +214,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)tearDown
 {
-    [ZMMessageNotification removeMessageObserverForToken:self.token];
+    [MessageChangeInfo removeObserver:self.token forMessage:self.message];
     self.token = nil;
     self.tornDown = YES;
 }
@@ -251,14 +242,14 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if(self) {
         self.window = window;
-        self.token = [window addConversationWindowObserver:self];
+        self.token = [MessageWindowChangeInfo addObserver:self forWindow:window];
     }
     return self;
 }
 
 - (void)tearDown
 {
-    [self.window removeConversationWindowObserverToken:self.token];
+    [MessageWindowChangeInfo removeObserver:self.token forWindow:self.window];
     self.token = nil;
     self.tornDown = YES;
 }
@@ -291,14 +282,14 @@ static NSString * const Placeholder = @"Placeholder";
         _window = [conversation conversationWindowWithSize:size];
         _mutableMessages = [self.window.messages mutableCopy];
         
-        _opaqueToken = [self.window addConversationWindowObserver:self];
+        _opaqueToken = [MessageWindowChangeInfo addObserver:self forWindow:self.window];
     }
     return self;
 }
 
 - (void)dealloc
 {
-    [self.window removeConversationWindowObserverToken:self.opaqueToken];
+    [MessageWindowChangeInfo removeObserver:self.opaqueToken forWindow:self.window];
     _opaqueToken = nil;
 }
 
@@ -309,7 +300,8 @@ static NSString * const Placeholder = @"Placeholder";
     }];
     
     [note.insertedIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop ZM_UNUSED) {
-        [self.mutableMessages insertObject:Placeholder atIndex:idx];
+        NSString *placeHolder = [Placeholder stringByAppendingString:[NSString stringWithFormat:@"%lu",(unsigned long)idx]];
+        [self.mutableMessages insertObject:placeHolder atIndex:idx];
     }];
     
     [note.movedIndexPairs enumerateObjectsUsingBlock:^(ZMMovedIndex *moved, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
@@ -317,7 +309,7 @@ static NSString * const Placeholder = @"Placeholder";
     }];
     
     for(NSUInteger i = 0; i < self.mutableMessages.count; ++i) {
-        if(self.mutableMessages[i] == Placeholder) {
+        if([self.mutableMessages[i] isKindOfClass:[NSString class]] &&  [(NSString *)self.mutableMessages[i] hasPrefix:Placeholder]) {
             [self.mutableMessages replaceObjectAtIndex:i withObject:self.window.messages[i]];
         }
     }

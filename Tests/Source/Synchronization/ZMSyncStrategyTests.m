@@ -773,8 +773,8 @@
     
     // expect
     for (id<ZMObjectStrategy> syncObject in self.syncObjects) {
-        [[self.mockUpstreamSync1 expect] objectsDidChange:totalSet];
-        [[self.mockUpstreamSync2 expect] objectsDidChange:totalSet];
+        [(id<ZMContextChangeTracker>)[self.mockUpstreamSync1 expect] objectsDidChange:totalSet];
+        [(id<ZMContextChangeTracker>)[self.mockUpstreamSync2 expect] objectsDidChange:totalSet];
         
         [self verifyMockLater:syncObject];
     }
@@ -789,8 +789,8 @@
 {
     // given
     
-    [[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
-    [[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
     
     ZMUser *uiUser = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     XCTAssertTrue([self.uiMOC saveOrRollback]);
@@ -821,8 +821,8 @@
 - (void)testThatItSynchronizesCallStateChangesInUIContextToSyncContext
 {
     // expect
-    [[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
-    [[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
     
     
     // given
@@ -955,8 +955,8 @@
     }];
     
     // stub
-    [[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
-    [[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
 
     // when
     //

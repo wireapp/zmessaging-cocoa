@@ -85,7 +85,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    id convToken = [conversation addConversationObserver:self.conversationChangeObserver];
+    id convToken = [ConversationChangeInfo addObserver:self.conversationChangeObserver forConversation:conversation];
     [self.conversationChangeObserver clearNotifications];
     
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:10];
@@ -132,7 +132,7 @@
     XCTAssertEqualObjects(windowInfo2.updatedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
     XCTAssertEqualObjects(windowInfo2.movedIndexPairs, @[]);
     
-    [ZMConversation removeConversationObserverForToken:convToken];
+    [ConversationChangeInfo removeObserver:convToken forConversation:conversation];
     [windowObserver tearDown];
 }
 
@@ -328,7 +328,7 @@
     ZMClientMessage *receivedMessage = conversation.messages.lastObject;
     NSUUID *messageNone = receivedMessage.nonce;
     
-    id convToken = [conversation addConversationObserver:self.conversationChangeObserver];
+    id convToken = [ConversationChangeInfo addObserver:self.conversationChangeObserver forConversation:conversation];
     [self.conversationChangeObserver clearNotifications];
     
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:10];
@@ -373,7 +373,7 @@
     XCTAssertEqualObjects(windowInfo.updatedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(windowInfo.movedIndexPairs, @[]);
 
-    [ZMConversation removeConversationObserverForToken:convToken];
+    [ConversationChangeInfo removeObserver:convToken forConversation:conversation];
     [windowObserver tearDown];
 }
 

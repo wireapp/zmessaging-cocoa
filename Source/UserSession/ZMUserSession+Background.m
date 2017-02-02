@@ -265,15 +265,18 @@ static NSString *ZMLogTag = @"Push";
 {
     NOT_USED(note);
     [self notifyThirdPartyServices];
-    self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = NO;
+    // TODO Sabine: Implement background behaviour
+//    self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = NO;
 }
 
 - (void)applicationWillEnterForeground:(NSNotification *)note;
 {
     NOT_USED(note);
     self.didNotifyThirdPartyServices = NO;
-    self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = YES;
+    // TODO Sabine: Implement background behaviour
+//    self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = YES;
 
+    // TODO Sabine: What are these changes?
     [self mergeChangesFromStoredSaveNotificationsIfNeeded];
 }
 

@@ -1198,7 +1198,10 @@
     XCTAssertTrue(message.isExpired);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateFailedToSend);
     
-    MessageChangeObserver *observer = [[MessageChangeObserver alloc] initWithMessage:message];
+    __block MessageChangeObserver *observer;
+    [self performIgnoringZMLogError:^{
+        observer = [[MessageChangeObserver alloc] initWithMessage:message];
+    }];
     
     // when
     self.mockTransportSession.doNotRespondToRequests = YES;
@@ -1207,7 +1210,6 @@
     [self.userSession performChanges:^{
         [message resend];
     }];
-    
     
     
     // then
@@ -1224,7 +1226,9 @@
     // finally
     WaitForEverythingToBeDoneWithTimeout(0.5);
     [ZMMessage resetDefaultExpirationTime];
-    [observer tearDown];
+    [self performIgnoringZMLogError:^{
+        [observer tearDown];
+    }];
 }
 
 

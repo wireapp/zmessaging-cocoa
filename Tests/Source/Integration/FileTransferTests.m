@@ -1266,7 +1266,9 @@
     id insertBlock = ^(NSData *data, MockConversation *mockConversation, MockUserClient *from, MockUserClient *to) {
         [mockConversation insertOTRAssetFromClient:from toClient:to metaData:data imageData:nil assetId:thumbnailAssetID isInline:NO];
         conversation = [self conversationForMockConversation:mockConversation];
-        observer = [[MessageChangeObserver alloc] initWithMessage:conversation.messages.lastObject];
+        [self performIgnoringZMLogError:^{
+            observer = [[MessageChangeObserver alloc] initWithMessage:conversation.messages.lastObject];
+        }];
     };
     
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalWithMimeType:@"video/mp4"
@@ -1292,12 +1294,11 @@
     [self.userSession performChanges:^{
         [message requestImageDownload];
     }];
-    
     WaitForAllGroupsToBeEmpty(0.5);
     
     XCTAssertNotNil(message);
     NSArray *notifications = observer.notifications;
-    XCTAssertEqual(notifications.count, 1lu);
+    XCTAssertEqual(notifications.count, 2lu);
     MessageChangeInfo *info = notifications.lastObject;
     XCTAssertTrue(info.imageChanged);
     
@@ -1307,7 +1308,10 @@
     XCTAssertEqualObjects(message.nonce, nonce);
     XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
     
-    [observer tearDown];
+    [self performIgnoringZMLogError:^{
+        [observer tearDown];
+    }];
+    
 }
 
 - (void)testThatAFileUpload_AssetOriginal_MessageIsReceivedWhenSentRemotely
@@ -1825,7 +1829,9 @@
     id insertBlock = ^(NSData *data, MockConversation *mockConversation, MockUserClient *from, MockUserClient *to) {
         [mockConversation insertOTRAssetFromClient:from toClient:to metaData:data imageData:nil assetId:thumbnailAssetID isInline:NO];
         conversation = [self conversationForMockConversation:mockConversation];
-        observer = [[MessageChangeObserver alloc] initWithMessage:conversation.messages.lastObject];
+        [self performIgnoringZMLogError:^{
+            observer = [[MessageChangeObserver alloc] initWithMessage:conversation.messages.lastObject];
+        }];
     };
     
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalWithMimeType:@"video/mp4"
@@ -1856,7 +1862,7 @@
     
     XCTAssertNotNil(message);
     NSArray *notifications = observer.notifications;
-    XCTAssertEqual(notifications.count, 1lu);
+    XCTAssertEqual(notifications.count, 2lu);
     MessageChangeInfo *info = notifications.lastObject;
     XCTAssertTrue(info.imageChanged);
     
@@ -1867,7 +1873,9 @@
     XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
     XCTAssertTrue(message.isEphemeral);
 
-    [observer tearDown];
+    [self performIgnoringZMLogError:^{
+        [observer tearDown];
+    }];
 }
 
 - (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_FailedDownload_AfterFailedDecryption_Ephemeral
@@ -1962,7 +1970,9 @@
     id insertBlock = ^(NSData *data, MockConversation *mockConversation, MockUserClient *from, MockUserClient *to) {
         [mockConversation insertOTRMessageFromClient:from toClient:to data:data];
         conversation = [self conversationForMockConversation:mockConversation];
-        observer = [[MessageChangeObserver alloc] initWithMessage:conversation.messages.lastObject];
+        [self performIgnoringZMLogError:^{
+            observer = [[MessageChangeObserver alloc] initWithMessage:conversation.messages.lastObject];
+        }];
     };
 
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalWithMimeType:@"video/mp4"
@@ -1995,7 +2005,7 @@
 
     XCTAssertNotNil(message);
     NSArray *notifications = observer.notifications;
-    XCTAssertEqual(notifications.count, 1lu);
+    XCTAssertEqual(notifications.count, 2lu);
     MessageChangeInfo *info = notifications.lastObject;
     XCTAssertTrue(info.imageChanged);
 
@@ -2005,7 +2015,9 @@
     XCTAssertEqualObjects(message.nonce, nonce);
     XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
     
-    [observer tearDown];
+    [self performIgnoringZMLogError:^{
+        [observer tearDown];
+    }];
 }
 
 - (void)testThatItReceivesAVideoFileMessageThumbnailSentRemotely_Ephemeral_V3
@@ -2035,7 +2047,9 @@
     id insertBlock = ^(NSData *data, MockConversation *mockConversation, MockUserClient *from, MockUserClient *to) {
         [mockConversation insertOTRMessageFromClient:from toClient:to data:data];
         conversation = [self conversationForMockConversation:mockConversation];
-        observer = [[MessageChangeObserver alloc] initWithMessage:conversation.messages.lastObject];
+        [self performIgnoringZMLogError:^{
+            observer = [[MessageChangeObserver alloc] initWithMessage:conversation.messages.lastObject];
+        }];
     };
 
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalWithMimeType:@"video/mp4"
@@ -2066,7 +2080,7 @@
 
     XCTAssertNotNil(message);
     NSArray *notifications = observer.notifications;
-    XCTAssertEqual(notifications.count, 1lu);
+    XCTAssertEqual(notifications.count, 2lu);
     MessageChangeInfo *info = notifications.lastObject;
     XCTAssertTrue(info.imageChanged);
 
@@ -2077,7 +2091,9 @@
     XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
     XCTAssertTrue(message.isEphemeral);
     
-    [observer tearDown];
+    [self performIgnoringZMLogError:^{
+        [observer tearDown];
+    }];
 }
 
 - (void)testThatAFileUpload_AssetUploaded_MessageIsReceivedAndUpdatesTheOriginalMessageWhenSentRemotely_V3

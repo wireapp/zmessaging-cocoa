@@ -118,10 +118,16 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             let confirmationMessage = ZMGenericMessage(confirmation: message.nonce.transportString(), type: .DELIVERED, nonce:UUID.create().transportString())
             
             let convObserver = ConversationChangeObserver(conversation: conversation)
-            let messageObserver = MessageChangeObserver(message: message)
+            
+            var messageObserver : MessageChangeObserver!
+            performIgnoringZMLogError{
+                messageObserver = MessageChangeObserver(message: message)
+            }
             defer {
                 convObserver?.tearDown()
-                messageObserver?.tearDown()
+                performIgnoringZMLogError{
+                    messageObserver?.tearDown()
+                }
             }
             
             // when

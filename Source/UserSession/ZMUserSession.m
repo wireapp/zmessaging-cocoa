@@ -406,7 +406,8 @@ ZM_EMPTY_ASSERTING_INIT()
 
         self.wireCallCenterV2 = [[WireCallCenterV2 alloc] initWithContext:self.managedObjectContext];
         
-        self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = self.application.applicationState != UIApplicationStateBackground;
+        // TODO Sabine: add background behaviour to dispatcher
+        //self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = self.application.applicationState != UIApplicationStateBackground;
         ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self
                                                                            selector:@selector(didEnterEventProcessingState:)
                                                                                name:ZMApplicationDidEnterEventProcessingStateNotificationName

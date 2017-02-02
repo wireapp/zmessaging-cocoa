@@ -226,7 +226,7 @@
     ZMSearchResult *searchResult = self.searchResults[token];
     ZMSearchUser *searchUser = searchResult.usersInDirectory.firstObject;
     
-    id userToken = [ZMUser addUserObserver:self forUsers:@[searchUser] managedObjectContext:self.uiMOC];
+    id userToken = [UserChangeInfo addObserver:self forBareUser:searchUser];
     XCTAssertNil(searchUser.user);
     
     XCTAssertEqual(self.userNotifications.count, 0u);
@@ -250,7 +250,7 @@
     XCTAssertEqualObjects(note.user, searchUser);
     XCTAssertTrue(note.connectionStateChanged);
     
-    [ZMUser removeUserObserverForToken:userToken];
+    [UserChangeInfo removeObserver:userToken forBareUser:searchUser];
     [searchDirectory tearDown];
 }
 
@@ -289,7 +289,7 @@
     ZMSearchUser *searchUser = searchResult.usersInDirectory.firstObject;
     XCTAssertNotNil(searchUser.user);
     
-    id userToken = [ZMUser addUserObserver:self forUsers:@[searchUser] managedObjectContext:self.uiMOC];
+    id userToken = [UserChangeInfo addObserver:self forBareUser:searchUser];
 
     
     // connect
@@ -308,7 +308,7 @@
     XCTAssertEqualObjects(note1.user, searchUser);
     XCTAssertTrue(note1.connectionStateChanged);
     
-    [ZMUser removeUserObserverForToken:userToken];
+    [UserChangeInfo removeObserver:userToken forBareUser:searchUser];
     [searchDirectory tearDown];
 }
 
@@ -448,7 +448,7 @@
         XCTAssertEqual(result.usersInDirectory.count, 1u);
         ZMSearchUser *user = result.usersInDirectory.firstObject;
         XCTAssertNil(user.imageSmallProfileData);
-        token = [ZMUser addUserObserver:userListener forUsers:@[user] managedObjectContext:self.uiMOC];
+        token = [UserChangeInfo addObserver:userListener forBareUser:user];
         dispatch_semaphore_signal(sem);
         return YES;
     }] forToken:OCMOCK_ANY];
@@ -464,7 +464,7 @@
     [searchListener verify];
     [userListener verify];
     
-    [ZMUser removeUserObserverForToken:token];
+    [UserChangeInfo removeObserver:token forBareUser:nil];
     [searchDirectory tearDown];
 }
 
@@ -765,6 +765,7 @@
     
     __block ZMSearchUser *searchUser;
     __block id userToken;
+    __block ZMSearchDirectory *searchDirectory;
     
     // search for user
     {
@@ -789,19 +790,18 @@
         [[searchListener expect] didReceiveSearchResult:[OCMArg checkWithBlock:^BOOL(ZMSearchResult *result) {
             XCTAssertEqual(result.usersInDirectory.count, 1u);
             searchUser = result.usersInDirectory.firstObject;
-            userToken = [ZMUser addUserObserver:userListener forUsers:@[searchUser] managedObjectContext:self.uiMOC];
+            userToken = [UserChangeInfo addObserver:userListener forBareUser:searchUser];
             dispatch_semaphore_signal(sem);
             return YES;
         }] forToken:OCMOCK_ANY];
         
-        ZMSearchDirectory *searchDirectory = [[ZMSearchDirectory alloc] initWithUserSession:self.userSession];
+        searchDirectory = [[ZMSearchDirectory alloc] initWithUserSession:self.userSession];
         [searchDirectory addSearchResultObserver:searchListener];
         
         [searchDirectory searchForUsersAndConversationsMatchingQueryString:unConnectedUserName];
         XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
         
         WaitForAllGroupsToBeEmpty(0.5);
-        [searchDirectory tearDown];
     }
     
     // when requesting medium image
@@ -824,8 +824,9 @@
     }
     
     // then
+    [searchDirectory tearDown];
     [userListener verify];
-    [ZMUser removeUserObserverForToken:userToken];
+    [UserChangeInfo removeObserver:userToken forBareUser:searchUser];
 }
 
 - (void)DISABLED_testThatItDoesNotDownloadCachedImagesAgainButNotifiesObservers
@@ -877,7 +878,7 @@
         [[searchListener expect] didReceiveSearchResult:[OCMArg checkWithBlock:^BOOL(ZMSearchResult *result) {
             XCTAssertEqual(result.usersInDirectory.count, 1u);
             searchUser = result.usersInDirectory.firstObject;
-            userToken = [ZMUser addUserObserver:userListener forUsers:@[searchUser] managedObjectContext:self.uiMOC];
+            userToken = [UserChangeInfo addObserver:userListener forBareUser:searchUser];
             dispatch_semaphore_signal(sem);
             return YES;
         }] forToken:OCMOCK_ANY];
@@ -936,7 +937,7 @@
     
     // then
     [userListener verify];
-    [ZMUser removeUserObserverForToken:userToken];
+    [UserChangeInfo removeObserver:userToken forBareUser:searchUser];
 }
 
 @end

@@ -37,14 +37,14 @@
     return self;
 }
 
-- (void)conversationWindowDidChange:(MessageWindowChangeInfo *)note
+- (void)conversationWindowDidChange:(MessageWindowChangeInfo *)changeInfo
 {
     if(self.notificationHandler) {
-        self.notificationHandler(note);
+        self.notificationHandler(changeInfo);
     }
     
     [self.window.conversation setVisibleWindowFromMessage:self.window.conversation.messages.firstObject toMessage:self.window.conversation.messages.lastObject];
-    [self.notifications addObject:note];
+    [self.notifications addObject:changeInfo];
 }
 
 - (void)registerOnConversation:(ZMConversation *)conversation;

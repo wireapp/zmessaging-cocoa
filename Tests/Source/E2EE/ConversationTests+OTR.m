@@ -858,12 +858,19 @@
     
     ZMMessage *observedMessage = localGroupConversation.messages.lastObject; // the last message is the "you are using a new device message"
 
-    MessageChangeObserver *messageObserver = [[MessageChangeObserver alloc] initWithMessage:observedMessage];
+    __block MessageChangeObserver *messageObserver;
+    [self performIgnoringZMLogError:^{
+        messageObserver = [[MessageChangeObserver alloc] initWithMessage:observedMessage];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+
     XCTAssertTrue([observedMessage isKindOfClass:ZMAssetClientMessage.class]);
     
-    [observedMessage requestImageDownload];
+    [self.userSession performChanges:^{
+        [observedMessage requestImageDownload];
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
+
     // then
     XCTAssertEqual(messageObserver.notifications.count, 1lu);
     
@@ -884,8 +891,9 @@
         }
     }
     
-    [messageObserver tearDown];
-
+    [self performIgnoringZMLogError:^{
+        [messageObserver tearDown];
+    }];
 }
 
 - (void)testThatAssetMediumIsRedownloadedIfNoMessageDataIsStored
@@ -919,7 +927,10 @@
     
     // THEN
     XCTAssertNil([[imageMessageData imageMessageData] mediumData]);
-    [imageMessageData requestImageDownload];
+    
+    [self.userSession performChanges:^{
+        [imageMessageData requestImageDownload];
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertNotNil([[imageMessageData imageMessageData] mediumData]);
 }
@@ -953,7 +964,9 @@
     
     // THEN
     XCTAssertNil([[imageMessageData imageMessageData] mediumData]);
-    [imageMessageData requestImageDownload];
+    [self.userSession performChanges:^{
+        [imageMessageData requestImageDownload];
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertNotNil([[imageMessageData imageMessageData] mediumData]);
 }
@@ -1049,6 +1062,7 @@
                     [self establishSessionBetweenSelfUserAndMockUser:user];
                     WaitForAllGroupsToBeEmpty(0.5);
                 }
+                XCTAssert(user.clients.count > 0);
             }
             [self.syncMOC saveOrRollback];
             [self.uiMOC saveOrRollback];
@@ -1075,7 +1089,6 @@
         }
     };
     [observer clearNotifications];
-    [conversation addConversationObserver:observer];
 
     // when
     __block ZMClientMessage* message;
@@ -1085,11 +1098,9 @@
             [NSThread sleepForTimeInterval:0.1];
         }
     }];
-    
-    [observer tearDown];
-    [message.managedObjectContext saveOrRollback];
     WaitForEverythingToBeDone();
     
+    [observer tearDown];
     return message;
 }
 
@@ -1132,17 +1143,18 @@
         connectionSelfToUser5.lastUpdate = [NSDate dateWithTimeIntervalSinceNow:-3];
         connectionSelfToUser5.conversation = selfToUser5Conversation;
     }];
-    
     WaitForEverythingToBeDoneWithTimeout(0.5);
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
     
     [self establishSessionBetweenSelfUserAndMockUser:self.user5];
-    
+    WaitForEverythingToBeDoneWithTimeout(0.5);
+
+    ZMUser *user = [self userForMockUser:self.user5];
+
     [self.userSession performChanges:^{
         ZMUser *selfUser = [self userForMockUser:self.selfUser];
-        [selfUser.selfClient trustClients:[self userForMockUser:self.user5].clients];
+        [selfUser.selfClient trustClients:user.clients];
     }];
-    
     WaitForEverythingToBeDoneWithTimeout(0.5);
     
     // then
@@ -1174,8 +1186,6 @@
     [self.userSession performChanges:^{
         message = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
-    
-    [message.managedObjectContext saveOrRollback];
     WaitForEverythingToBeDone();
     
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
@@ -1228,14 +1238,12 @@
         }
     };
     [observer clearNotifications];
-    [conversation addConversationObserver:observer];
     
     // when
     __block ZMClientMessage* message;
     [self.userSession performChanges:^{
         message = [conversation appendOTRMessageWithText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] nonce:[NSUUID createUUID] fetchLinkPreview:YES];
     }];
-    
     [message.managedObjectContext saveOrRollback];
     WaitForEverythingToBeDone();
     
@@ -1245,6 +1253,8 @@
     
     XCTAssertEqual(message.visibleInConversation, message.conversation);
     XCTAssertEqual(message.conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+    
+    [observer tearDown];
 }
 
 - (void)testThatItDoesNotDeliversOTRMessageAfterIgnoringExpiring
@@ -1303,7 +1313,7 @@
             }
         }
     };
-    [conversation addConversationObserver:observer];
+    [observer clearNotifications];
     
     // WHEN
     __block ZMClientMessage* message1;
@@ -1332,8 +1342,8 @@
             }
         }
     };
-    [conversation addConversationObserver:observer];
-    
+    [observer clearNotifications];
+
     // WHEN
     __block ZMClientMessage* message2;
     [self.userSession performChanges:^{
@@ -1677,17 +1687,18 @@
     UserClient *selfClient = [ZMUser selfUserInUserSession:self.userSession].selfClient;
     ZMUser *user1 = [self userForMockUser:self.user1];
     
-    if (initialSecurityLevel == ZMConversationSecurityLevelSecure) {
-        [selfClient ignoreClients:user1.clients];
-    } else {
-        UserClient *trusted = [user1.clients.allObjects firstObjectMatchingWithBlock:^BOOL(UserClient *obj) {
-            return [obj.trustedByClients containsObject:selfClient];
-        }];
-        if (nil != trusted) {
-            [selfClient ignoreClient:trusted];
+    [self.userSession performChanges:^{
+        if (initialSecurityLevel == ZMConversationSecurityLevelSecure) {
+            [selfClient ignoreClients:user1.clients];
+        } else {
+            UserClient *trusted = [user1.clients.allObjects firstObjectMatchingWithBlock:^BOOL(UserClient *obj) {
+                return [obj.trustedByClients containsObject:selfClient];
+            }];
+            if (nil != trusted) {
+                [selfClient ignoreClient:trusted];
+            }
         }
-    }
-
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
     
     if (shouldChangeSecurityLevel) {
