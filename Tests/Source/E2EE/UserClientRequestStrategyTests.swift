@@ -436,6 +436,28 @@ extension UserClientRequestStrategyTests {
             }
         }
     }
+    
+    func testThatDeletesClientsThatWereNotInTheFetchResponse() {
+        
+        // given
+        let selfClient = self.createSelfClient()
+        let selfUser = ZMUser.selfUser(in: self.syncMOC)
+        let nextResponse = ZMTransportResponse(payload: payloadForClients() as ZMTransportData?, httpStatus: 200, transportSessionError: nil)
+        let newClient = UserClient.insertNewObject(in: self.syncMOC)
+        newClient.user = selfUser
+        newClient.remoteIdentifier = "deleteme"
+        self.syncMOC.saveOrRollback()
+        
+        // when
+        _ = sut.nextRequest()
+        sut.didReceive(nextResponse, forSingleRequest: nil)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // then
+        XCTAssertTrue(selfUser.clients.contains(selfClient))
+        XCTAssertFalse(selfUser.clients.contains(newClient))
+        
+    }
 }
 
 

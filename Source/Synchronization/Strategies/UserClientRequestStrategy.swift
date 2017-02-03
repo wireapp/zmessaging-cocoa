@@ -294,23 +294,46 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
         switch (response.result) {
         case .success:
             if let payload = response.payload?.asArray() as? [[String: AnyObject]] {
-                func createSelfUserClient(_ clientInfo: [String: AnyObject]) -> UserClient? {
-                    let client = UserClient.createOrUpdateClient(clientInfo, context: self.managedObjectContext)
-                    client?.user = ZMUser.selfUser(in: self.managedObjectContext)
-                    return client
-                }
-                
-                let clients = payload.flatMap(createSelfUserClient)
-                self.managedObjectContext.saveOrRollback()
-                clientUpdateStatus?.didFetchClients(clients)
+                self.received(clients: payload)
             }
-            break
         case .expired:
             clientUpdateStatus?.failedToFetchClients()
-            break
         default:
             break
         }
+    }
+    
+    private func received(clients: [[String: AnyObject]]) {
+        func createSelfUserClient(_ clientInfo: [String: AnyObject]) -> UserClient? {
+            let client = UserClient.createOrUpdateClient(clientInfo, context: self.managedObjectContext)
+            client?.user = ZMUser.selfUser(in: self.managedObjectContext)
+            return client
+        }
+        
+        let clients = clients.flatMap(createSelfUserClient)
+    
+        // remove all clients that are not there, with the exception of the self client
+        // in theory we should also remove the self client and log out, but this will happen
+        // next time the user sends a message or when we will receive the "deleted" event
+        // for that client
+        let foundClientsIdentifier = Set(clients.flatMap { $0.remoteIdentifier })
+        let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
+        let selfClient = selfUser.selfClient()
+        let otherClients = selfUser.clients ?? Set()
+        
+        otherClients.forEach {
+            guard $0 != selfClient, // not current client
+                let identifier = $0.remoteIdentifier, // has remote ID
+                !foundClientsIdentifier.contains(identifier) // not in the list of found ones
+                else {
+                return
+            }
+            // not there? delete
+            self.managedObjectContext.delete($0)
+        }
+        
+        self.managedObjectContext.saveOrRollback()
+        clientUpdateStatus?.didFetchClients(clients)
     }
     
     /// Returns whether synchronization of this object needs additional requests
