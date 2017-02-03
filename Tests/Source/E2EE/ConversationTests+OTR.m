@@ -1357,15 +1357,16 @@
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
 
+    [self establishSessionBetweenSelfUserAndMockUser:self.user1];
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
 
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
     WaitForEverythingToBeDoneWithTimeout(0.5);
-
 
     [self makeConversationSecured:conversation];
 
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:NO];
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        [session registerClientForUser:self.user1 label:@"iPhone" type:@"permanent"];
+    }];
     WaitForEverythingToBeDoneWithTimeout(0.5);
 
     // When
