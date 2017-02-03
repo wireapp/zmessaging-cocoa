@@ -119,7 +119,6 @@ class CallStateObserverTests : MessagingTest {
         // given
         let ignoredCallStates : [CallState] = [.terminating(reason: .anweredElsewhere),
                                                .terminating(reason: .normal),
-                                               .terminating(reason: .normalSelf),
                                                .terminating(reason: .lostMedia),
                                                .terminating(reason: .internalError),
                                                .terminating(reason: .unknown),
