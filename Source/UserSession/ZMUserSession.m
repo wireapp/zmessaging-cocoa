@@ -95,6 +95,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) NSString *applicationGroupIdentifier;
 @property (nonatomic) NSURL *storeURL;
 @property (nonatomic) NSURL *keyStoreURL;
+@property (nonatomic, readwrite) NSURL *sharedContainerURL;
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 
 
@@ -296,7 +297,8 @@ ZM_EMPTY_ASSERTING_INIT()
         self.pushChannelIsOpen = NO;
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
-        
+
+        self.sharedContainerURL = [self.class sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
         self.apnsEnvironment = apnsEnvironment;
         self.networkIsOnline = YES;
         self.managedObjectContext = userInterfaceContext;
