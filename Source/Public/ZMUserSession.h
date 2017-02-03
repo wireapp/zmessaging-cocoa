@@ -24,6 +24,7 @@
 
 #import <zmessaging/ZMNetworkState.h>
 #import <ZMTransport/ZMTransportRequest.h>
+#import <zmessaging/CallingProtocolStrategy.h>
 
 @class ZMTransportSession;
 @class ZMSearchDirectory;
@@ -31,6 +32,8 @@
 @class ZMConversation;
 @class UserClient;
 @class ZMProxyRequest;
+@class WireCallCenterV2;
+@class ZMCallKitDelegate;
 
 @protocol UserProfile;
 @protocol AnalyticsType;
@@ -129,6 +132,12 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 /// Top conversation directory
 @property (nonatomic, readonly) TopConversationsDirectory *topConversationsDirectory;
 
+/// CallCenter for V2 calls
+@property (nonatomic, readonly) WireCallCenterV2 *wireCallCenterV2;
+
+/// CallKit delegate
+@property (nonatomic, readonly) ZMCallKitDelegate *callKitDelegate;
+
 @end
 
 
@@ -165,8 +174,10 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 
 
 @interface ZMUserSession (Calling)
-+ (BOOL)useCallKit;
-+ (void)setUseCallKit:(BOOL)useCallKit;
+
+@property (class) BOOL useCallKit;
+@property (class) CallingProtocolStrategy callingProtocolStrategy;
+
 @end
 
 

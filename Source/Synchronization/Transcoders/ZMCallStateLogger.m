@@ -63,27 +63,27 @@
     }
 }
 
-- (NSString *)descriptionForVoiceChannelState:(ZMVoiceChannelState)state
+- (NSString *)descriptionForVoiceChannelState:(VoiceChannelV2State)state
 {
     
     switch (state) {
-        case ZMVoiceChannelStateDeviceTransferReady:
+        case VoiceChannelV2StateDeviceTransferReady:
             return @"TransferReady";
-        case ZMVoiceChannelStateInvalid:
+        case VoiceChannelV2StateInvalid:
             return @"Invalid";
-        case ZMVoiceChannelStateNoActiveUsers:
+        case VoiceChannelV2StateNoActiveUsers:
             return @"NoActiveUsers";
-        case ZMVoiceChannelStateIncomingCall:
+        case VoiceChannelV2StateIncomingCall:
             return @"IncomingCall";
-        case ZMVoiceChannelStateIncomingCallInactive:
+        case VoiceChannelV2StateIncomingCallInactive:
             return @"IncomingCallInactive";
-        case ZMVoiceChannelStateSelfConnectedToActiveChannel:
+        case VoiceChannelV2StateSelfConnectedToActiveChannel:
             return @"ConnectedToActiveChannel";
-        case ZMVoiceChannelStateOutgoingCall:
+        case VoiceChannelV2StateOutgoingCall:
             return @"OutgoingCall";
-        case ZMVoiceChannelStateOutgoingCallInactive:
+        case VoiceChannelV2StateOutgoingCallInactive:
             return @"OutgoingCallInactive";
-        case ZMVoiceChannelStateSelfIsJoiningActiveChannel:
+        case VoiceChannelV2StateSelfIsJoiningActiveChannel:
             return @"SelfIsJoiningActiveChannel";
         default:
             break;
@@ -173,8 +173,8 @@
         return;
     }
     
-    [ZMVoiceChannel setLastSessionIdentifier:sessionID];
-    [ZMVoiceChannel setLastSessionStartDate:[NSDate date]];
+    [VoiceChannelV2 setLastSessionIdentifier:sessionID];
+    [VoiceChannelV2 setLastSessionStartDate:[NSDate date]];
     if (sessionID != nil) {
         [self.flowSync setSessionIdentifier:sessionID forConversationIdentifier:conversation.remoteIdentifier];
     }

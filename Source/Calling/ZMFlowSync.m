@@ -26,7 +26,7 @@
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMOnDemandFlowManager.h"
-#import "ZMVoiceChannel+VideoCalling.h"
+#import "VoiceChannelV2+VideoCalling.h"
 
 static NSString * const DefaultMediaType = @"application/json";
 id ZMFlowSyncInternalDeploymentEnvironmentOverride;
@@ -459,7 +459,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
                 canSendVideo = YES;
             } else {
                 // notify UI that a video call can not be established
-                [CallingInitialisationNotification notifyCallingFailedWithErrorCode:ZMVoiceChannelErrorCodeVideoCallingNotSupported];
+                [CallingInitialisationNotification notifyCallingFailedWithErrorCode:VoiceChannelV2ErrorCodeVideoCallingNotSupported];
             }
         }
         
@@ -519,7 +519,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
             ZMConversation *uiConv = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:self.uiManagedObjectContext];
             [ZMUserSession appendAVSLogMessageForConversation:uiConv withMessage:[NSString stringWithFormat:@"Self user wants to leave voice channel. Reason: %@", reason]];
             if (uiConv.callDeviceIsActive) {
-                [uiConv.voiceChannel leaveOnAVSError];
+                [uiConv.voiceChannelRouter.v2 leaveOnAVSError];
                 [self.uiManagedObjectContext saveOrRollback];
             }
             else {
@@ -553,18 +553,16 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
             return;
         }
         
-        NSManagedObjectID *conversationID = conversation.objectID;
-        NSManagedObjectID *userID = user.objectID;
+        NSUUID *conversationID = conversation.remoteIdentifier;
+        NSUUID *userID = user.remoteIdentifier;
         
+        VoiceGainNotification *voiceGainNotification = [[VoiceGainNotification alloc] initWithVolume:(float)volume conversationId:conversationID userId:userID];
+                
         [self.uiManagedObjectContext performGroupedBlock:^{
-            NSNotificationQueue *queue = self.voiceGainNotificationQueue;
-            
-            ZMConversation *uiConversation = (id) [self.uiManagedObjectContext objectWithID:conversationID];
-            ZMUser *uiUser = (id) [self.uiManagedObjectContext objectWithID:userID];
-            
-            ZMVoiceChannelParticipantVoiceGainChangedNotification *note = [ZMVoiceChannelParticipantVoiceGainChangedNotification notificationWithConversation:uiConversation participant:uiUser voiceGain:volume];
-            
-            [queue enqueueNotification:note postingStyle:NSPostWhenIdle coalesceMask:NSNotificationCoalescingOnSender | NSNotificationCoalescingOnName forModes:nil];
+            [self.voiceGainNotificationQueue enqueueNotification:voiceGainNotification.notification
+                                                    postingStyle:NSPostWhenIdle
+                                                    coalesceMask:NSNotificationCoalescingOnSender | NSNotificationCoalescingOnName
+                                                        forModes:nil];
         }];
     }];
 }
@@ -579,7 +577,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
             return  [ZMUser userWithRemoteID:userID.UUID createIfNeeded:NO inContext:self.managedObjectContext];
         }];
 
-        [conversation.voiceChannel updateActiveFlowParticipants:participants];
+        [conversation.voiceChannelRouter.v2 updateActiveFlowParticipants:participants];
         [self.managedObjectContext enqueueDelayedSave];
     }];
 }

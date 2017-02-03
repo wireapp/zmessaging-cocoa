@@ -482,13 +482,7 @@
                                       conversation.remoteIdentifier.transportString];
     
     // when
-    // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
     __block ZMMessage *fileMessage;
-    
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
         fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
@@ -1151,15 +1145,7 @@
                                       conversation.remoteIdentifier.transportString];
     
     // when
-    // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
     __block ZMMessage *fileMessage;
-    
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
         fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
@@ -1331,7 +1317,6 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
 
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
@@ -1339,23 +1324,13 @@
                                                                           name:@"foo228"
                                                                      messageID:nonce.transportString
                                                                   expiresAfter:nil];
-    
-    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
-    __block NSError *error;
-    __block NSString *prekey;
-    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
-    }];
-    XCTAssertNil(error);
-    
+
+
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self inserOTRMessage:original
-               inConversation:self.selfToUser1Conversation
-                     fromUser:self.user1
-                     toClient:self.selfUser.clients.anyObject
-                     usingKey:prekey
-                      session:session];
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+        [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject
+                                                            toClient:self.selfUser.clients.anyObject
+                                                                data:original.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1584,31 +1559,6 @@
     return url;
 }
 
-- (void)encryptAndRemotelyInsertOTRAssetToSelfClient:(ZMGenericMessage *)genericMessage
-                                            fromUser:(MockUser *)user
-                                      inConversation:(MockConversation *)conversation
-{
-    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
-    __block NSError *error;
-    __block NSString *prekey;
-    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
-    }];
-    XCTAssertNil(error);
-    
-    // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        
-        [self inserOTRMessage:genericMessage
-               inConversation:conversation
-                     fromUser:user
-                     toClient:self.selfUser.clients.anyObject
-                     usingKey:prekey
-                      session:session];
-    }];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-}
 
 - (ZMAssetClientMessage *)remotelyInsertAssetOriginalAndUpdate:(ZMGenericMessage *)updateMessage
                                                    insertBlock:(void (^)(NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to))insertBlock
@@ -1640,14 +1590,13 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *__unused session) {
-        NSData *messageData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:original.data];
-        [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:messageData];
+        [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:original.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession performRemoteChanges:^(__unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        NSData *updateMessageData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:updateMessage.data];
+        NSData *updateMessageData = [MockUserClient encryptedWithData:updateMessage.data from:senderClient to:selfClient];
         insertBlock(updateMessageData, mockConversation, senderClient, selfClient);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1747,31 +1696,21 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
-    
+    [self establishSessionBetweenSelfUserAndMockUser:self.user1];
+    WaitForAllGroupsToBeEmpty(0.5);
+
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
                                                                       mimeType:@"text/plain"
                                                                           name:self.name
                                                                      messageID:nonce.transportString
-                                                                  expiresAfter:@20];
-    
-    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
-    __block NSError *error;
-    __block NSString *prekey;
-    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
-    }];
-    XCTAssertNil(error);
+                                                                  expiresAfter:@30];
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self inserOTRMessage:original
-               inConversation:self.selfToUser1Conversation
-                     fromUser:self.user1
-                     toClient:self.selfUser.clients.anyObject
-                     usingKey:prekey
-                      session:session];
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+        [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject
+                                                            toClient:self.selfUser.clients.anyObject
+                                                                data:original.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1806,7 +1745,7 @@
     NSUUID *assetID = NSUUID.createUUID;
     NSData *otrKey = NSData.randomEncryptionKey;
     NSData *sha256 = NSData.zmRandomSHA256Key;
-    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@20];
+    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -1830,7 +1769,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce.transportString  expiresAfter:@20];
+    ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce.transportString  expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:cancelled insertBlock:
@@ -1856,7 +1795,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *failed = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedFAILED messageID:nonce.transportString expiresAfter:@20];
+    ZMGenericMessage *failed = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedFAILED messageID:nonce.transportString expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:failed insertBlock:
@@ -1891,7 +1830,7 @@
     ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
     ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
     ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
-    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:@(20)];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:@30];
     
     
     // when
@@ -1961,7 +1900,7 @@
     NSData *encryptedAsset = [assetData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
     NSData *sha256 = encryptedAsset.zmSHA256Digest;
     
-    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@20];
+    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -2102,7 +2041,7 @@
     ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
     ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
     ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
-    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:@(20)];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:@20];
 
     // when
     __block MessageChangeObserver *observer;
@@ -2628,10 +2567,9 @@
 
     // when
     // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        [session registerClientForUser:self.user1 label:@"Android!" type:@"permanent"];
+    }];
     __block ZMMessage *fileMessage;
 
     [self.mockTransportSession resetReceivedRequests];
@@ -3428,10 +3366,9 @@
 
     // when
     // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        [session registerClientForUser:self.user1 label:@"Android!" type:@"permanent"];
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
 
     __block ZMMessage *fileMessage;

@@ -18,7 +18,7 @@
 
 import Foundation
 import AddressBook
-import libPhoneNumber
+import libPhoneNumberiOS
 
 /// iOS AddressBook-based address book
 class AddressBookIOS8 : AddressBook {

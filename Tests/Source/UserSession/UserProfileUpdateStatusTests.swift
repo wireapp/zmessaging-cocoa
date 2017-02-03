@@ -57,6 +57,58 @@ class UserProfileUpdateStatusTests : MessagingTest {
     }
 }
 
+// MARK: - Changing email
+extension UserProfileUpdateStatusTests {
+    func testThatItReturnsErrorWhenPreparingForEmailChangeAndUserUserHasNoEmail() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.emailAddress = nil
+        
+        // WHEN
+        do {
+            try self.sut.requestEmailChange(email: "foo@example.com")
+        } catch {
+            XCTFail("Should not throw")
+            return
+        }
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // THEN
+        XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
+        guard let first = self.observer.invokedCallbacks.first else { return }
+        switch first {
+        case .emailUpdateDidFail(error: UserProfileUpdateError.emailNotSet):
+            break
+        default:
+            XCTFail()
+        }
+    }
+    
+    func testThatItPreparesForEmailChangeIfSelfUserHasEmail() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.emailAddress = "my@fo.example.com"
+        
+        // WHEN
+        do {
+            try self.sut.requestEmailChange(email: "foo@example.com")
+        } catch {
+            XCTFail("Should not throw")
+            return
+        }
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // THEN
+        XCTAssertTrue(self.sut.currentlyChangingEmail)
+        XCTAssertFalse(self.sut.currentlySettingEmail)
+        XCTAssertFalse(self.sut.currentlySettingPassword)
+        XCTAssertEqual(self.newRequestCallbackCount, 1)
+    }
+
+}
+
 // MARK: - Set email and password
 extension UserProfileUpdateStatusTests {
     
@@ -99,13 +151,21 @@ extension UserProfileUpdateStatusTests {
         // WHEN
         do {
             try self.sut.requestSettingEmailAndPassword(credentials: credentials)
-            XCTFail("Should have thrown")
         } catch {
+            XCTFail("Should not throw")
             return
         }
-        
-        // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
+        XCTAssertEqual(self.observer.invokedCallbacks.count, 1)
+        guard let first = self.observer.invokedCallbacks.first else { return }
+        switch first {
+        case .emailUpdateDidFail(error: UserProfileUpdateError.emailAlreadySet):
+            break
+        default:
+            XCTFail()
+        }
     }
     
     func testThatItCanCancelSettingEmailAndPassword() {

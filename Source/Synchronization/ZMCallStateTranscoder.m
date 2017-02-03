@@ -22,7 +22,7 @@
 @import ZMCDataModel;
 
 #import "ZMCallStateTranscoder.h"
-#import "ZMVoiceChannel+CallFlow.h"
+#import "VoiceChannelV2+CallFlow.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMCallStateLogger.h"
@@ -186,14 +186,14 @@ _Pragma("clang diagnostic pop")
                 // under bad network conditions we might not be able to send out the request to leave a call,
                 // but we should still be able to stop the audio stream
                 [strongSync updateFlowsForConversation:conv];
-                [conv.voiceChannel resetTimer];
+                [conv.voiceChannelRouter.v2 resetTimer];
             }
             if ([conv hasLocalModificationsForKey:ZMConversationIsSelfAnActiveMemberKey] && !conv.isSelfAnActiveMember) {
                 // when the selfUser leaves a conversation with an ongoing call, we should reset the conversations's state
                 conv.callDeviceIsActive = NO;
                 [strongSync updateFlowsForConversation:conv];
-                [conv.voiceChannel resetCallState];
-                [conv.voiceChannel resetTimer];
+                [conv.voiceChannelRouter.v2 resetCallState];
+                [conv.voiceChannelRouter.v2 resetTimer];
             }
         }
         
@@ -284,8 +284,8 @@ _Pragma("clang diagnostic pop")
 {
     // don't process call state update events when selfUser left the conversation
     if (conversation.conversationType == ZMConversationTypeGroup && !conversation.isSelfAnActiveMember) {
-        [conversation.voiceChannel removeAllCallParticipants];
-        [conversation.voiceChannel updateActiveFlowParticipants:@[]];
+        [conversation.voiceChannelRouter.v2 removeAllCallParticipants];
+        [conversation.voiceChannelRouter.v2 updateActiveFlowParticipants:@[]];
         return;
     }
     
@@ -315,8 +315,8 @@ _Pragma("clang diagnostic pop")
                 // we are not able to set the call state on the be because the be would refuse requests
                 conversation.callDeviceIsActive = NO;
                 [self.flowSync updateFlowsForConversation:conversation];
-                [conversation.voiceChannel resetCallState];
-                [conversation.voiceChannel resetTimer];
+                [conversation.voiceChannelRouter.v2 resetCallState];
+                [conversation.voiceChannelRouter.v2 resetTimer];
             }
             break;
         }
@@ -398,8 +398,8 @@ _Pragma("clang diagnostic pop")
     
     // we don't want to update the voiceChannel once we left the conversation
     if (!conversation.isSelfAnActiveMember) {
-        [conversation.voiceChannel removeAllCallParticipants];
-        [conversation.voiceChannel updateActiveFlowParticipants:@[]];
+        [conversation.voiceChannelRouter.v2 removeAllCallParticipants];
+        [conversation.voiceChannelRouter.v2 updateActiveFlowParticipants:@[]];
         return;
     }
     
@@ -443,7 +443,7 @@ _Pragma("clang diagnostic pop")
             if (uiConversation != nil) {
                 // the backend know which clients are currently joined. Therefore calling this from a clinet that is not currently joined will not cause the call with the other client to drop
                 // however this enables us to rejoin the call if the app crashed or got killed while being in a call
-                [uiConversation.voiceChannel leave];
+                [uiConversation.voiceChannelRouter.v2 leave];
                 [self.uiManagedObjectContext enqueueDelayedSave];
             }
         }];
@@ -478,19 +478,19 @@ _Pragma("clang diagnostic pop")
             return;
         }
     }
-    ZMVoiceChannelCallEndReason endReason = [self callEndReasonForStringValue:reason];
+    VoiceChannelV2CallEndReason endReason = [self callEndReasonForStringValue:reason];
     ZMCallStateReasonToLeave reasonToLeave = conversation.reasonToLeave;
     conversation.reasonToLeave = ZMCallStateReasonToLeaveNone;
     
     
-    if (endReason == ZMVoiceChannelCallEndReasonRequested) {
+    if (endReason == VoiceChannelV2CallEndReasonRequested) {
         switch (reasonToLeave) {
             case ZMCallStateReasonToLeaveUser:
-                endReason = ZMVoiceChannelCallEndReasonRequestedSelf;
+                endReason = VoiceChannelV2CallEndReasonRequestedSelf;
                 break;
                 
             case ZMCallStateReasonToLeaveAvsError:
-                endReason = ZMVoiceChannelCallEndReasonRequestedAVS;
+                endReason = VoiceChannelV2CallEndReasonRequestedAVS;
                 break;
                 
             default:
@@ -498,30 +498,25 @@ _Pragma("clang diagnostic pop")
         }
     }
     
-    [self.uiManagedObjectContext performGroupedBlock:^{
-
-        ZMConversation *UIConversation = [self.uiManagedObjectContext existingObjectWithID:conversation.objectID error:nil];
-        ZMCallEndedNotification *note = [ZMCallEndedNotification notificationWithConversation:UIConversation reason:endReason];
-        [[NSNotificationCenter defaultCenter] postNotification:note];
-    }];
+    [[[CallEndedNotification alloc] initWithReason:endReason conversationId:conversation.remoteIdentifier] post];
 }
 
-- (ZMVoiceChannelCallEndReason)callEndReasonForStringValue:(NSString *)reasonString;
+- (VoiceChannelV2CallEndReason)callEndReasonForStringValue:(NSString *)reasonString;
 {
     if ([reasonString isEqualToString:DropCauseDisconnected]){
-        return ZMVoiceChannelCallEndReasonDisconnected;
+        return VoiceChannelV2CallEndReasonDisconnected;
     }
     if ([reasonString isEqualToString:DropCauseInterrupted]) {
-        return ZMVoiceChannelCallEndReasonInterrupted;
+        return VoiceChannelV2CallEndReasonInterrupted;
     }
     if ([reasonString isEqualToString:DropCauseRequested]) {
-        return ZMVoiceChannelCallEndReasonRequested;
+        return VoiceChannelV2CallEndReasonRequested;
     }
     if ([reasonString isEqualToString:DropCauseGone]) {
-        return ZMVoiceChannelCallEndReasonOtherLostMedia;
+        return VoiceChannelV2CallEndReasonOtherLostMedia;
     }
     
-    return ZMVoiceChannelCallEndReasonRequested;
+    return VoiceChannelV2CallEndReasonRequested;
 }
 
 - (BOOL)processSelfInfoFromPayload:(NSDictionary *)payload forConversation:(ZMConversation *)conversation eventSource:(ZMCallEventSource)eventSource
@@ -592,7 +587,7 @@ _Pragma("clang diagnostic pop")
     
     // remove participants that don't have a state anymore
     for (ZMUser *user in currentParticipants) {
-        [conversation.voiceChannel removeCallParticipant:user];
+        [conversation.voiceChannelRouter.v2 removeCallParticipant:user];
         
     }
     
@@ -606,7 +601,7 @@ _Pragma("clang diagnostic pop")
 
     if (!currentIsVideoCall && isVideoActive) {
         conversation.isVideoCall = YES;
-        [conversation.voiceChannel updateForStateChange];
+        [conversation.voiceChannelRouter.v2 updateForStateChange];
     }
     
     if (conversation.isVideoCall) {
@@ -635,13 +630,13 @@ _Pragma("clang diagnostic pop")
         [[NSNotificationCenter defaultCenter] postNotificationName:ZMConversationCancelNotificationForIncomingCallNotificationName object:conversation];
     }
     if(changeToActive && !participantWasJoined) {
-        [conversation.voiceChannel addCallParticipant:participant];
+        [conversation.voiceChannelRouter.v2 addCallParticipant:participant];
         if (eventSource == ZMCallEventSourceUpstream && conversation.callDeviceIsActive && !participant.isSelfUser) {
             [self.flowSync addJoinedCallParticipant:participant inConversation:conversation];
         }
     }
     else if(changeToIdle && participantWasJoined) {
-        [conversation.voiceChannel removeCallParticipant:participant];
+        [conversation.voiceChannelRouter.v2 removeCallParticipant:participant];
     }
     else if(!changeToIdle && !changeToActive && !isIgnoringCall) {
         VerifyString(NO, "Unknown participant state in transport data.");
@@ -751,8 +746,8 @@ _Pragma("clang diagnostic pop")
             // we send out a leave request in case we are joined on the BE for some reason
             conversation.callDeviceIsActive = NO;
             if (!isVoiceChannelFull) {
-                [conversation.voiceChannel resetCallState];
-                [conversation.voiceChannel resetTimer];
+                [conversation.voiceChannelRouter.v2 resetCallState];
+                [conversation.voiceChannelRouter.v2 resetTimer];
             }
         }
         [self.flowSync updateFlowsForConversation:conversation];
@@ -797,8 +792,8 @@ _Pragma("clang diagnostic pop")
             // (A) the request never reached the BE --> we want to reset the local call state (set callDeviceIsActive to !callDeviceIsActive)
             // (B) the response never reached the device --> we want to reset the call state on the BE (set hasLocalModificationsForCallDeviceIsActive to YES)
             conversation.callDeviceIsActive = NO;
-            [conversation.voiceChannel resetCallState];
-            [conversation.voiceChannel resetTimer];
+            [conversation.voiceChannelRouter.v2 resetCallState];
+            [conversation.voiceChannelRouter.v2 resetTimer];
         } else {
             // we re-add the conversation to the upstream so that it retry to upload changes
             [self.upstreamSync objectsDidChange:[NSSet setWithObject:conversation]];

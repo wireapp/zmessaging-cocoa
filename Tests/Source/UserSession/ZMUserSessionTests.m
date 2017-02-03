@@ -18,6 +18,7 @@
 
 
 @import PushKit;
+@import ZMCMockTransport;
 
 #include "ZMUserSessionTestsBase.h"
 #import "ZMPushToken.h"
@@ -259,11 +260,19 @@
 - (void)testThatItReturnsTheFingerprintForUserClient
 {
     // given
-    [self createSelfClient];
+    UserClient *selfUser = [self createSelfClient];
+    
     ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    UserClient *user1Client1 = [self createClientForUser:user1 createSessionWithSelfUser:YES];
-
-    // when & then
+    user1.remoteIdentifier = [NSUUID createUUID];
+    UserClient *user1Client1 = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
+    user1Client1.user = user1;
+    user1Client1.remoteIdentifier = @"aabbccdd11";
+    [self.syncMOC saveOrRollback];
+    
+    // when
+    [selfUser establishSessionWithClient:user1Client1 usingPreKey:@"pQABAQICoQBYIGnflzMYd4OvMaHKfcIJzlb1fvEIhBx4qN545db7ZDBrA6EAoQBYIH7q8TQbCCuaMLYW6yW7NzLsU/OA7ea7Xs/hAyXK1jETBPY="];
+    
+    // then
     XCTAssertNotNil(user1Client1.fingerprint);
 }
 
@@ -272,7 +281,9 @@
     // given
     [self createSelfClient];
     ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    UserClient *user1Client1 = [self createClientForUser:user1 createSessionWithSelfUser:NO];
+    UserClient *user1Client1 = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
+    user1Client1.user = user1;
+    user1Client1.remoteIdentifier = @"aabbccdd11";
     
     // when & then
     XCTAssertNil(user1Client1.fingerprint);

@@ -77,7 +77,8 @@ extension UserProfileRequestStrategy : RequestStrategy {
             return self.phoneUpdateSync.nextRequest()
         }
         
-        if self.userProfileUpdateStatus.currentlySettingEmail {
+        if self.userProfileUpdateStatus.currentlySettingEmail ||
+            self.userProfileUpdateStatus.currentlyChangingEmail {
             self.emailUpdateSync.readyForNextRequestIfNotBusy()
             return self.emailUpdateSync.nextRequest()
         }

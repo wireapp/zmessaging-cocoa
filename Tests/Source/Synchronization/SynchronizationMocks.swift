@@ -18,6 +18,8 @@
 
 import Foundation
 import AddressBook
+import ZMCDataModel
+import Cryptobox
 @testable import zmessaging
 
 class MockAuthenticationStatus: ZMAuthenticationStatus {
@@ -109,22 +111,16 @@ class FakeCredentialProvider: NSObject, ZMCredentialProvider
 class FakeCookieStorage: ZMPersistentCookieStorage {
 }
 
-
 // used by tests to fake errors on genrating pre keys
-open class FakeKeysStore: UserClientKeysStore {
+class SpyUserClientKeyStore : UserClientKeysStore {
     
     var failToGeneratePreKeys: Bool = false
     var failToGenerateLastPreKey: Bool = false
     
     var lastGeneratedKeys : [(id: UInt16, prekey: String)] = []
     var lastGeneratedLastPrekey : String?
-
-    static var testDirectory : URL {
-        let directoryURL = try! FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-        return directoryURL.appendingPathComponent("otr")
-    }
     
-    override open func generateMoreKeys(_ count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
+    override public func generateMoreKeys(_ count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
 
         if self.failToGeneratePreKeys {
             let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
@@ -137,7 +133,7 @@ open class FakeKeysStore: UserClientKeysStore {
         }
     }
     
-    override open func lastPreKey() throws -> String {
+    override public func lastPreKey() throws -> String {
         if self.failToGenerateLastPreKey {
             let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
             throw error
@@ -147,6 +143,4 @@ open class FakeKeysStore: UserClientKeysStore {
             return lastGeneratedLastPrekey!
         }
     }
-    
 }
-

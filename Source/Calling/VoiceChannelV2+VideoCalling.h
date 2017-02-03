@@ -19,31 +19,21 @@
 
 @import Foundation;
 @import ZMCDataModel;
-#import <ZMCDataModel/ZMVoiceChannel.h>
+
+#import "VoiceChannelV2.h"
 
 @class ZMUser;
 @class UIView;
 
-extern NSString * const ZMFrontCameraDeviceID;
-extern NSString * const ZMBackCameraDeviceID;
+FOUNDATION_EXPORT NSString * VoiceChannelV2VideoCallErrorDomain;
 
-FOUNDATION_EXPORT NSString * ZMVoiceChannelVideoCallErrorDomain;
-
-@interface ZMVoiceChannel (VideoCalling)
-
-/// Establishing a video call or join a video call and send video straight away
-/// Returns an error if a video call can not be initialized
-- (BOOL)joinVideoCall:(NSError **)error inUserSession:(ZMUserSession *)userSession;
+@interface VoiceChannelV2 (VideoCalling)
 
 // Checks if sending of the video is possible for the participant
 - (BOOL)isSendingVideoForParticipant:(ZMUser *)participant error:(NSError **)error;
 
 // Set video sending active/inactive
 - (BOOL)setVideoSendActive:(BOOL)active error:(NSError **)error;
-
-// Selects camera
-- (BOOL)setVideoCaptureDevice:(NSString *)deviceId error:(NSError **)error;
-
 
 #pragma mark - Private
 - (BOOL)setVideoSendState:(int)state error:(NSError **)error;

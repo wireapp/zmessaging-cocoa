@@ -23,12 +23,12 @@
 @import ZMUtilities;
 @import ZMCDataModel;
 @import CallKit;
+@import CoreTelephony;
 
 #import "ZMUserSession+Background.h"
 
 #import "ZMUserSession+Internal.h"
 #import "ZMSyncStrategy.h"
-//#import "ZMOperationLoop.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
 #import "ZMSearchDirectory+Internal.h"
@@ -53,6 +53,7 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMLocalNotificationDispatcher.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
+#import "CallingProtocolStrategy.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
@@ -312,11 +313,14 @@ ZM_EMPTY_ASSERTING_INIT()
         UserImageLocalCache *userImageCache = [[UserImageLocalCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_userImageCache = userImageCache;
         
-        ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100 location:cacheLocation];
+        ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:500 location:cacheLocation];
         self.managedObjectContext.zm_imageAssetCache = imageAssetCache;
         
         FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_fileAssetCache = fileAssetCache;
+        
+        CTCallCenter *callCenter = [[CTCallCenter alloc] init];
+        self.managedObjectContext.zm_callCenter = callCenter;
         
         [self.syncManagedObjectContext performBlockAndWait:^{
             self.syncManagedObjectContext.zm_imageAssetCache = imageAssetCache;
@@ -342,6 +346,9 @@ ZM_EMPTY_ASSERTING_INIT()
             
             self.pingBackStatus = [[BackgroundAPNSPingBackStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext
                                                                                   authenticationProvider:self.authenticationStatus];
+
+           self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
+                                                                                managedObjectContext:syncManagedObjectContext];
             
             self.transportSession = session;
             self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
@@ -398,6 +405,7 @@ ZM_EMPTY_ASSERTING_INIT()
         }];
         [self enableBackgroundFetch];
 
+        self.wireCallCenterV2 = [[WireCallCenterV2 alloc] initWithContext:self.managedObjectContext];
         
         self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = self.application.applicationState != UIApplicationStateBackground;
         ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self
@@ -1029,6 +1037,18 @@ static BOOL ZMUserSessionUseCallKit = NO;
     ZMUserSessionUseCallKit = useCallKit;
 }
 
+static CallingProtocolStrategy ZMUserSessionCallingProtocolStrategy = CallingProtocolStrategyNegotiate;
+
++ (CallingProtocolStrategy)callingProtocolStrategy
+{
+    return ZMUserSessionCallingProtocolStrategy;
+}
+
++ (void)setCallingProtocolStrategy:(CallingProtocolStrategy)callingProtocolStrategy
+{
+    ZMUserSessionCallingProtocolStrategy = callingProtocolStrategy;
+}
+
 @end
 
 
@@ -1056,4 +1076,3 @@ static BOOL ZMUserSessionUseCallKit = NO;
 }
 
 @end
-

@@ -20,7 +20,7 @@
 #import "MessagingTest.h"
 
 
-@interface ZMVoiceChannelTests : MessagingTest <CallingInitialisationObserver>
+@interface VoiceChannelV2Tests : MessagingTest <CallingInitialisationObserver>
 
 @property (nonatomic) ZMConversation *conversation;
 @property (nonatomic) ZMConversation *otherConversation;

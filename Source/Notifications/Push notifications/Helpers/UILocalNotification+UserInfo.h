@@ -18,6 +18,7 @@
 
 
 @import UIKit;
+@class ZMUser;
 @class ZMConversation;
 @class ZMUpdateEvent;
 @class ZMOTRMessage;
@@ -32,6 +33,7 @@
 - (nullable ZMConversation *)conversationInManagedObjectContext:(nonnull NSManagedObjectContext *)MOC;
 - (nullable ZMMessage *)messageInConversation:(nonnull ZMConversation *)conversation inManagedObjectContext:(nonnull NSManagedObjectContext *)MOC;
 
+- (void)setupUserInfo:(nonnull ZMConversation *)conversation sender:(nonnull ZMUser *)sender;
 - (void)setupUserInfo:(nullable ZMConversation *)conversation forEvent:(nullable ZMUpdateEvent *)event;
 - (void)setupUserInfo:(nonnull ZMMessage *)message;
 

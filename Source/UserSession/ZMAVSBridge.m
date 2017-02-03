@@ -18,6 +18,7 @@
 
 
 @import ZMCSystem;
+@import avs;
 
 #import "ZMAVSBridge.h"
 
@@ -44,6 +45,11 @@ id ZMFlowSyncInternalFlowManagerOverride;
 + (id)overrideFlowManager 
 {
     return ZMFlowSyncInternalFlowManagerOverride;
+}
+
++ (AVSFlowManager *)flowManagerInstance
+{
+    return [[ZMAVSBridge flowManagerClass] getInstance];
 }
 
 @end

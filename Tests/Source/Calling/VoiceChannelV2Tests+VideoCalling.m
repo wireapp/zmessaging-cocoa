@@ -19,16 +19,16 @@
 
 @import zmessaging;
 @import ZMCDataModel;
+@import avs;
 
-#import "ZMVoiceChannelTests.h"
-#import "AVSFlowManager.h"
+#import "VoiceChannelV2Tests.h"
 #import "ZMUserSession+Internal.h"
 
 @import ZMCMockTransport;
 
 extern id ZMFlowSyncInternalFlowManagerOverride;
 
-@implementation ZMVoiceChannelTests (VideoCalling)
+@implementation VoiceChannelV2Tests (VideoCalling)
 
 
 - (void)testThatItCallsIsSendingVideoForParticipantAndReturnValue_hasFlowManager
@@ -53,7 +53,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel isSendingVideoForParticipant:self.conversation.connection.to error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 isSendingVideoForParticipant:self.conversation.connection.to error:&error];
     
     // then
     XCTAssertTrue(result);
@@ -69,7 +69,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     ZMFlowSyncInternalFlowManagerOverride = nil;
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel isSendingVideoForParticipant:self.conversation.connection.to error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 isSendingVideoForParticipant:self.conversation.connection.to error:&error];
     
     // then
     XCTAssertFalse(result);
@@ -87,7 +87,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
 
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel isSendingVideoForParticipant:self.conversation.connection.to error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 isSendingVideoForParticipant:self.conversation.connection.to error:&error];
     
     // then
     XCTAssertFalse(result);
@@ -119,7 +119,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
     
     // then
     XCTAssertTrue(result);
@@ -136,7 +136,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
     
     // then
     XCTAssertFalse(result);
@@ -157,7 +157,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
     
     // then
     XCTAssertFalse(result);
@@ -179,7 +179,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
+    BOOL result = [self.conversation.voiceChannelRouter.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
     
     // then
     XCTAssertFalse(result);
@@ -188,11 +188,11 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     ZMFlowSyncInternalFlowManagerOverride = nil;
 }
 
+// FIXME move to VoiceChannelRouterTests
 - (void)testThatItCallsSetVideoCaptureDeviewAndReturnValue_hasFlowManager
 {
     // given
     XCTestExpectation *callExpectation = [self expectationWithDescription:@"Method called"];
-    NSString *deviceID = @"FRONT#1";
     self.conversation.isVideoCall = YES;
 
     id flowManagerMock = [OCMockObject mockForClass:[MockFlowManager class]];
@@ -201,7 +201,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     [[[flowManagerMock stub] andDo:^(NSInvocation *invocation __unused) {
         [callExpectation fulfill];
     }] setVideoCaptureDevice:[OCMArg checkWithBlock:^BOOL(id obj) {
-        XCTAssertEqual(obj, deviceID);
+        XCTAssertNotNil(obj);
         return YES;
     }]
      forConversation:[OCMArg checkWithBlock:^BOOL(id obj) {
@@ -213,7 +213,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel setVideoCaptureDevice:deviceID error:&error];
+    BOOL result = [self.conversation.voiceChannel setVideoCaptureDeviceWithDevice:ZMCaptureDeviceFront error:&error];
     
     // then
     XCTAssertTrue(result);
@@ -223,17 +223,15 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
 
 }
 
+// FIXME move to VoiceChannelRouterTests
 - (void)testThatItCallsSetVideoCaptureDeviceAndReturnValue_noFlowManager
 {
     // given
-    NSString *deviceID = @"FRONT#1";
-
-    
     ZMFlowSyncInternalFlowManagerOverride = nil;
     
     // when
     NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel setVideoCaptureDevice:deviceID error:&error];
+    BOOL result = [self.conversation.voiceChannel setVideoCaptureDeviceWithDevice:ZMCaptureDeviceFront error:&error];
     
     // then
     XCTAssertFalse(result);
@@ -242,97 +240,11 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
 
 }
 
-- (void)testThatQueryingTheCurrentDeviceIDWithoutStartingVideoReturnNil;
-{
-    // when
-    XCTAssertNil(self.conversation.voiceChannel.currentVideoDeviceID);
-}
-
-- (void)testThatItStartingVideoSetsCurrentVideoToDefaultBack;
-{
-    // given
-    id flowManagerMock = [OCMockObject mockForClass:[MockFlowManager class]];
-    [[[flowManagerMock stub] andReturnValue:@(YES)] isReady];
-
-    [(MockFlowManager *)[flowManagerMock stub] setVideoSendState:FLOWMANAGER_VIDEO_SEND forConversation:OCMOCK_ANY];
-    
-    [[[flowManagerMock stub] andReturnValue:@(YES)] isMediaEstablishedInConversation:OCMOCK_ANY];
-    [[[flowManagerMock stub] andReturnValue:@(YES)] canSendVideoForConversation:OCMOCK_ANY];
-    
-    ZMFlowSyncInternalFlowManagerOverride = flowManagerMock;
-    
-    // when
-    NSError *error = nil;
-    BOOL result = [self.conversation.voiceChannel setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
-    
-    // then
-    XCTAssertTrue(result);
-    XCTAssertNil(error);
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5f]);
-    XCTAssertEqualObjects(self.conversation.voiceChannel.currentVideoDeviceID, ZMFrontCameraDeviceID);
-    ZMFlowSyncInternalFlowManagerOverride = nil;
-
-}
-
-- (void)testThatQueryingDeviceIDReturnsTheCorrectOne
-{
-    // given
-    self.conversation.isVideoCall = YES;
-
-    id flowManagerMock = [OCMockObject mockForClass:[MockFlowManager class]];
-    [[[flowManagerMock stub] andReturnValue:@(YES)] isReady];
-
-    [(MockFlowManager *)[flowManagerMock expect] setVideoSendState:FLOWMANAGER_VIDEO_SEND forConversation:OCMOCK_ANY];
-    
-    [[[flowManagerMock stub] andReturnValue:@(YES)] isMediaEstablishedInConversation:OCMOCK_ANY];
-    [[[flowManagerMock stub] andReturnValue:@(YES)] canSendVideoForConversation:OCMOCK_ANY];
-    [[flowManagerMock stub] setVideoCaptureDevice:OCMOCK_ANY forConversation:OCMOCK_ANY];
-    
-    ZMFlowSyncInternalFlowManagerOverride = flowManagerMock;
-    
-    NSError *error = nil;
-    XCTAssertTrue([self.conversation.voiceChannel setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error]);
-    
-    XCTAssertNil(error); // sanity check
-    
-    //when
-    [self.conversation.voiceChannel setVideoCaptureDevice:[ZMFrontCameraDeviceID copy] error:&error];
-    XCTAssertNil(error);
-    XCTAssertEqualObjects(self.conversation.voiceChannel.currentVideoDeviceID, ZMFrontCameraDeviceID);
-    ZMFlowSyncInternalFlowManagerOverride = nil;
-
-}
-
-- (void)testThatSettingVideoCaptureWithoutHAvingVideoActiveTriggerAnError
-{
-    // given
-    id flowManagerMock = [OCMockObject mockForClass:[MockFlowManager class]];
-    [[[flowManagerMock stub] andReturnValue:@(YES)] isReady];
-
-    [(MockFlowManager *)[flowManagerMock expect] setVideoSendState:FLOWMANAGER_VIDEO_SEND forConversation:OCMOCK_ANY];
-    
-    [[[flowManagerMock stub] andReturnValue:@(YES)] isMediaEstablishedInConversation:OCMOCK_ANY];
-    [[[flowManagerMock stub] andReturnValue:@(YES)] canSendVideoForConversation:OCMOCK_ANY];
-    
-    ZMFlowSyncInternalFlowManagerOverride = flowManagerMock;
-    
-    NSError *error = nil;
-    //when
-    [self.conversation.voiceChannel setVideoCaptureDevice:[ZMFrontCameraDeviceID copy] error:&error];
-    
-    //then
-    XCTAssertNotNil(error);
-    XCTAssertEqual(error.code, (long)ZMVoiceChannelErrorCodeVideoNotActive);
-    XCTAssertEqualObjects(error.domain, ZMVoiceChannelVideoCallErrorDomain);
-    ZMFlowSyncInternalFlowManagerOverride = nil;
-
-}
-
-- (void)testThatItSetsIsVideoCallWhenJoinignVideoCall
+- (void)testThatItSetsIsVideoCallWhenJoiningVideoCall
 {
     // when
     NSError *error;
-    [self.conversation.voiceChannel joinVideoCall:&error];
+    [self.conversation.voiceChannelRouter.v2 joinVideoCall];
     
     // then
     XCTAssertTrue(self.conversation.isVideoCall);
@@ -343,30 +255,29 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
 {
     // givne
     NSError *error;
-    [self.conversation.voiceChannel joinVideoCall:&error];
+    [self.conversation.voiceChannelRouter.v2 joinVideoCall];
     XCTAssertNil(error);
 
     // when
-    [self.conversation.voiceChannel leave];
+    [self.conversation.voiceChannelRouter.v2 leave];
     
     // then
     XCTAssertFalse(self.conversation.isVideoCall);
 }
 
-- (void)testThatItNotifyObserverWhenInitialisingVideoCallFails;
+- (void)testThatItFailsToStartVideoCallWhenAudioCallIsStarted;
 {
     //given
-    [self.conversation.voiceChannel join];
+    [self.conversation.voiceChannelRouter.v2 join];
     
     // when
-    NSError *error;
-    BOOL didJoin = [self.conversation.voiceChannel joinVideoCall:&error];
+    __block BOOL didJoin;
+    [self performIgnoringZMLogError:^{
+        didJoin = [self.conversation.voiceChannelRouter.v2 joinVideoCall];
+    }];
     
     // then
     XCTAssertFalse(didJoin);
-    XCTAssertNotNil(error);
-    ZMVoiceChannelErrorCode expectedErrorType = ZMVoiceChannelErrorCodeSwitchToVideoNotAllowed;
-    XCTAssertEqual(error.code, expectedErrorType);
 }
 
 - (void)testThatItSetsIsSendingVideoOnParticipantsState_SelfUser
@@ -375,7 +286,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     self.conversation.isSendingVideo = YES;
     
     // when
-    ZMVoiceChannelParticipantState *state = [self.conversation.voiceChannel participantStateForUser:self.selfUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannelRouter.v2 stateForParticipant:self.selfUser];
     
     // then
     XCTAssertTrue(state.isSendingVideo);
@@ -387,7 +298,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     self.conversation.isSendingVideo = NO;
     
     // when
-    ZMVoiceChannelParticipantState *state = [self.conversation.voiceChannel participantStateForUser:self.selfUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannelRouter.v2 stateForParticipant:self.selfUser];
     
     // then
     XCTAssertFalse(state.isSendingVideo);
@@ -401,7 +312,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     [self.conversation addActiveVideoCallParticipant:self.otherUser];
     
     // when
-    ZMVoiceChannelParticipantState *state = [self.conversation.voiceChannel participantStateForUser:self.otherUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannelRouter.v2 stateForParticipant:self.otherUser];
     
     // then
     XCTAssertTrue(state.isSendingVideo);
@@ -414,7 +325,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     [self.conversation removeActiveVideoCallParticipant:self.otherUser];
     
     // when
-    ZMVoiceChannelParticipantState *state = [self.conversation.voiceChannel participantStateForUser:self.otherUser];
+    VoiceChannelV2ParticipantState *state = [self.conversation.voiceChannelRouter.v2 stateForParticipant:self.otherUser];
     
     // then
     XCTAssertFalse(state.isSendingVideo);

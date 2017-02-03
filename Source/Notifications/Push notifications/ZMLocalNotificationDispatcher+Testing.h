@@ -26,7 +26,8 @@
                            sharedApplication:(id<ZMApplication>)sharedApplication
                         eventNotificationSet:(ZMLocalNotificationSet *)eventNotificationSet
                        failedNotificationSet:(ZMLocalNotificationSet *)failedNotificationSet
-                        messageNotifications:(ZMLocalNotificationSet *)messageNotifications;
+                        messageNotifications:(ZMLocalNotificationSet *)messageNotifications
+                        callingNotifications:(ZMLocalNotificationSet *)callingNotifications;
 
 - (void)didReceiveUpdateEvents:(NSArray <ZMUpdateEvent *>*)events conversationMap:(ZMConversationMapping *)conversationMap notificationID:(NSUUID *)notificationID;
 

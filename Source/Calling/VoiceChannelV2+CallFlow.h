@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMCDataModel;
+#import "VoiceChannelV2.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -25,10 +25,11 @@ NS_ASSUME_NONNULL_BEGIN
 @class AVSFlowManager;
 @class ZMUserSession;
 
-@interface ZMVoiceChannel (CallFlow)
+@interface VoiceChannelV2 (CallFlow)
 
-- (void)joinInUserSession:(ZMUserSession *)userSession;
-- (void)leaveInUserSession:(ZMUserSession *)userSession;
+- (BOOL)join;
+- (BOOL)joinVideoCall;
+- (void)leave;
 - (void)leaveOnAVSError;
 - (void)ignoreIncomingCall;
 

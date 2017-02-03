@@ -47,6 +47,7 @@
 {
     [super setUp];
     
+    ZMUserSession.callingProtocolStrategy = CallingProtocolStrategyVersion2;
     self.thirdPartyServices = [[ThirdPartyServices alloc] init];
     self.dataChangeNotificationsCount = 0;
     self.baseURL = [NSURL URLWithString:@"http://bar.example.com"];
@@ -65,7 +66,7 @@
         return YES;
     }]];
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
-    self.mediaManager = [OCMockObject niceMockForClass:NSObject.class];
+    self.mediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     self.operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
     [[self.operationLoop stub] tearDown];
@@ -108,6 +109,7 @@
 
 - (void)tearDown
 {
+    ZMUserSession.callingProtocolStrategy = CallingProtocolStrategyNegotiate;
     [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
     [self.syncMOC.userInfo removeAllObjects];
     
