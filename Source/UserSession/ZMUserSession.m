@@ -239,8 +239,6 @@ ZM_EMPTY_ASSERTING_INIT()
         syncMOC.analytics = analytics;
     }];
 
-    NSURL *sharedContainerURL = [self.class sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
-    self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithSharedContainerURL:sharedContainerURL];
     UIApplication *application = [UIApplication sharedApplication];
     
     ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL
@@ -408,6 +406,7 @@ ZM_EMPTY_ASSERTING_INIT()
         [self enableBackgroundFetch];
 
         self.wireCallCenterV2 = [[WireCallCenterV2 alloc] initWithContext:self.managedObjectContext];
+        self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithSharedContainerURL:self.sharedContainerURL];
         
         self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = self.application.applicationState != UIApplicationStateBackground;
         ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self
