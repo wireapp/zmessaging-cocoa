@@ -81,7 +81,10 @@ class WireCallCenterV2Tests : MessagingTest {
     private var user1 : ZMUser!
     private var user2 : ZMUser!
     private var token : WireCallCenterObserverToken?
-    private var sut : WireCallCenterV2!
+    private var notificationDispatcher : NotificationDispatcher!
+    private var sut : WireCallCenterV2 {
+        return uiMOC.wireCallCenterV2
+    }
     
     override func setUp() {
         super.setUp()
@@ -100,29 +103,31 @@ class WireCallCenterV2Tests : MessagingTest {
         conversation.internalAddParticipant(user1, isAuthoritative: true)
         
         ZMUserSession.callingProtocolStrategy = .version2
-        
         self.uiMOC.saveOrRollback()
-        
-        sut = WireCallCenterV2(context: uiMOC)
+
+        // In order for all changes to be forwarded, we need to initialize the notificationDispatcher and add the callCenter as a consumer
+        notificationDispatcher = NotificationDispatcher(managedObjectContext: uiMOC)
+        notificationDispatcher.addChangeInfoConsumer(sut)
     }
 
     override func tearDown() {
-        super.tearDown()
-        
+        uiMOC.userInfo[NSManagedObjectContext.WireCallCenterV2Key] = nil
+        notificationDispatcher.tearDown()
         ZMUserSession.callingProtocolStrategy = .negotiate
-        token = nil
-        sut = nil
+        if let token = token {
+            WireCallCenterV2.removeObserver(token: token)
+        }
+        super.tearDown()
     }
     
     private func notifyCallStateChange(in conversations: [ZMConversation]) {
-        NotificationCenter.default.post(name: WireCallCenterV2.CallStateDidChangeNotification, object: nil, userInfo: ["updated" : Set<ZMConversation>(conversations) ])
-        
+        sut.callStateDidChange(conversations: Set(conversations))
     }
     
     // MARK - call state observer
-    
-    func testThatInstanceDoesntHaveRetainCycles() {
-        weak var callCenter : WireCallCenterV2? = WireCallCenterV2(context: uiMOC)
+    func testThatInstanceDoesNotHaveRetainCycles() {
+        weak var callCenter = uiMOC.wireCallCenterV2
+        uiMOC.userInfo[NSManagedObjectContext.WireCallCenterV2Key] = nil
         XCTAssertNil(callCenter)
     }
     
@@ -147,6 +152,7 @@ class WireCallCenterV2Tests : MessagingTest {
         
         // when
         conversation.voiceChannelRouter?.v2.addCallParticipant(user1)
+        uiMOC.saveOrRollback()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -160,9 +166,11 @@ class WireCallCenterV2Tests : MessagingTest {
         
         // when
         conversation.voiceChannelRouter?.v2.addCallParticipant(user1)
+        uiMOC.saveOrRollback()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         conversation.voiceChannelRouter?.v2.addCallParticipant(user2)
+        uiMOC.saveOrRollback()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -178,6 +186,7 @@ class WireCallCenterV2Tests : MessagingTest {
         
         // when
         conversation.voiceChannelRouter?.v2.addCallParticipant(user1)
+        uiMOC.saveOrRollback()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -191,9 +200,11 @@ class WireCallCenterV2Tests : MessagingTest {
         
         // when
         conversation.voiceChannelRouter?.v2.addCallParticipant(user1)
+        uiMOC.saveOrRollback()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         conversation.voiceChannelRouter?.v2.removeCallParticipant(user1)
+        uiMOC.saveOrRollback()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -208,6 +219,7 @@ class WireCallCenterV2Tests : MessagingTest {
         
         // when
         conversation.voiceChannelRouter?.v2.addCallParticipant(user1)
+        uiMOC.saveOrRollback()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         conversation.activeFlowParticipants = NSOrderedSet(array: [user1])

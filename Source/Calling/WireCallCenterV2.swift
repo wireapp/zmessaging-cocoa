@@ -35,9 +35,13 @@ class VoiceChannelParticipantSnapshot: NSObject {
         activeFlowParticipantsState = conversation.activeFlowParticipants.copy() as! NSOrderedSet
         callParticipantState = conversation.callParticipants.copy() as! NSOrderedSet
     }
+    
+    deinit {
+        print("deinit")
+    }
 
     func conversationDidChange(change: ConversationChangeInfo) {
-        guard change.conversation == conversation, change.callParticipantsChanged else { return }
+        guard change.conversation == conversation else { return }
         recalculateSet()
     }
     
@@ -167,7 +171,7 @@ fileprivate class ReceivedVideoStateSnapshot {
 
 
 extension NSManagedObjectContext {
-    static let WireCallCenterV2Key = "WireCallCenter2"
+    public static let WireCallCenterV2Key = "WireCallCenter2"
     
     public var wireCallCenterV2 : WireCallCenterV2 {
         assert(zm_isUserInterfaceContext, "WireCallCenter should not be initialized on syncMOC")
@@ -192,16 +196,9 @@ public class WireCallCenterV2 : NSObject, ChangeInfoConsumer {
     private var voiceChannelSnapshots : [ZMConversation : VoiceChannelStateSnapshot] = [:]
     private var videoSnapshot : ReceivedVideoStateSnapshot?
     private var participantSnapshot : VoiceChannelParticipantSnapshot?
-    
-    private var tornDown = false
-    
-    func tearDown(){
-        NotificationCenter.default.removeObserver(self)
-        tornDown = true
-    }
-    
+        
     deinit {
-        assert(tornDown, "You forgot to tear down WireCallCenterV2")
+        NotificationCenter.default.removeObserver(self)
     }
     
     public init(context: NSManagedObjectContext) {

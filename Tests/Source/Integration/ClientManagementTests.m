@@ -178,7 +178,7 @@
     
     // then
     
-    XCTAssertEqual(observer.notifications.count, 2u);
+    XCTAssertEqual(observer.notifications.count, 1u);
     UserChangeInfo *firstChangeInfo = observer.notifications.firstObject;
     XCTAssertTrue(firstChangeInfo.clientsChanged);
     XCTAssertEqual(selfUser.clients.count, 2u);

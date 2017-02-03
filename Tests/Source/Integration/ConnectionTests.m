@@ -406,7 +406,7 @@
     
     // we should receive notifcations about the list change and the conversation updates and the connection status should change
     {
-        NSIndexSet *expectedSet1 = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 1)];
+        NSIndexSet *expectedSet1 = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 2)];
 
         NSArray *listNotes = conversationListObserver.notifications;
         XCTAssertEqual(listNotes.count, 2u);
@@ -415,9 +415,15 @@
         ConversationListChangeInfo *listNote2 = listNotes.lastObject;
 
         XCTAssertEqualObjects(listNote1.insertedIndexes, expectedSet1);
-        XCTAssertLessThanOrEqual(listNote2.insertedIndexes.firstIndex, 1u); // there is a race condition, it might be 1 or 0
-
+        XCTAssertEqualObjects(listNote1.updatedIndexes, [NSIndexSet indexSet]);
+        XCTAssertEqualObjects(listNote1.deletedIndexes, [NSIndexSet indexSet]);
+        XCTAssertEqual(listNote1.movedIndexPairs.count, 0u);
         
+        XCTAssertEqualObjects(listNote2.insertedIndexes, [NSIndexSet indexSet]);
+        XCTAssertEqualObjects(listNote2.updatedIndexes, expectedSet1);
+        XCTAssertEqualObjects(listNote2.deletedIndexes, [NSIndexSet indexSet]);
+        XCTAssertEqual(listNote2.movedIndexPairs.count, 0u);
+
         NSArray *convNotes = convObserver.notifications;
         convNotes = convObserver.notifications;
         XCTAssertNotNil(convNotes);
@@ -556,8 +562,8 @@
         }
         XCTAssertTrue(conv1StateChanged);
         XCTAssertTrue(conv2StateChanged);
-        XCTAssertFalse(conv1ParticipantsChanged);
-        XCTAssertFalse(conv2ParticipantsChanged);
+        XCTAssertTrue(conv1ParticipantsChanged);
+        XCTAssertTrue(conv2ParticipantsChanged);
     }
     
     [ConversationChangeInfo removeObserver:token1 forConversation:conv1];
@@ -779,7 +785,7 @@
             }
         }
         XCTAssertTrue(conv1StateChanged);
-        XCTAssertFalse(conv1ParticipantsChanged);
+        XCTAssertTrue(conv1ParticipantsChanged);
     }
     
     WaitForEverythingToBeDoneWithTimeout(0.1);

@@ -890,8 +890,12 @@
     NSArray *currentFirstPart = [currentMessageSet subarrayWithRange:NSMakeRange(2, observer.window.size - 2)];
     
     XCTAssertEqualObjects(originalFirstPart, currentFirstPart);
-    XCTAssertEqualObjects([[(id<ZMConversationMessage>)currentMessageSet[0] textMessageData] messageText], expectedTextRemote);
-    XCTAssertEqualObjects([[(id<ZMConversationMessage>)currentMessageSet[1] textMessageData] messageText], expectedTextLocal);
+    NSString *messageText1 = [[(id<ZMConversationMessage>)currentMessageSet[0] textMessageData] messageText];
+    NSString *messageText2 = [[(id<ZMConversationMessage>)currentMessageSet[1] textMessageData] messageText];
+
+    // The order is not defined
+    XCTAssertTrue([messageText1 isEqualToString:expectedTextLocal] || [messageText2 isEqualToString:expectedTextLocal]);
+    XCTAssertTrue([messageText1 isEqualToString:expectedTextRemote] || [messageText2 isEqualToString:expectedTextRemote]);
 }
 
 @end
