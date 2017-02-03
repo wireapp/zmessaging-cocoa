@@ -88,6 +88,27 @@ extension UserProfileUpdateRequestStrategyTests {
     func testThatItCreatesARequestToChangePhone() {
         
         // GIVEN
+        ZMUser.selfUser(in: self.uiMOC).phoneNumber = "+1234567890"
+        let credentials = ZMPhoneCredentials(phoneNumber: "+155523123123", verificationCode: "12345")
+        self.userProfileUpdateStatus.requestPhoneNumberChange(credentials: credentials)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        
+        // THEN
+        let expected = ZMTransportRequest(path: "/activate", method: .methodPOST, payload: [
+            "phone":credentials.phoneNumber!,
+            "code":credentials.phoneNumberVerificationCode!,
+            "dryrun":false
+            ] as NSDictionary)
+        XCTAssertEqual(request, expected)
+    }
+    
+    func testThatItCreatesARequestToAddPhone() {
+        
+        // GIVEN
+        ZMUser.selfUser(in: self.uiMOC).phoneNumber = nil
         let credentials = ZMPhoneCredentials(phoneNumber: "+155523123123", verificationCode: "12345")
         self.userProfileUpdateStatus.requestPhoneNumberChange(credentials: credentials)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
