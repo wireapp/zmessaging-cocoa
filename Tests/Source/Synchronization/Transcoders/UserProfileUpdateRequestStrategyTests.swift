@@ -162,6 +162,24 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertEqual(emailInPayload, newEmail)
     }
     
+    func testThatItCreatesARequestToRemovePhoneNumber() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.emailAddress = "foo@email.com"
+        selfUser.phoneNumber = "+155523123123"
+        self.userProfileUpdateStatus.requestPhoneNumberRemoval()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        
+        // THEN
+        XCTAssertEqual(request?.path, "/self/phone")
+        XCTAssertEqual(request?.method, .methodDELETE)
+        XCTAssertNil(request?.payload)
+    }
+    
     func testThatItCreatesARequestToUpdateEmailAfterUpdatingPassword() {
         
         // GIVEN
@@ -247,6 +265,7 @@ extension UserProfileUpdateRequestStrategyTests {
 // MARK: - Parsing response
 extension UserProfileUpdateRequestStrategyTests {
     
+    // MARK: - Phone verification code
     func testThatItCallsDidRequestPhoneVerificationCodeSuccessfully() {
         
         // GIVEN
@@ -317,6 +336,7 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.phoneNumberIsAlreadyRegistered.rawValue))
     }
     
+    // MARK: - Phone number change
     func testThatItCallsDidChangePhoneSuccessfully() {
         
         // GIVEN
@@ -351,6 +371,7 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
     }
     
+    // MARK: - Setting email and password
     func testThatCallsDidUpdatePasswordSuccessfully() {
         
         // GIVEN
@@ -397,23 +418,6 @@ extension UserProfileUpdateRequestStrategyTests {
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailPasswordUpdate , 1)
-    }
-    
-    func testThatItCallsDidUpdateEmailSuccessfullyWhenChangingEmail() {
-        
-        // GIVEN
-        let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = "foo@email.com"
-        try! self.userProfileUpdateStatus.requestEmailChange(email: "mario@example.com")
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        
-        // WHEN
-        let request = self.sut.nextRequest()
-        request?.complete(with: self.successResponse())
-        
-        // THEN
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidUpdateEmailSuccessfully , 1)
     }
     
     func testThatItCallsDidUpdateEmailSuccessfullyWhenSettingEmailAndPassword() {
@@ -492,6 +496,85 @@ extension UserProfileUpdateRequestStrategyTests {
         
     }
     
+    // MARK: - Email change
+    func testThatItCallsDidUpdateEmailSuccessfullyWhenChangingEmail() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.emailAddress = "foo@email.com"
+        try! self.userProfileUpdateStatus.requestEmailChange(email: "mario@example.com")
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.successResponse())
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidUpdateEmailSuccessfully , 1)
+    }
+    
+    // MARK: - Removing phone number
+    func testThatItCallsDidRemovePhoneNumberSuccessfully() {
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.phoneNumber = "+155523123123"
+        selfUser.emailAddress = "foo@email.com"
+        self.userProfileUpdateStatus.requestPhoneNumberRemoval()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        XCTAssertNotNil(request)
+        request?.complete(with: self.successResponse())
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertNil(ZMUser.selfUser(in: self.uiMOC).phoneNumber)
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidRemovePhoneNumberSuccessfully , 1)
+    }
+    
+    func testThatItCallsDidFailRemovePhoneNumberWhenItsLastIdentity() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.phoneNumber = "+155523123123"
+        selfUser.emailAddress = "foo@email.com"
+        self.userProfileUpdateStatus.requestPhoneNumberRemoval()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.lastIdentityResponse())
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.count, 1)
+        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.first as? NSError else { return }
+        XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.lastUserIdentityCantBeDeleted.rawValue))
+    }
+    
+    func testThatItCallsDidFailRemovePhoneNumberOnOtherErrors() {
+        
+        // GIVEN
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.phoneNumber = "+155523123123"
+        selfUser.emailAddress = "foo@email.com"
+        self.userProfileUpdateStatus.requestPhoneNumberRemoval()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // WHEN
+        let request = self.sut.nextRequest()
+        request?.complete(with: self.errorResponse())
+        
+        // THEN
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.count, 1)
+        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.first as? NSError else { return }
+        XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
+    }
+    
+    // MARK: - Check handle availability
     func testThatItCallsDidFetchHandle() {
         
         // GIVEN
@@ -540,6 +623,7 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailRequestToFetchHandle, [handle])
     }
     
+    // MARK: - Setting handle
     func testThatItCallsSuccessSetHandle() {
         
         // GIVEN
@@ -588,6 +672,7 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailToSetAlreadyExistingHandle , 1)
     }
     
+    // MARK: - Suggesting handles
     func testThatItCallsDidFinddHandleSuggestion() {
         
         // GIVEN
@@ -689,6 +774,12 @@ extension UserProfileUpdateRequestStrategyTests {
                                    transportSessionError: nil)
     }
     
+    func lastIdentityResponse() -> ZMTransportResponse {
+        return ZMTransportResponse(payload: ["label":"last-identity]"] as NSDictionary,
+                                   httpStatus: 403,
+                                   transportSessionError: nil)
+    }
+    
     func invalidEmailResponse() -> ZMTransportResponse {
         return ZMTransportResponse(payload: ["label":"invalid-email"] as NSDictionary,
                                    httpStatus: 400,
@@ -728,6 +819,8 @@ class TestUserProfileUpdateStatus : UserProfileUpdateStatus {
     
     var recordedDidFailEmailUpdate : [Error] = []
     var recordedDidUpdateEmailSuccessfully = 0
+    var recordedDidRemovePhoneNumberSuccessfully = 0
+    var recordedDidFailPhoneNumberRemoval : [Error] = []
     var recordedDidChangePhoneSuccesfully = 0
     var recordedDidFailPasswordUpdate = 0
     var recordedDidUpdatePasswordSuccessfully = 0
@@ -752,6 +845,16 @@ class TestUserProfileUpdateStatus : UserProfileUpdateStatus {
     override func didUpdateEmailSuccessfully() {
         recordedDidUpdateEmailSuccessfully += 1
         super.didUpdateEmailSuccessfully()
+    }
+    
+    override func didFailPhoneNumberRemoval(error: Error) {
+        recordedDidFailPhoneNumberRemoval.append(error)
+        super.didFailPhoneNumberRemoval(error: error)
+    }
+    
+    override func didRemovePhoneNumberSuccessfully() {
+        recordedDidRemovePhoneNumberSuccessfully += 1
+        super.didRemovePhoneNumberSuccessfully()
     }
     
     override func didChangePhoneSuccesfully() {

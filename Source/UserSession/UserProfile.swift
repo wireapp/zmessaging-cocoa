@@ -28,6 +28,9 @@ import Foundation
     
     /// Requests phone number change, with a PIN received earlier
     func requestPhoneNumberChange(credentials: ZMPhoneCredentials)
+    
+    /// Requests phone number removal. Must still have an email set.
+    func requestPhoneNumberRemoval()
 
     /// Requests email change
     /// The email will need to be verified externally
