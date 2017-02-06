@@ -35,10 +35,6 @@ class VoiceChannelParticipantSnapshot: NSObject {
         activeFlowParticipantsState = conversation.activeFlowParticipants.copy() as! NSOrderedSet
         callParticipantState = conversation.callParticipants.copy() as! NSOrderedSet
     }
-    
-    deinit {
-        print("deinit")
-    }
 
     func conversationDidChange(change: ConversationChangeInfo) {
         guard change.conversation == conversation else { return }
@@ -90,21 +86,17 @@ class VoiceChannelStateSnapshot {
         guard state != .invalid else { return nil }
         self.conversation = conversation
         currentVoiceChannelState = state
-    }
-    
-    func notifyInitialChange(){
-        guard let conversation = conversation,
-              currentVoiceChannelState != .invalid
-        else { return }
-        
+        // Initial change notification
         VoiceChannelStateNotification(voiceChannelState: currentVoiceChannelState, conversationId: conversation.objectID).post()
     }
     
+    func recalculateState(){
+        guard let conversation = self.conversation else { return }
+        updateVoiceChannelState(for: conversation)
+    }
+    
     func updateVoiceChannelState(for conversation: ZMConversation) -> Bool {
-        guard conversation == self.conversation else {
-            currentVoiceChannelState = .invalid
-            return false
-        }
+        guard conversation == self.conversation else { return false }
         let newState = conversation.voiceChannelRouter?.v2.state ?? VoiceChannelV2State.invalid
         
         if newState != currentVoiceChannelState {
@@ -261,7 +253,6 @@ public class WireCallCenterV2 : NSObject, ChangeInfoConsumer {
             }
         } else if let snapshot = VoiceChannelStateSnapshot(conversation: conversation) {
             voiceChannelSnapshots[conversation] = snapshot
-            snapshot.notifyInitialChange()
             return true
         }
         return false
@@ -275,6 +266,8 @@ public class WireCallCenterV2 : NSObject, ChangeInfoConsumer {
     
     public func applicationWillEnterForeground() {
         // Do nothing
+        participantSnapshot?.recalculateSet()
+        voiceChannelSnapshots.forEach{$0.value.recalculateState()}
     }
     
     public func applicationDidEnterBackground() {
