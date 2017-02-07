@@ -28,6 +28,12 @@ import Foundation
     /// The password might already have been set though - this is how BE is designed and there's nothing SE can do about it
     @objc optional func emailUpdateDidFail(_ error: Error!)
     
+    /// Invoked when the email could not be removed
+    @objc optional func emailRemovalDidFail(_ error: Error!)
+    
+    /// Invoked when the email was removed
+    @objc optional func didRemoveEmail()
+    
     /// Invoked when the email was sent to the backend
     @objc optional func didSentVerificationEmail()
     
@@ -67,6 +73,8 @@ import Foundation
 enum UserProfileUpdateNotificationType {
     case passwordUpdateDidFail
     case emailUpdateDidFail(error: Error)
+    case emailRemovalDidFail(error: Error)
+    case didRemoveEmail
     case emailDidSendVerification
     case phoneNumberVerificationCodeRequestDidFail(error: Error)
     case phoneNumberVerificationCodeRequestDidSucceed
@@ -108,6 +116,10 @@ extension UserProfileUpdateStatus {
             switch note.type {
             case .emailUpdateDidFail(let error):
                 observer.emailUpdateDidFail?(error)
+            case .emailRemovalDidFail(let error):
+                observer.emailRemovalDidFail?(error)
+            case .didRemoveEmail:
+                observer.didRemoveEmail?()
             case .phoneNumberVerificationCodeRequestDidFail(let error):
                 observer.phoneNumberVerificationCodeRequestDidFail?(error);
             case .phoneNumberChangeDidFail(let error):

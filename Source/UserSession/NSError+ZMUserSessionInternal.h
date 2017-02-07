@@ -38,4 +38,6 @@
 
 + (instancetype)invalidInvitationCodeWithResponse:(ZMTransportResponse *)response;
 
++ (instancetype)lastUserIdentityCantBeRemovedWithResponse:(ZMTransportResponse *)response;
+
 @end
