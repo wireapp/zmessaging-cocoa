@@ -1033,6 +1033,9 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 @end
 
 
+/* NOTE
+ * FlowManager is not initialized on demand anymore since WireCallCenterV3
+ * is not initialized on demand.
 @implementation ZMFlowSyncTests (FlowManagerSetup)
 
 - (void)testThatItSetsUpTheFlowManagerOnApplicationDidBecomeActive
@@ -1087,3 +1090,4 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 }
 
 @end
+ */
