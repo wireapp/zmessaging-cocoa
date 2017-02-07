@@ -298,7 +298,8 @@ extension WireCallCenterV2 {
 
     /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
     public class func addVoiceChannelStateObserver(observer: WireCallCenterV2CallStateObserver, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
-        return NotificationCenterObserverToken(name: VoiceChannelStateNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
+        return NotificationCenterObserverToken(name: VoiceChannelStateNotification.notificationName, object: nil, queue: .main) {
+            [weak observer] (note) in
             guard let note = note.userInfo?[VoiceChannelStateNotification.userInfoKey] as? VoiceChannelStateNotification,
                   let strongObserver = observer
             else { return }
@@ -314,7 +315,8 @@ extension WireCallCenterV2 {
     public class func addVoiceChannelParticipantObserver(observer: VoiceChannelParticipantObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         context.wireCallCenterV2.createParticipantSnapshotIfNeeded(for: conversation)
         
-        return NotificationCenterObserverToken(name: VoiceChannelParticipantNotification.notificationName, object: conversation, queue: .main) { [weak observer] (note) in
+        return NotificationCenterObserverToken(name: VoiceChannelParticipantNotification.notificationName, object: conversation, queue: .main) {
+            [weak observer] (note) in
             guard let note = note.userInfo?[VoiceChannelParticipantNotification.userInfoKey] as? VoiceChannelParticipantNotification,
                 let strongObserver = observer
                 else { return }
@@ -363,9 +365,13 @@ extension WireCallCenterV2 {
     
     @objc
     func applicationDidBecomeActive(note: Notification) {
-        if let connectedCallConversation =  conversations(withVoiceChannelStates: [.selfConnectedToActiveChannel]).first, connectedCallConversation.isVideoCall {
-            // We need to start video in conversation that accepted video call in background but did not start the recording yet
-            try? connectedCallConversation.voiceChannelRouter?.v2.setVideoSendActive(true)
+        context.performGroupedBlock { [weak self] in
+            guard let `self` = self,
+                  let connectedCallConversation =  self.conversations(withVoiceChannelStates: [.selfConnectedToActiveChannel]).first, connectedCallConversation.isVideoCall
+            else { return }
+                // We need to start video in conversation that accepted video call in background but did not start the recording yet
+                try? connectedCallConversation.voiceChannelRouter?.v2.setVideoSendActive(true)
+            self.context.enqueueDelayedSave()
         }
     }
     
