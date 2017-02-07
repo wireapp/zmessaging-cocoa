@@ -88,12 +88,6 @@
     }
 }
 
-- (void)tearDown
-{
-    [ConversationChangeInfo removeObserver:self.token forConversation:self.conversation];
-    self.token = nil;
-    self.tornDown = YES;
-}
 
 @end
 
@@ -116,19 +110,6 @@ ZM_EMPTY_ASSERTING_INIT()
         self.token = [ConversationListChangeInfo addObserver:self forList:conversationList];
     }
     return self;
-}
-
-
-- (void)tearDown
-{
-    [ConversationListChangeInfo removeObserver:self.token forList:self.conversationList];
-    self.token = nil;
-    self.tornDown = YES;
-}
-
-- (void)dealloc
-{
-    NSAssert(self.tornDown, @"needs to teardown conversationList token");
 }
 
 - (void)conversationListDidChange:(ConversationListChangeInfo *)note;
@@ -177,18 +158,6 @@ ZM_EMPTY_ASSERTING_INIT()
     }
 }
 
--(void)tearDown
-{
-    id strongUser = self.user;
-    [UserChangeInfo removeObserver:self.token forBareUser:strongUser];
-    self.token = nil;
-    self.tornDown = YES;
-}
-
-- (void)dealloc
-{
-    [self tearDown];
-}
 
 @end
 
@@ -209,14 +178,6 @@ ZM_EMPTY_ASSERTING_INIT()
         self.token = [MessageChangeInfo addObserver:self forMessage:message];
     }
     return self;
-}
-
-
-- (void)tearDown
-{
-    [MessageChangeInfo removeObserver:self.token forMessage:self.message];
-    self.token = nil;
-    self.tornDown = YES;
 }
 
 - (void)messageDidChange:(MessageChangeInfo *)changeInfo
@@ -245,13 +206,6 @@ ZM_EMPTY_ASSERTING_INIT()
         self.token = [MessageWindowChangeInfo addObserver:self forWindow:window];
     }
     return self;
-}
-
-- (void)tearDown
-{
-    [MessageWindowChangeInfo removeObserver:self.token forWindow:self.window];
-    self.token = nil;
-    self.tornDown = YES;
 }
 
 - (void)conversationWindowDidChange:(MessageWindowChangeInfo *)note
@@ -285,12 +239,6 @@ static NSString * const Placeholder = @"Placeholder";
         _opaqueToken = [MessageWindowChangeInfo addObserver:self forWindow:self.window];
     }
     return self;
-}
-
-- (void)dealloc
-{
-    [MessageWindowChangeInfo removeObserver:self.opaqueToken forWindow:self.window];
-    _opaqueToken = nil;
 }
 
 - (void)conversationWindowDidChange:(MessageWindowChangeInfo *)note
