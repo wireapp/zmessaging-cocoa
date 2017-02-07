@@ -143,7 +143,7 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
 
 + (instancetype)lastUserIdentityCantBeRemovedWithResponse:(ZMTransportResponse *)response
 {
-    if (response.HTTPStatus == 403 && [[response payloadLabel] isEqualToString:@"last-identity]"]) {
+    if (response.HTTPStatus == 403 && [[response payloadLabel] isEqualToString:@"last-identity"]) {
         return [NSError userSessionErrorWithErrorCode:ZMUserSessionLastUserIdentityCantBeDeleted userInfo:nil];
     }
     return nil;

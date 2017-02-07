@@ -104,7 +104,7 @@ extension UserProfileUpdateStatus : UserProfile {
         self.managedObjectContext.performGroupedBlock {
             let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
             guard selfUser.emailAddress != nil else {
-                self.didFailEmailUpdate(error: UserProfileUpdateError.removingLastIdentity)
+                self.didFailPhoneNumberRemoval(error: UserProfileUpdateError.removingLastIdentity)
                 return
             }
             
@@ -260,7 +260,7 @@ extension UserProfileUpdateStatus {
     /// Invoked when the request to change phone number failed
     func didFailPhoneNumberRemoval(error: Error) {
         self.removePhoneNumber = nil
-        UserProfileUpdateNotification.post(type: .emailUpdateDidFail(error: error))
+        UserProfileUpdateNotification.post(type: .phoneNumberRemovalDidFail(error: error))
     }
     
     /// Invoked when the request to change email failed
