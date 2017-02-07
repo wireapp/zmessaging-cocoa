@@ -662,10 +662,10 @@ class ZMCallKitDelegateTest: MessagingTest {
     func testThatItDoesntReportCallEndedAt_v3_Terminating_normalSelf() {
         // given
         let conversation = self.conversation()
-        let otherUser = self.otherUser(moc: self.uiMOC)
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .normalSelf), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversationId: conversation.remoteIdentifier!, userId: selfUser.remoteIdentifier!)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)

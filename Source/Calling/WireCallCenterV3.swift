@@ -51,10 +51,8 @@ private class Box<T : Any> {
 }
 
 public enum CallClosedReason : Int32 {
-    /// Ongoing call was closed by remote
+    /// Ongoing call was closed by remote or self user
     case normal
-    /// Ongoing call was closed by self
-    case normalSelf
     /// Call was closed because of internal error in AVS
     case internalError
     /// Outgoing call timed out
@@ -348,6 +346,16 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                     WireCallCenterV3VideoNotification(receivedVideoState: state).post()
                 }
             })
+            
+            wcall_set_state_handler({ (conversationId, state, context) in
+                guard let context = context, let conversationId = conversationId, state == WCALL_STATE_ANSWERED else {
+                    return
+                }
+                
+                let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
+                
+                selfReference.answered(conversationId: String(cString: conversationId))
+            })
         }
         
         WireCallCenterV3.activeInstance = self
@@ -378,6 +386,14 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
         
         DispatchQueue.main.async {
             WireCallCenterMissedCallNotification(conversationId: UUID(uuidString: conversationId)!, userId: UUID(uuidString: userId)!, timestamp: timestamp, video: isVideoCall).post()
+        }
+    }
+    
+    private func answered(conversationId: String) {
+        zmLog.debug("answered call")
+        
+        DispatchQueue.main.async {
+            WireCallCenterCallStateNotification(callState: .answered, conversationId: UUID(uuidString: conversationId)!, userId: nil).post()
         }
     }
     
@@ -452,13 +468,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     
     @objc(answerCallForConversationID:)
     public func answerCall(conversationId: UUID) -> Bool {
-        let answered =  wcall_answer(conversationId.transportString()) == 0
-        
-        if answered {
-            WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.userId).post()
-        }
-        
-        return answered
+        return wcall_answer(conversationId.transportString()) == 0
     }
     
     @objc(startCallForConversationID:video:)
@@ -474,9 +484,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     
     @objc(closeCallForConversationID:)
     public func closeCall(conversationId: UUID) {
-        let started = callState(conversationId: conversationId) == .established
         wcall_end(conversationId.transportString())
-        WireCallCenterCallStateNotification(callState: .terminating(reason: started ? .normalSelf : .canceled), conversationId: conversationId, userId: userId).post()
     }
     
     @objc(toogleVideoForConversationID:isActive:)

@@ -1351,6 +1351,41 @@
     XCTAssertEqual(message1.deliveryState, ZMDeliveryStateFailedToSend);
 }
 
+- (void)testThatItDoesNotSendAnUploadedFailedMessageForFileMessagesUploadingThePlaceholderWhenDegrading
+{
+    // Given
+    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+
+    [self establishSessionBetweenSelfUserAndMockUser:self.user1];
+    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+
+    WaitForEverythingToBeDoneWithTimeout(0.5);
+
+    [self makeConversationSecured:conversation];
+
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        [session registerClientForUser:self.user1 label:@"iPhone" type:@"permanent"];
+    }];
+    WaitForEverythingToBeDoneWithTimeout(0.5);
+
+    // When
+    __block ZMAssetClientMessage *message;
+    [self.userSession performChanges:^{
+        NSURL *fileURL = [self createTestFile:self.name];
+        ZMFileMetadata *fileMetadata = [[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil];
+        message = (ZMAssetClientMessage *)[conversation appendMessageWithFileMetadata:fileMetadata];
+    }];
+
+    WaitForEverythingToBeDoneWithTimeout(0.5);
+
+    // Then
+    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+    XCTAssert(message.isExpired);
+    XCTAssertEqual(message.uploadState, ZMAssetUploadStateDone);
+    XCTAssertEqual(message.transferState, ZMFileTransferStateFailedUpload);
+}
+
 - (void)testThatItInsertsNewClientSystemMessageWhenReceivedMissingClients
 {
     ZMClientMessage *message = [self sendOtrMessageWithInitialSecurityLevel:ZMConversationSecurityLevelSecure
@@ -2161,7 +2196,7 @@
     [[NSNotificationCenter defaultCenter] addObserverForName:ZMConversationFailedToDecryptMessageNotificationName object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification * _Nonnull note) {
         XCTAssertEqualObjects(conversation.remoteIdentifier, [(ZMConversation *)note.object remoteIdentifier]);
         XCTAssertNotNil(note.userInfo[@"cause"]);
-        XCTAssertEqualObjects(note.userInfo[@"cause"], @"CBErrorCodeDecodeError");
+        XCTAssertEqualObjects(note.userInfo[@"cause"], @3);
         [expectation fulfill];
     }];
     

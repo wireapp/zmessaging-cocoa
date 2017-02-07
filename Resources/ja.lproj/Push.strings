@@ -22,11 +22,11 @@
 
 "push.notification.add.message.group" = "%1$@ が %2$@ で %3$@";
 "push.notification.add.message.group.nousername" = "%1$@ で新しいメッセージです。%2$@";
-"push.notification.add.message.group.nousername.noconversationname" = "新メッセージ：%1$@";
-"push.notification.add.message.group.noconversationname" = "%1$@が会話において%2$@";
+"push.notification.add.message.group.nousername.noconversationname" = "新しいメッセージ：%1$@";
+"push.notification.add.message.group.noconversationname" = "%1$@ との会話; %2$@";
 
 "push.notification.add.message.oneonone" = "%1$@: %2$@";
-"push.notification.add.message.oneonone.nousername" = "新メッセージ：%1$@";
+"push.notification.add.message.oneonone.nousername" = "新しいメッセージ：%1$@";
 
 "push.notification.add.image.group" = "%1$@が%2$@で写真を共有しました";
 "push.notification.add.image.group.nousername" = "%1$@での新しい写真";

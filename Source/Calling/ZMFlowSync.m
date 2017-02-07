@@ -78,9 +78,8 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         self.voiceGainNotificationQueue = [[NSNotificationQueue alloc] initWithNotificationCenter:[NSNotificationCenter defaultCenter]];
 
         self.onDemandFlowManager = onDemandFlowManager;
-        if (self.application.applicationState != UIApplicationStateBackground || [ZMUserSession useCallKit]) {
-            [self setUpFlowManagerIfNeeded];
-        }
+        
+        [self setUpFlowManagerIfNeeded];
         
         [application registerObserverForDidBecomeActive:self selector:@selector(appDidBecomeActive:)];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];

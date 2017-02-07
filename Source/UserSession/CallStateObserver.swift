@@ -114,7 +114,7 @@ private final class CallingSystemMessageGenerator {
     func process(callState: CallState, in conversation: ZMConversation, sender: ZMUser) {
         
         switch callState {
-        case .incoming:
+        case .incoming, .outgoing:
             callers[conversation] = sender
         case .terminating(reason: .canceled):
             let caller = callers[conversation] ?? sender

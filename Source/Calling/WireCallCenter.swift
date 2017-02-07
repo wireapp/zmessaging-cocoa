@@ -60,8 +60,6 @@ extension CallClosedReason {
         switch self {
         case .lostMedia:
             return VoiceChannelV2CallEndReason.disconnected
-        case .normalSelf:
-            return VoiceChannelV2CallEndReason.requestedSelf
         case .normal, .anweredElsewhere, .canceled:
             return VoiceChannelV2CallEndReason.requested
         case .timeout:

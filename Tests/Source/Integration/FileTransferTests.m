@@ -1535,21 +1535,6 @@
 
 #pragma mark Helper
 
-- (NSURL *)createTestFile:(NSString *)name
-{
-    NSError *error;
-    NSFileManager *fm = NSFileManager.defaultManager;
-    NSURL *directory = [fm URLForDirectory:NSCachesDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:&error];
-    XCTAssertNil(error);
-    
-    NSString *fileName = [NSString stringWithFormat:@"%@.dat", name];
-    NSURL *fileURL = [directory URLByAppendingPathComponent:fileName].filePathURL;
-    NSData *testData = [NSData secureRandomDataOfLength:256];
-    XCTAssertTrue([testData writeToFile:fileURL.path atomically:YES]);
-    
-    return fileURL;
-}
-
 - (NSURL *)testVideoFileURL
 {
     NSBundle *bundle = [NSBundle bundleForClass:self.class];

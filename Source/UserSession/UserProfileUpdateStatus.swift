@@ -384,10 +384,6 @@ extension UserProfileUpdateStatus {
     
     /// Whether we are currently requesting a change of phone number
     public var currentlySettingPhone : Bool {
-        guard !self.selfUserHasPhoneNumber else {
-            return false
-        }
-        
         return self.phoneNumberToSet != nil
     }
     

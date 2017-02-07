@@ -178,7 +178,8 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             if response.result == .success {
                 self.userProfileUpdateStatus.didChangePhoneSuccesfully()
             } else {
-                let error : Error = NSError.userSessionErrorWith(ZMUserSessionErrorCode.unkownError, userInfo: nil)
+                let error : Error = NSError.invalidPhoneVerificationCodeError(with: response) ??
+                    NSError.userSessionErrorWith(ZMUserSessionErrorCode.unkownError, userInfo: nil)
                 self.userProfileUpdateStatus.didFailChangingPhone(error: error)
             }
             

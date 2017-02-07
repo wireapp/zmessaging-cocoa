@@ -52,7 +52,7 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
             }
             
             indicateIncomingCall(from: user, in: conversation, video: video)
-        case let .terminating(reason: reason) where reason != .normalSelf:
+        case let .terminating(reason: reason) where !(reason == .normal && userId == ZMUser.selfUser(inUserSession: userSession).remoteIdentifier):
             if #available(iOS 10.0, *) {
                 provider.reportCall(with: conversationId, endedAt: nil, reason: UInt(reason.CXCallEndedReason.rawValue))
             }

@@ -325,11 +325,11 @@ static dispatch_queue_t lastSessionIdentifierIsolation(void)
     NSDictionary *boldAttributes = @{NSFontAttributeName: boldFont};
     
     void(^append)(NSString *) = ^(NSString *text){
-        NSAttributedString *s = [[NSAttributedString alloc] initWithString:text ?: @"" attributes:attributes];
+        NSAttributedString *s = [[NSAttributedString alloc] initWithString:text.localizedString ?: @"" attributes:attributes];
         [result appendAttributedString:s];
     };
     void(^appendBold)(NSString *) = ^(NSString *text){
-        NSAttributedString *s = [[NSAttributedString alloc] initWithString:text ?: @"" attributes:boldAttributes];
+        NSAttributedString *s = [[NSAttributedString alloc] initWithString:text.localizedString ?: @"" attributes:boldAttributes];
         [result appendAttributedString:s];
     };
     

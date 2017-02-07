@@ -166,7 +166,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         }
     }
 
-    if (self.isFetchingStreamForAPNS) {
+    if (self.isFetchingStreamForAPNS && self.notificationEventsToCancel != nil) {
         // In case we are fetching the stream because we have received a push notification we need to forward them to the pingback status
         // The status will forward them to the operationloop and check if the received notification was contained in this batch.
         NSArray <ZMUpdateEvent *> *events = [parsedEvents arrayByAddingObjectsFromArray:lastCallStateEvents.allValues];
