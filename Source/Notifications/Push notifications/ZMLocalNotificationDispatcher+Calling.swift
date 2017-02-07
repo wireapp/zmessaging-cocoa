@@ -47,11 +47,25 @@ public extension ZMLocalNotificationDispatcher {
     }
     
     private func notification(for conversation: ZMConversation, sender: ZMUser) -> ZMLocalNotificationForCallState {
-        if let existingNote = callingNotifications.notifications.first(where: { (note) -> Bool in note.conversationID == conversation.remoteIdentifier }), let callStateNote = existingNote as? ZMLocalNotificationForCallState {
+        if let callStateNote = callingNotifications.notifications.first(where: { $0.isCallStateNote(for: conversation, by: sender) }) as? ZMLocalNotificationForCallState {
             return callStateNote
         }
         
         return ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
     }
     
+}
+
+extension ZMLocalNotification {
+    
+    /// Returns whether this notification is a call state notification matching conversation and sender
+    fileprivate func isCallStateNote(for conversation: ZMConversation, by sender: ZMUser) -> Bool {
+        guard let callStateNotification = self as? ZMLocalNotificationForCallState,
+            callStateNotification.conversation == conversation,
+            callStateNotification.sender == sender
+        else {
+                return false
+        }
+        return true
+    }
 }
