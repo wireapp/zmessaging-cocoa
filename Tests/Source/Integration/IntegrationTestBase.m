@@ -104,7 +104,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     
     self.conversationChangeObserver = [[ConversationChangeObserver alloc] init];
     self.userChangeObserver = [[UserChangeObserver alloc] init];
-    [self.messageChangeObserver tearDown];
     self.messageChangeObserver = [[MessageChangeObserver alloc] init];
     [self.application simulateApplicationDidBecomeActive];
     WaitForEverythingToBeDoneWithTimeout(0.5);
@@ -123,11 +122,9 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     [BackgroundActivityFactory tearDownInstance];
     [LinkPreviewDetectorHelper tearDown];
     
-    [self.conversationChangeObserver tearDown];
-    [self.userChangeObserver tearDown];
-    [self performIgnoringZMLogError:^{
-        [self.messageChangeObserver tearDown];
-    }];
+    self.conversationChangeObserver = nil;
+    self.userChangeObserver = nil;
+    self.messageChangeObserver = nil;
 
     WaitForAllGroupsToBeEmpty(0.5);
     

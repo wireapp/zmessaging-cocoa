@@ -206,8 +206,6 @@ class DeleteMessagesTests: ConversationTestsBase {
         guard let note = observer.notifications.firstObject as? MessageWindowChangeInfo else { return XCTFail() }
         XCTAssertEqual(note.deletedIndexes.count, 1) // Deleted the original message
         XCTAssertEqual(note.insertedIndexes.count, 1) // Inserted the system message
-
-        observer.tearDown()
     }
 
 }

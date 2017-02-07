@@ -132,8 +132,7 @@
     XCTAssertEqualObjects(windowInfo2.updatedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
     XCTAssertEqualObjects(windowInfo2.movedIndexPairs, @[]);
     
-    [ConversationChangeInfo removeObserver:convToken forConversation:conversation];
-    [windowObserver tearDown];
+    (void)convToken;
 }
 
 - (void)testThatItCanEditAnEditedMessage
@@ -372,9 +371,8 @@
     XCTAssertEqualObjects(windowInfo.insertedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
     XCTAssertEqualObjects(windowInfo.updatedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(windowInfo.movedIndexPairs, @[]);
-
-    [ConversationChangeInfo removeObserver:convToken forConversation:conversation];
-    [windowObserver tearDown];
+    
+    (void)convToken;
 }
 
 

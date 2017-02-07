@@ -352,9 +352,6 @@
     
     // THEN
     XCTAssertTrue([observer.notifications.firstObject clientsChanged]);
-
-    // AFTER
-    [observer tearDown];
 }
 
 - (void)testThatItDeliversTwoOTRAssetMessages
@@ -627,7 +624,6 @@
     
     ZMClientMessage *msg = conversation.messages[initialMessagesCount];
     XCTAssertEqualObjects(msg.genericMessage.text.content, expectedText);
-    [observer tearDown];    
 }
 
 - (ZMGenericMessage *)remotelyInsertOTRImageIntoConversation:(MockConversation *)mockConversation imageFormat:(ZMImageFormat)format
@@ -682,8 +678,6 @@
     
     ZMAssetClientMessage *msg = conversation.messages[initialMessagesCount];
     XCTAssertEqualObjects([msg.imageAssetStorage genericMessageForFormat:format], assetMessage);
-    [observer tearDown];
-
 }
 
 - (void)testThatItSendsANotificationWhenRecievingAOtrMediumAssetMessageThroughThePushChannel
@@ -823,8 +817,6 @@
             XCTAssertEqual(currentMessageSet[i], initialMessageSet[i-1]);
         }
     }
-    
-    [messageObserver tearDown];
 }
 
 - (void)testThatMessageWindowChangesWhenOTRAssetMediumIsLoaded
@@ -858,10 +850,8 @@
     
     ZMMessage *observedMessage = localGroupConversation.messages.lastObject; // the last message is the "you are using a new device message"
 
-    __block MessageChangeObserver *messageObserver;
-    [self performIgnoringZMLogError:^{
-        messageObserver = [[MessageChangeObserver alloc] initWithMessage:observedMessage];
-    }];
+    MessageChangeObserver *messageObserver = [[MessageChangeObserver alloc] initWithMessage:observedMessage];
+    
     WaitForAllGroupsToBeEmpty(0.5);
 
     XCTAssertTrue([observedMessage isKindOfClass:ZMAssetClientMessage.class]);
@@ -890,10 +880,6 @@
             XCTAssertEqual(currentMessageSet[i], initialMessageSet[i-1]);
         }
     }
-    
-    [self performIgnoringZMLogError:^{
-        [messageObserver tearDown];
-    }];
 }
 
 - (void)testThatAssetMediumIsRedownloadedIfNoMessageDataIsStored
@@ -1100,7 +1086,6 @@
     }];
     WaitForEverythingToBeDone();
     
-    [observer tearDown];
     return message;
 }
 
@@ -1247,14 +1232,12 @@
     [message.managedObjectContext saveOrRollback];
     WaitForEverythingToBeDone();
     
-    [observer tearDown];
     XCTAssertTrue(notificationRecieved);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     XCTAssertEqual(message.visibleInConversation, message.conversation);
     XCTAssertEqual(message.conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
     
-    [observer tearDown];
 }
 
 - (void)testThatItDoesNotDeliversOTRMessageAfterIgnoringExpiring
@@ -1353,7 +1336,6 @@
     
     // THEN
     WaitForEverythingToBeDone();
-    [observer tearDown];
     XCTAssertTrue(notificationRecieved);
     XCTAssertEqual(message2.deliveryState, ZMDeliveryStateSent);
     XCTAssertNotNil(message2);
@@ -1629,7 +1611,6 @@
         XCTAssertEqual(messagesAfterInserting.count, 1lu); // Only the added client message
     }
     
-    [observer tearDown];
 }
 
 - (void)testThatItInsertsNewClientSystemMessageWhenReceivingMessageFromNewClientInSecuredConversation
@@ -1734,7 +1715,6 @@
         XCTAssertEqual(messageCountAfterSetup, conversation.messages.count);
     }
     
-    [observer tearDown];
 }
 
 - (void)setupInitialSecurityLevel:(ZMConversationSecurityLevel)initialSecurityLevel inConversation:(ZMConversation *)conversation
@@ -1806,7 +1786,6 @@
     XCTAssertTrue([lastMessage isKindOfClass:[ZMSystemMessage class]]);
     
     XCTAssertEqual(lastMessage.systemMessageType, ZMSystemMessageTypeConversationIsSecure);
-    [observer tearDown];
 }
 
 - (void)testThatItInsertsSystemMessageWhenAllSelfUserClientsBecomeTrusted
@@ -1863,7 +1842,6 @@
     XCTAssertTrue([lastMessage isKindOfClass:[ZMSystemMessage class]]);
     
     XCTAssertEqual(lastMessage.systemMessageType, ZMSystemMessageTypeConversationIsSecure);
-    [observer tearDown];
 }
 
 - (void)testThatItInsertsSystemMessageWhenTheSelfUserDeletesAnUntrustedClient
@@ -1940,7 +1918,6 @@
             XCTFail(@"Did not create system message");
         }
     }
-    [observer tearDown];
 }
 
 - (void)testThatItInsertsSystemMessageWhenTheOtherUserDeletesAnUntrustedClient
@@ -2026,7 +2003,6 @@
         
         XCTAssertEqual(lastMessage.systemMessageType, ZMSystemMessageTypeConversationIsSecure);
     }
-    [observer tearDown];
 }
 
 - (void)testThatItDoesNotSetAllConversationsToSecureWhenTrustingSelfUserClients

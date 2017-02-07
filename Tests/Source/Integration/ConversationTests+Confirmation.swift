@@ -119,16 +119,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             
             let convObserver = ConversationChangeObserver(conversation: conversation)
             
-            var messageObserver : MessageChangeObserver!
-            performIgnoringZMLogError{
-                messageObserver = MessageChangeObserver(message: message)
-            }
-            defer {
-                convObserver?.tearDown()
-                performIgnoringZMLogError{
-                    messageObserver?.tearDown()
-                }
-            }
+            let messageObserver = MessageChangeObserver(message: message)
             
             // when
             mockTransportSession.performRemoteChanges { session in

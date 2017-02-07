@@ -250,8 +250,8 @@
     XCTAssertEqualObjects(note.user, searchUser);
     XCTAssertTrue(note.connectionStateChanged);
     
-    [UserChangeInfo removeObserver:userToken forBareUser:searchUser];
     [searchDirectory tearDown];
+    (void)userToken;
 }
 
 - (void)testThatItNotifiesObserversWhenTheConnectionStatusChanges_LocalUser
@@ -308,8 +308,8 @@
     XCTAssertEqualObjects(note1.user, searchUser);
     XCTAssertTrue(note1.connectionStateChanged);
     
-    [UserChangeInfo removeObserver:userToken forBareUser:searchUser];
     [searchDirectory tearDown];
+    (void)userToken;
 }
 
 @end
@@ -464,7 +464,6 @@
     [searchListener verify];
     [userListener verify];
     
-    [UserChangeInfo removeObserver:token forBareUser:nil];
     [searchDirectory tearDown];
 }
 
@@ -826,7 +825,6 @@
     // then
     [searchDirectory tearDown];
     [userListener verify];
-    [UserChangeInfo removeObserver:userToken forBareUser:searchUser];
 }
 
 - (void)DISABLED_testThatItDoesNotDownloadCachedImagesAgainButNotifiesObservers
@@ -937,7 +935,6 @@
     
     // then
     [userListener verify];
-    [UserChangeInfo removeObserver:userToken forBareUser:searchUser];
 }
 
 @end

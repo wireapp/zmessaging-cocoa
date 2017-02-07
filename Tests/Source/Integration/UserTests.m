@@ -164,8 +164,6 @@
     XCTAssertEqualObjects(selfUser.displayName, @"Super Name");
     
     XCTAssertEqualObjects(realUser.displayName, @"Super Duper Name");
-    [userObserver tearDown];
-
 }
 
 - (void)testThatDisplayNameDoesNotChangesIfAUserWithADifferentNameIsAdded
@@ -214,7 +212,6 @@
     
     XCTAssertEqualObjects(realUser.displayName, @"Max");
     XCTAssertEqualObjects(selfUser.displayName, @"Super");
-    [userObserver tearDown];
 }
 
 - (void)testThatClientsGetAddedAndDeletedForUserWhenRequested

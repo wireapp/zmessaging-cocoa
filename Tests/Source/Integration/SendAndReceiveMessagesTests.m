@@ -626,7 +626,7 @@
     
     // assert
     XCTAssertEqual(list.count, 4u);
-    [observer tearDown];
+    (void)observer;
 }
 
 - (void)testThatSystemEventsAreAddedToAConversationWhenTheyAreGeneratedRemotely
@@ -1198,10 +1198,7 @@
     XCTAssertTrue(message.isExpired);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateFailedToSend);
     
-    __block MessageChangeObserver *observer;
-    [self performIgnoringZMLogError:^{
-        observer = [[MessageChangeObserver alloc] initWithMessage:message];
-    }];
+    MessageChangeObserver *observer = [[MessageChangeObserver alloc] initWithMessage:message];
     
     // when
     self.mockTransportSession.doNotRespondToRequests = YES;
@@ -1226,9 +1223,6 @@
     // finally
     WaitForEverythingToBeDoneWithTimeout(0.5);
     [ZMMessage resetDefaultExpirationTime];
-    [self performIgnoringZMLogError:^{
-        [observer tearDown];
-    }];
 }
 
 

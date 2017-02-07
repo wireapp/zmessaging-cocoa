@@ -110,7 +110,6 @@
     XCTAssertFalse(note.connectionStateChanged);
     
     verifyConversation(conversation);
-    [observer tearDown];
 }
 
 - (void)testThatItSendsANotificationInConversation:(MockConversation *)mockConversation
@@ -151,7 +150,6 @@
     
     // then
     verifyConversation(conversation, observer);
-    [observer tearDown];
 }
 
 - (BOOL)conversation:(ZMConversation *)conversation hasMessagesWithNonces:(NSArray *)nonces
@@ -203,7 +201,6 @@
     
     // then
     verifyConversation(conversation);
-    [observer tearDown];
     
 }
 

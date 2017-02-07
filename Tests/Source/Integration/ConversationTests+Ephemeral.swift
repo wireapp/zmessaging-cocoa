@@ -196,10 +196,7 @@ extension ConversationTests_Ephemeral {
         }
         XCTAssertTrue(waitForEverythingToBeDone())
 
-        var messageObserver : MessageChangeObserver!
-        performIgnoringZMLogError{
-            messageObserver = MessageChangeObserver(message: ephemeral)!
-        }
+        let messageObserver = MessageChangeObserver(message: ephemeral)!
         spinMainQueue(withTimeout: 1.1)
         
         // then
@@ -208,9 +205,7 @@ extension ConversationTests_Ephemeral {
             return XCTFail()
         }
         XCTAssertTrue(messageChangeInfo.isObfuscatedChanged)
-        performIgnoringZMLogError{
-            messageObserver.tearDown()
-        }
+
     }
     
 }

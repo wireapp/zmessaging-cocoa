@@ -498,9 +498,8 @@ extension SearchUserImageStrategyTests {
         userIDsTable.replaceUserID(toDownload: searchUser1.remoteIdentifier, withAssetIDToDownload: assetID1)
         
         let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
-        uiMOC.searchUserObserverCenter?.addSearchUser(searchUser1) // This is called when the searchDirectory returns the searchUsers
+        uiMOC.searchUserObserverCenter.addSearchUser(searchUser1) // This is called when the searchDirectory returns the searchUsers
         let userObserver = UserChangeObserver(user: searchUser1)!
-        defer { userObserver.tearDown() }
         
         // when
         guard let request = sut.nextRequest() else { return XCTFail() }

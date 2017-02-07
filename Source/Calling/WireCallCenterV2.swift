@@ -92,7 +92,7 @@ class VoiceChannelStateSnapshot {
     
     func recalculateState(){
         guard let conversation = self.conversation else { return }
-        updateVoiceChannelState(for: conversation)
+        _ = updateVoiceChannelState(for: conversation)
     }
     
     func updateVoiceChannelState(for conversation: ZMConversation) -> Bool {

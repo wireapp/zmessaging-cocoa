@@ -101,7 +101,6 @@
     XCTAssertTrue(note.accentColorValueChanged);
     
     XCTAssertEqual(selfUser.accentColorValue, accentColor);
-    [observer tearDown];
 }
 
 @end
@@ -189,9 +188,8 @@
     XCTAssertEqualObjects(selfUser.phoneNumber, phone);
     
     // after
-    [UserChangeInfo removeObserver:userObserverToken forBareUser:selfUser];
     [self.userSession.userProfile removeObserverWithToken:editableUserObserverToken];
-
+    (void)userObserverToken;
 }
 
 - (void)testThatItIsNotifiedWhenItConfirmsWithTheWrongCode
@@ -435,9 +433,8 @@
     XCTAssertEqualObjects(selfUser.emailAddress, email);
     
     // after
-    [UserChangeInfo removeUserObserver:userObserverToken forUser:selfUser];
     [self.userSession.userProfile removeObserverWithToken:editUserObserverToken];
-    
+    (void)userObserverToken;
 }
 
 - (void)testThatItNotifiesWhenFailingToSetThePasswordForNetworkError
@@ -521,9 +518,8 @@
     XCTAssertEqualObjects(selfUser.emailAddress, email);
     
     // after
-    [UserChangeInfo removeObserver:userObserverToken forBareUser:selfUser];
     [self.userSession.userProfile removeObserverWithToken:editingToken];
-    
+    (void)userObserverToken;
 }
 
 - (void)testThatItNotifiesWhenFailingToSetTheEmailBecauseOfGenericError

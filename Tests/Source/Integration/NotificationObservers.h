@@ -29,10 +29,8 @@ typedef void(^ObserverCallback)(NSObject *note);
 
 @property (nonatomic, readonly) NSMutableArray *notifications;
 @property (nonatomic, copy) ObserverCallback notificationCallback;
-@property (nonatomic) BOOL tornDown;
 
 - (void)clearNotifications;
-- (void)tearDown;
 
 @end
 

@@ -210,7 +210,6 @@
     // then
     XCTAssertFalse([pending containsObject:conversation]);
     XCTAssertEqual(observer.notifications.count, 1u);
-    [observer tearDown];
 }
 
 - (void)testThatAConnectionRequestIsRemovedFromConversationsListWhenItIsCancelled;
@@ -238,7 +237,6 @@
     // then
     XCTAssertFalse([conversations containsObject:conversation]);
     XCTAssertEqual(observer.notifications.count, 1u);
-    [observer tearDown];
 }
 
 - (void)testThatConnectionRequestsFromTwoUsersAreBothAddedToActiveConversations;
@@ -308,9 +306,6 @@
         XCTAssertEqual(note.deletedIndexes.count, 0u);
     }
     XCTAssertEqual(insertionsCount, 2);
-    [pendingObserver tearDown];
-    [activeObserver tearDown];
-
 }
 
 - (void)addConnectionRequestInMockTransportsession:(MockTransportSession<MockTransportSessionObjectCreation> *)session forUser:(MockUser *)mockUser
@@ -453,12 +448,9 @@
         XCTAssertEqual(conv2.messages.count, 2u); // accepting connection request produces a new conversation system message
     }
     
-    [ConversationChangeInfo removeObserver:token1 forConversation:conv1];
-    [ConversationChangeInfo removeObserver:token2 forConversation:conv2];
-
-    [conversationListObserver tearDown];
-    [pendingConversationListObserver tearDown];
-} 
+    (void)token1;
+    (void)token2;
+}
 
 - (void)testThatConnectionRequestsToTwoUsersAreAddedToPending;
 {
@@ -566,9 +558,9 @@
         XCTAssertTrue(conv2ParticipantsChanged);
     }
     
-    [ConversationChangeInfo removeObserver:token1 forConversation:conv1];
-    [ConversationChangeInfo removeObserver:token2 forConversation:conv2];
-    [listObserver tearDown];
+    (void)token1;
+    (void)token2;
+    (void)listObserver;
 }
 
 - (void)testThatWeSeeANewConversationSystemMessageWhenAcceptingAConnectionRequest;
@@ -789,7 +781,7 @@
     }
     
     WaitForEverythingToBeDoneWithTimeout(0.1);
-    [ConversationChangeInfo removeObserver:token1 forConversation:conv1];
+    (void)token1;
 }
 
 - (void)testThatItNotifiesObserversWhenWeSendAConnectionRequest
@@ -838,7 +830,6 @@
         XCTAssertTrue(note.deletedIndexes.count == 0);
         XCTAssertTrue(note.movedIndexPairs.count == 0);
     }
-    [observer tearDown];
 }
 
 - (void)testThatItTheConnectionRequestConversationIsOnTopOfTheConversationList
@@ -908,7 +899,6 @@
     // then
     XCTAssertTrue([conversations containsObject:conversation]);
     XCTAssertEqual(observer.notifications.count, 2u);
-    [observer tearDown];
 }
 
 
@@ -1110,7 +1100,7 @@
         // then
         XCTAssertEqual(pending.count, pendingCount + 1u);
     }
-    [ConversationListChangeInfo removeObserver:listToken forList:pending];
+    (void)listToken;
 }
 
 - (void)testThatItSendsOutANotificationWhenAConnectionStatusChangeFromPendingToAcceptedIsRejectedByTheBackend

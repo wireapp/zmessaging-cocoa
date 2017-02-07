@@ -54,10 +54,6 @@
     self.observerToken = [MessageWindowChangeInfo addObserver:self forWindow:self.window];
 }
 
-- (void)dealloc
-{
-    [MessageWindowChangeInfo removeObserver:self forWindow:self.window];
-}
 
 @end
 
@@ -1623,8 +1619,8 @@
     XCTAssertEqual(callStateRequest.count, 0u);
    
     // after
-    [ConversationListChangeInfo removeObserver:listToken forList:list];
     [self tearDownVoiceChannelForConversation:conversationToObserve];
+    (void)listToken;
 }
 
 

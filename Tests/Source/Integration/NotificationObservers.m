@@ -39,7 +39,6 @@
 
 - (void)dealloc
 {
-    NSAssert(self.tornDown, @"needs to teardown conversationList token");
     [self stopObservering];
 }
 
