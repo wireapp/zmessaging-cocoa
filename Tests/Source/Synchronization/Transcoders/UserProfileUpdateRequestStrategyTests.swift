@@ -775,7 +775,7 @@ extension UserProfileUpdateRequestStrategyTests {
     }
     
     func lastIdentityResponse() -> ZMTransportResponse {
-        return ZMTransportResponse(payload: ["label":"last-identity]"] as NSDictionary,
+        return ZMTransportResponse(payload: ["label":"last-identity"] as NSDictionary,
                                    httpStatus: 403,
                                    transportSessionError: nil)
     }
