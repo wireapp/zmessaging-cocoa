@@ -137,9 +137,15 @@ static NSString const *SearchAPI = @"/search/common";
     [self.cache setObject:entry forKey:searchedID];
     
     // expect
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Delegate is called"];
+
     id delegate = [OCMockObject mockForProtocol:@protocol(ZMCommonContactsSearchDelegate)];
     [[delegate reject] didReceiveCommonContactsUsers:OCMOCK_ANY forSearchToken:OCMOCK_ANY];
-    [[self.transportSessionMock expect] enqueueSearchRequest:OCMOCK_ANY];
+    [[self.transportSessionMock expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(id obj){
+        NOT_USED(obj);
+        [expectation fulfill];
+        return YES;
+    }]];
     
     // when
     NSOperationQueue *queue = [NSOperationQueue zm_serialQueueWithName:self.name];
@@ -149,6 +155,8 @@ static NSString const *SearchAPI = @"/search/common";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
+
     [delegate verify];
     [self.transportSessionMock verify];
     XCTAssertNil([self.cache objectForKey:searchedID]);

@@ -43,6 +43,6 @@
 
 - (NSString *)localizedStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation emoji:(NSString *)emoji;
 
-- (NSString *)localizedString;
+- (NSString *)localizedStringForPushNotification;
 
 @end

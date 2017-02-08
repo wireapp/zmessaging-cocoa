@@ -228,7 +228,7 @@ static NSString *const NoOtherUserNameKey = @"nootherusername";
     return localizedStringWithKeyAndArguments(ZMPushLocalizedString(key), arguments);
 }
 
-- (NSString *)localizedString;
+- (NSString *)localizedStringForPushNotification;
 {
     return localizedStringWithKeyAndArguments(ZMPushLocalizedString(self), nil);
 }

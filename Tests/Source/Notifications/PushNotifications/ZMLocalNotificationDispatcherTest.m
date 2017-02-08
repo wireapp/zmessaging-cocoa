@@ -364,7 +364,7 @@
     // then
     XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1u);
     UILocalNotification *scheduledNotification = self.application.scheduledLocalNotifications.firstObject;
-    XCTAssertEqualObjects(scheduledNotification.alertBody, [ZMPushStringDefault localizedString]);
+    XCTAssertEqualObjects(scheduledNotification.alertBody, [ZMPushStringDefault localizedStringForPushNotification]);
     XCTAssertEqualObjects(scheduledNotification.soundName, @"new_message_apns.caf");
 
 }

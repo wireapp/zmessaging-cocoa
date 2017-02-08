@@ -51,7 +51,7 @@ extension NotificationForMessage {
             shouldHideContent = isEphemeral
         }
         if shouldHideContent {
-            notification.alertBody = (isEphemeral ? ZMPushStringEphemeral : ZMPushStringDefault).localized()
+            notification.alertBody = (isEphemeral ? ZMPushStringEphemeral : ZMPushStringDefault).localizedStringForPushNotification()
             notification.soundName = ZMCustomSound.notificationNewMessageSoundName()
             if isEphemeral {
                 notification.category = ZMConversationCategory

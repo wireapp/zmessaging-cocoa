@@ -121,7 +121,7 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
         let notification = UILocalNotification()
         let shouldHideContent = managedObjectContext.persistentStoreMetadata(forKey: ZMShouldHideNotificationContentKey)
         if let shouldHideContent = shouldHideContent as? NSNumber , shouldHideContent.boolValue == true {
-            notification.alertBody = ZMPushStringDefault.localized()
+            notification.alertBody = ZMPushStringDefault.localizedStringForPushNotification()
             notification.soundName = ZMCustomSound.notificationNewMessageSoundName()
         } else {
             notification.alertBody = configureAlertBody(conversation).escapingPercentageSymbols()
