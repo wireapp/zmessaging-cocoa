@@ -816,16 +816,15 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     [self recreateUserSessionAndWipeCache:YES];
     WaitForAllGroupsToBeEmpty(0.5);
     
+    __block NSString *idToDelete;
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        MockUserClient *client = [session registerClientForUser:self.selfUser label:@"idToDelete" type:@"permanent"];
+        idToDelete = client.identifier;
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
     id token = [self.userSession addAuthenticationObserver:authenticationObserver];
-    
-    NSString *remoteID = @"idToDelete";
-    NSDictionary *otherClientInfo = @{
-                                      @"id" : remoteID,
-                                      @"type": @"permanent",
-                                      @"label": @"some label",
-                                      @"time": [NSDate date].transportString
-                                      };
     
     // expect
 
@@ -833,8 +832,9 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         // simulate the user selecting a client to delete
         [self.userSession performChanges:^{
             ZMUser *selfUser = [self userForMockUser:self.selfUser];
+            [selfUser.managedObjectContext saveOrRollback];
             UserClient *clientToDelete = [selfUser.clients.allObjects firstObjectMatchingWithBlock:^BOOL(UserClient *client) {
-                return [client.remoteIdentifier isEqualToString:remoteID];
+                return [client.remoteIdentifier isEqualToString:idToDelete];
             }];
             XCTAssertNotNil(clientToDelete);
             [self.userSession deleteClient:clientToDelete];
@@ -847,7 +847,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     [[authenticationObserver expect] authenticationDidSucceed];
 
     __block BOOL didTryToRegister = NO;
-    __block BOOL didFetchClients = NO;
     __block BOOL didDeleteClient = NO;
 
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
@@ -858,14 +857,8 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
             NSDictionary *tooManyClients = @{@"label" : @"too-many-clients"};
             return [ZMTransportResponse responseWithPayload:tooManyClients HTTPStatus:400 transportSessionError:nil];
         }
-        // we fetch the existing clients
-        if(!didFetchClients && [request.path isEqualToString:clientsPath] && request.method == ZMMethodGET) {
-            didFetchClients = YES;
-            NSArray *clientList = @[otherClientInfo];
-            return [ZMTransportResponse responseWithPayload:clientList HTTPStatus:200 transportSessionError:nil];
-        }
         // we successfully delete the selected client (currently not working with MocktransportSession)
-        if(!didDeleteClient && [request.path isEqualToString:[NSString stringWithFormat:@"%@/%@",clientsPath, remoteID]] && request.method == ZMMethodDELETE) {
+        if(!didDeleteClient && [request.path isEqualToString:[NSString stringWithFormat:@"%@/%@",clientsPath, idToDelete]] && request.method == ZMMethodDELETE) {
             didDeleteClient = YES;
             return [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
         }
