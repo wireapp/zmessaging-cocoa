@@ -31,6 +31,8 @@ import Foundation
     
     fileprivate var phoneUpdateSync : ZMSingleRequestSync! = nil
     
+    fileprivate var phoneNumberDeleteSync : ZMSingleRequestSync! = nil
+    
     fileprivate var passwordUpdateSync : ZMSingleRequestSync! = nil
     
     fileprivate var emailUpdateSync : ZMSingleRequestSync! = nil
@@ -51,6 +53,7 @@ import Foundation
         
         self.phoneCodeRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.phoneUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
+        self.phoneNumberDeleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.passwordUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.emailUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.handleCheckSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
@@ -81,6 +84,11 @@ extension UserProfileRequestStrategy : RequestStrategy {
             self.userProfileUpdateStatus.currentlyChangingEmail {
             self.emailUpdateSync.readyForNextRequestIfNotBusy()
             return self.emailUpdateSync.nextRequest()
+        }
+        
+        if self.userProfileUpdateStatus.currentlyRemovingPhoneNumber {
+            self.phoneNumberDeleteSync.readyForNextRequestIfNotBusy()
+            return self.phoneNumberDeleteSync.nextRequest()
         }
         
         if self.userProfileUpdateStatus.currentlySettingPassword {
@@ -126,6 +134,9 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             ]
             return ZMTransportRequest(path: "/activate", method: .methodPOST, payload: payload)
         
+        case self.phoneNumberDeleteSync:
+            return ZMTransportRequest(path: "/self/phone", method: .methodDELETE, payload: nil)
+
         case self.passwordUpdateSync:
             let payload : NSDictionary = [
                 "new_password" : self.userProfileUpdateStatus.passwordToSet!
@@ -204,6 +215,16 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
                     NSError.keyExistsError(with: response) ??
                     NSError.userSessionErrorWith(ZMUserSessionErrorCode.unkownError, userInfo: nil)
                 self.userProfileUpdateStatus.didFailEmailUpdate(error: error)
+            }
+            
+        case self.phoneNumberDeleteSync:
+            if response.result == .success {
+                ZMUser.selfUser(in: managedObjectContext).phoneNumber = nil
+                self.userProfileUpdateStatus.didRemovePhoneNumberSuccessfully()
+            } else {
+                let error : Error = NSError.lastUserIdentityCantBeRemoved(with: response) ??
+                    NSError.userSessionErrorWith(ZMUserSessionErrorCode.unkownError, userInfo: nil)
+                self.userProfileUpdateStatus.didFailPhoneNumberRemoval(error: error)
             }
             
         case self.handleCheckSync:

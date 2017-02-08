@@ -134,6 +134,9 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 /// CallKit delegate
 @property (nonatomic, readonly) ZMCallKitDelegate *callKitDelegate;
 
+/// The URL of the shared container that has been determinned using the passed in application group identifier
+@property (nonatomic, readonly) NSURL *sharedContainerURL;
+
 @end
 
 

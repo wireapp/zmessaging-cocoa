@@ -67,7 +67,7 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
 
 @implementation NSError (ZMUserSessionInteral)
 
-+ (instancetype)userSessionErrorWithErrorCode:(ZMUserSessionErrorCode)code userInfo:(NSDictionary *)userInfo;
++ (instancetype)userSessionErrorWithErrorCode:(ZMUserSessionErrorCode)code userInfo:(NSDictionary *)userInfo
 {
     NSMutableDictionary *newUserInfo = [NSMutableDictionary dictionaryWithDictionary:userInfo];
     NSString *description = LocalizedDescriptionStringFromZMUserSessionErrorCode(code);
@@ -77,7 +77,7 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
     return [NSError errorWithDomain:ZMUserSessionErrorDomain code:code userInfo:newUserInfo];
 }
 
-+ (instancetype)pendingLoginErrorWithResponse:(ZMTransportResponse *)response;
++ (instancetype)pendingLoginErrorWithResponse:(ZMTransportResponse *)response
 {
     if (response.HTTPStatus == 403 && [[response payloadLabel] isEqualToString:@"pending-login"]) {
         return [NSError userSessionErrorWithErrorCode:ZMUserSessionCodeRequestIsAlreadyPending userInfo:nil];
@@ -85,7 +85,7 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
     return nil;
 }
 
-+ (instancetype)unauthorizedErrorWithResponse:(ZMTransportResponse *)response;
++ (instancetype)unauthorizedErrorWithResponse:(ZMTransportResponse *)response
 {
     if (response.HTTPStatus == 403 && [[response payloadLabel] isEqualToString:@"unauthorized"]) {
         return [NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidPhoneNumber userInfo:nil];
@@ -93,7 +93,7 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
     return nil;
 }
 
-+ (instancetype)invalidPhoneVerificationCodeErrorWithResponse:(ZMTransportResponse *)response;
++ (instancetype)invalidPhoneVerificationCodeErrorWithResponse:(ZMTransportResponse *)response
 {
     if (response.HTTPStatus == 404 && [[response payloadLabel] isEqualToString:@"invalid-code"]) {
         return [NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidPhoneNumberVerificationCode userInfo:nil];
@@ -101,7 +101,7 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
     return nil;
 }
 
-+ (instancetype)invalidPhoneNumberErrorWithReponse:(ZMTransportResponse *)response;
++ (instancetype)invalidPhoneNumberErrorWithReponse:(ZMTransportResponse *)response
 {
     if (response.HTTPStatus == 400 && ([[response payloadLabel] isEqualToString:@"invalid-phone"] || [[response payloadLabel] isEqualToString:@"bad-request"])) {
         return [NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidPhoneNumber userInfo:nil];
@@ -109,7 +109,7 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
     return nil;
 }
 
-+ (instancetype)phoneNumberIsAlreadyRegisteredErrorWithResponse:(ZMTransportResponse *)response;
++ (instancetype)phoneNumberIsAlreadyRegisteredErrorWithResponse:(ZMTransportResponse *)response
 {
     if (response.HTTPStatus == 409) {
         return [NSError userSessionErrorWithErrorCode:ZMUserSessionPhoneNumberIsAlreadyRegistered userInfo:nil];
@@ -133,10 +133,18 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
     return nil;
 }
 
-+ (instancetype)invalidInvitationCodeWithResponse:(ZMTransportResponse *)response;
++ (instancetype)invalidInvitationCodeWithResponse:(ZMTransportResponse *)response
 {
     if (response.HTTPStatus == 400 && [[response payloadLabel] isEqualToString:@"invalid-invitation-code"]) {
         return [NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidInvitationCode userInfo:nil];
+    }
+    return nil;
+}
+
++ (instancetype)lastUserIdentityCantBeRemovedWithResponse:(ZMTransportResponse *)response
+{
+    if (response.HTTPStatus == 403 && [[response payloadLabel] isEqualToString:@"last-identity"]) {
+        return [NSError userSessionErrorWithErrorCode:ZMUserSessionLastUserIdentityCantBeDeleted userInfo:nil];
     }
     return nil;
 }
