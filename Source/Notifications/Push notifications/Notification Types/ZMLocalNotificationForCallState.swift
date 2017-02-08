@@ -95,7 +95,7 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
     
     func shouldCreateNotificationFor(callState: CallState) -> Bool {
         switch callState {
-        case .terminating(reason: .anweredElsewhere):
+        case .terminating(reason: .anweredElsewhere), .terminating(reason: .normal):
             return false
         case .incoming,
              .terminating,

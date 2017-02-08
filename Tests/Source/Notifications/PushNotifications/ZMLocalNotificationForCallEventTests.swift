@@ -88,15 +88,20 @@ class ZMLocalNotificationForCallStateTests : MessagingTest {
         XCTAssertEqual(uiNote.soundName, ZMCustomSound.notificationNewMessageSoundName())
     }
     
-    func testAnsweredElsewhereCall() {
+    func testCallClosedReasonsWhichShouldBeIgnored() {
         // given
         let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
-        note.update(forCallState: .terminating(reason: .anweredElsewhere))
+        let ignoredCallClosedReasons : [CallClosedReason] = [.anweredElsewhere, .normal]
+        
+        // when
+        for reason in ignoredCallClosedReasons {
+            note.update(forCallState: .terminating(reason: reason))
+        }
         
         // then
         XCTAssertEqual(note.notifications.count, 0)
     }
-
+    
     
     func testMissedCall() {
         // given
