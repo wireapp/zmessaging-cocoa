@@ -453,7 +453,7 @@ ZM_EMPTY_ASSERTING_INIT()
                 return;
             }
 
-            [self.uiMOC mergeUserInfoFromUserInfo:userInfo];
+            [strongUiMoc mergeUserInfoFromUserInfo:userInfo];
             NSSet *changedConversations = [strongUiMoc mergeCallStateChanges:callStateChanges];
             if (changedConversations != nil) {
                 [strongUiMoc.wireCallCenterV2 callStateDidChangeWithConversations: changedConversations];

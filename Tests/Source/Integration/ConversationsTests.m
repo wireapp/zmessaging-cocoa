@@ -1660,7 +1660,8 @@
     WaitForEverythingToBeDone();
     
     // given
-    MockUserClient *fromClient = self.user1.clients.anyObject, *toClient = self.selfUser.clients.anyObject;
+    MockUserClient *fromClient = self.user1.clients.anyObject;
+    MockUserClient *toClient = self.selfUser.clients.anyObject;
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
@@ -1678,6 +1679,10 @@
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertEqual(conversation.estimatedUnreadCount, 0u);
+    
+    toClient = [self.selfUser.clients.allObjects filterWithBlock:^(MockUserClient* client){
+        return [client.identifier isEqualToString: [ZMUser selfUserInContext: self.uiMOC].selfClient.remoteIdentifier];
+    }].firstObject;
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {

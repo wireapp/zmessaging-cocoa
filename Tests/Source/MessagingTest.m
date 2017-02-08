@@ -273,7 +273,6 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSString *clientID = [self.uiMOC persistentStoreMetadataForKey:ZMPersistedClientIdKey];
     self.uiMOC = nil;
     self.syncMOC = nil;
     
@@ -312,7 +311,6 @@
         [self.uiMOC setupUserKeyStoreForDirectory:self.keyStoreURL];
     }];
     
-    [self.uiMOC setPersistentStoreMetadata:clientID forKey:ZMPersistedClientIdKey];
     [self.uiMOC saveOrRollback];
     WaitForAllGroupsToBeEmpty(2);
     
@@ -509,7 +507,7 @@
 - (void)updateDisplayNameGeneratorWithUsers:(NSArray *)users;
 {
     [self.uiMOC saveOrRollback];
-    [self.uiMOC updateDisplayNameGeneratorWithUpdatedUsers:[NSSet set] insertedUsers:[NSSet setWithArray:users] deletedUsers:[NSSet set]];
+    [self.uiMOC updateNameGeneratorWithUpdatedUsers:[NSSet set] insertedUsers:[NSSet setWithArray:users] deletedUsers:[NSSet set]];
 }
 
 @end
@@ -603,7 +601,7 @@
 - (UserClient *)createSelfClient
 {
     UserClient *selfClient = [self setupSelfClientInMoc:self.syncMOC];
-    [UserClient createOrUpdateClient:@{@"id": selfClient.remoteIdentifier, @"type": @"permanent", @"time": [[NSDate date] transportString]} context:self.syncMOC];
+    [UserClient createOrUpdateSelfUserClient:@{@"id": selfClient.remoteIdentifier, @"type": @"permanent", @"time": [[NSDate date] transportString]} context:self.syncMOC];
     [self.syncMOC saveOrRollback];
     
     return selfClient;

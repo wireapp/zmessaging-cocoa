@@ -448,7 +448,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
     __block NSMutableArray *keysToRemove = [NSMutableArray array];
     [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
-        if ([obj respondsToSelector:@selector(tearDown)]) {
+        if ([obj respondsToSelector:@selector((tearDown))]) {
             [obj tearDown];
             [keysToRemove addObject:key];
         }
@@ -457,7 +457,7 @@ ZM_EMPTY_ASSERTING_INIT()
     [keysToRemove removeAllObjects];
     [self.syncManagedObjectContext performBlockAndWait:^{
         [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
-            if ([obj respondsToSelector:@selector(tearDown)]) {
+            if ([obj respondsToSelector:@selector((tearDown))]) {
                 [obj tearDown];
             }
             [keysToRemove addObject:key];

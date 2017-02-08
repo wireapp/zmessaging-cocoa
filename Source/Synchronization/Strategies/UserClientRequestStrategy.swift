@@ -238,7 +238,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
             
             client.remoteIdentifier = remoteIdentifier
             client.numberOfKeysRemaining = Int32(requestsFactory.keyCount)
-            _ = UserClient.createOrUpdateClient(payload, context: self.managedObjectContext)
+            _ = UserClient.createOrUpdateSelfUserClient(payload, context: self.managedObjectContext)
             clientRegistrationStatus?.didRegister(client)
         }
         else {
@@ -305,8 +305,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
     
     private func received(clients: [[String: AnyObject]]) {
         func createSelfUserClient(_ clientInfo: [String: AnyObject]) -> UserClient? {
-            let client = UserClient.createOrUpdateClient(clientInfo, context: self.managedObjectContext)
-            client?.user = ZMUser.selfUser(in: self.managedObjectContext)
+            let client = UserClient.createOrUpdateSelfUserClient(clientInfo, context: self.managedObjectContext)
             return client
         }
         
@@ -395,8 +394,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextCha
         
         switch event.type {
         case .userClientAdd:
-            if let client = UserClient.createOrUpdateClient(clientInfo, context: self.managedObjectContext) {
-                client.user = selfUser
+            if let client = UserClient.createOrUpdateSelfUserClient(clientInfo, context: self.managedObjectContext) {
                 selfUser.selfClient()?.addNewClientToIgnored(client, causedBy: .none)
             }
         case .userClientRemove:
