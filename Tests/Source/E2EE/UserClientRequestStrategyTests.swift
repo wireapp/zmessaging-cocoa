@@ -592,18 +592,21 @@ extension UserClientRequestStrategyTests {
     func testThatItAddsASelfUserClientWhenDownloadingAClientEvent() {
         
         // given
-        let selfUser = ZMUser.selfUser(in: self.syncMOC)
+        let selfClient = createSelfClient()
+        let selfUser = selfClient.user!
         let clientId = "94766bd92f56923d"
         
-        XCTAssertEqual(selfUser.clients.count, 0)
+        XCTAssertEqual(selfUser.clients.count, 1)
         let payload = UserClientRequestStrategyTests.payloadForAddingClient(clientId)
         let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil)!
         
         // when
         self.sut.processEvents([event], liveEvents:false, prefetchResult: .none)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        self.syncMOC.saveOrRollback()
         
         // then
-        XCTAssertEqual(selfUser.clients.count, 1)
+        XCTAssertEqual(selfUser.clients.count, 2)
         guard let newClient = selfUser.clients.first else {
             XCTFail()
             return

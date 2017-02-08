@@ -69,7 +69,8 @@ public final class UserClientRequestFactory {
     
     
     func storeMaxRangeID(_ client: UserClient, maxRangeID: UInt16) -> ZMCompletionHandler {
-        let completionHandler = ZMCompletionHandler(on: client.managedObjectContext!, block: { response in
+        let completionHandler = ZMCompletionHandler(on: client.managedObjectContext!, block: { [weak client] response in
+            guard let client = client else { return }
             if response.result == .success {
                 client.preKeysRangeMax = Int64(maxRangeID)
             }
@@ -78,7 +79,8 @@ public final class UserClientRequestFactory {
     }
     
     func storeAPSSignalingKeys(_ client: UserClient, signalingKeys: SignalingKeys) -> ZMCompletionHandler {
-        let completionHandler = ZMCompletionHandler(on: client.managedObjectContext!, block: { response in
+        let completionHandler = ZMCompletionHandler(on: client.managedObjectContext!, block: { [weak client] response in
+            guard let client = client else { return }
             if response.result == .success {
                 client.apsDecryptionKey = signalingKeys.decryptionKey
                 client.apsVerificationKey = signalingKeys.verificationKey
