@@ -77,13 +77,13 @@ class VoiceChannelParticipantSnapshot: NSObject {
     }
 }
 
-class VoiceChannelStateSnapshot {
+public class VoiceChannelStateSnapshot {
     fileprivate weak var conversation : ZMConversation?
     fileprivate var currentVoiceChannelState : VoiceChannelV2State
     
     init?(conversation: ZMConversation) {
         let state = conversation.voiceChannelRouter?.v2.state ?? VoiceChannelV2State.invalid
-        guard state != .invalid else { return nil }
+        guard state != .invalid && state != .noActiveUsers else { return nil }
         self.conversation = conversation
         currentVoiceChannelState = state
         // Initial change notification
