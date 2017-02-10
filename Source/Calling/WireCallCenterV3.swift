@@ -135,7 +135,8 @@ public enum CallState : Equatable {
             self = .answered
         case WCALL_STATE_MEDIA_ESTAB:
             self = .established
-        case WCALL_STATE_TERMINATING:
+        case WCALL_STATE_TERM_LOCAL: fallthrough
+        case WCALL_STATE_TERM_REMOTE:
             self = .terminating(reason: .unknown)
         default:
             self = .none // FIXME check with AVS when WCALL_STATE_UNKNOWN can happen
@@ -312,6 +313,15 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                                          timestamp: timestamp,
                                          isVideoCall: isVideoCall != 0)
                 },
+                { (conversationId, context) in
+                    guard let context = context, let conversationId = conversationId else {
+                        return
+                    }
+                    
+                    let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
+                    
+                    selfReference.answered(conversationId: String(cString: conversationId))
+                },
                 { (conversationId, userId, context) in
                     guard let context = context, let conversationId = conversationId, let userId = userId else {
                         return
@@ -345,16 +355,6 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                 DispatchQueue.main.async {
                     WireCallCenterV3VideoNotification(receivedVideoState: state).post()
                 }
-            })
-            
-            wcall_set_state_handler({ (conversationId, state, context) in
-                guard let context = context, let conversationId = conversationId, state == WCALL_STATE_ANSWERED else {
-                    return
-                }
-                
-                let selfReference = Unmanaged<WireCallCenterV3>.fromOpaque(context).takeUnretainedValue()
-                
-                selfReference.answered(conversationId: String(cString: conversationId))
             })
         }
         
@@ -485,6 +485,11 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     @objc(closeCallForConversationID:)
     public func closeCall(conversationId: UUID) {
         wcall_end(conversationId.transportString())
+    }
+    
+    @objc(rejectCallForConversationID:)
+    public func rejectCall(conversationId: UUID) {
+        wcall_reject(conversationId.transportString())
     }
     
     @objc(toogleVideoForConversationID:isActive:)

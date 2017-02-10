@@ -101,7 +101,7 @@ extension VoiceChannelV3 : CallActionsInternal {
     public func ignore() {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
         
-        WireCallCenterV3.activeInstance?.closeCall(conversationId: remoteIdentifier)
+        WireCallCenterV3.activeInstance?.rejectCall(conversationId: remoteIdentifier)
     }
     
 }
