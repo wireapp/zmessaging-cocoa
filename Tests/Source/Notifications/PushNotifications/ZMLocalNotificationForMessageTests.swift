@@ -38,9 +38,26 @@ class ZMLocalNotificationForMessageTests : ZMLocalNotificationForEventTest {
         return ZMLocalNotificationForMessage(message: message, application: self.application)
     }
     
+    func unknownNotification(_ conversation: ZMConversation, sender: ZMUser) -> ZMLocalNotificationForMessage? {
+        
+        let message = ZMClientMessage.insertNewObject(in: self.syncMOC)
+        message.sender = sender;
+        message.visibleInConversation = conversation
+        message.nonce = UUID()
+        message.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(20)
+        
+        return ZMLocalNotificationForMessage(message: message, application: self.application)
+    }
+    
     func alertBodyForNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, isEphemeral: Bool = false) -> String? {
         guard let notification = textNotification(conversation, sender: sender, text: text, isEphemeral: isEphemeral),
               let uiNote = notification.uiNotifications.first else { return nil }
+        return uiNote.alertBody
+    }
+    
+    func alertBodyForUnknownNotification(_ conversation: ZMConversation, sender: ZMUser) -> String? {
+        guard let notification = unknownNotification(conversation, sender: sender),
+            let uiNote = notification.uiNotifications.first else { return nil }
         return uiNote.alertBody
     }
     
@@ -112,6 +129,12 @@ class ZMLocalNotificationForMessageTests : ZMLocalNotificationForEventTest {
         
         // then
         XCTAssertNil(notification)
+    }
+    
+    func testThatItCreatesPushNotificationForMessageOfUnknownType() {
+        XCTAssertEqual(alertBodyForUnknownNotification(oneOnOneConversation, sender: sender), "Super User sent a message")
+        XCTAssertEqual(alertBodyForUnknownNotification(groupConversation, sender: sender), "Super User sent a message in Super Conversation")
+        XCTAssertEqual(alertBodyForUnknownNotification(groupConversationWithoutName, sender: sender), "Super User sent a message")
     }
 }
 

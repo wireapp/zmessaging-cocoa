@@ -39,6 +39,7 @@ extern NSString * _Null_unspecified const ZMPushStringVideoAdd;
 extern NSString * _Null_unspecified const ZMPushStringAudioAdd;
 extern NSString * _Null_unspecified const ZMPushStringFileAdd;
 extern NSString * _Null_unspecified const ZMPushStringLocationAdd;
+extern NSString * _Null_unspecified const ZMPushStringUnknownAdd;
 extern NSString * _Null_unspecified const ZMPushStringMessageAddMany;
 
 extern NSString * _Null_unspecified const ZMPushStringMemberJoin;

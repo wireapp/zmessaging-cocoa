@@ -134,14 +134,16 @@ final public class ZMLocalNotificationForMessage : ZMLocalNotification, Notifica
         case .knock:
             let knockCount = NSNumber(value: eventCount)
             return ZMPushStringKnock.localizedString(with: sender, conversation:conversation, count:knockCount)
-        default:
+        case .undefined:
+            return ZMPushStringUnknownAdd.localizedString(with: sender, conversation: conversation)
+        case .system(_):
             return ""
         }
     }
     
     class func canCreateNotification(_ message : ZMOTRMessage, contentType: ZMLocalNotificationContentType) -> Bool {
         switch contentType {
-        case .undefined, .system:
+        case .system:
             return false
         default:
            return shouldCreateNotification(message)
