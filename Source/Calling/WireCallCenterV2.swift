@@ -321,9 +321,7 @@ extension WireCallCenterV2 {
                 let strongObserver = observer
                 else { return }
             
-            context.performGroupedBlock {
                 strongObserver.voiceChannelParticipantsDidChange(note.setChangeInfo)
-            }
         }
     }
     
