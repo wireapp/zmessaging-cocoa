@@ -81,7 +81,6 @@ class WireCallCenterV2Tests : MessagingTest {
     private var user1 : ZMUser!
     private var user2 : ZMUser!
     private var token : WireCallCenterObserverToken?
-    private var notificationDispatcher : NotificationDispatcher!
     private var sut : WireCallCenterV2 {
         return uiMOC.wireCallCenterV2
     }
@@ -104,15 +103,14 @@ class WireCallCenterV2Tests : MessagingTest {
         
         ZMUserSession.callingProtocolStrategy = .version2
         self.uiMOC.saveOrRollback()
+        
+        // make sure sut is initialized
+        _ = sut
 
-        // In order for all changes to be forwarded, we need to initialize the notificationDispatcher and add the callCenter as a consumer
-        notificationDispatcher = NotificationDispatcher(managedObjectContext: uiMOC)
-        notificationDispatcher.addChangeInfoConsumer(sut)
     }
 
     override func tearDown() {
         uiMOC.userInfo[NSManagedObjectContext.WireCallCenterV2Key] = nil
-        notificationDispatcher.tearDown()
         ZMUserSession.callingProtocolStrategy = .negotiate
         if let token = token {
             WireCallCenterV2.removeObserver(token: token)

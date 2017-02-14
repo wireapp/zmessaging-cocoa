@@ -146,7 +146,6 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if (self) {
         self.notificationDispatcher = [[NotificationDispatcher alloc] initWithManagedObjectContext: uiMOC];
-        [self.notificationDispatcher addChangeInfoConsumer:uiMOC.wireCallCenterV2];
         self.application = application;
         self.localNotificationDispatcher = localNotificationsDispatcher;
         self.authenticationStatus = authenticationStatus;
