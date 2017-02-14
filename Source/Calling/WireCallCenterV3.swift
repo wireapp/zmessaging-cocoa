@@ -490,6 +490,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     @objc(rejectCallForConversationID:)
     public func rejectCall(conversationId: UUID) {
         wcall_reject(conversationId.transportString())
+        WireCallCenterCallStateNotification(callState: .terminating(reason: .canceled), conversationId: conversationId, userId: userId).post()
     }
     
     @objc(toogleVideoForConversationID:isActive:)
