@@ -60,7 +60,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
 extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTrackerSource {
     
     public var contextChangeTrackers: [ZMContextChangeTracker] {
-        return [self]
+        return [self, self.genericMessageStrategy]
     }
     
     public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
