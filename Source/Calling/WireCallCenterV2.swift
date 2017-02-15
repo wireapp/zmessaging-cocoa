@@ -35,11 +35,6 @@ class VoiceChannelParticipantSnapshot: NSObject {
         activeFlowParticipantsState = conversation.activeFlowParticipants.copy() as! NSOrderedSet
         callParticipantState = conversation.callParticipants.copy() as! NSOrderedSet
     }
-
-    func conversationDidChange(change: ConversationChangeInfo) {
-        guard change.conversation == conversation else { return }
-        recalculateSet()
-    }
     
     func callStateDidChange(for conversations: Set<ZMConversation>) {
         guard let conversation = conversation, conversations.contains(conversation) else { return }
@@ -179,7 +174,7 @@ extension NSManagedObjectContext {
 
 
 @objc
-public class WireCallCenterV2 : NSObject, ChangeInfoConsumer {
+public class WireCallCenterV2 : NSObject {
     
     @objc
     public static let CallStateDidChangeNotification = Notification.Name("CallStateDidChangeNotification")
@@ -204,6 +199,10 @@ public class WireCallCenterV2 : NSObject, ChangeInfoConsumer {
                                                selector: #selector(flowManagerDidChangeReceivedVideoState(note:)),
                                                name: NSNotification.Name(rawValue: FlowManagerVideoReceiveStateNotification),
                                                object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(managedObjectContextDidChange(note:)),
+                                               name: NSNotification.Name.NSManagedObjectContextObjectsDidChange,
+                                               object: context)
     }
     
     fileprivate func createParticipantSnapshotIfNeeded(for conversation: ZMConversation) {
@@ -219,11 +218,23 @@ public class WireCallCenterV2 : NSObject, ChangeInfoConsumer {
     }
     
     // MARK : Processing changes
-    public func objectsDidChange(changes: [ClassIdentifier : [ObjectChangeInfo]]) {
-        guard let convChanges = changes[ZMConversation.entityName()] as? [ConversationChangeInfo] else { return }
-        convChanges.forEach{
-            guard updateVoiceChannelState(forConversation: $0.conversation) || $0.callParticipantsChanged else { return }
-            participantSnapshot?.conversationDidChange(change: $0)
+    
+    public func managedObjectContextDidChange(note: Notification) {
+        guard let userInfo = note.userInfo as? [String : Any] else { return }
+        
+        let updatedObjects = userInfo[NSUpdatedObjectsKey] as? Set<NSManagedObject> ?? Set<NSManagedObject>()
+        let insertedObjects = userInfo[NSInsertedObjectsKey] as? Set<NSManagedObject> ?? Set<NSManagedObject>()
+        let refreshedObjects = userInfo[NSRefreshedObjectsKey] as? Set<NSManagedObject> ?? Set<NSManagedObject>()
+        
+        let changedObjects = updatedObjects.union(insertedObjects).union(refreshedObjects)
+        let changedConversations = changedObjects.flatMap({ $0 as? ZMConversation })
+        
+        for conversation in changedConversations {
+            updateVoiceChannelState(forConversation: conversation)
+            
+            if participantSnapshot?.conversation == conversation {
+                participantSnapshot?.recalculateSet()
+            }
         }
     }
     

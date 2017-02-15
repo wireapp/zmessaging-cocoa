@@ -90,14 +90,6 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 
 
 
-@interface MessagingTest (DisplayNameGenerator)
-
-- (void)updateDisplayNameGeneratorWithUsers:(NSArray *)users;
-
-@end
-
-
-
 @interface MessagingTest (AVS)
 
 - (void)simulateMediaFlowEstablishedOnConversation:(ZMConversation *)conversation;
