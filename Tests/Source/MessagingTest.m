@@ -501,20 +501,6 @@
 @end
 
 
-
-@implementation MessagingTest (DisplayNameGenerator)
-
-- (void)updateDisplayNameGeneratorWithUsers:(NSArray *)users;
-{
-    [self.uiMOC saveOrRollback];
-    [self.uiMOC updateNameGeneratorWithUpdatedUsers:[NSSet set] insertedUsers:[NSSet setWithArray:users] deletedUsers:[NSSet set]];
-}
-
-@end
-
-
-
-
 @implementation MessagingTest (AVS)
 
 - (void)simulateMediaFlowEstablishedOnConversation:(ZMConversation *)uiConversation;

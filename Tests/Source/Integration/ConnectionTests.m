@@ -110,10 +110,12 @@
     }];
 
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     
     ZMUser *userToConnectTo = [conversation.activeParticipants.array firstObjectMatchingWithBlock:^BOOL(ZMUser* user) {
-        return [user.displayName isEqual:@"Extra User4"];
+        return [user.name isEqual:userName];
     }];
     XCTAssertNotNil(userToConnectTo);
     

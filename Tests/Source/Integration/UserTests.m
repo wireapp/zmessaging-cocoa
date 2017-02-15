@@ -115,57 +115,6 @@
 }
 
 
-- (void)testThatDisplayNameChangesIfUsersAreAdded
-{
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForEverythingToBeDone();
-    
-    // Create a conversation and change SelfUser name
-    
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    (void) conversation.lastModifiedDate;
-    
-    ZMUser<ZMEditableUser> *selfUser = [ZMUser selfUserInUserSession:self.userSession];
-    [self.userSession performChanges:^{
-        selfUser.name = @"Super Name";
-    }];
-    WaitForEverythingToBeDone();
-
-    XCTAssertEqualObjects(selfUser.displayName, @"Super");
-    
-    // initialize observers
-    UserChangeObserver *userObserver = [[UserChangeObserver alloc] initWithUser:selfUser];
-    
-    // when
-    // add new user to groupConversation remotely
-    
-    __block MockUser *extraUser;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        extraUser = [session insertUserWithName:@"Super Duper Name"];
-        [self storeRemoteIDForObject:extraUser];
-        [self.groupConversation addUsersByUser:self.selfUser addedUsers:@[extraUser]];
-        XCTAssertNotNil(extraUser.name);
-    }];
-    WaitForEverythingToBeDone();
-    
-    // then
-
-    ZMUser *realUser = [self userForMockUser:extraUser];
-    XCTAssertEqualObjects(realUser.name, @"Super Duper Name");
-    XCTAssertTrue([conversation.activeParticipants containsObject:realUser]);
-    
-    NSArray *userNotes = userObserver.notifications;
-    XCTAssertEqual(userNotes.count, 1u, @"%@", userNotes);
-
-    UserChangeInfo *note1 = userNotes.firstObject;
-    XCTAssertNotNil(note1);
-    XCTAssertTrue(note1.nameChanged);
-    XCTAssertEqualObjects(note1.user, selfUser);
-    XCTAssertEqualObjects(selfUser.displayName, @"Super Name");
-    
-    XCTAssertEqualObjects(realUser.displayName, @"Super Duper Name");
-}
-
 - (void)testThatDisplayNameDoesNotChangesIfAUserWithADifferentNameIsAdded
 {
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);

@@ -28,8 +28,6 @@ class InvitationsTests : IntegrationTestBase {
     override func setUp() {
         super.setUp()
         self.addressBook = AddressBookFake()
-        let users : [ZMUser] = (self.allUsers as! [MockUser]).flatMap{user(for: $0)}
-        self.updateDisplayNameGenerator(withUsers: users)
         self.searchDirectory = ZMSearchDirectory(userSession: self.userSession)
         zmessaging.debug_searchResultAddressBookOverride = self.addressBook
     }
