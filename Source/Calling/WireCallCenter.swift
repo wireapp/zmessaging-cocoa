@@ -64,6 +64,8 @@ extension CallClosedReason {
             return VoiceChannelV2CallEndReason.requested
         case .timeout:
             return VoiceChannelV2CallEndReason.requestedAVS
+        case .inputOutputError:
+            return VoiceChannelV2CallEndReason.inputOutputError
         case .internalError, .unknown:
             return VoiceChannelV2CallEndReason.interrupted
         }

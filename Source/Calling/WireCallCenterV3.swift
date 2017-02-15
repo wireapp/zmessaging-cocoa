@@ -55,6 +55,8 @@ public enum CallClosedReason : Int32 {
     case normal
     /// Call was closed because of internal error in AVS
     case internalError
+    /// Call was closed due to a input/output error (couldn't access microphone)
+    case inputOutputError
     /// Outgoing call timed out
     case timeout
     /// Ongoing call lost media and was closed
@@ -80,6 +82,8 @@ public enum CallClosedReason : Int32 {
             self = .lostMedia
         case WCALL_REASON_ERROR:
             self = .internalError
+        case WCALL_REASON_IO_ERROR:
+            self = .inputOutputError
         default:
             self = .unknown
         }

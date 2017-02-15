@@ -58,7 +58,8 @@ typedef NS_ENUM(uint8_t, VoiceChannelV2CallEndReason) {
     VoiceChannelV2CallEndReasonRequestedAVS, ///< AVS requested to end call. (media wasn't flowing etc.)
     VoiceChannelV2CallEndReasonOtherLostMedia, ///< Other participant lost media flow
     VoiceChannelV2CallEndReasonInterrupted, ///< When GSM call interrupts call
-    VoiceChannelV2CallEndReasonDisconnected ///< When the client disconnects from the service due to other technical reasons
+    VoiceChannelV2CallEndReasonDisconnected, ///< When the client disconnects from the service due to other technical reasons
+    VoiceChannelV2CallEndReasonInputOutputError ///< When the client disconnects from the service due to input output error (microphone not working)
 };
 
 // The voice channel of a conversation.
