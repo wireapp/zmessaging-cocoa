@@ -275,7 +275,6 @@ _Pragma("clang diagnostic pop")
         }
         else if (event.type == ZMUpdateEventConversationCreate) {
             conversation.callStateNeedsToBeUpdatedFromBackend = YES;
-            conversation.isIgnoringCall = YES;
         }
     }
 }
