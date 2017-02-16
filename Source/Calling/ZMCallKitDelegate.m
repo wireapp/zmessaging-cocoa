@@ -499,6 +499,7 @@ NS_ASSUME_NONNULL_END
 
 - (void)provider:(CXProvider * __unused)provider performAnswerCallAction:(CXAnswerCallAction *)action
 {
+    [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ performAnswerCallAction", provider];
     [self.userSession performChanges:^{
         ZMConversation *callConversation = [action conversationInContext:self.userSession.managedObjectContext];
         [callConversation.voiceChannelRouter.currentVoiceChannel joinWithVideo:NO];
@@ -508,8 +509,6 @@ NS_ASSUME_NONNULL_END
 
 - (void)provider:(CXProvider *)provider performEndCallAction:(nonnull CXEndCallAction *)action
 {
-    [self.mediaManager resetAudioDevice];
-    
     ZMUserSession *userSession = self.userSession;
 
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
@@ -565,6 +564,8 @@ NS_ASSUME_NONNULL_END
 - (void)provider:(CXProvider *)provider didDeactivateAudioSession:(AVAudioSession __unused *)audioSession
 {
     [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ didDeactivateAudioSession", provider];
+    
+    [self.mediaManager resetAudioDevice];
 }
 
 @end
