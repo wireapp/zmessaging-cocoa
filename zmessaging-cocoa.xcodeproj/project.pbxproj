@@ -939,6 +939,8 @@
 		B40DC79D1D01A61600CEF65C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "pt-BR"; path = "pt-BR.lproj/Push.stringsdict"; sourceTree = "<group>"; };
 		B422BB981DCCC3F60076EAD5 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Push.strings; sourceTree = "<group>"; };
 		B422BB991DCCC3F60076EAD5 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ar; path = ar.lproj/Push.stringsdict; sourceTree = "<group>"; };
+		B42430E01E55CB6B00D73D1B /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/Push.strings; sourceTree = "<group>"; };
+		B42430E11E55CB6B00D73D1B /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = pl; path = pl.lproj/Push.stringsdict; sourceTree = "<group>"; };
 		B42783671E363D3A00747363 /* fi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fi; path = fi.lproj/Push.strings; sourceTree = "<group>"; };
 		B42783681E363D3A00747363 /* fi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = fi; path = fi.lproj/Push.stringsdict; sourceTree = "<group>"; };
 		B432ADBF1E02DE9500147768 /* et */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = et; path = et.lproj/Push.strings; sourceTree = "<group>"; };
@@ -2377,6 +2379,7 @@
 				sl,
 				et,
 				fi,
+				pl,
 			);
 			mainGroup = 540029AA1918CA8500578793;
 			productRefGroup = 540029B51918CA8500578793 /* Products */;
@@ -2876,6 +2879,7 @@
 				B4A124851DDCB58900FD9D66 /* sl */,
 				B432ADBF1E02DE9500147768 /* et */,
 				B42783671E363D3A00747363 /* fi */,
+				B42430E01E55CB6B00D73D1B /* pl */,
 			);
 			name = Push.strings;
 			sourceTree = "<group>";
@@ -2900,6 +2904,7 @@
 				B4A124861DDCB58A00FD9D66 /* sl */,
 				B432ADC01E02DE9500147768 /* et */,
 				B42783681E363D3A00747363 /* fi */,
+				B42430E11E55CB6B00D73D1B /* pl */,
 			);
 			name = Push.stringsdict;
 			sourceTree = "<group>";
