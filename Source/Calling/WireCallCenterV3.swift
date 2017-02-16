@@ -472,7 +472,13 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     
     @objc(answerCallForConversationID:)
     public func answerCall(conversationId: UUID) -> Bool {
-        return wcall_answer(conversationId.transportString()) == 0
+        let answered = wcall_answer(conversationId.transportString()) == 0
+        
+        if answered {
+            WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.userId).post()
+        }
+        
+        return answered
     }
     
     @objc(startCallForConversationID:video:)
