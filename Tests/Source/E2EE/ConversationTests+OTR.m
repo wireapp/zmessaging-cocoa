@@ -1213,7 +1213,7 @@
     observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     observer.notificationCallback = ^(NSObject *note) {
         ConversationChangeInfo *changeInfo = (ConversationChangeInfo *)note;
-        if (changeInfo.securityLevelChanged && changeInfo.didDegradeSecurityLevelBecauseOfMissingClients) {
+        if (changeInfo.securityLevelChanged && changeInfo.didNotSendMessagesBecauseOfConversationSecurityLevel) {
             notificationRecieved = YES;
             [self.userSession performChanges:^{
                 if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
@@ -1236,7 +1236,7 @@
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     XCTAssertEqual(message.visibleInConversation, message.conversation);
-    XCTAssertEqual(message.conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+    XCTAssertEqual(message.conversation.securityLevel, ZMConversationSecurityLevelNotSecure);
     
 }
 
@@ -1251,7 +1251,7 @@
                                              handleSecurityLevelNotification:^(ConversationChangeInfo *changeInfo) {
                                                  notificationRecieved = YES;
                                                  if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
-                                                     XCTAssertTrue(changeInfo.didDegradeSecurityLevelBecauseOfMissingClients);
+                                                     XCTAssertTrue(changeInfo.didNotSendMessagesBecauseOfConversationSecurityLevel);
                                                  }
                                              }];
     WaitForEverythingToBeDone();
@@ -1292,7 +1292,7 @@
         if ([changeInfo securityLevelChanged]) {
             notificationRecieved = YES;
             if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
-                XCTAssertTrue(changeInfo.didDegradeSecurityLevelBecauseOfMissingClients);
+                XCTAssertTrue(changeInfo.didNotSendMessagesBecauseOfConversationSecurityLevel);
             }
         }
     };
@@ -1318,7 +1318,7 @@
         if ([changeInfo securityLevelChanged]) {
             notificationRecieved &= YES;
             if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
-                XCTAssertTrue(changeInfo.didDegradeSecurityLevelBecauseOfMissingClients);
+                XCTAssertTrue(changeInfo.didNotSendMessagesBecauseOfConversationSecurityLevel);
                 [self.userSession performChanges:^{
                     [changeInfo.conversation resendMessagesThatCausedConversationSecurityDegradation];
                 }];
