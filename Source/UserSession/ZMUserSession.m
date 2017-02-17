@@ -57,7 +57,6 @@
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
-NSString * const ZMUserSessionTrackingIdentifierDidChangeNotification = @"ZMUserSessionTrackingIdentifierDidChange";
 static NSString * const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
 NSString * const ZMAppendAVSLogNotificationName = @"ZMAppendAVSLogNotification";
 NSString * const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
@@ -703,11 +702,6 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
 }
 
-- (NSString *)trackingIdentifier;
-{
-    return self.managedObjectContext.userSessionTrackingIdentifier;
-}
-
 - (void)notifyThirdPartyServices;
 {
     if (! self.didNotifyThirdPartyServices) {
@@ -946,25 +940,6 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 }
 
 @end
-
-
-
-@implementation NSManagedObjectContext (TrackingIdentifier)
-
-static NSString * const TrackingIdentifierKey = @"ZMTrackingIdentifier";
-
-- (NSString *)userSessionTrackingIdentifier;
-{
-    return [self persistentStoreMetadataForKey:TrackingIdentifierKey];
-}
-
-- (void)setUserSessionTrackingIdentifier:(NSString *)identifier;
-{
-    [self setPersistentStoreMetadata:[identifier copy] forKey:TrackingIdentifierKey];
-}
-
-@end
-
 
 
 @implementation ZMUserSession (LaunchOptions)

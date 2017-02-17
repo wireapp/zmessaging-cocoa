@@ -30,7 +30,6 @@
 
 @property (nonatomic) ZMSelfTranscoder<ZMSingleRequestTranscoder> *sut;
 @property (nonatomic) ZMUpstreamModifiedObjectSync *upstreamObjectSync;
-@property (nonatomic) NSString *trackingIdentifier;
 @property (nonatomic) id mockClientRegistrationStatus;
 @property (nonatomic) ZMClientRegistrationStatus *realClientRegistrationStatus;
 @property (nonatomic) NSTimeInterval originalRequestInterval;
@@ -72,7 +71,6 @@
 
 - (NSMutableDictionary *)samplePayloadForUserID:(NSUUID *)userID
 {
-    self.trackingIdentifier = NSUUID.createUUID.transportString;
     return [@{
               @"name" : @"Papineau",
               @"id" : userID.transportString,
@@ -80,7 +78,6 @@
               @"phone" : @"555-986-45789",
               @"accent_id" : @3,
               @"picture" : @[],
-              @"tracking_id": self.trackingIdentifier,
               } mutableCopy];
 }
 
@@ -745,40 +742,6 @@
     [self testThatItDoesNotResetTheProfileImageWhenRequestKeysDoNotContainImageDataKeysWithBlock:^(ZMUser *user) {
         [self.sut.contextChangeTrackers[0] objectsDidChange:[NSSet setWithObject:user]];
     }];
-}
-
-- (void)testThatItSetsTheTrackingIdentfier;
-{
-    // given
-    NSDictionary *payload = [self samplePayloadForUserID:[NSUUID createUUID]];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-
-    // when
-    [self.sut didReceiveResponse:response forSingleRequest:nil];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqualObjects(self.uiMOC.userSessionTrackingIdentifier, self.trackingIdentifier);
-}
-
-- (void)testThatItDoesNotClearTheTrackingIdentifier;
-{
-    // given
-    NSMutableDictionary *payload = [NSMutableDictionary dictionaryWithDictionary:[self samplePayloadForUserID:[NSUUID createUUID]]];
-    [payload removeObjectForKey:@"tracking_id"];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-    self.uiMOC.userSessionTrackingIdentifier = self.trackingIdentifier;
-    [self.uiMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // when
-    [self performIgnoringZMLogError:^{
-        [self.sut didReceiveResponse:response forSingleRequest:nil];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqualObjects(self.uiMOC.userSessionTrackingIdentifier, self.trackingIdentifier);
 }
 
 @end

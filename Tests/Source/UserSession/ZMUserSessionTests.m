@@ -921,27 +921,6 @@
 
 
 
-@implementation ZMUserSessionTests (TrackingIdentifier)
-
-- (void)testThatItCanSetTheTrackingIdentifier;
-{
-    // given
-    NSString * const identifier = @"4BC737AF24CB-Foo-bar";
-    
-    // when
-    self.uiMOC.userSessionTrackingIdentifier = identifier;
-    [self.uiMOC saveOrRollback];
-    
-    // then
-    [self.syncMOC performGroupedBlockAndWait:^{
-        XCTAssertEqualObjects(self.syncMOC.userSessionTrackingIdentifier, identifier);
-    }];
-}
-
-@end
-
-
-
 #if TARGET_OS_IPHONE
 
 @implementation ZMUserSessionTests (RemoteNotifications)

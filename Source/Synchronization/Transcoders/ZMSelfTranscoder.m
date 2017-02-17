@@ -33,7 +33,6 @@ static NSString * const SmallProfileRemoteIdentifierDataKey = @"smallProfileRemo
 
 static NSString * const AccentColorValueKey = @"accentColorValue";
 static NSString * const NameKey = @"name";
-static NSString * const TrackingIdentifierKey = @"tracking_id";
 
 static NSString * const ImageMediumDataKey = @"imageMediumData";
 static NSString * const ImageSmallProfileDataKey = @"imageSmallProfileData";
@@ -288,7 +287,6 @@ static NSString * const DeletionRequestKey = @"";
         
         NSDictionary *payload = [response.payload asDictionary];
         [selfUser updateWithTransportData:payload authoritative:YES];
-        [self updateTrackingIdentifierFromPayload:payload];
         
         // TODO: Write tests for all cases
         BOOL selfUserHasEmail = (selfUser.emailAddress != nil);
@@ -309,19 +307,6 @@ static NSString * const DeletionRequestKey = @"";
                 self.timedDownstreamSync.timeInterval = 0;
             }
         }
-    }
-}
-
-- (void)updateTrackingIdentifierFromPayload:(NSDictionary *)payload;
-{
-    NSString *identifier = [payload optionalStringForKey:TrackingIdentifierKey];
-    if (identifier != nil) {
-        self.managedObjectContext.userSessionTrackingIdentifier = identifier;
-        ZMSDispatchGroup *group = [ZMSDispatchGroup groupWithLabel:@"ZMSelfTranscoder"];
-        [self.managedObjectContext enqueueDelayedSaveWithGroup:group];
-        [group notifyOnQueue:dispatch_get_main_queue() block:^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:ZMUserSessionTrackingIdentifierDidChangeNotification object:@1];
-        }];
     }
 }
 

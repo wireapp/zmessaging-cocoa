@@ -51,8 +51,6 @@
 @end
 
 
-/// C.f. -[ZMUserSession trackingIdentifier]
-extern NSString * const ZMUserSessionTrackingIdentifierDidChangeNotification;
 extern NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName;
 extern NSString * const ZMPhoneVerificationCodeKey;
 extern NSString * const ZMUserSessionResetPushTokensNotificationName;
@@ -116,11 +114,6 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 
 /// Enqueue some changes on the managed object context (in the block) before saving, then invokes the completion handler
 - (void)enqueueChanges:(dispatch_block_t)block completionHandler:(dispatch_block_t)completionHandler ZM_NON_NULL(1);
-
-/// This identifier uniquely identifies the logged in user with 3rd party services such as Localytics.
-/// A @c ZMUserSessionTrackingIdentifierDidChangeNotification notification will be sent out when this is updated.
-@property (nonatomic, readonly) NSString *trackingIdentifier;
-
 
 /// Creates new signaling keys  and reregisters the keys and the push tokens with the backend
 - (void)resetPushTokens;

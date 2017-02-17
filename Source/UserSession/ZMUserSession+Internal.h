@@ -145,15 +145,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @end
 
 
-
-@interface NSManagedObjectContext (TrackingIdentifier)
-
-@property (nonatomic, copy) NSString *userSessionTrackingIdentifier;
-
-@end
-
-
-
 @interface ZMUserSession (RequestToOpenConversation)
 
 + (void)requestToOpenSyncConversationOnUI:(ZMConversation *)conversation;
