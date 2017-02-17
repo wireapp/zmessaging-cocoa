@@ -107,6 +107,8 @@ extension CallingRequestStrategy : ZMEventConsumer {
                     continue
                 }
                 
+                self.zmLog.debug("received calling message")
+                
                 callCenter?.received(data: payload,
                                      currentTimestamp: Date().addingTimeInterval(serverTimeDelta),
                                      serverTimestamp: eventTimestamp,
@@ -135,6 +137,8 @@ extension CallingRequestStrategy : WireCallCenterTransport {
                 completionHandler(500)
                 return
             }
+            
+            self.zmLog.debug("sending calling message")
             
             let genericMessage = ZMGenericMessage(callingContent: dataString, nonce: NSUUID().transportString())
             
