@@ -28,6 +28,14 @@
 "push.notification.add.message.oneonone" = "%1$@: %2$@";
 "push.notification.add.message.oneonone.nousername" = "Новое сообщение: %1$@";
 
+"push.notification.add.unknown.group" = "%1$@ отправил(а) сообщение в %2$@";
+"push.notification.add.unknown.group.nousername" = "Новое сообщение в %1$@";
+"push.notification.add.unknown.group.nousername.noconversationname" = "Новое сообщение";
+"push.notification.add.unknown.group.noconversationname" = "%1$@ отправил(а) сообщение";
+
+"push.notification.add.unknown.oneonone" = "%1$@ отправил(а) сообщение";
+"push.notification.add.unknown.oneonone.nousername" = "Новое сообщение";
+
 "push.notification.add.image.group" = "%1$@ поделился картинкой в %2$@";
 "push.notification.add.image.group.nousername" = "Новая картинка в %1$@";
 "push.notification.add.image.group.nousername.noconversationname" = "Новая картинка в разговоре";

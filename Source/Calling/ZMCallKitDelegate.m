@@ -559,6 +559,8 @@ NS_ASSUME_NONNULL_END
 - (void)provider:(CXProvider __unused *)provider didActivateAudioSession:(AVAudioSession __unused *)audioSession
 {
     [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ didActivateAudioSession", provider];
+    
+    [self.mediaManager startAudio];
 }
 
 - (void)provider:(CXProvider *)provider didDeactivateAudioSession:(AVAudioSession __unused *)audioSession
