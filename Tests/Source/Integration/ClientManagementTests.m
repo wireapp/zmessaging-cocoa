@@ -221,7 +221,7 @@
     XCTAssertEqual(message.systemMessageType, ZMSystemMessageTypeNewClient);
 }
 
-- (void)testThatItCanSendAMessageAfterReceivingANotificationForANewClient
+- (void)testThatItCanNotSendAMessageAfterReceivingANotificationForANewClient
 {
     // given
     XCTAssert([self logInAndWaitForSyncToBeComplete]);
@@ -254,11 +254,11 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateFailedToSend);
     ZMTransportRequest *messageRequest = [self.mockTransportSession.receivedRequests firstObjectMatchingWithBlock:^BOOL(ZMTransportRequest *req) {
         return [req.path isEqualToString:[NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString]];
     }];
-    XCTAssertNotNil(messageRequest);
+    XCTAssertNil(messageRequest);
 }
 
 - (void)testThatItRemovesAUserClientWhenReceivingANotificationForAClient
