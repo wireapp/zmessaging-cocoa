@@ -1293,6 +1293,7 @@
             notificationRecieved = YES;
             if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
                 XCTAssertTrue(changeInfo.didNotSendMessagesBecauseOfConversationSecurityLevel);
+                [changeInfo.conversation doNotResendMessagesThatCausedDegradation];
             }
         }
     };
@@ -1339,7 +1340,7 @@
     XCTAssertTrue(notificationRecieved);
     XCTAssertEqual(message2.deliveryState, ZMDeliveryStateSent);
     XCTAssertNotNil(message2);
-    XCTAssertEqual(message2.conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+    XCTAssertEqual(message2.conversation.securityLevel, ZMConversationSecurityLevelNotSecure);
     XCTAssertEqual(message1.deliveryState, ZMDeliveryStateFailedToSend);
 }
 
@@ -2084,7 +2085,7 @@
     XCTAssertEqual(conversation2.securityLevel, ZMConversationSecurityLevelNotSecure);
 }
 
-- (void)testThatItSendsMessagesWhenThereAreIgnoredClients
+- (void)testThatItDoesNotSendMessagesWhenThereAreIgnoredClients
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
@@ -2138,7 +2139,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
+    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 0u);
 }
 
 @end
