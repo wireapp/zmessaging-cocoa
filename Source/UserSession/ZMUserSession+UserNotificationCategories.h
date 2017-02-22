@@ -22,7 +22,7 @@
 #import "ZMUserSession.h"
 
 extern NSString *const ZMConversationCategory;
-extern NSString *const ZMConversationCategoryEphemeral;
+extern NSString *const ZMConversationCategoryInlcudingLike;
 extern NSString *const ZMConversationOpenAction;
 extern NSString *const ZMConversationDirectReplyAction;
 extern NSString *const ZMConversationMuteAction;
@@ -43,7 +43,7 @@ extern NSString *const ZMConnectAcceptAction;
 @interface ZMUserSession (UserNotificationCategories)
 
 - (UIUserNotificationCategory *)replyCategory;
-- (UIUserNotificationCategory *)replyCategoryEphemeral;
+- (UIUserNotificationCategory *)replyCategoryIncludingLike;
 - (UIUserNotificationCategory *)incomingCallCategory;
 - (UIUserNotificationCategory *)missedCallCategory;
 

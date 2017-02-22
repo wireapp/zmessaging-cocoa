@@ -142,7 +142,7 @@ static NSString *ZMLogTag = @"Push";
     [application registerForRemoteNotifications];
     NSSet *categories = [NSSet setWithArray:@[
                                               self.replyCategory,
-                                              self.replyCategoryEphemeral,
+                                              self.replyCategoryIncludingLike,
                                               self.missedCallCategory,
                                               self.incomingCallCategory,
                                               self.connectCategory

@@ -21,7 +21,7 @@
 
 
 NSString *const ZMConversationCategory = @"conversationCategory";
-NSString *const ZMConversationCategoryEphemeral = @"conversationCategoryEphemeral";
+NSString *const ZMConversationCategoryInlcudingLike = @"conversationCategoryWithLike";
 NSString *const ZMConversationOpenAction = @"conversationOpenAction";
 NSString *const ZMConversationDirectReplyAction = @"conversationDirectReplyAction";
 NSString *const ZMConversationMuteAction = @"conversationMuteAction";
@@ -73,20 +73,23 @@ static NSString * ZMPushActionLocalizedString(NSString *key)
 
 - (UIUserNotificationCategory *)replyCategory
 {
-    UIMutableUserNotificationCategory *category = [[UIMutableUserNotificationCategory alloc] init];
-    category.identifier = ZMConversationCategory;
-    NSArray *actions = @[[self replyActionDirectMessage: NO], [self likeMessageAction], [self muteConversationBackgroundAction]];
-
-    [category setActions:actions forContext:UIUserNotificationActionContextDefault];
-    [category setActions:actions forContext:UIUserNotificationActionContextMinimal];
-    return category;
+    return [self replyCategoryInlcudingLike:NO];
 }
 
-- (UIUserNotificationCategory *)replyCategoryEphemeral
+- (UIUserNotificationCategory *)replyCategoryIncludingLike
+{
+    return [self replyCategoryInlcudingLike:YES];
+}
+
+- (UIUserNotificationCategory *)replyCategoryInlcudingLike:(BOOL)includingLike
 {
     UIMutableUserNotificationCategory *category = [[UIMutableUserNotificationCategory alloc] init];
-    category.identifier = ZMConversationCategoryEphemeral;
-    NSArray *actions = @[[self replyActionDirectMessage: NO], [self muteConversationBackgroundAction]];
+    category.identifier = includingLike ? ZMConversationCategoryInlcudingLike : ZMConversationCategory;
+    NSMutableArray *actions = @[[self replyActionDirectMessage: NO], [self muteConversationBackgroundAction]].mutableCopy;
+
+    if (!includingLike) {
+        [actions insertObject:self.likeMessageAction atIndex:1];
+    }
 
     [category setActions:actions forContext:UIUserNotificationActionContextDefault];
     [category setActions:actions forContext:UIUserNotificationActionContextMinimal];

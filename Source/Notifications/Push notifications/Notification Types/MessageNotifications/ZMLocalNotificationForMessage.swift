@@ -54,22 +54,22 @@ extension NotificationForMessage {
             notification.alertBody = (isEphemeral ? ZMPushStringEphemeral : ZMPushStringDefault).localizedStringForPushNotification()
             notification.soundName = ZMCustomSound.notificationNewMessageSoundName()
             if isEphemeral {
-                notification.category = conversationCategory(for: isEphemeral)
+                notification.category = conversationCategory(ephemeral: isEphemeral)
             }
         } else {
             notification.alertBody = configureAlertBody(message).escapingPercentageSymbols()
             notification.soundName = soundName
-            notification.category = conversationCategory(for: isEphemeral)
+            notification.category = conversationCategory(ephemeral: isEphemeral)
         }
         notification.setupUserInfo(message)
         return notification
     }
 
-    func conversationCategory(for ephemeral: Bool) -> String {
-        if ephemeral {
-            return ZMConversationCategoryEphemeral;
-        } else {
-            return ZMConversationCategory;
+    func conversationCategory(ephemeral: Bool) -> String {
+        guard !ephemeral else { return ZMConversationCategory }
+        switch contentType {
+        case .knock, .system(_), .undefined : return ZMConversationCategory
+        default: return ZMConversationCategoryInlcudingLike
         }
     }
     
