@@ -140,7 +140,13 @@ static NSString *ZMLogTag = @"Push";
 - (void)setupPushNotificationsForApplication:(id<ZMApplication>)application
 {
     [application registerForRemoteNotifications];
-    NSSet *categories = [NSSet setWithArray:@[self.replyCategory, self.missedCallCategory, self.incomingCallCategory, self.connectCategory]];
+    NSSet *categories = [NSSet setWithArray:@[
+                                              self.replyCategory,
+                                              self.replyCategoryEphemeral,
+                                              self.missedCallCategory,
+                                              self.incomingCallCategory,
+                                              self.connectCategory
+                                              ]];
     [application registerUserNotificationSettings:[UIUserNotificationSettings  settingsForTypes:(UIUserNotificationTypeSound |
                                                                                                  UIUserNotificationTypeAlert |
                                                                                                  UIUserNotificationTypeBadge)
@@ -196,6 +202,9 @@ static NSString *ZMLogTag = @"Push";
     if ([identifier isEqualToString:ZMConversationMuteAction]) {
         [self muteConversationForNotification:notification withCompletionHandler:completionHandler];
         return;
+    }
+    if ([identifier isEqualToString:ZMMessageLikeAction]) {
+        [self likeMessageForNotification:notification WithCompletionHandler:completionHandler];
     }
     
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_8_4) {

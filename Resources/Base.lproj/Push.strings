@@ -170,6 +170,7 @@
 "push.notification.action.message.reply" = "Reply";
 "push.notification.action.message.reply.button.title" = "Send";
 "push.notification.action.conversation.mute" = "Mute";
+"push.notification.action.message.like" = "❤️";
 
 "push.notification.action.call.accept" = "Accept";
 "push.notification.action.call.ignore" = "Decline";

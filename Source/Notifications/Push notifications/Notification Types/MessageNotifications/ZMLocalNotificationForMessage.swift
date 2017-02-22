@@ -54,15 +54,23 @@ extension NotificationForMessage {
             notification.alertBody = (isEphemeral ? ZMPushStringEphemeral : ZMPushStringDefault).localizedStringForPushNotification()
             notification.soundName = ZMCustomSound.notificationNewMessageSoundName()
             if isEphemeral {
-                notification.category = ZMConversationCategory
+                notification.category = conversationCategory(for: isEphemeral)
             }
         } else {
             notification.alertBody = configureAlertBody(message).escapingPercentageSymbols()
             notification.soundName = soundName
-            notification.category = ZMConversationCategory
+            notification.category = conversationCategory(for: isEphemeral)
         }
         notification.setupUserInfo(message)
         return notification
+    }
+
+    func conversationCategory(for ephemeral: Bool) -> String {
+        if ephemeral {
+            return ZMConversationCategoryEphemeral;
+        } else {
+            return ZMConversationCategory;
+        }
     }
     
     static public func shouldCreateNotification(_ message: MessageType) -> Bool {

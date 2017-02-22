@@ -2414,7 +2414,7 @@
     // when
     NSString *reactionEmoji = @"❤️";
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:message];
+        [ZMMessage addReaction:MessageReactionLike toMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2486,9 +2486,8 @@
     MessageChangeObserver *observer = [[MessageChangeObserver alloc] initWithMessage:message];
 
     // when
-    NSString *reactionEmoji = @"❤️";
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:message];
+        [ZMMessage addReaction:MessageReactionLike toMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2515,10 +2514,9 @@
         message = (ZMTextMessage *)[conversation appendMessageWithText:@"Je t'aime JCVD"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    NSString *reactionEmoji = @"❤️";
+
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:message];
+        [ZMMessage addReaction:MessageReactionLike toMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2556,7 +2554,7 @@
     
     NSString *reactionEmoji = @"❤️";
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:message];
+        [ZMMessage addReaction:MessageReactionLike toMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2712,10 +2710,9 @@
         message = (ZMTextMessage *)[conversation appendMessageWithText:@"Je t'aime JCVD"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    NSString *reactionEmoji = @"❤️";
+
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:message];
+        [ZMMessage addReaction:MessageReactionLike toMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2801,15 +2798,12 @@
         [mockConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    
+
     ZMMessage *editedMessage = [ZMMessage fetchMessageWithNonce:nonce forConversation:conversation inManagedObjectContext:self.uiMOC];
-    
-    NSString *reactionEmoji = @"❤️";
     
     // when
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:editedMessage];
+        [ZMMessage addReaction:MessageReactionLike toMessage:editedMessage];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
