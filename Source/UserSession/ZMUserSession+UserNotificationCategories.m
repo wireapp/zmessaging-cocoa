@@ -87,7 +87,7 @@ static NSString * ZMPushActionLocalizedString(NSString *key)
     category.identifier = includingLike ? ZMConversationCategoryInlcudingLike : ZMConversationCategory;
     NSMutableArray *actions = @[[self replyActionDirectMessage: NO], [self muteConversationBackgroundAction]].mutableCopy;
 
-    if (!includingLike) {
+    if (includingLike) {
         [actions insertObject:self.likeMessageAction atIndex:1];
     }
 
