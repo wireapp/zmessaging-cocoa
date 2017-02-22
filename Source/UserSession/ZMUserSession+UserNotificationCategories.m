@@ -21,7 +21,7 @@
 
 
 NSString *const ZMConversationCategory = @"conversationCategory";
-NSString *const ZMConversationCategoryInlcudingLike = @"conversationCategoryWithLike";
+NSString *const ZMConversationCategoryIncludingLike = @"conversationCategoryWithLike";
 NSString *const ZMConversationOpenAction = @"conversationOpenAction";
 NSString *const ZMConversationDirectReplyAction = @"conversationDirectReplyAction";
 NSString *const ZMConversationMuteAction = @"conversationMuteAction";
@@ -84,7 +84,7 @@ static NSString * ZMPushActionLocalizedString(NSString *key)
 - (UIUserNotificationCategory *)replyCategoryInlcudingLike:(BOOL)includingLike
 {
     UIMutableUserNotificationCategory *category = [[UIMutableUserNotificationCategory alloc] init];
-    category.identifier = includingLike ? ZMConversationCategoryInlcudingLike : ZMConversationCategory;
+    category.identifier = includingLike ? ZMConversationCategoryIncludingLike : ZMConversationCategory;
     NSMutableArray *actions = @[[self replyActionDirectMessage: NO], [self muteConversationBackgroundAction]].mutableCopy;
 
     if (includingLike) {

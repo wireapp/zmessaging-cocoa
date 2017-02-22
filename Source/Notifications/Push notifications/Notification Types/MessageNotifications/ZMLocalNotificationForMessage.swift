@@ -69,7 +69,7 @@ extension NotificationForMessage {
         guard !ephemeral else { return ZMConversationCategory }
         switch contentType {
         case .knock, .system(_), .undefined : return ZMConversationCategory
-        default: return ZMConversationCategoryInlcudingLike
+        default: return ZMConversationCategoryIncludingLike
         }
     }
     

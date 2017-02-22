@@ -22,7 +22,7 @@
 #import "ZMUserSession.h"
 
 extern NSString *const ZMConversationCategory;
-extern NSString *const ZMConversationCategoryInlcudingLike;
+extern NSString *const ZMConversationCategoryIncludingLike;
 extern NSString *const ZMConversationOpenAction;
 extern NSString *const ZMConversationDirectReplyAction;
 extern NSString *const ZMConversationMuteAction;
