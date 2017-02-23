@@ -38,14 +38,6 @@
 
 @implementation ZMLastUpdateEventIDTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
-{
-    NOT_USED(moc);
-    NOT_USED(appStateDelegate);
-    RequireString(NO, "Use the other init");
-    return nil;
-}
-
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                             appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
                                   syncStatus:(SyncStatus *)syncStatus
