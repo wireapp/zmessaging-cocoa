@@ -49,25 +49,14 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
     /// Address book
     fileprivate let addressBookGenerator : ()->(AddressBookAccessor?)
     
-    /// Default AddressBook Generator
-    static let defaultAddressBookGenerator = { return AddressBook.factory() }
-
     public override var configuration: ZMStrategyConfigurationOption { return .allowsRequestsDuringEventProcessing }
     
     public override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
-        // notify of denied access
-        if AddressBookUploadRequestStrategy.defaultAddressBookGenerator() == nil {
-            NotificationCenter.default.post(name: Notification.Name(rawValue: failedToAccessAddressBookNotificationName), object: nil)
-        }
-        self.addressBookGenerator = AddressBookUploadRequestStrategy.defaultAddressBookGenerator
-        self.tracker = AddressBookAnalytics(analytics: moc.analytics, managedObjectContext: moc)
-        super.init(managedObjectContext: moc, appStateDelegate: appStateDelegate)
-        self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
+        self.init(managedObjectContext: moc, appStateDelegate: appStateDelegate)
     }
     
     /// Use for testing only
-    internal init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate, addressBookGenerator: @escaping ()->(AddressBookAccessor?) = AddressBookUploadRequestStrategy.defaultAddressBookGenerator, tracker: AddressBookTracker? = nil)
-    {
+    internal init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate, addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook.factory() }, tracker: AddressBookTracker? = nil) {
         // notify of denied access
         if addressBookGenerator() == nil {
             NotificationCenter.default.post(name: Notification.Name(rawValue: failedToAccessAddressBookNotificationName), object: nil)
