@@ -52,7 +52,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
     public override var configuration: ZMStrategyConfigurationOption { return .allowsRequestsDuringEventProcessing }
     
     public override convenience init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
-        self.init(managedObjectContext: moc, appStateDelegate: appStateDelegate)
+        self.init(managedObjectContext: moc, appStateDelegate: appStateDelegate, addressBookGenerator: { return AddressBook.factory() }, tracker: nil)
     }
     
     /// Use for testing only
