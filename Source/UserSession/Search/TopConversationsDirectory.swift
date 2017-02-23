@@ -23,16 +23,17 @@ import ZMCDataModel
 /// This object is expected to be used on the UI context only
 @objc public class TopConversationsDirectory : NSObject {
 
-    fileprivate let managedObjectContext : NSManagedObjectContext
+    fileprivate let uiMOC : NSManagedObjectContext
+    fileprivate let syncMOC : NSManagedObjectContext
+    fileprivate static let topConversationSize = 10
 
     /// Cached top conversations
     /// - warning: Might include deleted or blocked conversations
     fileprivate var topConversationsCache : [ZMConversation] = []
     
-    fileprivate(set) var fetchingTopConversations : Bool = false
-    
     public init(managedObjectContext: NSManagedObjectContext) {
-        self.managedObjectContext = managedObjectContext
+        uiMOC = managedObjectContext
+        syncMOC = managedObjectContext.zm_sync
         super.init()
         self.loadList()
     }
@@ -44,16 +45,34 @@ private let topConversationsObjectIDKey = "WireTopConversationsObjectIDKey"
 extension TopConversationsDirectory {
 
     public func refreshTopConversations() {
-        self.fetchingTopConversations = true
-        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        syncMOC.performGroupedBlock {
+            let conversations = self.fetchOneOnOneConversations()
+            let countByConversation = conversations.mapToDictionary(with: self.messageCount)
+            let sorted = countByConversation.sorted {  $0.1 > $1.1 }.prefix(TopConversationsDirectory.topConversationSize)
+            let identifiers = sorted.flatMap { $0.0.objectID }
+            self.updateUIList(with: identifiers)
+        }
     }
-    
-    func didDownloadTopConversations(conversations: [ZMConversation]) {
-        self.fetchingTopConversations = false
-        self.managedObjectContext.perform {
-            self.topConversationsCache = conversations.flatMap { self.managedObjectContext.object(with: $0.objectID) as? ZMConversation }
+
+    private func updateUIList(with identifiers: [NSManagedObjectID]) {
+        uiMOC.performGroupedBlock {
+            self.topConversationsCache = identifiers.flatMap {
+                (try? self.uiMOC.existingObject(with: $0)) as? ZMConversation
+            }
             self.persistList()
         }
+    }
+
+    private func messageCount(for conversation: ZMConversation) -> Int? {
+        guard let identifier = conversation.remoteIdentifier else { return 0 }
+        guard let predicate = ZMMessage.predicateForNonSystemMessagesInTheLastMonth(in: identifier) else { return 0 }
+        let request = ZMMessage.sortedFetchRequest(with: predicate)!
+        return try? self.syncMOC.count(for: request)
+    }
+
+    private func fetchOneOnOneConversations() -> [ZMConversation] {
+        let request = ZMConversation.sortedFetchRequest(with: ZMConversation.predicateForActiveOneOnOneConversations)
+        return syncMOC.executeFetchRequestOrAssert(request) as! [ZMConversation]
     }
     
     /// Top conversations
@@ -64,17 +83,17 @@ extension TopConversationsDirectory {
     /// Persist list of conversations to persistent store
     private func persistList() {
         let valueToSave = self.topConversations.map { $0.objectID.uriRepresentation().absoluteString }
-        self.managedObjectContext.setPersistentStoreMetadata(array: valueToSave, key: topConversationsObjectIDKey)
+        self.uiMOC.setPersistentStoreMetadata(array: valueToSave, key: topConversationsObjectIDKey)
         TopConversationsDirectoryNotification.post()
     }
 
     /// Load list from persistent store
     fileprivate func loadList() {
-        guard let ids = self.managedObjectContext.persistentStoreMetadata(forKey: topConversationsObjectIDKey) as? [String] else {
+        guard let ids = self.uiMOC.persistentStoreMetadata(forKey: topConversationsObjectIDKey) as? [String] else {
             return
         }
-        let managedObjectIDs = ids.flatMap(URL.init).flatMap { self.managedObjectContext.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: $0) }
-        self.topConversationsCache = managedObjectIDs.flatMap { self.managedObjectContext.object(with: $0) as? ZMConversation }
+        let managedObjectIDs = ids.flatMap(URL.init).flatMap { self.uiMOC.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: $0) }
+        self.topConversationsCache = managedObjectIDs.flatMap { self.uiMOC.object(with: $0) as? ZMConversation }
     }
 }
 
@@ -118,3 +137,32 @@ extension TopConversationsDirectory {
     }
 
 }
+
+fileprivate extension ZMConversation {
+
+    static var predicateForActiveOneOnOneConversations: NSPredicate {
+        let oneOnOnePredicate = NSPredicate(format: "%K == %d", #keyPath(ZMConversation.conversationType), ZMConversationType.oneOnOne.rawValue)
+        let acceptedPredicate = NSPredicate(format: "%K == %d", #keyPath(ZMConversation.connection.status), ZMConnectionStatus.accepted.rawValue)
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [oneOnOnePredicate, acceptedPredicate])
+    }
+
+}
+
+
+fileprivate extension ZMMessage {
+
+    static func predicateForNonSystemMessagesInTheLastMonth(in identifier: UUID) -> NSPredicate? {
+        guard let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) else { return nil }
+        let lastMonthPredicate = NSPredicate(format: "%K >= %@", #keyPath(ZMMessage.serverTimestamp), oneMonthAgo as NSDate)
+        let conversationPredicate = NSPredicate(
+            format: "%K.%K == %@",
+            ZMMessageConversationKey,
+            ZMConversationRemoteIdentifierDataKey,
+            (identifier as NSUUID).data() as NSData
+        )
+
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [lastMonthPredicate, conversationPredicate])
+    }
+
+}
+

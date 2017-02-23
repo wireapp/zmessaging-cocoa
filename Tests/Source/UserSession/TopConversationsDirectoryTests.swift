@@ -25,11 +25,9 @@ class TopConversationsDirectoryTests : MessagingTest {
     var sut : TopConversationsDirectory!
     var topConversationsObserver: FakeTopConversationsDirectoryObserver!
     var topConversationsObserverToken: TopConversationsDirectoryObserverToken!
-    var newRequestObserver : OperationLoopNewRequestObserver!
     
     override func setUp() {
         super.setUp()
-        self.newRequestObserver = OperationLoopNewRequestObserver()
         self.sut = TopConversationsDirectory(managedObjectContext: self.uiMOC)
         self.topConversationsObserver = FakeTopConversationsDirectoryObserver()
         self.topConversationsObserverToken = self.sut.add(observer: topConversationsObserver)
@@ -38,70 +36,95 @@ class TopConversationsDirectoryTests : MessagingTest {
     override func tearDown() {
         self.sut.removeObserver(with: self.topConversationsObserverToken)
         self.sut = nil
-        self.newRequestObserver = nil
         super.tearDown()
     }
     
-    func testThatItIsNotFetchingWhenCreated() {
-        XCTAssertFalse(self.sut.fetchingTopConversations)
+    func testThatItHasNoResultsWhenCreatedAndNeverFetched() {
         XCTAssertEqual(self.sut.topConversations, [])
     }
     
-    func testThatItIsFetchingAfterRefreshing() {
-        
-        // WHEN
-        self.sut.refreshTopConversations()
-        
-        // THEN
-        XCTAssertTrue(self.sut.fetchingTopConversations)
-        XCTAssertEqual(self.newRequestObserver.notifications.count, 1)
-    }
-    
-    func testThatItIsNotFetchingAfterDownloading() {
-        
+    func testThatItSetsTheFetchedTopConversations() {
         // GIVEN
-        self.sut.refreshTopConversations()
-        
-        // WHEN
-        self.sut.didDownloadTopConversations(conversations: [])
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        
-        // THEN
-        XCTAssertFalse(self.sut.fetchingTopConversations)
-    }
-    
-    func testThatItSetsTheDownloadedTopConversations() {
-        
-        // GIVEN
-        let conv1 = self.createConversation(in: self.uiMOC)
-        let conv2 = self.createConversation(in: self.uiMOC)
-        _ = self.createConversation(in: self.uiMOC)
-        self.sut.refreshTopConversations()
-        
-        // WHEN
-        self.sut.didDownloadTopConversations(conversations: [conv1, conv2])
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        
-        // THEN
-        XCTAssertEqual(self.sut.topConversations, [conv1, conv2])
+        let conv1 = createConversation(in: uiMOC, fillWithNew: 5)
+        let conv2 = createConversation(in: uiMOC, fillWithNew: 15)
+        let conv3 = createConversation(in: uiMOC, fillWithNew: 2)
 
+        // WHEN
+        sut.refreshTopConversations()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // THEN
+        XCTAssertEqual(sut.topConversations, [conv2, conv1, conv3])
+    }
+
+    func testThatOnlyOneOnOneConversationsAreIncluded() {
+        // GIVEN
+        let conv1 = createConversation(in: uiMOC, fillWithNew: 5)
+        let conv2 = createConversation(in: uiMOC, fillWithNew: 15)
+        let conv3 = createConversation(in: uiMOC, fillWithNew: 2)
+
+        let user1 = ZMUser.insertNewObject(in: uiMOC), user2 = ZMUser.insertNewObject(in: uiMOC)
+        user1.remoteIdentifier = .create()
+        user2.remoteIdentifier = .create()
+        let groupConv = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user1, user2])
+        groupConv?.remoteIdentifier = .create()
+
+        // WHEN
+        sut.refreshTopConversations()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
+        XCTAssertEqual(sut.topConversations, [conv2, conv1, conv3])
+    }
+
+    func testThatItDoesNotConsiderMessagesOlderThanOneMonthInTheSorting() {
+        // GIVEN
+        let conv1 = createConversation(in: uiMOC, fillWithNew: 5, old: 15)
+        let conv2 = createConversation(in: uiMOC, fillWithNew: 10, old: 5)
+        let conv3 = createConversation(in: uiMOC, fillWithNew: 2, old: 20)
+
+        // WHEN
+        sut.refreshTopConversations()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
+        XCTAssertEqual(sut.topConversations, [conv2, conv1, conv3])
+    }
+
+    func testThatItUpdatesTheConversationsWhenRefreshIsCalledSubsequently() {
+        // GIVEN
+        let conv1 = createConversation(in: uiMOC, fillWithNew: 5, old: 15)
+        let conv2 = createConversation(in: uiMOC, fillWithNew: 10, old: 5)
+        let conv3 = createConversation(in: uiMOC, fillWithNew: 2, old: 20)
+
+        // WHEN
+        sut.refreshTopConversations()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
+        XCTAssertEqual(sut.topConversations, [conv2, conv1, conv3])
+
+        // WHEN
+        fill(conv3, with: 10)
+        sut.refreshTopConversations()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
     }
     
     func testThatItSetsTopConversationFromTheRightContext() {
         // GIVEN
-        self.sut.refreshTopConversations()
         var expectedConversationsIds : [NSManagedObjectID] = []
         
         // WHEN
-        self.syncMOC.performGroupedBlockAndWait {
-            let conv1 = self.createConversation(in: self.uiMOC)
-            expectedConversationsIds.append(conv1.objectID)
-            let conv2 = self.createConversation(in: self.uiMOC)
-            expectedConversationsIds.append(conv2.objectID)
-            _ = self.createConversation(in: self.uiMOC)
-            self.sut.didDownloadTopConversations(conversations: [conv1, conv2])
-        }
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        let conv1 = self.createConversation(in: self.uiMOC, fillWithNew: 2)
+        expectedConversationsIds.append(conv1.objectID)
+        let conv2 = self.createConversation(in: self.uiMOC)
+        expectedConversationsIds.append(conv2.objectID)
+
+        sut.refreshTopConversations()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
         
         // THEN
         XCTAssertEqual(self.sut.topConversations.map { $0.objectID }, expectedConversationsIds)
@@ -113,13 +136,13 @@ class TopConversationsDirectoryTests : MessagingTest {
         // GIVEN
         let conv1 = self.createConversation(in: self.uiMOC)
         let conv2 = self.createConversation(in: self.uiMOC)
-        _ = self.createConversation(in: self.uiMOC)
-        self.sut.refreshTopConversations()
-        
+
         // WHEN
-        self.sut.didDownloadTopConversations(conversations: [conv1, conv2])
+        self.sut.refreshTopConversations()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.uiMOC.delete(conv1)
+        uiMOC.saveOrRollback()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // THEN
         XCTAssertEqual(self.sut.topConversations, [conv2])
@@ -130,13 +153,11 @@ class TopConversationsDirectoryTests : MessagingTest {
         // GIVEN
         let conv1 = self.createConversation(in: self.uiMOC)
         let conv2 = self.createConversation(in: self.uiMOC)
-        _ = self.createConversation(in: self.uiMOC)
-        self.sut.refreshTopConversations()
         
         // WHEN
-        self.sut.didDownloadTopConversations(conversations: [conv1, conv2])
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         conv1.connection?.status = .blocked
+        sut.refreshTopConversations()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // THEN
         XCTAssertEqual(self.sut.topConversations, [conv2])
@@ -145,20 +166,18 @@ class TopConversationsDirectoryTests : MessagingTest {
     func testThatItDoesPersistsResults() {
         
         // GIVEN
-        let conv1 = self.createConversation(in: self.uiMOC)
-        let conv2 = self.createConversation(in: self.uiMOC)
-        _ = self.createConversation(in: self.uiMOC)
-        self.sut.refreshTopConversations()
+        createConversation(in: uiMOC)
+        createConversation(in: uiMOC)
+        createConversation(in: uiMOC)
         
         // WHEN
-        self.sut.didDownloadTopConversations(conversations: [conv1, conv2])
+        self.sut.refreshTopConversations()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         self.uiMOC.saveOrRollback()
         
         // THEN
         let sut2 = TopConversationsDirectory(managedObjectContext: self.uiMOC)
         XCTAssertEqual(sut2.topConversations, self.sut.topConversations)
-        
     }
 }
 
@@ -181,10 +200,10 @@ extension TopConversationsDirectoryTests {
 
         // GIVEN
         XCTAssertEqual(topConversationsObserver.topConversationsDidChangeCallCount, 0)
-        sut.refreshTopConversations()
+
 
         // WHEN
-        sut.didDownloadTopConversations(conversations: [])
+                sut.refreshTopConversations()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
 
         // THEN
@@ -195,19 +214,18 @@ extension TopConversationsDirectoryTests {
 
         // GIVEN
         XCTAssertEqual(topConversationsObserver.topConversationsDidChangeCallCount, 0)
-        sut.refreshTopConversations()
 
         // WHEN
-        sut.didDownloadTopConversations(conversations: [])
+        sut.refreshTopConversations()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
 
         // THEN
         XCTAssertEqual(topConversationsObserver.topConversationsDidChangeCallCount, 1)
 
         // WHEN
-        let (conv1, conv2) = (createConversation(in: uiMOC), createConversation(in: uiMOC))
+        createConversation(in: uiMOC)
+        createConversation(in: uiMOC)
         sut.refreshTopConversations()
-        sut.didDownloadTopConversations(conversations: [conv1, conv2])
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
 
         // THEN
@@ -218,15 +236,43 @@ extension TopConversationsDirectoryTests {
 
 // MARK: - Helpers
 extension TopConversationsDirectoryTests {
-    
-    func createConversation(in managedObjectContext: NSManagedObjectContext) -> ZMConversation {
+
+    @discardableResult
+    func createConversation(
+        in managedObjectContext: NSManagedObjectContext,
+        fillWithNew new: Int = 0,
+        old: Int = 0,
+        file: StaticString = #file,
+        line: UInt = #line
+        ) -> ZMConversation {
+
         let conversation = ZMConversation.insertNewObject(in: managedObjectContext)
         conversation.remoteIdentifier = UUID.create()
         conversation.conversationType = .oneOnOne
         conversation.connection = ZMConnection.insertNewObject(in: managedObjectContext)
         conversation.connection?.status = .accepted
+        fill(conversation, with: (new, old), file: file, line: line)
         managedObjectContext.saveOrRollback()
         return conversation
+    }
+
+    func fill(_ conversation: ZMConversation, with messageCount: Int, file: StaticString = #file, line: UInt = #line) {
+        fill(conversation, with: (messageCount, 0), file: file, line: line)
+    }
+
+    func fill(_ conversation: ZMConversation, with messageCount: (new: Int, old: Int), file: StaticString = #file, line: UInt = #line) {
+        guard messageCount.new > 0 || messageCount.old > 0 else { return }
+        (0..<messageCount.new).forEach {
+            _ = conversation.appendMessage(withText: "Message #\($0)")
+        }
+
+        (0..<messageCount.old).forEach {
+            let message = conversation.appendMessage(withText: "Message #\($0)") as! ZMMessage
+            message.serverTimestamp = Date(timeIntervalSince1970: TimeInterval($0 * 100))
+        }
+
+        XCTAssertTrue(uiMOC.saveOrRollback(), file: file, line: line)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2), file: file, line: line)
     }
 }
 

@@ -198,7 +198,6 @@
                                                proxiedRequestStatus:nil
                                                       accountStatus:nil
                                        backgroundAPNSPingBackStatus:nil
-                                          topConversationsDirectory:nil
                                                        mediaManager:nil
                                                 onDemandFlowManager:nil
                                                             syncMOC:self.syncMOC

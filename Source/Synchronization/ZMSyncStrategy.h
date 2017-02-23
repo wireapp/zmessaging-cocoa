@@ -55,7 +55,6 @@
                         proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
                                accountStatus:(ZMAccountStatus *)accountStatus
                 backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
-                   topConversationsDirectory:(TopConversationsDirectory *)topConversationsDirectory
                                 mediaManager:(id<AVSMediaManager>)mediaManager
                          onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                      syncMOC:(NSManagedObjectContext *)syncMOC

@@ -371,7 +371,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                proxiedRequestStatus:self.proxiedRequestStatus
                                                                                       accountStatus:self.accountStatus
                                                                        backgroundAPNSPingBackStatus:self.pingBackStatus
-                                                                          topConversationsDirectory:self.topConversationsDirectory
                                                                         localNotificationdispatcher:self.localNotificationDispatcher
                                                                                        mediaManager:mediaManager
                                                                                 onDemandFlowManager:self.onDemandFlowManager
