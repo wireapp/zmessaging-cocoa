@@ -223,6 +223,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.systemMessageTranscoder,
                                    self.clientMessageTranscoder,
                                    self.callingRequestStrategy,
+                                   self.callStateTranscoder,
                                    ];
 
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
@@ -255,7 +256,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager syncStatus:self.syncStateManager.syncStatus objectDirectory:self];
     self.flowTranscoder = [[ZMFlowSync alloc] initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC application:self.application];
     self.callingRequestStrategy = [[CallingRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus];
-    self.callStateTranscoder = [[ZMCallStateTranscoder alloc] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:uiMOC objectStrategyDirectory:self];
+    self.callStateTranscoder = [[ZMCallStateTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager objectStrategyDirectory:self];
     self.loginTranscoder = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.syncStateManager.authenticationStatus clientRegistrationStatus:self.syncStateManager.clientRegistrationStatus];
     self.loginCodeRequestTranscoder = [[ZMLoginCodeRequestTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.syncStateManager.authenticationStatus];
     self.phoneNumberVerificationTranscoder = [[ZMPhoneNumberVerificationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.syncStateManager.authenticationStatus];
@@ -367,7 +368,6 @@ ZM_EMPTY_ASSERTING_INIT()
     return @[
              self.registrationTranscoder,
              self.flowTranscoder,
-             self.callStateTranscoder,
              self.phoneNumberVerificationTranscoder,
              self.loginCodeRequestTranscoder,
              self.loginTranscoder,

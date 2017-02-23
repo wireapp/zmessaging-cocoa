@@ -71,8 +71,10 @@
     
     self.gsmCallHandler = [OCMockObject niceMockForClass:[ZMGSMCallHandler class]];
     [self verifyMockLater:self.gsmCallHandler];
+    
+    [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateEventProcessing)] appState];
 
-    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
 
     [self simulateOpeningPushChannel];
 }
@@ -136,23 +138,14 @@
     return conversation;
 }
 
-
-
 - (NSDictionary *)payloadForConversation:(ZMConversation *)conversation othersAreJoined:(BOOL)othersAreJoined selfIsJoined:(BOOL)selfIsJoined
 {
     return [self payloadForCallStateEventInConversation:conversation othersAreJoined:othersAreJoined selfIsJoined:selfIsJoined sequence:nil];
 }
 
-
-- (void)testThatItProcessesDownstreamBeforeUpstream;
+- (void)testThatUsesCorrectRequestStrategyConfiguration
 {
-    // when
-    NSArray *generators = self.sut.requestGenerators;
-    
-    // then
-    XCTAssertEqual(generators.count, 2u);
-    XCTAssertTrue([generators.firstObject isKindOfClass:ZMDownstreamObjectSync.class]);
-    XCTAssertTrue([generators.lastObject isKindOfClass:ZMUpstreamModifiedObjectSync.class]);
+    XCTAssertEqual(self.sut.configuration, ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync);
 }
 
 - (void)testThatItReturnsTheContextChangeTrackers;
@@ -180,7 +173,7 @@
         }
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNotNil(request);
@@ -202,7 +195,7 @@
         }
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNil(request);
@@ -225,7 +218,7 @@
         }
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNil(request);
@@ -250,7 +243,7 @@
         }
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNil(request);
@@ -276,7 +269,7 @@
         }
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNil(request);
@@ -301,7 +294,7 @@
         }
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNil(request);
@@ -322,7 +315,7 @@
         
         // when
         block(conversation);
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNotNil(request);
@@ -367,7 +360,7 @@
         
         // when
         block(conversation);
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     }];
         WaitForAllGroupsToBeEmpty(0.5);
@@ -405,7 +398,7 @@
         
         // when
         block(conversation);
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:HTTPStatus transportSessionError:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1456,7 +1449,7 @@
         [self.sut.contextChangeTrackers.lastObject objectsDidChange:[NSSet setWithObject:syncConversation]];
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         // then
@@ -1537,7 +1530,7 @@
         XCTAssertTrue(syncConversation.hasLocalModificationsForCallDeviceIsActive);
         
         [self.sut.contextChangeTrackers.lastObject objectsDidChange:[NSSet setWithObject:syncConversation]];
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         // when
@@ -1555,7 +1548,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
         XCTAssertEqual(syncConversation.keysThatHaveLocalModifications.count, 0u);
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertTrue(syncConversation.callDeviceIsActive);
         XCTAssertNil(request);
         
@@ -1574,7 +1567,7 @@
         XCTAssertTrue(syncConversation.hasLocalModificationsForCallDeviceIsActive);
         [self.sut.contextChangeTrackers.lastObject objectsDidChange:[NSSet setWithObject:syncConversation]];
         
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         // when
@@ -1591,7 +1584,7 @@
         // then
         XCTAssertEqual(syncConversation.keysThatHaveLocalModifications.count, 0u);
         XCTAssertFalse(syncConversation.callDeviceIsActive);
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNil(request);
         
         [syncConversation.voiceChannelRouter.v2 tearDown];
@@ -1612,7 +1605,7 @@
         
         [self.sut.contextChangeTrackers.lastObject objectsDidChange:[NSSet setWithObject:syncConversation]];
         
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         // when
@@ -1635,7 +1628,7 @@
         XCTAssertTrue(syncConversation.callDeviceIsActive);
         XCTAssertTrue([syncConversation.callParticipants containsObject:self.syncSelfUser]);
 
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNil(request);
         [syncConversation.voiceChannelRouter.v2 tearDown];
     }];
@@ -1942,7 +1935,7 @@
         for (id<ZMContextChangeTracker> t in self.sut.contextChangeTrackers) {
             [t objectsDidChange:[NSSet setWithObject:syncConversation]];
         }
-        XCTAssertNotNil([self.sut.requestGenerators nextRequest]);
+        XCTAssertNotNil([self.sut nextRequest]);
         
         // finally
         XCTAssertNoThrow([self.flowTranscoder verify]);
@@ -2041,7 +2034,7 @@
         for (id<ZMContextChangeTracker> t in self.sut.contextChangeTrackers) {
             [t objectsDidChange:[NSSet setWithObject:syncConversation]];
         }
-        XCTAssertNotNil([self.sut.requestGenerators nextRequest]);
+        XCTAssertNotNil([self.sut nextRequest]);
         
         // finally
         XCTAssertNoThrow([self.flowTranscoder verify]);
@@ -2077,7 +2070,7 @@
         for (id<ZMContextChangeTracker> t in self.sut.contextChangeTrackers) {
             [t objectsDidChange:[NSSet setWithObject:syncConversation]];
         }
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         [request completeWithResponse:response];
     }];
@@ -2120,7 +2113,7 @@
         for (id<ZMContextChangeTracker> t in self.sut.contextChangeTrackers) {
             [t objectsDidChange:[NSSet setWithObject:syncConversation]];
         }
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         // when
@@ -3238,7 +3231,7 @@
     [self checkThatItCallsAddJoinedUsers:YES selfUserJoined:YES withBlock:^(NSDictionary * payload, ZMConversation *syncConversation) {
         [self.sut.contextChangeTrackers.lastObject objectsDidChange:[NSSet setWithObject:syncConversation]];
         
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
@@ -3251,7 +3244,7 @@
     [self checkThatItCallsAddJoinedUsers:NO selfUserJoined:NO withBlock:^(NSDictionary * payload, ZMConversation *syncConversation) {
         [self.sut.contextChangeTrackers.lastObject objectsDidChange:[NSSet setWithObject:syncConversation]];
         
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
@@ -3608,7 +3601,7 @@
     
     // when
     [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -3629,7 +3622,7 @@
     
     // when
     [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -3654,7 +3647,7 @@
     
     // when
     [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

@@ -165,7 +165,7 @@
 
     id callStateTranscoder = [OCMockObject mockForClass:ZMCallStateTranscoder.class];
     [[[[callStateTranscoder expect] andReturn:callStateTranscoder] classMethod] alloc];
-    (void) [[[callStateTranscoder expect] andReturn:callStateTranscoder] initWithSyncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC objectStrategyDirectory:OCMOCK_ANY];
+    (void) [[[callStateTranscoder expect] andReturn:callStateTranscoder] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY objectStrategyDirectory:OCMOCK_ANY];
         
     id loginCodeRequestTranscoder = [OCMockObject mockForClass:ZMLoginCodeRequestTranscoder.class];
     [[[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] classMethod] alloc];

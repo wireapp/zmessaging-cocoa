@@ -21,6 +21,7 @@
 @import ZMCDataModel;
 
 #import "MessagingTest.h"
+#import "ObjectTranscoderTests.h"
 #import "ZMCallStateTranscoder.h"
 #import "ZMFlowSync.h"
 #import "ZMObjectStrategyDirectory.h"
@@ -28,7 +29,7 @@
 #import "ZMOperationLoop.h"
 #import "ZMGSMCallHandler.h"
 
-@interface ZMCallStateTranscoderTests : MessagingTest
+@interface ZMCallStateTranscoderTests : ObjectTranscoderTests
 
 @property (nonatomic) ZMCallStateTranscoder<ZMDownstreamTranscoder, ZMUpstreamTranscoder> *sut;
 @property (nonatomic) id objectStrategyDirectory;

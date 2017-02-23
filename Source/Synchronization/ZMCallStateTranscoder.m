@@ -101,22 +101,22 @@ _Pragma("clang diagnostic ignored \"-Wobjc-designated-initializers\"") \
 }
 _Pragma("clang diagnostic pop")
 
-- (instancetype)initWithSyncManagedObjectContext:(NSManagedObjectContext *)syncMOC
-                          uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
-                         objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
 {
-    return [self initWithSyncManagedObjectContext:syncMOC uiManagedObjectContext:uiMOC objectStrategyDirectory:directory gsmCallHandler:nil];
+    return [self initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate objectStrategyDirectory:directory gsmCallHandler:nil];
 }
 
 
-- (instancetype)initWithSyncManagedObjectContext:(NSManagedObjectContext *)syncMOC
-                          uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
-                         objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
-                                  gsmCallHandler:(ZMGSMCallHandler *)gsmCallHandler;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
+                              gsmCallHandler:(ZMGSMCallHandler *)gsmCallHandler
 {
-    self = [super initWithManagedObjectContext:syncMOC];
+    self = [super initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate];
     if (self) {
-        self.uiManagedObjectContext = uiMOC;
+        self.uiManagedObjectContext = managedObjectContext.zm_userInterfaceContext;
         self.objectStrategyDirectory = directory;
         self.callStateLogger = [[ZMCallStateLogger alloc] initWithFlowSync:directory.flowTranscoder];
         self.convToSequenceMap = [NSMutableDictionary dictionary];
@@ -135,14 +135,18 @@ _Pragma("clang diagnostic pop")
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
         
-        self.gsmCallHandler = gsmCallHandler ?: [[ZMGSMCallHandler alloc] initWithUIManagedObjectContext:uiMOC
-                                                              syncManagedObjectContext:syncMOC
-                                                                       callStateLogger:self.callStateLogger];
+        self.gsmCallHandler = gsmCallHandler ?: [[ZMGSMCallHandler alloc] initWithUIManagedObjectContext:self.uiManagedObjectContext
+                                                                                syncManagedObjectContext:managedObjectContext
+                                                                                         callStateLogger:self.callStateLogger];
         [self checkForOngoingCalls];
     }
     return self;
 }
 
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
+}
 
 - (NSNumber *)lastSequenceForConversation:(ZMConversation *)conversation;
 {
@@ -151,7 +155,6 @@ _Pragma("clang diagnostic pop")
     }
     return self.convToSequenceMap[conversation.remoteIdentifier];
 }
-
 
 - (void)tearDown
 {
@@ -231,9 +234,17 @@ _Pragma("clang diagnostic pop")
     }];
 }
 
-- (NSArray *)requestGenerators;
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
-    return @[self.downstreamSync, self.upstreamSync];
+    for (id<ZMRequestGenerator> requestGenerator in @[self.downstreamSync, self.upstreamSync]) {
+        ZMTransportRequest *request = [requestGenerator nextRequest];
+        
+        if (request != nil) {
+            return request;
+        }
+    }
+    
+    return nil;
 }
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> *)events
