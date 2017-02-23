@@ -73,7 +73,7 @@
     // then
     XCTAssertEqual(storedNote.conversation, self.conversation);
     XCTAssertEqualObjects(storedNote.senderUUID, self.sender.remoteIdentifier);
-    XCTAssertEqualObjects(storedNote.category, ZMConversationCategory);
+    XCTAssertEqualObjects(storedNote.category, ZMConversationCategoryIncludingLike);
     XCTAssertEqualObjects(storedNote.textInput, textInput);
 }
 
