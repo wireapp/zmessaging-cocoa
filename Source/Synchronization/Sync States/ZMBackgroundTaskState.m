@@ -122,7 +122,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
     id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
     
     ZMTransportRequest *request;
-    request = [self.clientMessageTranscoder.requestGenerators nextRequest];
+    request = [self.clientMessageTranscoder nextRequest];
     ZM_WEAK(self);
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:directory.moc block:^(ZMTransportResponse *response) {
         if (response.result == ZMTransportResponseStatusSuccess) {

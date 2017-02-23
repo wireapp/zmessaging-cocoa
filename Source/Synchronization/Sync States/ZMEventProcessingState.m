@@ -61,8 +61,6 @@
         self.syncObjects = @[
                              objectStrategyDirectory.flowTranscoder,
                              objectStrategyDirectory.callStateTranscoder,
-                             objectStrategyDirectory.systemMessageTranscoder,
-                             objectStrategyDirectory.clientMessageTranscoder,
                              ];
         
         for (id<ZMObjectStrategy> syncObject in self.syncObjects) {

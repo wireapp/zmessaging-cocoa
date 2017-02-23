@@ -38,6 +38,7 @@
 @class ClientUpdateStatus;
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
+@class ZMSyncStateManager;
 
 @protocol ZMTransportData;
 @protocol AVSMediaManager;
@@ -70,15 +71,7 @@
 - (void)tearDown;
 
 @property (nonatomic, readonly) NSManagedObjectContext *syncMOC;
-@property (nonatomic, readonly) BackgroundAPNSConfirmationStatus *apnsConfirmationStatus;
-@property (nonatomic, readonly) ZMAuthenticationStatus *authenticationStatus;
-@property (nonatomic, readonly) UserProfileUpdateStatus *userProfileUpdateStatus;
-@property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
-@property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;
-@property (nonatomic, readonly) BackgroundAPNSPingBackStatus *pingBackStatus;
-@property (nonatomic, readonly) ZMAccountStatus *accountStatus;
-@property (nonatomic, readonly) ProxiedRequestsStatus *proxiedRequestStatus;
-@property (nonatomic, readonly) SyncStatus *syncStatus;
+@property (nonatomic, readonly) ZMSyncStateManager *syncStateManager;
 
 - (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
 

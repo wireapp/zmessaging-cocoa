@@ -23,32 +23,27 @@ import ZMCLinkPreview
 class AddressBookUploadRequestStrategyTest : MessagingTest {
     
     var sut : zmessaging.AddressBookUploadRequestStrategy!
-    var authenticationStatus : MockAuthenticationStatus!
-    var clientRegistrationStatus : ZMMockClientRegistrationStatus!
+    var mockAppStateDelegate : MockAppStateDelegate!
     var addressBook : AddressBookFake!
     var trackerFake : AddressBookTrackerFake!
     
     override func setUp() {
         super.setUp()
-        self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
-        self.clientRegistrationStatus = ZMMockClientRegistrationStatus()
-        self.clientRegistrationStatus.mockPhase = .registered
         self.addressBook = AddressBookFake()
         self.trackerFake = AddressBookTrackerFake()
         
         let ab = self.addressBook // I don't want to capture self in closure later
         ab?.fillWithContacts(5)
-        self.sut = zmessaging.AddressBookUploadRequestStrategy(authenticationStatus: self.authenticationStatus,
-                                                               clientRegistrationStatus: self.clientRegistrationStatus,
-                                                               managedObjectContext: self.syncMOC,
+        mockAppStateDelegate = MockAppStateDelegate()
+        mockAppStateDelegate.mockAppState = .eventProcessing
+        self.sut = zmessaging.AddressBookUploadRequestStrategy(managedObjectContext: self.syncMOC,
+                                                               appStateDelegate: mockAppStateDelegate,
                                                                addressBookGenerator: { return ab },
                                                                tracker: self.trackerFake)
     }
     
     override func tearDown() {
-        self.authenticationStatus = nil
-        self.clientRegistrationStatus.tearDown()
-        self.clientRegistrationStatus = nil
+        self.mockAppStateDelegate = nil
         self.sut = nil
         self.addressBook = nil
         super.tearDown()

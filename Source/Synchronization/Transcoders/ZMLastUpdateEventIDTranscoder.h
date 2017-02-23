@@ -18,19 +18,22 @@
 
 
 @import Foundation;
-@import WireRequestStrategy;
+@import WireMessageStrategy;
 
 @protocol ZMObjectStrategyDirectory;
 @class SyncStatus;
 
-@interface ZMLastUpdateEventIDTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator, ZMSyncPhase>
+@interface ZMLastUpdateEventIDTranscoder : ZMAbstractRequestStrategy <ZMSyncPhase, ZMObjectStrategy>
 
 @property (nonatomic, readonly) BOOL isDownloadingLastUpdateEventID;
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                             objectDirectory:(id<ZMObjectStrategyDirectory>)directory
-                                  syncStatus:(SyncStatus *)syncStatus
-                  clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
+- (instancetype _Nonnull)initWithManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc appStateDelegate:(id<ZMAppStateDelegate> _Nonnull)appStateDelegate NS_UNAVAILABLE;
+
+- (instancetype _Nonnull)initWithManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
+                             appStateDelegate:(id<ZMAppStateDelegate> _Nonnull)appStateDelegate
+                                  syncStatus:(SyncStatus * _Nonnull)syncStatus
+                             objectDirectory:(id<ZMObjectStrategyDirectory> _Nonnull)directory;
+
 
 - (void)startRequestingLastUpdateEventIDWithoutPersistingIt;
 - (void)persistLastUpdateEventID;

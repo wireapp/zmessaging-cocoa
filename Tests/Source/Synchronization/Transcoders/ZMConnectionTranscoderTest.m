@@ -46,11 +46,13 @@
 {
     [super setUp];
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
+    [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateEventProcessing)] appState];
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
-    self.mockSyncStatus.mockPhase = SyncPhaseDone;
+    
+    
     self.mockClientRegistrationDelegate = [[ZMMockClientRegistrationStatus alloc] init];
-    self.sut = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC syncStatus:self.mockSyncStatus clientRegistrationDelegate:self.mockClientRegistrationDelegate];
+    self.sut = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 

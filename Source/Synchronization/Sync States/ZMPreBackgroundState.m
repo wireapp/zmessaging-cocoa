@@ -84,8 +84,6 @@
     id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
     NSArray *transcoders = @[
                              directory.flowTranscoder,
-                             directory.systemMessageTranscoder,
-                             directory.clientMessageTranscoder,
                              ];
     
     ZMTransportRequest *nextRequest = [self nextRequestFromTranscoders:transcoders];
@@ -94,6 +92,7 @@
 
 - (BOOL)canGoToBackgroundState
 {
+    // TODO Sabine what's supposed to happen here? do we still need this?
     id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
     BOOL clientMessageHasPending = directory.clientMessageTranscoder.hasPendingMessages;
     return !clientMessageHasPending;

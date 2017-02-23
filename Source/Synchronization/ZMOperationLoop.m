@@ -26,6 +26,7 @@
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 #import "ZMSyncStrategy+EventProcessing.h"
+#import "ZMSyncStateManager.h"
 
 #import "ZMUserTranscoder.h"
 #import "ZMUserSession.h"
@@ -308,7 +309,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 - (BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
 {
-    return self.syncStrategy.pingBackStatus;
+    return self.syncStrategy.syncStateManager.pingBackStatus;
 }
 
 @end

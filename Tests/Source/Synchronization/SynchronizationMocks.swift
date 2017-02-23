@@ -20,6 +20,59 @@ import Foundation
 import AddressBook
 @testable import zmessaging
 
+
+public class MockAppStateDelegate : NSObject, ZMAppStateDelegate, DeliveryConfirmationDelegate, ClientDeletionDelegate, ZMRequestCancellation {
+    
+    public var confirmationDelegate : DeliveryConfirmationDelegate { return self }
+    public var taskCancellationDelegate : ZMRequestCancellation { return self }
+    public var clientDeletionDelegate : ClientDeletionDelegate { return self }
+    
+    public var mockAppState = ZMAppState.unauthenticated
+    public var appState: ZMAppState {
+        return mockAppState
+    }
+    
+    //MARK ZMRequestCancellation
+    public var cancelledIdentifiers = [ZMTaskIdentifier]()
+    
+    public func cancelTask(with identifier: ZMTaskIdentifier) {
+        cancelledIdentifiers.append(identifier)
+    }
+    
+    
+    // MARK: ClientDeletionDelegate
+    public var deletionCalls : Int = 0
+    
+    /// Notify that the current client was deleted remotely
+    public func didDetectCurrentClientDeletion() {
+        deletionCalls = deletionCalls+1
+    }
+    
+    
+    // MARK: DeliveryConfirmationDelegate
+    public private (set) var messagesToConfirm = Set<UUID>()
+    public private (set) var messagesConfirmed = Set<UUID>()
+    
+    public static var sendDeliveryReceipts: Bool {
+        return true
+    }
+    
+    public var needsToSyncMessages: Bool {
+        return true
+    }
+    
+    public func needsToConfirmMessage(_ messageNonce: UUID) {
+        messagesToConfirm.insert(messageNonce)
+    }
+    
+    public func didConfirmMessage(_ messageNonce: UUID) {
+        messagesConfirmed.insert(messageNonce)
+    }
+    
+}
+
+
+
 class MockAuthenticationStatus: ZMAuthenticationStatus {
     
     var mockPhase: ZMAuthenticationPhase

@@ -59,6 +59,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     self.selfUserID = NSUUID.createUUID;
     [self setupSelfConversation]; // when updating lastRead we are posting to the selfConversation
 
+    [[[(id)self.syncStrategy stub] andReturn:self.syncMOC] moc];
     [self verifyMockLater:self.syncStrategy];
     
     NSMutableArray *downloadedEvents = [NSMutableArray array];
@@ -75,9 +76,9 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
-    self.mockClientRegistrationDelegate = [[ZMMockClientRegistrationStatus alloc] init];
-    self.mockClientRegistrationDelegate.mockReadiness = YES;
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authStatusMock accountStatus:nil syncStrategy:self.syncStrategy syncStatus:self.mockSyncStatus clientRegistrationDelegate:self.mockClientRegistrationDelegate];
+    [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateEventProcessing)] appState];
+
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy appStateDelegate:self.mockAppStateDelegate syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -1893,7 +1894,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     id authStatusMock = [OCMockObject mockForClass:[ZMAuthenticationStatus class]];
     [[[authStatusMock stub] andReturnValue:@YES] registeredOnThisDevice];
     
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authStatusMock accountStatus:nil syncStrategy:self.syncStrategy syncStatus:self.mockSyncStatus clientRegistrationDelegate:self.mockClientRegistrationDelegate];
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy appStateDelegate:self.mockAppStateDelegate syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [ZMChangeTrackerBootstrap bootStrapChangeTrackers:self.sut.contextChangeTrackers onContext:self.syncMOC];
@@ -2092,7 +2093,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [[[accountStatus stub]
       andReturnValue: OCMOCK_VALUE((AccountState){AccountStateOldDeviceActiveAccount})] currentAccountState];
 
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authStatusMock accountStatus:accountStatus syncStrategy:self.syncStrategy syncStatus:self.mockSyncStatus clientRegistrationDelegate:self.mockClientRegistrationDelegate];
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy appStateDelegate:self.mockAppStateDelegate syncStatus:self.mockSyncStatus];
     
     __block NSDictionary *rawConversation;
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -2126,16 +2127,11 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItDoesNotAppendNewConversationIfNewDevice {
     
     // given
-    id authStatusMock = [OCMockObject niceMockForClass:[ZMAuthenticationStatus class]];
-    [[[authStatusMock stub] andReturnValue:@NO] registeredOnThisDevice];
-    id accountStatusMock = [OCMockObject niceMockForClass:[ZMAccountStatus class]];
-    
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC
-                                                              authenticationStatus:authStatusMock
-                                                                     accountStatus:accountStatusMock
-                                                                      syncStrategy:self.syncStrategy
-                                                                    syncStatus:self.mockSyncStatus
-                                                        clientRegistrationDelegate:self.mockClientRegistrationDelegate];
+    id appStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMAppStateDelegate)];
+    [[[appStateDelegate expect] andReturnValue:@(ZMAppStateSyncing)] appState];
+    [[[appStateDelegate expect] andReturnValue:@(ZMAppStateEventProcessing)] appState];
+
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy appStateDelegate:appStateDelegate syncStatus:self.mockSyncStatus];
     
     __block NSDictionary *rawConversation;
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3551,7 +3547,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [[[accountStatus stub]
       andReturnValue: OCMOCK_VALUE((AccountState){AccountStateOldDeviceActiveAccount})] currentAccountState];
     
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authStatusMock accountStatus:accountStatus syncStrategy:self.syncStrategy syncStatus:self.mockSyncStatus clientRegistrationDelegate:self.mockClientRegistrationDelegate];
+    self.sut = (id) [[ZMConversationTranscoder alloc]  initWithSyncStrategy:self.syncStrategy appStateDelegate:self.mockAppStateDelegate syncStatus:self.mockSyncStatus];
 
     
     NSUUID *otherUserID = [NSUUID createUUID];

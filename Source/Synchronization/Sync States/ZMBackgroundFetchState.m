@@ -128,13 +128,10 @@ static NSTimeInterval const MaximumTimeInState = 25;
 
 - (ZMTransportRequest *)nextRequest
 {
-    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
-
-    ZMTransportRequest *request;
-    request = [self.missingUpdateEventsTranscoder.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.missingUpdateEventsTranscoder nextRequest];
 
     ZM_WEAK(self);
-    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:directory.moc block:^(ZMTransportResponse *response) {
+    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.objectStrategyDirectory.moc block:^(ZMTransportResponse *response) {
         ZM_STRONG(self);
         if(response.result != ZMTransportResponseStatusSuccess) {
             self.errorInDowloading = YES;

@@ -51,11 +51,8 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 @property (nonatomic, weak) ZMSyncStrategy *syncStrategy;
 @property (nonatomic) ZMRemoteIdentifierObjectSync *remoteIDSync;
 @property (nonatomic) ZMSimpleListRequestPaginator *listPaginator;
-@property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
-@property (nonatomic, weak) ZMAccountStatus *accountStatus;
 
 @property (nonatomic, weak) SyncStatus *syncStatus;
-@property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
 @property (nonatomic) BOOL didStartSlowSync;
 
 @end
@@ -75,30 +72,24 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 
 @implementation ZMConversationTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate;
 {
     Require(NO);
-    self = [super initWithManagedObjectContext:moc];
+    self = [super initWithManagedObjectContext:moc appStateDelegate:appStateDelegate];
     NOT_USED(self);
     self = nil;
     return self;
 }
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                        authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-                               accountStatus:(ZMAccountStatus *)accountStatus
-                                syncStrategy:(ZMSyncStrategy *)syncStrategy
-                                  syncStatus:(SyncStatus *)syncStatus
-                  clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
+- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)syncStrategy
+                    appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                          syncStatus:(SyncStatus *)syncStatus;
 {
-    self = [super initWithManagedObjectContext:moc];
+    self = [super initWithManagedObjectContext:syncStrategy.moc appStateDelegate:appStateDelegate];
     if (self) {
         self.syncStatus = syncStatus;
-        self.clientRegistrationDelegate = clientRegistrationDelegate;
-        self.authenticationStatus = authenticationStatus;
-        self.accountStatus = accountStatus;
-        self.modifiedSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName updatePredicate:nil filter:nil keysToSync:self.keysToSync managedObjectContext:moc];
-        self.insertedSync = [[ZMUpstreamInsertedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName managedObjectContext:moc];
+        self.modifiedSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName updatePredicate:nil filter:nil keysToSync:self.keysToSync managedObjectContext:self.managedObjectContext];
+        self.insertedSync = [[ZMUpstreamInsertedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName managedObjectContext:self.managedObjectContext];
         NSPredicate *conversationPredicate =
         [NSPredicate predicateWithFormat:@"%K != %@ AND (connection == nil OR (connection.status != %d AND connection.status != %d) ) AND needsToBeUpdatedFromBackend == YES",
          [ZMConversation remoteIdentifierDataKey], nil,
@@ -117,6 +108,11 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
         self.remoteIDSync = [[ZMRemoteIdentifierObjectSync alloc] initWithTranscoder:self managedObjectContext:self.managedObjectContext];
     }
     return self;
+}
+
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
 - (NSArray<NSString *> *)keysToSync
@@ -173,12 +169,8 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     return SyncPhaseFetchingConversations;
 }
 
-- (ZMTransportRequest *)nextRequest
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
-    if (!self.clientRegistrationDelegate.clientIsReadyForRequests) {
-        return nil;
-    }
-    
     SyncStatus *status = self.syncStatus;
     if (status.currentSyncPhase == self.expectedSyncPhase) {
         if (!self.didStartSlowSync) {
@@ -234,7 +226,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     ZMConversation *conversation = [ZMConversation conversationWithRemoteID:convRemoteID createIfNeeded:YES inContext:self.managedObjectContext created:&conversationCreated];
     [conversation updateWithTransportData:transportData];
     
-    if (conversation.conversationType != ZMConversationTypeSelf && self.authenticationStatus.currentPhase == ZMAuthenticationPhaseAuthenticated && conversationCreated) {
+    if (conversation.conversationType != ZMConversationTypeSelf && self.appStateDelegate.appState != ZMAppStateUnauthenticated && conversationCreated) {
         // we just got a new conversation, we display new conversation header
         [conversation appendNewConversationSystemMessageIfNeeded];
         [self.managedObjectContext enqueueDelayedSave];

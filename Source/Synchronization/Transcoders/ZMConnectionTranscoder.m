@@ -54,18 +54,22 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 
 @implementation ZMConnectionTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc syncStatus:(SyncStatus *)syncStatus clientRegistrationDelegate:(id<ClientRegistrationDelegate>)clientRegistrationDelegate;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate syncStatus:(SyncStatus *)syncStatus;
 {
-    self = [super initWithManagedObjectContext:moc];
+    self = [super initWithManagedObjectContext:moc appStateDelegate:appStateDelegate];
     if(self) {
         self.syncStatus = syncStatus;
-        self.clientRegistrationDelegate = clientRegistrationDelegate;
         self.modifiedObjectSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self entityName:ZMConnection.entityName managedObjectContext:self.managedObjectContext];
         self.insertedObjectSync = [[ZMUpstreamInsertedObjectSync alloc] initWithTranscoder:self entityName:ZMConnection.entityName managedObjectContext:self.managedObjectContext];
         self.conversationsListSync = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:PathConnections startKey:@"start" pageSize:ZMConnectionTranscoderPageSize  managedObjectContext:moc includeClientID:NO transcoder:self];
         self.downstreamSync = [[ZMDownstreamObjectSync alloc] initWithTranscoder:self entityName:ZMConnection.entityName managedObjectContext:self.managedObjectContext];
     }
     return self;
+}
+
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
 - (void)setNeedsSlowSync
@@ -82,12 +86,8 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     return SyncPhaseFetchingConnections;
 }
 
-- (ZMTransportRequest *)nextRequest
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
-    if (!self.clientRegistrationDelegate.clientIsReadyForRequests) {
-        return nil;
-    }
-    
     SyncStatus *status = self.syncStatus;
     if (status.currentSyncPhase == self.expectedSyncPhase) {
         if (!self.didStartSlowSync) {

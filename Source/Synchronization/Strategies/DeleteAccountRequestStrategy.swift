@@ -21,24 +21,22 @@ import Foundation
 import ZMTransport
 
 /// Requests the account deletion
-@objc public final class DeleteAccountRequestStrategy: NSObject, RequestStrategy, ZMSingleRequestTranscoder {
+@objc public final class DeleteAccountRequestStrategy: ZMAbstractRequestStrategy, ZMSingleRequestTranscoder {
 
     fileprivate static let path: String = "/self"
     public static let userDeletionInitiatedKey: String = "ZMUserDeletionInitiatedKey"
-    
     fileprivate(set) var deleteSync: ZMSingleRequestSync! = nil
-    /// The managed object context to operate on
-    fileprivate let managedObjectContext: NSManagedObjectContext
-    fileprivate let authStatus: ZMAuthenticationStatus
     
-    public init(authStatus: ZMAuthenticationStatus, managedObjectContext: NSManagedObjectContext) {
-        self.authStatus = authStatus
-        self.managedObjectContext = managedObjectContext
-        super.init()
+    public override var configuration: ZMStrategyConfigurationOption {
+        return [.allowsRequestsDuringSync, .allowsRequestsWhileUnauthenticated, .allowsRequestsDuringEventProcessing]
+    }
+    
+    public override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
+        super.init(managedObjectContext: moc, appStateDelegate: appStateDelegate)
         self.deleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: self.managedObjectContext)
     }
     
-    public func nextRequest() -> ZMTransportRequest? {
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         guard let shouldBeDeleted : NSNumber = self.managedObjectContext.persistentStoreMetadata(key: DeleteAccountRequestStrategy.userDeletionInitiatedKey) as? NSNumber
             , shouldBeDeleted.boolValue
         else {
