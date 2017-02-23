@@ -18,14 +18,16 @@
 
 import Foundation
 import AddressBook
+import ZMCDataModel
+import Cryptobox
 @testable import zmessaging
 
 
-public class MockAppStateDelegate : NSObject, ZMAppStateDelegate, DeliveryConfirmationDelegate, ClientDeletionDelegate, ZMRequestCancellation {
+public class MockAppStateDelegate : NSObject, ZMAppStateDelegate, DeliveryConfirmationDelegate, ClientRegistrationDelegate, ZMRequestCancellation {
     
     public var confirmationDelegate : DeliveryConfirmationDelegate { return self }
     public var taskCancellationDelegate : ZMRequestCancellation { return self }
-    public var clientDeletionDelegate : ClientDeletionDelegate { return self }
+    public var clientRegistrationDelegate : ClientRegistrationDelegate { return self }
     
     public var mockAppState = ZMAppState.unauthenticated
     public var appState: ZMAppState {
@@ -40,12 +42,17 @@ public class MockAppStateDelegate : NSObject, ZMAppStateDelegate, DeliveryConfir
     }
     
     
-    // MARK: ClientDeletionDelegate
+    // MARK: ClientRegistrationDelegate
     public var deletionCalls : Int = 0
     
     /// Notify that the current client was deleted remotely
     public func didDetectCurrentClientDeletion() {
         deletionCalls = deletionCalls+1
+    }
+    
+    /// Returns true if the client is registered
+    public var clientIsReadyForRequests: Bool {
+        return true
     }
     
     
@@ -94,7 +101,7 @@ class MockAuthenticationStatus: ZMAuthenticationStatus {
     }
 }
 
-class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus, ClientRegistrationDelegate {
+class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus {
     var mockPhase : ZMClientRegistrationPhase?
     var mockCredentials : ZMEmailCredentials = ZMEmailCredentials(email: "bla@example.com", password: "secret")
     var mockReadiness :Bool = true
@@ -114,7 +121,7 @@ class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus, ClientRegistra
         return true
     }
     
-    override var clientIsReadyForRequests: Bool {
+    override func clientIsReadyForRequests() -> Bool {
         return mockReadiness
     }
 }
@@ -162,22 +169,16 @@ class FakeCredentialProvider: NSObject, ZMCredentialProvider
 class FakeCookieStorage: ZMPersistentCookieStorage {
 }
 
-
 // used by tests to fake errors on genrating pre keys
-open class FakeKeysStore: UserClientKeysStore {
+class SpyUserClientKeyStore : UserClientKeysStore {
     
     var failToGeneratePreKeys: Bool = false
     var failToGenerateLastPreKey: Bool = false
     
     var lastGeneratedKeys : [(id: UInt16, prekey: String)] = []
     var lastGeneratedLastPrekey : String?
-
-    static var testDirectory : URL {
-        let directoryURL = try! FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-        return directoryURL.appendingPathComponent("otr")
-    }
     
-    override open func generateMoreKeys(_ count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
+    override public func generateMoreKeys(_ count: UInt16, start: UInt16) throws -> [(id: UInt16, prekey: String)] {
 
         if self.failToGeneratePreKeys {
             let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
@@ -190,7 +191,7 @@ open class FakeKeysStore: UserClientKeysStore {
         }
     }
     
-    override open func lastPreKey() throws -> String {
+    override public func lastPreKey() throws -> String {
         if self.failToGenerateLastPreKey {
             let error = NSError(domain: "cryptobox.error", code: 0, userInfo: ["reason" : "using fake store with simulated fail"])
             throw error
@@ -200,7 +201,6 @@ open class FakeKeysStore: UserClientKeysStore {
             return lastGeneratedLastPrekey!
         }
     }
-    
 }
 
 public class MockSyncStatus : SyncStatus {

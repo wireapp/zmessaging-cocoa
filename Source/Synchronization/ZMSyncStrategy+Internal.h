@@ -28,7 +28,7 @@
 @property (nonatomic, readonly) ZMSyncStateMachine *stateMachine;
 @property (nonatomic, readonly) ZMUpdateEventsBuffer *eventsBuffer;
 @property (nonatomic, weak, readonly) ZMLocalNotificationDispatcher *localNotificationDispatcher;
-
+@property (nonatomic, readonly) NotificationDispatcher *notificationDispatcher;
 @property (nonatomic, readonly) NSArray<ZMObjectSyncStrategy *> *requestStrategies;
 @property (nonatomic, readonly) NSArray<id<ZMContextChangeTracker>> *allChangeTrackers;
 

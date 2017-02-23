@@ -105,7 +105,6 @@
 - (void)setUp;
 {
     [super setUp];
-    
     NSFileManager *fm = NSFileManager.defaultManager;
     NSString *bundleIdentifier = [NSBundle bundleForClass:self.class].bundleIdentifier;
     self.groupIdentifier = [@"group." stringByAppendingString:bundleIdentifier];
@@ -113,6 +112,9 @@
     NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
     self.storeURL = [[sharedContainerURL URLByAppendingPathComponent:bundleIdentifier] URLByAppendingPathComponent:@"store.wiredatabase"];
     self.keyStoreURL = sharedContainerURL;
+    
+    NSURL *otrFolder = [self.keyStoreURL URLByAppendingPathComponent:@"otr"];
+    [fm removeItemAtURL:otrFolder error: nil];
     
     _application = [[ApplicationMock alloc] init];
     
@@ -155,7 +157,6 @@
     self.searchMOC = [NSManagedObjectContext createSearchContextWithStoreAtURL:self.storeURL];
     [self.searchMOC addGroup:self.dispatchGroup];
     self.mockTransportSession = [[MockTransportSession alloc] initWithDispatchGroup:self.dispatchGroup];
-    self.mockTransportSession.cryptoboxLocation = [self.keyStoreURL URLByAppendingPathComponent:@"otr"];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
 }
 
@@ -271,7 +272,6 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSString *clientID = [self.uiMOC persistentStoreMetadataForKey:ZMPersistedClientIdKey];
     self.uiMOC = nil;
     self.syncMOC = nil;
     
@@ -284,7 +284,6 @@
     }
     [self performIgnoringZMLogError:^{
         self.uiMOC = [NSManagedObjectContext createUserInterfaceContextWithStoreAtURL:self.storeURL];
-        self.uiMOC.globalManagedObjectContextObserver.propagateChanges = YES;
     }];
     
     ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100 location:nil];
@@ -311,7 +310,6 @@
         [self.uiMOC setupUserKeyStoreForDirectory:self.keyStoreURL];
     }];
     
-    [self.uiMOC setPersistentStoreMetadata:clientID forKey:ZMPersistedClientIdKey];
     [self.uiMOC saveOrRollback];
     WaitForAllGroupsToBeEmpty(2);
     
@@ -486,25 +484,6 @@
 @end
 
 
-
-@implementation MessagingTest (DisplayNameGenerator)
-
-- (void)updateDisplayNameGeneratorWithUsers:(NSArray *)users;
-{
-    [self.uiMOC saveOrRollback];
-    NSNotification *note = [NSNotification notificationWithName:@"TestNotification" object:nil userInfo:@{
-                                                                                              NSInsertedObjectsKey : [NSSet setWithArray:users],
-                                                                                              NSUpdatedObjectsKey :[NSSet set],
-                                                                                              NSDeletedObjectsKey : [NSSet set]
-                                                                                              }];
-    [self.uiMOC updateDisplayNameGeneratorWithChanges:note];
-}
-
-@end
-
-
-
-
 @implementation MessagingTest (AVS)
 
 - (void)simulateMediaFlowEstablishedOnConversation:(ZMConversation *)uiConversation;
@@ -571,45 +550,6 @@
 
 @implementation MessagingTest (OTR)
 
-- (NSData *)encryptedMessage:(ZMGenericMessage *)message recipient:(UserClient *)recipient
-{
-    [self establishSessionWithClient:recipient];
-    
-    __block NSData *messageData;
-    __block NSError *error;
-    
-    [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        messageData = [sessionsDirectory encrypt:message.data recipientClientId:recipient.remoteIdentifier error:&error];
-    }];
-
-    XCTAssertNil(error, @"Error encrypting message: %@", error);
-    return messageData;
-}
-
-- (void)establishSessionWithClient:(UserClient *)userClient
-{
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-    
-    __block NSError *error;
-    __block NSString *lastPrekey;
-    __block BOOL hasSession = NO;
-    
-    [selfUser.selfClient.keysStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        if (![sessionsDirectory hasSessionForID:userClient.remoteIdentifier]) {
-            lastPrekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
-        } else {
-            hasSession = YES;
-        }
-    }];
-    
-    if (hasSession) {
-        return;
-    }
-    
-    XCTAssertTrue([selfUser.selfClient establishSessionWithClient:userClient usingPreKey:lastPrekey], @"Unable to establish session");
-    XCTAssertNil(error, @"Error establishing session: %@", error);
-}
-
 - (UserClient *)setupSelfClientInMoc:(NSManagedObjectContext *)moc;
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:moc];
@@ -630,35 +570,10 @@
 - (UserClient *)createSelfClient
 {
     UserClient *selfClient = [self setupSelfClientInMoc:self.syncMOC];
-    [UserClient createOrUpdateClient:@{@"id": selfClient.remoteIdentifier, @"type": @"permanent", @"time": [[NSDate date] transportString]} context:self.syncMOC];
+    [UserClient createOrUpdateSelfUserClient:@{@"id": selfClient.remoteIdentifier, @"type": @"permanent", @"time": [[NSDate date] transportString]} context:self.syncMOC];
     [self.syncMOC saveOrRollback];
     
     return selfClient;
-}
-
-- (UserClient *)createClientForUser:(ZMUser *)user createSessionWithSelfUser:(BOOL)createSessionWithSeflUser
-{
-    if(user.remoteIdentifier == nil) {
-        user.remoteIdentifier = [NSUUID createUUID];
-    }
-    UserClient *userClient = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
-    userClient.remoteIdentifier = [NSString createAlphanumericalString];
-    userClient.user = user;
-    
-    if (createSessionWithSeflUser) {
-        [self establishSessionWithClient:userClient];
-    }
-
-    return userClient;
-}
-
-- (UserClient *)createClientForMockUser:(MockUser *)mockUser createSessionWithSelfUser:(BOOL)createSessionWithSeflUser
-{
-    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:mockUser.identifier.UUID inManagedObjectContext:self.syncMOC];
-    if(user) {
-        return [self createClientForUser:user createSessionWithSelfUser:createSessionWithSeflUser];
-    }
-    return nil;
 }
 
 - (ZMClientMessage *)createClientTextMessage:(BOOL)encrypted

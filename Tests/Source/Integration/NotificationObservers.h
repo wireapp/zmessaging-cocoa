@@ -29,10 +29,8 @@ typedef void(^ObserverCallback)(NSObject *note);
 
 @property (nonatomic, readonly) NSMutableArray *notifications;
 @property (nonatomic, copy) ObserverCallback notificationCallback;
-@property (nonatomic) BOOL tornDown;
 
 - (void)clearNotifications;
-- (void)tearDown;
 
 @end
 
@@ -53,8 +51,7 @@ typedef void(^ObserverCallback)(NSObject *note);
 
 
 @interface UserChangeObserver : ChangeObserver <ZMUserObserver>
-- (instancetype)initWithUser:(ZMUser *)user;
-- (instancetype)initWithSearchUser:(ZMSearchUser *)user managedObjectContext:(NSManagedObjectContext *)context;
+- (instancetype)initWithUser:(id<ZMBareUser>)user;
 
 @end
 

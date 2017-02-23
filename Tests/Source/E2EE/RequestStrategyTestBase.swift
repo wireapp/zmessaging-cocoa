@@ -27,38 +27,19 @@ extension ZMContextChangeTrackerSource {
 
 class RequestStrategyTestBase : MessagingTest {
     
-    func generatePrekeyAndLastKey(_ selfClient: UserClient, count: UInt16 = 2) -> (prekeys: [String], lastKey: String) {
-        var preKeys : [String] = []
-        var lastKey : String = ""
-        selfClient.keysStore.encryptionContext.perform { (sessionsDirectory) in
-            preKeys = try! sessionsDirectory.generatePrekeys(0..<count).map{ $0.prekey }
-            lastKey = try! sessionsDirectory.generateLastPrekey()
-        }
-        return (preKeys, lastKey)
-    }
-    
     func createClients() -> (UserClient, UserClient) {
         let selfClient = self.createSelfClient()
-        let (prekeys, lastKey) = generatePrekeyAndLastKey(selfClient)
-        let otherClient = createRemoteClient(prekeys, lastKey: lastKey)
-        return (selfClient, otherClient)
+        return (selfClient, createRemoteClient())
     }
     
-    func createRemoteClient(_ preKeys: [String]?, lastKey: String?) -> UserClient {
+    func createRemoteClient() -> UserClient {
         
         var mockUser: MockUser!
         var mockClient: MockUserClient!
         
         self.mockTransportSession.performRemoteChanges { (session) -> Void in
-            if let session = session as? MockTransportSessionObjectCreation {
-                mockUser = session.insertUser(withName: "foo")
-                if let preKeys = preKeys, let lastKey = lastKey {
-                    mockClient = session.registerClient(for: mockUser, label: mockUser.name!, type: "permanent", preKeys: preKeys, lastPreKey: lastKey)
-                }
-                else {
-                    mockClient = session.registerClient(for: mockUser, label: mockUser.name!, type: "permanent")
-                }
-            }
+            mockUser = session.insertUser(withName: "foo")
+            mockClient = session.registerClient(for: mockUser, label: mockUser.name!, type: "permanent")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         

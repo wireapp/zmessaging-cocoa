@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -57,7 +57,7 @@ public extension ZMLocalNotificationForEvent {
         case .userContactJoin:
             return ZMLocalNotificationForNewUserEvent(events: [event], conversation: conversation,  managedObjectContext: managedObjectContext, application: application)
         case .callState:
-            if !ZMUserSession.useCallKit() {
+            if !ZMUserSession.useCallKit {
                 return ZMLocalNotificationForCallEvent(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application: application, sessionTracker: sessionTracker)
             }
             else {
@@ -119,9 +119,9 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
     
     func configureNotification(_ conversation: ZMConversation?) -> UILocalNotification {
         let notification = UILocalNotification()
-        let shouldHideContent = managedObjectContext.persistentStoreMetadata(key: ZMShouldHideNotificationContentKey)
+        let shouldHideContent = managedObjectContext.persistentStoreMetadata(forKey: ZMShouldHideNotificationContentKey)
         if let shouldHideContent = shouldHideContent as? NSNumber , shouldHideContent.boolValue == true {
-            notification.alertBody = ZMPushStringDefault.localized()
+            notification.alertBody = ZMPushStringDefault.localizedStringForPushNotification()
             notification.soundName = ZMCustomSound.notificationNewMessageSoundName()
         } else {
             notification.alertBody = configureAlertBody(conversation).escapingPercentageSymbols()

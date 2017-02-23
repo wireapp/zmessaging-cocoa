@@ -38,8 +38,6 @@
 
 #import <zmessaging/zmessaging-Swift.h>
 
-NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName = @"ZMApplicationDidEnterEventProcessingStateNotification";
-
 static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 
 @interface ZMSyncStateMachine ()
@@ -102,7 +100,9 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
         self.authNotificationToken = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note) {
             ZM_STRONG(self);
             if (note.type == ZMAuthenticationNotificationAuthenticationDidFail) {
-                [self didFailAuthentication];
+                [self.directory.moc performGroupedBlock:^{
+                    [self didFailAuthentication];
+                }];
             }
         }];
 

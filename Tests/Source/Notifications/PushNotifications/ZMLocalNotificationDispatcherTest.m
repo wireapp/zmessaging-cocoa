@@ -61,7 +61,8 @@
                                                                  sharedApplication:self.application
                                                               eventNotificationSet:self.mockEventNotificationSet
                                                              failedNotificationSet:self.mockFailedNotificationSet
-                                                              messageNotifications:nil];
+                                                              messageNotifications:nil
+                                                              callingNotifications:nil];
     
     self.conversation1 = [self insertConversationWithRemoteID:[NSUUID createUUID] name:@"Conversation 1"];
     self.conversation2 = [self insertConversationWithRemoteID:[NSUUID createUUID] name:@"Conversation 2"];
@@ -363,7 +364,7 @@
     // then
     XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1u);
     UILocalNotification *scheduledNotification = self.application.scheduledLocalNotifications.firstObject;
-    XCTAssertEqualObjects(scheduledNotification.alertBody, [ZMPushStringDefault localizedString]);
+    XCTAssertEqualObjects(scheduledNotification.alertBody, [ZMPushStringDefault localizedStringForPushNotification]);
     XCTAssertEqualObjects(scheduledNotification.soundName, @"new_message_apns.caf");
 
 }
@@ -380,7 +381,8 @@
                                                                  sharedApplication:self.application
                                                               eventNotificationSet:self.mockEventNotificationSet
                                                              failedNotificationSet:self.mockFailedNotificationSet
-                                                              messageNotifications:localNotificationSet];
+                                                              messageNotifications:localNotificationSet
+                                                            callingNotifications:nil];
     
     // given
     ZMClientMessage *message = (id)[self.conversation1 appendMessageWithText:@"foo"];
@@ -421,7 +423,8 @@
                                                                  sharedApplication:self.application
                                                               eventNotificationSet:self.mockEventNotificationSet
                                                              failedNotificationSet:self.mockFailedNotificationSet
-                                                              messageNotifications:localNotificationSet];
+                                                              messageNotifications:localNotificationSet
+                                                              callingNotifications:nil];
     
     // when
     [self.sut processMessage:message];

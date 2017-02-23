@@ -205,7 +205,7 @@ extension ConversationTests_Ephemeral {
             return XCTFail()
         }
         XCTAssertTrue(messageChangeInfo.isObfuscatedChanged)
-        messageObserver.tearDown()
+
     }
     
 }

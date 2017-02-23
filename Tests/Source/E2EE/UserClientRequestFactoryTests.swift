@@ -28,25 +28,24 @@ class UserClientRequestFactoryTests: MessagingTest {
     
     var sut: UserClientRequestFactory!
     var authenticationStatus: ZMAuthenticationStatus!
+    var spyKeyStore: SpyUserClientKeyStore!
     
     override func setUp() {
         super.setUp()
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-        
-        authenticationStatus = MockAuthenticationStatus(cookie: nil);
-        self.sut = UserClientRequestFactory()
-        
-        let newKeyStore = FakeKeysStore(in: FakeKeysStore.testDirectory)
-        self.syncMOC.userInfo.setObject(newKeyStore, forKey: "ZMUserClientKeysStore" as NSCopying)
+        self.spyKeyStore = SpyUserClientKeyStore(in: UserClientKeysStore.otrDirectoryURL)
+        self.authenticationStatus = MockAuthenticationStatus(cookie: nil);
+        self.sut = UserClientRequestFactory(keysStore: self.spyKeyStore)
     }
     
     override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        self.authenticationStatus = nil
+        self.sut = nil
+        self.spyKeyStore = nil
         super.tearDown()
     }
 
     func expectedKeyPayloadForClientPreKeys(_ client : UserClient) -> [[String : Any]] {
-        let generatedKeys = (client.keysStore as! FakeKeysStore).lastGeneratedKeys
+        let generatedKeys = self.spyKeyStore.lastGeneratedKeys
         let expectedPrekeys : [[String: Any]] = generatedKeys.map { (key: (id: UInt16, prekey: String)) in
             return ["key": key.prekey, "id": NSNumber(value: key.id)]
         }
@@ -59,7 +58,10 @@ class UserClientRequestFactoryTests: MessagingTest {
         let credentials = ZMEmailCredentials(email: "some@example.com", password: "123")
         
         //when
-        let request = try! sut.registerClientRequest(client, credentials: credentials, authenticationStatus:authenticationStatus)
+        guard let request = try? sut.registerClientRequest(client, credentials: credentials, authenticationStatus:authenticationStatus) else {
+            XCTFail()
+            return
+        }
         
         //then
         guard let transportRequest = request.transportRequest else { return XCTFail("Should return non nil request") }
@@ -68,11 +70,14 @@ class UserClientRequestFactoryTests: MessagingTest {
         guard let type = payload["type"] as? String, type == ZMUserClientTypePermanent else { return XCTFail("Client type should be 'permanent'") }
         guard let password = payload["password"] as? String, password == credentials.password else { return XCTFail("Payload should contain password") }
         
-        let lastPreKey = (client.keysStore as! FakeKeysStore).lastGeneratedLastPrekey!
+        guard let lastPreKey = self.spyKeyStore.lastGeneratedLastPrekey else {
+            XCTFail()
+            return
+        }
         
         guard let lastKeyPayload = payload["lastkey"] as? [String: Any] else { return XCTFail() }
         XCTAssertEqual(lastKeyPayload["key"] as? String, lastPreKey)
-        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: UserClientKeysStore.MaxPreKeyID + 1))
+        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: CBOX_LAST_PREKEY_ID))
 
         guard let preKeysPayloadData = payload["prekeys"] as? [[String: Any]] else  { return XCTFail("Payload should contain prekeys") }
         zip(preKeysPayloadData, expectedKeyPayloadForClientPreKeys(client)).forEach { (lhs, rhs) in
@@ -106,11 +111,11 @@ class UserClientRequestFactoryTests: MessagingTest {
         XCTAssertEqual(payload["type"] as? String, ZMUserClientTypePermanent, "Client type should be 'permanent'")
         XCTAssertNil(payload["password"])
         
-        let lastPreKey = try! client.keysStore.lastPreKey()
+        let lastPreKey = try! self.spyKeyStore.lastPreKey()
         
         guard let lastKeyPayload = payload["lastkey"] as? [String: Any] else { return XCTFail("Payload should contain last prekey") }
         XCTAssertEqual(lastKeyPayload["key"] as? String, lastPreKey)
-        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: UserClientKeysStore.MaxPreKeyID + 1))
+        XCTAssertEqual(lastKeyPayload["id"] as? NSNumber, NSNumber(value: CBOX_LAST_PREKEY_ID))
         
         guard let preKeysPayloadData = payload["prekeys"] as? [[String: Any]] else { return XCTFail("Payload should contain prekeys") }
         
@@ -127,7 +132,7 @@ class UserClientRequestFactoryTests: MessagingTest {
     func testThatItReturnsNilForRegisterClientRequestIfCanNotGeneratePreKyes() {
         //given
         let client = UserClient.insertNewObject(in: self.syncMOC)
-        (client.keysStore as! FakeKeysStore).failToGeneratePreKeys = true
+        self.spyKeyStore.failToGeneratePreKeys = true
         
         let credentials = ZMEmailCredentials(email: "some@example.com", password: "123")
         
@@ -140,7 +145,7 @@ class UserClientRequestFactoryTests: MessagingTest {
     func testThatItReturnsNilForRegisterClientRequestIfCanNotGenerateLastPreKey() {
         //given
         let client = UserClient.insertNewObject(in: self.syncMOC)
-        (client.keysStore as! FakeKeysStore).failToGenerateLastPreKey = true
+        self.spyKeyStore.failToGenerateLastPreKey = true
         
         let credentials = ZMEmailCredentials(email: "some@example.com", password: "123")
         
@@ -210,7 +215,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         
         //given
         let client = UserClient.insertNewObject(in: self.syncMOC)
-        (client.keysStore as! FakeKeysStore).failToGeneratePreKeys = true
+        self.spyKeyStore.failToGeneratePreKeys = true
 
         client.remoteIdentifier = UUID.create().transportString()
         

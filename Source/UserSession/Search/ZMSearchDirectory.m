@@ -101,6 +101,9 @@ static ZMUserIDsForSearchDirectoryTable *userIDMissingProfileImageBySearch;
         [[ZMSearchUser searchUserToMediumImageCache] removeAllObjects];
     }];
     
+    // Reset searchuser observer center to remove unnecessarily observed searchUsers
+    [self.userInterfaceContext.searchUserObserverCenter reset];
+    
     self.searchContext = nil;
     self.userInterfaceContext = nil;
     self.userSession = nil;
@@ -256,6 +259,9 @@ static ZMUserIDsForSearchDirectoryTable *userIDMissingProfileImageBySearch;
 - (void)sendSearchResult:(ZMSearchResult *)searchResult forToken:(ZMSearchToken)token
 {
     [self.userInterfaceContext performBlock:^{
+        for (ZMSearchUser *user in searchResult.allSearchUser) {
+            [self.userInterfaceContext.searchUserObserverCenter addSearchUser:user];
+        }
         for (id<ZMSearchResultObserver> observer in self.observers) {
             [observer didReceiveSearchResult:searchResult forToken:token];
         }

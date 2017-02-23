@@ -37,6 +37,7 @@ extern NSString * _Null_unspecified const ZMShouldHideNotificationContentKey;
 
 @property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *eventsNotifications;
 @property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *messageNotifications;
+@property (nonatomic, readonly, nonnull) ZMLocalNotificationSet *callingNotifications;
 @property (nonatomic, readonly, nonnull) id<ZMApplication> sharedApplication;
 @property (nonatomic, readonly, nonnull) id sharedApplicationForSwift;
 

@@ -133,7 +133,7 @@ extension AnalyticsTests {
         XCTAssertEqual(analytics.taggedEventsWithAttributes.count, 2)
         let eventWithAtributes = analytics.taggedEventsWithAttributes.last!
         XCTAssertEqual(eventWithAtributes.event, "connect.completed_addressbook_search")
-        XCTAssertEqual(eventWithAtributes.attributes["interval"] as? Int, 0)
+        XCTAssertEqual((eventWithAtributes.attributes["interval"] as? NSNumber)?.intValue, 0)
     }
     
     func testThatItTracksAddresBookUploadStarted() {

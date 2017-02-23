@@ -58,7 +58,7 @@
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
     NSUInteger initialMessageCount = conversation.messages.count;
     
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo22dd"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString];
     
@@ -87,7 +87,7 @@
     
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
-    XCTAssertEqualObjects(message.fileMessageData.filename.stringByDeletingPathExtension, self.name);
+    XCTAssertEqualObjects(message.fileMessageData.filename.stringByDeletingPathExtension, @"foo22dd");
     XCTAssertEqualObjects(message.fileMessageData.filename.pathExtension, @"dat");
     XCTAssertEqual(message.fileMessageData.size, 256lu);
 }
@@ -106,7 +106,7 @@
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
     NSUInteger initialMessageCount = conversation.messages.count;
     
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo22a"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString];
     
@@ -135,7 +135,7 @@
     
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
-    XCTAssertEqualObjects(message.fileMessageData.filename.stringByDeletingPathExtension, self.name);
+    XCTAssertEqualObjects(message.fileMessageData.filename.stringByDeletingPathExtension, @"foo22a");
     XCTAssertEqualObjects(message.fileMessageData.filename.pathExtension, @"dat");
     XCTAssertEqual(message.fileMessageData.size, 256lu);
 }
@@ -153,7 +153,7 @@
     XCTAssertNotNil(conversation);
     XCTAssertEqual(conversation.messages.count, 2lu);
     
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo22bb"];
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:[NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString]]) {
@@ -196,7 +196,7 @@
     XCTAssertNotNil(conversation);
     XCTAssertEqual(conversation.messages.count, 1lu);
     
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo22cc"];
     
     // when
     __block ZMMessage *fileMessage;
@@ -207,7 +207,7 @@
     
     __block ZMMessage *textMessage;
     [self.userSession performChanges:^{
-        textMessage = (id)[conversation appendMessageWithText:self.name];
+        textMessage = (id)[conversation appendMessageWithText:@"foo22cc"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -229,7 +229,7 @@
     XCTAssertNotNil(conversation);
     XCTAssertEqual(conversation.messages.count, 1lu);
     
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo22dd"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
@@ -272,7 +272,7 @@
     NSUInteger initialMessageCount = conversation.messages.count;
 
     
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo223"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString];
     
@@ -323,7 +323,7 @@
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
     NSUInteger initialMessageCount = conversation.messages.count;
     
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo224"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString];
     
@@ -374,7 +374,7 @@
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
     NSUInteger initialMessageCount = conversation.messages.count;
     
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo225"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString];
     
@@ -427,7 +427,7 @@
     XCTAssertNotNil(conversation);
     XCTAssertEqual(conversation.messages.count, 1lu);
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo226"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     
     __block ZMMessage *fileMessage;
@@ -471,7 +471,7 @@
     XCTAssertEqual(conversation.messages.count, 1lu);
     XCTAssertNotNil(conversation);
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo227"];
     NSString *expectedMessageAddPath = [NSString
                                         stringWithFormat:@"/conversations/%@/otr/messages",
                                         conversation.remoteIdentifier.transportString];
@@ -481,13 +481,7 @@
                                       conversation.remoteIdentifier.transportString];
     
     // when
-    // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
     __block ZMMessage *fileMessage;
-    
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
         fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
@@ -1150,15 +1144,7 @@
                                       conversation.remoteIdentifier.transportString];
     
     // when
-    // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
     __block ZMMessage *fileMessage;
-    
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
         fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
@@ -1305,12 +1291,11 @@
     [self.userSession performChanges:^{
         [message requestImageDownload];
     }];
-    
     WaitForAllGroupsToBeEmpty(0.5);
     
     XCTAssertNotNil(message);
     NSArray *notifications = observer.notifications;
-    XCTAssertEqual(notifications.count, 1lu);
+    XCTAssertEqual(notifications.count, 2lu);
     MessageChangeInfo *info = notifications.lastObject;
     XCTAssertTrue(info.imageChanged);
     
@@ -1319,8 +1304,7 @@
     XCTAssertEqualObjects(message.fileMessageData.thumbnailAssetID, thumbnailIDString);
     XCTAssertEqualObjects(message.nonce, nonce);
     XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
-    
-    [observer tearDown];
+
 }
 
 - (void)testThatAFileUpload_AssetOriginal_MessageIsReceivedWhenSentRemotely
@@ -1330,31 +1314,20 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
 
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
                                                                       mimeType:@"text/plain"
-                                                                          name:self.name
+                                                                          name:@"foo228"
                                                                      messageID:nonce.transportString
                                                                   expiresAfter:nil];
-    
-    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
-    __block NSError *error;
-    __block NSString *prekey;
-    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
-    }];
-    XCTAssertNil(error);
-    
+
+
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self inserOTRMessage:original
-               inConversation:self.selfToUser1Conversation
-                     fromUser:self.user1
-                     toClient:self.selfUser.clients.anyObject
-                     usingKey:prekey
-                      session:session];
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+        [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject
+                                                            toClient:self.selfUser.clients.anyObject
+                                                                data:original.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1370,7 +1343,7 @@
     ZMAssetClientMessage *message = (ZMAssetClientMessage *)conversation.messages.lastObject;
     XCTAssertEqual(message.size, 256lu);
     XCTAssertEqualObjects(message.mimeType, @"text/plain");
-    XCTAssertEqualObjects(message.filename, self.name);
+    XCTAssertEqualObjects(message.filename, @"foo228");
     XCTAssertEqualObjects(message.nonce, nonce);
     XCTAssertNil(message.assetId);
     XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
@@ -1559,21 +1532,6 @@
 
 #pragma mark Helper
 
-- (NSURL *)createTestFile:(NSString *)name
-{
-    NSError *error;
-    NSFileManager *fm = NSFileManager.defaultManager;
-    NSURL *directory = [fm URLForDirectory:NSCachesDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:&error];
-    XCTAssertNil(error);
-    
-    NSString *fileName = [NSString stringWithFormat:@"%@.dat", name];
-    NSURL *fileURL = [directory URLByAppendingPathComponent:fileName].filePathURL;
-    NSData *testData = [NSData secureRandomDataOfLength:256];
-    XCTAssertTrue([testData writeToFile:fileURL.path atomically:YES]);
-    
-    return fileURL;
-}
-
 - (NSURL *)testVideoFileURL
 {
     NSBundle *bundle = [NSBundle bundleForClass:self.class];
@@ -1583,31 +1541,6 @@
     return url;
 }
 
-- (void)encryptAndRemotelyInsertOTRAssetToSelfClient:(ZMGenericMessage *)genericMessage
-                                            fromUser:(MockUser *)user
-                                      inConversation:(MockConversation *)conversation
-{
-    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
-    __block NSError *error;
-    __block NSString *prekey;
-    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
-    }];
-    XCTAssertNil(error);
-    
-    // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        
-        [self inserOTRMessage:genericMessage
-               inConversation:conversation
-                     fromUser:user
-                     toClient:self.selfUser.clients.anyObject
-                     usingKey:prekey
-                      session:session];
-    }];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-}
 
 - (ZMAssetClientMessage *)remotelyInsertAssetOriginalAndUpdate:(ZMGenericMessage *)updateMessage
                                                    insertBlock:(void (^)(NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to))insertBlock
@@ -1633,20 +1566,19 @@
     
     ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
                                                                       mimeType:mimeType
-                                                                          name:self.name
+                                                                          name:@"foo229"
                                                                      messageID:nonce.transportString
                                                                   expiresAfter:isEphemeral ? @20 : nil];
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *__unused session) {
-        NSData *messageData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:original.data];
-        [mockConversation insertOTRMessageFromClient:senderClient toClient:selfClient data:messageData];
+        [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:original.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession performRemoteChanges:^(__unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        NSData *updateMessageData = [MockUserClient encryptedDataFromClient:senderClient toClient:selfClient data:updateMessage.data];
+        NSData *updateMessageData = [MockUserClient encryptedWithData:updateMessage.data from:senderClient to:selfClient];
         insertBlock(updateMessageData, mockConversation, senderClient, selfClient);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1663,7 +1595,7 @@
     ZMAssetClientMessage *message = (ZMAssetClientMessage *)conversation.messages.lastObject;
     XCTAssertEqual(message.size, 256lu);
     XCTAssertEqualObjects(message.mimeType, mimeType);
-    XCTAssertEqualObjects(message.filename, self.name);
+    XCTAssertEqualObjects(message.filename, @"foo229");
     XCTAssertEqualObjects(message.nonce, nonce);
     
     return message;
@@ -1746,31 +1678,21 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
-    
+    [self establishSessionBetweenSelfUserAndMockUser:self.user1];
+    WaitForAllGroupsToBeEmpty(0.5);
+
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
                                                                       mimeType:@"text/plain"
                                                                           name:self.name
                                                                      messageID:nonce.transportString
-                                                                  expiresAfter:@20];
-    
-    EncryptionContext *box = self.userSession.syncManagedObjectContext.zm_cryptKeyStore.encryptionContext;
-    __block NSError *error;
-    __block NSString *prekey;
-    [box perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        prekey = [sessionsDirectory generateLastPrekeyAndReturnError:&error];
-    }];
-    XCTAssertNil(error);
+                                                                  expiresAfter:@30];
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self inserOTRMessage:original
-               inConversation:self.selfToUser1Conversation
-                     fromUser:self.user1
-                     toClient:self.selfUser.clients.anyObject
-                     usingKey:prekey
-                      session:session];
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+        [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject
+                                                            toClient:self.selfUser.clients.anyObject
+                                                                data:original.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1805,7 +1727,7 @@
     NSUUID *assetID = NSUUID.createUUID;
     NSData *otrKey = NSData.randomEncryptionKey;
     NSData *sha256 = NSData.zmRandomSHA256Key;
-    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@20];
+    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -1829,7 +1751,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce.transportString  expiresAfter:@20];
+    ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce.transportString  expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:cancelled insertBlock:
@@ -1855,7 +1777,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *failed = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedFAILED messageID:nonce.transportString expiresAfter:@20];
+    ZMGenericMessage *failed = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedFAILED messageID:nonce.transportString expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:failed insertBlock:
@@ -1890,7 +1812,7 @@
     ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
     ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
     ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
-    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:@(20)];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:@30];
     
     
     // when
@@ -1931,7 +1853,7 @@
     
     XCTAssertNotNil(message);
     NSArray *notifications = observer.notifications;
-    XCTAssertEqual(notifications.count, 1lu);
+    XCTAssertEqual(notifications.count, 2lu);
     MessageChangeInfo *info = notifications.lastObject;
     XCTAssertTrue(info.imageChanged);
     
@@ -1942,7 +1864,6 @@
     XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
     XCTAssertTrue(message.isEphemeral);
 
-    [observer tearDown];
 }
 
 - (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_FailedDownload_AfterFailedDecryption_Ephemeral
@@ -1960,7 +1881,7 @@
     NSData *encryptedAsset = [assetData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
     NSData *sha256 = encryptedAsset.zmSHA256Digest;
     
-    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@20];
+    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce.transportString expiresAfter:@30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -2070,7 +1991,7 @@
 
     XCTAssertNotNil(message);
     NSArray *notifications = observer.notifications;
-    XCTAssertEqual(notifications.count, 1lu);
+    XCTAssertEqual(notifications.count, 2lu);
     MessageChangeInfo *info = notifications.lastObject;
     XCTAssertTrue(info.imageChanged);
 
@@ -2080,7 +2001,6 @@
     XCTAssertEqualObjects(message.nonce, nonce);
     XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
     
-    [observer tearDown];
 }
 
 - (void)testThatItReceivesAVideoFileMessageThumbnailSentRemotely_Ephemeral_V3
@@ -2101,7 +2021,7 @@
     ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
     ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
     ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
-    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:@(20)];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce.transportString expiresAfter:@20];
 
     // when
     __block MessageChangeObserver *observer;
@@ -2141,7 +2061,7 @@
 
     XCTAssertNotNil(message);
     NSArray *notifications = observer.notifications;
-    XCTAssertEqual(notifications.count, 1lu);
+    XCTAssertEqual(notifications.count, 2lu);
     MessageChangeInfo *info = notifications.lastObject;
     XCTAssertTrue(info.imageChanged);
 
@@ -2151,8 +2071,7 @@
     XCTAssertEqualObjects(message.nonce, nonce);
     XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
     XCTAssertTrue(message.isEphemeral);
-    
-    [observer tearDown];
+
 }
 
 - (void)testThatAFileUpload_AssetUploaded_MessageIsReceivedAndUpdatesTheOriginalMessageWhenSentRemotely_V3
@@ -2197,7 +2116,7 @@
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
     NSUInteger initialMessageCount = conversation.messages.count;
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foofile"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetUploadPath = @"/assets/v3";
 
@@ -2229,7 +2148,7 @@
 
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
-    XCTAssertEqualObjects(message.fileMessageData.filename.stringByDeletingPathExtension, self.name);
+    XCTAssertEqualObjects(message.fileMessageData.filename.stringByDeletingPathExtension, @"foofile");
     XCTAssertEqualObjects(message.fileMessageData.filename.pathExtension, @"dat");
     XCTAssertEqual(message.fileMessageData.size, 256lu);
 }
@@ -2248,7 +2167,7 @@
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
     NSUInteger initialMessageCount = conversation.messages.count;
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foogile"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetUploadPath = @"/assets/v3";
 
@@ -2286,7 +2205,7 @@
 
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
-    XCTAssertEqualObjects(message.fileMessageData.filename.stringByDeletingPathExtension, self.name);
+    XCTAssertEqualObjects(message.fileMessageData.filename.stringByDeletingPathExtension, @"foogile");
     XCTAssertEqualObjects(message.fileMessageData.filename.pathExtension, @"dat");
     XCTAssertEqual(message.fileMessageData.size, 256lu);
 }
@@ -2304,7 +2223,7 @@
     XCTAssertNotNil(conversation);
     XCTAssertEqual(conversation.messages.count, 2lu);
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"fooz"];
 
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if ([request.path isEqualToString:@"/assets/v3"]) {
@@ -2347,7 +2266,7 @@
     XCTAssertNotNil(conversation);
     XCTAssertEqual(conversation.messages.count, 1lu);
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foob"];
 
     // when
     __block ZMMessage *fileMessage;
@@ -2380,7 +2299,7 @@
     XCTAssertNotNil(conversation);
     XCTAssertEqual(conversation.messages.count, 1lu);
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo22"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
 
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
@@ -2423,7 +2342,7 @@
     NSUInteger initialMessageCount = conversation.messages.count;
 
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo43"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetAddPath = @"/assets/v3";
 
@@ -2473,7 +2392,7 @@
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
     NSUInteger initialMessageCount = conversation.messages.count;
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo45"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetAddPath = @"/assets/v3";
 
@@ -2524,7 +2443,7 @@
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
     NSUInteger initialMessageCount = conversation.messages.count;
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo112"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetAddPath = @"/assets/v3";
 
@@ -2577,7 +2496,7 @@
     XCTAssertNotNil(conversation);
     XCTAssertEqual(conversation.messages.count, 1lu);
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo2332"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
 
     __block ZMMessage *fileMessage;
@@ -2621,16 +2540,15 @@
     XCTAssertEqual(conversation.messages.count, 1lu);
     XCTAssertNotNil(conversation);
 
-    NSURL *fileURL = [self createTestFile:self.name];
+    NSURL *fileURL = [self createTestFile:@"foo2432"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetAddPath = @"/assets/v3";
 
     // when
     // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        [session registerClientForUser:self.user1 label:@"Android!" type:@"permanent"];
+    }];
     __block ZMMessage *fileMessage;
 
     [self.mockTransportSession resetReceivedRequests];
@@ -3427,10 +3345,9 @@
 
     // when
     // register other users client
-    __unused EncryptionContext *user1Box = [self setupOTREnvironmentForUser:self.user1
-                                                               isSelfClient:NO
-                                                               numberOfKeys:1
-                                               establishSessionWithSelfUser:NO];
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        [session registerClientForUser:self.user1 label:@"Android!" type:@"permanent"];
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
 
     __block ZMMessage *fileMessage;

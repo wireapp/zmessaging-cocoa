@@ -71,14 +71,6 @@
 
 @implementation ClientManagementTests
 
-- (NSArray *)randomPrekeys {
-    return @[
-             @"pQABAQsCoQBYIELN3h/T6oTbEnvMAfWzSkPy7iTWO8lVWY9UersuKefmA6EAoQBYINKKgRnF/pqXy+4JpUrgwSROdT+ot+JlVMKB4FY0wDnBBPY=",
-             @"pQABAQwCoQBYIGlzhnQjz8CgcIz3bZ2lJYuDNUX1e4dLSXQ7OTPhCVCrA6EAoQBYINKKgRnF/pqXy+4JpUrgwSROdT+ot+JlVMKB4FY0wDnBBPY=",
-             @"pQABARICoQBYIP/cTFVVxCGU/T36Zn5uzmAYTx6Glawxjni3hZUyMo6KA6EAoQBYINKKgRnF/pqXy+4JpUrgwSROdT+ot+JlVMKB4FY0wDnBBPY="
-             ];
-}
-
 - (void)setUp
 {
     [super setUp];
@@ -186,7 +178,7 @@
     
     // then
     
-    XCTAssertEqual(observer.notifications.count, 2u);
+    XCTAssertEqual(observer.notifications.count, 1u);
     UserChangeInfo *firstChangeInfo = observer.notifications.firstObject;
     XCTAssertTrue(firstChangeInfo.clientsChanged);
     XCTAssertEqual(selfUser.clients.count, 2u);
@@ -201,7 +193,7 @@
     // given
     XCTAssert([self logInAndWaitForSyncToBeComplete]);
 
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self establishSessionBetweenSelfUserAndMockUser:self.user1];
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     UserClient *selfClient = [ZMUser selfUserInUserSession:self.userSession].selfClient;
     [self.userSession performChanges:^{
@@ -229,12 +221,12 @@
     XCTAssertEqual(message.systemMessageType, ZMSystemMessageTypeNewClient);
 }
 
-- (void)testThatItCanSendAMessageAfterReceivingANotificationForANewClient
+- (void)testThatItCanNotSendAMessageAfterReceivingANotificationForANewClient
 {
     // given
     XCTAssert([self logInAndWaitForSyncToBeComplete]);
     
-    [self setupOTREnvironmentForUser:self.user1 isSelfClient:NO numberOfKeys:1 establishSessionWithSelfUser:YES];
+    [self establishSessionBetweenSelfUserAndMockUser:self.user1];
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     UserClient *selfClient = [ZMUser selfUserInUserSession:self.userSession].selfClient;
     [self.userSession performChanges:^{
@@ -246,7 +238,7 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session registerClientForUser:self.selfUser label:@"Foo client" type:@"permanent" preKeys:[self randomPrekeys] lastPreKey:[self randomPrekeys].lastObject];
+        [session registerClientForUser:self.selfUser label:@"Foo client" type:@"permanent"];
     }];
     WaitForEverythingToBeDone();
     
@@ -262,11 +254,11 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateFailedToSend);
     ZMTransportRequest *messageRequest = [self.mockTransportSession.receivedRequests firstObjectMatchingWithBlock:^BOOL(ZMTransportRequest *req) {
         return [req.path isEqualToString:[NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString]];
     }];
-    XCTAssertNotNil(messageRequest);
+    XCTAssertNil(messageRequest);
 }
 
 - (void)testThatItRemovesAUserClientWhenReceivingANotificationForAClient

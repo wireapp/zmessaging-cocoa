@@ -138,6 +138,12 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     }
 }
 
+- (void)updateServerTimeDeltaWithTimestamp:(NSString *)timestamp {
+    NSDate *serverTime = [NSDate dateWithTransportString:timestamp];
+    NSTimeInterval serverTimeDelta = [serverTime timeIntervalSinceNow];
+    self.managedObjectContext.serverTimeDelta = serverTimeDelta;
+}
+
 + (NSArray<NSDictionary *> *)eventDictionariesFromPayload:(id<ZMTransportData>)payload
 {
     return [payload.asDictionary optionalArrayForKey:@"notifications"].asDictionaries;
@@ -172,7 +178,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         }
     }
 
-    if (self.isFetchingStreamForAPNS) {
+    if (self.isFetchingStreamForAPNS && self.notificationEventsToCancel != nil) {
         // In case we are fetching the stream because we have received a push notification we need to forward them to the pingback status
         // The status will forward them to the operationloop and check if the received notification was contained in this batch.
         NSArray <ZMUpdateEvent *> *events = [parsedEvents arrayByAddingObjectsFromArray:lastCallStateEvents.allValues];
@@ -300,6 +306,12 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 {
     NOT_USED(paginator);
     SyncStatus *syncStatus = self.syncStatus;
+    
+    NSString *timestamp = ((NSString *) response.payload.asDictionary[@"time"]);
+    if (timestamp) {
+        [self updateServerTimeDeltaWithTimestamp:timestamp];
+    }
+    
     NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
     if (latestEventId != nil) {
         if (response.HTTPStatus == 404 && syncStatus.currentSyncPhase == SyncPhaseFetchingMissedEvents) {

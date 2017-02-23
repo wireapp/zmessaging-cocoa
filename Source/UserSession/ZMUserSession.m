@@ -23,6 +23,7 @@
 @import ZMUtilities;
 @import ZMCDataModel;
 @import CallKit;
+@import CoreTelephony;
 
 #import "ZMUserSession+Background.h"
 #import "ZMSyncStateManager.h"
@@ -53,10 +54,10 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMLocalNotificationDispatcher.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
+#import "CallingProtocolStrategy.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
-NSString * const ZMUserSessionTrackingIdentifierDidChangeNotification = @"ZMUserSessionTrackingIdentifierDidChange";
 static NSString * const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
 NSString * const ZMAppendAVSLogNotificationName = @"ZMAppendAVSLogNotification";
 NSString * const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
@@ -87,6 +88,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) NSString *applicationGroupIdentifier;
 @property (nonatomic) NSURL *storeURL;
 @property (nonatomic) NSURL *keyStoreURL;
+@property (nonatomic, readwrite) NSURL *sharedContainerURL;
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 
 
@@ -214,7 +216,7 @@ ZM_EMPTY_ASSERTING_INIT()
                   appGroupIdentifier:(NSString *)appGroupIdentifier;
 {
     zmSetupEnvironments();
-    ZMBackendEnvironment *environment = [[ZMBackendEnvironment alloc] init];
+    ZMBackendEnvironment *environment = [[ZMBackendEnvironment alloc] initWithUserDefaults:NSUserDefaults.standardUserDefaults];
     NSURL *backendURL = environment.backendURL;
     NSURL *websocketURL = environment.backendWSURL;
     self.applicationGroupIdentifier = appGroupIdentifier;
@@ -284,8 +286,10 @@ ZM_EMPTY_ASSERTING_INIT()
         [ZMUserAgent setWireAppVersion:appVersion];
         self.didStartInitialSync = NO;
         self.pushChannelIsOpen = NO;
+
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
-        
+
+        self.sharedContainerURL = [self.class sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
         self.apnsEnvironment = apnsEnvironment;
         self.networkIsOnline = YES;
         self.managedObjectContext = userInterfaceContext;
@@ -302,11 +306,14 @@ ZM_EMPTY_ASSERTING_INIT()
         UserImageLocalCache *userImageCache = [[UserImageLocalCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_userImageCache = userImageCache;
         
-        ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100 location:cacheLocation];
+        ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:500 location:cacheLocation];
         self.managedObjectContext.zm_imageAssetCache = imageAssetCache;
         
         FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_fileAssetCache = fileAssetCache;
+        
+        CTCallCenter *callCenter = [[CTCallCenter alloc] init];
+        self.managedObjectContext.zm_callCenter = callCenter;
         
         [self.syncManagedObjectContext performBlockAndWait:^{
             self.syncManagedObjectContext.zm_imageAssetCache = imageAssetCache;
@@ -315,6 +322,9 @@ ZM_EMPTY_ASSERTING_INIT()
             
             self.localNotificationDispatcher =
             [[ZMLocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext sharedApplication:application];
+            
+           self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
+                                                                                managedObjectContext:syncManagedObjectContext];
             
             self.transportSession = session;
             self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
@@ -366,9 +376,8 @@ ZM_EMPTY_ASSERTING_INIT()
         }];
         [self enableBackgroundFetch];
 
+        self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithSharedContainerURL:self.sharedContainerURL];
         
-        self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = self.application.applicationState != UIApplicationStateBackground;
-
         if ([self.class useCallKit]) {
             CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[ZMCallKitDelegate providerConfiguration]];
             CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
@@ -400,7 +409,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
     __block NSMutableArray *keysToRemove = [NSMutableArray array];
     [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
-        if ([obj respondsToSelector:@selector(tearDown)]) {
+        if ([obj respondsToSelector:@selector((tearDown))]) {
             [obj tearDown];
             [keysToRemove addObject:key];
         }
@@ -409,7 +418,7 @@ ZM_EMPTY_ASSERTING_INIT()
     [keysToRemove removeAllObjects];
     [self.syncManagedObjectContext performBlockAndWait:^{
         [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
-            if ([obj respondsToSelector:@selector(tearDown)]) {
+            if ([obj respondsToSelector:@selector((tearDown))]) {
                 [obj tearDown];
             }
             [keysToRemove addObject:key];
@@ -653,11 +662,6 @@ ZM_EMPTY_ASSERTING_INIT()
         
         [self.operationLoop accessTokenDidChangeWithToken:token ofType:type];
     }];
-}
-
-- (NSString *)trackingIdentifier;
-{
-    return self.managedObjectContext.userSessionTrackingIdentifier;
 }
 
 - (void)notifyThirdPartyServices;
@@ -907,25 +911,6 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 @end
 
 
-
-@implementation NSManagedObjectContext (TrackingIdentifier)
-
-static NSString * const TrackingIdentifierKey = @"ZMTrackingIdentifier";
-
-- (NSString *)userSessionTrackingIdentifier;
-{
-    return [self persistentStoreMetadataForKey:TrackingIdentifierKey];
-}
-
-- (void)setUserSessionTrackingIdentifier:(NSString *)identifier;
-{
-    [self setPersistentStoreMetadata:[identifier copy] forKey:TrackingIdentifierKey];
-}
-
-@end
-
-
-
 @implementation ZMUserSession (LaunchOptions)
 
 - (void)didLaunchWithURL:(NSURL *)URL;
@@ -995,6 +980,18 @@ static BOOL ZMUserSessionUseCallKit = NO;
     ZMUserSessionUseCallKit = useCallKit;
 }
 
+static CallingProtocolStrategy ZMUserSessionCallingProtocolStrategy = CallingProtocolStrategyNegotiate;
+
++ (CallingProtocolStrategy)callingProtocolStrategy
+{
+    return ZMUserSessionCallingProtocolStrategy;
+}
+
++ (void)setCallingProtocolStrategy:(CallingProtocolStrategy)callingProtocolStrategy
+{
+    ZMUserSessionCallingProtocolStrategy = callingProtocolStrategy;
+}
+
 @end
 
 
@@ -1048,4 +1045,3 @@ static BOOL ZMUserSessionUseCallKit = NO;
 }
 
 @end
-

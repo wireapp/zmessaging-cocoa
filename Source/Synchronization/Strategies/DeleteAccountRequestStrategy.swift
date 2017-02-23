@@ -37,7 +37,7 @@ import ZMTransport
     }
     
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        guard let shouldBeDeleted : NSNumber = self.managedObjectContext.persistentStoreMetadata(key: DeleteAccountRequestStrategy.userDeletionInitiatedKey) as? NSNumber
+        guard let shouldBeDeleted : NSNumber = self.managedObjectContext.persistentStoreMetadata(forKey: DeleteAccountRequestStrategy.userDeletionInitiatedKey) as? NSNumber
             , shouldBeDeleted.boolValue
         else {
             return nil

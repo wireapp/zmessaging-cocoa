@@ -23,7 +23,6 @@ import Foundation
     
     func tagEvent(_ event: String)
     func tagEvent(_ event: String, attributes: [String: NSObject])
-    func upload()
     
 }
 
@@ -37,8 +36,5 @@ import Foundation
     public func tagEvent(_ event: String, attributes: [String : NSObject]) {
         print(Date(), "[ANALYTICS]", #function, event, attributes)
     }
-    
-    public func upload() {
-        print(Date(), "[ANALYTICS]", #function)
-    }
+
 }

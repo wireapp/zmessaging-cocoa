@@ -37,6 +37,12 @@ import Foundation
     /// Invoken when requesting the phone number verification code succeeded
     @objc optional func phoneNumberVerificationCodeRequestDidSucceed()
     
+    /// Invoked when the phone number could not be removed
+    @objc optional func phoneNumberRemovalDidFail(_ error: Error!)
+    
+    /// Invoked when phone number was removed
+    @objc optional func didRemovePhoneNumber()
+    
     /// Invoked when the phone number code verification failed
     /// The opposite (phone number change success) will be notified
     /// by a change in the user phone number
@@ -68,9 +74,11 @@ enum UserProfileUpdateNotificationType {
     case passwordUpdateDidFail
     case emailUpdateDidFail(error: Error)
     case emailDidSendVerification
+    case didRemovePhoneNumber
     case phoneNumberVerificationCodeRequestDidFail(error: Error)
     case phoneNumberVerificationCodeRequestDidSucceed
     case phoneNumberChangeDidFail(error: Error)
+    case phoneNumberRemovalDidFail(error: Error)
     case didCheckAvailabilityOfHandle(handle: String, available: Bool)
     case didFailToCheckAvailabilityOfHandle(handle: String)
     case didSetHandle
@@ -108,6 +116,10 @@ extension UserProfileUpdateStatus {
             switch note.type {
             case .emailUpdateDidFail(let error):
                 observer.emailUpdateDidFail?(error)
+            case .phoneNumberRemovalDidFail(let error):
+                observer.phoneNumberRemovalDidFail?(error)
+            case .didRemovePhoneNumber:
+                observer.didRemovePhoneNumber?()
             case .phoneNumberVerificationCodeRequestDidFail(let error):
                 observer.phoneNumberVerificationCodeRequestDidFail?(error);
             case .phoneNumberChangeDidFail(let error):

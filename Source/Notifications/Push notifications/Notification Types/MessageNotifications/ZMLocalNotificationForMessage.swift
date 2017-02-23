@@ -45,24 +45,32 @@ extension NotificationForMessage {
         let notification = UILocalNotification()
 
         let shouldHideContent : Bool
-        if let hide = message.managedObjectContext!.persistentStoreMetadata(key: ZMShouldHideNotificationContentKey) as? NSNumber, hide.boolValue == true {
+        if let hide = message.managedObjectContext!.persistentStoreMetadata(forKey: ZMShouldHideNotificationContentKey) as? NSNumber, hide.boolValue == true {
             shouldHideContent = true
         } else {
             shouldHideContent = isEphemeral
         }
         if shouldHideContent {
-            notification.alertBody = (isEphemeral ? ZMPushStringEphemeral : ZMPushStringDefault).localized()
+            notification.alertBody = (isEphemeral ? ZMPushStringEphemeral : ZMPushStringDefault).localizedStringForPushNotification()
             notification.soundName = ZMCustomSound.notificationNewMessageSoundName()
             if isEphemeral {
-                notification.category = ZMConversationCategory
+                notification.category = conversationCategory(ephemeral: isEphemeral)
             }
         } else {
             notification.alertBody = configureAlertBody(message).escapingPercentageSymbols()
             notification.soundName = soundName
-            notification.category = ZMConversationCategory
+            notification.category = conversationCategory(ephemeral: isEphemeral)
         }
         notification.setupUserInfo(message)
         return notification
+    }
+
+    func conversationCategory(ephemeral: Bool) -> String {
+        guard !ephemeral else { return ZMConversationCategory }
+        switch contentType {
+        case .knock, .system(_), .undefined : return ZMConversationCategory
+        default: return ZMConversationCategoryIncludingLike
+        }
     }
     
     static public func shouldCreateNotification(_ message: MessageType) -> Bool {
@@ -134,14 +142,16 @@ final public class ZMLocalNotificationForMessage : ZMLocalNotification, Notifica
         case .knock:
             let knockCount = NSNumber(value: eventCount)
             return ZMPushStringKnock.localizedString(with: sender, conversation:conversation, count:knockCount)
-        default:
+        case .undefined:
+            return ZMPushStringUnknownAdd.localizedString(with: sender, conversation: conversation)
+        case .system(_):
             return ""
         }
     }
     
     class func canCreateNotification(_ message : ZMOTRMessage, contentType: ZMLocalNotificationContentType) -> Bool {
         switch contentType {
-        case .undefined, .system:
+        case .system:
             return false
         default:
            return shouldCreateNotification(message)

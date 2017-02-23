@@ -48,6 +48,7 @@
 {
     [super setUp];
     
+    ZMUserSession.callingProtocolStrategy = CallingProtocolStrategyVersion2;
     self.thirdPartyServices = [[ThirdPartyServices alloc] init];
     self.dataChangeNotificationsCount = 0;
     self.baseURL = [NSURL URLWithString:@"http://bar.example.com"];
@@ -66,7 +67,7 @@
         return YES;
     }]];
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
-    self.mediaManager = [OCMockObject niceMockForClass:NSObject.class];
+    self.mediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     
     ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:self.cookieStorage];
@@ -131,6 +132,7 @@
     self.authenticationStatus = nil;
     self.proxiedRequestStatus = nil;
     
+    ZMUserSession.callingProtocolStrategy = CallingProtocolStrategyNegotiate;
     [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
     [self.syncMOC.userInfo removeAllObjects];
     

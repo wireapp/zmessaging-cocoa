@@ -73,6 +73,23 @@ static NSString * const EventTimeKey = @"eventTime";
     return message;
 }
 
+- (void)setupUserInfo:(ZMConversation *)conversation sender:(ZMUser *)sender
+{
+    NSMutableDictionary *info = [NSMutableDictionary dictionary];
+    
+    NSString *conversationIDString = conversation.remoteIdentifier.transportString;
+    if (conversationIDString != nil) {
+        info[ConversationIDStringKey] = conversationIDString;
+    }
+    
+    NSString *senderUUIDString = sender.remoteIdentifier.transportString;
+    if (senderUUIDString != nil) {
+        info[SenderIDStringKey] = senderUUIDString;
+    }
+    
+    self.userInfo = [info copy];
+}
+
 - (void)setupUserInfo:(ZMConversation *)conversation forEvent:(ZMUpdateEvent*)event;
 {
     NSMutableDictionary *info = [NSMutableDictionary dictionary];

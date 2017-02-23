@@ -31,7 +31,7 @@ class ZMCallStateTests : MessagingTest {
         self.uiMOC.saveOrRollback()
         
         // when
-        try! conversation.voiceChannel.joinVideoCall()
+        _ = conversation.voiceChannelRouter?.v2.join(video: true)
         let callState = self.uiMOC.zm_callState.createCopyAndResetHasChanges()
         _ = syncMOC.mergeCallStateChanges(callState)
         

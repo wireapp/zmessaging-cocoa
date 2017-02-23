@@ -113,7 +113,7 @@ static NSString * const ExcludeVersionsKey = @"exclude";
                              application:(id<ZMApplication>)application
                        completionHandler:(void (^)(NSString *, NSArray *))completionHandler {
     return [self initWithURLSession:nil
-                                env:[ZMBackendEnvironment new]
+                                env:[[ZMBackendEnvironment alloc] initWithUserDefaults:NSUserDefaults.standardUserDefaults]
                successCheckInterval:downloadInterval
                failureCheckInterval:UnsuccessfulDownloadRetryInterval
                        userDefaults:[NSUserDefaults standardUserDefaults]

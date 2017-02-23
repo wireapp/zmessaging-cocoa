@@ -32,11 +32,17 @@
     
     if (self.localMediumRemoteIdentifier != nil) {
         self.localMediumRemoteIdentifier = nil;
-        [self.managedObjectContext saveOrRollback];
+        ZMSDispatchGroup *group = [ZMSDispatchGroup groupWithLabel:@"ZMUser"];
+        [self.managedObjectContext enqueueDelayedSaveWithGroup:group];
+        
+        [group notifyOnQueue:dispatch_get_main_queue() block:^{
+            [UserImageStrategy requestAssetForUserWith:self.objectID];
+            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
+        }];
+    } else {
+        [UserImageStrategy requestAssetForUserWith:self.objectID];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
-    
-    [UserImageStrategy requestAssetForUserWith:self.objectID];
-    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (void)requestSmallProfileImageInUserSession:(ZMUserSession *)userSession;
@@ -49,11 +55,17 @@
     
     if (self.localSmallProfileRemoteIdentifier != nil) {
         self.localSmallProfileRemoteIdentifier = nil;
-        [self.managedObjectContext saveOrRollback];
+        ZMSDispatchGroup *group = [ZMSDispatchGroup groupWithLabel:@"ZMUser"];
+        [self.managedObjectContext enqueueDelayedSaveWithGroup:group];
+        
+        [group notifyOnQueue:dispatch_get_main_queue() block:^{
+            [UserImageStrategy requestSmallAssetForUserWith:self.objectID];
+            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
+        }];
+    } else {
+        [UserImageStrategy requestSmallAssetForUserWith:self.objectID];
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
-    
-    [UserImageStrategy requestSmallAssetForUserWith:self.objectID];
-    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (id<ZMCommonContactsSearchToken>)searchCommonContactsInUserSession:(ZMUserSession *)session withDelegate:(id<ZMCommonContactsSearchDelegate>)delegate

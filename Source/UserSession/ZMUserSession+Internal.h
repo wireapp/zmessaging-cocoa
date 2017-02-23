@@ -61,6 +61,8 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic) BOOL didNotifyThirdPartyServices;
 @property (nonatomic, readonly) id<ZMApplication> application;
 @property (nonatomic) ZMCallKitDelegate *callKitDelegate;
+@property (nonatomic) ZMCallStateObserver *callStateObserver;
+@property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 
 - (void)notifyThirdPartyServices;
 - (void)start;
@@ -140,15 +142,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @end
 
 
-
-@interface NSManagedObjectContext (TrackingIdentifier)
-
-@property (nonatomic, copy) NSString *userSessionTrackingIdentifier;
-
-@end
-
-
-
 @interface ZMUserSession (RequestToOpenConversation)
 
 + (void)requestToOpenSyncConversationOnUI:(ZMConversation *)conversation;
@@ -170,11 +163,9 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 
 
-
 @interface ZMUserSession (ZMBackgroundFetch)
 
 - (void)enableBackgroundFetch;
 
 @end
-
 

@@ -96,10 +96,16 @@ extension EventDecoder {
     /// - parameter events The new events that should be decrypted and stored in the database.
     /// - parameter startingAtIndex The startIndex to be used for the incrementing sortIndex of the stored events.
     fileprivate func storeEvents(_ events: [ZMUpdateEvent], startingAtIndex startIndex: Int64) {
-        syncMOC.zm_cryptKeyStore.encryptionContext.perform { [weak self] (sessionsDirectory) in
+        syncMOC.zm_cryptKeyStore.encryptionContext.perform { [weak self] (sessionsDirectory) -> Void in
             guard let `self` = self else { return }
             
-            let newUpdateEvents = events.flatMap { sessionsDirectory.decryptUpdateEventAndAddClient($0, managedObjectContext: self.syncMOC) }
+            let newUpdateEvents = events.flatMap { event -> ZMUpdateEvent? in
+                if event.type == .conversationOtrMessageAdd || event.type == .conversationOtrAssetAdd {
+                    return sessionsDirectory.decryptAndAddClient(event, in: self.syncMOC)
+                } else {
+                    return event
+                }
+            }
             
             // This call has to be synchronous to ensure that we close the
             // encryption context only if we stored all events in the database
@@ -161,7 +167,7 @@ extension EventDecoder {
     
     /// create event ID store if needed
     fileprivate func createReceivedPushEventIDsStoreIfNecessary() {
-        if self.eventMOC.persistentStoreMetadata(key: previouslyReceivedEventIDsKey) as? [String] == nil {
+        if self.eventMOC.persistentStoreMetadata(forKey: previouslyReceivedEventIDsKey) as? [String] == nil {
             self.eventMOC.setPersistentStoreMetadata(array: [String](), key: previouslyReceivedEventIDsKey)
         }
     }
@@ -169,13 +175,13 @@ extension EventDecoder {
     
     /// List of already received event IDs
     fileprivate var alreadyReceivedPushEventIDs : Set<UUID> {
-        let array = self.eventMOC.persistentStoreMetadata(key: previouslyReceivedEventIDsKey) as! [String]
+        let array = self.eventMOC.persistentStoreMetadata(forKey: previouslyReceivedEventIDsKey) as! [String]
         return Set(array.flatMap { UUID(uuidString: $0) })
     }
     
     /// List of already received event IDs as strings
     fileprivate var alreadyReceivedPushEventIDsStrings : Set<String> {
-        return Set(self.eventMOC.persistentStoreMetadata(key: previouslyReceivedEventIDsKey) as! [String])
+        return Set(self.eventMOC.persistentStoreMetadata(forKey: previouslyReceivedEventIDsKey) as! [String])
     }
     
     /// Store received event IDs 

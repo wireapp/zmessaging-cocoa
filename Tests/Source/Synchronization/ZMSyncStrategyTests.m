@@ -31,8 +31,6 @@
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 #import "ZMUpdateEventsBuffer.h"
 #import "ZMOperationLoop.h"
-#import "AVSMediaManager.h"
-#import "AVSFlowManager.h"
 #import "MessagingTest+EventFactory.h"
 #import "zmessaging_iOS_Tests-Swift.h"
 #import "ZMNotifications+UserSession.h"
@@ -808,8 +806,8 @@
     
     // expect
     for (id<ZMObjectStrategy> syncObject in self.syncObjects) {
-        [[self.mockUpstreamSync1 expect] objectsDidChange:totalSet];
-        [[self.mockUpstreamSync2 expect] objectsDidChange:totalSet];
+        [(id<ZMContextChangeTracker>)[self.mockUpstreamSync1 expect] objectsDidChange:totalSet];
+        [(id<ZMContextChangeTracker>)[self.mockUpstreamSync2 expect] objectsDidChange:totalSet];
         
         [self verifyMockLater:syncObject];
     }
@@ -824,8 +822,8 @@
 {
     // given
     
-    [[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
-    [[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
     
     ZMUser *uiUser = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     XCTAssertTrue([self.uiMOC saveOrRollback]);
@@ -856,8 +854,8 @@
 - (void)testThatItSynchronizesCallStateChangesInUIContextToSyncContext
 {
     // expect
-    [[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
-    [[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
     
     
     // given
@@ -990,8 +988,8 @@
     }];
     
     // stub
-    [[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
-    [[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
+    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
 
     // when
     //
@@ -1116,6 +1114,28 @@
     XCTAssertFalse([ids containsObject:remoteId]);
 }
 
+- (void)testThatItMergesTheUserInfoOfContexts {
+    
+    // The security level degradation info is stored in the user info. I'm using this one to verify that it is merged correcly
+    // GIVEN
+    __block ZMOTRMessage *message;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMConversationTypeGroup;
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        
+        message = (ZMOTRMessage *)[conversation appendMessageWithText:@"foo bar bar bar"];
+        message.causedSecurityLevelDegradation = YES;
+        
+        // WHEN
+        [self.syncMOC saveOrRollback];
+    }];
+    [self spinMainQueueWithTimeout:0.2];
+    
+    // THEN
+    ZMOTRMessage *uiMessage = [self.uiMOC existingObjectWithID:message.objectID error:nil];
+    XCTAssertTrue(uiMessage.causedSecurityLevelDegradation);
+}
 #pragma mark - Helper
 
 - (NSSet <Class> *)transcodersExpectedToReturnNonces
@@ -1151,31 +1171,6 @@
             }
         }
     }
-}
-
-- (ZMUpdateEvent *)otrMessageAddPayloadFromClient:(UserClient *)client text:(NSString *)text nonce:(NSUUID *)nonce
-{
-    ZMGenericMessage *message = [ZMGenericMessage messageWithText:text nonce:nonce.transportString expiresAfter:nil];
-    __block NSError *error;
-    __block NSData *encryptedData;
-    
-    [self.syncMOC.zm_cryptKeyStore.encryptionContext perform:^(EncryptionSessionsDirectory * _Nonnull sessionsDirectory) {
-        encryptedData =  [sessionsDirectory encrypt:message.data recipientClientId:client.remoteIdentifier error:&error];
-    }];
-    XCTAssertNil(error);
-    
-    NSDictionary *payload = @{
-                              @"type" : @"conversation.otr-message-add",
-                              @"data" : @{
-                                      @"recipient" : client.remoteIdentifier,
-                                      @"sender" : client.remoteIdentifier,
-                                      @"text" : encryptedData.base64String
-                                      },
-                              @"conversation": NSUUID.createUUID.transportString,
-                              @"time" : [NSDate dateWithTimeIntervalSince1970:555555].transportString
-                              };
-    
-    return [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
 }
 
 @end
@@ -1361,21 +1356,6 @@
     
     // then
     [self.updateEventsBuffer verify];
-}
-
-- (void)testThatItPostsApplicationDidEnterEventProcessingStateNotificationWhenSyncFinishes
-{
-    // given
-    [[self.updateEventsBuffer stub] processAllEventsInBuffer];
-
-    // expect
-    [self expectationForNotification:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil handler:nil];
-    
-    // when
-    [self.sut didFinishSync];
-    
-    // then
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 @end

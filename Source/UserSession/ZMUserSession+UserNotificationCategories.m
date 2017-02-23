@@ -21,9 +21,12 @@
 
 
 NSString *const ZMConversationCategory = @"conversationCategory";
+NSString *const ZMConversationCategoryIncludingLike = @"conversationCategoryWithLike";
 NSString *const ZMConversationOpenAction = @"conversationOpenAction";
 NSString *const ZMConversationDirectReplyAction = @"conversationDirectReplyAction";
 NSString *const ZMConversationMuteAction = @"conversationMuteAction";
+
+NSString *const ZMMessageLikeAction = @"messageLikeAction";
 
 NSString *const ZMIncomingCallCategory = @"incomingCallCategory";
 NSString *const ZMMissedCallCategory = @"missedCallCategory";
@@ -70,15 +73,28 @@ static NSString * ZMPushActionLocalizedString(NSString *key)
 
 - (UIUserNotificationCategory *)replyCategory
 {
+    return [self replyCategoryInlcudingLike:NO];
+}
+
+- (UIUserNotificationCategory *)replyCategoryIncludingLike
+{
+    return [self replyCategoryInlcudingLike:YES];
+}
+
+- (UIUserNotificationCategory *)replyCategoryInlcudingLike:(BOOL)includingLike
+{
     UIMutableUserNotificationCategory *category = [[UIMutableUserNotificationCategory alloc] init];
-    category.identifier = ZMConversationCategory;
-    NSArray *actions = @[[self replyActionDirectMessage: NO], [self muteConversationBackgroundAction]];
+    category.identifier = includingLike ? ZMConversationCategoryIncludingLike : ZMConversationCategory;
+    NSMutableArray *actions = @[[self replyActionDirectMessage: NO], [self muteConversationBackgroundAction]].mutableCopy;
+
+    if (includingLike) {
+        [actions insertObject:self.likeMessageAction atIndex:1];
+    }
 
     [category setActions:actions forContext:UIUserNotificationActionContextDefault];
     [category setActions:actions forContext:UIUserNotificationActionContextMinimal];
     return category;
 }
-
 
 - (UIUserNotificationCategory *)incomingCallCategory
 {
@@ -126,6 +142,11 @@ static NSString * ZMPushActionLocalizedString(NSString *key)
         action.parameters = @{UIUserNotificationTextInputActionButtonTitleKey: sendButtonTitle};
     }
     return action;
+}
+
+- (UIUserNotificationAction *)likeMessageAction
+{
+    return [self mutableBackgroundAction:ZMMessageLikeAction localizedTitleKey:@"message.like"];
 }
 
 - (UIUserNotificationAction *)acceptCallAction

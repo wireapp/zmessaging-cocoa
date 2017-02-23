@@ -64,24 +64,6 @@ static NSString *const ZMInitialSyncCompletedNotificationName = @"ZMInitialSyncC
 @end
 
 
-@implementation ZMConversationMessageWindow (Notifications)
-
-
-- (id<ZMConversationMessageWindowObserverOpaqueToken>)addConversationWindowObserver:(id<ZMConversationMessageWindowObserver>)observer;
-{
-    return (id) [self.conversation.managedObjectContext.globalManagedObjectContextObserver addConversationWindowObserver:observer window:self];
-}
-
-
-- (void)removeConversationWindowObserverToken:(id<ZMConversationMessageWindowObserverOpaqueToken>)token
-{
-    [self.conversation.managedObjectContext.globalManagedObjectContextObserver removeConversationWindowObserverForToken:(id)token];
-}
-
-
-@end
-
-
 
 @implementation ZMNetworkAvailabilityChangeNotification
 

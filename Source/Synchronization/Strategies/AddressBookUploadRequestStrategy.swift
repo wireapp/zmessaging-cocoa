@@ -51,7 +51,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
     
     public override var configuration: ZMStrategyConfigurationOption { return .allowsRequestsDuringEventProcessing }
     
-    public override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
+    public override convenience init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
         self.init(managedObjectContext: moc, appStateDelegate: appStateDelegate)
     }
     
@@ -98,7 +98,7 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
         }
         
         let allLocalContactIDs = Set(encodedChunk.otherContactsHashes.keys)
-        let payload = ["cards" : contactCards, "self" : []]
+        let payload : [String: Any] = ["cards" : contactCards, "self" : self.selfHashes()]
         self.tracker.tagAddressBookUploadStarted(encodedChunk.numberOfTotalContacts)
         let request = ZMTransportRequest(path: onboardingEndpoint, method: .methodPOST, payload: payload as ZMTransportData?, shouldCompress: true)
         request.add(ZMCompletionHandler(on: self.managedObjectContext, block: {
@@ -107,6 +107,11 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
             })
         )
         return request
+    }
+    
+    /// Returns a list of the hashes for the current user
+    private func selfHashes() -> [String] {
+        return ZMUser.selfUser(in: self.managedObjectContext).contactHashes
     }
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
@@ -275,7 +280,7 @@ extension AddressBook {
     
     /// Whether the address book needs to be uploaded
     fileprivate static func addressBookNeedsToBeUploaded(_ moc: NSManagedObjectContext) -> Bool {
-        return (moc.persistentStoreMetadata(key: addressBookNeedsToBeUploadedKey) as? NSNumber)?.boolValue == true
+        return (moc.persistentStoreMetadata(forKey: addressBookNeedsToBeUploadedKey) as? NSNumber)?.boolValue == true
     }
 }
 
@@ -301,11 +306,24 @@ extension AddressBookUploadRequestStrategy {
     fileprivate var lastUploadedCardIndex : UInt {
         get {
             return UInt((self.managedObjectContext
-                .persistentStoreMetadata(key: addressBookLastUploadedIndex) as? NSNumber)?.intValue ?? 0)
+                .persistentStoreMetadata(forKey: addressBookLastUploadedIndex) as? NSNumber)?.intValue ?? 0)
         }
         set {
             self.managedObjectContext
                 .setPersistentStoreMetadata(NSNumber(value: Int(newValue)), key: addressBookLastUploadedIndex)
         }
     }
+}
+
+
+extension ZMUser {
+    
+    /// Returns a list of the hashes for the current user
+    var contactHashes : [String] {
+        return [self.normalizedEmailAddress, self.phoneNumber]
+            .flatMap { $0 }
+            .filter { !$0.isEmpty }
+            .map { $0.base64EncodedSHADigest }
+    }
+    
 }

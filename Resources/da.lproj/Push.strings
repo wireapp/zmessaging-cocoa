@@ -28,6 +28,14 @@
 "push.notification.add.message.oneonone" = "%1$@: %2$@";
 "push.notification.add.message.oneonone.nousername" = "Ny besked: %1$@";
 
+"push.notification.add.unknown.group" = "%1$@ sendte en besked til %2$@";
+"push.notification.add.unknown.group.nousername" = "Ny besked i %1$@";
+"push.notification.add.unknown.group.nousername.noconversationname" = "Ny besked";
+"push.notification.add.unknown.group.noconversationname" = "%1$@ sendte en besked";
+
+"push.notification.add.unknown.oneonone" = "%1$@ sendte en besked";
+"push.notification.add.unknown.oneonone.nousername" = "Ny besked";
+
 "push.notification.add.image.group" = "%1$@ delte et billede i %2$@";
 "push.notification.add.image.group.nousername" = "Nyt billede i %1$@";
 "push.notification.add.image.group.nousername.noconversationname" = "Nyt billede i en samtale";
@@ -169,7 +177,7 @@
 "push.notification.action.call.callback" = "Ring tilbage";
 "push.notification.action.connection.accept" = "Besvar";
 
-"push.notification.callkit.call.started.group" = "%1$@ in %2$@";
-"push.notification.callkit.call.started.group.nousername.noconversationname" = "Someone calling in a conversation";
-"push.notification.callkit.call.started.group.nousername" = "Someone calling in %1$@";
-"push.notification.callkit.call.started.group.noconversationname" = "%@ calling in a conversation";
+"push.notification.callkit.call.started.group" = "%1$@ i %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Nogen ringer i en samtale";
+"push.notification.callkit.call.started.group.nousername" = "Nogen ringer i %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ ringer i en samtale";

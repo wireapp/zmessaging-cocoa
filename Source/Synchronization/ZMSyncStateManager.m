@@ -96,7 +96,7 @@
     return ZMAppStateEventProcessing;
 }
 
-- (id<ClientDeletionDelegate>)clientDeletionDelegate;
+- (id<ClientRegistrationDelegate>)clientRegistrationDelegate;
 {
     return self.clientRegistrationStatus;
 }

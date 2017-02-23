@@ -23,86 +23,6 @@
 
 @implementation ZMSyncStrategy (ManagedObjectChanges)
 
-
-- (void)managedObjectContextDidSave:(NSNotification *)note;
-{
-    if(self.tornDown || self.contextMergingDisabled) {
-        return;
-    }
-    
-    if([ZMSLog getLevelWithTag:ZMTAG_CORE_DATA] == ZMLogLevelDebug) {
-        [self logDidSaveNotification:note];
-    }
-    
-    NSManagedObjectContext *mocThatSaved = note.object;
-    NSManagedObjectContext *strongUiMoc = self.uiMOC;
-    ZMCallState *callStateChanges = mocThatSaved.zm_callState.createCopyAndResetHasChanges;
-    
-    if (mocThatSaved.zm_isUserInterfaceContext && strongUiMoc != nil) {
-        if(mocThatSaved != strongUiMoc) {
-            RequireString(mocThatSaved == strongUiMoc, "Not the right MOC!");
-        }
-        
-        NSSet *conversationsWithCallChanges = [callStateChanges allContainedConversationsInContext:strongUiMoc];
-        if (conversationsWithCallChanges != nil) {
-            [strongUiMoc.globalManagedObjectContextObserver notifyUpdatedCallState:conversationsWithCallChanges notifyDirectly:YES];
-        }
-        
-        ZM_WEAK(self);
-        [self.syncMOC performGroupedBlock:^{
-            ZM_STRONG(self);
-            if(self == nil || self.tornDown) {
-                return;
-            }
-            NSSet *changedConversations = [self.syncMOC mergeCallStateChanges:callStateChanges];
-            [self.syncMOC mergeChangesFromContextDidSaveNotification:note];
-            
-            [self processSaveWithInsertedObjects:[NSSet set] updateObjects:changedConversations];
-            [self.syncMOC processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
-        }];
-    } else if (mocThatSaved.zm_isSyncContext) {
-        RequireString(mocThatSaved == self.syncMOC, "Not the right MOC!");
-        
-        ZM_WEAK(self);
-        [strongUiMoc performGroupedBlock:^{
-            ZM_STRONG(self);
-            if(self == nil || self.tornDown) {
-                return;
-            }
-            
-            NSSet *changedConversations = [strongUiMoc mergeCallStateChanges:callStateChanges];
-            [strongUiMoc.globalManagedObjectContextObserver notifyUpdatedCallState:changedConversations notifyDirectly:[self shouldForwardCallStateChangeDirectlyForNote:note]];
-            
-            [strongUiMoc mergeChangesFromContextDidSaveNotification:note];
-            [strongUiMoc processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
-        }];
-    }
-}
-
-- (BOOL)processSaveWithInsertedObjects:(NSSet *)insertedObjects updateObjects:(NSSet *)updatedObjects
-{
-    NSSet *allObjects = [NSSet zmSetByCompiningSets:insertedObjects, updatedObjects, nil];
-    
-    for(id<ZMContextChangeTracker> tracker in self.allChangeTrackers)
-    {
-        [tracker objectsDidChange:allObjects];
-    }
-    
-    return YES;
-}
-
-- (BOOL)shouldForwardCallStateChangeDirectlyForNote:(NSNotification *)note
-{
-    if ([(NSSet *)note.userInfo[NSInsertedObjectsKey] count] == 0 &&
-        [(NSSet *)note.userInfo[NSDeletedObjectsKey] count] == 0 &&
-        [(NSSet *)note.userInfo[NSUpdatedObjectsKey] count] == 0 &&
-        [(NSSet *)note.userInfo[NSRefreshedObjectsKey] count] == 0) {
-        return YES;
-    }
-    return NO;
-}
-
-
 - (void)logDidSaveNotification:(NSNotification *)note;
 {
     NSManagedObjectContext * ZM_UNUSED moc = note.object;
@@ -132,5 +52,106 @@
     }
 }
 
+- (void)managedObjectContextDidSave:(NSNotification *)note;
+{
+    if(self.tornDown || self.contextMergingDisabled) {
+        return;
+    }
+    
+    if([ZMSLog getLevelWithTag:ZMTAG_CORE_DATA] == ZMLogLevelDebug) {
+        [self logDidSaveNotification:note];
+    }
+    
+    NSManagedObjectContext *mocThatSaved = note.object;
+    NSManagedObjectContext *strongUiMoc = self.uiMOC;
+    ZMCallState *callStateChanges = mocThatSaved.zm_callState.createCopyAndResetHasChanges;
+    NSDictionary *userInfo = [mocThatSaved.userInfo copy];
+    
+    if (mocThatSaved.zm_isUserInterfaceContext && strongUiMoc != nil) {
+        if(mocThatSaved != strongUiMoc) {
+            RequireString(mocThatSaved == strongUiMoc, "Not the right MOC!");
+        }
+        
+        NSSet *conversationsWithCallChanges = [callStateChanges allContainedConversationsInContext:strongUiMoc];
+        if (conversationsWithCallChanges != nil) {
+            [strongUiMoc.wireCallCenterV2 callStateDidChangeWithConversations:conversationsWithCallChanges];
+        }
+        
+        ZM_WEAK(self);
+        [self.syncMOC performGroupedBlock:^{
+            ZM_STRONG(self);
+            if(self == nil || self.tornDown) {
+                return;
+            }
+            [self.syncMOC mergeUserInfoFromUserInfo:userInfo];
+            NSSet *changedConversations = [self.syncMOC mergeCallStateChanges:callStateChanges];
+            [self.syncMOC mergeChangesFromContextDidSaveNotification:note];
+            [self processSaveWithInsertedObjects:[NSSet set] updateObjects:changedConversations];
+            [self.syncMOC processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
+        }];
+    } else if (mocThatSaved.zm_isSyncContext) {
+        RequireString(mocThatSaved == self.syncMOC, "Not the right MOC!");
+        
+        NSSet<NSManagedObjectID*>* changedObjectsIDs = [self extractManagedObjectIDsFrom:note];
+        
+        ZM_WEAK(self);
+        [strongUiMoc performGroupedBlock:^{
+            ZM_STRONG(self);
+            if(self == nil || self.tornDown) {
+                return;
+            }
+            
+            [strongUiMoc mergeUserInfoFromUserInfo:userInfo];
+            NSSet *changedConversations = [strongUiMoc mergeCallStateChanges:callStateChanges];
+            if (changedConversations != nil) {
+                [strongUiMoc.wireCallCenterV2 callStateDidChangeWithConversations: changedConversations];
+            }
+            
+            [self.notificationDispatcher willMergeChanges:changedObjectsIDs];
+            [strongUiMoc mergeChangesFromContextDidSaveNotification:note];
+            
+            [strongUiMoc processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
+            [self.notificationDispatcher didMergeChanges];
+            
+        }];
+    }
+}
+
+- (NSSet<NSManagedObjectID*>*)extractManagedObjectIDsFrom:(NSNotification *)note
+{
+    NSSet<NSManagedObjectID*>* changedObjectsIDs;
+    if (note.userInfo[NSUpdatedObjectsKey] != nil) {
+        NSSet<NSManagedObject *>* changedObjects = note.userInfo[NSUpdatedObjectsKey];
+        changedObjectsIDs = [changedObjects mapWithBlock:^id(NSManagedObject* obj) {
+            return obj.objectID;
+        }];
+    } else {
+        changedObjectsIDs = [NSSet set];
+    }
+    return changedObjectsIDs;
+}
+
+- (BOOL)shouldForwardCallStateChangeDirectlyForNote:(NSNotification *)note
+{
+    if ([(NSSet *)note.userInfo[NSInsertedObjectsKey] count] == 0 &&
+        [(NSSet *)note.userInfo[NSDeletedObjectsKey] count] == 0 &&
+        [(NSSet *)note.userInfo[NSUpdatedObjectsKey] count] == 0 &&
+        [(NSSet *)note.userInfo[NSRefreshedObjectsKey] count] == 0) {
+        return YES;
+    }
+    return NO;
+}
+
+- (BOOL)processSaveWithInsertedObjects:(NSSet *)insertedObjects updateObjects:(NSSet *)updatedObjects
+{
+    NSSet *allObjects = [NSSet zmSetByCompiningSets:insertedObjects, updatedObjects, nil];
+    
+    for(id<ZMContextChangeTracker> tracker in self.allChangeTrackers)
+    {
+        [tracker objectsDidChange:allObjects];
+    }
+    
+    return YES;
+}
 
 @end

@@ -54,6 +54,7 @@ NSString *const ZMPushStringVideoAdd = @"add.video"; // "[senderName] shared a v
 NSString *const ZMPushStringAudioAdd = @"add.audio"; // "[senderName] shared an audio message in [conversationName]"
 NSString *const ZMPushStringFileAdd = @"add.file"; // "[senderName] shared a file in [conversationName]"
 NSString *const ZMPushStringLocationAdd = @"add.location"; // "[senderName] shared a location in [conversationName]"
+NSString *const ZMPushStringUnknownAdd = @"add.unknown"; // "[senderName] sent a message in [conversationName]"
 NSString *const ZMPushStringMessageAddMany = @"add.message.many"; // "x new messages in [conversationName] / from [senderName]"
 
 /// 2 users, 1 conversation

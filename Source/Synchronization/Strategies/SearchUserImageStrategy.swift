@@ -126,7 +126,7 @@ public class SearchUserImageStrategy : ZMAbstractRequestStrategy {
                 imagesByUserIDCache.setObject(imageData as NSData, forKey: userAssetID.userID as NSUUID)
             }
             uiContext.performGroupedBlock {
-                userAssetID.searchUser.notifyNewSmallImageData(response.imageData, managedObjectContextObserver: self.uiContext.globalManagedObjectContextObserver)
+                userAssetID.searchUser.notifyNewSmallImageData(response.imageData, searchUserObserverCenter: self.uiContext.searchUserObserverCenter)
             }
             userIDsTable.removeAllEntries(withUserIDs: Set(arrayLiteral: userAssetID.userID))
         }

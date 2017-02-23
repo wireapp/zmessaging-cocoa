@@ -60,7 +60,9 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     /// The user account was deleted
     ZMUserSessionAccountDeleted = 17,
     /// The current usert client was deleted remotely
-    ZMUserSessionClientDeletedRemotely = 18
+    ZMUserSessionClientDeletedRemotely = 18,
+    /// The last user identity (email or phone number) cannot be removed.
+    ZMUserSessionLastUserIdentityCantBeDeleted = 19
 };
 
 FOUNDATION_EXPORT NSString * const ZMUserSessionErrorDomain;

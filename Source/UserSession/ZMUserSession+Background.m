@@ -45,8 +45,6 @@ static NSString *ZMLogTag = @"Push";
 @end
 
 
-
-
 @implementation ZMUserSession (PushReceivers)
 
 - (void)receivedPushNotificationWithPayload:(NSDictionary *)payload completionHandler:(ZMPushNotificationCompletionHandler)handler source:(ZMPushNotficationType)source
@@ -144,7 +142,13 @@ static NSString *ZMLogTag = @"Push";
 - (void)setupPushNotificationsForApplication:(id<ZMApplication>)application
 {
     [application registerForRemoteNotifications];
-    NSSet *categories = [NSSet setWithArray:@[self.replyCategory, self.missedCallCategory, self.incomingCallCategory, self.connectCategory]];
+    NSSet *categories = [NSSet setWithArray:@[
+                                              self.replyCategory,
+                                              self.replyCategoryIncludingLike,
+                                              self.missedCallCategory,
+                                              self.incomingCallCategory,
+                                              self.connectCategory
+                                              ]];
     [application registerUserNotificationSettings:[UIUserNotificationSettings  settingsForTypes:(UIUserNotificationTypeSound |
                                                                                                  UIUserNotificationTypeAlert |
                                                                                                  UIUserNotificationTypeBadge)
@@ -201,6 +205,9 @@ static NSString *ZMLogTag = @"Push";
         [self muteConversationForNotification:notification withCompletionHandler:completionHandler];
         return;
     }
+    if ([identifier isEqualToString:ZMMessageLikeAction]) {
+        [self likeMessageForNotification:notification WithCompletionHandler:completionHandler];
+    }
     
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_8_4) {
         NSString *textInput = [responseInfo optionalStringForKey:UIUserNotificationActionResponseTypedTextKey];
@@ -232,7 +239,7 @@ static NSString *ZMLogTag = @"Push";
     // Wrap the handler:
     ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult const result){
         ZM_STRONG(self);
-        [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
+        [self.managedObjectContext performGroupedBlock:^{
             switch (result) {
                 case ZMBackgroundFetchResultNewData:
                     completionHandler(UIBackgroundFetchResultNewData);
@@ -269,14 +276,33 @@ static NSString *ZMLogTag = @"Push";
 {
     NOT_USED(note);
     [self notifyThirdPartyServices];
-    self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = NO;
 }
 
 - (void)applicationWillEnterForeground:(NSNotification *)note;
 {
     NOT_USED(note);
     self.didNotifyThirdPartyServices = NO;
-    self.managedObjectContext.globalManagedObjectContextObserver.propagateChanges = YES;
+
+    [self mergeChangesFromStoredSaveNotificationsIfNeeded];
+}
+
+- (void)mergeChangesFromStoredSaveNotificationsIfNeeded
+{
+    NSArray *storedNotifications = self.storedDidSaveNotifications.storedNotifications.copy;
+    [self.storedDidSaveNotifications clear];
+
+    for (NSDictionary *changes in storedNotifications) {
+        [NSManagedObjectContext mergeChangesFromRemoteContextSave:changes intoContexts:@[self.managedObjectContext]];
+        [self.syncManagedObjectContext performGroupedBlock:^{
+            [NSManagedObjectContext mergeChangesFromRemoteContextSave:changes intoContexts:@[self.syncManagedObjectContext]];
+        }];
+    }
+
+    [self.managedObjectContext processPendingChanges];
+
+    [self.syncManagedObjectContext performGroupedBlock:^{
+        [self.syncManagedObjectContext processPendingChanges];
+    }];
 }
 
 @end
@@ -294,7 +320,7 @@ static NSString *ZMLogTag = @"Push";
         return;
     }
     
-    [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
+    [self.managedObjectContext performGroupedBlock: ^{
         ZMStoredLocalNotification *note = self.pendingLocalNotification;
         
         if ([note.category isEqualToString:ZMConnectCategory]) {
@@ -332,12 +358,11 @@ static NSString *ZMLogTag = @"Push";
 - (void)handleCallCategoryNotification:(ZMStoredLocalNotification *)note
 {
     if (note.actionIdentifier == nil || [note.actionIdentifier isEqualToString:ZMCallAcceptAction]) {
-        BOOL callIsStillOngoing = (note.conversation.callParticipants.count > 0);
+        BOOL callIsStillOngoing = (note.conversation.callParticipants.count > 0) || note.conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall;
         BOOL userWantsToCallBack = ([note.category isEqualToString:ZMMissedCallCategory]);
-        if ([note.conversation firstOtherConversationWithActiveCall] == nil &&
-            (callIsStillOngoing || userWantsToCallBack))
-        {
-            [note.conversation.voiceChannel join];
+        
+        if ([WireCallCenter activeCallConversationsInUserSession:self].count == 0 && (callIsStillOngoing || userWantsToCallBack)) {
+            [note.conversation.voiceChannel joinWithVideo:NO userSession:self];
             [note.conversation.managedObjectContext saveOrRollback];
         }
     }
@@ -391,7 +416,6 @@ static NSString *ZMLogTag = @"Push";
     }];
 }
 
-
 - (void)replyToNotification:(UILocalNotification *)notification withReply:(NSString*)reply completionHandler:(void (^)())completionHandler;
 {
     if (reply.length == 0) {
@@ -406,7 +430,7 @@ static NSString *ZMLogTag = @"Push";
         ZM_WEAK(self);
         [self.operationLoop startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
             ZM_STRONG(self);
-            [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
+            [self.managedObjectContext performGroupedBlock: ^{
                 if (result == ZMBackgroundTaskResultFailed) {
                     [self.localNotificationDispatcher didFailToSendMessageInConversation:conversation];
                 }
@@ -434,8 +458,6 @@ static NSString *ZMLogTag = @"Push";
 
 
 
-
-
 @implementation ZMUserSession (ZMBackgroundFetch)
 
 - (void)enableBackgroundFetch;
@@ -445,7 +467,3 @@ static NSString *ZMLogTag = @"Push";
 }
 
 @end
-
-
-
-

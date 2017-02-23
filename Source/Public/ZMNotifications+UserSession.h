@@ -23,7 +23,6 @@
 #import "ZMNetworkState.h"
 #import "ZMUserSession.h"
 
-@class ZMCallEndedNotification;
 @class ZMTypingChangeNotification;
 @class ZMConnectionLimitNotification;
 @class ZMInvitationStatusChangedNotification;

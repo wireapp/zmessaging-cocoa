@@ -36,13 +36,14 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     var updateProvider: FakeCredentialProvider!
     var cookieStorage : ZMPersistentCookieStorage!
     
+    var spyKeyStore: SpyUserClientKeyStore!
+    
     var receivedAuthenticationNotifications : [ZMUserSessionAuthenticationNotification] = []
     
     override func setUp() {
         super.setUp()
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-        let newKeyStore = FakeKeysStore(in: FakeKeysStore.testDirectory)
-        self.syncMOC.userInfo.setObject(newKeyStore, forKey: "ZMUserClientKeysStore" as NSCopying)
+
+        self.spyKeyStore = SpyUserClientKeyStore(in: UserClientKeysStore.otrDirectoryURL)
         cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer")
         let cookie = ZMCookie(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage)
         loginProvider = FakeCredentialProvider()
@@ -50,7 +51,7 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
         clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, loginCredentialProvider:loginProvider, update:updateProvider, cookie:cookie, registrationStatusDelegate: nil)
         authenticationStatus = MockAuthenticationStatus(cookie: cookie);
         clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
-        sut = UserClientRequestStrategy(authenticationStatus:authenticationStatus, clientRegistrationStatus: clientRegistrationStatus, clientUpdateStatus:clientUpdateStatus, context: self.syncMOC)
+        sut = UserClientRequestStrategy(authenticationStatus:authenticationStatus, clientRegistrationStatus: clientRegistrationStatus, clientUpdateStatus:clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
         NotificationCenter.default.addObserver(self, selector: #selector(UserClientRequestStrategyTests.didReceiveAuthenticationNotification(_:)), name: NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil)
     }
     
@@ -60,13 +61,13 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     }
     
     override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-        clientRegistrationStatus.tearDown()
-        clientRegistrationStatus = nil
-        clientUpdateStatus.tearDown()
-        clientUpdateStatus = nil
-        sut.tearDown()
-        sut = nil
+        self.clientRegistrationStatus.tearDown()
+        self.clientRegistrationStatus = nil
+        self.clientUpdateStatus.tearDown()
+        self.clientUpdateStatus = nil
+        self.spyKeyStore = nil
+        self.sut.tearDown()
+        self.sut = nil
         receivedAuthenticationNotifications = []
         NotificationCenter.default.removeObserver(self)
         super.tearDown()
@@ -140,7 +141,7 @@ extension UserClientRequestStrategyTests {
         XCTAssertNotNil(client.remoteIdentifier, "Should store remoteIdentifier provided by response")
         XCTAssertEqual(client.remoteIdentifier, remoteIdentifier)
         
-        let storedRemoteIdentifier = self.syncMOC.persistentStoreMetadata(key: ZMPersistedClientIdKey) as? String
+        let storedRemoteIdentifier = self.syncMOC.persistentStoreMetadata(forKey: ZMPersistedClientIdKey) as? String
         AssertOptionalEqual(storedRemoteIdentifier, expression2: remoteIdentifier)
         self.syncMOC.setPersistentStoreMetadata(nil as String?, key: ZMPersistedClientIdKey)
     }
@@ -164,7 +165,7 @@ extension UserClientRequestStrategyTests {
         
         // then
         let maxID_after = UInt16(client.preKeysRangeMax)
-        let expectedMaxID = (client.keysStore as! FakeKeysStore).lastGeneratedKeys.last?.id
+        let expectedMaxID = self.spyKeyStore.lastGeneratedKeys.last?.id
         
         XCTAssertNotEqual(maxID_after, maxID_before)
         XCTAssertEqual(maxID_after, expectedMaxID)
@@ -435,97 +436,27 @@ extension UserClientRequestStrategyTests {
             }
         }
     }
-}
-
-// MARK: Fetching Other Users Clients
-extension UserClientRequestStrategyTests {
     
-    func payloadForOtherClients(_ identifiers: String...) -> ZMTransportData {
-        return identifiers.reduce([]) { $0 + [["id": $1, "class" : "phone"]] } as ZMTransportData
-    }
-    
-    func testThatItCreatesOtherUsersClientsCorrectly() {
+    func testThatDeletesClientsThatWereNotInTheFetchResponse() {
+        
         // given
-        let _ = createClients()
-        let (firstIdentifier, secondIdentifier) = (UUID.create().transportString(), UUID.create().transportString())
-        let payload = [
-            [
-                "id" : firstIdentifier,
-                "class" : "phone"
-            ],
-            [
-                "id" : secondIdentifier,
-                "class": "tablet"
-            ]
-        ]
-        
-        let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-        
-        let identifier = UUID.create()
-        let user = ZMUser.insertNewObject(in: syncMOC)
-        user.remoteIdentifier = identifier
+        let selfClient = self.createSelfClient()
+        let selfUser = ZMUser.selfUser(in: self.syncMOC)
+        let nextResponse = ZMTransportResponse(payload: payloadForClients() as ZMTransportData?, httpStatus: 200, transportSessionError: nil)
+        let newClient = UserClient.insertNewObject(in: self.syncMOC)
+        newClient.user = selfUser
+        newClient.remoteIdentifier = "deleteme"
+        self.syncMOC.saveOrRollback()
         
         // when
-        clientRegistrationStatus.mockPhase = .registered
         _ = sut.nextRequest()
-        sut.didReceive(response, remoteIdentifierObjectSync: nil, forRemoteIdentifiers: Set(arrayLiteral: identifier))
+        sut.didReceive(nextResponse, forSingleRequest: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // then
-        let expectedDeviceClasses = Set(arrayLiteral: "phone", "tablet")
-        let actualDeviceClasses = Set(user.clients.flatMap { $0.deviceClass })
-        let expectedIdentifiers = Set(arrayLiteral: firstIdentifier, secondIdentifier)
-        let actualIdentifiers = Set(user.clients.map { $0.remoteIdentifier! })
-        XCTAssertEqual(user.clients.count, 2)
-        XCTAssertEqual(expectedDeviceClasses, actualDeviceClasses)
-        XCTAssertEqual(expectedIdentifiers, actualIdentifiers)
-    }
-    
-    func testThatItAddsOtherUsersNewFetchedClientsToSelfUsersMissingClients() {
-        // given
-        let (selfClient, _) = createClients()
-        XCTAssertEqual(selfClient.missingClients?.count, 0)
-        let (firstIdentifier, secondIdentifier) = (UUID.create().transportString(), UUID.create().transportString())
-        let payload = payloadForOtherClients(firstIdentifier, secondIdentifier)
-        let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-        let identifier = UUID.create()
-        let user = ZMUser.insertNewObject(in: syncMOC)
-        user.remoteIdentifier = identifier
+        XCTAssertTrue(selfUser.clients.contains(selfClient))
+        XCTAssertFalse(selfUser.clients.contains(newClient))
         
-        // when
-        clientRegistrationStatus.mockPhase = .registered
-        _ = sut.nextRequest()
-        sut.didReceive(response, remoteIdentifierObjectSync: nil, forRemoteIdentifiers: Set(arrayLiteral: identifier))
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        
-        // then
-        XCTAssertEqual(user.clients.count, 2)
-        XCTAssertEqual(user.clients, selfClient.missingClients)
-    }
-    
-    func testThatItDeletesLocalClientsNotIncludedInResponseToFetchOtherUsersClients() {
-        // given
-        let (selfClient, localOnlyClient) = createClients()
-        XCTAssertEqual(selfClient.missingClients?.count, 0)
-        
-        let firstIdentifier = UUID.create().transportString()
-        let payload = payloadForOtherClients(firstIdentifier)
-        let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-        let identifier = UUID.create()
-        let user = ZMUser.insertNewObject(in: syncMOC)
-        user.mutableSetValue(forKey: "clients").add(localOnlyClient)
-        user.remoteIdentifier = identifier
-        XCTAssertEqual(user.clients.count, 1)
-        
-        // when
-        clientRegistrationStatus.mockPhase = .registered
-        _ = sut.nextRequest()
-        sut.didReceive(response, remoteIdentifierObjectSync: nil, forRemoteIdentifiers: Set(arrayLiteral: identifier))
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        
-        // then
-        XCTAssertEqual(user.clients.count, 1)
-        XCTAssertEqual(user.clients.first?.remoteIdentifier, firstIdentifier)
     }
 }
 
@@ -589,48 +520,6 @@ extension UserClientRequestStrategyTests {
 }
 
 
-// MARK: fetching other user's clients / RemoteIdentifierObjectSync
-extension UserClientRequestStrategyTests {
-    
-    func testThatItDoesNotDeleteAnObjectWhenResponseContainsRemoteID() {
-        let (_, otherClient) = self.createClients()
-        let user = otherClient.user
-        let payload =  [["id" : otherClient.remoteIdentifier!]]
-        let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-        
-        //when
-        self.sut.didReceive(response, remoteIdentifierObjectSync: nil, forRemoteIdentifiers:Set(arrayLiteral: user!.remoteIdentifier!))
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        XCTAssertFalse(otherClient.isDeleted)
-    }
-    
-    func testThatItAddsNewInsertedClientsToIgnoredClients() {
-        let (selfClient, otherClient) = self.createClients()
-        let user = otherClient.user
-        let payload =  [["id" : otherClient.remoteIdentifier!]]
-        let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-        
-        //when
-        self.sut.didReceive(response, remoteIdentifierObjectSync: nil, forRemoteIdentifiers:Set(arrayLiteral: user!.remoteIdentifier!))
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        XCTAssertFalse(selfClient.trustedClients.contains(otherClient))
-        XCTAssertTrue(selfClient.ignoredClients.contains(otherClient))
-    }
-    
-    func testThatItDeletesAnObjectWhenResponseDoesNotContainRemoteID() {
-        let (_, otherClient) = self.createClients()
-        let user = otherClient.user
-        let remoteID = "otherRemoteID"
-        let payload: [[String]] = [[remoteID]]
-        XCTAssertNotEqual(otherClient.remoteIdentifier, remoteID)
-        let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-        
-        //when
-        self.sut.didReceive(response, remoteIdentifierObjectSync: nil, forRemoteIdentifiers:Set(arrayLiteral: user!.remoteIdentifier!))
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        XCTAssertTrue(otherClient.isDeleted)
-    }
-}
 
 // MARK: - Updating from push events
 extension UserClientRequestStrategyTests {
@@ -712,6 +601,8 @@ extension UserClientRequestStrategyTests {
         
         // when
         self.sut.processEvents([event], liveEvents:false, prefetchResult: .none)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        self.syncMOC.saveOrRollback()
         
         // then
         XCTAssertEqual(selfUser.clients.count, 1)
@@ -760,7 +651,10 @@ extension UserClientRequestStrategyTests {
         // given
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
         let existingClient1 = self.createSelfClient()
-        let existingClient2 = self.createClient(for: selfUser, createSessionWithSelfUser:false)
+        let existingClient2 = UserClient.insertNewObject(in: self.syncMOC)
+        existingClient2.user = selfUser
+        existingClient2.remoteIdentifier = "aabbcc112233"
+        self.syncMOC.saveOrRollback()
         
         XCTAssertEqual(selfUser.clients.count, 2)
         let payload: [String: Any] = [
@@ -827,7 +721,7 @@ extension UserClientRequestStrategyTests {
         XCTAssertNotNil(newFingerprint)
         XCTAssertNotEqual(fingerprint, newFingerprint)
         XCTAssertNil(selfUser.clients.first?.remoteIdentifier)
-        XCTAssertNil(syncMOC.persistentStoreMetadata(key: ZMPersistedClientIdKey))
+        XCTAssertNil(syncMOC.persistentStoreMetadata(forKey: ZMPersistedClientIdKey))
         XCTAssertNotNil(fingerprint)
         XCTAssertNotNil(newFingerprint)
         XCTAssertNotEqual(previousLastPrekey, newLastPrekey)
@@ -900,5 +794,3 @@ extension UserClientRequestStrategyTests {
     }
 
 }
-
-

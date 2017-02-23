@@ -42,6 +42,21 @@
     [super tearDown];
 }
 
+- (NSURL *)createTestFile:(NSString *)name
+{
+    NSError *error;
+    NSFileManager *fm = NSFileManager.defaultManager;
+    NSURL *directory = [fm URLForDirectory:NSCachesDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:&error];
+    XCTAssertNil(error);
+
+    NSString *fileName = [NSString stringWithFormat:@"%@.dat", name];
+    NSURL *fileURL = [directory URLByAppendingPathComponent:fileName].filePathURL;
+    NSData *testData = [NSData secureRandomDataOfLength:256];
+    XCTAssertTrue([testData writeToFile:fileURL.path atomically:YES]);
+
+    return fileURL;
+}
+
 - (void)setupGroupConversationWithOnlyConnectedParticipants
 {
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -95,7 +110,6 @@
     XCTAssertFalse(note.connectionStateChanged);
     
     verifyConversation(conversation);
-    [observer tearDown];
 }
 
 - (void)testThatItSendsANotificationInConversation:(MockConversation *)mockConversation
@@ -136,7 +150,6 @@
     
     // then
     verifyConversation(conversation, observer);
-    [observer tearDown];
 }
 
 - (BOOL)conversation:(ZMConversation *)conversation hasMessagesWithNonces:(NSArray *)nonces
@@ -188,7 +201,6 @@
     
     // then
     verifyConversation(conversation);
-    [observer tearDown];
     
 }
 

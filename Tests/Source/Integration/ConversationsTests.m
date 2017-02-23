@@ -315,8 +315,6 @@
     } timeout:0.5]);
     
     XCTAssertEqualObjects(conversation.userDefinedName, newConversationName);
-    [observer tearDown];
-
 }
 
 @end
@@ -438,7 +436,6 @@
         WaitForEverythingToBeDone();
         
         XCTAssertFalse([conversation hasLocalModificationsForKey:ZMConversationUnsyncedActiveParticipantsKey]);
-        [observer tearDown];
     }
 }
 
@@ -588,7 +585,6 @@
         WaitForEverythingToBeDone();
         
         XCTAssertFalse([conversation hasLocalModificationsForKey:ZMConversationUnsyncedActiveParticipantsKey]);
-        [observer tearDown];
     }
 }
 
@@ -681,7 +677,6 @@
         XCTAssertEqualObjects(note1.updatedIndexes, updatedIndexes2);
         XCTAssertEqualObjects([self movedIndexPairsForChangeSet:note1], movedIndexes2);
     }
-    [observer tearDown];
 }
 
 - (void)testThatSelfUserSeesConversationWhenItIsAddedToConversationByOtherUser
@@ -700,6 +695,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
+    NSLog(@"%@", conversationList.identifier);
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
         [groupConversation addUsersByUser:self.user1 addedUsers:@[self.selfUser]];
@@ -755,7 +751,7 @@
     XCTAssertNotNil(groupConversation);
     
     ZMConversationMessageWindow *conversationWindow = [groupConversation conversationWindowWithSize:5];
-    id token = [conversationWindow addConversationWindowObserver:self];
+    id token = [MessageWindowChangeInfo addObserver: self forWindow:conversationWindow];
     
     // correct window?
     XCTAssertEqual(conversationWindow.messages.count, 5u);
@@ -784,9 +780,7 @@
         ZMMessage *lastMessage = conversationWindow.messages.firstObject;
         XCTAssertEqualObjects(lastMessage.textMessageData.messageText, extraMessageText);
     }
-    
-    // finally
-    [conversationWindow removeConversationWindowObserverToken:token];
+    (void)token;
 }
 
 - (void)testThatTheMessageWindowIsUpdatedProperlyWithLocalMessages
@@ -856,6 +850,7 @@
     MockConversationWindowObserver *observer = [self windowObserverAfterLogginInAndInsertingMessagesInMockConversation:self.groupConversation];
     
     NSOrderedSet *initialMessageSet = observer.computedMessages;
+    XCTAssertEqualObjects(observer.computedMessages, observer.window.messages);
     
     // when
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
@@ -869,7 +864,7 @@
     
     [self.uiMOC saveOrRollback];
     WaitForAllGroupsToBeEmpty(0.5);
-    
+
     // then
     NSArray *currentMessageSet = observer.computedMessages.array;
     NSArray *windowMessageSet = observer.window.messages.array ;
@@ -883,14 +878,16 @@
     
     XCTAssertEqualObjects(currentTexts, windowTexts);
     
-    
-    
     NSArray *originalFirstPart = [initialMessageSet.array subarrayWithRange:NSMakeRange(0, observer.window.size - 2)];
     NSArray *currentFirstPart = [currentMessageSet subarrayWithRange:NSMakeRange(2, observer.window.size - 2)];
     
     XCTAssertEqualObjects(originalFirstPart, currentFirstPart);
-    XCTAssertEqualObjects([[(id<ZMConversationMessage>)currentMessageSet[0] textMessageData] messageText], expectedTextLocal);
-    XCTAssertEqualObjects([[(id<ZMConversationMessage>)currentMessageSet[1] textMessageData] messageText], expectedTextRemote);
+    NSString *messageText1 = [[(id<ZMConversationMessage>)currentMessageSet[0] textMessageData] messageText];
+    NSString *messageText2 = [[(id<ZMConversationMessage>)currentMessageSet[1] textMessageData] messageText];
+
+    // The order is not defined
+    XCTAssertTrue([messageText1 isEqualToString:expectedTextLocal] || [messageText2 isEqualToString:expectedTextLocal]);
+    XCTAssertTrue([messageText1 isEqualToString:expectedTextRemote] || [messageText2 isEqualToString:expectedTextRemote]);
 }
 
 @end
@@ -956,7 +953,6 @@
     XCTAssertEqual(moves.count, 1u);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject from], 2u);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject to], 0u);
-    [observer tearDown];
 }
 
 - (void)testThatAConversationListListenerOnlyReceivesNotificationsForTheSpecificListItSignedUpFor
@@ -980,9 +976,6 @@
     // then
     XCTAssertGreaterThanOrEqual(convListener1.notifications.count, 0u);
     XCTAssertEqual(convListener2.notifications.count, 0u);
-    [convListener1 tearDown];
-    [convListener2 tearDown];
-
 }
 
 
@@ -1087,7 +1080,6 @@
     
     ZMMessage *receivedMessage3 = conversation1.messages.lastObject;
     XCTAssertEqualObjects(receivedMessage3.textMessageData.messageText, messageText3);
-    [observer tearDown];
 }
 
 - (void)testThatReceivingAPingInAConversationThatIsNotAtTheTopBringsItToTheTop
@@ -1123,8 +1115,6 @@
     NSArray *expectedArray = @[@[@(oneToOneIndex), @0]];
     
     XCTAssertEqualObjects(moves, expectedArray);
-    [conversationListChangeObserver tearDown];
-
 }
 
 - (void)testThatConversationGoesOnTopAfterARemoteUserAcceptsOurConnectionRequest
@@ -1171,7 +1161,7 @@
         XCTAssertEqual(note.deletedIndexes.count, 0u);
         XCTAssertEqual(note.insertedIndexes.count, 0u);
     }
-    XCTAssertEqual(updatesCount, 1);
+    XCTAssertEqual(updatesCount, 2);
     XCTAssertEqual(moves.count, 1u);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject from], from);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject to], 0u);
@@ -1179,7 +1169,6 @@
     
     XCTAssertEqualObjects(sentConversation, conversationList.firstObject);
     XCTAssertEqualObjects(oneToOneConversation, conversationList[1]);
-    [conversationListChangeObserver tearDown];
 }
 
 - (void)testThatConversationGoesOnTopAfterWeAcceptIncommingConnectionRequest
@@ -1228,8 +1217,6 @@
         XCTAssertEqual(note.deletedIndexes.count, 0u);
     }
     XCTAssertEqual(insertionsCount, 1);
-    [activeObserver tearDown];
-    [pendingObserver tearDown];
 }
 
 @end
@@ -1427,7 +1414,7 @@
 
     XCTAssertEqual(active.count, 3u);
     XCTAssertFalse([active containsObject:conversation]);
-    [observer tearDown];
+    (void)observer;
 }
 
 
@@ -1611,7 +1598,7 @@
     }];
     
     ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-    [syncConv.voiceChannel tearDown];
+    [syncConv.voiceChannelRouter.v2 tearDown];
 }
 
 - (void)testThatCallingAnArchivedConversation_Unarchives_ThisConversation
@@ -1624,7 +1611,7 @@
         [self.selfToUser1Conversation addUserToCall:self.user1];
     }];
     ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-    [syncConv.voiceChannel tearDown];
+    [syncConv.voiceChannelRouter.v2 tearDown];
 }
 
 - (void)testThatAcceptingArchivedOutgoingRequest_Unarchives_ThisConversation
@@ -1672,7 +1659,8 @@
     WaitForEverythingToBeDone();
     
     // given
-    MockUserClient *fromClient = self.user1.clients.anyObject, *toClient = self.selfUser.clients.anyObject;
+    MockUserClient *fromClient = self.user1.clients.anyObject;
+    MockUserClient *toClient = self.selfUser.clients.anyObject;
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
@@ -1690,6 +1678,10 @@
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertEqual(conversation.estimatedUnreadCount, 0u);
+    
+    toClient = [self.selfUser.clients.allObjects filterWithBlock:^(MockUserClient* client){
+        return [client.identifier isEqualToString: [ZMUser selfUserInContext: self.uiMOC].selfClient.remoteIdentifier];
+    }].firstObject;
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -1749,7 +1741,7 @@
     XCTAssertEqual(conversation.estimatedUnreadCount, 1u);
 
     ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-    [syncConv.voiceChannel tearDown];
+    [syncConv.voiceChannelRouter.v2 tearDown];
 }
 
 - (void)testThatItDoesNotSendALastReadEventWhenInsertingAMessage
@@ -1877,7 +1869,7 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     {
         ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
-        MessageWindowChangeToken *token = (id)[window addConversationWindowObserver:self];
+        id token = [MessageWindowChangeInfo addObserver: self forWindow:window];
         [self.mockTransportSession resetReceivedRequests];
         [self.receivedConversationWindowChangeNotifications removeAllObjects];
         
@@ -1911,7 +1903,7 @@
         XCTAssertEqualObjects(lastRequest.path, selfConversationPath);
         XCTAssertEqual(lastRequest.method, ZMMethodPOST);
         
-        [window removeConversationWindowObserverToken:(id)token];
+        token = nil;
     }
     
     [self recreateUserSessionAndWipeCache:YES];
@@ -1952,7 +1944,7 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
-    MessageWindowChangeToken *token = (id)[window addConversationWindowObserver:self];
+    id token = [MessageWindowChangeInfo addObserver: self forWindow:window];
     
     ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectory];
     NSManagedObjectID *conversationID = conversation.objectID;
@@ -1985,7 +1977,7 @@
     XCTAssertEqual(conversation.messages.count, 1u);
     XCTAssertEqual(window.messages.count, 1u); // new message
     
-    [window removeConversationWindowObserverToken:(id)token];
+    token = nil;
     
     [self recreateUserSessionAndWipeCache:YES];
     WaitForEverythingToBeDone();
@@ -2015,7 +2007,7 @@
     XCTAssertEqual(conversation.messages.count, 5lu);
     
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
-    MessageWindowChangeToken *token = (id)[window addConversationWindowObserver:self];
+    id token = [MessageWindowChangeInfo addObserver: self forWindow:window];
     
     ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectory];
     NSManagedObjectID *conversationID = conversation.objectID;
@@ -2039,7 +2031,7 @@
         [self.receivedConversationWindowChangeNotifications removeAllObjects];
     }
     
-    [window removeConversationWindowObserverToken:(id)token];
+    token = nil;
     [self recreateUserSessionAndWipeCache:YES];
     WaitForEverythingToBeDone();
     
@@ -2421,7 +2413,7 @@
     // when
     NSString *reactionEmoji = @"❤️";
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:message];
+        [ZMMessage addReaction:MessageReactionLike toMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2491,11 +2483,10 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     MessageChangeObserver *observer = [[MessageChangeObserver alloc] initWithMessage:message];
-    
+
     // when
-    NSString *reactionEmoji = @"❤️";
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:message];
+        [ZMMessage addReaction:MessageReactionLike toMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2503,8 +2494,6 @@
     XCTAssertEqual(observer.notifications.count, 1lu);
     MessageChangeInfo *changes = [observer.notifications lastObject];
     XCTAssertTrue(changes.reactionsChanged);
-    
-    [observer tearDown];
 }
 
 - (void)testThatAppendingAReactionNotifiesObserverOfChangesInReactions;
@@ -2524,13 +2513,11 @@
         message = (ZMTextMessage *)[conversation appendMessageWithText:@"Je t'aime JCVD"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    NSString *reactionEmoji = @"❤️";
+
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:message];
+        [ZMMessage addReaction:MessageReactionLike toMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
     
     MessageChangeObserver *observer = [[MessageChangeObserver alloc] initWithMessage:message];
     
@@ -2544,8 +2531,6 @@
     XCTAssertEqual(observer.notifications.count, 1lu);
     MessageChangeInfo *changes = [observer.notifications lastObject];
     XCTAssertTrue(changes.reactionsChanged);
-    
-    [observer tearDown];
 }
 
 - (void)testThatAppendingAReactionNotifiesObserverOfChangesInReactionsWhenExternalUserReact;
@@ -2568,13 +2553,11 @@
     
     NSString *reactionEmoji = @"❤️";
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:message];
+        [ZMMessage addReaction:MessageReactionLike toMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    
     MessageChangeObserver *observer = [[MessageChangeObserver alloc] initWithMessage:message];
-    
     ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:message.nonce.transportString nonce:[NSUUID UUID].transportString];
     MockUserClient *fromClient = [self.user1.clients anyObject];
     MockUserClient *toClient = [self.selfUser.clients anyObject];
@@ -2589,8 +2572,7 @@
     XCTAssertGreaterThanOrEqual(observer.notifications.count, 1lu);
     MessageChangeInfo *changes = [observer.notifications lastObject];
     XCTAssertTrue(changes.reactionsChanged);
-    
-    [observer tearDown];
+
 }
 
 - (void)testThatReceivingAReactionThatIsNotHandledDoesntSaveIt;
@@ -2727,10 +2709,9 @@
         message = (ZMTextMessage *)[conversation appendMessageWithText:@"Je t'aime JCVD"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    NSString *reactionEmoji = @"❤️";
+
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:message];
+        [ZMMessage addReaction:MessageReactionLike toMessage:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2816,15 +2797,12 @@
         [mockConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    
+
     ZMMessage *editedMessage = [ZMMessage fetchMessageWithNonce:nonce forConversation:conversation inManagedObjectContext:self.uiMOC];
-    
-    NSString *reactionEmoji = @"❤️";
     
     // when
     [self.userSession performChanges:^{
-        [ZMMessage addReaction:reactionEmoji toMessage:editedMessage];
+        [ZMMessage addReaction:MessageReactionLike toMessage:editedMessage];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

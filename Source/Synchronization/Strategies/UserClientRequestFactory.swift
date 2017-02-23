@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -30,12 +30,14 @@ enum UserClientRequestError: Error {
 
 public final class UserClientRequestFactory {
     
-    public init(keysCount: UInt16 = 100) {
+    unowned var keyStore : UserClientKeysStore
+    public let keyCount : UInt16
+    
+    public init(keysCount: UInt16 = 100, keysStore: UserClientKeysStore) {
         self.keyCount = keysCount
+        self.keyStore = keysStore
     }
     
-    public let keyCount : UInt16
-
     public func registerClientRequest(_ client: UserClient, credentials: ZMEmailCredentials?, authenticationStatus: ZMAuthenticationStatus) throws -> ZMUpstreamRequest {
         
         let (preKeysPayloadData, preKeysRangeMax) = try payloadForPreKeys(client)
@@ -67,7 +69,8 @@ public final class UserClientRequestFactory {
     
     
     func storeMaxRangeID(_ client: UserClient, maxRangeID: UInt16) -> ZMCompletionHandler {
-        let completionHandler = ZMCompletionHandler(on: client.managedObjectContext!, block: { response in
+        let completionHandler = ZMCompletionHandler(on: client.managedObjectContext!, block: { [weak client] response in
+            guard let client = client else { return }
             if response.result == .success {
                 client.preKeysRangeMax = Int64(maxRangeID)
             }
@@ -76,7 +79,8 @@ public final class UserClientRequestFactory {
     }
     
     func storeAPSSignalingKeys(_ client: UserClient, signalingKeys: SignalingKeys) -> ZMCompletionHandler {
-        let completionHandler = ZMCompletionHandler(on: client.managedObjectContext!, block: { response in
+        let completionHandler = ZMCompletionHandler(on: client.managedObjectContext!, block: { [weak client] response in
+            guard let client = client else { return }
             if response.result == .success {
                 client.apsDecryptionKey = signalingKeys.decryptionKey
                 client.apsVerificationKey = signalingKeys.verificationKey
@@ -89,7 +93,7 @@ public final class UserClientRequestFactory {
     internal func payloadForPreKeys(_ client: UserClient, startIndex: UInt16 = 0) throws -> (payload: [[String: Any]], maxRange: UInt16) {
         //we don't want to generate new prekeys if we already have them
         do {
-            let preKeys = try client.keysStore.generateMoreKeys(keyCount, start: startIndex)
+            let preKeys = try keyStore.generateMoreKeys(keyCount, start: startIndex)
             guard preKeys.count > 0 else {
                 throw UserClientRequestError.noPreKeys
             }
@@ -105,11 +109,11 @@ public final class UserClientRequestFactory {
     
     internal func payloadForLastPreKey(_ client: UserClient) throws -> [String: Any] {
         do {
-            let lastKey = try client.keysStore.lastPreKey()
+            let lastKey = try keyStore.lastPreKey()
             let lastPreKeyString = lastKey
             let lastPreKeyPayloadData : [String: Any] = [
                 "key": lastPreKeyString,
-                "id": NSNumber(value: UserClientKeysStore.MaxPreKeyID + 1)
+                "id": NSNumber(value: CBOX_LAST_PREKEY_ID)
             ]
             return lastPreKeyPayloadData
         } catch  {
