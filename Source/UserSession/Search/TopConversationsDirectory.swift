@@ -47,6 +47,7 @@ extension TopConversationsDirectory {
     public func refreshTopConversations() {
         syncMOC.performGroupedBlock {
             let conversations = self.fetchOneOnOneConversations()
+            // Mapping from conversation to message count in the last month
             let countByConversation = conversations.mapToDictionary(with: self.messageCount)
             let sorted = countByConversation.sorted {  $0.1 > $1.1 }.prefix(TopConversationsDirectory.topConversationSize)
             let identifiers = sorted.flatMap { $0.0.objectID }
@@ -63,11 +64,11 @@ extension TopConversationsDirectory {
         }
     }
 
-    private func messageCount(for conversation: ZMConversation) -> Int? {
+    private func messageCount(for conversation: ZMConversation) -> Int {
         guard let identifier = conversation.remoteIdentifier else { return 0 }
         guard let predicate = ZMMessage.predicateForNonSystemMessagesInTheLastMonth(in: identifier) else { return 0 }
-        let request = ZMMessage.sortedFetchRequest(with: predicate)!
-        return try? self.syncMOC.count(for: request)
+        guard let request = ZMMessage.sortedFetchRequest(with: predicate) else { return 0 }
+        return (try? self.syncMOC.count(for: request)) ?? 0
     }
 
     private func fetchOneOnOneConversations() -> [ZMConversation] {
