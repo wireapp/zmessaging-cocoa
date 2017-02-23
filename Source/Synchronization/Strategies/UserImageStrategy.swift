@@ -120,7 +120,6 @@ public class UserImageStrategy : ZMAbstractRequestStrategy, ZMDownstreamTranscod
     }
     
     public override func tearDown() {
-        super.tearDown()
         tornDown = true
         assetPreprocessingTracker.tearDown()
         NotificationCenter.default.removeObserver(self)
