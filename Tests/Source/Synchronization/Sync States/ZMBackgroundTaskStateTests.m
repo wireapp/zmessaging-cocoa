@@ -16,8 +16,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-// TODO Sabine reenable
-
 @import ZMTransport;
 @import WireMessageStrategy;
 
