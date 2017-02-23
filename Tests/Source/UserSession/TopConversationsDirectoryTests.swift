@@ -179,6 +179,20 @@ class TopConversationsDirectoryTests : MessagingTest {
         let sut2 = TopConversationsDirectory(managedObjectContext: self.uiMOC)
         XCTAssertEqual(sut2.topConversations, self.sut.topConversations)
     }
+
+    func testThatItLimitsTheNumberOfResults() {
+        // GIVEN
+        for _ in 0...30 {
+            createConversation(in: uiMOC)
+        }
+
+        // WHEN
+        sut.refreshTopConversations()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
+        XCTAssertEqual(sut.topConversations.count, 25)
+    }
 }
 
 // MARK: - Observation

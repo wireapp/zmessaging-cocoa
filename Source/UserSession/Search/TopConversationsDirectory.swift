@@ -25,7 +25,7 @@ import ZMCDataModel
 
     fileprivate let uiMOC : NSManagedObjectContext
     fileprivate let syncMOC : NSManagedObjectContext
-    fileprivate static let topConversationSize = 10
+    fileprivate static let topConversationSize = 25
 
     /// Cached top conversations
     /// - warning: Might include deleted or blocked conversations
