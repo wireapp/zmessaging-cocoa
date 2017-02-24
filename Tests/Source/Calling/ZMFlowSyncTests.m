@@ -23,7 +23,7 @@
 @import zmessaging;
 @import avs;
 
-#import "MessagingTest.h"
+#import "ObjectTranscoderTests.h"
 #import "ZMOperationLoop.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMOnDemandFlowManager.h"
@@ -35,7 +35,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 
 
-@interface ZMFlowSyncTests : MessagingTest
+@interface ZMFlowSyncTests : ObjectTranscoderTests
 
 @property (nonatomic) ZMFlowSync<AVSFlowManagerDelegate, ZMRequestGenerator> *sut;
 @property (nonatomic) id internalFlowManager;
@@ -86,7 +86,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 - (void)recreateSUT;
 {
     [self.sut tearDown];
-    self.sut = (id) [[ZMFlowSync alloc] initWithMediaManager:nil onDemandFlowManager:self.onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
+    self.sut = (id) [[ZMFlowSync alloc] initWithMediaManager:nil onDemandFlowManager:self.onDemandFlowManager managedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate application:self.application];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -161,7 +161,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     
     // when
     [self.syncMOC performBlockAndWait:^{
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNotNil(request);
@@ -190,7 +190,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         
         // when
         [self.syncMOC performBlockAndWait:^{
-            ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+            ZMTransportRequest *request = [self.sut nextRequest];
             
             // then
             XCTAssertNotNil(request);
@@ -213,8 +213,8 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     
     // when
     [self.syncMOC performBlockAndWait:^{
-        ZMTransportRequest *request1 = [self.sut.requestGenerators nextRequest];
-        ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request1 = [self.sut nextRequest];
+        ZMTransportRequest *request2 = [self.sut nextRequest];
         
         // then
         XCTAssertNotNil(request1);
@@ -248,7 +248,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     // when
     __block ZMTransportRequest *request;
     [self.syncMOC performBlockAndWait:^{
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
     }];
     
 
@@ -277,7 +277,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     // when
     __block ZMTransportRequest *request;
     [self.syncMOC performBlockAndWait:^{
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
     }];
     
     [request completeWithResponse:response];

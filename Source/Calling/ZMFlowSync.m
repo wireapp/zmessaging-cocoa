@@ -62,13 +62,13 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 - (instancetype)initWithMediaManager:(id)mediaManager
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-            syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
-              uiManagedObjectContext:(NSManagedObjectContext *)uiManagedObjectContext
+                managedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                    appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
                          application:(id<ZMApplication>)application
 {
-    self = [super initWithManagedObjectContext:syncManagedObjectContext];
+    self = [super initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate];
     if(self != nil) {
-        _uiManagedObjectContext = uiManagedObjectContext;
+        _uiManagedObjectContext = managedObjectContext.zm_userInterfaceContext;
         _mediaManager = mediaManager;
         _requestStack = [NSMutableArray array];
         _application = application;
@@ -138,17 +138,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         }
     }
     self.eventTypesToForward = [types copy];
-}
-
-- (NSArray *)contextChangeTrackers
-{
-    return @[];
-}
-
-
-- (NSArray *)requestGenerators;
-{
-    return @[self];
 }
 
 - (ZMTransportRequest *)nextRequest

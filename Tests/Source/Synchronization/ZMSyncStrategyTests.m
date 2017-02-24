@@ -161,7 +161,7 @@
     
     id flowTranscoder = [OCMockObject mockForClass:ZMFlowSync.class];
     [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];
-    (void)[[[flowTranscoder expect] andReturn:flowTranscoder] initWithMediaManager:nil onDemandFlowManager:nil syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
+    (void)[[[flowTranscoder expect] andReturn:flowTranscoder] initWithMediaManager:nil onDemandFlowManager:nil managedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY application:self.application];
 
     id callStateRequestStrategy = [OCMockObject mockForClass:ZMCallStateRequestStrategy.class];
     [[[[callStateRequestStrategy expect] andReturn:callStateRequestStrategy] classMethod] alloc];
