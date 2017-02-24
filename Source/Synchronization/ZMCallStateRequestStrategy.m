@@ -21,7 +21,7 @@
 @import ZMTransport;
 @import ZMCDataModel;
 
-#import "ZMCallStateTranscoder.h"
+#import "ZMCallStateRequestStrategy.h"
 #import "VoiceChannelV2+CallFlow.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUserSession+Internal.h"
@@ -56,7 +56,7 @@ static NSString * const ParticipantsDictionaryKey = @"participants";
 static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 
-@interface ZMCallStateTranscoder () <ZMContextChangeTracker>
+@interface ZMCallStateRequestStrategy () <ZMContextChangeTracker>
 
 @property (nonatomic) ZMDownstreamObjectSync *downstreamSync;
 @property (nonatomic) ZMUpstreamModifiedObjectSync *upstreamSync;
@@ -77,46 +77,36 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 
 
-@interface ZMCallStateTranscoder (DownstreamTranscoder) <ZMDownstreamTranscoder>
+@interface ZMCallStateRequestStrategy (DownstreamTranscoder) <ZMDownstreamTranscoder>
 
 - (void)updateObject:(ZMConversation *)conversation withPayload:(id<ZMTransportData>)payload eventSource:(ZMCallEventSource)eventSource;
 
 @end
 
 
-@interface ZMCallStateTranscoder (UpstreamTranscoder) <ZMUpstreamTranscoder>
+@interface ZMCallStateRequestStrategy (UpstreamTranscoder) <ZMUpstreamTranscoder>
 @end
 
 
 
-@implementation ZMCallStateTranscoder
+@implementation ZMCallStateRequestStrategy
 
-_Pragma("clang diagnostic push") \
-_Pragma("clang diagnostic ignored \"-Wobjc-designated-initializers\"") \
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
 {
-    NOT_USED(moc);
-    Require(NO);
-    return nil;
-}
-_Pragma("clang diagnostic pop")
-
-- (instancetype)initWithSyncManagedObjectContext:(NSManagedObjectContext *)syncMOC
-                          uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
-                         objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory;
-{
-    return [self initWithSyncManagedObjectContext:syncMOC uiManagedObjectContext:uiMOC objectStrategyDirectory:directory gsmCallHandler:nil];
+    return [self initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate objectStrategyDirectory:directory gsmCallHandler:nil];
 }
 
 
-- (instancetype)initWithSyncManagedObjectContext:(NSManagedObjectContext *)syncMOC
-                          uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
-                         objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
-                                  gsmCallHandler:(ZMGSMCallHandler *)gsmCallHandler;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
+                              gsmCallHandler:(ZMGSMCallHandler *)gsmCallHandler
 {
-    self = [super initWithManagedObjectContext:syncMOC];
+    self = [super initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate];
     if (self) {
-        self.uiManagedObjectContext = uiMOC;
+        self.uiManagedObjectContext = managedObjectContext.zm_userInterfaceContext;
         self.objectStrategyDirectory = directory;
         self.callStateLogger = [[ZMCallStateLogger alloc] initWithFlowSync:directory.flowTranscoder];
         self.convToSequenceMap = [NSMutableDictionary dictionary];
@@ -135,14 +125,18 @@ _Pragma("clang diagnostic pop")
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
         
-        self.gsmCallHandler = gsmCallHandler ?: [[ZMGSMCallHandler alloc] initWithUIManagedObjectContext:uiMOC
-                                                              syncManagedObjectContext:syncMOC
-                                                                       callStateLogger:self.callStateLogger];
+        self.gsmCallHandler = gsmCallHandler ?: [[ZMGSMCallHandler alloc] initWithUIManagedObjectContext:self.uiManagedObjectContext
+                                                                                syncManagedObjectContext:managedObjectContext
+                                                                                         callStateLogger:self.callStateLogger];
         [self checkForOngoingCalls];
     }
     return self;
 }
 
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
+}
 
 - (NSNumber *)lastSequenceForConversation:(ZMConversation *)conversation;
 {
@@ -151,7 +145,6 @@ _Pragma("clang diagnostic pop")
     }
     return self.convToSequenceMap[conversation.remoteIdentifier];
 }
-
 
 - (void)tearDown
 {
@@ -231,9 +224,17 @@ _Pragma("clang diagnostic pop")
     }];
 }
 
-- (NSArray *)requestGenerators;
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
-    return @[self.downstreamSync, self.upstreamSync];
+    for (id<ZMRequestGenerator> requestGenerator in @[self.downstreamSync, self.upstreamSync]) {
+        ZMTransportRequest *request = [requestGenerator nextRequest];
+        
+        if (request != nil) {
+            return request;
+        }
+    }
+    
+    return nil;
 }
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> *)events
@@ -345,7 +346,7 @@ _Pragma("clang diagnostic pop")
 
 
 
-@implementation ZMCallStateTranscoder (DownstreamTranscoder)
+@implementation ZMCallStateRequestStrategy (DownstreamTranscoder)
 
 - (NSString *)callStatePathForConversation:(ZMConversation *)conversation;
 {
@@ -649,7 +650,7 @@ _Pragma("clang diagnostic pop")
 
 
 
-@implementation ZMCallStateTranscoder (UpstreamTranscoder)
+@implementation ZMCallStateRequestStrategy (UpstreamTranscoder)
 
 - (BOOL)shouldProcessUpdatesBeforeInserts
 {

@@ -17,10 +17,10 @@
 // 
 
 
-#import "ZMCallStateTranscoderTests.h"
+#import "ZMCallStateRequestStrategyTests.h"
 
 
-@implementation ZMCallStateTranscoderTests (VideoCalling)
+@implementation ZMCallStateRequestStrategyTests (VideoCalling)
 
 - (void)testThatItSetsIsVideoWhenIsVideoCallIsTrue
 {

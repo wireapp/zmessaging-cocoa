@@ -106,7 +106,7 @@
                             ].mutableCopy;
 
     if ([ZMUserSession useCallKit]) {
-        [transcoders addObject:directory.callStateTranscoder];
+        [transcoders addObject:directory.callStateRequestStrategy];
     }
     
     ZMTransportRequest *nextRequest = [self nextRequestFromTranscoders:transcoders];

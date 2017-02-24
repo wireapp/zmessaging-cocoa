@@ -59,8 +59,7 @@
     if (self) {
         self.synStatus = synStatus;
         self.syncObjects = @[
-                             objectStrategyDirectory.flowTranscoder,
-                             objectStrategyDirectory.callStateTranscoder,
+                             objectStrategyDirectory.flowTranscoder
                              ];
         
         for (id<ZMObjectStrategy> syncObject in self.syncObjects) {

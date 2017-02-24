@@ -34,7 +34,7 @@
 #import "ZMGSMCallHandler.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
-#import "ZMCallStateTranscoder.h"
+#import "ZMCallStateRequestStrategy.h"
 #import "MockLinkPreviewDetector.h"
 #import "zmessaging_iOS_Tests-Swift.h"
 
@@ -110,7 +110,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 - (ZMGSMCallHandler *)gsmCallHandler
 {
-    return self.userSession.operationLoop.syncStrategy.callStateTranscoder.gsmCallHandler;
+    return self.userSession.operationLoop.syncStrategy.callStateRequestStrategy.gsmCallHandler;
 }
 
 - (void)tearDown

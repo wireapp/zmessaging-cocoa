@@ -20,6 +20,7 @@
 @import Foundation;
 @import CoreData;
 @import WireRequestStrategy;
+@import WireMessageStrategy;
 #import "ZMObjectStrategyDirectory.h"
 
 @class ZMConversation;
@@ -33,11 +34,14 @@ typedef NS_ENUM(uint8_t, ZMCallEventSource) {
 
 
 
-@interface ZMCallStateTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
+@interface ZMCallStateRequestStrategy : ZMAbstractRequestStrategy <ZMEventConsumer, ZMContextChangeTrackerSource>
 
-- (instancetype)initWithSyncManagedObjectContext:(NSManagedObjectContext *)syncMOC
-                          uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
-                         objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate NS_UNAVAILABLE;
+
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory;
 
 - (NSNumber *)lastSequenceForConversation:(ZMConversation *)conversation;
 
@@ -46,12 +50,12 @@ typedef NS_ENUM(uint8_t, ZMCallEventSource) {
 
 
 
-@interface ZMCallStateTranscoder (Testing)
+@interface ZMCallStateRequestStrategy (Testing)
 
-- (instancetype)initWithSyncManagedObjectContext:(NSManagedObjectContext *)syncMOC
-                          uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
-                         objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
-                                  gsmCallHandler:(ZMGSMCallHandler *)gsmCallHandler;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
+                              gsmCallHandler:(ZMGSMCallHandler *)gsmCallHandler;
 
 @property (nonatomic, readonly) ZMGSMCallHandler *gsmCallHandler;
 
