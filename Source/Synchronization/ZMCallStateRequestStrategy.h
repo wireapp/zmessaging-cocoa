@@ -41,7 +41,7 @@ typedef NS_ENUM(uint8_t, ZMCallEventSource) {
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
                             appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
-                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory;
+                     callFlowRequestStrategy:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy;
 
 - (NSNumber *)lastSequenceForConversation:(ZMConversation *)conversation;
 
@@ -54,7 +54,7 @@ typedef NS_ENUM(uint8_t, ZMCallEventSource) {
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
                             appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
-                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
+                     callFlowRequestStrategy:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy
                               gsmCallHandler:(ZMGSMCallHandler *)gsmCallHandler;
 
 @property (nonatomic, readonly) ZMGSMCallHandler *gsmCallHandler;

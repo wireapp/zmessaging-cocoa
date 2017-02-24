@@ -60,8 +60,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 @property (nonatomic) ZMDownstreamObjectSync *downstreamSync;
 @property (nonatomic) ZMUpstreamModifiedObjectSync *upstreamSync;
-@property (nonatomic, weak) id<ZMObjectStrategyDirectory> objectStrategyDirectory;
-@property (nonatomic, weak, readonly) ZMCallFlowRequestStrategy *callFlowRequestStrategy;
+@property (nonatomic, weak) ZMCallFlowRequestStrategy *callFlowRequestStrategy;
 @property (nonatomic) NSMutableDictionary *convToSequenceMap;
 @property (nonatomic) ZMConversation *lastConversation;
 @property (nonatomic) BOOL pushChannelIsOpen;
@@ -93,22 +92,22 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
                             appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
-                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
+                     callFlowRequestStrategy:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy
 {
-    return [self initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate objectStrategyDirectory:directory gsmCallHandler:nil];
+    return [self initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate callFlowRequestStrategy:callFlowRequestStrategy gsmCallHandler:nil];
 }
 
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
                             appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
-                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
+                     callFlowRequestStrategy:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy
                               gsmCallHandler:(ZMGSMCallHandler *)gsmCallHandler
 {
     self = [super initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate];
     if (self) {
         self.uiManagedObjectContext = managedObjectContext.zm_userInterfaceContext;
-        self.objectStrategyDirectory = directory;
-        self.callStateLogger = [[ZMCallStateLogger alloc] initWithFlowSync:directory.callFlowRequestStrategy];
+        self.callFlowRequestStrategy = callFlowRequestStrategy;
+        self.callStateLogger = [[ZMCallStateLogger alloc] initWithFlowSync:callFlowRequestStrategy];
         self.convToSequenceMap = [NSMutableDictionary dictionary];
         self.pushChannelIsOpen = NO;
         
@@ -135,7 +134,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
 - (NSNumber *)lastSequenceForConversation:(ZMConversation *)conversation;
@@ -317,11 +316,6 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
             break;
         }
     }
-}
-
-- (ZMCallFlowRequestStrategy *)callFlowRequestStrategy;
-{
-    return self.objectStrategyDirectory.callFlowRequestStrategy;
 }
 
 - (void)pushChannelDidChange:(NSNotification *)note

@@ -19,6 +19,7 @@
 
 #import "ZMSyncStrategy.h"
 @class ZMSyncStateMachine;
+@class ZMGSMCallHandler;
 
 @interface ZMSyncStrategy (Internal)
 
@@ -53,6 +54,7 @@
 @interface ZMSyncStrategy (Testing)
 
 @property (nonatomic) BOOL contextMergingDisabled;
+@property (nonatomic, readonly) ZMGSMCallHandler *gsmCallHandler;
 
 - (ZMFetchRequestBatch *)fetchRequestBatchForEvents:(NSArray<ZMUpdateEvent *> *)events;
 

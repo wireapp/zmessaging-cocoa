@@ -353,8 +353,6 @@
     [[[objectDirectory stub] andReturn:registrationTranscoder] registrationTranscoder];
     [[[objectDirectory stub] andReturn:phoneNumberVerificationTranscoder] phoneNumberVerificationTranscoder];
     [[[objectDirectory stub] andReturn:missingUpdateEventsTranscoder] missingUpdateEventsTranscoder];
-    [[[objectDirectory stub] andReturn:callFlowRequestStrategy] callFlowRequestStrategy];
-    [[[objectDirectory stub] andReturn:callStateRequestStrategy] callStateRequestStrategy];
     [[[objectDirectory stub] andReturn:loginTranscoder] loginTranscoder];
     [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
     
@@ -365,8 +363,6 @@
                                         registrationTranscoder,
                                         phoneNumberVerificationTranscoder,
                                         missingUpdateEventsTranscoder,
-                                        callFlowRequestStrategy,
-                                        callStateRequestStrategy,
                                         loginTranscoder,
                                         loginCodeRequestTranscoder,
                                         ]] allTranscoders];

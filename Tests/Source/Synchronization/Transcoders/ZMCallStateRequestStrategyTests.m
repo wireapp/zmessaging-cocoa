@@ -66,15 +66,13 @@
     
     self.callFlowRequestStrategy = [OCMockObject niceMockForClass:[ZMCallFlowRequestStrategy class]];
     [self verifyMockLater:self.callFlowRequestStrategy];
-    self.objectStrategyDirectory = [OCMockObject mockForProtocol:@protocol(ZMObjectStrategyDirectory)];
-    (void)[((id<ZMObjectStrategyDirectory>) [[self.objectStrategyDirectory stub] andReturn:self.callFlowRequestStrategy]) callFlowRequestStrategy];
     
     self.gsmCallHandler = [OCMockObject niceMockForClass:[ZMGSMCallHandler class]];
     [self verifyMockLater:self.gsmCallHandler];
     
     [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateEventProcessing)] appState];
 
-    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
 
     [self simulateOpeningPushChannel];
 }
@@ -145,7 +143,7 @@
 
 - (void)testThatUsesCorrectRequestStrategyConfiguration
 {
-    XCTAssertEqual(self.sut.configuration, ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync);
+    XCTAssertEqual(self.sut.configuration, ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing);
 }
 
 - (void)testThatItReturnsTheContextChangeTrackers;
@@ -3601,7 +3599,7 @@
     
     // when
     [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -3622,7 +3620,7 @@
     
     // when
     [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -3647,7 +3645,7 @@
     
     // when
     [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

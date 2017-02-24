@@ -47,10 +47,7 @@
 
 - (NSArray *)syncObjectsUsedByState
 {
-    return  @[ /* Note: these must be in the same order as in the class */
-        self.objectDirectory.callFlowRequestStrategy,
-        self.objectDirectory.callStateRequestStrategy,
-        ];
+    return  @[ /* Note: these must be in the same order as in the class */ ];
 }
 
 - (void)testThatThePolicyIsToProcessEvents

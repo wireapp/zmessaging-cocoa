@@ -32,7 +32,6 @@
 @interface ZMCallStateRequestStrategyTests : ObjectTranscoderTests
 
 @property (nonatomic) ZMCallStateRequestStrategy<ZMDownstreamTranscoder, ZMUpstreamTranscoder> *sut;
-@property (nonatomic) id objectStrategyDirectory;
 @property (nonatomic) id callFlowRequestStrategy;
 @property (nonatomic) ZMConversation *syncSelfToUser1Conversation;
 @property (nonatomic) ZMConversation *syncSelfToUser2Conversation;

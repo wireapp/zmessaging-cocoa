@@ -81,10 +81,7 @@
 
 - (ZMTransportRequest *)nextRequest
 {
-    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
-    NSArray *transcoders = @[
-                             directory.callFlowRequestStrategy,
-                             ];
+    NSArray *transcoders = @[];
     
     ZMTransportRequest *nextRequest = [self nextRequestFromTranscoders:transcoders];
     return nextRequest;
