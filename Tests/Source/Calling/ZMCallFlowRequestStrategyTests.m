@@ -62,6 +62,8 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     self.deploymentEnvironment = [OCMockObject niceMockForClass:ZMDeploymentEnvironment.class];
     ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride = self.deploymentEnvironment;
     [[[self.deploymentEnvironment stub] andReturnValue:OCMOCK_VALUE(ZMDeploymentEnvironmentTypeInternal)] environmentType];
+    
+    [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateEventProcessing)] appState];
 
     [self recreateSUT];
     
@@ -100,6 +102,11 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 {
     [[NSNotificationCenter defaultCenter] postNotificationName:ZMPushChannelStateChangeNotificationName object:nil
                                                       userInfo:@{ZMPushChannelIsOpenKey: @(YES)}];
+}
+
+- (void)testThatUsesCorrectRequestStrategyConfiguration
+{
+    XCTAssertEqual(self.sut.configuration, ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync);
 }
 
 - (void)testThatItReleasesTheFlowForCallDeviceIsActive_No

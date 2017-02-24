@@ -98,6 +98,11 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     return self;
 }
 
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
+}
+
 - (void)setUpFlowManagerIfNeeded
 {
     [self.onDemandFlowManager initializeFlowManagerWithDelegate:self];
@@ -140,7 +145,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     self.eventTypesToForward = [types copy];
 }
 
-- (ZMTransportRequest *)nextRequest
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
     if (!self.pushChannelIsOpen && ![ZMUserSession useCallKit]) {
         return nil;
