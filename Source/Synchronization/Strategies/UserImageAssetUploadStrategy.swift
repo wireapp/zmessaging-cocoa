@@ -23,10 +23,10 @@ public final class UserImageAssetUploadStrategy: NSObject {
     fileprivate let requestFactory = AssetRequestFactory()
     fileprivate var previewImageSync: ZMSingleRequestSync!
     fileprivate var completeImageSync: ZMSingleRequestSync!
-    fileprivate weak var imageUpdateStatus: UserProfileImageUpdateStatus?
+    fileprivate weak var imageUpdateStatus: UserProfileImageUploadStatus?
     
 
-    init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUpdateStatus) {
+    init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUploadStatus) {
         super.init()
         previewImageSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         completeImageSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
