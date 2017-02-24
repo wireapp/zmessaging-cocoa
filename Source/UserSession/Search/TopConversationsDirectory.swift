@@ -48,7 +48,7 @@ extension TopConversationsDirectory {
         syncMOC.performGroupedBlock {
             let conversations = self.fetchOneOnOneConversations()
             // Mapping from conversation to message count in the last month
-            let countByConversation = conversations.mapToDictionary(with: self.messageCount)
+            let countByConversation = conversations.mapToDictionary { $0.lastMonthMessageCount() }
             let sorted = countByConversation.sorted {  $0.1 > $1.1 }.prefix(TopConversationsDirectory.topConversationSize)
             let identifiers = sorted.flatMap { $0.0.objectID }
             self.updateUIList(with: identifiers)
@@ -62,13 +62,6 @@ extension TopConversationsDirectory {
             }
             self.persistList()
         }
-    }
-
-    private func messageCount(for conversation: ZMConversation) -> Int {
-        guard let identifier = conversation.remoteIdentifier else { return 0 }
-        guard let predicate = ZMMessage.predicateForNonSystemMessagesInTheLastMonth(in: identifier) else { return 0 }
-        guard let request = ZMMessage.sortedFetchRequest(with: predicate) else { return 0 }
-        return (try? self.syncMOC.count(for: request)) ?? 0
     }
 
     private func fetchOneOnOneConversations() -> [ZMConversation] {
@@ -145,6 +138,13 @@ fileprivate extension ZMConversation {
         let oneOnOnePredicate = NSPredicate(format: "%K == %d", #keyPath(ZMConversation.conversationType), ZMConversationType.oneOnOne.rawValue)
         let acceptedPredicate = NSPredicate(format: "%K == %d", #keyPath(ZMConversation.connection.status), ZMConnectionStatus.accepted.rawValue)
         return NSCompoundPredicate(andPredicateWithSubpredicates: [oneOnOnePredicate, acceptedPredicate])
+    }
+
+    func lastMonthMessageCount() -> Int {
+        guard let identifier = remoteIdentifier, let moc = managedObjectContext else { return 0 }
+        guard let predicate = ZMMessage.predicateForNonSystemMessagesInTheLastMonth(in: identifier) else { return 0 }
+        guard let request = ZMMessage.sortedFetchRequest(with: predicate) else { return 0 }
+        return (try? moc.count(for: request)) ?? 0
     }
 
 }
