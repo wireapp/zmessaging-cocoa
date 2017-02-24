@@ -17,7 +17,7 @@
 // 
 
 
-#import "ZMCallStateTranscoder.h"
+#import "ZMCallStateRequestStrategy.h"
 
 @class ZMConversation;
 @class ZMUser;

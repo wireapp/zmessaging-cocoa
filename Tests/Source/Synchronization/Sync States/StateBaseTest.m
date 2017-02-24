@@ -91,7 +91,7 @@
 - (void)stubRequestsOnHighPriorityObjectSync
 {
     [[[(id)[self.objectDirectory flowTranscoder] stub] andReturn:@[]] requestGenerators];
-    [[[(id)[self.objectDirectory callStateTranscoder] stub] andReturn:@[]] requestGenerators];
+    [[[(id)[self.objectDirectory callStateRequestStrategy] stub] andReturn:@[]] requestGenerators];
 }
 
 - (void)checkThatItCallsRequestGeneratorsOnObjectsOfClass:(NSArray *)objectsToTest creationOfStateBlock:(ZMSyncState *(^)(id<ZMObjectStrategyDirectory> directory))creationBlock;

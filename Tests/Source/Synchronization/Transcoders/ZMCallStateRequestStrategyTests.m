@@ -17,11 +17,11 @@
 // 
 
 
-#import "ZMCallStateTranscoderTests.h"
+#import "ZMCallStateRequestStrategyTests.h"
 #import "MessagingTest+EventFactory.h"
 
 
-@implementation ZMCallStateTranscoderTests
+@implementation ZMCallStateRequestStrategyTests
 
 - (void)setUp
 {
@@ -74,7 +74,7 @@
     
     [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateEventProcessing)] appState];
 
-    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
 
     [self simulateOpeningPushChannel];
 }
@@ -155,7 +155,7 @@
     
     // then
     XCTAssertEqual(trackers.count, 3u);
-    XCTAssertTrue([trackers.firstObject isKindOfClass:ZMCallStateTranscoder.class]);
+    XCTAssertTrue([trackers.firstObject isKindOfClass:ZMCallStateRequestStrategy.class]);
     XCTAssertTrue([trackers[1] isKindOfClass:ZMDownstreamObjectSync.class]);
     XCTAssertTrue([trackers.lastObject isKindOfClass:ZMUpstreamModifiedObjectSync.class]);
 }
@@ -705,7 +705,7 @@
 
 
 
-@implementation ZMCallStateTranscoderTests (Participants)
+@implementation ZMCallStateRequestStrategyTests (Participants)
 
 - (ZMUser *)createUser;
 {
@@ -1027,7 +1027,7 @@
 
 
 
-@implementation ZMCallStateTranscoderTests (Ignore)
+@implementation ZMCallStateRequestStrategyTests (Ignore)
 
 - (ZMConversation *)selfToUser1SyncConversationWithOutgoingCall
 {
@@ -1435,7 +1435,7 @@
 
 
 
-@implementation ZMCallStateTranscoderTests (CallDeviceIsActive)
+@implementation ZMCallStateRequestStrategyTests (CallDeviceIsActive)
 
 - (void)testThatItCreatesARequestForUpdatingTheCallIsJoinedAttribute
 {
@@ -1675,7 +1675,7 @@
 
 
 
-@implementation ZMCallStateTranscoderTests (Flows)
+@implementation ZMCallStateRequestStrategyTests (Flows)
 
 - (void)testThatItReleasesTheFlowIfSelfStateIsIdle_ReceivingResponse
 {
@@ -2133,7 +2133,7 @@
 
 
 
-@implementation ZMCallStateTranscoderTests (DroppedCallNotification)
+@implementation ZMCallStateRequestStrategyTests (DroppedCallNotification)
 
 - (void)testThatItFiresANotificationWhenReceivingUpstreamResponseWithCauseRequested_OnUserInitiatedLeave
 {
@@ -2347,7 +2347,7 @@
 @end
 
 
-@implementation ZMCallStateTranscoderTests (ConversationEvents)
+@implementation ZMCallStateRequestStrategyTests (ConversationEvents)
 
 - (NSMutableDictionary *)responsePayloadForUserEventInConversationID:(NSUUID *)conversationID userIDs:(NSArray *)userIDs eventType:(NSString *)eventType;
 {
@@ -2550,7 +2550,7 @@
 @end
 
 
-@implementation ZMCallStateTranscoderTests (SequenceNumber)
+@implementation ZMCallStateRequestStrategyTests (SequenceNumber)
 
 - (void)checkThatItStoresTheSequenceNumberWithBlock:(void (^)(ZMConversation *, ZMTransportResponse *))block
 {
@@ -2760,7 +2760,7 @@
 @end
 
 
-@implementation ZMCallStateTranscoderTests (UpstreamTranscoder)
+@implementation ZMCallStateRequestStrategyTests (UpstreamTranscoder)
 
 - (ZMConversation *)insertConversationNeedsUpdateFromBackend:(BOOL)callStateNeedsToBeUpdatedFromBackend
                                           callDeviceIsActive:(BOOL)callDeviceIsActive;
@@ -3273,7 +3273,7 @@
 @end
 
 
-@implementation ZMCallStateTranscoderTests (PushChannel)
+@implementation ZMCallStateRequestStrategyTests (PushChannel)
 
 - (void)testThatItDoesNotReturnARequestWhileThePushChannelIsClosed
 {
@@ -3434,7 +3434,7 @@
 
 
 
-@implementation ZMCallStateTranscoderTests (GSMCalls)
+@implementation ZMCallStateRequestStrategyTests (GSMCalls)
 
 - (void)testThatItSetsTheCause_Requested_CallDeviceIsActive_NO_ISInterruptedConv_YES
 {
@@ -3583,7 +3583,7 @@
 @end
 
 
-@implementation ZMCallStateTranscoderTests (RejoiningAfterCrashOrRestart)
+@implementation ZMCallStateRequestStrategyTests (RejoiningAfterCrashOrRestart)
 
 
 - (void)testThatOnStartUpItDoesNotSetCallStateNeedsToBeUpdatedFromBackend_InterruptedbyGSMCall
@@ -3601,7 +3601,7 @@
     
     // when
     [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -3622,7 +3622,7 @@
     
     // when
     [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -3647,7 +3647,7 @@
     
     // when
     [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate objectStrategyDirectory:self.objectStrategyDirectory gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

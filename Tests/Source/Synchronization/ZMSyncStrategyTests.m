@@ -53,7 +53,7 @@
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
 #import "ZMFlowSync.h"
-#import "ZMCallStateTranscoder.h"
+#import "ZMCallStateRequestStrategy.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
@@ -163,9 +163,9 @@
     [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];
     (void)[[[flowTranscoder expect] andReturn:flowTranscoder] initWithMediaManager:nil onDemandFlowManager:nil syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
 
-    id callStateTranscoder = [OCMockObject mockForClass:ZMCallStateTranscoder.class];
-    [[[[callStateTranscoder expect] andReturn:callStateTranscoder] classMethod] alloc];
-    (void) [[[callStateTranscoder expect] andReturn:callStateTranscoder] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY objectStrategyDirectory:OCMOCK_ANY];
+    id callStateRequestStrategy = [OCMockObject mockForClass:ZMCallStateRequestStrategy.class];
+    [[[[callStateRequestStrategy expect] andReturn:callStateRequestStrategy] classMethod] alloc];
+    (void) [[[callStateRequestStrategy expect] andReturn:callStateRequestStrategy] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY objectStrategyDirectory:OCMOCK_ANY];
         
     id loginCodeRequestTranscoder = [OCMockObject mockForClass:ZMLoginCodeRequestTranscoder.class];
     [[[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] classMethod] alloc];
@@ -204,7 +204,7 @@
                          missingUpdateEventsTranscoder,
                          registrationTranscoder,
                          flowTranscoder,
-                         callStateTranscoder,
+                         callStateRequestStrategy,
                          loginCodeRequestTranscoder,
                          phoneNumberVerificationTranscoder
     ];
@@ -241,7 +241,7 @@
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
     XCTAssertEqual(self.sut.registrationTranscoder, registrationTranscoder);
     XCTAssertEqual(self.sut.flowTranscoder, flowTranscoder);
-    XCTAssertEqual(self.sut.callStateTranscoder, callStateTranscoder);
+    XCTAssertEqual(self.sut.callStateRequestStrategy, callStateRequestStrategy);
     XCTAssertEqual(self.sut.loginCodeRequestTranscoder, loginCodeRequestTranscoder);
     XCTAssertEqual(self.sut.phoneNumberVerificationTranscoder, phoneNumberVerificationTranscoder);
     

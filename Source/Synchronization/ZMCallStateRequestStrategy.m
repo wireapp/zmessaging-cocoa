@@ -21,7 +21,7 @@
 @import ZMTransport;
 @import ZMCDataModel;
 
-#import "ZMCallStateTranscoder.h"
+#import "ZMCallStateRequestStrategy.h"
 #import "VoiceChannelV2+CallFlow.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUserSession+Internal.h"
@@ -56,7 +56,7 @@ static NSString * const ParticipantsDictionaryKey = @"participants";
 static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 
-@interface ZMCallStateTranscoder () <ZMContextChangeTracker>
+@interface ZMCallStateRequestStrategy () <ZMContextChangeTracker>
 
 @property (nonatomic) ZMDownstreamObjectSync *downstreamSync;
 @property (nonatomic) ZMUpstreamModifiedObjectSync *upstreamSync;
@@ -77,19 +77,19 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 
 
-@interface ZMCallStateTranscoder (DownstreamTranscoder) <ZMDownstreamTranscoder>
+@interface ZMCallStateRequestStrategy (DownstreamTranscoder) <ZMDownstreamTranscoder>
 
 - (void)updateObject:(ZMConversation *)conversation withPayload:(id<ZMTransportData>)payload eventSource:(ZMCallEventSource)eventSource;
 
 @end
 
 
-@interface ZMCallStateTranscoder (UpstreamTranscoder) <ZMUpstreamTranscoder>
+@interface ZMCallStateRequestStrategy (UpstreamTranscoder) <ZMUpstreamTranscoder>
 @end
 
 
 
-@implementation ZMCallStateTranscoder
+@implementation ZMCallStateRequestStrategy
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
                             appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
@@ -346,7 +346,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 
 
-@implementation ZMCallStateTranscoder (DownstreamTranscoder)
+@implementation ZMCallStateRequestStrategy (DownstreamTranscoder)
 
 - (NSString *)callStatePathForConversation:(ZMConversation *)conversation;
 {
@@ -650,7 +650,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 
 
-@implementation ZMCallStateTranscoder (UpstreamTranscoder)
+@implementation ZMCallStateRequestStrategy (UpstreamTranscoder)
 
 - (BOOL)shouldProcessUpdatesBeforeInserts
 {
