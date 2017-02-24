@@ -91,16 +91,6 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 @implementation ZMCallStateTranscoder
 
-_Pragma("clang diagnostic push") \
-_Pragma("clang diagnostic ignored \"-Wobjc-designated-initializers\"") \
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-{
-    NOT_USED(moc);
-    Require(NO);
-    return nil;
-}
-_Pragma("clang diagnostic pop")
-
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
                             appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory

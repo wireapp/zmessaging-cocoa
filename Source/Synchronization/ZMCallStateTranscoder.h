@@ -36,6 +36,9 @@ typedef NS_ENUM(uint8_t, ZMCallEventSource) {
 
 @interface ZMCallStateTranscoder : ZMAbstractRequestStrategy <ZMEventConsumer, ZMContextChangeTrackerSource>
 
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate NS_UNAVAILABLE;
+
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
                             appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory;
