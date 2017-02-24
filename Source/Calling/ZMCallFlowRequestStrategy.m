@@ -21,7 +21,7 @@
 @import ZMUtilities;
 @import ZMCDataModel;
 
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMAVSBridge.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMUserSessionAuthenticationNotification.h"
@@ -29,11 +29,11 @@
 #import "VoiceChannelV2+VideoCalling.h"
 
 static NSString * const DefaultMediaType = @"application/json";
-id ZMFlowSyncInternalDeploymentEnvironmentOverride;
+id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
 
 static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
-@interface ZMFlowSync ()
+@interface ZMCallFlowRequestStrategy ()
 
 @property (nonatomic, readonly) NSMutableArray *requestStack; ///< inverted FIFO
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
@@ -53,12 +53,12 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 
 
-@interface ZMFlowSync (FlowManagerDelegate) <AVSFlowManagerDelegate>
+@interface ZMCallFlowRequestStrategy (FlowManagerDelegate) <AVSFlowManagerDelegate>
 @end
 
 
 
-@implementation ZMFlowSync
+@implementation ZMCallFlowRequestStrategy
 
 - (instancetype)initWithMediaManager:(id)mediaManager
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
@@ -392,7 +392,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 
 
-@implementation ZMFlowSync (FlowManagerDelegate)
+@implementation ZMCallFlowRequestStrategy (FlowManagerDelegate)
 
 
 - (BOOL)requestWithPath:(NSString *)path

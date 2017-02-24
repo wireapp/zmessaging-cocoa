@@ -26,7 +26,7 @@
 
 @import ZMCMockTransport;
 
-extern id ZMFlowSyncInternalFlowManagerOverride;
+extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
 
 @implementation VoiceChannelV2Tests (VideoCalling)
 
@@ -49,7 +49,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
         return YES;
     }]];
 
-    ZMFlowSyncInternalFlowManagerOverride = flowManagerMock;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = flowManagerMock;
     
     // when
     NSError *error = nil;
@@ -60,13 +60,13 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     XCTAssertNil(error);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5f]);
     
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsIsSendingVideoForParticipantAndReturnValue_noFlowManager
 {
     // given
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
     // when
     NSError *error = nil;
     BOOL result = [self.conversation.voiceChannelRouter.v2 isSendingVideoForParticipant:self.conversation.connection.to error:&error];
@@ -75,7 +75,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
     
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsIsSendingVideoForParticipantAndReturnValue_FlowManagerNotReady
@@ -83,7 +83,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     // given
     id flowManagerMock = [OCMockObject mockForClass:[MockFlowManager class]];
     [[[flowManagerMock stub] andReturnValue:@(NO)] isReady];
-    ZMFlowSyncInternalFlowManagerOverride = flowManagerMock;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = flowManagerMock;
 
     // when
     NSError *error = nil;
@@ -93,7 +93,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
     
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsSetVideoSendActiveAndReturnValue_hasFlowManager
@@ -115,7 +115,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     [[[flowManagerMock stub] andReturnValue:@(YES)] isMediaEstablishedInConversation:OCMOCK_ANY];
     [[[flowManagerMock stub] andReturnValue:@(YES)] canSendVideoForConversation:OCMOCK_ANY];
     
-    ZMFlowSyncInternalFlowManagerOverride = flowManagerMock;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = flowManagerMock;
     
     // when
     NSError *error = nil;
@@ -125,14 +125,14 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     XCTAssertTrue(result);
     XCTAssertNil(error);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5f]);
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsSetVideoSendActiveAndReturnValue_noFlowManager
 {
     // given
     
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
     
     // when
     NSError *error = nil;
@@ -141,7 +141,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     // then
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsSetVideoSendActiveAndReturnValue_noMedia
@@ -153,7 +153,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     [[[flowManagerMock stub] andReturnValue:@(NO)] isMediaEstablishedInConversation:OCMOCK_ANY];
     [[[flowManagerMock stub] andReturnValue:@(YES)] canSendVideoForConversation:OCMOCK_ANY];
     
-    ZMFlowSyncInternalFlowManagerOverride = flowManagerMock;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = flowManagerMock;
     
     // when
     NSError *error = nil;
@@ -163,7 +163,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5f]);
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsSetVideoSendActiveAndReturnValue_cannotSend
@@ -175,7 +175,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     [[[flowManagerMock stub] andReturnValue:@(YES)] isMediaEstablishedInConversation:OCMOCK_ANY];
     [[[flowManagerMock stub] andReturnValue:@(NO)] canSendVideoForConversation:OCMOCK_ANY];
     
-    ZMFlowSyncInternalFlowManagerOverride = flowManagerMock;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = flowManagerMock;
     
     // when
     NSError *error = nil;
@@ -185,7 +185,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5f]);
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 // FIXME move to VoiceChannelRouterTests
@@ -209,7 +209,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
         return YES;
     }]];
     
-    ZMFlowSyncInternalFlowManagerOverride = flowManagerMock;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = flowManagerMock;
     
     // when
     NSError *error = nil;
@@ -219,7 +219,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     XCTAssertTrue(result);
     XCTAssertNil(error);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5f]);
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 
 }
 
@@ -227,7 +227,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
 - (void)testThatItCallsSetVideoCaptureDeviceAndReturnValue_noFlowManager
 {
     // given
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
     
     // when
     NSError *error = nil;
@@ -236,7 +236,7 @@ extern id ZMFlowSyncInternalFlowManagerOverride;
     // then
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 
 }
 

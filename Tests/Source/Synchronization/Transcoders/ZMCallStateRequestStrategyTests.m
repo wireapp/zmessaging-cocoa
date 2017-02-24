@@ -64,10 +64,10 @@
         [self.syncMOC saveOrRollback];
     }];
     
-    self.flowTranscoder = [OCMockObject niceMockForClass:[ZMFlowSync class]];
-    [self verifyMockLater:self.flowTranscoder];
+    self.callFlowRequestStrategy = [OCMockObject niceMockForClass:[ZMCallFlowRequestStrategy class]];
+    [self verifyMockLater:self.callFlowRequestStrategy];
     self.objectStrategyDirectory = [OCMockObject mockForProtocol:@protocol(ZMObjectStrategyDirectory)];
-    (void)[((id<ZMObjectStrategyDirectory>) [[self.objectStrategyDirectory stub] andReturn:self.flowTranscoder]) flowTranscoder];
+    (void)[((id<ZMObjectStrategyDirectory>) [[self.objectStrategyDirectory stub] andReturn:self.callFlowRequestStrategy]) callFlowRequestStrategy];
     
     self.gsmCallHandler = [OCMockObject niceMockForClass:[ZMGSMCallHandler class]];
     [self verifyMockLater:self.gsmCallHandler];
@@ -651,13 +651,13 @@
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         
         // expect
-        [[self.flowTranscoder expect] setSessionIdentifier:sessionID forConversationIdentifier:conversationID];
+        [[self.callFlowRequestStrategy expect] setSessionIdentifier:sessionID forConversationIdentifier:conversationID];
         
         // when
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
         
         // then
-        [self.flowTranscoder verify];
+        [self.callFlowRequestStrategy verify];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -688,7 +688,7 @@
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         
         // expect
-        [[self.flowTranscoder stub] setSessionIdentifier:OCMOCK_ANY forConversationIdentifier:OCMOCK_ANY];
+        [[self.callFlowRequestStrategy stub] setSessionIdentifier:OCMOCK_ANY forConversationIdentifier:OCMOCK_ANY];
         
         // when
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
@@ -1691,7 +1691,7 @@
                                   @"participants":@{}
                                   };
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(conversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -1701,7 +1701,7 @@
         
         // when
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
-        [self.flowTranscoder verify];
+        [self.callFlowRequestStrategy verify];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -1721,7 +1721,7 @@
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
         
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(conversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -1729,7 +1729,7 @@
         
         // when
         [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
-        [self.flowTranscoder verify];
+        [self.callFlowRequestStrategy verify];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -1757,7 +1757,7 @@
         ZMUpdateEvent *event = [ZMUpdateEvent eventsArrayFromPushChannelData:payload][0];
         
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(conversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -1765,7 +1765,7 @@
         
         // when
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
-        [self.flowTranscoder verify];
+        [self.callFlowRequestStrategy verify];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -1793,7 +1793,7 @@
         ZMUpdateEvent *event = [ZMUpdateEvent eventsArrayFromPushChannelData:payload][0];
         
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(conversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -1801,7 +1801,7 @@
         
         // when
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
-        [self.flowTranscoder verify];
+        [self.callFlowRequestStrategy verify];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -1838,7 +1838,7 @@
         ZMUpdateEvent *event = [ZMUpdateEvent eventsArrayFromPushChannelData:payload][0];
         
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(conversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -1846,7 +1846,7 @@
         
         // when
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
-        [self.flowTranscoder verify];
+        [self.callFlowRequestStrategy verify];
         
         // then
         XCTAssertFalse(conversation.callDeviceIsActive);
@@ -1886,11 +1886,11 @@
         ZMUpdateEvent *event = [ZMUpdateEvent eventsArrayFromPushChannelData:payload][0];
         
         // expect
-        [[self.flowTranscoder reject] updateFlowsForConversation:conversation];
+        [[self.callFlowRequestStrategy reject] updateFlowsForConversation:conversation];
         
         // when
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
-        [self.flowTranscoder verify];
+        [self.callFlowRequestStrategy verify];
         
         // then
         XCTAssertTrue(conversation.callDeviceIsActive);
@@ -1929,7 +1929,7 @@
         ZMConversation *syncConversation = (id)[self.syncMOC objectWithID:uiConversation.objectID];
         
         // expect
-        [[self.flowTranscoder reject] updateFlowsForConversation:syncConversation];
+        [[self.callFlowRequestStrategy reject] updateFlowsForConversation:syncConversation];
         
         // when
         for (id<ZMContextChangeTracker> t in self.sut.contextChangeTrackers) {
@@ -1938,7 +1938,7 @@
         XCTAssertNotNil([self.sut nextRequest]);
         
         // finally
-        XCTAssertNoThrow([self.flowTranscoder verify]);
+        XCTAssertNoThrow([self.callFlowRequestStrategy verify]);
         
         [syncConversation.voiceChannelRouter.v2 tearDown];
     }];
@@ -1959,7 +1959,7 @@
         // expect
         XCTAssertFalse(syncConversation.callDeviceIsActive);
         XCTAssertTrue(syncConversation.hasLocalModificationsForCallDeviceIsActive);
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(syncConversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -1970,7 +1970,7 @@
             [t objectsDidChange:[NSSet setWithObject:syncConversation]];
         }
         // finally
-        XCTAssertNoThrow([self.flowTranscoder verify]);
+        XCTAssertNoThrow([self.callFlowRequestStrategy verify]);
         
         [syncConversation.voiceChannelRouter.v2 tearDown];
     }];
@@ -1991,7 +1991,7 @@
                                                                                            @"quality": @1}} HTTPStatus:200 transportSessionError:nil];
         
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(syncConversation, conv);
             XCTAssertTrue(conv.callDeviceIsActive);
             return true;
@@ -2001,7 +2001,7 @@
         [self.sut updateUpdatedObject:syncConversation requestUserInfo:nil response:response keysToParse:self.keys];
         
         // finally
-        XCTAssertNoThrow([self.flowTranscoder verify]);
+        XCTAssertNoThrow([self.callFlowRequestStrategy verify]);
         
         [syncConversation.voiceChannelRouter.v2 tearDown];
     }];
@@ -2024,7 +2024,7 @@
         XCTAssertFalse(syncConversation.callDeviceIsActive);
         XCTAssertTrue(syncConversation.hasLocalModificationsForCallDeviceIsActive);
         
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(syncConversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -2037,7 +2037,7 @@
         XCTAssertNotNil([self.sut nextRequest]);
         
         // finally
-        XCTAssertNoThrow([self.flowTranscoder verify]);
+        XCTAssertNoThrow([self.callFlowRequestStrategy verify]);
         [syncConversation.voiceChannelRouter.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2060,7 +2060,7 @@
 
     [self.syncMOC performGroupedBlockAndWait:^{
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(syncConversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -2078,7 +2078,7 @@
         
     // finally
     [self.syncMOC performGroupedBlockAndWait:^{
-        XCTAssertNoThrow([self.flowTranscoder verify]);
+        XCTAssertNoThrow([self.callFlowRequestStrategy verify]);
         
         [syncConversation.voiceChannelRouter.v2 tearDown];
     }];
@@ -2103,7 +2103,7 @@
                                                        transportSessionError:nil];
     [self.syncMOC performGroupedBlockAndWait:^{
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(syncConversation, conv);
             XCTAssertTrue(conv.callDeviceIsActive);
             return true;
@@ -2123,7 +2123,7 @@
     
     // finally
     [self.syncMOC performGroupedBlockAndWait:^{
-        XCTAssertNoThrow([self.flowTranscoder verify]);
+        XCTAssertNoThrow([self.callFlowRequestStrategy verify]);
         
         [syncConversation.voiceChannelRouter.v2 tearDown];
     }];
@@ -2394,7 +2394,7 @@
                                                                           userIDs:@[self.syncSelfUser.remoteIdentifier]
                                                                         eventType:@"conversation.member-leave"];
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(conversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -2405,7 +2405,7 @@
         
         // then
         XCTAssertFalse(conversation.callDeviceIsActive);
-        [self.flowTranscoder verify];
+        [self.callFlowRequestStrategy verify];
     }];
 }
 
@@ -2532,7 +2532,7 @@
         XCTAssertTrue(conversation.callDeviceIsActive);
 
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(conversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -2543,7 +2543,7 @@
         
         // then
         XCTAssertFalse(conversation.callDeviceIsActive);
-        [self.flowTranscoder verify];
+        [self.callFlowRequestStrategy verify];
     }];
 }
 
@@ -2881,7 +2881,7 @@
         XCTAssertNotNil(request);
         
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(conversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -2926,7 +2926,7 @@
         XCTAssertNotNil(request);
         
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(conversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -3014,7 +3014,7 @@
         ZMUpstreamRequest *request = [self.sut requestForUpdatingObject:conversation forKeys:self.keys];
         
         //expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
             XCTAssertEqualObjects(conversation, conv);
             XCTAssertTrue(!conv.callDeviceIsActive);
             return true;
@@ -3033,7 +3033,7 @@
         XCTAssertTrue(conversation.hasLocalModificationsForCallDeviceIsActive);
         XCTAssertFalse(conversation.callStateNeedsToBeUpdatedFromBackend);
         
-        [self.flowTranscoder verify];
+        [self.callFlowRequestStrategy verify];
         [conversation.voiceChannelRouter.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3053,13 +3053,13 @@
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil];
         
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:conversation];
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:conversation];
         
         // when
         ZMUpstreamRequest *request = [self.sut requestForUpdatingObject:conversation forKeys:self.keys];
 
         // expect
-        [[self.flowTranscoder expect] updateFlowsForConversation:conversation];
+        [[self.callFlowRequestStrategy expect] updateFlowsForConversation:conversation];
         
         // when
         [request.transportRequest completeWithResponse:response];
@@ -3194,12 +3194,12 @@
         XCTAssertFalse([syncConversation.callParticipants containsObject:self.syncSelfUser]);
         
         // expect
-        [[self.flowTranscoder reject] addJoinedCallParticipant:self.syncSelfUser inConversation:syncConversation];
+        [[self.callFlowRequestStrategy reject] addJoinedCallParticipant:self.syncSelfUser inConversation:syncConversation];
 
         if (shouldCallAddUsers) {
-            [[self.flowTranscoder expect] addJoinedCallParticipant:self.syncOtherUser1 inConversation:syncConversation];
+            [[self.callFlowRequestStrategy expect] addJoinedCallParticipant:self.syncOtherUser1 inConversation:syncConversation];
         } else {
-            [[self.flowTranscoder reject] addJoinedCallParticipant:self.syncOtherUser1 inConversation:syncConversation];
+            [[self.callFlowRequestStrategy reject] addJoinedCallParticipant:self.syncOtherUser1 inConversation:syncConversation];
         }
         
         // when
@@ -3223,7 +3223,7 @@
         [syncConversation.voiceChannelRouter.v2 tearDown];
     }];
     
-    [self.flowTranscoder verify];
+    [self.callFlowRequestStrategy verify];
 }
 
 - (void)testThatItCallsAddUsersOnFLowSyncOnlyOnOtherUsers
@@ -3365,10 +3365,10 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload1 HTTPStatus:200 transportSessionError:nil];
 
     // then
-    [[self.flowTranscoder expect] appendLogForConversationID:conversation1.remoteIdentifier message:[OCMArg checkWithBlock:^BOOL(NSString *message) {
+    [[self.callFlowRequestStrategy expect] appendLogForConversationID:conversation1.remoteIdentifier message:[OCMArg checkWithBlock:^BOOL(NSString *message) {
         return [message hasPrefix:@"PushChannel did close"];
     }]];
-    [[self.flowTranscoder expect] appendLogForConversationID:conversation1.remoteIdentifier message:[OCMArg checkWithBlock:^BOOL(NSString *message) {
+    [[self.callFlowRequestStrategy expect] appendLogForConversationID:conversation1.remoteIdentifier message:[OCMArg checkWithBlock:^BOOL(NSString *message) {
         return [message hasPrefix:@"PushChannel did open"];
     }]];
 
@@ -3382,7 +3382,7 @@
     [self simulateOpeningPushChannel];
     
     // then
-    [self.flowTranscoder verify];
+    [self.callFlowRequestStrategy verify];
 }
 
 - (void)testThatItAppendsTheLogForAllConversations_Push
@@ -3549,13 +3549,13 @@
     
     // expect
     [[[self.gsmCallHandler expect] andReturnValue:OCMOCK_VALUE(YES)] isInterruptedCallConversation:conversation];
-    [[self.flowTranscoder reject] updateFlowsForConversation:OCMOCK_ANY];
+    [[self.callFlowRequestStrategy reject] updateFlowsForConversation:OCMOCK_ANY];
 
     // when
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
     [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
     
-    [self.flowTranscoder verify];
+    [self.callFlowRequestStrategy verify];
 }
 
 
@@ -3567,7 +3567,7 @@
     
     // expect
     [[[self.gsmCallHandler expect] andReturnValue:OCMOCK_VALUE(NO)] isInterruptedCallConversation:conversation];
-    [[self.flowTranscoder expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
+    [[self.callFlowRequestStrategy expect] updateFlowsForConversation:[OCMArg checkWithBlock:^BOOL(ZMConversation *conv) {
         XCTAssertEqualObjects(conversation, conv);
         XCTAssertTrue(!conv.callDeviceIsActive);
         return true;
@@ -3577,7 +3577,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
     [self.sut updateUpdatedObject:conversation requestUserInfo:nil response:response keysToParse:self.keys];
     
-    [self.flowTranscoder verify];
+    [self.callFlowRequestStrategy verify];
 }
 
 @end

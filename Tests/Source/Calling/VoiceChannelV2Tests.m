@@ -22,7 +22,7 @@
 @import ZMCDataModel;
 
 #import "VoiceChannelV2Tests.h"
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMUserSession.h"
 #import "ZMAVSBridge.h"
 

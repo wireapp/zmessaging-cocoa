@@ -90,7 +90,7 @@
 
 - (void)stubRequestsOnHighPriorityObjectSync
 {
-    [[[(id)[self.objectDirectory flowTranscoder] stub] andReturn:@[]] requestGenerators];
+    [[[(id)[self.objectDirectory callFlowRequestStrategy] stub] andReturn:@[]] requestGenerators];
     [[[(id)[self.objectDirectory callStateRequestStrategy] stub] andReturn:@[]] requestGenerators];
 }
 

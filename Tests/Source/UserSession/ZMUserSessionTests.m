@@ -1558,7 +1558,7 @@
 
 @end
 
-@interface ZMFlowSync (FlowManagerDelegate) <AVSFlowManagerDelegate>
+@interface ZMCallFlowRequestStrategy (FlowManagerDelegate) <AVSFlowManagerDelegate>
 @end
 
 @implementation ZMUserSessionTests (AVSLogObserver)
@@ -1594,7 +1594,7 @@
     [ZMUserSession removeAVSLogObserver:token];
     
     // when
-    [ZMFlowSync logMessage:testMessage];
+    [ZMCallFlowRequestStrategy logMessage:testMessage];
     
     // then
     [logObserver verify];

@@ -102,7 +102,7 @@
 {
     id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
     NSMutableArray *transcoders = @[
-                            directory.flowTranscoder,
+                            directory.callFlowRequestStrategy,
                             ].mutableCopy;
 
     if ([ZMUserSession useCallKit]) {

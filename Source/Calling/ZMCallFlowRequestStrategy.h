@@ -32,10 +32,10 @@ typedef NS_ENUM(int16_t, ZMFlowManagerCategory) {
     ZMFlowManagerCategoryCallInProgress,
 };
 
-extern id ZMFlowSyncInternalFlowManagerOverride;
-extern id ZMFlowSyncInternalDeploymentEnvironmentOverride;
+extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
+extern id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
 
-@interface ZMFlowSync : ZMAbstractRequestStrategy <ZMEventConsumer>
+@interface ZMCallFlowRequestStrategy : ZMAbstractRequestStrategy <ZMEventConsumer>
 
 - (instancetype)initWithMediaManager:(id)mediaManager
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager

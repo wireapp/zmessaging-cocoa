@@ -19,7 +19,7 @@
 
 #import "MessagingTest.h"
 #import "ZMCallStateLogger.h"
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMUserSession+Internal.h"
 
 @interface ZMCallStateLoggerTests : MessagingTest
@@ -33,7 +33,7 @@
 
 - (void)setUp {
     [super setUp];
-    self.mockFlowSync = [OCMockObject niceMockForClass:[ZMFlowSync class]];
+    self.mockFlowSync = [OCMockObject niceMockForClass:[ZMCallFlowRequestStrategy class]];
     [self verifyMockLater:self.mockFlowSync];
     
     self.sut = [[ZMCallStateLogger alloc] initWithFlowSync:self.mockFlowSync];
