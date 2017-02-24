@@ -34,12 +34,12 @@ public protocol UserProfileImageUpdateStateDelegate: class {
     func failed(withError: UserProfileImageUpdateError)
 }
 
-public class UserProfileImageUpdateStatus {
+public final class UserProfileImageUpdateStatus {
     
     internal enum State {
         case ready
         case preprocessing
-        case upload(image: UIImage)
+        case upload(image: Data)
         case uploading
         case uploaded(assetId: String)
         case completed
@@ -65,23 +65,6 @@ public class UserProfileImageUpdateStatus {
         }
         
         state[imageSize] = newState
-        
-//        switch newState {
-//        case .completed:
-//            <#code#>
-//        default:
-//            <#code#>
-//        }
-        
-//        switch newState {
-//        case .failed(let error):
-//        
-//        case .ready:
-//            break
-//        default:
-//            notifyDelegates(stateChanged: newState, for: imageSize)
-//        }
-
     }
     
     internal func canTransition(from currentState: State, to newState: State) -> Bool {
@@ -102,6 +85,25 @@ public class UserProfileImageUpdateStatus {
         }
     }
     
+    public func hasImageToUpload(for size: ImageSize) -> Bool {
+        switch state(for: size) {
+        case .upload:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    public func consumeImage(for size: ImageSize) -> Data? {
+        switch state(for: size) {
+        case .upload(image: let image):
+            setState(state: .uploading, for: size)
+            return image
+        default:
+            return nil
+        }
+    }
+    
     public func updateImage(image: UIImage) {
         setState(state: .preprocessing, for: .preview)
         setState(state: .preprocessing, for: .complete)
@@ -112,7 +114,7 @@ public class UserProfileImageUpdateStatus {
         setState(state: .failed(.preprocessingFailed), for: imageSize)
     }
     
-    public func preprocessingDone(imageSize: ImageSize, image: UIImage) {
+    public func preprocessingDone(imageSize: ImageSize, image: Data) {
         setState(state: .upload(image: image), for: imageSize)
     }
     
