@@ -21,43 +21,66 @@ import WireRequestStrategy
 
 public final class UserImageAssetUploadStrategy: NSObject {
     fileprivate let requestFactory = AssetRequestFactory()
-    fileprivate var previewImageSync: ZMSingleRequestSync!
-    fileprivate var completeImageSync: ZMSingleRequestSync!
+    fileprivate var requestSyncs = [ImageSize : ZMSingleRequestSync]()
+    fileprivate let moc: NSManagedObjectContext
     fileprivate weak var imageUpdateStatus: UserProfileImageUploadStatus?
-    
 
     init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUploadStatus) {
-        super.init()
-        previewImageSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
-        completeImageSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
+        self.moc = managedObjectContext
         self.imageUpdateStatus = imageUpdateStatus
+        super.init()
     }
+    
+    fileprivate func requestSync(for size: ImageSize) -> ZMSingleRequestSync {
+        if let sync = requestSyncs[size] {
+            return sync
+        } else {
+            let sync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)!
+            requestSyncs[size] = sync
+            return sync
+        }
+    }
+    
+    fileprivate func size(for requestSync: ZMSingleRequestSync) -> ImageSize? {
+        for (size, sync) in requestSyncs {
+            if sync === requestSync {
+                return size
+            }
+        }
+        return nil
+    }
+    
 }
 
 extension UserImageAssetUploadStrategy: RequestStrategy {
     public func nextRequest() -> ZMTransportRequest? {
-        if let _ = imageUpdateStatus?.hasImageToUpload(for: .preview) {
-            previewImageSync.readyForNextRequestIfNotBusy()
-            return previewImageSync.nextRequest()
-        } else if let _ = imageUpdateStatus?.hasImageToUpload(for: .complete) {
-            completeImageSync.readyForNextRequestIfNotBusy()
-            return completeImageSync.nextRequest()
-        }
-        return nil
+        guard let updateStatus = imageUpdateStatus else { return nil }
+        
+        let sync = updateStatus.allSizes.filter(updateStatus.hasImageToUpload).map(requestSync).first
+        sync?.readyForNextRequestIfNotBusy()
+        return sync?.nextRequest()
     }
 }
 
 extension UserImageAssetUploadStrategy: ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
-        let imageSize: ImageSize = (sync === previewImageSync) ? .preview : .complete
-        guard let image = imageUpdateStatus?.consumeImage(for: imageSize),
-            let request = requestFactory.upstreamRequestForAsset(withData: image, shareable: true, retention: .eternal) else {
-                return nil
+        if let size = size(for: sync), let image = imageUpdateStatus?.consumeImage(for: size) {
+            return requestFactory.upstreamRequestForAsset(withData: image, shareable: true, retention: .eternal)
         }
-        return request
+        return nil
     }
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
-        
+        guard let size = size(for: sync) else { return }
+        switch (response.result) {
+        case .success:
+            if let payload = response.payload?.asArray() as? [[String: AnyObject]] {
+                self.received(clients: payload)
+            }
+        case .expired:
+            clientUpdateStatus?.failedToFetchClients()
+        default:
+            break
+        }
     }
 }

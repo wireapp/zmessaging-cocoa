@@ -21,8 +21,6 @@ import Foundation
 public enum ImageSize {
     case preview
     case complete
-    
-    public static var allSizes: [ImageSize] { return [.preview, .complete] }
 }
 
 public enum UserProfileImageUpdateError: Error {
@@ -35,6 +33,7 @@ public protocol UserProfileImageUpdateStateDelegate: class {
 }
 
 internal protocol UserProfileImageUploadStatus: class {
+    var allSizes: [ImageSize] { get }
     func consumeImage(for size: ImageSize) -> Data?
     func hasImageToUpload(for size: ImageSize) -> Bool
     func uploadingDone(imageSize: ImageSize, assetId: String)
@@ -93,7 +92,7 @@ public final class UserProfileImageUpdateStatus {
     }
     
     public func updateImage(image: UIImage) {
-        ImageSize.allSizes.forEach {
+        allSizes.forEach {
             setState(state: .preprocessing, for: $0)
         }
         // Create ZMAssetsPreprocessor and kick off preprocessing
@@ -109,6 +108,10 @@ public final class UserProfileImageUpdateStatus {
 }
 
 extension UserProfileImageUpdateStatus: UserProfileImageUploadStatus {
+    internal var allSizes: [ImageSize] {
+        return [.preview, .complete]
+    }
+    
     internal func hasImageToUpload(for size: ImageSize) -> Bool {
         switch state(for: size) {
         case .upload:
