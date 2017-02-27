@@ -170,6 +170,7 @@
 "push.notification.action.message.reply" = "Reageer";
 "push.notification.action.message.reply.button.title" = "Stuur";
 "push.notification.action.conversation.mute" = "Dempen";
+"push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Neem op";
 "push.notification.action.call.ignore" = "Afwijzen";

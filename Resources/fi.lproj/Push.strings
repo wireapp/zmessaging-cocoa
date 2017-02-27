@@ -170,6 +170,7 @@
 "push.notification.action.message.reply" = "Vastaa";
 "push.notification.action.message.reply.button.title" = "Lähetä";
 "push.notification.action.conversation.mute" = "Mykistä";
+"push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Hyväksy";
 "push.notification.action.call.ignore" = "Kieltäydy";

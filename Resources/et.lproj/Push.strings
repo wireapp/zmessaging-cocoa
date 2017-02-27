@@ -170,6 +170,7 @@
 "push.notification.action.message.reply" = "Vasta";
 "push.notification.action.message.reply.button.title" = "Saada";
 "push.notification.action.conversation.mute" = "Hääletu";
+"push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Vasta";
 "push.notification.action.call.ignore" = "Keeldu";

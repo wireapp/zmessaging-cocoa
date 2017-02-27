@@ -170,6 +170,7 @@
 "push.notification.action.message.reply" = "رد";
 "push.notification.action.message.reply.button.title" = "إرسال";
 "push.notification.action.conversation.mute" = "كتم الصوت";
+"push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "قبول";
 "push.notification.action.call.ignore" = "رفض";

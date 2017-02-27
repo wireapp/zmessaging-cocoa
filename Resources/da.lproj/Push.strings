@@ -170,6 +170,7 @@
 "push.notification.action.message.reply" = "Svar";
 "push.notification.action.message.reply.button.title" = "Send";
 "push.notification.action.conversation.mute" = "Lyd fra";
+"push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Besvar";
 "push.notification.action.call.ignore" = "Afvis";

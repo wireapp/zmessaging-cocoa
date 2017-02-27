@@ -170,6 +170,7 @@
 "push.notification.action.message.reply" = "返信";
 "push.notification.action.message.reply.button.title" = "送信";
 "push.notification.action.conversation.mute" = "ミュート";
+"push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "承諾";
 "push.notification.action.call.ignore" = "辞退";

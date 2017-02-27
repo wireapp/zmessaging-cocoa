@@ -28,12 +28,12 @@
 "push.notification.add.message.oneonone" = "%1$@: %2$@";
 "push.notification.add.message.oneonone.nousername" = "Нове повідомлення: %1$@";
 
-"push.notification.add.unknown.group" = "%1$@ sent a message in %2$@";
-"push.notification.add.unknown.group.nousername" = "New message in %1$@";
+"push.notification.add.unknown.group" = "%1$@ надіслав(-ла) повідомлення в %2$@";
+"push.notification.add.unknown.group.nousername" = "Нове повідомлення в %1$@";
 "push.notification.add.unknown.group.nousername.noconversationname" = "Нове повідомлення";
-"push.notification.add.unknown.group.noconversationname" = "%1$@ sent a message";
+"push.notification.add.unknown.group.noconversationname" = "%1$@ надіслав(-ла) повідомлення";
 
-"push.notification.add.unknown.oneonone" = "%1$@ sent a message";
+"push.notification.add.unknown.oneonone" = "%1$@ надіслав(-ла) повідомлення";
 "push.notification.add.unknown.oneonone.nousername" = "Нове повідомлення";
 
 "push.notification.add.image.group" = "%1$@ поділився(-лась) картинкою в %2$@";
@@ -170,6 +170,7 @@
 "push.notification.action.message.reply" = "Відповісти";
 "push.notification.action.message.reply.button.title" = "Надіслати";
 "push.notification.action.conversation.mute" = "Вимкнути звук";
+"push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Прийняти";
 "push.notification.action.call.ignore" = "Скасувати";

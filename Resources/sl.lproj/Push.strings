@@ -170,6 +170,7 @@
 "push.notification.action.message.reply" = "Odgovori";
 "push.notification.action.message.reply.button.title" = "Pošlji";
 "push.notification.action.conversation.mute" = "Utišaj";
+"push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Sprejmi";
 "push.notification.action.call.ignore" = "Zavrni";
