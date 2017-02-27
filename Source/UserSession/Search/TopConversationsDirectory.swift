@@ -49,7 +49,7 @@ extension TopConversationsDirectory {
             let conversations = self.fetchOneOnOneConversations()
             // Mapping from conversation to message count in the last month
             let countByConversation = conversations.mapToDictionary { $0.lastMonthMessageCount() }
-            let sorted = countByConversation.sorted {  $0.1 > $1.1 }.prefix(TopConversationsDirectory.topConversationSize)
+            let sorted = countByConversation.filter { $0.1 > 0 }.sorted {  $0.1 > $1.1 }.prefix(TopConversationsDirectory.topConversationSize)
             let identifiers = sorted.flatMap { $0.0.objectID }
             self.updateUIList(with: identifiers)
         }
