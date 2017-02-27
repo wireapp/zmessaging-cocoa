@@ -24,6 +24,8 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     
     public var callState : CallState = .none
     public var overridenCallingProtocol : CallingProtocol = .version2
+    public var startCallShouldFail : Bool = false
+    public var answerCallShouldFail : Bool = false
     
     public override var callingProtocol: CallingProtocol {
         return overridenCallingProtocol
@@ -34,11 +36,11 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     }
     
     override public func startCall(conversationId: UUID, video: Bool) -> Bool {
-        return true
+        return !startCallShouldFail
     }
     
     override public func answerCall(conversationId: UUID) -> Bool {
-        return true
+        return !answerCallShouldFail
     }
     
     override public func closeCall(conversationId: UUID) {
@@ -55,6 +57,11 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     
     public override func toogleVideo(conversationID: UUID, active: Bool) {
         
+    }
+    
+    public func update(callState : CallState, conversationId: UUID, userId: UUID? = nil) {
+        self.callState = callState
+        WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId).post()
     }
     
 }

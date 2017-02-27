@@ -82,6 +82,59 @@ class MockCallKitCallController: NSObject, CallKitCallController {
 }
 
 @available(iOS 10.0, *)
+class MockCallAnswerAction : CXAnswerCallAction {
+    
+    var isFulfilled : Bool = false
+    var hasFailed : Bool = false
+    
+    override func fulfill(withDateConnected dateConnected: Date) {
+        isFulfilled = true
+    }
+    
+    override func fail() {
+        hasFailed = true
+    }
+    
+}
+
+@available(iOS 10.0, *)
+class MockStartCallAction : CXStartCallAction {
+    
+    var isFulfilled : Bool = false
+    var hasFailed : Bool = false
+    
+    override func fulfill() {
+        isFulfilled = true
+    }
+    
+    override func fail() {
+        hasFailed = true
+    }
+    
+}
+
+@available(iOS 10.0, *)
+class MockProvider : CXProvider {
+    
+    var isConnected : Bool = false
+    var hasStartedConnecting = false
+    
+    
+    convenience init(foo: Bool) {
+        self.init(configuration: CXProviderConfiguration(localizedName: "test"))
+    }
+    
+    override func reportOutgoingCall(with UUID: UUID, startedConnectingAt dateStartedConnecting: Date?) {
+        hasStartedConnecting = true
+    }
+    
+    override func reportOutgoingCall(with UUID: UUID, connectedAt dateConnected: Date?) {
+        isConnected = true
+    }
+    
+}
+
+@available(iOS 10.0, *)
 class ZMCallKitDelegateTest: MessagingTest {
     var sut: ZMCallKitDelegate!
     var callKitProvider: MockCallKitProvider!
@@ -142,7 +195,11 @@ class ZMCallKitDelegateTest: MessagingTest {
                                      userSession: self.mockUserSession,
                                      mediaManager: nil)
         
+        
+        mockUserSession.callKitDelegate = sut
         ZMCallKitDelegateTestsMocking.mockUserSession(self.mockUserSession, callKitDelegate: self.sut)
+        
+        
     }
     
     override func tearDown() {
@@ -197,7 +254,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         self.sut.requestStartCall(in: conversation, videoCall: false)
         
         // then
-        XCTAssertEqual(self.callKitProvider.timesReportCallUpdatedCalled, 1)
+        XCTAssertEqual(self.callKitProvider.timesReportCallUpdatedCalled, 0)
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
         XCTAssertTrue(self.callKitController.requestedTransaction!.actions.first! is CXStartCallAction)
         let action = self.callKitController.requestedTransaction!.actions.first! as! CXStartCallAction
@@ -215,7 +272,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         self.sut.requestStartCall(in: conversation, videoCall: false)
         
         // then
-        XCTAssertEqual(self.callKitProvider.timesReportCallUpdatedCalled, 1)
+        XCTAssertEqual(self.callKitProvider.timesReportCallUpdatedCalled, 0)
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
         XCTAssertTrue(self.callKitController.requestedTransaction!.actions.first! is CXStartCallAction)
         
@@ -245,6 +302,106 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(action.handle.type, .emailAddress)
         XCTAssertEqual(action.handle.value, otherUser.emailAddress)
         XCTAssertTrue(action.isVideo)
+    }
+    
+    // Actions - answer / start call
+    
+    func testThatCallAnswerActionIsFulfilledWhenCallIsEstablished() {
+        // given
+        let provider = MockProvider(foo: true)
+        let conversation = self.conversation(type: .oneOnOne)
+        let action = MockCallAnswerAction(call: conversation.remoteIdentifier!)
+        
+        // when
+        self.sut.provider(provider, perform: action)
+        mockWireCallCenterV3.update(callState: .established, conversationId: conversation.remoteIdentifier!)
+        
+        // then
+        XCTAssertTrue(action.isFulfilled)
+    }
+    
+    func testThatCallAnswerActionFailWhenCallCantBeJoined() {
+        // given
+        let provider = MockProvider(foo: true)
+        let conversation = self.conversation(type: .oneOnOne)
+        let action = MockCallAnswerAction(call: conversation.remoteIdentifier!)
+        
+        // when
+        self.sut.provider(provider, perform: action)
+        NotificationCenter.default.post(name: NSNotification.Name.ZMConversationVoiceChannelJoinFailed, object: conversation.remoteIdentifier!)
+        
+        // then
+        XCTAssertTrue(action.hasFailed)
+    }
+    
+    func testThatStartCallActionIsFulfilledWhenCallIsJoined() {
+        // given
+        let provider = MockProvider(foo: true)
+        let conversation = self.conversation(type: .oneOnOne)
+        let action = MockStartCallAction(call: conversation.remoteIdentifier!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
+        
+        // when
+        self.sut.provider(provider, perform: action)
+        
+        // then
+        XCTAssertTrue(action.isFulfilled)
+    }
+    
+    func testThatStartCallActionFailWhenCallCantBeStarted() {
+        // given
+        let provider = MockProvider(foo: true)
+        let conversation = self.conversation(type: .oneOnOne)
+        let action = MockStartCallAction(call: conversation.remoteIdentifier!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
+        mockWireCallCenterV3.startCallShouldFail = true
+        mockWireCallCenterV3.overridenCallingProtocol = .version3
+        
+        // when
+        self.sut.provider(provider, perform: action)
+        
+        // then
+        XCTAssertTrue(action.hasFailed)
+    }
+    
+    func testThatStartCallActionFailWhenCallCantBeJoined() {
+        // given
+        let provider = MockProvider(foo: true)
+        let conversation = self.conversation(type: .oneOnOne)
+        let action = MockStartCallAction(call: conversation.remoteIdentifier!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
+        
+        // when
+        self.sut.provider(provider, perform: action)
+        NotificationCenter.default.post(name: NSNotification.Name.ZMConversationVoiceChannelJoinFailed, object: conversation.remoteIdentifier!)
+        
+        // then
+        XCTAssertTrue(action.hasFailed)
+    }
+    
+    func testThatStartCallActionUpdatesWhenTheCallHasStartedConnecting() {
+        // given
+        let provider = MockProvider(foo: true)
+        let conversation = self.conversation(type: .oneOnOne)
+        let action = MockStartCallAction(call: conversation.remoteIdentifier!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
+        
+        // when
+        self.sut.provider(provider, perform: action)
+        mockWireCallCenterV3.update(callState: .answered, conversationId: conversation.remoteIdentifier!)
+        
+        // then
+        XCTAssertTrue(provider.hasStartedConnecting)
+    }
+    
+    func testThatStartCallActionUpdatesWhenTheCallHasConnected() {
+        // given
+        let provider = MockProvider(foo: true)
+        let conversation = self.conversation(type: .oneOnOne)
+        let action = MockStartCallAction(call: conversation.remoteIdentifier!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
+        
+        // when
+        self.sut.provider(provider, perform: action)
+        mockWireCallCenterV3.update(callState: .established, conversationId: conversation.remoteIdentifier!)
+        
+        // then
+        XCTAssertTrue(provider.isConnected)
     }
     
     // Public API - report end on outgoing call
@@ -465,7 +622,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
         
         // when
-        self.sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation)
+        self.sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version2)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 1)
@@ -479,41 +636,13 @@ class ZMCallKitDelegateTest: MessagingTest {
         let conversation = self.conversation()
         
         // when
-        self.sut.callCenterDidChange(voiceChannelState: .selfIsJoiningActiveChannel, conversation: conversation)
+        self.sut.callCenterDidChange(voiceChannelState: .selfIsJoiningActiveChannel, conversation: conversation, callingProtocol: .version2)
         
         // then
         XCTAssertEqual(self.sut.connectedCallConversation, conversation)
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
-    }
-    
-    func testThatItReportOutgoingCallConnectedAt_v2_Established() {
-        // given
-        let conversation = self.conversation()
-        
-        // when
-        self.sut.callCenterDidChange(voiceChannelState: .selfConnectedToActiveChannel, conversation: conversation)
-        
-        // then
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 1)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
-    }
-    
-    func testThatItReportOutgoingCallStartedConnecting_v2_OutgoingInGroupConversation() {
-        // given
-        let conversation = self.conversation(type: .group)
-        
-        // when
-        self.sut.callCenterDidChange(voiceChannelState: .outgoingCall, conversation: conversation)
-        
-        // then
-        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 1)
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
     
@@ -524,7 +653,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
         
         // when
-        self.sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation)
+        self.sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version2)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 1)
@@ -541,7 +670,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         sut.connectedCallConversation = conversation
         
         // when
-        sut.callCenterDidChange(voiceChannelState: .noActiveUsers, conversation: conversation)
+        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version2)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 1)
@@ -553,7 +682,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let conversation = self.conversation(type: .group)
         
         // when
-        sut.callCenterDidChange(voiceChannelState: .noActiveUsers, conversation: conversation)
+        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version2)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 1)
@@ -573,36 +702,6 @@ class ZMCallKitDelegateTest: MessagingTest {
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 1)
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
-    }
-    
-    func testThatItReportOutgoingCallStartedConnecting_v3_Answered() {
-        // given
-        let conversation = self.conversation()
-        let otherUser = self.otherUser(moc: self.uiMOC)
-        
-        // when
-        sut.callCenterDidChange(callState: .answered, conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
-        
-        // then
-        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 1)
-        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
-    }
-    
-    func testThatItReportOutgoingCallStartedConnecting_v3_Established() {
-        // given
-        let conversation = self.conversation()
-        let otherUser = self.otherUser(moc: self.uiMOC)
-        
-        // when
-        sut.callCenterDidChange(callState: .established, conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
-        
-        // then
-        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 1)
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }

@@ -26,6 +26,12 @@
 + (void)mockUserSession:(id)userSession callKitDelegate:(id)callKitDelegate
 {
     [[(id)[userSession stub] andReturn:callKitDelegate] callKitDelegate];
+    
+    [(id)[userSession stub] performChanges:[OCMArg checkWithBlock:^BOOL(id param) {
+        void (^passedBlock)() = param;
+        passedBlock();
+        return YES;
+    }]];
 }
 
 @end
