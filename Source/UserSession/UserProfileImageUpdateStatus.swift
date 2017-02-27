@@ -100,11 +100,11 @@ public final class UserProfileImageUpdateStatus {
         // Create ZMAssetsPreprocessor and kick off preprocessing
     }
     
-    public func preprocessingFailed(imageSize: ImageSize) {
+    internal func preprocessingFailed(imageSize: ImageSize) {
         setState(state: .failed(.preprocessingFailed), for: imageSize)
     }
     
-    public func preprocessingDone(imageSize: ImageSize, image: Data) {
+    internal func preprocessingDone(imageSize: ImageSize, image: Data) {
         setState(state: .upload(image: image), for: imageSize)
     }
 }
