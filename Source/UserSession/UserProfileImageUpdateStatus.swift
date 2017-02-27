@@ -84,6 +84,8 @@ public final class UserProfileImageUpdateStatus {
         case (.completed, .ready),
             (.failed, .ready):
             return true
+        case (.failed, .failed):
+            return false
         case (_, .failed):
             return true
         default:
