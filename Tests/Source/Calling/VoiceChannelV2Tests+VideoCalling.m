@@ -59,14 +59,10 @@ extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
     XCTAssertTrue(result);
     XCTAssertNil(error);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5f]);
-    
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsIsSendingVideoForParticipantAndReturnValue_noFlowManager
 {
-    // given
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
     // when
     NSError *error = nil;
     BOOL result = [self.conversation.voiceChannelRouter.v2 isSendingVideoForParticipant:self.conversation.connection.to error:&error];
@@ -74,8 +70,6 @@ extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
     // then
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
-    
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsIsSendingVideoForParticipantAndReturnValue_FlowManagerNotReady
@@ -92,8 +86,6 @@ extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
     // then
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
-    
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsSetVideoSendActiveAndReturnValue_hasFlowManager
@@ -125,15 +117,10 @@ extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
     XCTAssertTrue(result);
     XCTAssertNil(error);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5f]);
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsSetVideoSendActiveAndReturnValue_noFlowManager
 {
-    // given
-    
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
-    
     // when
     NSError *error = nil;
     BOOL result = [self.conversation.voiceChannelRouter.v2 setVideoSendState:FLOWMANAGER_VIDEO_SEND error:&error];
@@ -141,7 +128,6 @@ extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
     // then
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsSetVideoSendActiveAndReturnValue_noMedia
@@ -163,7 +149,6 @@ extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5f]);
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 - (void)testThatItCallsSetVideoSendActiveAndReturnValue_cannotSend
@@ -185,7 +170,6 @@ extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5f]);
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
 }
 
 // FIXME move to VoiceChannelRouterTests
@@ -219,25 +203,18 @@ extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
     XCTAssertTrue(result);
     XCTAssertNil(error);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5f]);
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
-
 }
 
 // FIXME move to VoiceChannelRouterTests
 - (void)testThatItCallsSetVideoCaptureDeviceAndReturnValue_noFlowManager
 {
     // given
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
-    
-    // when
     NSError *error = nil;
     BOOL result = [self.conversation.voiceChannel setVideoCaptureDeviceWithDevice:ZMCaptureDeviceFront error:&error];
     
     // then
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
-
 }
 
 - (void)testThatItSetsIsVideoCallWhenJoiningVideoCall

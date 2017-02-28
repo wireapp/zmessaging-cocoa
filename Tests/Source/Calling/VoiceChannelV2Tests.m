@@ -199,6 +199,8 @@
     
     [ZMUserSession setCallingProtocolStrategy:CallingProtocolStrategyNegotiate];
     
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
+    
     self.conversation = nil;
     self.otherConversation = nil;
     self.groupConversation = nil;
