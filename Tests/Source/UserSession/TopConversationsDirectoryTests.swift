@@ -105,6 +105,22 @@ class TopConversationsDirectoryTests : MessagingTest {
         XCTAssertEqual(sut.topConversations, [conv2])
     }
 
+    func testThatItDoesNotReturnConversationsWithSystemMessages() {
+        // GIVEN
+        let conv1 = createConversation(in: uiMOC, fillWithNew: 0)
+        conv1.appendStartedUsingThisDeviceMessage()
+
+        let conv2 = createConversation(in: uiMOC, fillWithNew: 1)
+        conv2.appendKnock()
+
+        // WHEN
+        sut.refreshTopConversations()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
+        // THEN
+        XCTAssertEqual(sut.topConversations, [conv2])
+    }
+
     func testThatItDoesNotReturnConversationsWithoutMessagesInTheLastMonth() {
         // GIVEN
         createConversation(in: uiMOC, fillWithNew: 0, old: 2)
@@ -138,6 +154,7 @@ class TopConversationsDirectoryTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
 
         // THEN
+        XCTAssertEqual(sut.topConversations, [conv3, conv2, conv1])
     }
     
     func testThatItSetsTopConversationFromTheRightContext() {
@@ -156,7 +173,7 @@ class TopConversationsDirectoryTests : MessagingTest {
         
         // THEN
         XCTAssertEqual(self.sut.topConversations.map { $0.objectID }, expectedConversationsIds)
-        XCTAssertEqual(self.sut.topConversations.map { $0.managedObjectContext! }, [self.uiMOC, self.uiMOC])
+        XCTAssertEqual(self.sut.topConversations.flatMap { $0.managedObjectContext }, [self.uiMOC, self.uiMOC])
     }
     
     func testThatItDoesNotReturnConversationsIfTheyAreDeleted() {
