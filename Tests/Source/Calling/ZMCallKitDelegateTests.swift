@@ -454,10 +454,6 @@ class ZMCallKitDelegateTest: MessagingTest {
     
     // Observer API V2 - report incoming call
     
-    func testThatItIgnoresMutedConversations() {
-        // FIXME update when design decision is taken
-    }
-    
     func testThatItReportNewIncomingCall_v2_Incoming() {
         // given
         let conversation = self.conversation()
