@@ -216,7 +216,7 @@
     XCTAssertTrue(conversation.hasLocalModificationsForIsSendingVideo);
     
     // expect
-    [self.flowTranscoder releaseFlowsForConversation:conversation];
+    [self.callFlowRequestStrategy releaseFlowsForConversation:conversation];
     
     // when
     [self.sut requestExpiredForObject:conversation forKeys:self.keys];
@@ -236,7 +236,7 @@
     XCTAssertTrue(conversation.hasLocalModificationsForIsSendingVideo);
     
     // expect
-    [self.flowTranscoder releaseFlowsForConversation:conversation];
+    [self.callFlowRequestStrategy releaseFlowsForConversation:conversation];
     
     // when
     [self.sut requestExpiredForObject:conversation forKeys:[NSSet setWithObject:ZMConversationIsSendingVideoKey]];
@@ -259,7 +259,7 @@
     XCTAssertNotNil(request);
     
     // expect
-    [self.flowTranscoder releaseFlowsForConversation:conversation];
+    [self.callFlowRequestStrategy releaseFlowsForConversation:conversation];
     
     // when
     [request.transportRequest completeWithResponse:response];

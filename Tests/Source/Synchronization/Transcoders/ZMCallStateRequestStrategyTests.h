@@ -23,7 +23,7 @@
 #import "MessagingTest.h"
 #import "ObjectTranscoderTests.h"
 #import "ZMCallStateRequestStrategy.h"
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMOperationLoop.h"
@@ -32,8 +32,7 @@
 @interface ZMCallStateRequestStrategyTests : ObjectTranscoderTests
 
 @property (nonatomic) ZMCallStateRequestStrategy<ZMDownstreamTranscoder, ZMUpstreamTranscoder> *sut;
-@property (nonatomic) id objectStrategyDirectory;
-@property (nonatomic) id flowTranscoder;
+@property (nonatomic) id callFlowRequestStrategy;
 @property (nonatomic) ZMConversation *syncSelfToUser1Conversation;
 @property (nonatomic) ZMConversation *syncSelfToUser2Conversation;
 @property (nonatomic) ZMConversation *syncGroupConversation;

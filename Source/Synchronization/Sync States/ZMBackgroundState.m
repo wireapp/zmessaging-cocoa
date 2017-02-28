@@ -100,14 +100,7 @@
 
 - (ZMTransportRequest *)nextRequest
 {
-    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
-    NSMutableArray *transcoders = @[
-                            directory.flowTranscoder,
-                            ].mutableCopy;
-
-    if ([ZMUserSession useCallKit]) {
-        [transcoders addObject:directory.callStateRequestStrategy];
-    }
+    NSMutableArray *transcoders = @[].mutableCopy;
     
     ZMTransportRequest *nextRequest = [self nextRequestFromTranscoders:transcoders];
     

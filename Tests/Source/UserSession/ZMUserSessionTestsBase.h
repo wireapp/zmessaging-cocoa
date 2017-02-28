@@ -36,7 +36,7 @@
 #import "ZMCredentials.h"
 #import "ZMSyncStrategy.h"
 #import "ZMOperationLoop.h"
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMPushToken.h"
 #import "ZMCommonContactsSearch.h"
 

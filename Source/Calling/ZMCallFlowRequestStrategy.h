@@ -19,6 +19,7 @@
 
 #import <Foundation/Foundation.h>
 @import WireRequestStrategy;
+@import WireMessageStrategy;
 @import avs;
 
 @class ZMConversation;
@@ -31,15 +32,15 @@ typedef NS_ENUM(int16_t, ZMFlowManagerCategory) {
     ZMFlowManagerCategoryCallInProgress,
 };
 
-extern id ZMFlowSyncInternalFlowManagerOverride;
-extern id ZMFlowSyncInternalDeploymentEnvironmentOverride;
+extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
+extern id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
 
-@interface ZMFlowSync : ZMObjectSyncStrategy <ZMObjectStrategy>
+@interface ZMCallFlowRequestStrategy : ZMAbstractRequestStrategy <ZMEventConsumer>
 
 - (instancetype)initWithMediaManager:(id)mediaManager
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-            syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
-              uiManagedObjectContext:(NSManagedObjectContext *)uiManagedObjectContext
+                managedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                    appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
                          application:(id<ZMApplication>)application;
 
 

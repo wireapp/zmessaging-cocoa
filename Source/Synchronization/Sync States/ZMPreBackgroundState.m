@@ -22,7 +22,7 @@
 @import WireMessageStrategy;
 
 #import "ZMPreBackgroundState.h"
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMStateMachineDelegate.h"
 
@@ -81,10 +81,7 @@
 
 - (ZMTransportRequest *)nextRequest
 {
-    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
-    NSArray *transcoders = @[
-                             directory.flowTranscoder,
-                             ];
+    NSArray *transcoders = @[];
     
     ZMTransportRequest *nextRequest = [self nextRequestFromTranscoders:transcoders];
     return nextRequest;

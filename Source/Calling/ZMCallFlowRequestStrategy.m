@@ -21,7 +21,7 @@
 @import ZMUtilities;
 @import ZMCDataModel;
 
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMAVSBridge.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMUserSessionAuthenticationNotification.h"
@@ -29,11 +29,11 @@
 #import "VoiceChannelV2+VideoCalling.h"
 
 static NSString * const DefaultMediaType = @"application/json";
-id ZMFlowSyncInternalDeploymentEnvironmentOverride;
+id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
 
 static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
-@interface ZMFlowSync ()
+@interface ZMCallFlowRequestStrategy ()
 
 @property (nonatomic, readonly) NSMutableArray *requestStack; ///< inverted FIFO
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
@@ -53,22 +53,22 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 
 
-@interface ZMFlowSync (FlowManagerDelegate) <AVSFlowManagerDelegate>
+@interface ZMCallFlowRequestStrategy (FlowManagerDelegate) <AVSFlowManagerDelegate>
 @end
 
 
 
-@implementation ZMFlowSync
+@implementation ZMCallFlowRequestStrategy
 
 - (instancetype)initWithMediaManager:(id)mediaManager
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-            syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
-              uiManagedObjectContext:(NSManagedObjectContext *)uiManagedObjectContext
+                managedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                    appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
                          application:(id<ZMApplication>)application
 {
-    self = [super initWithManagedObjectContext:syncManagedObjectContext];
+    self = [super initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate];
     if(self != nil) {
-        _uiManagedObjectContext = uiManagedObjectContext;
+        _uiManagedObjectContext = managedObjectContext.zm_userInterfaceContext;
         _mediaManager = mediaManager;
         _requestStack = [NSMutableArray array];
         _application = application;
@@ -96,6 +96,11 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         self.avsLogQueue = dispatch_queue_create("AVSLog", DISPATCH_QUEUE_SERIAL);
     }
     return self;
+}
+
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
 }
 
 - (void)setUpFlowManagerIfNeeded
@@ -140,18 +145,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     self.eventTypesToForward = [types copy];
 }
 
-- (NSArray *)contextChangeTrackers
-{
-    return @[];
-}
-
-
-- (NSArray *)requestGenerators;
-{
-    return @[self];
-}
-
-- (ZMTransportRequest *)nextRequest
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
     if (!self.pushChannelIsOpen && ![ZMUserSession useCallKit]) {
         return nil;
@@ -403,7 +397,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 
 
-@implementation ZMFlowSync (FlowManagerDelegate)
+@implementation ZMCallFlowRequestStrategy (FlowManagerDelegate)
 
 
 - (BOOL)requestWithPath:(NSString *)path

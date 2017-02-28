@@ -52,7 +52,7 @@
 #import "ZMSelfStrategy.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMCallStateRequestStrategy.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
@@ -159,13 +159,13 @@
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
     (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY application:OCMOCK_ANY backgroundAPNSPingbackStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
     
-    id flowTranscoder = [OCMockObject mockForClass:ZMFlowSync.class];
-    [[[[flowTranscoder expect] andReturn:flowTranscoder] classMethod] alloc];
-    (void)[[[flowTranscoder expect] andReturn:flowTranscoder] initWithMediaManager:nil onDemandFlowManager:nil syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
+    id callFlowRequestStrategy = [OCMockObject niceMockForClass:ZMCallFlowRequestStrategy.class];
+    [[[[callFlowRequestStrategy expect] andReturn:callFlowRequestStrategy] classMethod] alloc];
+    (void)[[[callFlowRequestStrategy expect] andReturn:callFlowRequestStrategy] initWithMediaManager:nil onDemandFlowManager:nil managedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY application:self.application];
 
-    id callStateRequestStrategy = [OCMockObject mockForClass:ZMCallStateRequestStrategy.class];
+    id callStateRequestStrategy = [OCMockObject niceMockForClass:ZMCallStateRequestStrategy.class];
     [[[[callStateRequestStrategy expect] andReturn:callStateRequestStrategy] classMethod] alloc];
-    (void) [[[callStateRequestStrategy expect] andReturn:callStateRequestStrategy] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY objectStrategyDirectory:OCMOCK_ANY];
+    (void) [[[callStateRequestStrategy expect] andReturn:callStateRequestStrategy] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY callFlowRequestStrategy:OCMOCK_ANY];
         
     id loginCodeRequestTranscoder = [OCMockObject mockForClass:ZMLoginCodeRequestTranscoder.class];
     [[[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] classMethod] alloc];
@@ -203,8 +203,6 @@
                          clientMessageTranscoder,
                          missingUpdateEventsTranscoder,
                          registrationTranscoder,
-                         flowTranscoder,
-                         callStateRequestStrategy,
                          loginCodeRequestTranscoder,
                          phoneNumberVerificationTranscoder
     ];
@@ -240,8 +238,6 @@
     XCTAssertEqual(self.sut.selfStrategy, selfStrategy);
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
     XCTAssertEqual(self.sut.registrationTranscoder, registrationTranscoder);
-    XCTAssertEqual(self.sut.flowTranscoder, flowTranscoder);
-    XCTAssertEqual(self.sut.callStateRequestStrategy, callStateRequestStrategy);
     XCTAssertEqual(self.sut.loginCodeRequestTranscoder, loginCodeRequestTranscoder);
     XCTAssertEqual(self.sut.phoneNumberVerificationTranscoder, phoneNumberVerificationTranscoder);
     

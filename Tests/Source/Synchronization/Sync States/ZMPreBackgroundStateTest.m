@@ -73,9 +73,7 @@
 
 - (NSArray *)syncObjectsUsedByState
 {
-    return  @[ /* Note: these must be in the same order as in the class */
-              self.objectDirectory.flowTranscoder,
-              ];
+    return  @[ /* Note: these must be in the same order as in the class */ ];
 }
 
 - (void)testThatItReturnsTheFirstRequestReturnedByASync

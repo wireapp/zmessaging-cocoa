@@ -43,7 +43,7 @@
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMLastUpdateEventIDTranscoder.h"
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMCallStateRequestStrategy.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
@@ -337,8 +337,8 @@
     [self verifyMockLater:phoneNumberVerificationTranscoder];
     id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
     [self verifyMockLater:missingUpdateEventsTranscoder];
-    id flowTranscoder = [OCMockObject mockForClass:ZMFlowSync.class];
-    [self verifyMockLater:flowTranscoder];
+    id callFlowRequestStrategy = [OCMockObject mockForClass:ZMCallFlowRequestStrategy.class];
+    [self verifyMockLater:callFlowRequestStrategy];
     id callStateRequestStrategy = [OCMockObject mockForClass:ZMCallStateRequestStrategy.class];
     [self verifyMockLater:callStateRequestStrategy];
     id loginTranscoder = [OCMockObject mockForClass:ZMLoginTranscoder.class];
@@ -353,8 +353,6 @@
     [[[objectDirectory stub] andReturn:registrationTranscoder] registrationTranscoder];
     [[[objectDirectory stub] andReturn:phoneNumberVerificationTranscoder] phoneNumberVerificationTranscoder];
     [[[objectDirectory stub] andReturn:missingUpdateEventsTranscoder] missingUpdateEventsTranscoder];
-    [[[objectDirectory stub] andReturn:flowTranscoder] flowTranscoder];
-    [[[objectDirectory stub] andReturn:callStateRequestStrategy] callStateRequestStrategy];
     [[[objectDirectory stub] andReturn:loginTranscoder] loginTranscoder];
     [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
     
@@ -365,8 +363,6 @@
                                         registrationTranscoder,
                                         phoneNumberVerificationTranscoder,
                                         missingUpdateEventsTranscoder,
-                                        flowTranscoder,
-                                        callStateRequestStrategy,
                                         loginTranscoder,
                                         loginCodeRequestTranscoder,
                                         ]] allTranscoders];

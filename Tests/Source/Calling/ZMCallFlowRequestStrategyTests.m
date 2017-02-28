@@ -23,7 +23,7 @@
 @import zmessaging;
 @import avs;
 
-#import "MessagingTest.h"
+#import "ObjectTranscoderTests.h"
 #import "ZMOperationLoop.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMOnDemandFlowManager.h"
@@ -35,9 +35,9 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 
 
-@interface ZMFlowSyncTests : MessagingTest
+@interface ZMCallFlowRequestStrategyTests : ObjectTranscoderTests
 
-@property (nonatomic) ZMFlowSync<AVSFlowManagerDelegate, ZMRequestGenerator> *sut;
+@property (nonatomic) ZMCallFlowRequestStrategy<AVSFlowManagerDelegate, ZMRequestGenerator> *sut;
 @property (nonatomic) id internalFlowManager;
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
 @property (nonatomic) id deploymentEnvironment;
@@ -46,22 +46,24 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 
 
-@implementation ZMFlowSyncTests
+@implementation ZMCallFlowRequestStrategyTests
 
 - (void)setUp
 {
     [super setUp];
         
     self.internalFlowManager = [OCMockObject mockForClass:AVSFlowManager.class];
-    ZMFlowSyncInternalFlowManagerOverride = self.internalFlowManager;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = self.internalFlowManager;
     self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:nil];
     NSArray *events = @[FlowEventName1, FlowEventName2];
     [(AVSFlowManager *)[[self.internalFlowManager stub] andReturn:events] events];
     [[self.internalFlowManager stub] setValue:OCMOCK_ANY forKey:@"delegate"];
     
     self.deploymentEnvironment = [OCMockObject niceMockForClass:ZMDeploymentEnvironment.class];
-    ZMFlowSyncInternalDeploymentEnvironmentOverride = self.deploymentEnvironment;
+    ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride = self.deploymentEnvironment;
     [[[self.deploymentEnvironment stub] andReturnValue:OCMOCK_VALUE(ZMDeploymentEnvironmentTypeInternal)] environmentType];
+    
+    [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateEventProcessing)] appState];
 
     [self recreateSUT];
     
@@ -77,8 +79,8 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [self.internalFlowManager stopMocking];
 
     self.deploymentEnvironment = nil;
-    ZMFlowSyncInternalDeploymentEnvironmentOverride = nil;
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
     
     [super tearDown];
 }
@@ -86,7 +88,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 - (void)recreateSUT;
 {
     [self.sut tearDown];
-    self.sut = (id) [[ZMFlowSync alloc] initWithMediaManager:nil onDemandFlowManager:self.onDemandFlowManager syncManagedObjectContext:self.syncMOC uiManagedObjectContext:self.uiMOC application:self.application];
+    self.sut = (id) [[ZMCallFlowRequestStrategy alloc] initWithMediaManager:nil onDemandFlowManager:self.onDemandFlowManager managedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate application:self.application];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -100,6 +102,11 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 {
     [[NSNotificationCenter defaultCenter] postNotificationName:ZMPushChannelStateChangeNotificationName object:nil
                                                       userInfo:@{ZMPushChannelIsOpenKey: @(YES)}];
+}
+
+- (void)testThatUsesCorrectRequestStrategyConfiguration
+{
+    XCTAssertEqual(self.sut.configuration, ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync);
 }
 
 - (void)testThatItReleasesTheFlowForCallDeviceIsActive_No
@@ -161,7 +168,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     
     // when
     [self.syncMOC performBlockAndWait:^{
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNotNil(request);
@@ -190,7 +197,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         
         // when
         [self.syncMOC performBlockAndWait:^{
-            ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+            ZMTransportRequest *request = [self.sut nextRequest];
             
             // then
             XCTAssertNotNil(request);
@@ -213,8 +220,8 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     
     // when
     [self.syncMOC performBlockAndWait:^{
-        ZMTransportRequest *request1 = [self.sut.requestGenerators nextRequest];
-        ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request1 = [self.sut nextRequest];
+        ZMTransportRequest *request2 = [self.sut nextRequest];
         
         // then
         XCTAssertNotNil(request1);
@@ -248,7 +255,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     // when
     __block ZMTransportRequest *request;
     [self.syncMOC performBlockAndWait:^{
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
     }];
     
 
@@ -277,7 +284,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     // when
     __block ZMTransportRequest *request;
     [self.syncMOC performBlockAndWait:^{
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
     }];
     
     [request completeWithResponse:response];
@@ -569,7 +576,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 
 
-@implementation ZMFlowSyncTests (VoiceGain)
+@implementation ZMCallFlowRequestStrategyTests (VoiceGain)
 
 - (void)testThatItSendsAVoiceGainNotification;
 {
@@ -807,7 +814,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 @end
 
-@implementation ZMFlowSyncTests (VideoCall)
+@implementation ZMCallFlowRequestStrategyTests (VideoCall)
 
 - (void)testThatItTellsAVSToEstablishVideoCall;
 {
@@ -1036,7 +1043,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 /* NOTE
  * FlowManager is not initialized on demand anymore since WireCallCenterV3
  * is not initialized on demand.
-@implementation ZMFlowSyncTests (FlowManagerSetup)
+@implementation ZMCallFlowRequestStrategyTests (FlowManagerSetup)
 
 - (void)testThatItSetsUpTheFlowManagerOnApplicationDidBecomeActive
 {

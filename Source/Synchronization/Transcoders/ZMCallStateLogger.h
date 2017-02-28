@@ -28,7 +28,7 @@
 @property (nonatomic) BOOL pushChannelIsOpen;
 
 
-- (instancetype)initWithFlowSync:(ZMFlowSync *)flowSync;
+- (instancetype)initWithFlowSync:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy;
 
 - (void)logCurrentStateForConversation:(ZMConversation *)conversation
                            withMessage:(NSString *)message;

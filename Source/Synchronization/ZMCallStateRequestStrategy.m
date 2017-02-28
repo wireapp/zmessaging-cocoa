@@ -28,7 +28,7 @@
 #import "ZMCallStateLogger.h"
 #import "ZMGSMCallHandler.h"
 #import "ZMLocalNotificationDispatcher.h"
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 static NSString * const StateKey = @"state";
@@ -60,8 +60,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 @property (nonatomic) ZMDownstreamObjectSync *downstreamSync;
 @property (nonatomic) ZMUpstreamModifiedObjectSync *upstreamSync;
-@property (nonatomic, weak) id<ZMObjectStrategyDirectory> objectStrategyDirectory;
-@property (nonatomic, weak, readonly) ZMFlowSync *flowSync;
+@property (nonatomic, weak) ZMCallFlowRequestStrategy *callFlowRequestStrategy;
 @property (nonatomic) NSMutableDictionary *convToSequenceMap;
 @property (nonatomic) ZMConversation *lastConversation;
 @property (nonatomic) BOOL pushChannelIsOpen;
@@ -93,22 +92,22 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
                             appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
-                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
+                     callFlowRequestStrategy:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy
 {
-    return [self initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate objectStrategyDirectory:directory gsmCallHandler:nil];
+    return [self initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate callFlowRequestStrategy:callFlowRequestStrategy gsmCallHandler:nil];
 }
 
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
                             appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
-                     objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)directory
+                     callFlowRequestStrategy:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy
                               gsmCallHandler:(ZMGSMCallHandler *)gsmCallHandler
 {
     self = [super initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate];
     if (self) {
         self.uiManagedObjectContext = managedObjectContext.zm_userInterfaceContext;
-        self.objectStrategyDirectory = directory;
-        self.callStateLogger = [[ZMCallStateLogger alloc] initWithFlowSync:directory.flowTranscoder];
+        self.callFlowRequestStrategy = callFlowRequestStrategy;
+        self.callStateLogger = [[ZMCallStateLogger alloc] initWithFlowSync:callFlowRequestStrategy];
         self.convToSequenceMap = [NSMutableDictionary dictionary];
         self.pushChannelIsOpen = NO;
         
@@ -135,7 +134,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
 - (NSNumber *)lastSequenceForConversation:(ZMConversation *)conversation;
@@ -172,7 +171,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 - (void)objectsDidChange:(NSSet *)objects
 {
     for (ZMConversation *conv in objects) {
-        ZMFlowSync *strongSync = self.flowSync;
+        ZMCallFlowRequestStrategy *strongSync = self.callFlowRequestStrategy;
         if ([conv isKindOfClass:[ZMConversation class]]){
             if ([self.upstreamFetchPredicate evaluateWithObject:conv] && !conv.callDeviceIsActive && conv.hasLocalModificationsForCallDeviceIsActive) {
                 // we need to release the flows as soon as the user wants to leave the call
@@ -310,18 +309,13 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
                 // when the selfuser was removed from a conversation while in a call (which should not happen), we should reset the call state locally
                 // we are not able to set the call state on the be because the be would refuse requests
                 conversation.callDeviceIsActive = NO;
-                [self.flowSync updateFlowsForConversation:conversation];
+                [self.callFlowRequestStrategy updateFlowsForConversation:conversation];
                 [conversation.voiceChannelRouter.v2 resetCallState];
                 [conversation.voiceChannelRouter.v2 resetTimer];
             }
             break;
         }
     }
-}
-
-- (ZMFlowSync *)flowSync;
-{
-    return self.objectStrategyDirectory.flowTranscoder;
 }
 
 - (void)pushChannelDidChange:(NSNotification *)note
@@ -551,7 +545,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
     }
     
     if(!conversation.callDeviceIsActive) { // do not "force join"
-        [self.flowSync updateFlowsForConversation:conversation];
+        [self.callFlowRequestStrategy updateFlowsForConversation:conversation];
         [self.gsmCallHandler setActiveCallSyncConversation:nil];
     }
     
@@ -628,7 +622,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
     if(changeToActive && !participantWasJoined) {
         [conversation.voiceChannelRouter.v2 addCallParticipant:participant];
         if (eventSource == ZMCallEventSourceUpstream && conversation.callDeviceIsActive && !participant.isSelfUser) {
-            [self.flowSync addJoinedCallParticipant:participant inConversation:conversation];
+            [self.callFlowRequestStrategy addJoinedCallParticipant:participant inConversation:conversation];
         }
     }
     else if(changeToIdle && participantWasJoined) {
@@ -679,7 +673,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
     // If the user left the voice channel, we are supposed to release the flow immediately, before getting a
     // reply from the backend.
     if (!conversation.callDeviceIsActive) {
-        [self.flowSync updateFlowsForConversation:conversation];
+        [self.callFlowRequestStrategy updateFlowsForConversation:conversation];
     }
     
     NSString *path = [self callStatePathForConversation:conversation];
@@ -746,7 +740,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
                 [conversation.voiceChannelRouter.v2 resetTimer];
             }
         }
-        [self.flowSync updateFlowsForConversation:conversation];
+        [self.callFlowRequestStrategy updateFlowsForConversation:conversation];
     }
 }
 
@@ -795,7 +789,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
             [self.upstreamSync objectsDidChange:[NSSet setWithObject:conversation]];
         }
         // we dont need to set hasLocalModifications since it was never reset, the upstreamsync will pick this object up again
-        [self.flowSync updateFlowsForConversation:conversation];
+        [self.callFlowRequestStrategy updateFlowsForConversation:conversation];
     }
 }
 
@@ -825,7 +819,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
     
     [self updateObject:conversation withPayload:response.payload eventSource:ZMCallEventSourceUpstream];
     if (![self.gsmCallHandler isInterruptedCallConversation:conversation]) {
-        [self.flowSync updateFlowsForConversation:conversation];
+        [self.callFlowRequestStrategy updateFlowsForConversation:conversation];
     }
     [self.gsmCallHandler setActiveCallSyncConversation:(conversation.callDeviceIsActive) ? conversation : nil];
     

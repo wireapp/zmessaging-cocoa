@@ -40,8 +40,6 @@
 
 - (void)checkThatItCallsRequestGeneratorsOnObjectsOfClass:(NSArray *)objectsToTest creationOfStateBlock:(ZMSyncState *(^)(id<ZMObjectStrategyDirectory> directory))creationBlock;
 
-- (void)stubRequestsOnHighPriorityObjectSync;
-
 - (id<ZMRequestGenerator>)generatorReturningNiceMockRequest;
 - (id<ZMRequestGenerator>)generatorReturningRequest:(ZMTransportRequest *)request;
 
