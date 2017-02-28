@@ -150,6 +150,8 @@ class TopConversationsDirectoryTests : MessagingTest {
 
         // WHEN
         fill(conv3, with: 10)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+
         sut.refreshTopConversations()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
 
@@ -291,6 +293,31 @@ extension TopConversationsDirectoryTests {
         XCTAssertEqual(topConversationsObserver.topConversationsDidChangeCallCount, 2)
     }
 
+    func testTopConversationFetchingPerformance() {
+//        measured [Time, seconds] average: 0.002, relative standard deviation: 41.686%, values: [0.005234, 0.001380, 0.001704, 0.001740, 0.002017, 0.002177, 0.002234, 0.002532, 0.002773, 0.003041], performanceMetricID:com.apple.XCTPerformanceMetric_WallClockTime, baselineName: "Local Baseline", baselineAverage: 0.011, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.100, maxStandardDeviation: 0.100
+
+        measureMetrics(type(of: self).defaultPerformanceMetrics(), automaticallyStartMeasuring: false) {
+            // given
+            (0..<20).forEach {
+                self.createConversation(in: self.uiMOC, fillWithNew: $0, old: 5)
+            }
+
+            // when measuring
+            self.startMeasuring()
+            self.sut.refreshTopConversations()
+            XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+            self.stopMeasuring()
+
+            // clean up for the next block execution
+            self.uiMOC.executeFetchRequestOrAssert(ZMConversation.sortedFetchRequest()).forEach {
+                self.uiMOC.delete($0 as! NSManagedObject)
+            }
+
+            XCTAssertTrue(self.uiMOC.saveOrRollback())
+            XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        }
+    }
+
 }
 
 // MARK: - Helpers
@@ -322,12 +349,13 @@ extension TopConversationsDirectoryTests {
     func fill(_ conversation: ZMConversation, with messageCount: (new: Int, old: Int), file: StaticString = #file, line: UInt = #line) {
         guard messageCount.new > 0 || messageCount.old > 0 else { return }
         (0..<messageCount.new).forEach {
-            _ = conversation.appendMessage(withText: "Message #\($0)")
+            let msg = conversation.appendMessage(withText: "Message #\($0)")
         }
 
         (0..<messageCount.old).forEach {
             let message = conversation.appendMessage(withText: "Message #\($0)") as! ZMMessage
             message.serverTimestamp = Date(timeIntervalSince1970: TimeInterval($0 * 100))
+            conversation.resortMessages(withUpdatedMessage: message)
         }
 
         XCTAssertTrue(uiMOC.saveOrRollback(), file: file, line: line)

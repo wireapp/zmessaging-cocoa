@@ -30,7 +30,7 @@ import ZMCDataModel
     /// Cached top conversations
     /// - warning: Might include deleted or blocked conversations
     fileprivate var topConversationsCache : [ZMConversation] = []
-    
+
     public init(managedObjectContext: NSManagedObjectContext) {
         uiMOC = managedObjectContext
         syncMOC = managedObjectContext.zm_sync
@@ -47,6 +47,7 @@ extension TopConversationsDirectory {
     public func refreshTopConversations() {
         syncMOC.performGroupedBlock {
             let conversations = self.fetchOneOnOneConversations()
+
             // Mapping from conversation to message count in the last month
             let countByConversation = conversations.mapToDictionary { $0.lastMonthMessageCount() }
             let sorted = countByConversation.filter { $0.1 > 0 }.sorted {  $0.1 > $1.1 }.prefix(TopConversationsDirectory.topConversationSize)
@@ -68,12 +69,12 @@ extension TopConversationsDirectory {
         let request = ZMConversation.sortedFetchRequest(with: ZMConversation.predicateForActiveOneOnOneConversations)
         return syncMOC.executeFetchRequestOrAssert(request) as! [ZMConversation]
     }
-    
+
     /// Top conversations
     public var topConversations : [ZMConversation] {
         return self.topConversationsCache.filter { !$0.isZombieObject && $0.connection?.status == .accepted }
     }
-    
+
     /// Persist list of conversations to persistent store
     private func persistList() {
         let valueToSave = self.topConversations.map { $0.objectID.uriRepresentation().absoluteString }
@@ -132,6 +133,7 @@ extension TopConversationsDirectory {
 
 }
 
+
 fileprivate extension ZMConversation {
 
     static var predicateForActiveOneOnOneConversations: NSPredicate {
@@ -141,35 +143,17 @@ fileprivate extension ZMConversation {
     }
 
     func lastMonthMessageCount() -> Int {
-        guard let identifier = remoteIdentifier, let moc = managedObjectContext else { return 0 }
-        let assetCount = ZMAssetClientMessage.countOfMessagesInTheLastMonth(in: identifier, context: moc)
-        let messageCount = ZMClientMessage.countOfMessagesInTheLastMonth(in: identifier, context: moc)
-        return assetCount + messageCount
-    }
+        guard let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) else { return 0 }
 
-}
-
-
-fileprivate extension ZMMessage {
-
-    static func predicateForMessagesInTheLastMonth(in identifier: UUID) -> NSPredicate? {
-        guard let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) else { return nil }
-        let lastMonthPredicate = NSPredicate(format: "%K >= %@", #keyPath(ZMMessage.serverTimestamp), oneMonthAgo as NSDate)
-        let conversationPredicate = NSPredicate(
-            format: "%K.%K == %@",
-            ZMMessageConversationKey,
-            ZMConversationRemoteIdentifierDataKey,
-            (identifier as NSUUID).data() as NSData
-        )
-
-        return NSCompoundPredicate(andPredicateWithSubpredicates: [lastMonthPredicate, conversationPredicate])
-    }
-
-    static func countOfMessagesInTheLastMonth(in identifier: UUID, context: NSManagedObjectContext) -> Int {
-        guard let predicate = predicateForMessagesInTheLastMonth(in: identifier) else { return 0 }
-        guard let request = sortedFetchRequest(with: predicate) else { return 0 }
-        return (try? context.count(for: request)) ?? 0
+        var count = 0
+        for obj in messages.reverseObjectEnumerator() {
+            guard let message = obj as? ZMMessage, let timestamp = message.serverTimestamp else { continue }
+            guard nil == message.systemMessageData else { continue }
+            guard timestamp >= oneMonthAgo else { return count }
+            count += 1
+        }
+        
+        return count
     }
     
 }
-
