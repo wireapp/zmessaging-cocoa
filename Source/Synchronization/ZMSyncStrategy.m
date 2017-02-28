@@ -137,7 +137,6 @@ ZM_EMPTY_ASSERTING_INIT()
 - (instancetype)initWithSyncManagedObjectContextMOC:(NSManagedObjectContext *)syncMOC
                              uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
                                              cookie:(ZMCookie *)cookie
-                          topConversationsDirectory:(TopConversationsDirectory *)topConversationsDirectory
                                        mediaManager:(id<AVSMediaManager>)mediaManager
                                 onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                   syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
@@ -146,7 +145,6 @@ ZM_EMPTY_ASSERTING_INIT()
                            taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
                                  appGroupIdentifier:(NSString *)appGroupIdentifier
                                         application:(id<ZMApplication>)application;
-
 {
     self = [super init];
     if (self) {
@@ -217,7 +215,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.lastUpdateEventIDTranscoder,
                                    self.missingUpdateEventsTranscoder,
                                    [[UserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager imageProcessingQueue:imageProcessingQueue],
-                                   [[TopConversationsRequestStrategy alloc] initWithManagedObjectContext:uiMOC appStateDelegate:self.syncStateManager conversationDirectory:topConversationsDirectory],
                                    [[LinkPreviewUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus],
                                    self.selfStrategy,
                                    self.systemMessageTranscoder,
@@ -225,6 +222,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.callingRequestStrategy,
                                    self.callStateRequestStrategy,
                                    self.callFlowRequestStrategy,
+                                   [[GenericMessageNotificationRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus]
                                    ];
 
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];

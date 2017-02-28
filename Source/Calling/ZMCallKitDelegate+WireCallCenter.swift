@@ -38,15 +38,53 @@ extension CallClosedReason {
     
 }
 
+@objc(ZMCallObserver)
+public class CallObserver : NSObject, VoiceChannelStateObserver {
+    
+    private var token : WireCallCenterObserverToken?
+    
+    public init(conversation: ZMConversation) {
+        super.init()
+        
+        token = WireCallCenter.addVoiceChannelStateObserver(conversation: conversation, observer: self, context: conversation.managedObjectContext!)
+    }
+    
+    public var onAnswered : (() -> Void)?
+    public var onEstablished : (() -> Void)?
+    public var onFailedToJoin : (() -> Void)?
+    
+    public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
+
+        switch voiceChannelState {
+        case .selfIsJoiningActiveChannel:
+            onAnswered?()
+        case .selfConnectedToActiveChannel:
+            onEstablished?()
+        default:
+            break
+        }
+    }
+    
+    public func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol) {
+        
+    }
+    
+    public func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation) {
+        onFailedToJoin?()
+    }
+}
+
 extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
+        guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext) else {
+            return
+        }
         
         switch callState {
         case .incoming(video: let video):
             guard
                 let userId = userId,
-                let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext),
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: userSession.managedObjectContext) else {
                     break
             }
@@ -56,12 +94,6 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
             if #available(iOS 10.0, *) {
                 provider.reportCall(with: conversationId, endedAt: nil, reason: UInt(reason.CXCallEndedReason.rawValue))
             }
-        case .answered:
-            provider.reportOutgoingCall(with: conversationId, startedConnectingAt: Date())
-        case .established:
-            provider.reportOutgoingCall(with: conversationId, connectedAt: Date())
-        case .outgoing:
-            provider.reportOutgoingCall(with: conversationId, startedConnectingAt: Date())
         default:
             break
         }
@@ -83,33 +115,44 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
     
 }
 
-extension ZMCallKitDelegate : WireCallCenterV2CallStateObserver {
+extension ZMCallKitDelegate : VoiceChannelStateObserver {
     
-    public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation) {
-        switch voiceChannelState {
-        case .incomingCall:
+    public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
+        guard callingProtocol == .version2 else { return }
+    
+        if voiceChannelState == .incomingCall {
             guard let user = conversation.voiceChannelRouter?.v2.participants.firstObject as? ZMUser else { return }
             indicateIncomingCall(from: user, in: conversation, video: conversation.voiceChannelRouter?.v2.isVideoCall ?? false)
-        case .outgoingCall:
-            provider.reportOutgoingCall(with: conversation.remoteIdentifier!, startedConnectingAt: Date())
-        case .selfIsJoiningActiveChannel:
+        }
+        
+        if voiceChannelState == .selfIsJoiningActiveChannel {
             connectedCallConversation = conversation
-        case .selfConnectedToActiveChannel:
-            conversation.voiceChannelRouter?.v2.callStartDate = Date()
-            provider.reportOutgoingCall(with: conversation.remoteIdentifier!, connectedAt: Date())
-        case .noActiveUsers:
-            if #available(iOS 10.0, *) {
-                if conversation == connectedCallConversation {
-                    provider.reportCall(with: conversation.remoteIdentifier!, endedAt: nil, reason: UInt(CXCallEndedReason.remoteEnded.rawValue))
-                } else {
-                    provider.reportCall(with: conversation.remoteIdentifier!, endedAt: nil, reason: UInt(CXCallEndedReason.unanswered.rawValue))
-                }
-            }
-            connectedCallConversation = nil
-            conversation.voiceChannelRouter?.v2.callStartDate = nil
-        default:
-            break
         }
     }
     
+    public func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol) {
+        guard callingProtocol == .version2 && reason != .requestedSelf else {
+            resetCallProperties(forConversation: conversation)
+            return
+        }
+        
+        if #available(iOS 10.0, *) {
+            if conversation == connectedCallConversation {
+                provider.reportCall(with: conversation.remoteIdentifier!, endedAt: nil, reason: UInt(CXCallEndedReason.remoteEnded.rawValue))
+            } else {
+                provider.reportCall(with: conversation.remoteIdentifier!, endedAt: nil, reason: UInt(CXCallEndedReason.unanswered.rawValue))
+            }
+        }
+        
+        resetCallProperties(forConversation: conversation)
+    }
+    
+    public func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation) {
+        
+    }
+    
+    private func resetCallProperties(forConversation conversation : ZMConversation) {
+        connectedCallConversation = nil
+        conversation.voiceChannelRouter?.v2.callStartDate = nil
+    }
 }

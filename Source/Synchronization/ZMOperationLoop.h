@@ -54,7 +54,6 @@ extern NSString * const ZMPushChannelResponseStatusKey;
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                                   cookie:(ZMCookie *)cookie
-               topConversationsDirectory:(TopConversationsDirectory *)topConversationsDirectory
              localNotificationdispatcher:(ZMLocalNotificationDispatcher *)dispatcher
                             mediaManager:(id<AVSMediaManager>)mediaManager
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager

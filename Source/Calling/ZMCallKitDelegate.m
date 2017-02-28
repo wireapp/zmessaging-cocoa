@@ -90,6 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) id<NSObject> callStateObserverToken;
 @property (nonatomic) id<NSObject> missedCallsObserverToken;
 @property (nonatomic) id<NSObject> v2CallStateObserverToken;
+@property (nonatomic) NSMutableDictionary<NSUUID *, ZMCallObserver *> *calls;
 
 @end
 
@@ -220,10 +221,6 @@ NS_ASSUME_NONNULL_END
 @end
 
 
-@interface ZMCallKitDelegate (ProviderDelegate) <CXProviderDelegate>
-@end
-
-
 @implementation ZMCallKitDelegate
 
 - (void)dealloc
@@ -253,8 +250,9 @@ NS_ASSUME_NONNULL_END
         self.userSession = userSession;
         self.mediaManager = mediaManager;
         self.onDemandFlowManager = onDemandFlowManager;
-                
-        self.v2CallStateObserverToken = [WireCallCenterV2 addVoiceChannelStateObserverWithObserver:self context:userSession.managedObjectContext];
+        self.calls = [[NSMutableDictionary alloc] init];
+        
+        self.v2CallStateObserverToken = [WireCallCenter addVoiceChannelStateObserverWithObserver:self context:userSession.managedObjectContext];
         self.callStateObserverToken = [self observeCallState];
         self.missedCallsObserverToken = [self observeMissedCalls];
         
@@ -333,6 +331,20 @@ NS_ASSUME_NONNULL_END
     }
 }
 
+- (void)endCallIn:(ZMConversation *)conversation
+{
+    [self.userSession performChanges:^{
+        if (conversation.voiceChannel.selfUserConnectionState == VoiceChannelV2ConnectionStateNotConnected) {
+            [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: ignore incoming call"];
+            [conversation.voiceChannelRouter.currentVoiceChannel ignore];
+        }
+        else {
+            [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: leave"];
+            [conversation.voiceChannelRouter.currentVoiceChannel leave];
+        }
+    }];
+}
+
 - (void)requestStartCallInConversation:(ZMConversation *)conversation videoCall:(BOOL)video
 {
     if (conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall) {
@@ -350,6 +362,7 @@ NS_ASSUME_NONNULL_END
         CXStartCallAction *startCallAction = [[CXStartCallAction alloc] initWithCallUUID:conversation.remoteIdentifier
                                                                                   handle:conversation.callKitHandle];
         startCallAction.video = video;
+        startCallAction.contactIdentifier = [conversation localizedCallerNameWithCallFromUser:[ZMUser selfUserInUserSession:self.userSession]];
         
         CXTransaction *startCallTransaction = [[CXTransaction alloc] initWithAction:startCallAction];
         
@@ -358,12 +371,6 @@ NS_ASSUME_NONNULL_END
                 [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot start call: %@", error];
             }
         }];
-        
-        CXCallUpdate *update = [[CXCallUpdate alloc] init];
-        update.remoteHandle = conversation.callKitHandle;
-        update.localizedCallerName = [conversation localizedCallerNameWithCallFromUser:[ZMUser selfUserInUserSession:self.userSession]];
-        
-        [self.provider reportCallWithUUID:conversation.remoteIdentifier updated:update];
     }
 }
 
@@ -375,6 +382,8 @@ NS_ASSUME_NONNULL_END
     
     [self.callController requestTransaction:endCallTransaction completion:^(NSError * _Nullable error) {
         if (nil != error) {
+            [self endCallIn:conversation];
+            
             [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot end call: %@", error];
         }
     }];
@@ -481,6 +490,7 @@ NS_ASSUME_NONNULL_END
 {
     [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ didReset", provider];
     [self.mediaManager resetAudioDevice];
+    [self.calls removeAllObjects];
     [self leaveAllActiveCalls];
 }
 
@@ -489,22 +499,60 @@ NS_ASSUME_NONNULL_END
     [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ performStartCallAction", provider];
     ZMUserSession *userSession = self.userSession;
     ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
+    
+    ZMCallObserver *call = [[ZMCallObserver alloc] initWithConversation:callConversation];
+    [self.calls setObject:call forKey:callConversation.remoteIdentifier];
+    
+    call.onAnswered = ^{
+        [provider reportOutgoingCallWithUUID:callConversation.remoteIdentifier startedConnectingAtDate:[NSDate date]];
+    };
+    
+    call.onEstablished = ^{
+        [provider reportOutgoingCallWithUUID:callConversation.remoteIdentifier connectedAtDate:[NSDate date]];
+    };
+    
+    call.onFailedToJoin = ^{
+        [action fail];
+    };
+    
     [userSession performChanges:^{
         [self configureAudioSession];
-        [callConversation.voiceChannelRouter.currentVoiceChannel joinWithVideo:action.video];
+        if ([callConversation.voiceChannelRouter.currentVoiceChannel joinWithVideo:action.video]) {
+            [action fulfill];
+        } else {
+            [action fail];
+        }
     }];
     
-    [action fulfill];
+    CXCallUpdate *update = [[CXCallUpdate alloc] init];
+    update.remoteHandle = callConversation.callKitHandle;
+    update.localizedCallerName = [callConversation localizedCallerNameWithCallFromUser:[ZMUser selfUserInUserSession:userSession]];
+    
+    [provider reportCallWithUUID:callConversation.remoteIdentifier updated:update];
 }
 
 - (void)provider:(CXProvider * __unused)provider performAnswerCallAction:(CXAnswerCallAction *)action
 {
     [self logInfoForConversation:nil line:__LINE__ format:@"CXProvider %@ performAnswerCallAction", provider];
-    [self.userSession performChanges:^{
-        ZMConversation *callConversation = [action conversationInContext:self.userSession.managedObjectContext];
-        [callConversation.voiceChannelRouter.currentVoiceChannel joinWithVideo:NO];
+    ZMUserSession *userSession = self.userSession;
+    
+    ZMConversation *callConversation = [action conversationInContext:userSession.managedObjectContext];
+    ZMCallObserver *call = [[ZMCallObserver alloc] initWithConversation:callConversation];
+    [self.calls setObject:call forKey:callConversation.remoteIdentifier];
+    
+    call.onEstablished = ^{
+        [action fulfillWithDateConnected:[NSDate date]];
+    };
+    
+    call.onFailedToJoin = ^{
+        [action fail];
+    };
+    
+    [userSession performChanges:^{
+        if (![callConversation.voiceChannelRouter.currentVoiceChannel joinWithVideo:NO]) {
+            [action fail];
+        }
     }];
-    [action fulfill];
 }
 
 - (void)provider:(CXProvider *)provider performEndCallAction:(nonnull CXEndCallAction *)action
@@ -519,18 +567,10 @@ NS_ASSUME_NONNULL_END
         callConversation.voiceChannel.state != VoiceChannelV2StateIncomingCallInactive &&
         callConversation.voiceChannel.state != VoiceChannelV2StateOutgoingCallInactive) {
         
-        [userSession performChanges:^{
-            if (callConversation.voiceChannel.selfUserConnectionState == VoiceChannelV2ConnectionStateNotConnected) {
-                [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: ignore incoming call"];
-                [callConversation.voiceChannelRouter.currentVoiceChannel ignore];
-            }
-            else {
-                [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: leave"];
-                [callConversation.voiceChannelRouter.currentVoiceChannel leave];
-            }
-        }];
+        [self endCallIn:callConversation];
     }
     [action fulfill];
+    [self.calls removeObjectForKey:callConversation.remoteIdentifier];
 }
 
 - (void)provider:(CXProvider *)provider performSetHeldCallAction:(nonnull CXSetHeldCallAction *)action

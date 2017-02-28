@@ -170,6 +170,7 @@
 "push.notification.action.message.reply" = "回复";
 "push.notification.action.message.reply.button.title" = "发送";
 "push.notification.action.conversation.mute" = "静音";
+"push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "接听";
 "push.notification.action.call.ignore" = "拒绝";

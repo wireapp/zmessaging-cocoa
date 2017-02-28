@@ -170,6 +170,7 @@
 "push.notification.action.message.reply" = "Cevapla";
 "push.notification.action.message.reply.button.title" = "Gönder";
 "push.notification.action.conversation.mute" = "Sustur";
+"push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Kabul et";
 "push.notification.action.call.ignore" = "Reddet";

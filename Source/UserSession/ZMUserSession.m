@@ -343,7 +343,6 @@ ZM_EMPTY_ASSERTING_INIT()
             ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.syncManagedObjectContext cookieStorage:session.cookieStorage];
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
                                                                                              cookie:cookie
-                                                                          topConversationsDirectory:self.topConversationsDirectory
                                                                         localNotificationdispatcher:self.localNotificationDispatcher
                                                                                        mediaManager:mediaManager
                                                                                 onDemandFlowManager:self.onDemandFlowManager

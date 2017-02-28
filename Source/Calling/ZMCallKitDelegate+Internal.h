@@ -33,3 +33,6 @@
 - (void)indicateIncomingCallFromUser:(nonnull ZMUser *)user inConversation:(nonnull ZMConversation *)conversation video:(BOOL)video;
 
 @end
+
+@interface ZMCallKitDelegate (ProviderDelegate) <CXProviderDelegate>
+@end

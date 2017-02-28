@@ -176,7 +176,7 @@ public protocol WireCallCenterCallStateObserver : class {
     
 }
 
-struct WireCallCenterCallStateNotification {
+public struct WireCallCenterCallStateNotification {
     
     static let notificationName = Notification.Name("WireCallCenterNotification")
     static let userInfoKey = notificationName.rawValue

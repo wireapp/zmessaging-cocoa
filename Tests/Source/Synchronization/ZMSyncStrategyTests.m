@@ -221,7 +221,6 @@
     self.sut = [[ZMSyncStrategy alloc] initWithSyncManagedObjectContextMOC:self.syncMOC
                                                     uiManagedObjectContext:self.uiMOC
                                                                     cookie:nil
-                                                 topConversationsDirectory:nil
                                                               mediaManager:nil
                                                        onDemandFlowManager:nil
                                                          syncStateDelegate:self.syncStateDelegate
