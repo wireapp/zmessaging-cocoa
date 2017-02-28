@@ -474,6 +474,23 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
     
+    func testThatItIgnoresNewIncomingCall_v2_Incoming_Silenced() {
+        // given
+        let conversation = self.conversation()
+        conversation.isSilenced = true
+        let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
+        mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
+        
+        // when
+        self.sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation)
+        
+        // then
+        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
+    }
+    
     func testThatItStoresConnectedConversation_v2_Answered() {
         // given
         let conversation = self.conversation()
@@ -572,6 +589,22 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 1)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
+    }
+    
+    func testThatItIgnoresNewIncomingCall_v3_Incoming_Silenced() {
+        // given
+        let conversation = self.conversation()
+        conversation.isSilenced = true
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        
+        // when
+        sut.callCenterDidChange(callState: .incoming(video: false), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
+        
+        // then
+        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
