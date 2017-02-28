@@ -331,6 +331,20 @@ NS_ASSUME_NONNULL_END
     }
 }
 
+- (void)endCallIn:(ZMConversation *)conversation
+{
+    [self.userSession performChanges:^{
+        if (conversation.voiceChannel.selfUserConnectionState == VoiceChannelV2ConnectionStateNotConnected) {
+            [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: ignore incoming call"];
+            [conversation.voiceChannelRouter.currentVoiceChannel ignore];
+        }
+        else {
+            [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: leave"];
+            [conversation.voiceChannelRouter.currentVoiceChannel leave];
+        }
+    }];
+}
+
 - (void)requestStartCallInConversation:(ZMConversation *)conversation videoCall:(BOOL)video
 {
     if (conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall) {
@@ -368,6 +382,8 @@ NS_ASSUME_NONNULL_END
     
     [self.callController requestTransaction:endCallTransaction completion:^(NSError * _Nullable error) {
         if (nil != error) {
+            [self endCallIn:conversation];
+            
             [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot end call: %@", error];
         }
     }];
@@ -551,16 +567,7 @@ NS_ASSUME_NONNULL_END
         callConversation.voiceChannel.state != VoiceChannelV2StateIncomingCallInactive &&
         callConversation.voiceChannel.state != VoiceChannelV2StateOutgoingCallInactive) {
         
-        [userSession performChanges:^{
-            if (callConversation.voiceChannel.selfUserConnectionState == VoiceChannelV2ConnectionStateNotConnected) {
-                [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: ignore incoming call"];
-                [callConversation.voiceChannelRouter.currentVoiceChannel ignore];
-            }
-            else {
-                [self logInfoForConversation:callConversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: leave"];
-                [callConversation.voiceChannelRouter.currentVoiceChannel leave];
-            }
-        }];
+        [self endCallIn:callConversation];
     }
     [action fulfill];
     [self.calls removeObjectForKey:callConversation.remoteIdentifier];

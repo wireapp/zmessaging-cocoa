@@ -77,13 +77,16 @@ public class CallObserver : NSObject, VoiceChannelStateObserver {
 extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
+        guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext) else {
+            return
+        }
         
         switch callState {
         case .incoming(video: let video):
             guard
                 let userId = userId,
-                let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext),
-                let user = ZMUser(remoteID: userId, createIfNeeded: false, in: userSession.managedObjectContext) else {
+                let user = ZMUser(remoteID: userId, createIfNeeded: false, in: userSession.managedObjectContext),
+                !conversation.isSilenced else {
                     break
             }
             
@@ -117,8 +120,8 @@ extension ZMCallKitDelegate : VoiceChannelStateObserver {
     
     public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
         guard callingProtocol == .version2 else { return }
-        
-        if voiceChannelState == .incomingCall {
+    
+        if voiceChannelState == .incomingCall && !conversation.isSilenced {
             guard let user = conversation.voiceChannelRouter?.v2.participants.firstObject as? ZMUser else { return }
             indicateIncomingCall(from: user, in: conversation, video: conversation.voiceChannelRouter?.v2.isVideoCall ?? false)
         }
