@@ -82,14 +82,15 @@ extension VoiceChannelV3 : CallActionsInternal {
     
     public func join(video: Bool) -> Bool {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
+        var joined = false
         
         if state == .incomingCall {
-            _ = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier)
+            joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier) ?? false
         } else {
-            _ = WireCallCenterV3.activeInstance?.startCall(conversationId: remoteIdentifier, video: video)
+            joined = WireCallCenterV3.activeInstance?.startCall(conversationId: remoteIdentifier, video: video) ?? false
         }
         
-        return true
+        return joined
     }
     
     public func leave() {
