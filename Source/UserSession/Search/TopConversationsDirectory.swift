@@ -142,8 +142,8 @@ fileprivate extension ZMConversation {
 
     func lastMonthMessageCount() -> Int {
         guard let identifier = remoteIdentifier, let moc = managedObjectContext else { return 0 }
-        let assetCount = ZMAssetClientMessage.countOfMessageInTheLastMonth(in: identifier, context: moc)
-        let messageCount = ZMClientMessage.countOfMessageInTheLastMonth(in: identifier, context: moc)
+        let assetCount = ZMAssetClientMessage.countOfMessagesInTheLastMonth(in: identifier, context: moc)
+        let messageCount = ZMClientMessage.countOfMessagesInTheLastMonth(in: identifier, context: moc)
         return assetCount + messageCount
     }
 
@@ -165,7 +165,7 @@ fileprivate extension ZMMessage {
         return NSCompoundPredicate(andPredicateWithSubpredicates: [lastMonthPredicate, conversationPredicate])
     }
 
-    static func countOfMessageInTheLastMonth(in identifier: UUID, context: NSManagedObjectContext) -> Int {
+    static func countOfMessagesInTheLastMonth(in identifier: UUID, context: NSManagedObjectContext) -> Int {
         guard let predicate = predicateForMessagesInTheLastMonth(in: identifier) else { return 0 }
         guard let request = sortedFetchRequest(with: predicate) else { return 0 }
         return (try? context.count(for: request)) ?? 0
