@@ -360,6 +360,7 @@
 		F19F4F3A1E5F1AE400F4D8FF /* UserProfileImageUpdateStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19F4F391E5F1AE400F4D8FF /* UserProfileImageUpdateStatus.swift */; };
 		F19F4F3C1E604AA700F4D8FF /* UserImageAssetUploadStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19F4F3B1E604AA700F4D8FF /* UserImageAssetUploadStrategy.swift */; };
 		F19F4F4D1E646C3C00F4D8FF /* UserProfileImageUpdateStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19F4F4C1E646C3C00F4D8FF /* UserProfileImageUpdateStatusTests.swift */; };
+		F19F4F4F1E6575F700F4D8FF /* UserProfileImageOwner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19F4F4E1E6575F700F4D8FF /* UserProfileImageOwner.swift */; };
 		F920F4D61DA3DCF8002B860B /* ConversationTests+Ephemeral.swift in Sources */ = {isa = PBXBuildFile; fileRef = F920F4D51DA3DCF8002B860B /* ConversationTests+Ephemeral.swift */; };
 		F9245BED1CBF95A8009D1E85 /* ZMHotFixDirectory+Swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9245BEC1CBF95A8009D1E85 /* ZMHotFixDirectory+Swift.swift */; };
 		F925468B1C62882500CE2D7C /* ZMCallStateTranscoderTests+VideoCalling.m in Sources */ = {isa = PBXBuildFile; fileRef = F925468A1C62882500CE2D7C /* ZMCallStateTranscoderTests+VideoCalling.m */; };
@@ -987,6 +988,7 @@
 		F19F4F391E5F1AE400F4D8FF /* UserProfileImageUpdateStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileImageUpdateStatus.swift; sourceTree = "<group>"; };
 		F19F4F3B1E604AA700F4D8FF /* UserImageAssetUploadStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserImageAssetUploadStrategy.swift; sourceTree = "<group>"; };
 		F19F4F4C1E646C3C00F4D8FF /* UserProfileImageUpdateStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileImageUpdateStatusTests.swift; sourceTree = "<group>"; };
+		F19F4F4E1E6575F700F4D8FF /* UserProfileImageOwner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileImageOwner.swift; sourceTree = "<group>"; };
 		F91CA6AC1BECBD3F000EE5C2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Push.strings; sourceTree = "<group>"; };
 		F91CA6AD1BECBD46000EE5C2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = Base; path = Base.lproj/Push.stringsdict; sourceTree = "<group>"; };
 		F91CA6AE1BECBD51000EE5C2 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Push.strings; sourceTree = "<group>"; };
@@ -1707,6 +1709,7 @@
 				F936DB281C11DF40005E93AE /* ZMClientUpdateNotification.h */,
 				F936DB291C11DF40005E93AE /* ZMClientUpdateNotification.m */,
 				F936DB2C1C11E4CB005E93AE /* ZMClientUpdateNotification+Internal.h */,
+				F19F4F4E1E6575F700F4D8FF /* UserProfileImageOwner.swift */,
 				F19F4F391E5F1AE400F4D8FF /* UserProfileImageUpdateStatus.swift */,
 				547E5B571DDB4B800038D936 /* UserProfileUpdateStatus.swift */,
 				5478A1401DEC4048006F7268 /* UserProfile.swift */,
@@ -2770,6 +2773,7 @@
 				5435C5551E13D9A0002D9766 /* NSManagedObjectContext+KeyValueStore.swift in Sources */,
 				BF2A9D511D6B536E00FA7DBC /* EventDecoder.swift in Sources */,
 				5490F9031AF021EB004696F4 /* ZMUserProfileUpdateStatus.m in Sources */,
+				F19F4F4F1E6575F700F4D8FF /* UserProfileImageOwner.swift in Sources */,
 				549815D11A432BC700A7CE2E /* ZMSearch.m in Sources */,
 				549815D31A432BC700A7CE2E /* ZMSearchDirectory.m in Sources */,
 				F97678FA1D76D11400CC075D /* BackgroundAPNSConfirmationStatus.swift in Sources */,

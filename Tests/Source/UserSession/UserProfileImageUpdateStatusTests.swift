@@ -38,13 +38,40 @@ var sampleFailedState: UserProfileImageUpdateStatus.State {
 
 class MockPreprocessor: NSObject, ZMAssetsPreprocessorProtocol {
     weak var delegate: ZMAssetsPreprocessorDelegate? = nil
-    
+    var operations = [Operation]()
+
     var imageOwner: ZMImageOwner? = nil
+    var operationsCalled: Bool = false
     
-    func operations(forPreprocessingImageOwner imageOwner: ZMImageOwner) -> [Any]? {
-        return []
+    func operations(forPreprocessingImageOwner imageOwner: ZMImageOwner) -> [Operation]? {
+        operationsCalled = true
+        self.imageOwner = imageOwner
+        return operations
     }
+}
+
+class MockOperation: NSObject, ZMImageDownsampleOperationProtocol {
+    let downsampleImageData: Data
+    let format: ZMImageFormat
+    let properties : ZMIImageProperties
     
+    init(downsampleImageData: Data = Data(), format: ZMImageFormat = .original, properties: ZMIImageProperties = ZMIImageProperties(size: .zero, length: 0, mimeType: "foo")) {
+        self.downsampleImageData = downsampleImageData
+        self.format = format
+        self.properties = properties
+    }
+}
+
+class MockImageOwner: NSObject, ZMImageOwner {
+    public func requiredImageFormats() -> NSOrderedSet! { return NSOrderedSet() }
+    public func imageData(for format: ZMImageFormat) -> Data! { return Data() }
+    public func setImageData(_ imageData: Data!, for format: ZMImageFormat, properties: ZMIImageProperties!) {}
+    public func originalImageData() -> Data! { return Data() }
+    public func originalImageSize() -> CGSize { return .zero }
+    public func isInline(for format: ZMImageFormat) -> Bool { return false }
+    public func isPublic(for format: ZMImageFormat) -> Bool { return false }
+    public func isUsingNativePush(for format: ZMImageFormat) -> Bool { return false }
+    public func processingDidFinish() {}
 }
 
 extension UserProfileImageUpdateStatus.State {
@@ -56,11 +83,15 @@ extension UserProfileImageUpdateStatus.State {
 class UserProfileImageUpdateStatusTests: MessagingTest {
     var sut : UserProfileImageUpdateStatus!
     var preprocessor : MockPreprocessor!
-
+    var tinyImage: Data!
+    var imageOwner: ZMImageOwner!
+    
     override func setUp() {
         super.setUp()
         preprocessor = MockPreprocessor()
-        sut = UserProfileImageUpdateStatus()
+        sut = UserProfileImageUpdateStatus(preprocessor: preprocessor)
+        tinyImage = data(forResource: "tiny", extension: "jpg")
+        imageOwner = UserProfileImageOwner(imageData: tinyImage, size: .zero)
     }
     
     func checkThatTransition(from oldState: UserProfileImageUpdateStatus.State, to newState: UserProfileImageUpdateStatus.State, isValid: Bool, file: StaticString = #file, line: UInt = #line) {
@@ -79,6 +110,16 @@ class UserProfileImageUpdateStatusTests: MessagingTest {
         }
     }
     
+    func operationWithExpectation(description: String) -> Operation {
+        let expectation = self.expectation(description: description)
+        return BlockOperation {
+            expectation.fulfill()
+        }
+    }
+}
+
+// MARK: State transitions
+extension UserProfileImageUpdateStatusTests {
     func testThatItStartsWithReadyState() {
         XCTAssertEqual(sut.state(for: .preview), .ready)
         XCTAssertEqual(sut.state(for: .complete), .ready)
@@ -120,4 +161,88 @@ class UserProfileImageUpdateStatusTests: MessagingTest {
         XCTAssertEqual(sut.state(for: .preview), sampleFailedState)
         XCTAssertEqual(sut.state(for: .complete), .ready)
     }
+}
+
+// MARK: Preprocessing
+extension UserProfileImageUpdateStatusTests {
+    func testThatItSetsPreprocessorDelegateWhenProcessing() {
+        // WHEN
+        sut.updateImage(imageData: tinyImage)
+
+        // THEN
+        XCTAssertNotNil(preprocessor.delegate)
+    }
+    
+    func testThatItAsksPreprocessorForOperationsWithCorrectImageOwner() {
+        // WHEN
+        sut.updateImage(imageData: tinyImage)
+
+        // THEN
+        XCTAssertTrue(preprocessor.operationsCalled)
+        let imageOwner = preprocessor.imageOwner
+        XCTAssertNotNil(imageOwner)
+        XCTAssertEqual(imageOwner?.originalImageData(), tinyImage)
+    }
+    
+    func testThatPreprocessingFailsWhenNoOperationsAreReturned() {
+        // GIVEN
+        preprocessor.operations = []
+        
+        // WHEN
+        sut.updateImage(imageData: tinyImage)
+
+        // THEN
+        XCTAssertEqual(sut.state(for: .preview), .failed(.preprocessingFailed))
+        XCTAssertEqual(sut.state(for: .complete), .failed(.preprocessingFailed))
+    }
+    
+    func testThatResizeOperationsAreEnqueued() {
+        // GIVEN
+        let e1 = self.operationWithExpectation(description: "#1 Image processing done")
+        let e2 = self.operationWithExpectation(description: "#2 Image processing done")
+        preprocessor.operations = [e1, e2]
+        
+        // WHEN
+        sut.updateImage(imageData: tinyImage)
+
+        // THEN 
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
+    func testThatAfterDownsamplingImageItSetsCorrectState() {
+        // GIVEN
+        sut.setState(state: .preprocessing, for: .complete)
+        sut.setState(state: .preprocessing, for: .preview)
+        
+        let previewOperation = MockOperation(downsampleImageData: "preview".data(using: .utf8)!, format: ImageSize.preview.imageFormat)
+        let completeOperation = MockOperation(downsampleImageData: "complete".data(using: .utf8)!, format: ImageSize.complete.imageFormat)
+
+        // WHEN
+        sut.completedDownsampleOperation(previewOperation, imageOwner: imageOwner)
+        
+        // THEN
+        XCTAssertEqual(sut.state(for: .preview), .upload(image: previewOperation.downsampleImageData))
+        XCTAssertEqual(sut.state(for: .complete), .preprocessing)
+
+        // WHEN
+        sut.completedDownsampleOperation(completeOperation, imageOwner: imageOwner)
+        
+        // THEN
+        XCTAssertEqual(sut.state(for: .preview), .upload(image: previewOperation.downsampleImageData))
+        XCTAssertEqual(sut.state(for: .complete), .upload(image: completeOperation.downsampleImageData))
+    }
+    
+    func testThatIfDownsamplingFailsStateForAllSizesIsSetToFail() {
+        // GIVEN
+        sut.setState(state: .preprocessing, for: .complete)
+        sut.setState(state: .preprocessing, for: .preview)
+        
+        // WHEN
+        sut.failedPreprocessingImageOwner(imageOwner)
+        
+        // THEN
+        XCTAssertEqual(sut.state(for: .preview), .failed(.preprocessingFailed))
+        XCTAssertEqual(sut.state(for: .complete), .failed(.preprocessingFailed))
+    }
+
 }

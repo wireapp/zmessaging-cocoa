@@ -21,6 +21,15 @@ import Foundation
 public enum ImageSize {
     case preview
     case complete
+    
+    var imageFormat: ZMImageFormat {
+        switch self {
+        case .preview:
+            return .medium
+        case .complete:
+            return .profile
+        }
+    }
 }
 
 public enum UserProfileImageUpdateError: Error {
@@ -32,7 +41,7 @@ public protocol UserProfileImageUpdateStateDelegate: class {
     func failed(withError: UserProfileImageUpdateError)
 }
 
-internal protocol UserProfileImageUploadStatus: class {
+internal protocol UserProfileImageUploadStatusProtocol: class {
     var allSizes: [ImageSize] { get }
     func consumeImage(for size: ImageSize) -> Data?
     func hasImageToUpload(for size: ImageSize) -> Bool
@@ -40,7 +49,7 @@ internal protocol UserProfileImageUploadStatus: class {
     func uploadingFailed(imageSize: ImageSize, error: NSError)
 }
 
-public final class UserProfileImageUpdateStatus {
+public final class UserProfileImageUpdateStatus: NSObject {
     
     internal enum State {
         case ready
@@ -52,12 +61,19 @@ public final class UserProfileImageUpdateStatus {
         case failed(UserProfileImageUpdateError)
     }
     
-    fileprivate var changeDelegates: [UserProfileImageUpdateStateDelegate] = []
+    internal var preprocessor: ZMAssetsPreprocessorProtocol?
+    internal let queue: OperationQueue
     
-    fileprivate var state: [ImageSize : State] = [
-        .preview : .ready,
-        .complete : .ready
-        ]
+    fileprivate var changeDelegates: [UserProfileImageUpdateStateDelegate] = []
+    fileprivate var imageOwner: ImageOwner?
+    
+    fileprivate var state = [ImageSize : State]()
+    
+    init(preprocessor: ZMAssetsPreprocessorProtocol, queue: OperationQueue = ZMImagePreprocessor.createSuitableImagePreprocessingQueue()){
+        self.queue = queue
+        self.preprocessor = preprocessor
+        super.init()
+    }
     
     internal func state(for imageSize: ImageSize) -> State {
         return state[imageSize] ?? .ready
@@ -93,23 +109,47 @@ public final class UserProfileImageUpdateStatus {
         }
     }
     
-    public func updateImage(image: UIImage) {
+}
+
+extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
+    
+    public func updateImage(imageData: Data, size: CGSize) {
         allSizes.forEach {
             setState(state: .preprocessing, for: $0)
         }
-        // Create ZMAssetsPreprocessor and kick off preprocessing
+        
+        preprocessor?.delegate = self
+        let imageOwner = UserProfileImageOwner(imageData: imageData, size: size)
+        guard let operations = preprocessor?.operations(forPreprocessingImageOwner: imageOwner), !operations.isEmpty else {
+            allSizes.forEach {
+                setState(state: .failed(.preprocessingFailed), for: $0)
+            }
+            return
+        }
+        
+        queue.addOperations(operations, waitUntilFinished: false)
     }
     
-    internal func preprocessingFailed(imageSize: ImageSize) {
-        setState(state: .failed(.preprocessingFailed), for: imageSize)
+    public func completedDownsampleOperation(_ operation: ZMImageDownsampleOperationProtocol, imageOwner: ZMImageOwner) {
+        allSizes.forEach {
+            if operation.format == $0.imageFormat {
+                setState(state: .upload(image: operation.downsampleImageData), for: $0)
+            }
+        }
     }
     
-    internal func preprocessingDone(imageSize: ImageSize, image: Data) {
-        setState(state: .upload(image: image), for: imageSize)
+    public func failedPreprocessingImageOwner(_ imageOwner: ZMImageOwner) {
+        allSizes.forEach {
+            setState(state: .failed(.preprocessingFailed), for: $0)
+        }
     }
+    
+    public func didCompleteProcessingImageOwner(_ imageOwner: ZMImageOwner) {}
+    
+    public func preprocessingComleteOperation(for imageOwner: ZMImageOwner) -> Operation? { return nil }
 }
 
-extension UserProfileImageUpdateStatus: UserProfileImageUploadStatus {
+extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
     internal var allSizes: [ImageSize] {
         return [.preview, .complete]
     }
