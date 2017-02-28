@@ -627,6 +627,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
     
+    /* NOTE disabled because we had to disable this behaviour
     func testThatItIgnoresNewIncomingCall_v2_Incoming_Silenced() {
         // given
         let conversation = self.conversation()
@@ -643,6 +644,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
+    */
     
     func testThatItStoresConnectedConversation_v2_Answered() {
         // given
@@ -719,6 +721,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
     
+    /* NOTE disabled because we had to disable this behaviour
     func testThatItIgnoresNewIncomingCall_v3_Incoming_Silenced() {
         // given
         let conversation = self.conversation()
@@ -734,6 +737,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
+    */
     
     func testThatItReportCallEndedAt_v3_Terminating_normal() {
         // given
