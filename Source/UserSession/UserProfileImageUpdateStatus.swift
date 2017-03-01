@@ -83,7 +83,6 @@ public final class UserProfileImageUpdateStatus: NSObject {
     
     internal enum ProfileUpdateState {
         case ready
-        case preprocess(image: Data)
         case preprocessing
         case update(previewAssetId: String, completeAssetId: String)
         case updating
@@ -92,8 +91,7 @@ public final class UserProfileImageUpdateStatus: NSObject {
         
         internal func canTransition(to newState: ProfileUpdateState) -> Bool {
             switch (self, newState) {
-            case (.ready, .preprocess),
-                 (.preprocess, .preprocessing),
+            case (.ready, .preprocessing),
                  (.preprocessing, .update),
                  (.update, .updating),
                  (.updating, .completed):
@@ -158,11 +156,11 @@ extension UserProfileImageUpdateStatus {
         }
         
         imageState[imageSize] = newState
-        didTransition(from: currentState, to: newState, for: imageSize)
+        didTransition(from: currentState, to: newState)
     }
     
     
-    internal func didTransition(from oldState: ImageState, to currentState: ImageState, for imageSize: ProfileImageSize) {
+    internal func didTransition(from oldState: ImageState, to currentState: ImageState) {
         switch (oldState, currentState) {
         case (_, .preprocessing):
             setState(state: .preprocessing)

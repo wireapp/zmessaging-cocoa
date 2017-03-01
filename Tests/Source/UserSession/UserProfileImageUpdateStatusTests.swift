@@ -30,9 +30,6 @@ var sampleFailedState: UserProfileImageUpdateStatus.ImageState {
     return UserProfileImageUpdateStatus.ImageState.failed(.preprocessingFailed)
 }
 
-var samplePreprocessState: UserProfileImageUpdateStatus.ProfileUpdateState {
-    return UserProfileImageUpdateStatus.ProfileUpdateState.preprocess(image: Data())
-}
 var sampleUpdateState: UserProfileImageUpdateStatus.ProfileUpdateState {
     return UserProfileImageUpdateStatus.ProfileUpdateState.update(previewAssetId: "id1", completeAssetId: "id2")
 }
@@ -118,7 +115,7 @@ extension UserProfileImageUpdateStatus.ProfileUpdateState: Equatable {
 
 extension UserProfileImageUpdateStatus.ProfileUpdateState: StateTransition {
     static var allStates: [UserProfileImageUpdateStatus.ProfileUpdateState] {
-        return [.ready, samplePreprocessState, .preprocessing, sampleUpdateState, .updating, .completed, .failed]
+        return [.ready, .preprocessing, sampleUpdateState, .updating, .completed, .failed]
     }
 }
 
@@ -190,6 +187,49 @@ extension UserProfileImageUpdateStatusTests {
         XCTAssertEqual(sut.imageState(for: .preview), sampleFailedState)
         XCTAssertEqual(sut.imageState(for: .complete), .ready)
     }
+    
+    func testThatProfileUpdateStateIsSetToPreprocessingAfterAnyImageStateIsPreprocessing() {
+        // WHEN
+        sut.setState(state: .preprocessing, for: .complete)
+
+        // THEN
+        XCTAssertEqual(sut.state, .preprocessing)
+    }
+    
+    func testThatProfileUpdateStateIsSetToUpdateAfterAllImageStatesAreUploaded() {
+        // GIVEN
+        sut.setState(state: .preprocessing, for: .preview)
+        sut.setState(state: .preprocessing, for: .complete)
+        sut.setState(state: sampleUploadState, for: .preview)
+        sut.setState(state: sampleUploadState, for: .complete)
+        sut.setState(state: .uploading, for: .preview)
+        sut.setState(state: .uploading, for: .complete)
+        XCTAssertEqual(sut.imageState(for: .preview), .uploading)
+        XCTAssertEqual(sut.imageState(for: .complete), .uploading)
+
+        // WHEN
+        let previewAssetId = "asset_preview"
+        let completeAssetId = "asset_complete"
+
+        XCTAssertEqual(sut.state, .preprocessing)
+        sut.setState(state: .uploaded(assetId: previewAssetId), for: .preview)
+        XCTAssertEqual(sut.state, .preprocessing)
+        sut.setState(state: .uploaded(assetId: completeAssetId), for: .complete)
+
+        // THEN
+        XCTAssertEqual(sut.state, .update(previewAssetId: previewAssetId, completeAssetId: completeAssetId))
+    }
+    
+    func testThatProfileUpdateStateIsSetToFailedAfterAnyImageStatesIsFailed() {
+        // WHEN
+        sut.setState(state: .preprocessing, for: .preview)
+        sut.setState(state: sampleUploadState, for: .preview)
+        sut.setState(state: sampleFailedState, for: .preview)
+
+        // THEN
+        XCTAssertEqual(sut.state, .failed)
+    }
+
 }
 
 // MARK: Main state transitions
@@ -199,8 +239,7 @@ extension UserProfileImageUpdateStatusTests {
     }
     
     func testProfileUpdateStateTransitions() {
-        ProfileUpdateState.canTransition(from: .ready, onlyTo: [.failed, samplePreprocessState])
-        ProfileUpdateState.canTransition(from: samplePreprocessState, onlyTo: [.failed, .preprocessing])
+        ProfileUpdateState.canTransition(from: .ready, onlyTo: [.failed, .preprocessing])
         ProfileUpdateState.canTransition(from: .preprocessing, onlyTo: [.failed, sampleUpdateState])
         ProfileUpdateState.canTransition(from: sampleUpdateState, onlyTo: [.failed, .updating])
         ProfileUpdateState.canTransition(from: .updating, onlyTo: [.failed, .completed])
@@ -210,10 +249,10 @@ extension UserProfileImageUpdateStatusTests {
     
     func testThatProfileUpdateStateCanTransitionToValidState() {
         // WHEN
-        sut.setState(state: samplePreprocessState)
+        sut.setState(state: .preprocessing)
         
         // THEN
-        XCTAssertEqual(sut.state, samplePreprocessState)
+        XCTAssertEqual(sut.state, .preprocessing)
     }
     
     func testThatProfileUpdateStateDoesntTransitionToInvalidState() {
