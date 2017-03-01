@@ -214,8 +214,8 @@ extension UserProfileImageUpdateStatusTests {
         sut.setState(state: .preprocessing, for: .complete)
         sut.setState(state: .preprocessing, for: .preview)
         
-        let previewOperation = MockOperation(downsampleImageData: "preview".data(using: .utf8)!, format: ImageSize.preview.imageFormat)
-        let completeOperation = MockOperation(downsampleImageData: "complete".data(using: .utf8)!, format: ImageSize.complete.imageFormat)
+        let previewOperation = MockOperation(downsampleImageData: "preview".data(using: .utf8)!, format: ProfileImageSize.preview.imageFormat)
+        let completeOperation = MockOperation(downsampleImageData: "complete".data(using: .utf8)!, format: ProfileImageSize.complete.imageFormat)
 
         // WHEN
         sut.completedDownsampleOperation(previewOperation, imageOwner: imageOwner)

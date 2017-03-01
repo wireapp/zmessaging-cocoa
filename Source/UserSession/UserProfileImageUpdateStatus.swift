@@ -18,7 +18,7 @@
 
 import Foundation
 
-public enum ImageSize {
+public enum ProfileImageSize {
     case preview
     case complete
     
@@ -42,11 +42,11 @@ public protocol UserProfileImageUpdateStateDelegate: class {
 }
 
 internal protocol UserProfileImageUploadStatusProtocol: class {
-    var allSizes: [ImageSize] { get }
-    func consumeImage(for size: ImageSize) -> Data?
-    func hasImageToUpload(for size: ImageSize) -> Bool
-    func uploadingDone(imageSize: ImageSize, assetId: String)
-    func uploadingFailed(imageSize: ImageSize, error: NSError)
+    var allSizes: [ProfileImageSize] { get }
+    func consumeImage(for size: ProfileImageSize) -> Data?
+    func hasImageToUpload(for size: ProfileImageSize) -> Bool
+    func uploadingDone(imageSize: ProfileImageSize, assetId: String)
+    func uploadingFailed(imageSize: ProfileImageSize, error: NSError)
 }
 
 public final class UserProfileImageUpdateStatus: NSObject {
@@ -67,7 +67,7 @@ public final class UserProfileImageUpdateStatus: NSObject {
     fileprivate var changeDelegates: [UserProfileImageUpdateStateDelegate] = []
     fileprivate var imageOwner: ImageOwner?
     
-    fileprivate var state = [ImageSize : State]()
+    fileprivate var state = [ProfileImageSize : State]()
     
     init(preprocessor: ZMAssetsPreprocessorProtocol, queue: OperationQueue = ZMImagePreprocessor.createSuitableImagePreprocessingQueue()){
         self.queue = queue
@@ -75,11 +75,11 @@ public final class UserProfileImageUpdateStatus: NSObject {
         super.init()
     }
     
-    internal func state(for imageSize: ImageSize) -> State {
+    internal func state(for imageSize: ProfileImageSize) -> State {
         return state[imageSize] ?? .ready
     }
     
-    internal func setState(state newState: State, for imageSize: ImageSize) {
+    internal func setState(state newState: State, for imageSize: ProfileImageSize) {
         let currentState = state(for: imageSize)
         guard canTransition(from: currentState, to: newState) else {
             // Trying to transition to invalids state - ignore
@@ -150,11 +150,11 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
 }
 
 extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
-    internal var allSizes: [ImageSize] {
+    internal var allSizes: [ProfileImageSize] {
         return [.preview, .complete]
     }
     
-    internal func hasImageToUpload(for size: ImageSize) -> Bool {
+    internal func hasImageToUpload(for size: ProfileImageSize) -> Bool {
         switch state(for: size) {
         case .upload:
             return true
@@ -163,7 +163,7 @@ extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
         }
     }
     
-    internal func consumeImage(for size: ImageSize) -> Data? {
+    internal func consumeImage(for size: ProfileImageSize) -> Data? {
         switch state(for: size) {
         case .upload(image: let image):
             setState(state: .uploading, for: size)
@@ -173,11 +173,11 @@ extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
         }
     }
     
-    internal func uploadingDone(imageSize: ImageSize, assetId: String) {
+    internal func uploadingDone(imageSize: ProfileImageSize, assetId: String) {
         setState(state: .uploaded(assetId: assetId), for: imageSize)
     }
     
-    internal func uploadingFailed(imageSize: ImageSize, error: NSError) {
+    internal func uploadingFailed(imageSize: ProfileImageSize, error: NSError) {
         setState(state: .failed(.uploadFailed(error)), for: imageSize)
     }
 }

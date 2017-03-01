@@ -21,7 +21,7 @@ import WireRequestStrategy
 
 public final class UserImageAssetUploadStrategy: NSObject {
     fileprivate let requestFactory = AssetRequestFactory()
-    fileprivate var requestSyncs = [ImageSize : ZMSingleRequestSync]()
+    fileprivate var requestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
     fileprivate let moc: NSManagedObjectContext
     fileprivate weak var imageUpdateStatus: UserProfileImageUploadStatusProtocol?
 
@@ -31,7 +31,7 @@ public final class UserImageAssetUploadStrategy: NSObject {
         super.init()
     }
     
-    fileprivate func requestSync(for size: ImageSize) -> ZMSingleRequestSync {
+    fileprivate func requestSync(for size: ProfileImageSize) -> ZMSingleRequestSync {
         if let sync = requestSyncs[size] {
             return sync
         } else {
@@ -41,7 +41,7 @@ public final class UserImageAssetUploadStrategy: NSObject {
         }
     }
     
-    fileprivate func size(for requestSync: ZMSingleRequestSync) -> ImageSize? {
+    fileprivate func size(for requestSync: ZMSingleRequestSync) -> ProfileImageSize? {
         for (size, sync) in requestSyncs {
             if sync === requestSync {
                 return size
