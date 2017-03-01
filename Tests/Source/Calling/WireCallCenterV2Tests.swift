@@ -99,7 +99,7 @@ class WireCallCenterV2Tests : MessagingTest {
         conversation = ZMConversation.insertNewObject(in: self.uiMOC)
         conversation.conversationType = .oneOnOne
         conversation.remoteIdentifier = UUID()
-        conversation.internalAddParticipant(user1, isAuthoritative: true)
+        conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral: user1), isAuthoritative: true)
         
         ZMUserSession.callingProtocolStrategy = .version2
         self.uiMOC.saveOrRollback()

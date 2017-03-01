@@ -39,7 +39,7 @@ class ZMLocalNotificationDispatcherCallingTests : MessagingTest {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .oneOnOne
             conversation.remoteIdentifier = UUID()
-            conversation.internalAddParticipant(sender, isAuthoritative: true)
+            conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral:sender), isAuthoritative: true)
             
             self.conversation = conversation
         }
