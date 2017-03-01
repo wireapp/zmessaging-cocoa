@@ -146,7 +146,7 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     
     public func didCompleteProcessingImageOwner(_ imageOwner: ZMImageOwner) {}
     
-    public func preprocessingComleteOperation(for imageOwner: ZMImageOwner) -> Operation? { return nil }
+    public func preprocessingCompleteOperation(for imageOwner: ZMImageOwner) -> Operation? { return nil }
 }
 
 extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
