@@ -22,7 +22,7 @@ public enum ProfileImageSize {
     case preview
     case complete
     
-    var imageFormat: ZMImageFormat {
+    internal var imageFormat: ZMImageFormat {
         switch self {
         case .preview:
             return .medium
@@ -51,7 +51,7 @@ internal protocol UserProfileImageUploadStatusProtocol: class {
 
 public final class UserProfileImageUpdateStatus: NSObject {
     
-    internal enum State {
+    internal enum ImageState {
         case ready
         case preprocessing
         case upload(image: Data)
@@ -59,6 +59,56 @@ public final class UserProfileImageUpdateStatus: NSObject {
         case uploaded(assetId: String)
         case completed
         case failed(UserProfileImageUpdateError)
+        
+        internal func canTransition(to newState: ImageState) -> Bool {
+            switch (self, newState) {
+            case (.ready, .preprocessing),
+                 (.preprocessing, .upload),
+                 (.upload, .uploading),
+                 (.uploading, .uploaded),
+                 (.uploaded, .completed):
+                return true
+            case (.completed, .ready),
+                 (.failed, .ready):
+                return true
+            case (.failed, .failed):
+                return false
+            case (_, .failed):
+                return true
+            default:
+                return false
+            }
+        }
+    }
+    
+    internal enum ProfileUpdateState {
+        case ready
+        case preprocess(image: Data)
+        case preprocessing
+        case update(previewAssetId: String, completeAssetId: String)
+        case updating
+        case completed
+        case failed
+        
+        internal func canTransition(to newState: ProfileUpdateState) -> Bool {
+            switch (self, newState) {
+            case (.ready, .preprocess),
+                 (.preprocess, .preprocessing),
+                 (.preprocessing, .update),
+                 (.update, .updating),
+                 (.updating, .completed):
+                return true
+            case (.completed, .ready),
+                 (.failed, .ready):
+                return true
+            case (.failed, .failed):
+                return false
+            case (_, .failed):
+                return true
+            default:
+                return false
+            }
+        }
     }
     
     internal var preprocessor: ZMAssetsPreprocessorProtocol?
@@ -67,48 +117,73 @@ public final class UserProfileImageUpdateStatus: NSObject {
     fileprivate var changeDelegates: [UserProfileImageUpdateStateDelegate] = []
     fileprivate var imageOwner: ImageOwner?
     
-    fileprivate var state = [ProfileImageSize : State]()
+    fileprivate var imageState = [ProfileImageSize : ImageState]()
+    internal fileprivate(set) var state: ProfileUpdateState = .ready
     
     init(preprocessor: ZMAssetsPreprocessorProtocol, queue: OperationQueue = ZMImagePreprocessor.createSuitableImagePreprocessingQueue()){
         self.queue = queue
         self.preprocessor = preprocessor
         super.init()
     }
-    
-    internal func state(for imageSize: ProfileImageSize) -> State {
-        return state[imageSize] ?? .ready
+}
+
+// MARK: Main state transitions
+extension UserProfileImageUpdateStatus {
+    internal func setState(state newState: ProfileUpdateState) {
+        let currentState = state
+        guard currentState.canTransition(to: newState) else {
+            // Trying to transition to invalids state - ignore
+            return
+        }
+        state = newState
+        didTransition(from: currentState, to: newState)
     }
     
-    internal func setState(state newState: State, for imageSize: ProfileImageSize) {
-        let currentState = state(for: imageSize)
-        guard canTransition(from: currentState, to: newState) else {
+    internal func didTransition(from oldState: ProfileUpdateState, to currentState: ProfileUpdateState) {
+        
+    }
+}
+
+// MARK: Image state transitions
+extension UserProfileImageUpdateStatus {
+    internal func imageState(for imageSize: ProfileImageSize) -> ImageState {
+        return imageState[imageSize] ?? .ready
+    }
+    
+    internal func setState(state newState: ImageState, for imageSize: ProfileImageSize) {
+        let currentState = imageState(for: imageSize)
+        guard currentState.canTransition(to: newState) else {
             // Trying to transition to invalids state - ignore
             return
         }
         
-        state[imageSize] = newState
+        imageState[imageSize] = newState
+        didTransition(from: currentState, to: newState, for: imageSize)
     }
     
-    internal func canTransition(from currentState: State, to newState: State) -> Bool {
-        switch (currentState, newState) {
-        case (.ready, .preprocessing),
-            (.preprocessing, .upload),
-            (.upload, .uploading),
-            (.uploading, .uploaded),
-            (.uploaded, .completed):
-            return true
-        case (.completed, .ready),
-            (.failed, .ready):
-            return true
-        case (.failed, .failed):
-            return false
+    
+    internal func didTransition(from oldState: ImageState, to currentState: ImageState, for imageSize: ProfileImageSize) {
+        switch (oldState, currentState) {
+        case (_, .preprocessing):
+            setState(state: .preprocessing)
+        case (_, .uploaded):
+            // When one image is uploaded we check state of all other images
+            let previewState = imageState(for: .preview)
+            let completeState = imageState(for: .complete)
+            
+            switch (previewState, completeState) {
+            case let (.uploaded(assetId: previewAssetId), .uploaded(assetId: completeAssetId)):
+                // If both images are uploaded we can update profile
+                setState(state: .update(previewAssetId: previewAssetId, completeAssetId: completeAssetId))
+            default:
+                break // Need to wait until both images are uploaded
+            }
         case (_, .failed):
-            return true
+            setState(state: .failed)
         default:
-            return false
+            break
         }
     }
-    
 }
 
 extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
@@ -155,7 +230,7 @@ extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
     }
     
     internal func hasImageToUpload(for size: ProfileImageSize) -> Bool {
-        switch state(for: size) {
+        switch imageState(for: size) {
         case .upload:
             return true
         default:
@@ -164,7 +239,7 @@ extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
     }
     
     internal func consumeImage(for size: ProfileImageSize) -> Data? {
-        switch state(for: size) {
+        switch imageState(for: size) {
         case .upload(image: let image):
             setState(state: .uploading, for: size)
             return image
