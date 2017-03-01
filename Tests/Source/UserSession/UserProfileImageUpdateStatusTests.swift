@@ -167,7 +167,7 @@ extension UserProfileImageUpdateStatusTests {
 extension UserProfileImageUpdateStatusTests {
     func testThatItSetsPreprocessorDelegateWhenProcessing() {
         // WHEN
-        sut.updateImage(imageData: tinyImage)
+        sut.updateImage(imageData: tinyImage, size: .zero)
 
         // THEN
         XCTAssertNotNil(preprocessor.delegate)
@@ -175,7 +175,7 @@ extension UserProfileImageUpdateStatusTests {
     
     func testThatItAsksPreprocessorForOperationsWithCorrectImageOwner() {
         // WHEN
-        sut.updateImage(imageData: tinyImage)
+        sut.updateImage(imageData: tinyImage, size: .zero)
 
         // THEN
         XCTAssertTrue(preprocessor.operationsCalled)
@@ -189,7 +189,7 @@ extension UserProfileImageUpdateStatusTests {
         preprocessor.operations = []
         
         // WHEN
-        sut.updateImage(imageData: tinyImage)
+        sut.updateImage(imageData: tinyImage, size: .zero)
 
         // THEN
         XCTAssertEqual(sut.state(for: .preview), .failed(.preprocessingFailed))
@@ -203,7 +203,7 @@ extension UserProfileImageUpdateStatusTests {
         preprocessor.operations = [e1, e2]
         
         // WHEN
-        sut.updateImage(imageData: tinyImage)
+        sut.updateImage(imageData: tinyImage, size: .zero)
 
         // THEN 
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
