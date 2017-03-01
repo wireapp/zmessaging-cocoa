@@ -23,9 +23,9 @@ public final class UserImageAssetUploadStrategy: NSObject {
     fileprivate let requestFactory = AssetRequestFactory()
     fileprivate var requestSyncs = [ImageSize : ZMSingleRequestSync]()
     fileprivate let moc: NSManagedObjectContext
-    fileprivate weak var imageUpdateStatus: UserProfileImageUploadStatus?
+    fileprivate weak var imageUpdateStatus: UserProfileImageUploadStatusProtocol?
 
-    init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUploadStatus) {
+    init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUploadStatusProtocol) {
         self.moc = managedObjectContext
         self.imageUpdateStatus = imageUpdateStatus
         super.init()
@@ -71,16 +71,5 @@ extension UserImageAssetUploadStrategy: ZMSingleRequestTranscoder {
     }
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
-        guard let size = size(for: sync) else { return }
-        switch (response.result) {
-        case .success:
-            if let payload = response.payload?.asArray() as? [[String: AnyObject]] {
-                self.received(clients: payload)
-            }
-        case .expired:
-            clientUpdateStatus?.failedToFetchClients()
-        default:
-            break
-        }
     }
 }
