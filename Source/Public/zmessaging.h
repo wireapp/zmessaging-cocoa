@@ -51,7 +51,6 @@
 #import <zmessaging/ZMClientUpdateNotification+Internal.h>
 #import <zmessaging/ZMCookie.h>
 #import <zmessaging/ZMLocalNotification.h>
-#import <zmessaging/ZMLocalNotificationDispatcher.h>
 #import <zmessaging/ZMLocalNotificationLocalization.h>
 #import <zmessaging/UILocalNotification+StringProcessing.h>
 #import <zmessaging/ZMHotFixDirectory.h>

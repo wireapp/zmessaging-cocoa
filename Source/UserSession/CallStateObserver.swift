@@ -23,7 +23,7 @@ import CoreData
 @objc(ZMCallStateObserver)
 public final class CallStateObserver : NSObject {
     
-    fileprivate let localNotificationDispatcher : ZMLocalNotificationDispatcher
+    fileprivate let localNotificationDispatcher : LocalNotificationDispatcher
     fileprivate let callingSystemMessageGenerator = CallingSystemMessageGenerator()
     fileprivate let managedObjectContext : NSManagedObjectContext
     fileprivate var callStateToken : WireCallCenterObserverToken? = nil
@@ -38,7 +38,7 @@ public final class CallStateObserver : NSObject {
         }
     }
     
-    public init(localNotificationDispatcher : ZMLocalNotificationDispatcher, managedObjectContext: NSManagedObjectContext) {
+    public init(localNotificationDispatcher : LocalNotificationDispatcher, managedObjectContext: NSManagedObjectContext) {
         self.localNotificationDispatcher = localNotificationDispatcher
         self.managedObjectContext = managedObjectContext
         

@@ -45,7 +45,6 @@
 #import "ZMessagingLogs.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMOnDemandFlowManager.h"
-#import "ZMLocalNotificationDispatcher.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 @interface ZMSyncStrategy ()
@@ -92,7 +91,7 @@
 
 @property (nonatomic) NSManagedObjectContext *eventMOC;
 @property (nonatomic) EventDecoder *eventDecoder;
-@property (nonatomic, weak) ZMLocalNotificationDispatcher *localNotificationDispatcher;
+@property (nonatomic, weak) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) BackgroundAPNSConfirmationStatus *apnsConfirmationStatus;
 
 @property (nonatomic) NSArray *allChangeTrackers;
@@ -106,9 +105,6 @@
 @property (nonatomic, weak) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic) NotificationDispatcher *notificationDispatcher;
 
-@end
-
-@interface ZMLocalNotificationDispatcher (Push) <PushMessageHandler>
 @end
 
 @interface BackgroundAPNSConfirmationStatus (Protocol) <DeliveryConfirmationDelegate>
@@ -136,7 +132,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                        uiMOC:(NSManagedObjectContext *)uiMOC
                            syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                        backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
-                localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
+                localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
                     taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
                           appGroupIdentifier:(NSString *)appGroupIdentifier
                                  application:(id<ZMApplication>)application;
@@ -246,7 +242,7 @@ ZM_EMPTY_ASSERTING_INIT()
 }
 
 - (void)createTranscodersWithClientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
-                         localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
+                         localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
                                  authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
                          backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
                                         accountStatus:(ZMAccountStatus *)accountStatus

@@ -25,7 +25,7 @@
 @class ZMAuthenticationStatus;
 @class ZMClientRegistrationStatus;
 @class NSManagedObjectContext;
-@class ZMLocalNotificationDispatcher;
+@class LocalNotificationDispatcher;
 
 @protocol ZMSyncStateDelegate;
 @protocol ZMTransportData;
@@ -59,7 +59,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
                     proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
                            accountStatus:(ZMAccountStatus *)accountStatus
             backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
-             localNotificationdispatcher:(ZMLocalNotificationDispatcher *)dispatcher
+             localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
                             mediaManager:(id<AVSMediaManager>)mediaManager
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                    uiMOC:(NSManagedObjectContext *)uiMOC

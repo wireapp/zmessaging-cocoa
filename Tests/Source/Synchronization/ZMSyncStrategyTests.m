@@ -84,7 +84,7 @@
 {
     [super setUp];
     
-    self.mockDispatcher = [OCMockObject niceMockForClass:[ZMLocalNotificationDispatcher class]];
+    self.mockDispatcher = [OCMockObject niceMockForClass:[LocalNotificationDispatcher class]];
     self.mockUpstreamSync1 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     self.mockUpstreamSync2 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     [self verifyMockLater:self.mockUpstreamSync1];
