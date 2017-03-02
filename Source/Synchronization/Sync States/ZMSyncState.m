@@ -126,8 +126,12 @@
 - (ZMTransportRequest *)nextRequestFromTranscoders:(NSArray *)transcoders;
 {
     ZMTransportRequest *nextRequest;
-    for (id <ZMObjectStrategy> transcoder in transcoders) {
-        nextRequest = [transcoder.requestGenerators nextRequest];
+    for (id transcoder in transcoders) {
+        if ([transcoder conformsToProtocol:@protocol(ZMObjectStrategy)]) {
+            nextRequest = [[(id<ZMObjectStrategy>) transcoder requestGenerators] nextRequest];
+        } else if ([transcoder conformsToProtocol:@protocol(ZMRequestGenerator)]) {
+            nextRequest = [transcoder nextRequest];
+        }
         [nextRequest setDebugInformationTranscoder:transcoder];
         if (nextRequest != nil) {
             return nextRequest;

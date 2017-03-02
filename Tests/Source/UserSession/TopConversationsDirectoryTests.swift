@@ -349,7 +349,7 @@ extension TopConversationsDirectoryTests {
     func fill(_ conversation: ZMConversation, with messageCount: (new: Int, old: Int), file: StaticString = #file, line: UInt = #line) {
         guard messageCount.new > 0 || messageCount.old > 0 else { return }
         (0..<messageCount.new).forEach {
-            let msg = conversation.appendMessage(withText: "Message #\($0)")
+            _ = conversation.appendMessage(withText: "Message #\($0)")
         }
 
         (0..<messageCount.old).forEach {

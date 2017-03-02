@@ -794,3 +794,10 @@ extension UserClientRequestStrategyTests {
     }
 
 }
+
+extension UserClientRequestStrategy {
+    
+    func notifyChangeTrackers(_ object: ZMManagedObject) {
+        self.contextChangeTrackers.forEach { $0.objectsDidChange(Set([object])) }
+    }
+}

@@ -106,13 +106,9 @@
     [[[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] classMethod] alloc];
     (void) [[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:OCMOCK_ANY accountStatus:OCMOCK_ANY syncStrategy:OCMOCK_ANY];
 
-    id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
-    [[[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] classMethod] alloc];
-    (void) [[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] initWithManagedObjectContext:self.syncMOC upstreamInsertedObjectSync:nil localNotificationDispatcher:self.mockDispatcher messageExpirationTimer:nil];
-
-    id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
+    id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
-    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC localNotificationDispatcher:self.mockDispatcher clientRegistrationStatus:OCMOCK_ANY apnsConfirmationStatus:OCMOCK_ANY];
+    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initIn:self.syncMOC localNotificationDispatcher:self.mockDispatcher clientRegistrationStatus:OCMOCK_ANY apnsConfirmationStatus:OCMOCK_ANY];
 
     id selfTranscoder = [OCMockObject mockForClass:ZMSelfTranscoder.class];
     [[[[selfTranscoder expect] andReturn:selfTranscoder] classMethod] alloc];
@@ -170,7 +166,6 @@
                          userTranscoder,
                          self.conversationTranscoder,
                          selfTranscoder,
-                         systemMessageTranscoder,
                          clientMessageTranscoder,
                          missingUpdateEventsTranscoder,
                          registrationTranscoder,
@@ -211,7 +206,6 @@
     
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
-    XCTAssertEqual(self.sut.systemMessageTranscoder, systemMessageTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
     XCTAssertEqual(self.sut.selfTranscoder, selfTranscoder);
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
@@ -1105,7 +1099,7 @@
 - (NSSet <Class> *)transcodersExpectedToReturnNonces
 {
     return @[
-             ZMClientMessageTranscoder.class,
+             ClientMessageTranscoder.class,
              ].set;
 }
 

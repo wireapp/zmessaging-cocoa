@@ -84,7 +84,6 @@
 {
     return  @[ /* Note: these must be in the same order as in the class */
               self.objectDirectory.flowTranscoder,
-              self.objectDirectory.systemMessageTranscoder,
               self.objectDirectory.clientMessageTranscoder,
               self.objectDirectory.selfTranscoder,
               ];
@@ -99,7 +98,6 @@
      */
     
     [self checkThatItCallsRequestGeneratorsOnObjectsOfClass:[self syncObjectsUsedByState] creationOfStateBlock:^ZMSyncState *(id<ZMObjectStrategyDirectory> directory) {
-        [[[(id)directory.systemMessageTranscoder stub] andReturnValue:@YES] hasPendingMessages];
         return [[ZMPreBackgroundState alloc] initWithAuthenticationCenter:self.authenticationStatus clientRegistrationStatus:self.clientRegistrationStatus objectStrategyDirectory:directory stateMachineDelegate:self.stateMachine];
     }];
     
