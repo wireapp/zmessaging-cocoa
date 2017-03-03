@@ -46,8 +46,8 @@ class CallStateObserverTests : MessagingTest {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .oneOnOne
             conversation.remoteIdentifier = UUID()
-            conversation.internalAddParticipant(sender, isAuthoritative: true)
-            conversation.internalAddParticipant(receiver, isAuthoritative: true)
+            conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral:sender), isAuthoritative: true)
+            conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral:receiver), isAuthoritative: true)
             
             self.conversation = conversation
         }
