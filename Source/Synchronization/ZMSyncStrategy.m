@@ -634,10 +634,7 @@ ZM_EMPTY_ASSERTING_INIT()
         
         ZMFetchRequestBatch *fetchRequest = [self fetchRequestBatchForEvents:decryptedEvents];
         ZMFetchRequestBatchResult *prefetchResult = [self.syncMOC executeFetchRequestBatchOrAssert:fetchRequest];
-        NSArray *allObjectStrategies = [[self.allTranscoders arrayByAddingObjectsFromArray:self.requestStrategies]
-                                        arrayByAddingObject:self.systemMessageEventConsumer];
-        
-        for(id obj in allObjectStrategies) {
+        for(id obj in [self eventConsumers]) {
             @autoreleasepool {
                 if ([obj conformsToProtocol:@protocol(ZMEventConsumer)]) {
                     [obj processEvents:decryptedEvents liveEvents:YES prefetchResult:prefetchResult];
@@ -647,6 +644,11 @@ ZM_EMPTY_ASSERTING_INIT()
         [self.localNotificationDispatcher processEvents:decryptedEvents liveEvents:YES prefetchResult:nil];
         [self.syncMOC enqueueDelayedSave];
     }];
+}
+
+- (NSArray *)eventConsumers {
+    return [[self.allTranscoders arrayByAddingObjectsFromArray:self.requestStrategies]
+            arrayByAddingObject:self.systemMessageEventConsumer];
 }
 
 - (void)processDownloadedEvents:(NSArray <ZMUpdateEvent *>*)events;
@@ -661,11 +663,11 @@ ZM_EMPTY_ASSERTING_INIT()
         ZMFetchRequestBatch *fetchRequest = [self fetchRequestBatchForEvents:decryptedEvents];
         ZMFetchRequestBatchResult *prefetchResult = [self.moc executeFetchRequestBatchOrAssert:fetchRequest];
         
-        for(id<ZMEventConsumer> obj in self.allTranscoders) {
+        for(id<ZMEventConsumer> obj in [self eventConsumers]) {
             @autoreleasepool {
-                ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:5 label:[NSString stringWithFormat:@"Processing downloaded events in %@", [obj class]]];
-                [obj processEvents:decryptedEvents liveEvents:NO prefetchResult:prefetchResult];
-                [tp warnIfLongerThanInterval];
+                if ([obj conformsToProtocol:@protocol(ZMEventConsumer)]) {
+                    [obj processEvents:decryptedEvents liveEvents:NO prefetchResult:prefetchResult];
+                }
             }
         }
     }];
