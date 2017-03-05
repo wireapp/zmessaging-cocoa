@@ -260,7 +260,9 @@
 {
     // expect
     for(id object in [self.objectDirectory allTranscoders]) {
-        [[object expect] setNeedsSlowSync];
+        if([object conformsToProtocol:@protocol(ZMObjectStrategy)]) {
+            [[object expect] setNeedsSlowSync];
+        }
     }
     
     // when

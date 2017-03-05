@@ -139,7 +139,9 @@
     [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturnValue:@YES] hasPendingMessages];
     [[(id)self.stateMachine reject] goToState:OCMOCK_ANY];
     for(id transcoder in self.syncObjectsUsedByState) {
-        [[[[transcoder stub] andReturn:nil] requestGenerators] nextRequest];
+        if([transcoder conformsToProtocol:@protocol(ZMRequestGeneratorSource)]) {
+            [[[[transcoder stub] andReturn:nil] requestGenerators] nextRequest];
+        }
     }
     
     // when

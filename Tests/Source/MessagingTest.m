@@ -374,7 +374,6 @@
     [[[objectDirectory stub] andReturn:@[
                                         userTranscoder,
                                         conversationTranscoder,
-                                        systemMessageEventConsumer,
                                         clientMessageTranscoder,
                                         selfTranscoder,
                                         connectionTranscoder,
