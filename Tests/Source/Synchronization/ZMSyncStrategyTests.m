@@ -322,8 +322,16 @@
 - (void)testThatWhenItConsumesEventsTheyAreForwardedToAllIndividualObjects
 {
     // given
-    NSArray *eventsArray = @[[ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.member-join", @"f": @2} uuid:nil],
-                             [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.message-add", @"a": @3} uuid:nil]];
+    NSString *uuid = [NSUUID createUUID].transportString;
+    NSArray *eventsArray = @[
+                             [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.member-join",
+                                                                          @"f": @2,
+                                                                          @"conversation": uuid
+                                                                          } uuid:nil],
+                             [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.message-add",
+                                                                          @"a": @3,
+                                                                          @"conversation": uuid
+                                                                          } uuid:nil]];
     XCTAssertEqual(eventsArray.count, 2u);
     
     // expect
