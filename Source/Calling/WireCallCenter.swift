@@ -56,12 +56,12 @@ public protocol VoiceChannelStateObserver : class {
 
 extension CallClosedReason {
     
-    var voiceChannelCallEndReason : VoiceChannelV2CallEndReason {
+    func voiceChannelCallEndReason(with user: ZMUser?) -> VoiceChannelV2CallEndReason {
         switch self {
         case .lostMedia:
             return VoiceChannelV2CallEndReason.disconnected
         case .normal, .anweredElsewhere, .canceled:
-            return VoiceChannelV2CallEndReason.requested
+            return user?.isSelfUser == true ? .requestedSelf : .requested
         case .timeout:
             return VoiceChannelV2CallEndReason.requestedAVS
         case .inputOutputError:
@@ -129,7 +129,12 @@ class VoiceChannelStateObserverToken : NSObject, WireCallCenterV2CallStateObserv
         observer?.callCenterDidChange(voiceChannelState: callState.voiceChannelState, conversation: conversation, callingProtocol: .version3)
         
         if case let .terminating(reason: reason) = callState {
-            observer?.callCenterDidEndCall(reason: reason.voiceChannelCallEndReason, conversation: conversation, callingProtocol: .version3)
+            let user = userId.flatMap { ZMUser(remoteID: $0, createIfNeeded: false, in: context) }
+            observer?.callCenterDidEndCall(
+                reason: reason.voiceChannelCallEndReason(with: user),
+                conversation: conversation,
+                callingProtocol: .version3
+            )
         }
     }
     
