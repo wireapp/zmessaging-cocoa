@@ -84,9 +84,10 @@ extension VoiceChannelV3 : CallActionsInternal {
         guard let conversation = conversation, let remoteIdentifier = conversation.remoteIdentifier else { return false }
         var joined = false
         
-        if state == .incomingCall {
+        switch state {
+        case .incomingCall, .incomingCallDegraded:
             joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier) ?? false
-        } else {
+        default:
             joined = WireCallCenterV3.activeInstance?.startCall(conversationId: remoteIdentifier, video: video) ?? false
         }
         
