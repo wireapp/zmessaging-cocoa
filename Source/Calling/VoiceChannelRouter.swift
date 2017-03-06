@@ -157,7 +157,10 @@ extension VoiceChannelRouter : CallActions {
     public func leaveAndKeepDegradedConversationSecurity(userSession: ZMUserSession) {
         guard let conversation = conversation else { return }
         userSession.syncManagedObjectContext.performGroupedBlock {
-            userSession.callingStrategy.dropPendingCallMessages(for: conversation)
+            let conversationId = conversation.objectID
+            if let syncConversation = (try? userSession.syncManagedObjectContext.existingObject(with: conversationId)) as? ZMConversation {
+                userSession.callingStrategy.dropPendingCallMessages(for: syncConversation)
+            }
         }
         leave(userSession: userSession)
     }
