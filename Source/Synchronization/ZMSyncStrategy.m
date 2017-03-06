@@ -88,7 +88,7 @@
 @property (nonatomic) PushTokenStrategy *pushTokenStrategy;
 @property (nonatomic) SearchUserImageStrategy *searchUserImageStrategy;
 
-@property (nonatomic) CallingRequestStrategy *callingRequestStrategy;
+@property (nonatomic, readwrite) CallingRequestStrategy *callingRequestStrategy;
 
 @property (nonatomic) NSManagedObjectContext *eventMOC;
 @property (nonatomic) EventDecoder *eventDecoder;
