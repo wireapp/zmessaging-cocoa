@@ -1623,6 +1623,43 @@
     (void)listToken;
 }
 
+- (void)testThatItFiresAConversationChangeNotificationWhenAGroupCallIsDeclined
+{
+    // given
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    self.useGroupConversation = YES;
+
+    ZMConversation *conversation = self.conversationUnderTest;
+
+    ZMConversationList *list = [ZMConversationList conversationsInUserSession:self.userSession];
+    id listObserver = [OCMockObject niceMockForProtocol:@protocol(ZMConversationListObserver)];
+    id listToken = [ConversationListChangeInfo addObserver:listObserver forList:list];
+
+    // Joining
+    [self usersJoinGroupCall:[[self mockConversationUnderTest] activeUsers]];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+
+    // Expect
+    XCTestExpectation *expectation1 = [self expectationWithDescription:@"connection set to accepted"];
+    [(id<ZMConversationListObserver>)[listObserver expect] conversationInsideList:list didChange:[OCMArg checkWithBlock:^BOOL(ConversationChangeInfo *note) {
+        if (note.conversationListIndicatorChanged && note.conversation == conversation) {
+            [expectation1 fulfill];
+            return YES;
+        }
+        return NO;
+    }]];
+
+    // When
+    [self.userSession performChanges:^{
+        [self.conversationUnderTest.voiceChannelRouter.v2 ignoreIncomingCall];
+    }];
+
+    // Then
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    (void)listToken;
+}
+
 
 - (void)testThatWeCanJoinGroupCallAfterWeLeaveItAndItIsStillActive
 {
