@@ -458,12 +458,10 @@ ZM_EMPTY_ASSERTING_INIT()
                 [strongUiMoc.wireCallCenterV2 callStateDidChangeWithConversations: changedConversations];
             }
            
-            [self.notificationDispatcher willMergeChanges:changedObjectsIDs];
             [strongUiMoc mergeChangesFromContextDidSaveNotification:note];
             
             [strongUiMoc processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
-            [self.notificationDispatcher didMergeChanges];
-
+            [self.notificationDispatcher didMergeChanges:changedObjectsIDs];
         }];
     }
 }

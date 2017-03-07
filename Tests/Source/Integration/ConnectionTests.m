@@ -406,20 +406,14 @@
         NSIndexSet *expectedSet1 = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 2)];
 
         NSArray *listNotes = conversationListObserver.notifications;
-        XCTAssertEqual(listNotes.count, 2u);
+        XCTAssertEqual(listNotes.count, 1u);
 
         ConversationListChangeInfo *listNote1 = listNotes.firstObject;
-        ConversationListChangeInfo *listNote2 = listNotes.lastObject;
 
         XCTAssertEqualObjects(listNote1.insertedIndexes, expectedSet1);
         XCTAssertEqualObjects(listNote1.updatedIndexes, [NSIndexSet indexSet]);
         XCTAssertEqualObjects(listNote1.deletedIndexes, [NSIndexSet indexSet]);
         XCTAssertEqual(listNote1.movedIndexPairs.count, 0u);
-        
-        XCTAssertEqualObjects(listNote2.insertedIndexes, [NSIndexSet indexSet]);
-        XCTAssertEqualObjects(listNote2.updatedIndexes, expectedSet1);
-        XCTAssertEqualObjects(listNote2.deletedIndexes, [NSIndexSet indexSet]);
-        XCTAssertEqual(listNote2.movedIndexPairs.count, 0u);
 
         NSArray *convNotes = convObserver.notifications;
         convNotes = convObserver.notifications;

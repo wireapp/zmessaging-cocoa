@@ -702,6 +702,8 @@
         [groupConversation addUsersByUser:self.user1 addedUsers:@[self.selfUser]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
+    [self.syncMOC saveOrRollback];
+    WaitForAllGroupsToBeEmpty(0.5);
 
     //By this moment new conversation should be created and self user should be it's member
     ZMConversation *newConv = [self conversationForMockConversation:groupConversation];
@@ -1162,7 +1164,7 @@
         XCTAssertEqual(note.deletedIndexes.count, 0u);
         XCTAssertEqual(note.insertedIndexes.count, 0u);
     }
-    XCTAssertEqual(updatesCount, 2);
+    XCTAssertEqual(updatesCount, 1);
     XCTAssertEqual(moves.count, 1u);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject from], from);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject to], 0u);
