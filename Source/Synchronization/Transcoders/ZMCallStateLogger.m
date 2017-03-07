@@ -75,18 +75,20 @@
             return @"NoActiveUsers";
         case VoiceChannelV2StateIncomingCall:
             return @"IncomingCall";
+        case VoiceChannelV2StateIncomingCallDegraded:
+            return @"IncomingCallDegraded";
         case VoiceChannelV2StateIncomingCallInactive:
             return @"IncomingCallInactive";
         case VoiceChannelV2StateSelfConnectedToActiveChannel:
             return @"ConnectedToActiveChannel";
         case VoiceChannelV2StateOutgoingCall:
             return @"OutgoingCall";
+        case VoiceChannelV2StateOutgoingCallDegraded:
+            return @"OutgoingCallDegraded";
         case VoiceChannelV2StateOutgoingCallInactive:
             return @"OutgoingCallInactive";
         case VoiceChannelV2StateSelfIsJoiningActiveChannel:
             return @"SelfIsJoiningActiveChannel";
-        default:
-            break;
     }
 }
 

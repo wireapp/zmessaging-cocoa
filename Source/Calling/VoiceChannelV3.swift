@@ -57,8 +57,8 @@ public class VoiceChannelV3 : NSObject, CallProperties {
     }
 
     public var state: VoiceChannelV2State {
-        if let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = WireCallCenterV3.activeInstance {
-            return callCenter.callState(conversationId:remoteIdentifier).voiceChannelState
+        if let conversation = conversation, let remoteIdentifier = conversation.remoteIdentifier, let callCenter = WireCallCenterV3.activeInstance {
+            return callCenter.callState(conversationId:remoteIdentifier).voiceChannelState(securityLevel: conversation.securityLevel)
         } else {
             return .noActiveUsers
         }
@@ -81,12 +81,13 @@ public class VoiceChannelV3 : NSObject, CallProperties {
 extension VoiceChannelV3 : CallActionsInternal {
     
     public func join(video: Bool) -> Bool {
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
+        guard let conversation = conversation, let remoteIdentifier = conversation.remoteIdentifier else { return false }
         var joined = false
         
-        if state == .incomingCall {
+        switch state {
+        case .incomingCall, .incomingCallDegraded:
             joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier) ?? false
-        } else {
+        default:
             joined = WireCallCenterV3.activeInstance?.startCall(conversationId: remoteIdentifier, video: video) ?? false
         }
         
@@ -120,16 +121,20 @@ public extension CallState {
         }
     }
     
-    var voiceChannelState : VoiceChannelV2State {
+    func voiceChannelState(securityLevel: ZMConversationSecurityLevel) -> VoiceChannelV2State {
         switch self {
         case .none:
             return .noActiveUsers
+        case .incoming where securityLevel == .secureWithIgnored:
+            return .incomingCallDegraded
         case .incoming:
             return .incomingCall
         case .answered:
             return .selfIsJoiningActiveChannel
         case .established:
             return .selfConnectedToActiveChannel
+        case .outgoing where securityLevel == .secureWithIgnored:
+            return .outgoingCallDegraded
         case .outgoing:
             return .outgoingCall
         case .terminating:

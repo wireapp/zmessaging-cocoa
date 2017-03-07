@@ -347,7 +347,7 @@ NS_ASSUME_NONNULL_END
 
 - (void)requestStartCallInConversation:(ZMConversation *)conversation videoCall:(BOOL)video
 {
-    if (conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall) {
+    if (conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall || conversation.voiceChannel.state == VoiceChannelV2StateIncomingCallDegraded) {
         CXAnswerCallAction *answerAction = [[CXAnswerCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
         CXTransaction *callAnswerTransaction = [[CXTransaction alloc] initWithAction:answerAction];
         [self.callController requestTransaction:callAnswerTransaction completion:^(NSError * _Nullable error) {
@@ -359,8 +359,15 @@ NS_ASSUME_NONNULL_END
     else {
         [self endAllOngoingCallKitCallsExcept:conversation];
         
+        CXHandle *handle = conversation.callKitHandle;
+        
+        if (handle == nil) {
+            [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot get call kit handle for conversation"];
+            return;
+        }
+        
         CXStartCallAction *startCallAction = [[CXStartCallAction alloc] initWithCallUUID:conversation.remoteIdentifier
-                                                                                  handle:conversation.callKitHandle];
+                                                                                  handle:handle];
         startCallAction.video = video;
         startCallAction.contactIdentifier = [conversation localizedCallerNameWithCallFromUser:[ZMUser selfUserInUserSession:self.userSession]];
         

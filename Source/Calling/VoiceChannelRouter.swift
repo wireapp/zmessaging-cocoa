@@ -149,6 +149,22 @@ extension VoiceChannelRouter : CallObservers {
 
 extension VoiceChannelRouter : CallActions {
     
+    public func continueByDecreasingConversationSecurity(userSession: ZMUserSession) {
+        guard let conversation = conversation else { return }
+        conversation.makeNotSecure()
+    }
+    
+    public func leaveAndKeepDegradedConversationSecurity(userSession: ZMUserSession) {
+        guard let conversation = conversation else { return }
+        userSession.syncManagedObjectContext.performGroupedBlock {
+            let conversationId = conversation.objectID
+            if let syncConversation = (try? userSession.syncManagedObjectContext.existingObject(with: conversationId)) as? ZMConversation {
+                userSession.callingStrategy.dropPendingCallMessages(for: syncConversation)
+            }
+        }
+        leave(userSession: userSession)
+    }
+    
     public func join(video: Bool, userSession: ZMUserSession) -> Bool {
         if ZMUserSession.useCallKit {
             userSession.callKitDelegate.requestStartCall(in: conversation!, videoCall: video)

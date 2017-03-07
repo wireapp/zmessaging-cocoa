@@ -26,6 +26,8 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     public var overridenCallingProtocol : CallingProtocol = .version2
     public var startCallShouldFail : Bool = false
     public var answerCallShouldFail : Bool = false
+    public var didCallStartCall : Bool = false
+    public var didCallAnswerCall : Bool = false
     
     public override var callingProtocol: CallingProtocol {
         return overridenCallingProtocol
@@ -36,10 +38,12 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     }
     
     override public func startCall(conversationId: UUID, video: Bool) -> Bool {
+        didCallStartCall = true
         return !startCallShouldFail
     }
     
     override public func answerCall(conversationId: UUID) -> Bool {
+        didCallAnswerCall = true
         return !answerCallShouldFail
     }
     

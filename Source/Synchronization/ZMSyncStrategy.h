@@ -83,6 +83,7 @@
 
 @property (nonatomic, readonly) BOOL slowSyncInProgress;
 @property (nonatomic, readonly) NSManagedObjectContext *syncMOC;
+@property (nonatomic, readonly) CallingRequestStrategy *callingRequestStrategy;
 
 - (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
 

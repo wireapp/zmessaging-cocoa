@@ -43,9 +43,11 @@ typedef NS_ENUM(uint8_t, VoiceChannelV2State) {
     VoiceChannelV2StateInvalid = 0,
     VoiceChannelV2StateNoActiveUsers, ///< Nobody is active on the voice channel
     VoiceChannelV2StateOutgoingCall, ///< We are connecting and nobody is in a connected state on the voice channel yet (ie: we are calling)
+    VoiceChannelV2StateOutgoingCallDegraded, ///< We are doing an outgoing call but we can't proceed since the conversation security is degraded
     VoiceChannelV2StateOutgoingCallInactive, ///< We are connecting and nobody is in a connected state on the voice channel yet (ie: we are calling) but not ringing anymore.
     VoiceChannelV2StateIncomingCall, ///< Someone else is calling (ringing) you on the voice channel.
-    VoiceChannelV2StateIncomingCallInactive, // Group call is in progress but it's not ringing for us.
+    VoiceChannelV2StateIncomingCallDegraded, ///< Someone else is calling but we can't proceed since the conversation security is degraded
+    VoiceChannelV2StateIncomingCallInactive, ///< Group call is in progress but it's not ringing for us.
     VoiceChannelV2StateSelfIsJoiningActiveChannel, ///< Somebody else is in a connected state on the voice channel and we are connecting (ie: we are joining)
     VoiceChannelV2StateSelfConnectedToActiveChannel, ///< Self connects to voice channel AND there is someone already connected on the channel
     VoiceChannelV2StateDeviceTransferReady, ///< This device is ready to have the call transfered to it

@@ -999,6 +999,11 @@ static BOOL ZMUserSessionUseCallKit = NO;
 
 @implementation ZMUserSession (Calling)
 
+- (CallingRequestStrategy *)callingStrategy
+{
+    return self.operationLoop.syncStrategy.callingRequestStrategy;
+}
+
 + (BOOL)useCallKit
 {
     return ZMUserSessionUseCallKit;

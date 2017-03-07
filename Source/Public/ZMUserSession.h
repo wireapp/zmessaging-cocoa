@@ -33,6 +33,7 @@
 @class UserClient;
 @class ZMProxyRequest;
 @class ZMCallKitDelegate;
+@class CallingRequestStrategy;
 
 @protocol UserProfile;
 @protocol AnalyticsType;
@@ -164,11 +165,11 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 
 @end
 
-
 @interface ZMUserSession (Calling)
 
 @property (class) BOOL useCallKit;
 @property (class) CallingProtocolStrategy callingProtocolStrategy;
+@property (nonatomic, readonly) CallingRequestStrategy *callingStrategy;
 
 @end
 
