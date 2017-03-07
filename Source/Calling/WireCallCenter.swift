@@ -127,7 +127,6 @@ class VoiceChannelStateObserverToken : NSObject, WireCallCenterV2CallStateObserv
         guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: context) else { return }
         let voiceChannelState = callState.voiceChannelState(securityLevel: conversation.securityLevel)
         observer?.callCenterDidChange(voiceChannelState: voiceChannelState, conversation: conversation, callingProtocol: .version3)
-        conversation.securityLevel == .secureWithIgnored
         
         if case let .terminating(reason: reason) = callState {
             observer?.callCenterDidEndCall(reason: reason.voiceChannelCallEndReason, conversation: conversation, callingProtocol: .version3)
@@ -156,13 +155,7 @@ class VoiceChannelStateObserverFilter : NSObject,  VoiceChannelStateObserver {
         self.token = VoiceChannelStateObserverToken(context: context, observer: self)
         self.conversationToken = ConversationChangeInfo.add(observer: self, for: conversation)
     }
-    
-    deinit {
-        if let token = conversationToken {
-            ConversationChangeInfo.remove(observer: token, for: observedConversation)
-        }
-    }
-    
+        
     func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
         if conversation == observedConversation {
             observer?.callCenterDidChange(voiceChannelState: voiceChannelState, conversation: conversation, callingProtocol: callingProtocol)
