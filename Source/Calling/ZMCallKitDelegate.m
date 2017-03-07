@@ -359,8 +359,15 @@ NS_ASSUME_NONNULL_END
     else {
         [self endAllOngoingCallKitCallsExcept:conversation];
         
+        CXHandle *handle = conversation.callKitHandle;
+        
+        if (handle == nil) {
+            [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot get call kit handle for conversation"];
+            return;
+        }
+        
         CXStartCallAction *startCallAction = [[CXStartCallAction alloc] initWithCallUUID:conversation.remoteIdentifier
-                                                                                  handle:conversation.callKitHandle];
+                                                                                  handle:handle];
         startCallAction.video = video;
         startCallAction.contactIdentifier = [conversation localizedCallerNameWithCallFromUser:[ZMUser selfUserInUserSession:self.userSession]];
         
