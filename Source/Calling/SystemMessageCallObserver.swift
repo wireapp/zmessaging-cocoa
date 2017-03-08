@@ -31,7 +31,6 @@ private let log = ZMSLog(tag: "Calling System Message")
 
     public init(userSession: ZMUserSession) {
         super.init()
-        ZMSLog.set(level: .info, tag: "Calling System Message") // TODO: Remove
         token = VoiceChannelRouter.addStateObserver(self, userSession: userSession)
     }
 
