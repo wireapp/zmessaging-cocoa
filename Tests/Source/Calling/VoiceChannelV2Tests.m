@@ -162,9 +162,11 @@
     
     self.otherConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     self.otherConversation.conversationType = ZMConversationTypeOneOnOne;
+    self.otherConversation.remoteIdentifier = [NSUUID new];
     
     self.groupConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     self.groupConversation.conversationType = ZMConversationTypeGroup;
+    self.groupConversation.remoteIdentifier = [NSUUID new];
     
     self.selfUser = [ZMUser selfUserInContext:self.uiMOC];
     self.selfUser.name = @"Me Myself";
@@ -188,6 +190,7 @@
         self.syncGroupConversation = (id)[self.syncMOC objectWithID:self.groupConversation.objectID];
         self.syncOneOnOneConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         self.syncOneOnOneConversation.conversationType = ZMConversationTypeOneOnOne;
+        self.syncOneOnOneConversation.remoteIdentifier = NSUUID.createUUID;
         [self.syncMOC saveOrRollback];
     }];
 }
