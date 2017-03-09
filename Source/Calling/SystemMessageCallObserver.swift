@@ -53,11 +53,12 @@ private let log = ZMSLog(tag: "Calling System Message")
             let duration = -startDate.timeIntervalSinceNow
             log.info("Appending performed call message: \(duration), \(caller.displayName), \"\(conversation.displayName)\"")
             conversation.appendPerformedCallMessage(with: duration, caller: caller)
-            callerByConversation[conversation] = nil
-            startDateByConversation[conversation] = nil
         } else {
             log.error("Call ended but no call info present in order to insert system message")
         }
+
+        callerByConversation[conversation] = nil
+        startDateByConversation[conversation] = nil
     }
 
     public func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation) {
