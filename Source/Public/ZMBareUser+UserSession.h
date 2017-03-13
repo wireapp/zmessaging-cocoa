@@ -23,6 +23,8 @@
 
 @class ZMUserSession, ZMAddressBookContact;
 
+@protocol ZMCommonContactsSearchDelegate;
+@protocol ZMCommonContactsSearchToken;
 
 @protocol ZMSearchableUser <ZMBareUser>
 

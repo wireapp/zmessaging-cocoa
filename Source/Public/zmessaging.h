@@ -33,6 +33,7 @@
 #import <zmessaging/ZMTypingUsers.h>
 #import <zmessaging/ZMOnDemandFlowManager.h>
 #import <zmessaging/CallingProtocolStrategy.h>
+#import <zmessaging/ZMCommonContactsSearchDelegate.h>
 
 
 // PRIVATE

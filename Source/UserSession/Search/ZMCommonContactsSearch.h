@@ -20,7 +20,12 @@
 @import Foundation;
 @import ZMCDataModel;
 
+#import "ZMCommonContactsSearchDelegate.h"
+
+
 @class ZMTransportSession;
+
+
 
 @interface ZMCommonContactsSearchCachedEntry : NSObject
 
