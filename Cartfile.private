@@ -1,2 +1,2 @@
-github "wireapp/wire-ios-mocktransport" ~> 22.0
+github "wireapp/wire-ios-mocktransport" ~> 24.0
 github "wireapp/wire-ios-testing" ~> 8.0
