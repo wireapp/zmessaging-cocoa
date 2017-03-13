@@ -35,7 +35,6 @@ public enum ProfileImageSize {
 public enum UserProfileImageUpdateError: Error {
     case preprocessingFailed
     case uploadFailed(NSError)
-    case cancelled
 }
 
 public protocol UserProfileImageUpdateStateDelegate: class {
@@ -88,7 +87,7 @@ public final class UserProfileImageUpdateStatus: NSObject {
         case update(previewAssetId: String, completeAssetId: String)
         case updating
         case completed
-        case failed
+        case failed(UserProfileImageUpdateError)
         
         internal func canTransition(to newState: ProfileUpdateState) -> Bool {
             switch (self, newState) {
@@ -159,7 +158,7 @@ extension UserProfileImageUpdateStatus {
         let imageOwner = UserProfileImageOwner(imageData: imageData, size: size)
         guard let operations = preprocessor?.operations(forPreprocessingImageOwner: imageOwner), !operations.isEmpty else {
             resetImageState()
-            setState(state: .failed)
+            setState(state: .failed(.preprocessingFailed))
             return
         }
         
@@ -202,8 +201,8 @@ extension UserProfileImageUpdateStatus {
             default:
                 break // Need to wait until both images are uploaded
             }
-        case (_, .failed):
-            setState(state: .failed)
+        case let (_, .failed(error)):
+            setState(state: .failed(error))
         default:
             break
         }
@@ -225,7 +224,7 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     }
     
     public func failedPreprocessingImageOwner(_ imageOwner: ZMImageOwner) {
-        setState(state: .failed)
+        setState(state: .failed(.preprocessingFailed))
     }
     
     public func didCompleteProcessingImageOwner(_ imageOwner: ZMImageOwner) {}

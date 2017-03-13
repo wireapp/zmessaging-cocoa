@@ -26,7 +26,7 @@ var sampleUploadState: UserProfileImageUpdateStatus.ImageState {
 var sampleUploadedState: UserProfileImageUpdateStatus.ImageState {
     return UserProfileImageUpdateStatus.ImageState.uploaded(assetId: "foo")
 }
-var sampleFailedState: UserProfileImageUpdateStatus.ImageState {
+var sampleFailedImageState: UserProfileImageUpdateStatus.ImageState {
     return UserProfileImageUpdateStatus.ImageState.failed(.preprocessingFailed)
 }
 
@@ -35,6 +35,9 @@ var samplePreprocessState: UserProfileImageUpdateStatus.ProfileUpdateState {
 }
 var sampleUpdateState: UserProfileImageUpdateStatus.ProfileUpdateState {
     return UserProfileImageUpdateStatus.ProfileUpdateState.update(previewAssetId: "id1", completeAssetId: "id2")
+}
+var sampleFailedState: UserProfileImageUpdateStatus.ProfileUpdateState {
+    return UserProfileImageUpdateStatus.ProfileUpdateState.failed(.preprocessingFailed)
 }
 
 class MockPreprocessor: NSObject, ZMAssetsPreprocessorProtocol {
@@ -106,7 +109,7 @@ extension UserProfileImageUpdateStatus.ImageState: Equatable {
 
 extension UserProfileImageUpdateStatus.ImageState: StateTransition {
     static var allStates: [UserProfileImageUpdateStatus.ImageState] {
-        return [.ready, .preprocessing, sampleUploadState, .uploading, sampleUploadedState, .completed, sampleFailedState]
+        return [.ready, .preprocessing, sampleUploadState, .uploading, sampleUploadedState, .completed, sampleFailedImageState]
     }
 }
 
@@ -118,7 +121,7 @@ extension UserProfileImageUpdateStatus.ProfileUpdateState: Equatable {
 
 extension UserProfileImageUpdateStatus.ProfileUpdateState: StateTransition {
     static var allStates: [UserProfileImageUpdateStatus.ProfileUpdateState] {
-        return [.ready, samplePreprocessState, sampleUpdateState, .updating, .completed, .failed]
+        return [.ready, samplePreprocessState, sampleUpdateState, .updating, .completed, sampleFailedState]
     }
 }
 
@@ -156,13 +159,13 @@ extension UserProfileImageUpdateStatusTests {
     }
     
     func testImageStateTransitions() {
-        ImageState.canTransition(from: .ready, onlyTo: [sampleFailedState, .preprocessing])
-        ImageState.canTransition(from: .preprocessing, onlyTo: [sampleFailedState, sampleUploadState])
-        ImageState.canTransition(from: sampleUploadState, onlyTo: [sampleFailedState, .uploading])
-        ImageState.canTransition(from: .uploading, onlyTo: [sampleFailedState, sampleUploadedState])
-        ImageState.canTransition(from: sampleUploadedState, onlyTo: [sampleFailedState, .completed])
-        ImageState.canTransition(from: .completed, onlyTo: [sampleFailedState, .ready])
-        ImageState.canTransition(from: sampleFailedState, onlyTo: [.ready])
+        ImageState.canTransition(from: .ready, onlyTo: [sampleFailedImageState, .preprocessing])
+        ImageState.canTransition(from: .preprocessing, onlyTo: [sampleFailedImageState, sampleUploadState])
+        ImageState.canTransition(from: sampleUploadState, onlyTo: [sampleFailedImageState, .uploading])
+        ImageState.canTransition(from: .uploading, onlyTo: [sampleFailedImageState, sampleUploadedState])
+        ImageState.canTransition(from: sampleUploadedState, onlyTo: [sampleFailedImageState, .completed])
+        ImageState.canTransition(from: .completed, onlyTo: [sampleFailedImageState, .ready])
+        ImageState.canTransition(from: sampleFailedImageState, onlyTo: [.ready])
     }
     
     func testThatImageStateCanTransitionToValidState() {
@@ -208,9 +211,7 @@ extension UserProfileImageUpdateStatusTests {
         let previewAssetId = "asset_preview"
         let completeAssetId = "asset_complete"
 
-//        XCTAssertEqual(sut.state, .preprocessing)
         sut.setState(state: .uploaded(assetId: previewAssetId), for: .preview)
-//        XCTAssertEqual(sut.state, .preprocessing)
         sut.setState(state: .uploaded(assetId: completeAssetId), for: .complete)
 
         // THEN
@@ -221,10 +222,10 @@ extension UserProfileImageUpdateStatusTests {
         // WHEN
         sut.setState(state: .preprocessing, for: .preview)
         sut.setState(state: sampleUploadState, for: .preview)
-        sut.setState(state: sampleFailedState, for: .preview)
+        sut.setState(state: sampleFailedImageState, for: .preview)
 
         // THEN
-        XCTAssertEqual(sut.state, .failed)
+        XCTAssertEqual(sut.state, .failed(.preprocessingFailed))
     }
 
 }
@@ -236,12 +237,12 @@ extension UserProfileImageUpdateStatusTests {
     }
     
     func testProfileUpdateStateTransitions() {
-        ProfileUpdateState.canTransition(from: .ready, onlyTo: [.failed, samplePreprocessState])
-        ProfileUpdateState.canTransition(from: samplePreprocessState, onlyTo: [.failed, sampleUpdateState])
-        ProfileUpdateState.canTransition(from: sampleUpdateState, onlyTo: [.failed, .updating])
-        ProfileUpdateState.canTransition(from: .updating, onlyTo: [.failed, .completed])
+        ProfileUpdateState.canTransition(from: .ready, onlyTo: [sampleFailedState, samplePreprocessState])
+        ProfileUpdateState.canTransition(from: samplePreprocessState, onlyTo: [sampleFailedState, sampleUpdateState])
+        ProfileUpdateState.canTransition(from: sampleUpdateState, onlyTo: [sampleFailedState, .updating])
+        ProfileUpdateState.canTransition(from: .updating, onlyTo: [sampleFailedState, .completed])
         ProfileUpdateState.canTransition(from: .completed, onlyTo: [.ready])
-        ProfileUpdateState.canTransition(from: .failed, onlyTo: [.ready])
+        ProfileUpdateState.canTransition(from: sampleFailedState, onlyTo: [.ready])
     }
     
     func testThatProfileUpdateStateCanTransitionToValidState() {
@@ -266,10 +267,10 @@ extension UserProfileImageUpdateStatusTests {
         sut.setState(state: .preprocessing, for: .complete)
 
         // WHEN
-        sut.setState(state: .failed)
+        sut.setState(state: .failed(.preprocessingFailed))
 
         // THEN
-        XCTAssertEqual(sut.state, .failed)
+        XCTAssertEqual(sut.state, .failed(.preprocessingFailed))
         XCTAssertEqual(sut.imageState(for: .preview), .ready)
         XCTAssertEqual(sut.imageState(for: .complete), .ready)
     }
@@ -304,7 +305,7 @@ extension UserProfileImageUpdateStatusTests {
         sut.updateImage(imageData: tinyImage, size: .zero)
 
         // THEN
-        XCTAssertEqual(sut.state, .failed)
+        XCTAssertEqual(sut.state, .failed(.preprocessingFailed))
         XCTAssertEqual(sut.imageState(for: .preview), .ready)
         XCTAssertEqual(sut.imageState(for: .complete), .ready)
     }
@@ -354,7 +355,7 @@ extension UserProfileImageUpdateStatusTests {
         sut.failedPreprocessingImageOwner(imageOwner)
         
         // THEN
-        XCTAssertEqual(sut.state, .failed)
+        XCTAssertEqual(sut.state, .failed(.preprocessingFailed))
         XCTAssertEqual(sut.imageState(for: .preview), .ready)
         XCTAssertEqual(sut.imageState(for: .complete), .ready)
     }
@@ -365,13 +366,13 @@ extension UserProfileImageUpdateStatusTests {
         XCTAssertEqual(sut.state, .preprocess(image: Data(), size: .zero))
         XCTAssertEqual(sut.imageState(for: .preview), .preprocessing)
         XCTAssertEqual(sut.imageState(for: .complete), .preprocessing)
-        sut.setState(state: .failed)
+        sut.setState(state: .failed(.preprocessingFailed))
 
         // WHEN
         sut.updateImage(imageData: Data(), size: .zero)
         
         // THEN
-        XCTAssertEqual(sut.state, .failed)
+        XCTAssertEqual(sut.state, .failed(.preprocessingFailed))
         XCTAssertEqual(sut.imageState(for: .preview), .ready)
         XCTAssertEqual(sut.imageState(for: .complete), .ready)
 
