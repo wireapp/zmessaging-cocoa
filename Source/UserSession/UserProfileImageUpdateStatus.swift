@@ -133,7 +133,7 @@ extension UserProfileImageUpdateStatus {
     internal func setState(state newState: ProfileUpdateState) {
         let currentState = state
         guard currentState.canTransition(to: newState) else {
-            // Trying to transition to invalids state - ignore
+            // Trying to transition to invalid state - ignore
             return
         }
         state = newState
@@ -176,7 +176,7 @@ extension UserProfileImageUpdateStatus {
     internal func setState(state newState: ImageState, for imageSize: ProfileImageSize) {
         let currentState = imageState(for: imageSize)
         guard currentState.canTransition(to: newState) else {
-            // Trying to transition to invalids state - ignore
+            // Trying to transition to invalid state - ignore
             return
         }
         
