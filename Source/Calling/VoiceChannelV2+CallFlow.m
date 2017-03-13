@@ -61,6 +61,7 @@
         case VoiceChannelV2StateIncomingCallInactive:
         case VoiceChannelV2StateOutgoingCallDegraded:
         case VoiceChannelV2StateOutgoingCallInactive:
+        case VoiceChannelV2StateSelfIsJoiningActiveChannelDegraded:
             break;
     }
 }

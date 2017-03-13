@@ -131,6 +131,8 @@ public extension CallState {
             return .incomingCallDegraded
         case .incoming:
             return .incomingCall
+        case .answered where securityLevel == .secureWithIgnored:
+            return .selfIsJoiningActiveChannelDegraded
         case .answered:
             return .selfIsJoiningActiveChannel
         case .established:

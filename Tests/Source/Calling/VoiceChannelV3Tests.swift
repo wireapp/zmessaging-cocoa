@@ -88,7 +88,7 @@ class VoiceChannelV3Tests : MessagingTest {
         // given
         let callStates : [CallState] =  [.none, .incoming(video: false), .answered, .established, .outgoing, .terminating(reason: CallClosedReason.normal), .unknown]
         let notSecureMapping : [VoiceChannelV2State] = [.noActiveUsers, .incomingCall, .selfIsJoiningActiveChannel, .selfConnectedToActiveChannel, .outgoingCall, .noActiveUsers, .invalid]
-        let secureWithIgnoredMapping : [VoiceChannelV2State] = [.noActiveUsers, .incomingCallDegraded, .selfIsJoiningActiveChannel, .selfConnectedToActiveChannel, .outgoingCallDegraded, .noActiveUsers, .invalid]
+        let secureWithIgnoredMapping : [VoiceChannelV2State] = [.noActiveUsers, .incomingCallDegraded, .selfIsJoiningActiveChannelDegraded, .selfConnectedToActiveChannel, .outgoingCallDegraded, .noActiveUsers, .invalid]
         
         // then
         XCTAssertEqual(callStates.map({ $0.voiceChannelState(securityLevel: .notSecure)}), notSecureMapping)
