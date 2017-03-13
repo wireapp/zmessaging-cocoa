@@ -136,39 +136,6 @@
     [searchDirectory tearDown];
 }
 
-- (void)testThatItReturnsCommonUsersWithAUser
-{
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    __block id<ZMCommonContactsSearchToken> receivedToken;
-    __block NSOrderedSet *receivedUsers;
-    
-    // given
-    ZMUser *user1 = [self userForMockUser:self.user1];
-    id delegate = [OCMockObject mockForProtocol:@protocol(ZMCommonContactsSearchDelegate)];
-    [[delegate expect] didReceiveCommonContactsUsers:[OCMArg checkWithBlock:^BOOL(id obj) {
-        receivedUsers = obj;
-        return YES;
-    }] forSearchToken:[OCMArg checkWithBlock:^BOOL(id obj) {
-        receivedToken = obj;
-        return YES;
-    }]];
-    
-    // when
-    id<ZMCommonContactsSearchToken> token = [user1 searchCommonContactsInUserSession:self.userSession withDelegate:delegate];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    [delegate verify];
-    XCTAssertEqual(token, receivedToken);
-    NSArray *expectedUsers = @[self.user1, self.user2];
-    for(MockUser *user in expectedUsers) {
-        ZMUser *realUser = [self userForMockUser:user];
-        
-        XCTAssertTrue([receivedUsers containsObject:realUser]);
-    }
-}
-
 - (void)testThatTheSelfUserCanAcceptAConnectionRequest
 {
     // given
