@@ -34,19 +34,19 @@ public enum ProfileImageSize {
 
 public enum UserProfileImageUpdateError: Error {
     case preprocessingFailed
-    case uploadFailed(NSError)
+    case uploadFailed(Error)
 }
 
 public protocol UserProfileImageUpdateStateDelegate: class {
     func failed(withError: UserProfileImageUpdateError)
 }
 
-internal protocol UserProfileImageUploadStatusProtocol: class {
+public protocol UserProfileImageUploadStatusProtocol: class {
     var allSizes: [ProfileImageSize] { get }
     func consumeImage(for size: ProfileImageSize) -> Data?
     func hasImageToUpload(for size: ProfileImageSize) -> Bool
     func uploadingDone(imageSize: ProfileImageSize, assetId: String)
-    func uploadingFailed(imageSize: ProfileImageSize, error: NSError)
+    func uploadingFailed(imageSize: ProfileImageSize, error: Error)
 }
 
 public final class UserProfileImageUpdateStatus: NSObject {
@@ -233,11 +233,11 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
 }
 
 extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
-    internal var allSizes: [ProfileImageSize] {
+    public var allSizes: [ProfileImageSize] {
         return [.preview, .complete]
     }
     
-    internal func hasImageToUpload(for size: ProfileImageSize) -> Bool {
+    public func hasImageToUpload(for size: ProfileImageSize) -> Bool {
         switch imageState(for: size) {
         case .upload:
             return true
@@ -246,7 +246,7 @@ extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
         }
     }
     
-    internal func consumeImage(for size: ProfileImageSize) -> Data? {
+    public func consumeImage(for size: ProfileImageSize) -> Data? {
         switch imageState(for: size) {
         case .upload(image: let image):
             setState(state: .uploading, for: size)
@@ -256,11 +256,11 @@ extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
         }
     }
     
-    internal func uploadingDone(imageSize: ProfileImageSize, assetId: String) {
+    public func uploadingDone(imageSize: ProfileImageSize, assetId: String) {
         setState(state: .uploaded(assetId: assetId), for: imageSize)
     }
     
-    internal func uploadingFailed(imageSize: ProfileImageSize, error: NSError) {
+    public func uploadingFailed(imageSize: ProfileImageSize, error: Error) {
         setState(state: .failed(.uploadFailed(error)), for: imageSize)
     }
 }
