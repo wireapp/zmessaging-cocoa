@@ -3733,10 +3733,13 @@
 
 - (void)testThatOnStartUpItSetsCallStateNeedsToBeUpdatedFromBackend_NotInterruptedbyGSMCall
 {
-    // given
     ZMConversation *conversation = self.syncSelfToUser1Conversation;
-    [[conversation mutableOrderedSetValueForKey:@"callParticipants"] addObject:self.syncOtherUser1];
-    [self.syncMOC saveOrRollback];
+    
+    // given
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [[conversation mutableOrderedSetValueForKey:@"callParticipants"] addObject:self.syncOtherUser1];
+        [self.syncMOC saveOrRollback];
+    }];
     
     XCTAssertTrue(conversation.callParticipants.count > 0);
     XCTAssertFalse(conversation.callStateNeedsToBeUpdatedFromBackend);

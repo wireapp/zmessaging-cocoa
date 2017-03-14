@@ -61,6 +61,7 @@
         case VoiceChannelV2StateIncomingCallInactive:
         case VoiceChannelV2StateOutgoingCallDegraded:
         case VoiceChannelV2StateOutgoingCallInactive:
+        case VoiceChannelV2StateSelfIsJoiningActiveChannelDegraded:
             break;
     }
 }
@@ -212,6 +213,10 @@
 {
     ZMConversation *conv = self.conversation;
     
+    if (conv.remoteIdentifier.transportString.length == 0) {
+        return NO;
+    }
+    
     if ([self hasOngoingGSMCall] && ![ZMUserSession useCallKit]) {
         [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
             [CallingInitialisationNotification notifyCallingFailedWithErrorCode:VoiceChannelV2ErrorCodeOngoingGSMCall];
@@ -235,15 +240,19 @@
 
 - (BOOL)joinVideoCall
 {
-    ZMConversation *strongConversation = self.conversation;
+    ZMConversation *conversation = self.conversation;
+    
+    if (conversation.remoteIdentifier.transportString.length == 0) {
+        return NO;
+    }
     
     // if there is already an ongoing audioCall we can not switch to videoCall
-    if (strongConversation.callDeviceIsActive && !strongConversation.isVideoCall) {
+    if (conversation.callDeviceIsActive && !conversation.isVideoCall) {
         ZMLogError(@"Can't start video call because there's already an ongoing audio call");
         return NO;
     }
     
-    strongConversation.isVideoCall = YES;
+    conversation.isVideoCall = YES;
     
     [self join];
     

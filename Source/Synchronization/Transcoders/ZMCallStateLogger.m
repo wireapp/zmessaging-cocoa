@@ -89,6 +89,8 @@
             return @"OutgoingCallInactive";
         case VoiceChannelV2StateSelfIsJoiningActiveChannel:
             return @"SelfIsJoiningActiveChannel";
+        case VoiceChannelV2StateSelfIsJoiningActiveChannelDegraded:
+            return @"SelfIsJoiningActiveChannelDegraded";
     }
 }
 

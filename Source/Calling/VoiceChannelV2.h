@@ -35,33 +35,34 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(uint8_t, VoiceChannelV2ConnectionState) {
     VoiceChannelV2ConnectionStateInvalid,
     VoiceChannelV2ConnectionStateNotConnected,
-    VoiceChannelV2ConnectionStateConnecting,    ///<  The user is in the process of joining the media flow channel
-    VoiceChannelV2ConnectionStateConnected      ///<  The media flow channel is established.  The user is fully connected and can participate in the voice channel
+    VoiceChannelV2ConnectionStateConnecting,    ///  The user is in the process of joining the media flow channel
+    VoiceChannelV2ConnectionStateConnected      ///  The media flow channel is established.  The user is fully connected and can participate in the voice channel
 };
 
 typedef NS_ENUM(uint8_t, VoiceChannelV2State) {
     VoiceChannelV2StateInvalid = 0,
-    VoiceChannelV2StateNoActiveUsers, ///< Nobody is active on the voice channel
-    VoiceChannelV2StateOutgoingCall, ///< We are connecting and nobody is in a connected state on the voice channel yet (ie: we are calling)
-    VoiceChannelV2StateOutgoingCallDegraded, ///< We are doing an outgoing call but we can't proceed since the conversation security is degraded
-    VoiceChannelV2StateOutgoingCallInactive, ///< We are connecting and nobody is in a connected state on the voice channel yet (ie: we are calling) but not ringing anymore.
-    VoiceChannelV2StateIncomingCall, ///< Someone else is calling (ringing) you on the voice channel.
-    VoiceChannelV2StateIncomingCallDegraded, ///< Someone else is calling but we can't proceed since the conversation security is degraded
-    VoiceChannelV2StateIncomingCallInactive, ///< Group call is in progress but it's not ringing for us.
-    VoiceChannelV2StateSelfIsJoiningActiveChannel, ///< Somebody else is in a connected state on the voice channel and we are connecting (ie: we are joining)
-    VoiceChannelV2StateSelfConnectedToActiveChannel, ///< Self connects to voice channel AND there is someone already connected on the channel
-    VoiceChannelV2StateDeviceTransferReady, ///< This device is ready to have the call transfered to it
+    VoiceChannelV2StateNoActiveUsers, /// Nobody is active on the voice channel
+    VoiceChannelV2StateOutgoingCall, /// We are connecting and nobody is in a connected state on the voice channel yet (ie: we are calling)
+    VoiceChannelV2StateOutgoingCallDegraded, /// We are doing an outgoing call but can't proceed since the conversation security is degraded
+    VoiceChannelV2StateOutgoingCallInactive, /// We are connecting and nobody is in a connected state on the voice channel yet (ie: we are calling) but not ringing anymore.
+    VoiceChannelV2StateIncomingCall, /// Someone else is calling (ringing) you on the voice channel.
+    VoiceChannelV2StateIncomingCallDegraded, /// Someone else is calling, but can't proceed since the conversation security is degraded
+    VoiceChannelV2StateIncomingCallInactive, /// Group call is in progress but it's not ringing for us.
+    VoiceChannelV2StateSelfIsJoiningActiveChannel, /// We are connecting to the voice channel
+    VoiceChannelV2StateSelfIsJoiningActiveChannelDegraded, /// We are connecting to the voice channel, but can't proceed since the conversation security is degraded
+    VoiceChannelV2StateSelfConnectedToActiveChannel, /// Self connects to voice channel AND there is someone already connected on the channel
+    VoiceChannelV2StateDeviceTransferReady, /// This device is ready to have the call transfered to it
 };
 
 
 typedef NS_ENUM(uint8_t, VoiceChannelV2CallEndReason) {
-    VoiceChannelV2CallEndReasonRequested, ///< Default when other user ends the call
-    VoiceChannelV2CallEndReasonRequestedSelf, ///< when self user ends the call
-    VoiceChannelV2CallEndReasonRequestedAVS, ///< AVS requested to end call. (media wasn't flowing etc.)
-    VoiceChannelV2CallEndReasonOtherLostMedia, ///< Other participant lost media flow
-    VoiceChannelV2CallEndReasonInterrupted, ///< When GSM call interrupts call
-    VoiceChannelV2CallEndReasonDisconnected, ///< When the client disconnects from the service due to other technical reasons
-    VoiceChannelV2CallEndReasonInputOutputError ///< When the client disconnects from the service due to input output error (microphone not working)
+    VoiceChannelV2CallEndReasonRequested, /// Default when other user ends the call
+    VoiceChannelV2CallEndReasonRequestedSelf, /// when self user ends the call
+    VoiceChannelV2CallEndReasonRequestedAVS, /// AVS requested to end call. (media wasn't flowing etc.)
+    VoiceChannelV2CallEndReasonOtherLostMedia, /// Other participant lost media flow
+    VoiceChannelV2CallEndReasonInterrupted, /// When GSM call interrupts call
+    VoiceChannelV2CallEndReasonDisconnected, /// When the client disconnects from the service due to other technical reasons
+    VoiceChannelV2CallEndReasonInputOutputError /// When the client disconnects from the service due to input output error (microphone not working)
 };
 
 // The voice channel of a conversation.
