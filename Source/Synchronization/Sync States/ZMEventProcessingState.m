@@ -64,13 +64,9 @@
                              objectStrategyDirectory.userTranscoder,
                              objectStrategyDirectory.selfTranscoder,
                              objectStrategyDirectory.conversationTranscoder,
-                             objectStrategyDirectory.systemMessageTranscoder,
                              objectStrategyDirectory.clientMessageTranscoder,
                              ];
         
-        for (id<ZMObjectStrategy> syncObject in self.syncObjects) {
-            Require([syncObject conformsToProtocol:@protocol(ZMObjectStrategy)]);
-        }
         self.hotFix = [[ZMHotFix alloc] initWithSyncMOC:objectStrategyDirectory.moc];
     }
     return self;

@@ -27,7 +27,6 @@
 #import "ZMUserSession+Internal.h"
 #import "ZMCallStateLogger.h"
 #import "ZMGSMCallHandler.h"
-#import "ZMLocalNotificationDispatcher.h"
 #import "ZMFlowSync.h"
 #import <zmessaging/zmessaging-Swift.h>
 
@@ -626,7 +625,7 @@ _Pragma("clang diagnostic pop")
     
     if (isIgnoringCall){
         conversation.isIgnoringCall = YES;
-        [[NSNotificationCenter defaultCenter] postNotificationName:ZMConversationCancelNotificationForIncomingCallNotificationName object:conversation];
+        [[NSNotificationCenter defaultCenter] postNotificationName:[LocalNotificationDispatcher ZMConversationCancelNotificationForIncomingCallNotificationName] object:conversation];
     }
     if(changeToActive && !participantWasJoined) {
         [conversation.voiceChannelRouter.v2 addCallParticipant:participant];

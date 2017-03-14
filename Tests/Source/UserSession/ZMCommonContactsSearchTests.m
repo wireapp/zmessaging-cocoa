@@ -23,7 +23,7 @@
 #import "MessagingTest.h"
 #import "ZMCommonContactsSearch.h"
 
-static NSString const *SearchAPI = @"/search/common";
+static NSString const *SearchAPI = @"/search/contacts";
 
 @interface ZMCommonContactsSearchTests : MessagingTest
 
@@ -48,6 +48,7 @@ static NSString const *SearchAPI = @"/search/common";
         ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user1.remoteIdentifier = [NSUUID createUUID];
         user1.name = @"A"; // setting the name will ensure reliable ordering when fetching
+        user1.handle = @"handleA";
         
         ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user2.remoteIdentifier = [NSUUID createUUID];
@@ -56,9 +57,7 @@ static NSString const *SearchAPI = @"/search/common";
         [self.syncMOC saveOrRollback];
         user1ID = user1.objectID;
         user2ID = user2.objectID;
-
     }];
-
     
     self.user1 = (ZMUser*)[self.uiMOC objectWithID:user1ID];
     self.user2 = (ZMUser*)[self.uiMOC objectWithID:user2ID];
@@ -67,7 +66,6 @@ static NSString const *SearchAPI = @"/search/common";
     [self.uiMOC refreshObject:self.user2 mergeChanges:YES];
 
     self.cache = [[NSCache alloc] init];
-    
 }
 
 - (void)tearDown {
@@ -80,30 +78,25 @@ static NSString const *SearchAPI = @"/search/common";
     [super tearDown];
 }
 
-- (NSDictionary *)sampleSearchResponse
+- (NSDictionary *)sampleSearchResponseWithSearchedID:(NSUUID *)searchedID
 {
     return @{
              @"documents": @[
                      @{
-                         @"id": self.user1.remoteIdentifier.transportString,
-                         },
-                     @{
-                         @"id": self.user2.remoteIdentifier.transportString,
+                         @"id": searchedID.transportString,
+                         @"total_mutual_friends": @2
                          }
-                     ],
+                     ]
              };
 }
 
 - (void)testThatItCallsTheDelegateOnTheMainQueueIfTheResultIsAlreadyInTheCache
 {
     // given
-    NSUUID *searchedID = [NSUUID createUUID];
-
+    NSUUID *searchedID = self.user1.remoteIdentifier;
     id token = @"token!";
-    
-    NSOrderedSet *expectedResult = [NSOrderedSet orderedSetWithArray:@[self.user1, self.user2]];
-    
-    ZMCommonContactsSearchCachedEntry *entry =  [[ZMCommonContactsSearchCachedEntry alloc] initWithExpirationDate:[NSDate dateWithTimeIntervalSinceNow:100000] userObjectsIDs:[NSOrderedSet orderedSetWithArray:@[self.user1.objectID, self.user2.objectID]]];
+
+    ZMCommonContactsSearchCachedEntry *entry =  [[ZMCommonContactsSearchCachedEntry alloc] initWithExpirationDate:[NSDate dateWithTimeIntervalSinceNow:100000] commonConnectionCount:2];
     [self.cache setObject:entry forKey:searchedID];
     
     // expect
@@ -112,7 +105,7 @@ static NSString const *SearchAPI = @"/search/common";
     [[[delegate expect] andDo:^(NSInvocation *i ZM_UNUSED) {
         [expectation fulfill];
         XCTAssertEqualObjects([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
-    }]didReceiveCommonContactsUsers:expectedResult forSearchToken:token];
+    }] didReceiveNumberOfTotalMutualConnections:2 forSearchToken:token];
     
     // when
     NSOperationQueue *queue = [NSOperationQueue zm_serialQueueWithName:self.name];
@@ -129,18 +122,18 @@ static NSString const *SearchAPI = @"/search/common";
 - (void)testThatItIgnoresAndDeleteTheValueInTheCacheIfTheEntryIsTooOld
 {
     // given
-    NSUUID *searchedID = [NSUUID createUUID];
+    NSUUID *searchedID = self.user1.remoteIdentifier;
     
     id token = @"token!";
     
-    ZMCommonContactsSearchCachedEntry *entry =  [[ZMCommonContactsSearchCachedEntry alloc] initWithExpirationDate:[NSDate dateWithTimeIntervalSinceNow:-100] userObjectsIDs:[NSOrderedSet orderedSetWithArray:@[self.user1.objectID, self.user2.objectID]]];
+    ZMCommonContactsSearchCachedEntry *entry =  [[ZMCommonContactsSearchCachedEntry alloc] initWithExpirationDate:[NSDate dateWithTimeIntervalSinceNow:-100] commonConnectionCount:2];
     [self.cache setObject:entry forKey:searchedID];
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"Delegate is called"];
 
     id delegate = [OCMockObject mockForProtocol:@protocol(ZMCommonContactsSearchDelegate)];
-    [[delegate reject] didReceiveCommonContactsUsers:OCMOCK_ANY forSearchToken:OCMOCK_ANY];
+    [[[delegate reject] ignoringNonObjectArgs] didReceiveNumberOfTotalMutualConnections:2 forSearchToken:OCMOCK_ANY];
     [[self.transportSessionMock expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(id obj){
         NOT_USED(obj);
         [expectation fulfill];
@@ -165,10 +158,11 @@ static NSString const *SearchAPI = @"/search/common";
 - (void)testThatItEnqueuesASearchRequestIfTheResultIsNotInTheCache
 {
     // given
-    NSUUID *searchedID = [NSUUID createUUID];
+    NSUUID *searchedID = self.user1.remoteIdentifier;
     
     id token = @"token!";
-    ZMTransportRequest *expectedRequest = [ZMTransportRequest requestWithPath:[NSString stringWithFormat:@"%@/%@", SearchAPI, searchedID.transportString] method:ZMMethodGET payload:nil];
+    NSString *expectedPath = [NSString stringWithFormat:@"%@?q=%@&size=1", SearchAPI, self.user1.handle];
+    ZMTransportRequest *expectedRequest = [ZMTransportRequest requestWithPath:expectedPath method:ZMMethodGET payload:nil];
     
     // expect
     id delegate = [OCMockObject mockForProtocol:@protocol(ZMCommonContactsSearchDelegate)];
@@ -184,21 +178,19 @@ static NSString const *SearchAPI = @"/search/common";
 - (void)testThatItCallsTheDelegateIfTheRequestIsCompletedSuccessfully
 {
     // given
-    NSUUID *searchedID = [NSUUID createUUID];
+    NSUUID *searchedID = self.user1.remoteIdentifier;
     
     __block ZMTransportRequest *request;
     
     id token = @"token!";
-    
-    NSDictionary *responsePayload = [self sampleSearchResponse];
-    NSOrderedSet *expectedUsers = [NSOrderedSet orderedSetWithArray:@[self.user1, self.user2]];
+    NSDictionary *responsePayload = [self sampleSearchResponseWithSearchedID:searchedID];
     
     id delegate = [OCMockObject mockForProtocol:@protocol(ZMCommonContactsSearchDelegate)];
     
     // expect
     [[[delegate expect] andDo:^(NSInvocation *i ZM_UNUSED) {
         XCTAssertEqualObjects([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
-    }] didReceiveCommonContactsUsers:expectedUsers forSearchToken:token];
+    }] didReceiveNumberOfTotalMutualConnections:2 forSearchToken:token];
     [[self.transportSessionMock expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(id obj) {
         request = obj;
         return YES;
@@ -217,16 +209,15 @@ static NSString const *SearchAPI = @"/search/common";
 - (void)testThatItDoesNotCallTheDelegateIfTheRequestFailedPermanentlyOrTemporarily
 {
     // given
-    NSUUID *searchedID = [NSUUID createUUID];
+    NSUUID *searchedID = self.user1.remoteIdentifier;
     
     __block ZMTransportRequest *request;
     
     id token = @"token!";
-    
     id delegate = [OCMockObject mockForProtocol:@protocol(ZMCommonContactsSearchDelegate)];
     
     // expect
-    [[delegate reject] didReceiveCommonContactsUsers:OCMOCK_ANY forSearchToken:OCMOCK_ANY];
+    [[[delegate reject]  ignoringNonObjectArgs] didReceiveNumberOfTotalMutualConnections:2 forSearchToken:OCMOCK_ANY];
     [[self.transportSessionMock expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(id obj) {
         request = obj;
         return YES;
@@ -247,19 +238,18 @@ static NSString const *SearchAPI = @"/search/common";
 - (void)testThatTheValueIsSetInTheCacheIfTheRequestIsCompletedSuccessfully
 {
     // given
-    NSUUID *searchedID = [NSUUID createUUID];
+    NSUUID *searchedID = self.user1.remoteIdentifier;
     
     __block ZMTransportRequest *request;
     
     id token = @"token!";
     
-    NSDictionary *responsePayload = [self sampleSearchResponse];
-    NSOrderedSet *expectedUsers = [NSOrderedSet orderedSetWithArray:@[self.user1.objectID, self.user2.objectID]];
+    NSDictionary *responsePayload = [self sampleSearchResponseWithSearchedID:searchedID];
     
     id delegate = [OCMockObject mockForProtocol:@protocol(ZMCommonContactsSearchDelegate)];
     
     // expect
-    [[delegate stub] didReceiveCommonContactsUsers:OCMOCK_ANY forSearchToken:OCMOCK_ANY];
+    [[[delegate stub] ignoringNonObjectArgs] didReceiveNumberOfTotalMutualConnections:2 forSearchToken:OCMOCK_ANY];
     [[self.transportSessionMock expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(id obj) {
         request = obj;
         return YES;
@@ -273,78 +263,60 @@ static NSString const *SearchAPI = @"/search/common";
     
     // then
     ZMCommonContactsSearchCachedEntry *cached = [self.cache objectForKey:searchedID];
-    XCTAssertEqualObjects(expectedUsers, cached.userObjectIDs);
+    XCTAssertEqual(cached.commonConnectionCount, 2lu);
 }
 
-- (void)testThatSearchUsersAreNotOrderedAlphabetically
+- (void)testThatItReturnsZeroCommonContactsIfTheUserDoesNotHaveAUsernameAndDoesNotCreateARequest
 {
     // given
-    NSUUID *searchedID = [NSUUID createUUID];
-    
-    __block ZMTransportRequest *request;
-    
+    NSUUID *searchedID = self.user2.remoteIdentifier;
+
     id token = @"token!";
-    
-    NSDictionary *responsePayload = [self sampleSearchResponse];
-    NSOrderedSet *expectedUsers = [NSOrderedSet orderedSetWithArray:@[self.user1.objectID, self.user2.objectID]];
-    
     id delegate = [OCMockObject mockForProtocol:@protocol(ZMCommonContactsSearchDelegate)];
-    
+
     // expect
-    [[delegate stub] didReceiveCommonContactsUsers:OCMOCK_ANY forSearchToken:OCMOCK_ANY];
+    [[[delegate expect] andDo:^(NSInvocation *i ZM_UNUSED) {
+        XCTAssertEqualObjects([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
+    }] didReceiveNumberOfTotalMutualConnections:0 forSearchToken:token];
+    [[self.transportSessionMock reject] enqueueSearchRequest:OCMOCK_ANY];
+
+    // when
+    [ZMCommonContactsSearch startSearchWithTransportSession:self.transportSessionMock userID:searchedID token:token syncMOC:self.syncMOC uiMOC:self.uiMOC searchDelegate:delegate resultsCache:self.cache];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    [delegate verify];
+}
+
+- (void)testThatItReturnsZeroCommonConnectionsWhenTheResultUserIDDoesNotMatch
+{
+    // given
+    NSUUID *searchedID = self.user1.remoteIdentifier;
+
+    __block ZMTransportRequest *request;
+
+    id token = @"token!";
+    NSDictionary *responsePayload = [self sampleSearchResponseWithSearchedID:self.user2.remoteIdentifier];
+
+    id delegate = [OCMockObject mockForProtocol:@protocol(ZMCommonContactsSearchDelegate)];
+
+    // expect
+    [[[delegate expect] andDo:^(NSInvocation *i ZM_UNUSED) {
+        XCTAssertEqualObjects([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
+    }] didReceiveNumberOfTotalMutualConnections:0 forSearchToken:token];
     [[self.transportSessionMock expect] enqueueSearchRequest:[OCMArg checkWithBlock:^BOOL(id obj) {
         request = obj;
         return YES;
     }]];
-    
-    {
-        // when
-        
-        XCTAssertEqualObjects(self.user1.name, @"A");
-        XCTAssertEqualObjects(self.user2.name, @"B");
-        
-        [ZMCommonContactsSearch startSearchWithTransportSession:self.transportSessionMock userID:searchedID token:token syncMOC:self.syncMOC uiMOC:self.uiMOC searchDelegate:delegate resultsCache:self.cache];
-        XCTAssertNotNil(request);
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil]];
-        WaitForAllGroupsToBeEmpty(0.5);
-        
-        // then
-        ZMCommonContactsSearchCachedEntry *cached1 = [self.cache objectForKey:searchedID];
-        XCTAssertEqualObjects(expectedUsers, cached1.userObjectIDs);
-    
-    }
-    
-    {
-        // when
-        // swap name order
-        [self.syncMOC performGroupedBlockAndWait:^{
-            ZMUser *user1 = (id)[self.syncMOC objectWithID:self.user1.objectID];
-            user1.name = @"B";
-            ZMUser *user2 = (id)[self.syncMOC objectWithID:self.user2.objectID];
-            user2.name = @"A";
-            
-            [self.syncMOC saveOrRollback];
-        }];
-        
-        WaitForAllGroupsToBeEmpty(0.5);
-        [self.uiMOC refreshObject:self.user1 mergeChanges:YES];
-        [self.uiMOC refreshObject:self.user2 mergeChanges:YES];
-        
-        XCTAssertEqualObjects(self.user1.name, @"B");
-        XCTAssertEqualObjects(self.user2.name, @"A");
-        
-        // perform search again
-        
-        [ZMCommonContactsSearch startSearchWithTransportSession:self.transportSessionMock userID:searchedID token:token syncMOC:self.syncMOC uiMOC:self.uiMOC searchDelegate:delegate resultsCache:self.cache];
-        XCTAssertNotNil(request);
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil]];
-        WaitForAllGroupsToBeEmpty(0.5);
-        
-        // then
-        // the order should not have changed
-        ZMCommonContactsSearchCachedEntry *cached2 = [self.cache objectForKey:searchedID];
-        XCTAssertEqualObjects(expectedUsers, cached2.userObjectIDs);
-    }
+
+    // when
+    [ZMCommonContactsSearch startSearchWithTransportSession:self.transportSessionMock userID:searchedID token:token syncMOC:self.syncMOC uiMOC:self.uiMOC searchDelegate:delegate resultsCache:self.cache];
+    XCTAssertNotNil(request);
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil]];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    [delegate verify];
 }
 
 @end

@@ -126,11 +126,16 @@
     id<ZMRequestGenerator> generator = [OCMockObject niceMockForProtocol:@protocol(ZMRequestGenerator)];
     [[[(id) generator stub] andReturn:dummyRequest] nextRequest];
     
+    
     for(Class classOfSyncExpectedToReturnARequest in classesOfObjectsToTest) {
         
-        // For each sync object, I want to test that it calls nextRequest until that object,
-        // and stops requesting after that object. I need to tear down everything for each
-        // test as there is no way apparently to revert the "reject" once it's set
+        // For each sync object, I want to test that it calls `nextRequest` until that object
+        // expecting all previous to return nil, and not call `nextRequest` on all sync objects after that object.
+        // This is basically testing that the first time, if #1 returns a request it does not ask #2 to #10 for a request,
+        // then if #1 return no request and number #2 returns a request, it does not ask #3 to #10 for a request,
+        // then if #1 and 2 returns no request and number #3 returns a request, it does not ask #4 to #10 for a request,
+        /// ...
+        // I need to tear down everything for each test as there is no way apparently to revert the "reject" once it's set
         
         id<ZMObjectStrategyDirectory> directory = [self createMockObjectStrategyDirectoryInMoc:self.uiMOC];
         ZMSyncState *sut = creationBlock(directory);
@@ -149,15 +154,27 @@
             
             if([sync class] == classOfSyncExpectedToReturnARequest)
             {
-                [[[sync expect] andReturn:@[generator]] requestGenerators];
+                if([sync conformsToProtocol:@protocol(ZMRequestGeneratorSource)]) {
+                    [[[sync expect] andReturn:@[generator]] requestGenerators];
+                } else {
+                    [[[sync expect] andReturn:dummyRequest] nextRequest];
+                }
                 shouldStartRejectingFromThisPointInArray = YES;
             }
             else {
                 if(shouldStartRejectingFromThisPointInArray) {
-                    [[sync reject] requestGenerators];
+                    if([sync conformsToProtocol:@protocol(ZMRequestGeneratorSource)]) {
+                        [[sync reject] requestGenerators];
+                    } else {
+                        [[sync reject] nextRequest];
+                    }
                 }
                 else {
-                    [[[sync expect] andReturn:@[]] requestGenerators];
+                    if([sync conformsToProtocol:@protocol(ZMRequestGeneratorSource)]) {
+                        [[[sync expect] andReturn:@[]] requestGenerators];
+                    } else {
+                        [[sync expect] nextRequest];
+                    }
                 }
             }
         }

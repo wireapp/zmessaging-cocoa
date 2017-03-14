@@ -696,7 +696,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
-    NSLog(@"%@", conversationList.identifier);
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
         [groupConversation addUsersByUser:self.user1 addedUsers:@[self.selfUser]];

@@ -30,7 +30,6 @@
 #import <libkern/OSAtomic.h>
 #import <os/activity.h>
 #import "ZMessagingLogs.h"
-#import "ZMLocalNotificationDispatcher.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 NSString * const ZMPushChannelStateChangeNotificationName = @"ZMPushChannelStateChangeNotification";
@@ -73,7 +72,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                       proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
                            accountStatus:(ZMAccountStatus *)accountStatus
             backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
-             localNotificationdispatcher:(ZMLocalNotificationDispatcher *)dispatcher
+             localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
                             mediaManager:(id<AVSMediaManager>)mediaManager
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                    uiMOC:(NSManagedObjectContext *)uiMOC

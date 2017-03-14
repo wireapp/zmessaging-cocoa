@@ -330,9 +330,9 @@
     [self verifyMockLater:userTranscoder];
     id conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [self verifyMockLater:conversationTranscoder];
-    id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
-    [self verifyMockLater:systemMessageTranscoder];
-    id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
+    id systemMessageEventConsumer = [OCMockObject mockForClass:SystemMessageEventsConsumer.class];
+    [self verifyMockLater:systemMessageEventConsumer];
+    id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
     [self verifyMockLater:clientMessageTranscoder];
     id selfTranscoder = [OCMockObject mockForClass:ZMSelfTranscoder.class];
     [self verifyMockLater:selfTranscoder];
@@ -358,7 +358,7 @@
     
     [[[objectDirectory stub] andReturn:userTranscoder] userTranscoder];
     [[[objectDirectory stub] andReturn:conversationTranscoder] conversationTranscoder];
-    [[[objectDirectory stub] andReturn:systemMessageTranscoder] systemMessageTranscoder];
+    [[[objectDirectory stub] andReturn:systemMessageEventConsumer] systemMessageEventConsumer];
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
     [[[objectDirectory stub] andReturn:selfTranscoder] selfTranscoder];
     [[[objectDirectory stub] andReturn:connectionTranscoder] connectionTranscoder];
@@ -374,7 +374,6 @@
     [[[objectDirectory stub] andReturn:@[
                                         userTranscoder,
                                         conversationTranscoder,
-                                        systemMessageTranscoder,
                                         clientMessageTranscoder,
                                         selfTranscoder,
                                         connectionTranscoder,

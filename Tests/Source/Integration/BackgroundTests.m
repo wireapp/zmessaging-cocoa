@@ -24,7 +24,6 @@
 #import "IntegrationTestBase.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMLocalNotificationDispatcher+Testing.h"
 #import "zmessaging_iOS_Tests-Swift.h"
 
 

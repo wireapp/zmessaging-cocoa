@@ -33,6 +33,7 @@
 #import <zmessaging/ZMTypingUsers.h>
 #import <zmessaging/ZMOnDemandFlowManager.h>
 #import <zmessaging/CallingProtocolStrategy.h>
+#import <zmessaging/ZMCommonContactsSearchDelegate.h>
 
 
 // PRIVATE
@@ -51,7 +52,6 @@
 #import <zmessaging/ZMClientUpdateNotification+Internal.h>
 #import <zmessaging/ZMCookie.h>
 #import <zmessaging/ZMLocalNotification.h>
-#import <zmessaging/ZMLocalNotificationDispatcher.h>
 #import <zmessaging/ZMLocalNotificationLocalization.h>
 #import <zmessaging/UILocalNotification+StringProcessing.h>
 #import <zmessaging/ZMHotFixDirectory.h>

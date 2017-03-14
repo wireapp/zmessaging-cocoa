@@ -34,7 +34,6 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"
-#import "ZMLocalNotificationDispatcher.h"
 #import "ZMOperationLoop+Background.h"
 
 @interface ZMOperationLoopTests : MessagingTest

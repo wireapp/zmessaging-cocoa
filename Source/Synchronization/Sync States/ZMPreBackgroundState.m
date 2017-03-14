@@ -88,7 +88,6 @@
     id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
     NSArray *transcoders = @[
                              directory.flowTranscoder,
-                             directory.systemMessageTranscoder,
                              directory.clientMessageTranscoder,
                              directory.selfTranscoder,
                              ];
