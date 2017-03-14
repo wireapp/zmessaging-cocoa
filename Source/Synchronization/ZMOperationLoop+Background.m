@@ -23,7 +23,6 @@
 #import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
 
-#import "ZMLocalNotificationDispatcher.h"
 #import "ZMSyncStrategy+Internal.h"
 #import <zmessaging/zmessaging-Swift.h>
 

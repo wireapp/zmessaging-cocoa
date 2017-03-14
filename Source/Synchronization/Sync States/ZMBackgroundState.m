@@ -107,7 +107,6 @@
     id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
     NSMutableArray *transcoders = @[
                             directory.flowTranscoder,
-                            directory.systemMessageTranscoder,
                             directory.clientMessageTranscoder,
                             directory.selfTranscoder,
                             ].mutableCopy;

@@ -45,7 +45,7 @@ extension NotificationForMessage {
         let notification = UILocalNotification()
 
         let shouldHideContent : Bool
-        if let hide = message.managedObjectContext!.persistentStoreMetadata(forKey: ZMShouldHideNotificationContentKey) as? NSNumber, hide.boolValue == true {
+        if let hide = message.managedObjectContext!.persistentStoreMetadata(forKey: LocalNotificationDispatcher.ZMShouldHideNotificationContentKey) as? NSNumber, hide.boolValue == true {
             shouldHideContent = true
         } else {
             shouldHideContent = isEphemeral

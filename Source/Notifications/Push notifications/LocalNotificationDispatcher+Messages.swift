@@ -17,26 +17,26 @@
 //
 
 import Foundation
+import WireMessageStrategy
 
-
-public extension ZMLocalNotificationDispatcher {
+extension LocalNotificationDispatcher: PushMessageHandler {
 
     // Processes ZMOTRMessages and ZMSystemMessages
-    public func processMessage(_ message: ZMMessage) {
+    @objc(processMessage:) public func process(_ message: ZMMessage) {
         if let message = message as? ZMOTRMessage {
             if let note = localNotificationForMessage(message), let uiNote = note.uiNotifications.last {
-                (sharedApplicationForSwift as! Application).scheduleLocalNotification(uiNote)
+                self.application.scheduleLocalNotification(uiNote)
             }
         }
         if let message = message as? ZMSystemMessage {
             if let note = localNotificationForSystemMessage(message), let uiNote = note.uiNotifications.last {
-                (sharedApplicationForSwift as! Application).scheduleLocalNotification(uiNote)
+                self.application.scheduleLocalNotification(uiNote)
             }
         }
     }
     
     // Process ZMGenericMessage that have "invisible" as in they don't create a message themselves
-    public func processGenericMessage(_ genericMessage: ZMGenericMessage) {
+    @objc(processGenericMessage:) public func process(_ genericMessage: ZMGenericMessage) {
         // hidden, deleted and reaction do not create messages on their own
         if genericMessage.hasEdited() || genericMessage.hasHidden() || genericMessage.hasDeleted() {
             // Cancel notification for message that was edited, deleted or hidden
@@ -46,7 +46,7 @@ public extension ZMLocalNotificationDispatcher {
 }
 
 // MARK: ZMOTRMessage
-extension ZMLocalNotificationDispatcher {
+extension LocalNotificationDispatcher {
 
     fileprivate func localNotificationForMessage(_ message : ZMOTRMessage) -> ZMLocalNotificationForMessage? {
         // We don't want to create duplicate notifications (e.g. for images)
@@ -60,7 +60,7 @@ extension ZMLocalNotificationDispatcher {
             return newNote;
         }
         
-        if let newNote = ZMLocalNotificationForMessage(message: message, application:(sharedApplicationForSwift as! Application)) {
+        if let newNote = ZMLocalNotificationForMessage(message: message, application:self.application) {
             messageNotifications.addObject(newNote)
             return newNote;
         }
@@ -88,7 +88,7 @@ extension ZMLocalNotificationDispatcher {
     fileprivate func cancelNotificationForMessageID(_ messageID: UUID) {
         for note in messageNotifications.notifications where note is ZMLocalNotificationForMessage {
             if (note as! ZMLocalNotificationForMessage).isNotificationFor(messageID) {
-                note.uiNotifications.forEach{(sharedApplicationForSwift as! Application).cancelLocalNotification($0)}
+                note.uiNotifications.forEach{self.application.cancelLocalNotification($0)}
                 _ = messageNotifications.remove(note);
             }
         }
@@ -97,7 +97,7 @@ extension ZMLocalNotificationDispatcher {
 
 
 // MARK: ZMSystemMessage
-extension ZMLocalNotificationDispatcher {
+extension LocalNotificationDispatcher {
     
     fileprivate func localNotificationForSystemMessage(_ message : ZMSystemMessage) -> ZMLocalNotificationForSystemMessage? {
         
@@ -106,7 +106,7 @@ extension ZMLocalNotificationDispatcher {
             return newNote;
         }
         
-        if let newNote = ZMLocalNotificationForSystemMessage(message: message, application:(sharedApplicationForSwift as! Application)) {
+        if let newNote = ZMLocalNotificationForSystemMessage(message: message, application:self.application) {
             messageNotifications.addObject(newNote)
             return newNote;
         }
