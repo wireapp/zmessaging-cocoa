@@ -526,7 +526,7 @@ extension UserClientRequestStrategyTests {
     
     static func payloadForAddingClient(_ clientId : String,
         label : String = "device label",
-        time : Date = Date(timeIntervalSince1970: 0)
+        time : Date = Date(timeIntervalSince1970: 12345)
         ) -> ZMTransportData {
         
             return [

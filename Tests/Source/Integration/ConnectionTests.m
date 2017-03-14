@@ -822,7 +822,6 @@
         ConversationListChangeInfo *note = notifications.firstObject;
         XCTAssertNotNil(note);
         XCTAssertEqualObjects(note.insertedIndexes, [NSIndexSet indexSetWithIndex:0]);
-        XCTAssertEqualObjects(note.updatedIndexes, [NSIndexSet indexSetWithIndex:0]);
         XCTAssertTrue(note.deletedIndexes.count == 0);
         XCTAssertTrue(note.movedIndexPairs.count == 0);
     }
