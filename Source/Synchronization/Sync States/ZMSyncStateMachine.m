@@ -246,8 +246,10 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 
 - (void)didStartSlowSync
 {
-    for(id<ZMObjectStrategy> obj in self.directory.allTranscoders) {
-        [obj setNeedsSlowSync];
+    for(id obj in self.directory.allTranscoders) {
+        if ([obj conformsToProtocol:@protocol(ZMObjectStrategy)]) {
+            [obj setNeedsSlowSync];
+        }
     }
 }
 

@@ -35,7 +35,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
 
 @interface ZMBackgroundTaskState () <ZMTimerClient>
 
-@property (nonatomic, readonly, weak) ZMMessageTranscoder *clientMessageTranscoder;
+@property (nonatomic, readonly, weak) ClientMessageTranscoder *clientMessageTranscoder;
 @property (nonatomic) BOOL errorPerformingTask;
 @property (nonatomic) BOOL didFinishTask;
 
@@ -126,7 +126,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
     id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
     
     ZMTransportRequest *request;
-    request = [self.clientMessageTranscoder.requestGenerators nextRequest];
+    request = [self.clientMessageTranscoder nextRequest];
     ZM_WEAK(self);
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:directory.moc block:^(ZMTransportResponse *response) {
         if (response.result == ZMTransportResponseStatusSuccess) {
@@ -187,7 +187,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
     return self.didFinishTask ? ZMBackgroundTaskResultSucceed : ZMBackgroundTaskResultFailed;
 }
 
-- (ZMMessageTranscoder *)clientMessageTranscoder;
+- (ClientMessageTranscoder *)clientMessageTranscoder;
 {
     return self.objectStrategyDirectory.clientMessageTranscoder;
 }

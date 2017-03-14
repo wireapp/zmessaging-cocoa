@@ -18,7 +18,7 @@
 
 import Foundation
 
-public extension ZMLocalNotificationDispatcher {
+public extension LocalNotificationDispatcher {
     
     public func process(callState: CallState, in conversation: ZMConversation, sender: ZMUser) {
         
@@ -42,7 +42,7 @@ public extension ZMLocalNotificationDispatcher {
     private func scheduleNotification(_ note: ZMLocalNotification) {
         if let uiNote = note.uiNotifications.first {
             callingNotifications.addObject(note)
-            (sharedApplicationForSwift as! Application).scheduleLocalNotification(uiNote)
+            self.application.scheduleLocalNotification(uiNote)
         }
     }
     

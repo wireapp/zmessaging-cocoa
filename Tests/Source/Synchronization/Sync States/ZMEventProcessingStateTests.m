@@ -53,7 +53,6 @@
         self.objectDirectory.userTranscoder,
         self.objectDirectory.selfTranscoder,
         self.objectDirectory.conversationTranscoder,
-        self.objectDirectory.systemMessageTranscoder,
         self.objectDirectory.clientMessageTranscoder,
         ];
 }
