@@ -41,7 +41,7 @@ private let log = ZMSLog(tag: "Calling System Message")
             log.info("Adding \(caller?.displayName ?? "") as caller in \"\(conversation.displayName)\"")
             callerByConversation[conversation] = conversation.callingUser()
         case .selfConnectedToActiveChannel:
-            precondition(nil != callerByConversation[conversation], "No caller present")
+            if nil == callerByConversation[conversation] { log.info("No caller present when setting call start date") }
             log.info("Setting call start date for \(conversation.displayName)")
             startDateByConversation[conversation] = Date()
         default: break
@@ -54,7 +54,7 @@ private let log = ZMSLog(tag: "Calling System Message")
             log.info("Appending performed call message: \(duration), \(caller.displayName), \"\(conversation.displayName)\"")
             conversation.appendPerformedCallMessage(with: duration, caller: caller)
         } else {
-            log.error("Call ended but no call info present in order to insert system message")
+            log.info("Call ended but no call info present in order to insert system message")
         }
 
         callerByConversation[conversation] = nil
