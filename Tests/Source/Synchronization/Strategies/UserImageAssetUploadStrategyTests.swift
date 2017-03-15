@@ -115,14 +115,22 @@ class UserImageAssetUploadStrategyTests : MessagingTest {
         updateStatus.dataToConsume[.preview] = "Some".data(using: .utf8)
         
         // THEN
-        XCTAssertNotNil(sut.nextRequest())
+        let previewRequest = sut.nextRequest()
+        XCTAssertNotNil(previewRequest)
+        XCTAssertEqual(previewRequest?.path, "/assets/v3")
+        XCTAssertEqual(previewRequest?.method, .methodPOST)
+
         
         // WHEN
         updateStatus.dataToConsume.removeAll()
         updateStatus.dataToConsume[.complete] = "Other".data(using: .utf8)
         
         // THEN
-        XCTAssertNotNil(sut.nextRequest())
+        let completeRequest = sut.nextRequest()
+        XCTAssertNotNil(completeRequest)
+        XCTAssertEqual(completeRequest?.path, "/assets/v3")
+        XCTAssertEqual(completeRequest?.method, .methodPOST)
+
     }
     
     func testThatItCreatesRequestWithExpectedData() {
