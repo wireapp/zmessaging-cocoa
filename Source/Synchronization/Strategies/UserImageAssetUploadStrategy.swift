@@ -19,19 +19,38 @@
 import Foundation
 import WireRequestStrategy
 
-public final class UserImageAssetUploadStrategy: NSObject {
-    fileprivate let requestFactory = AssetRequestFactory()
-    fileprivate var requestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
-    fileprivate let moc: NSManagedObjectContext
-    fileprivate weak var imageUpdateStatus: UserProfileImageUploadStatusProtocol?
+public enum AssetTransportError: Error {
+    case invalidLength
+    case assetTooLarge
+    case other(Error?)
+    
+    init(response: ZMTransportResponse) {
+        switch (response.httpStatus, response.payloadLabel()) {
+        case (400, .some("invalid-length")):
+            self = .invalidLength
+        case (413, .some("client-error")):
+            self = .assetTooLarge
+        default:
+            self = .other(response.transportSessionError)
+        }
+    }
+}
 
-    init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUploadStatusProtocol) {
+public final class UserImageAssetUploadStrategy: NSObject {
+    internal let requestFactory = AssetRequestFactory()
+    internal var requestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
+    internal let moc: NSManagedObjectContext
+    internal weak var imageUpdateStatus: UserProfileImageUploadStatusProtocol?
+    internal let authenticationStatus: AuthenticationStatusProvider
+
+    public init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUploadStatusProtocol, authenticationStatus: AuthenticationStatusProvider) {
         self.moc = managedObjectContext
         self.imageUpdateStatus = imageUpdateStatus
+        self.authenticationStatus = authenticationStatus
         super.init()
     }
     
-    fileprivate func requestSync(for size: ProfileImageSize) -> ZMSingleRequestSync {
+    internal func requestSync(for size: ProfileImageSize) -> ZMSingleRequestSync {
         if let sync = requestSyncs[size] {
             return sync
         } else {
@@ -41,7 +60,7 @@ public final class UserImageAssetUploadStrategy: NSObject {
         }
     }
     
-    fileprivate func size(for requestSync: ZMSingleRequestSync) -> ProfileImageSize? {
+    internal func size(for requestSync: ZMSingleRequestSync) -> ProfileImageSize? {
         for (size, sync) in requestSyncs {
             if sync === requestSync {
                 return size
@@ -54,6 +73,7 @@ public final class UserImageAssetUploadStrategy: NSObject {
 
 extension UserImageAssetUploadStrategy: RequestStrategy {
     public func nextRequest() -> ZMTransportRequest? {
+        guard case .authenticated = authenticationStatus.currentPhase else { return nil }
         guard let updateStatus = imageUpdateStatus else { return nil }
         
         let sync = updateStatus.allSizes.filter(updateStatus.hasImageToUpload).map(requestSync).first
@@ -71,5 +91,13 @@ extension UserImageAssetUploadStrategy: ZMSingleRequestTranscoder {
     }
     
     public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
+        guard let size = size(for: sync) else { return }
+        guard response.result == .success else {
+            let error = AssetTransportError(response: response)
+            imageUpdateStatus?.uploadingFailed(imageSize: size, error: error)
+            return
+        }
+        guard let payload = response.payload?.asDictionary(), let assetId = payload["key"] as? String else { fatal("No asset ID present in payload: \(response.payload)") }
+        imageUpdateStatus?.uploadingDone(imageSize: size, assetId: assetId)
     }
 }

@@ -66,6 +66,10 @@ class MockOperation: NSObject, ZMImageDownsampleOperationProtocol {
     }
 }
 
+enum MockUploadError: String, Error {
+    case failed
+}
+
 class MockImageOwner: NSObject, ZMImageOwner {
     public func requiredImageFormats() -> NSOrderedSet! { return NSOrderedSet() }
     public func imageData(for format: ZMImageFormat) -> Data! { return Data() }
@@ -376,5 +380,67 @@ extension UserProfileImageUpdateStatusTests {
         XCTAssertEqual(sut.imageState(for: .preview), .ready)
         XCTAssertEqual(sut.imageState(for: .complete), .ready)
 
+    }
+}
+
+// MARK: - Image upload status
+extension UserProfileImageUpdateStatusTests {
+    
+    func testThatItReturnsAllSizes() {
+        XCTAssertEqual(sut.allSizes, [.preview, .complete])
+    }
+    
+    func testThatItReturnsImageToUploadOnlyWhenInUploadState() {
+        // GIVEN
+        XCTAssertFalse(sut.hasImageToUpload(for: .preview))
+        sut.setState(state: .preprocessing, for: .preview)
+        sut.setState(state: .upload(image: Data()), for: .preview)
+
+        // THEN
+        XCTAssertTrue(sut.hasImageToUpload(for: .preview))
+        XCTAssertFalse(sut.hasImageToUpload(for: .complete))
+    }
+    
+    func testThatItAdvancesStateAfterConsumingImage() {
+        // GIVEN
+        let data = "some".data(using: .utf8)!
+        sut.setState(state: .preprocessing, for: .preview)
+        sut.setState(state: .upload(image: data), for: .preview)
+        
+        // WHEN
+        let dataToUpload = sut.consumeImage(for: .preview)
+        XCTAssertNil(sut.consumeImage(for: .complete))
+        
+        // THEN
+        XCTAssertEqual(data, dataToUpload)
+        XCTAssertEqual(sut.imageState(for: .preview), .uploading)
+    }
+    
+    func testThatItAdvancesStateAfterUploadIsDone() {
+        // GIVEN
+        sut.setState(state: .preprocessing, for: .preview)
+        sut.setState(state: .upload(image: Data()), for: .preview)
+        sut.setState(state: .uploading, for: .preview)
+        
+        // WHEN
+        let assetId = "1234"
+        sut.uploadingDone(imageSize: .preview, assetId: assetId)
+        
+        // THEN
+        XCTAssertEqual(sut.imageState(for: .preview), .uploaded(assetId: assetId))
+    }
+ 
+    func testThatItAdvancesStateAndPropogatesErrorWhenUploadFails() {
+        // GIVEN
+        sut.setState(state: .preprocessing, for: .preview)
+        sut.setState(state: .upload(image: Data()), for: .preview)
+        sut.setState(state: .uploading, for: .preview)
+        
+        // WHEN
+        sut.uploadingFailed(imageSize: .preview, error: MockUploadError.failed)
+        
+        // THEN
+        XCTAssertEqual(sut.imageState(for: .preview), .ready)
+        XCTAssertEqual(sut.state, .failed(.uploadFailed(MockUploadError.failed)))
     }
 }
