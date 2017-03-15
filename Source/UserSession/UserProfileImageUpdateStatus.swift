@@ -50,8 +50,8 @@ internal protocol UserProfileImageUploadStatusProtocol: class {
 }
 
 @objc public protocol UserProfileImageUpdateProtocol: class {
-    @objc(updateImageWithImageData:imageSize:)
-    func updateImage(imageData: Data, size: CGSize)
+    @objc(updateImageWithImageData:)
+    func updateImage(imageData: Data)
 }
 
 internal final class UserProfileImageUpdateStatus: NSObject {
@@ -88,7 +88,7 @@ internal final class UserProfileImageUpdateStatus: NSObject {
     
     internal enum ProfileUpdateState {
         case ready
-        case preprocess(image: Data, size: CGSize)
+        case preprocess(image: Data)
         case update(previewAssetId: String, completeAssetId: String)
         case updating
         case completed
@@ -146,8 +146,8 @@ extension UserProfileImageUpdateStatus {
     
     internal func didTransition(from oldState: ProfileUpdateState, to currentState: ProfileUpdateState) {
         switch (oldState, currentState) {
-        case let (_, .preprocess(image: data, size: size)):
-            startPreprocessing(imageData: data, size: size)
+        case let (_, .preprocess(image: data)):
+            startPreprocessing(imageData: data)
         case (_, .failed):
             resetImageState()
         default:
@@ -155,12 +155,12 @@ extension UserProfileImageUpdateStatus {
         }
     }
     
-    fileprivate func startPreprocessing(imageData: Data, size: CGSize) {
+    fileprivate func startPreprocessing(imageData: Data) {
         allSizes.forEach {
             setState(state: .preprocessing, for: $0)
         }
         
-        let imageOwner = UserProfileImageOwner(imageData: imageData, size: size)
+        let imageOwner = UserProfileImageOwner(imageData: imageData)
         guard let operations = preprocessor?.operations(forPreprocessingImageOwner: imageOwner), !operations.isEmpty else {
             resetImageState()
             setState(state: .failed(.preprocessingFailed))
@@ -215,8 +215,8 @@ extension UserProfileImageUpdateStatus {
 }
 
 extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
-    public func updateImage(imageData: Data, size: CGSize) {
-        setState(state: .preprocess(image: imageData, size: size))
+    public func updateImage(imageData: Data) {
+        setState(state: .preprocess(image: imageData))
     }
 }
 
