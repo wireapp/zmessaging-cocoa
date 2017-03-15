@@ -20,7 +20,9 @@ import Foundation
 import XCTest
 @testable import zmessaging
 
-class MockImageUpdateStatus: UserProfileImageUploadStatusProtocol {
+typealias ProfileImageSize = zmessaging.ProfileImageSize
+
+class MockImageUpdateStatus: zmessaging.UserProfileImageUploadStatusProtocol {
     var allSizes: [ProfileImageSize] { return [.preview, .complete] }
     
     var dataToConsume = [ProfileImageSize : Data]()
@@ -48,7 +50,7 @@ class MockImageUpdateStatus: UserProfileImageUploadStatusProtocol {
 
 class UserImageAssetUploadStrategyTests : MessagingTest {
     
-    var sut: UserImageAssetUploadStrategy!
+    var sut: zmessaging.UserImageAssetUploadStrategy!
     var authenticationStatus: MockAuthenticationStatus!
     var updateStatus: MockImageUpdateStatus!
     
@@ -56,7 +58,7 @@ class UserImageAssetUploadStrategyTests : MessagingTest {
         super.setUp()
         self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
         self.updateStatus = MockImageUpdateStatus()
-        self.sut = UserImageAssetUploadStrategy(managedObjectContext: syncMOC,
+        self.sut = zmessaging.UserImageAssetUploadStrategy(managedObjectContext: syncMOC,
                                                 imageUpdateStatus: updateStatus,
                                                 authenticationStatus: authenticationStatus)
     }

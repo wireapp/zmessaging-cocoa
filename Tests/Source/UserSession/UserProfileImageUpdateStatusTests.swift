@@ -105,6 +105,8 @@ extension StateTransition {
     }
 }
 
+typealias UserProfileImageUpdateStatus = zmessaging.UserProfileImageUpdateStatus
+
 extension UserProfileImageUpdateStatus.ImageState: Equatable {
     public static func ==(lhs: UserProfileImageUpdateStatus.ImageState, rhs: UserProfileImageUpdateStatus.ImageState) -> Bool {
         return String(describing: lhs) == String(describing: rhs)

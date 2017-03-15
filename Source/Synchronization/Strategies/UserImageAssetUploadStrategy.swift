@@ -19,7 +19,7 @@
 import Foundation
 import WireRequestStrategy
 
-public enum AssetTransportError: Error {
+internal enum AssetTransportError: Error {
     case invalidLength
     case assetTooLarge
     case other(Error?)
@@ -36,14 +36,14 @@ public enum AssetTransportError: Error {
     }
 }
 
-public final class UserImageAssetUploadStrategy: NSObject {
+internal final class UserImageAssetUploadStrategy: NSObject {
     internal let requestFactory = AssetRequestFactory()
     internal var requestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
     internal let moc: NSManagedObjectContext
     internal weak var imageUpdateStatus: UserProfileImageUploadStatusProtocol?
     internal let authenticationStatus: AuthenticationStatusProvider
 
-    public init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUploadStatusProtocol, authenticationStatus: AuthenticationStatusProvider) {
+    internal init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUploadStatusProtocol, authenticationStatus: AuthenticationStatusProvider) {
         self.moc = managedObjectContext
         self.imageUpdateStatus = imageUpdateStatus
         self.authenticationStatus = authenticationStatus
