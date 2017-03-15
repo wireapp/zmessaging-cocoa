@@ -49,6 +49,11 @@ public protocol UserProfileImageUploadStatusProtocol: class {
     func uploadingFailed(imageSize: ProfileImageSize, error: Error)
 }
 
+@objc public protocol UserProfileImageUpdateProtocol: class {
+    @objc(updateImageWithImageData:imageSize:)
+    func updateImage(imageData: Data, size: CGSize)
+}
+
 public final class UserProfileImageUpdateStatus: NSObject {
     
     internal enum ImageState {
@@ -209,11 +214,13 @@ extension UserProfileImageUpdateStatus {
     }
 }
 
-extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
-    
+extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
     public func updateImage(imageData: Data, size: CGSize) {
         setState(state: .preprocess(image: imageData, size: size))
     }
+}
+
+extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     
     public func completedDownsampleOperation(_ operation: ZMImageDownsampleOperationProtocol, imageOwner: ZMImageOwner) {
         allSizes.forEach {
