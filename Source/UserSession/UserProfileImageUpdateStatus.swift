@@ -54,7 +54,7 @@ internal protocol UserProfileImageUploadStatusProtocol: class {
     func updateImage(imageData: Data)
 }
 
-internal final class UserProfileImageUpdateStatus: NSObject {
+public final class UserProfileImageUpdateStatus: NSObject {
     
     internal enum ImageState {
         case ready
@@ -124,7 +124,11 @@ internal final class UserProfileImageUpdateStatus: NSObject {
     fileprivate var imageState = [ProfileImageSize : ImageState]()
     internal fileprivate(set) var state: ProfileUpdateState = .ready
     
-    internal init(preprocessor: ZMAssetsPreprocessorProtocol, queue: OperationQueue = ZMImagePreprocessor.createSuitableImagePreprocessingQueue()){
+    public convenience override init() {
+        self.init(preprocessor: ZMAssetsPreprocessor(delegate: nil), queue: ZMImagePreprocessor.createSuitableImagePreprocessingQueue())
+    }
+    
+    internal init(preprocessor: ZMAssetsPreprocessorProtocol, queue: OperationQueue){
         self.queue = queue
         self.preprocessor = preprocessor
         super.init()

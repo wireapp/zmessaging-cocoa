@@ -144,7 +144,7 @@ class UserProfileImageUpdateStatusTests: MessagingTest {
         super.setUp()
         preprocessor = MockPreprocessor()
         preprocessor.operations = [Operation()]
-        sut = UserProfileImageUpdateStatus(preprocessor: preprocessor)
+        sut = UserProfileImageUpdateStatus(preprocessor: preprocessor, queue: ZMImagePreprocessor.createSuitableImagePreprocessingQueue())
         tinyImage = data(forResource: "tiny", extension: "jpg")
         imageOwner = UserProfileImageOwner(imageData: tinyImage)
     }

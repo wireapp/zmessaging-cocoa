@@ -59,8 +59,8 @@ class UserImageAssetUploadStrategyTests : MessagingTest {
         self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
         self.updateStatus = MockImageUpdateStatus()
         self.sut = zmessaging.UserImageAssetUploadStrategy(managedObjectContext: syncMOC,
-                                                imageUpdateStatus: updateStatus,
-                                                authenticationStatus: authenticationStatus)
+                                                              imageUploadStatus: updateStatus,
+                                                           authenticationStatus: authenticationStatus)
     }
     
     func testThatItDoesNotReturnARequestWhenThereIsNoImageToUpload() {

@@ -36,16 +36,20 @@ internal enum AssetTransportError: Error {
     }
 }
 
-internal final class UserImageAssetUploadStrategy: NSObject {
+@objc public final class UserImageAssetUploadStrategy: NSObject {
     internal let requestFactory = AssetRequestFactory()
     internal var requestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
     internal let moc: NSManagedObjectContext
-    internal weak var imageUpdateStatus: UserProfileImageUploadStatusProtocol?
+    internal weak var imageUploadStatus: UserProfileImageUploadStatusProtocol?
     internal let authenticationStatus: AuthenticationStatusProvider
+    
+    @objc public convenience init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUpdateStatus, authenticationStatus: AuthenticationStatusProvider) {
+        self.init(managedObjectContext: managedObjectContext, imageUploadStatus: imageUpdateStatus, authenticationStatus: authenticationStatus)
+    }
 
-    internal init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUploadStatusProtocol, authenticationStatus: AuthenticationStatusProvider) {
+    internal init(managedObjectContext: NSManagedObjectContext, imageUploadStatus: UserProfileImageUploadStatusProtocol, authenticationStatus: AuthenticationStatusProvider) {
         self.moc = managedObjectContext
-        self.imageUpdateStatus = imageUpdateStatus
+        self.imageUploadStatus = imageUploadStatus
         self.authenticationStatus = authenticationStatus
         super.init()
     }
@@ -74,7 +78,7 @@ internal final class UserImageAssetUploadStrategy: NSObject {
 extension UserImageAssetUploadStrategy: RequestStrategy {
     public func nextRequest() -> ZMTransportRequest? {
         guard case .authenticated = authenticationStatus.currentPhase else { return nil }
-        guard let updateStatus = imageUpdateStatus else { return nil }
+        guard let updateStatus = imageUploadStatus else { return nil }
         
         let sync = updateStatus.allSizes.filter(updateStatus.hasImageToUpload).map(requestSync).first
         sync?.readyForNextRequestIfNotBusy()
@@ -84,7 +88,7 @@ extension UserImageAssetUploadStrategy: RequestStrategy {
 
 extension UserImageAssetUploadStrategy: ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
-        if let size = size(for: sync), let image = imageUpdateStatus?.consumeImage(for: size) {
+        if let size = size(for: sync), let image = imageUploadStatus?.consumeImage(for: size) {
             return requestFactory.upstreamRequestForAsset(withData: image, shareable: true, retention: .eternal)
         }
         return nil
@@ -94,10 +98,10 @@ extension UserImageAssetUploadStrategy: ZMSingleRequestTranscoder {
         guard let size = size(for: sync) else { return }
         guard response.result == .success else {
             let error = AssetTransportError(response: response)
-            imageUpdateStatus?.uploadingFailed(imageSize: size, error: error)
+            imageUploadStatus?.uploadingFailed(imageSize: size, error: error)
             return
         }
         guard let payload = response.payload?.asDictionary(), let assetId = payload["key"] as? String else { fatal("No asset ID present in payload: \(response.payload)") }
-        imageUpdateStatus?.uploadingDone(imageSize: size, assetId: assetId)
+        imageUploadStatus?.uploadingDone(imageSize: size, assetId: assetId)
     }
 }
