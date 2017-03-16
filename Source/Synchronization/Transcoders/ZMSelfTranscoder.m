@@ -37,6 +37,9 @@ static NSString * const NameKey = @"name";
 static NSString * const ImageMediumDataKey = @"imageMediumData";
 static NSString * const ImageSmallProfileDataKey = @"imageSmallProfileData";
 
+static NSString * const PreviewProfileAssetIdentifierKey = @"previewProfileAssetIdentifier";
+static NSString * const CompleteProfileAssetIdentifierKey = @"completeProfileAssetIdentifier";
+
 NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
 
 @interface ZMSelfTranscoder ()
@@ -64,11 +67,12 @@ NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
 - (instancetype)initWithClientRegistrationStatus:(ZMClientRegistrationStatus *)clientStatus
                             managedObjectContext:(NSManagedObjectContext *)moc
 {
-    NSArray<NSString *> *keysToSync = @[NameKey, AccentColorValueKey, SmallProfileRemoteIdentifierDataKey, MediumRemoteIdentifierDataKey];
+    NSArray<NSString *> *keysToSync = @[NameKey, AccentColorValueKey, SmallProfileRemoteIdentifierDataKey, MediumRemoteIdentifierDataKey, PreviewProfileAssetIdentifierKey, CompleteProfileAssetIdentifierKey];
     
     
     ZMUpstreamModifiedObjectSync *upstreamObjectSync = [[ZMUpstreamModifiedObjectSync alloc]
-                                                        initWithTranscoder:self entityName:ZMUser.entityName
+                                                        initWithTranscoder:self
+                                                        entityName:ZMUser.entityName
                                                         keysToSync:keysToSync
                                                         managedObjectContext:moc];
     
@@ -167,7 +171,9 @@ NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
     ZMUser *user = (ZMUser *)managedObject;
     Require(user.isSelfUser);
 
-    if ([keys containsObject:AccentColorValueKey] || [keys containsObject:NameKey]) {
+    if ([keys containsObject:AccentColorValueKey] ||
+        [keys containsObject:NameKey] ||
+        ([keys containsObject:PreviewProfileAssetIdentifierKey] && [keys containsObject:CompleteProfileAssetIdentifierKey])) {
         return [self requestForSettingBasicProfileDataOfUser:user changedKeys:keys];
     }
     else if([keys containsObject:SmallProfileRemoteIdentifierDataKey] && [keys containsObject:MediumRemoteIdentifierDataKey]) {
@@ -179,7 +185,6 @@ NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
             return [self requestForSettingImageDataForSelfUser:user];
         }
     }
-    
     ZMTrapUnableToGenerateRequest(keys, self);
     return nil;
 }
@@ -194,11 +199,28 @@ NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
     if([keys containsObject:AccentColorValueKey]) {
         payload[@"accent_id"] = @(user.accentColorValue);
     }
+    if([keys containsObject:PreviewProfileAssetIdentifierKey] && [keys containsObject:CompleteProfileAssetIdentifierKey]) {
+        payload[@"assets"] = [self profilePictureAssetsPayloadForUser:user];
+    }
     
     ZMTransportRequest *request = [ZMTransportRequest requestWithPath:@"/self" method:ZMMethodPUT payload:payload];
     return [[ZMUpstreamRequest alloc] initWithKeys:keys transportRequest:request];
 }
 
+- (NSArray *)profilePictureAssetsPayloadForUser:(ZMUser *)user {
+    return @[
+             @{
+                 @"size" : @"preview",
+                 @"key" : user.previewProfileAssetIdentifier,
+                 @"type" : @"image"
+                 },
+             @{
+                 @"size" : @"complete",
+                 @"key" : user.completeProfileAssetIdentifier,
+                 @"type" : @"image"
+                 },
+      ];
+}
 
 - (ZMUpstreamRequest *)requestForSettingImageDataForSelfUser:(ZMUser *)user
 {
