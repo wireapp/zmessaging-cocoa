@@ -66,6 +66,24 @@ class MockOperation: NSObject, ZMImageDownsampleOperationProtocol {
     }
 }
 
+typealias ProfileUpdateState = zmessaging.UserProfileImageUpdateStatus.ProfileUpdateState
+typealias ImageState = zmessaging.UserProfileImageUpdateStatus.ImageState
+
+class MockChangeDelegate: zmessaging.UserProfileImageUploadStateChangeDelegate {
+    var states = [ProfileUpdateState]()
+    func didTransition(from oldState: ProfileUpdateState, to currentState: ProfileUpdateState) {
+        states.append(currentState)
+    }
+    
+    var imageStates = [ProfileImageSize : [ImageState]]()
+
+    func didTransition(from oldState: ImageState, to currentState: ImageState, for size: ProfileImageSize) {
+        var states = imageStates[size] ?? [ImageState]()
+        states.append(currentState)
+        imageStates[size] = states
+    }
+}
+
 enum MockUploadError: String, Error {
     case failed
 }
@@ -114,25 +132,22 @@ extension UserProfileImageUpdateStatus.ImageState: Equatable {
 }
 
 extension UserProfileImageUpdateStatus.ImageState: StateTransition {
-    static var allStates: [UserProfileImageUpdateStatus.ImageState] {
-        return [.ready, .preprocessing, sampleUploadState, .uploading, sampleUploadedState, .completed, sampleFailedImageState]
+    static var allStates: [ImageState] {
+        return [.ready, .preprocessing, sampleUploadState, .uploading, sampleUploadedState, sampleFailedImageState]
     }
 }
 
-extension UserProfileImageUpdateStatus.ProfileUpdateState: Equatable {
-    public static func ==(lhs: UserProfileImageUpdateStatus.ProfileUpdateState, rhs: UserProfileImageUpdateStatus.ProfileUpdateState) -> Bool {
+extension ProfileUpdateState: Equatable {
+    public static func ==(lhs: ProfileUpdateState, rhs: ProfileUpdateState) -> Bool {
         return String(describing: lhs) == String(describing: rhs)
     }
 }
 
-extension UserProfileImageUpdateStatus.ProfileUpdateState: StateTransition {
-    static var allStates: [UserProfileImageUpdateStatus.ProfileUpdateState] {
-        return [.ready, samplePreprocessState, sampleUpdateState, .updating, .completed, sampleFailedState]
+extension ProfileUpdateState: StateTransition {
+    static var allStates: [ProfileUpdateState] {
+        return [.ready, samplePreprocessState, sampleUpdateState, sampleFailedState]
     }
 }
-
-typealias ProfileUpdateState = UserProfileImageUpdateStatus.ProfileUpdateState
-typealias ImageState = UserProfileImageUpdateStatus.ImageState
 
 class UserProfileImageUpdateStatusTests: MessagingTest {
     var sut : UserProfileImageUpdateStatus!
@@ -144,7 +159,7 @@ class UserProfileImageUpdateStatusTests: MessagingTest {
         super.setUp()
         preprocessor = MockPreprocessor()
         preprocessor.operations = [Operation()]
-        sut = UserProfileImageUpdateStatus(preprocessor: preprocessor, queue: ZMImagePreprocessor.createSuitableImagePreprocessingQueue())
+        sut = UserProfileImageUpdateStatus(managedObjectContext: syncMOC, preprocessor: preprocessor, queue: ZMImagePreprocessor.createSuitableImagePreprocessingQueue(), delegate: nil)
         tinyImage = data(forResource: "tiny", extension: "jpg")
         imageOwner = UserProfileImageOwner(imageData: tinyImage)
     }
@@ -169,8 +184,7 @@ extension UserProfileImageUpdateStatusTests {
         ImageState.canTransition(from: .preprocessing, onlyTo: [sampleFailedImageState, sampleUploadState])
         ImageState.canTransition(from: sampleUploadState, onlyTo: [sampleFailedImageState, .uploading])
         ImageState.canTransition(from: .uploading, onlyTo: [sampleFailedImageState, sampleUploadedState])
-        ImageState.canTransition(from: sampleUploadedState, onlyTo: [sampleFailedImageState, .completed])
-        ImageState.canTransition(from: .completed, onlyTo: [sampleFailedImageState, .ready])
+        ImageState.canTransition(from: sampleUploadedState, onlyTo: [sampleFailedImageState, .ready])
         ImageState.canTransition(from: sampleFailedImageState, onlyTo: [.ready])
     }
     
@@ -212,16 +226,19 @@ extension UserProfileImageUpdateStatusTests {
         sut.setState(state: .uploading, for: .complete)
         XCTAssertEqual(sut.imageState(for: .preview), .uploading)
         XCTAssertEqual(sut.imageState(for: .complete), .uploading)
+        let delegate = MockChangeDelegate()
 
         // WHEN
         let previewAssetId = "asset_preview"
         let completeAssetId = "asset_complete"
-
+        
+        sut.changeDelegate = delegate
         sut.setState(state: .uploaded(assetId: previewAssetId), for: .preview)
         sut.setState(state: .uploaded(assetId: completeAssetId), for: .complete)
 
         // THEN
-        XCTAssertEqual(sut.state, .update(previewAssetId: previewAssetId, completeAssetId: completeAssetId))
+        let states: [ProfileUpdateState] = [.update(previewAssetId: previewAssetId, completeAssetId: completeAssetId), .ready]
+        XCTAssertEqual(delegate.states, states)
     }
     
     func testThatProfileUpdateStateIsSetToFailedAfterAnyImageStatesIsFailed() {
@@ -245,9 +262,7 @@ extension UserProfileImageUpdateStatusTests {
     func testProfileUpdateStateTransitions() {
         ProfileUpdateState.canTransition(from: .ready, onlyTo: [sampleFailedState, samplePreprocessState])
         ProfileUpdateState.canTransition(from: samplePreprocessState, onlyTo: [sampleFailedState, sampleUpdateState])
-        ProfileUpdateState.canTransition(from: sampleUpdateState, onlyTo: [sampleFailedState, .updating])
-        ProfileUpdateState.canTransition(from: .updating, onlyTo: [sampleFailedState, .completed])
-        ProfileUpdateState.canTransition(from: .completed, onlyTo: [.ready])
+        ProfileUpdateState.canTransition(from: sampleUpdateState, onlyTo: [sampleFailedState, .ready])
         ProfileUpdateState.canTransition(from: sampleFailedState, onlyTo: [.ready])
     }
     
@@ -261,7 +276,7 @@ extension UserProfileImageUpdateStatusTests {
     
     func testThatProfileUpdateStateDoesntTransitionToInvalidState() {
         // WHEN
-        sut.setState(state: .updating)
+        sut.setState(state: sampleUpdateState)
         
         // THEN
         XCTAssertEqual(sut.state, .ready)
