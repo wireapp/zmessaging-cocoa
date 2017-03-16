@@ -31,7 +31,7 @@ var sampleFailedImageState: UserProfileImageUpdateStatus.ImageState {
 }
 
 var samplePreprocessState: UserProfileImageUpdateStatus.ProfileUpdateState {
-    return UserProfileImageUpdateStatus.ProfileUpdateState.preprocess(image: Data(), size: .zero)
+    return UserProfileImageUpdateStatus.ProfileUpdateState.preprocess(image: Data())
 }
 var sampleUpdateState: UserProfileImageUpdateStatus.ProfileUpdateState {
     return UserProfileImageUpdateStatus.ProfileUpdateState.update(previewAssetId: "id1", completeAssetId: "id2")
@@ -105,6 +105,8 @@ extension StateTransition {
     }
 }
 
+typealias UserProfileImageUpdateStatus = zmessaging.UserProfileImageUpdateStatus
+
 extension UserProfileImageUpdateStatus.ImageState: Equatable {
     public static func ==(lhs: UserProfileImageUpdateStatus.ImageState, rhs: UserProfileImageUpdateStatus.ImageState) -> Bool {
         return String(describing: lhs) == String(describing: rhs)
@@ -142,9 +144,9 @@ class UserProfileImageUpdateStatusTests: MessagingTest {
         super.setUp()
         preprocessor = MockPreprocessor()
         preprocessor.operations = [Operation()]
-        sut = UserProfileImageUpdateStatus(preprocessor: preprocessor)
+        sut = UserProfileImageUpdateStatus(preprocessor: preprocessor, queue: ZMImagePreprocessor.createSuitableImagePreprocessingQueue())
         tinyImage = data(forResource: "tiny", extension: "jpg")
-        imageOwner = UserProfileImageOwner(imageData: tinyImage, size: .zero)
+        imageOwner = UserProfileImageOwner(imageData: tinyImage)
     }
     
     func operationWithExpectation(description: String) -> Operation {
@@ -284,7 +286,7 @@ extension UserProfileImageUpdateStatusTests {
 extension UserProfileImageUpdateStatusTests {
     func testThatItSetsPreprocessorDelegateWhenProcessing() {
         // WHEN
-        sut.updateImage(imageData: tinyImage, size: .zero)
+        sut.updateImage(imageData: tinyImage)
 
         // THEN
         XCTAssertNotNil(preprocessor.delegate)
@@ -292,7 +294,7 @@ extension UserProfileImageUpdateStatusTests {
     
     func testThatItAsksPreprocessorForOperationsWithCorrectImageOwner() {
         // WHEN
-        sut.updateImage(imageData: tinyImage, size: .zero)
+        sut.updateImage(imageData: tinyImage)
 
         // THEN
         XCTAssertTrue(preprocessor.operationsCalled)
@@ -306,7 +308,7 @@ extension UserProfileImageUpdateStatusTests {
         preprocessor.operations = []
         
         // WHEN
-        sut.updateImage(imageData: tinyImage, size: .zero)
+        sut.updateImage(imageData: tinyImage)
 
         // THEN
         XCTAssertEqual(sut.state, .failed(.preprocessingFailed))
@@ -321,7 +323,7 @@ extension UserProfileImageUpdateStatusTests {
         preprocessor.operations = [e1, e2]
         
         // WHEN
-        sut.updateImage(imageData: tinyImage, size: .zero)
+        sut.updateImage(imageData: tinyImage)
 
         // THEN 
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
@@ -366,14 +368,14 @@ extension UserProfileImageUpdateStatusTests {
     
     func testThatItIsNotPossibleToStartPreprocessingAgainIfProfileUpdateFails() {
         // GIVEN
-        sut.updateImage(imageData: Data(), size: .zero)
-        XCTAssertEqual(sut.state, .preprocess(image: Data(), size: .zero))
+        sut.updateImage(imageData: Data())
+        XCTAssertEqual(sut.state, .preprocess(image: Data()))
         XCTAssertEqual(sut.imageState(for: .preview), .preprocessing)
         XCTAssertEqual(sut.imageState(for: .complete), .preprocessing)
         sut.setState(state: .failed(.preprocessingFailed))
 
         // WHEN
-        sut.updateImage(imageData: Data(), size: .zero)
+        sut.updateImage(imageData: Data())
         
         // THEN
         XCTAssertEqual(sut.state, .failed(.preprocessingFailed))

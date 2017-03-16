@@ -50,6 +50,7 @@
 
 - (instancetype)initWithAuthenticationCenter:(ZMAuthenticationStatus *)authenticationStatus
                      userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileStatus
+                userProfileImageUpdateStatus:(UserProfileImageUpdateStatus *)profileImageStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                           clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
                         proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus

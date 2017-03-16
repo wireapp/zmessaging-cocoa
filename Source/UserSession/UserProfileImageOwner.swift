@@ -26,11 +26,9 @@ public final class UserProfileImageOwner: NSObject, ZMImageOwner {
     }
     
     let imageData: Data
-    let imageSize: CGSize
     var processedImages = [ZMImageFormat : Data]()
     
-    init(imageData: Data, size: CGSize) {
-        self.imageSize = size
+    init(imageData: Data) {
         self.imageData = imageData
         super.init()
     }
@@ -52,7 +50,7 @@ public final class UserProfileImageOwner: NSObject, ZMImageOwner {
     }
     
     public func originalImageSize() -> CGSize {
-        return imageSize
+        return .zero
     }
     
     public func isInline(for format: ZMImageFormat) -> Bool {

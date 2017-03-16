@@ -121,6 +121,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (instancetype)initWithAuthenticationCenter:(ZMAuthenticationStatus *)authenticationStatus
                      userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileStatus
+                userProfileImageUpdateStatus:(UserProfileImageUpdateStatus *)profileImageStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                           clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
                         proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
@@ -225,6 +226,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[TypingStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[SearchUserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[UserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:imageProcessingQueue clientRegistrationDelegate:clientRegistrationStatus],
+                                   [[UserImageAssetUploadStrategy alloc] initWithManagedObjectContext:self.syncMOC imageUpdateStatus:profileImageStatus authenticationStatus:authenticationStatus],
                                    [[LinkPreviewUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[GenericMessageNotificationRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus]
                                    ];

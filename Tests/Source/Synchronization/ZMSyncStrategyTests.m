@@ -188,6 +188,7 @@
     
     self.sut = [[ZMSyncStrategy alloc] initWithAuthenticationCenter:self.authenticationStatus
                                             userProfileUpdateStatus:self.userProfileUpdateStatus
+                                       userProfileImageUpdateStatus:nil
                                            clientRegistrationStatus:self.clientRegistrationStatus
                                                  clientUpdateStatus:self.clientUpdateStatus
                                                proxiedRequestStatus:nil

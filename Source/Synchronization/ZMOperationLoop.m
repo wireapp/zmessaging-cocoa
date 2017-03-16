@@ -67,6 +67,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                     authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
                  userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileUpdateStatus
+            userProfileImageUpdateStatus:(UserProfileImageUpdateStatus *)profileImageStatus
                 clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                       clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
                       proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
@@ -84,6 +85,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
     ZMSyncStrategy *syncStrategy = [[ZMSyncStrategy alloc] initWithAuthenticationCenter:authenticationStatus
                                                                 userProfileUpdateStatus:userProfileUpdateStatus
+                                                           userProfileImageUpdateStatus:profileImageStatus
                                                                clientRegistrationStatus:clientRegistrationStatus
                                                                      clientUpdateStatus:clientUpdateStatus
                                                                      proxiedRequestStatus:proxiedRequestStatus

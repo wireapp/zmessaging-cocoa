@@ -41,6 +41,7 @@
 @protocol ZMNetworkAvailabilityObserver;
 @protocol ZMRequestsToOpenViewsDelegate;
 @protocol ZMThirdPartyServicesDelegate;
+@protocol UserProfileImageUpdateProtocol;
 @class TopConversationsDirectory;
 
 @protocol ZMAVSLogObserver <NSObject>
@@ -213,5 +214,11 @@ typedef NS_ENUM (NSInteger, ProxiedRequestType){
 @property (nonatomic, readonly) id<UserProfile> userProfile;
 
 - (UserClient *)selfUserClient;
+@end
+
+@interface ZMUserSession (ProfilePictureUpdate)
+
+@property (nonatomic, readonly) id<UserProfileImageUpdateProtocol> profileUpdate;
+
 @end
 

@@ -80,6 +80,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ClientUpdateStatus *clientUpdateStatus;
 @property (nonatomic) BackgroundAPNSPingBackStatus *pingBackStatus;
 @property (nonatomic) ZMAccountStatus *accountStatus;
+@property (nonatomic) UserProfileImageUpdateStatus *profileImageUpdateStatus;
 
 @property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 
@@ -346,8 +347,8 @@ ZM_EMPTY_ASSERTING_INIT()
             self.pingBackStatus = [[BackgroundAPNSPingBackStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext
                                                                                   authenticationProvider:self.authenticationStatus];
 
-           self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
-                                                                                managedObjectContext:syncManagedObjectContext];
+            self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
+                                                                                 managedObjectContext:syncManagedObjectContext];
             
             self.transportSession = session;
             self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
@@ -356,6 +357,8 @@ ZM_EMPTY_ASSERTING_INIT()
             
             self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
             self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
+            
+            self.profileImageUpdateStatus = [[UserProfileImageUpdateStatus alloc] init];
         }];
         
         _application = application;
@@ -366,6 +369,7 @@ ZM_EMPTY_ASSERTING_INIT()
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
                                                                                authenticationStatus:self.authenticationStatus
                                                                             userProfileUpdateStatus:self.userProfileUpdateStatus
+                                                                       userProfileImageUpdateStatus:self.profileImageUpdateStatus
                                                                            clientRegistrationStatus:self.clientRegistrationStatus
                                                                                  clientUpdateStatus:self.clientUpdateStatus
                                                                                proxiedRequestStatus:self.proxiedRequestStatus
@@ -1053,6 +1057,15 @@ static CallingProtocolStrategy ZMUserSessionCallingProtocolStrategy = CallingPro
 {
     self.transportSession.clientID = userClient.remoteIdentifier;
     [self.transportSession restartPushChannel];
+}
+
+@end
+
+@implementation ZMUserSession (ProfilePictureUpdate)
+
+- (id<UserProfileImageUpdateProtocol>)profileUpdate
+{
+    return self.profileImageUpdateStatus;
 }
 
 @end

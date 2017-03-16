@@ -18,7 +18,7 @@
 
 import Foundation
 
-public enum ProfileImageSize {
+internal enum ProfileImageSize {
     case preview
     case complete
     
@@ -32,21 +32,26 @@ public enum ProfileImageSize {
     }
 }
 
-public enum UserProfileImageUpdateError: Error {
+internal enum UserProfileImageUpdateError: Error {
     case preprocessingFailed
     case uploadFailed(Error)
 }
 
-public protocol UserProfileImageUpdateStateDelegate: class {
+internal protocol UserProfileImageUpdateStateDelegate: class {
     func failed(withError: UserProfileImageUpdateError)
 }
 
-public protocol UserProfileImageUploadStatusProtocol: class {
+internal protocol UserProfileImageUploadStatusProtocol: class {
     var allSizes: [ProfileImageSize] { get }
     func consumeImage(for size: ProfileImageSize) -> Data?
     func hasImageToUpload(for size: ProfileImageSize) -> Bool
     func uploadingDone(imageSize: ProfileImageSize, assetId: String)
     func uploadingFailed(imageSize: ProfileImageSize, error: Error)
+}
+
+@objc public protocol UserProfileImageUpdateProtocol: class {
+    @objc(updateImageWithImageData:)
+    func updateImage(imageData: Data)
 }
 
 public final class UserProfileImageUpdateStatus: NSObject {
@@ -83,7 +88,7 @@ public final class UserProfileImageUpdateStatus: NSObject {
     
     internal enum ProfileUpdateState {
         case ready
-        case preprocess(image: Data, size: CGSize)
+        case preprocess(image: Data)
         case update(previewAssetId: String, completeAssetId: String)
         case updating
         case completed
@@ -119,7 +124,11 @@ public final class UserProfileImageUpdateStatus: NSObject {
     fileprivate var imageState = [ProfileImageSize : ImageState]()
     internal fileprivate(set) var state: ProfileUpdateState = .ready
     
-    init(preprocessor: ZMAssetsPreprocessorProtocol, queue: OperationQueue = ZMImagePreprocessor.createSuitableImagePreprocessingQueue()){
+    public convenience override init() {
+        self.init(preprocessor: ZMAssetsPreprocessor(delegate: nil), queue: ZMImagePreprocessor.createSuitableImagePreprocessingQueue())
+    }
+    
+    internal init(preprocessor: ZMAssetsPreprocessorProtocol, queue: OperationQueue){
         self.queue = queue
         self.preprocessor = preprocessor
         super.init()
@@ -141,8 +150,8 @@ extension UserProfileImageUpdateStatus {
     
     internal func didTransition(from oldState: ProfileUpdateState, to currentState: ProfileUpdateState) {
         switch (oldState, currentState) {
-        case let (_, .preprocess(image: data, size: size)):
-            startPreprocessing(imageData: data, size: size)
+        case let (_, .preprocess(image: data)):
+            startPreprocessing(imageData: data)
         case (_, .failed):
             resetImageState()
         default:
@@ -150,12 +159,12 @@ extension UserProfileImageUpdateStatus {
         }
     }
     
-    fileprivate func startPreprocessing(imageData: Data, size: CGSize) {
+    fileprivate func startPreprocessing(imageData: Data) {
         allSizes.forEach {
             setState(state: .preprocessing, for: $0)
         }
         
-        let imageOwner = UserProfileImageOwner(imageData: imageData, size: size)
+        let imageOwner = UserProfileImageOwner(imageData: imageData)
         guard let operations = preprocessor?.operations(forPreprocessingImageOwner: imageOwner), !operations.isEmpty else {
             resetImageState()
             setState(state: .failed(.preprocessingFailed))
@@ -209,11 +218,13 @@ extension UserProfileImageUpdateStatus {
     }
 }
 
-extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
-    
-    public func updateImage(imageData: Data, size: CGSize) {
-        setState(state: .preprocess(image: imageData, size: size))
+extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
+    public func updateImage(imageData: Data) {
+        setState(state: .preprocess(image: imageData))
     }
+}
+
+extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     
     public func completedDownsampleOperation(_ operation: ZMImageDownsampleOperationProtocol, imageOwner: ZMImageOwner) {
         allSizes.forEach {
@@ -233,11 +244,11 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
 }
 
 extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
-    public var allSizes: [ProfileImageSize] {
+    internal var allSizes: [ProfileImageSize] {
         return [.preview, .complete]
     }
     
-    public func hasImageToUpload(for size: ProfileImageSize) -> Bool {
+    internal func hasImageToUpload(for size: ProfileImageSize) -> Bool {
         switch imageState(for: size) {
         case .upload:
             return true
@@ -246,7 +257,7 @@ extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
         }
     }
     
-    public func consumeImage(for size: ProfileImageSize) -> Data? {
+    internal func consumeImage(for size: ProfileImageSize) -> Data? {
         switch imageState(for: size) {
         case .upload(image: let image):
             setState(state: .uploading, for: size)
@@ -256,11 +267,11 @@ extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
         }
     }
     
-    public func uploadingDone(imageSize: ProfileImageSize, assetId: String) {
+    internal func uploadingDone(imageSize: ProfileImageSize, assetId: String) {
         setState(state: .uploaded(assetId: assetId), for: imageSize)
     }
     
-    public func uploadingFailed(imageSize: ProfileImageSize, error: Error) {
+    internal func uploadingFailed(imageSize: ProfileImageSize, error: Error) {
         setState(state: .failed(.uploadFailed(error)), for: imageSize)
     }
 }
