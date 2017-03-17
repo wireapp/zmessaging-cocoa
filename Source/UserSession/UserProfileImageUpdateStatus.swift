@@ -141,13 +141,16 @@ public final class UserProfileImageUpdateStatus: NSObject {
 // MARK: Main state transitions
 extension UserProfileImageUpdateStatus {
     internal func setState(state newState: ProfileUpdateState) {
-        let currentState = state
-        guard currentState.canTransition(to: newState) else {
-            // Trying to transition to invalid state - ignore
-            return
+        managedObjectContext.performGroupedBlock {
+
+            let currentState = self.state
+            guard currentState.canTransition(to: newState) else {
+                // Trying to transition to invalid state - ignore
+                return
+            }
+            self.state = newState
+            self.didTransition(from: currentState, to: newState)
         }
-        state = newState
-        didTransition(from: currentState, to: newState)
     }
     
     internal func didTransition(from oldState: ProfileUpdateState, to currentState: ProfileUpdateState) {
@@ -194,14 +197,16 @@ extension UserProfileImageUpdateStatus {
     }
     
     internal func setState(state newState: ImageState, for imageSize: ProfileImageSize) {
-        let currentState = imageState(for: imageSize)
-        guard currentState.canTransition(to: newState) else {
-            // Trying to transition to invalid state - ignore
-            return
+        managedObjectContext.performGroupedBlock {
+            let currentState = self.imageState(for: imageSize)
+            guard currentState.canTransition(to: newState) else {
+                // Trying to transition to invalid state - ignore
+                return
+            }
+            
+            self.imageState[imageSize] = newState
+            self.didTransition(from: currentState, to: newState, for: imageSize)
         }
-        
-        imageState[imageSize] = newState
-        didTransition(from: currentState, to: newState, for: imageSize)
     }
     
     internal func resetImageState() {
