@@ -166,8 +166,7 @@ extension UserProfileImageUpdateStatus {
     
     fileprivate func updateUserProfile(with previewAssetId: String, completeAssetId: String) {
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
-        selfUser.previewProfileAssetIdentifier = previewAssetId
-        selfUser.completeProfileAssetIdentifier = completeAssetId
+        selfUser.updateAndSyncProfileAssetIdentifiers(previewIdentifier: previewAssetId, completeIdentifier: completeAssetId)
         managedObjectContext.saveOrRollback()
         setState(state: .ready)
     }
