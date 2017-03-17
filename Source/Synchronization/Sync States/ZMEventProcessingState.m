@@ -63,8 +63,7 @@
                              objectStrategyDirectory.connectionTranscoder,
                              objectStrategyDirectory.userTranscoder,
                              objectStrategyDirectory.selfTranscoder,
-                             objectStrategyDirectory.conversationTranscoder,
-                             objectStrategyDirectory.clientMessageTranscoder,
+                             objectStrategyDirectory.conversationTranscoder
                              ];
         
         self.hotFix = [[ZMHotFix alloc] initWithSyncMOC:objectStrategyDirectory.moc];
