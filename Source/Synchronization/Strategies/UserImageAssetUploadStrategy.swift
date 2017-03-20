@@ -38,7 +38,8 @@ internal enum AssetTransportError: Error {
 
 @objc public final class UserImageAssetUploadStrategy: NSObject {
     internal let requestFactory = AssetRequestFactory()
-    internal var requestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
+    internal var upstreamRequestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
+    internal var downsteamRequestSyncs = [ProfileImageSize : ZMDownstreamObjectSyncWithWhitelist]()
     internal let moc: NSManagedObjectContext
     internal weak var imageUploadStatus: UserProfileImageUploadStatusProtocol?
     internal let authenticationStatus: AuthenticationStatusProvider
@@ -54,18 +55,52 @@ internal enum AssetTransportError: Error {
         super.init()
     }
     
-    internal func requestSync(for size: ProfileImageSize) -> ZMSingleRequestSync {
-        if let sync = requestSyncs[size] {
+    fileprivate func whitelistUserImageSync(for size: ProfileImageSize) -> ZMDownstreamObjectSyncWithWhitelist {
+        let predicates: [NSPredicate]
+        switch size {
+        case .preview:
+            predicates = [ZMUser.previewImageDownloadFilter]
+        case .complete:
+            predicates = [ZMUser.completeImageDownloadFilter]
+        }
+        
+        return ZMDownstreamObjectSyncWithWhitelist(transcoder:self,
+                                            entityName:ZMUser.entityName(),
+                                            predicateForObjectsToDownload:NSCompoundPredicate(andPredicateWithSubpredicates: predicates),
+                                            managedObjectContext:moc)
+    }
+    
+    internal func requestSync<T>(inList list: inout [ProfileImageSize : T], for size: ProfileImageSize, create: ((ProfileImageSize) -> T)) -> T {
+        if let sync = list[size] {
             return sync
         } else {
-            let sync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)!
-            requestSyncs[size] = sync
+            let sync = create(size)
+            list[size] = sync
             return sync
         }
     }
     
+    internal func downstreamRequestSync(for size: ProfileImageSize) -> ZMDownstreamObjectSyncWithWhitelist {
+        return requestSync(inList: &downsteamRequestSyncs, for: size, create: whitelistUserImageSync)
+    }
+    
+    internal func size(for requestSync: ZMDownstreamObjectSyncWithWhitelist) -> ProfileImageSize? {
+        for (size, sync) in downsteamRequestSyncs {
+            if sync === requestSync {
+                return size
+            }
+        }
+        return nil
+    }
+
+    internal func upstreamRequestSync(for size: ProfileImageSize) -> ZMSingleRequestSync {
+        return requestSync(inList: &upstreamRequestSyncs, for: size) { _ in
+            return ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)!
+        }
+    }
+
     internal func size(for requestSync: ZMSingleRequestSync) -> ProfileImageSize? {
-        for (size, sync) in requestSyncs {
+        for (size, sync) in upstreamRequestSyncs {
             if sync === requestSync {
                 return size
             }
@@ -78,11 +113,51 @@ internal enum AssetTransportError: Error {
 extension UserImageAssetUploadStrategy: RequestStrategy {
     public func nextRequest() -> ZMTransportRequest? {
         guard case .authenticated = authenticationStatus.currentPhase else { return nil }
+        
+        let downstreamSync = ProfileImageSize.allSizes.map(downstreamRequestSync).first
+        if let request = downstreamSync?.nextRequest() {
+            return request
+        }
+        
         guard let updateStatus = imageUploadStatus else { return nil }
         
-        let sync = updateStatus.allSizes.filter(updateStatus.hasImageToUpload).map(requestSync).first
+        let sync = ProfileImageSize.allSizes.filter(updateStatus.hasImageToUpload).map(upstreamRequestSync).first
         sync?.readyForNextRequestIfNotBusy()
         return sync?.nextRequest()
+    }
+}
+
+extension UserImageAssetUploadStrategy: ZMDownstreamTranscoder {
+    public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
+        guard let whitelistSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist else { return nil }
+        guard let user = object as? ZMUser else { return nil }
+        guard let size = size(for: whitelistSync) else { return nil }
+
+        let remoteId: String?
+        switch size {
+        case .preview:
+            remoteId = user.previewProfileAssetIdentifier
+        case .complete:
+            remoteId = user.completeProfileAssetIdentifier
+        }
+        guard let assetId = remoteId else { return nil }
+        let path = "/assets/v3/\(assetId)"
+        return ZMTransportRequest.imageGet(fromPath: path)
+    }
+    
+    public func delete(_ object: ZMManagedObject!, downstreamSync: ZMObjectSync!) {}
+    
+    public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
+        guard let whitelistSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist else { return }
+        guard let user = object as? ZMUser else { return }
+        guard let size = size(for: whitelistSync) else { return }
+
+        switch size {
+        case .preview:
+            user.imageSmallProfileData = response.imageData
+        case .complete:
+            user.imageMediumData = response.imageData
+        }
     }
 }
 
