@@ -20,14 +20,19 @@
 @import Foundation;
 @import ZMCDataModel;
 
+#import "ZMCommonContactsSearchDelegate.h"
+
+
 @class ZMTransportSession;
+
+
 
 @interface ZMCommonContactsSearchCachedEntry : NSObject
 
 @property (nonatomic, readonly) NSDate *expirationDate;
-@property (nonatomic, readonly) NSOrderedSet *userObjectIDs;
+@property (nonatomic, readonly) NSUInteger commonConnectionCount;
 
-- (instancetype)initWithExpirationDate:(NSDate *)expirationDate userObjectsIDs:(NSOrderedSet *)userObjectsIDs;
+- (instancetype)initWithExpirationDate:(NSDate *)expirationDate commonConnectionCount:(NSUInteger)commonConnectionCount;
 
 @end
 
@@ -38,11 +43,11 @@
 @property (nonatomic, readonly) id<ZMCommonContactsSearchToken> searchToken;
 
 + (void)startSearchWithTransportSession:(ZMTransportSession *)transportSession
-                                         userID:(NSUUID *)userID
-                                          token:(id<ZMCommonContactsSearchToken>)token
-                                        syncMOC:(NSManagedObjectContext *)syncMoc
-                                          uiMOC:(NSManagedObjectContext *)uiMOC
-                                 searchDelegate:(id<ZMCommonContactsSearchDelegate>)delegate
-                                   resultsCache:(NSCache *)resultsCache;
+                                 userID:(NSUUID *)userID
+                                  token:(id<ZMCommonContactsSearchToken>)token
+                                syncMOC:(NSManagedObjectContext *)syncMoc
+                                  uiMOC:(NSManagedObjectContext *)uiMOC
+                         searchDelegate:(id<ZMCommonContactsSearchDelegate>)delegate
+                           resultsCache:(NSCache *)resultsCache;
 
 @end

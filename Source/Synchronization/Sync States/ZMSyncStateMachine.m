@@ -200,7 +200,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
     [self.currentState didFailAuthentication];
 }
 
-
 - (void)dataDidChange
 {
     [self.currentState dataDidChange];

@@ -514,7 +514,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 {
     NSSet *users = [event usersFromUserIDsInManagedObjectContext:self.managedObjectContext createIfNeeded:YES];
     for (ZMUser *user in users) {
-        [conversation internalAddParticipant:user isAuthoritative:YES];
+        [conversation internalAddParticipants:[NSSet setWithObject:user] isAuthoritative:YES];
         [conversation synchronizeAddedUser:user];
     }
 }
@@ -526,7 +526,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     
     NSSet *users = [event usersFromUserIDsInManagedObjectContext:self.managedObjectContext createIfNeeded:YES];
     for (ZMUser *user in users) {
-        [conversation internalRemoveParticipant:user sender:sender];
+        [conversation internalRemoveParticipants:[NSSet setWithObject:user] sender:sender];
         [conversation synchronizeRemovedUser:user];
     }
 }

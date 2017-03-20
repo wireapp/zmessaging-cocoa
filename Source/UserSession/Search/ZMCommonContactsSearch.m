@@ -23,16 +23,19 @@
 
 #import "ZMCommonContactsSearch.h"
 
+
 static NSTimeInterval CacheValidityInterval = 60 * 10; // 10 minutes
+static NSString * const ZMSearchEndPoint = @"/search/contacts";
+
 
 @implementation ZMCommonContactsSearchCachedEntry
 
-- (instancetype)initWithExpirationDate:(NSDate *)expirationDate userObjectsIDs:(NSOrderedSet *)userObjectsIDs;
+- (instancetype)initWithExpirationDate:(NSDate *)expirationDate commonConnectionCount:(NSUInteger)commonConnectionCount;
 {
     self = [super init];
     if(self) {
         _expirationDate = expirationDate;
-        _userObjectIDs = [userObjectsIDs copy];
+        _commonConnectionCount = commonConnectionCount;
     }
     return self;
 }
@@ -78,70 +81,75 @@ static NSTimeInterval CacheValidityInterval = 60 * 10; // 10 minutes
     return self;
 }
 
-// return false if the value is not in cache
+// return NO if the value is not in cache
 - (BOOL)checkCacheAndNotify
 {
     ZMCommonContactsSearchCachedEntry *cached = [self.resultsCache objectForKey:self.userID];
-    if(cached != nil) {
-        
+    if (cached != nil) {
         if(cached.expirationDate.timeIntervalSinceNow < 0) {
             [self.resultsCache removeObjectForKey:self.userID];
-        }
-        else {
-            [self convertObjectIDsInUIUsersAndNotifyDelegate:cached.userObjectIDs];
+        } else {
+            [self notifyDelegateWithResult:cached.commonConnectionCount];
             return YES;
         }
     }
     return NO;
 }
 
-- (void)notifyDelegateWithResult:(NSOrderedSet *)users
+- (void)notifyDelegateWithResult:(NSUInteger)numberOfConnections
 {
-    [self.delegate didReceiveCommonContactsUsers:users forSearchToken:self.searchToken];
-}
-
-- (void)convertObjectIDsInUIUsersAndNotifyDelegate:(NSOrderedSet *)userObjectIDs
-{
-    NSFetchRequest *request = [ZMUser sortedFetchRequestWithPredicate:[NSPredicate predicateWithFormat:@"self in %@",userObjectIDs]];
-    
-    ZMCommonContactsSearchCachedEntry *entry = [[ZMCommonContactsSearchCachedEntry alloc] initWithExpirationDate:[NSDate dateWithTimeIntervalSinceNow:CacheValidityInterval] userObjectsIDs:userObjectIDs];
+    NSDate *expirationDate = [NSDate dateWithTimeIntervalSinceNow:CacheValidityInterval];
+    ZMCommonContactsSearchCachedEntry *entry = [[ZMCommonContactsSearchCachedEntry alloc] initWithExpirationDate:expirationDate commonConnectionCount:numberOfConnections];
     [self.resultsCache setObject:entry forKey:self.userID];
-    
+
     [self.uiMOC performGroupedBlock:^{
-        (void) [self.uiMOC executeFetchRequestOrAssert:request];
-        NSMutableOrderedSet *users = [NSMutableOrderedSet orderedSet];
-        for(NSManagedObjectID *objectID in userObjectIDs) {
-            ZMUser *user = (id)[self.uiMOC objectWithID:objectID];
-            [users addObject:user];
-        }
-        [self notifyDelegateWithResult:users];
+        [self.delegate didReceiveNumberOfTotalMutualConnections:numberOfConnections forSearchToken:self.searchToken];
     }];
-    
 }
 
 - (void)parseResponse:(ZMTransportResponse *)response
 {
-    if(response.result != ZMTransportResponseStatusSuccess) {
+    if (response.result != ZMTransportResponseStatusSuccess) {
         return;
     }
-        
-    NSMutableOrderedSet *userObjIDs = [NSMutableOrderedSet orderedSet];
-    for(NSDictionary *result in [[[response.payload asDictionary] arrayForKey:@"documents"] asDictionaries]) {
-        NSUUID* userID = [result uuidForKey:@"id"];
-        if(userID) {
-            ZMUser *user = [ZMUser userWithRemoteID:userID createIfNeeded:NO inContext:self.syncMOC];
-            if(user) {
-                [userObjIDs addObject:user.objectID];
-            }
-        }
+
+    NSDictionary *result = [response.payload.asDictionary arrayForKey:@"documents"].asDictionaries.firstObject;
+    NSUUID *userID = [result uuidForKey:@"id"];
+
+    if (![self.userID isEqual:userID]) {
+        // This should not happen
+        [self notifyDelegateWithResult:0];
+        return;
     }
-    
-    [self convertObjectIDsInUIUsersAndNotifyDelegate:userObjIDs];
+
+    NSUInteger numberOfConnections = [result numberForKey:@"total_mutual_friends"].unsignedIntegerValue;
+    [self notifyDelegateWithResult:numberOfConnections];
+}
+
+- (NSString *)fetchUsernameForUserWithID:(NSUUID *)userID
+{
+    if (nil == userID) {
+        return nil;
+    }
+
+    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:userID inManagedObjectContext:self.syncMOC];
+    return user.handle;
 }
 
 - (void)startRequest
 {
-    ZMTransportRequest *request = [ZMTransportRequest requestWithPath:[NSString stringWithFormat:@"/search/common/%@", self.userID.transportString] method:ZMMethodGET payload:nil];
+    NSString *username = [self fetchUsernameForUserWithID:self.userID];
+    if (nil == username) {
+        [self notifyDelegateWithResult:0];
+        return;
+    }
+
+    NSMutableCharacterSet *set = NSCharacterSet.URLQueryAllowedCharacterSet.mutableCopy;
+    [set removeCharactersInString:@"=&+"];
+    NSString *urlEncodedQuery = [username stringByAddingPercentEncodingWithAllowedCharacters:set];
+    NSString *path = [NSString stringWithFormat:@"%@?q=%@&size=%d", ZMSearchEndPoint, urlEncodedQuery, 1];
+
+    ZMTransportRequest *request = [ZMTransportRequest requestWithPath:path method:ZMMethodGET payload:nil];
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *response) {
         // Do not weakify. Keep a reference to self or the delegate will not be called
         [self parseResponse:response];
@@ -150,13 +158,25 @@ static NSTimeInterval CacheValidityInterval = 60 * 10; // 10 minutes
     [self.transportSession enqueueSearchRequest:request];
 }
 
-+ (void)startSearchWithTransportSession:(ZMTransportSession *)transportSession userID:(NSUUID *)userID token:(id<ZMCommonContactsSearchToken>)token syncMOC:(NSManagedObjectContext *)syncMoc uiMOC:(NSManagedObjectContext *)uiMOC searchDelegate:(id<ZMCommonContactsSearchDelegate>)delegate resultsCache:(NSCache *)resultsCache
++ (void)startSearchWithTransportSession:(ZMTransportSession *)transportSession
+                                 userID:(NSUUID *)userID
+                                  token:(id<ZMCommonContactsSearchToken>)token
+                                syncMOC:(NSManagedObjectContext *)syncMoc
+                                  uiMOC:(NSManagedObjectContext *)uiMOC
+                         searchDelegate:(id<ZMCommonContactsSearchDelegate>)delegate
+                           resultsCache:(NSCache *)resultsCache
 {
     if(delegate == nil) {
         return;
     }
     
-    ZMCommonContactsSearch *search = [[ZMCommonContactsSearch alloc] initWithTransportSession:transportSession userID:userID token:token syncMOC:syncMoc uiMOC:uiMOC searchDelegate:delegate resultsCache:resultsCache];
+    ZMCommonContactsSearch *search = [[ZMCommonContactsSearch alloc] initWithTransportSession:transportSession
+                                                                                       userID:userID
+                                                                                        token:token
+                                                                                      syncMOC:syncMoc
+                                                                                        uiMOC:uiMOC
+                                                                               searchDelegate:delegate
+                                                                                 resultsCache:resultsCache];
     
     if([search checkCacheAndNotify]) {
         return;
@@ -164,7 +184,5 @@ static NSTimeInterval CacheValidityInterval = 60 * 10; // 10 minutes
     
     [search startRequest];
 }
-
-
 
 @end

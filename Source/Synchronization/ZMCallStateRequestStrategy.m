@@ -27,7 +27,6 @@
 #import "ZMUserSession+Internal.h"
 #import "ZMCallStateLogger.h"
 #import "ZMGSMCallHandler.h"
-#import "ZMLocalNotificationDispatcher.h"
 #import "ZMCallFlowRequestStrategy.h"
 #import <zmessaging/zmessaging-Swift.h>
 
@@ -617,7 +616,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
     
     if (isIgnoringCall){
         conversation.isIgnoringCall = YES;
-        [[NSNotificationCenter defaultCenter] postNotificationName:ZMConversationCancelNotificationForIncomingCallNotificationName object:conversation];
+        [[NSNotificationCenter defaultCenter] postNotificationName:[LocalNotificationDispatcher ZMConversationCancelNotificationForIncomingCallNotificationName] object:conversation];
     }
     if(changeToActive && !participantWasJoined) {
         [conversation.voiceChannelRouter.v2 addCallParticipant:participant];

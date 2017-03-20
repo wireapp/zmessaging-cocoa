@@ -48,6 +48,7 @@
     
     [self.syncMOC performGroupedBlockAndWait:^{
         self.activeSyncCallConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        self.activeSyncCallConversation.remoteIdentifier = [NSUUID createUUID];
         self.activeSyncCallConversation.conversationType = ZMConversationTypeGroup;
         self.activeSyncCallConversation.callDeviceIsActive = YES;
         [self.activeSyncCallConversation resetHasLocalModificationsForCallDeviceIsActive];
@@ -57,6 +58,7 @@
     
     [self.syncMOC performGroupedBlockAndWait:^{
         self.inactiveSyncCallConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        self.inactiveSyncCallConversation.remoteIdentifier = [NSUUID createUUID];
         self.inactiveSyncCallConversation.conversationType = ZMConversationTypeGroup;
         [self.syncMOC saveOrRollback];
     }];

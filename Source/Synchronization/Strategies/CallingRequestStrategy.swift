@@ -55,6 +55,10 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
         return genericMessageStrategy.nextRequest()
     }
     
+    public func dropPendingCallMessages(for conversation: ZMConversation) {
+        genericMessageStrategy.expireEntities(withDependency: conversation)
+    }
+    
 }
 
 extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTrackerSource {

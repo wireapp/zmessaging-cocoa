@@ -325,9 +325,11 @@
 {
     id objectDirectory = [OCMockObject mockForProtocol:@protocol(ZMObjectStrategyDirectory)];
     
-    id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
-    [self verifyMockLater:systemMessageTranscoder];
-    id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
+    id conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
+    [self verifyMockLater:conversationTranscoder];
+    id systemMessageEventConsumer = [OCMockObject mockForClass:SystemMessageEventsConsumer.class];
+    [self verifyMockLater:systemMessageEventConsumer];
+    id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
     [self verifyMockLater:clientMessageTranscoder];
     id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
     [self verifyMockLater:selfStrategy];
@@ -347,7 +349,6 @@
     [self verifyMockLater:loginCodeRequestTranscoder];
     
     
-    [[[objectDirectory stub] andReturn:systemMessageTranscoder] systemMessageTranscoder];
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
     [[[objectDirectory stub] andReturn:selfStrategy] selfStrategy];
     [[[objectDirectory stub] andReturn:registrationTranscoder] registrationTranscoder];
@@ -357,7 +358,6 @@
     [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
     
     [[[objectDirectory stub] andReturn:@[
-                                        systemMessageTranscoder,
                                         clientMessageTranscoder,
                                         selfStrategy,
                                         registrationTranscoder,

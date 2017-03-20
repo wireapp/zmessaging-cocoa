@@ -91,7 +91,7 @@
 {
     [super setUp];
     
-    self.mockDispatcher = [OCMockObject niceMockForClass:[ZMLocalNotificationDispatcher class]];
+    self.mockDispatcher = [OCMockObject niceMockForClass:[LocalNotificationDispatcher class]];
     self.mockUpstreamSync1 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     self.mockUpstreamSync2 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     [self verifyMockLater:self.mockUpstreamSync1];
@@ -133,13 +133,9 @@
     [[[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] classMethod] alloc];
     (void) [[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] initWithSyncStrategy:OCMOCK_ANY appStateDelegate:OCMOCK_ANY syncStatus:OCMOCK_ANY];
 
-    id systemMessageTranscoder = [OCMockObject mockForClass:ZMSystemMessageTranscoder.class];
-    [[[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] classMethod] alloc];
-    (void) [[[systemMessageTranscoder expect] andReturn:systemMessageTranscoder] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY upstreamInsertedObjectSync:nil localNotificationDispatcher:self.mockDispatcher messageExpirationTimer:nil];
-
-    id clientMessageTranscoder = [OCMockObject mockForClass:ZMClientMessageTranscoder.class];
+    id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
-    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initWithManagedObjectContext:self.syncMOC appStateDelegate:OCMOCK_ANY localNotificationDispatcher:self.mockDispatcher];
+    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initIn:self.syncMOC localNotificationDispatcher:self.mockDispatcher clientRegistrationStatus:OCMOCK_ANY apnsConfirmationStatus:OCMOCK_ANY];
 
     id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
     [[[[selfStrategy expect] andReturn:selfStrategy] classMethod] alloc];
@@ -199,7 +195,6 @@
                          connectionTranscoder,
                          userTranscoder,
                          self.conversationTranscoder,
-                         systemMessageTranscoder,
                          clientMessageTranscoder,
                          missingUpdateEventsTranscoder,
                          registrationTranscoder,
@@ -232,7 +227,6 @@
     
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
-    XCTAssertEqual(self.sut.systemMessageTranscoder, systemMessageTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
     XCTAssertEqual(self.sut.selfStrategy, selfStrategy);
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
@@ -352,8 +346,16 @@
 - (void)testThatWhenItConsumesEventsTheyAreForwardedToAllIndividualObjects
 {
     // given
-    NSArray *eventsArray = @[[ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.member-join", @"f": @2} uuid:nil],
-                             [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.message-add", @"a": @3} uuid:nil]];
+    NSString *uuid = [NSUUID createUUID].transportString;
+    NSArray *eventsArray = @[
+                             [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.member-join",
+                                                                          @"f": @2,
+                                                                          @"conversation": uuid
+                                                                          } uuid:nil],
+                             [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.message-add",
+                                                                          @"a": @3,
+                                                                          @"conversation": uuid
+                                                                          } uuid:nil]];
     XCTAssertEqual(eventsArray.count, 2u);
     
     // expect
@@ -375,8 +377,16 @@
 - (void)testThatItAsksClientMessageTranscoderToDecryptUpdateEvents
 {
     // given
-    NSArray *eventsArray = @[[ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.member-join", @"f": @2} uuid:nil],
-                             [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.message-add", @"a": @3} uuid:nil]];
+    NSString *uuid = [NSUUID createUUID].transportString;
+    NSArray *eventsArray = @[
+                             [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.member-join",
+                                                                          @"f": @2,
+                                                                          @"conversation": uuid
+                                                                          } uuid:nil],
+                             [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.message-add",
+                                                                          @"a": @3,
+                                                                          @"conversation": uuid
+                                                                          } uuid:nil]];
     XCTAssertEqual(eventsArray.count, 2u);
     
     // expect
@@ -1136,7 +1146,7 @@
 - (NSSet <Class> *)transcodersExpectedToReturnNonces
 {
     return @[
-             ZMClientMessageTranscoder.class,
+             ClientMessageTranscoder.class,
              ].set;
 }
 

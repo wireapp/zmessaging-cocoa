@@ -31,7 +31,6 @@
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 #import "ZMSyncStrategy+EventProcessing.h"
 
-#import "ZMLocalNotificationDispatcher.h"
 #import "ZMOperationLoop+Background.h"
 #import "ZMSyncStateManager.h"
 

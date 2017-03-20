@@ -52,7 +52,6 @@
 
 #import "ZMEnvironmentsSetup.h"
 #import "ZMClientRegistrationStatus.h"
-#import "ZMLocalNotificationDispatcher.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
 #import "CallingProtocolStrategy.h"
 
@@ -84,12 +83,13 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMPushRegistrant *pushRegistrant;
 @property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
-@property (nonatomic) ZMLocalNotificationDispatcher *localNotificationDispatcher;
+@property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSString *applicationGroupIdentifier;
 @property (nonatomic) NSURL *storeURL;
 @property (nonatomic) NSURL *keyStoreURL;
 @property (nonatomic, readwrite) NSURL *sharedContainerURL;
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
+@property (nonatomic) SystemMessageCallObserver *systemMessageCallObserver;
 
 
 /// Build number of the Wire app
@@ -321,7 +321,7 @@ ZM_EMPTY_ASSERTING_INIT()
             self.syncManagedObjectContext.zm_fileAssetCache = fileAssetCache;
             
             self.localNotificationDispatcher =
-            [[ZMLocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext sharedApplication:application];
+            [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext application:application];
             
            self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
                                                                                 managedObjectContext:syncManagedObjectContext];
@@ -387,6 +387,8 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                           userSession:self
                                                                          mediaManager:(AVSMediaManager *)mediaManager];
         }
+
+        self.systemMessageCallObserver = [[SystemMessageCallObserver alloc] initWithUserSession:self];
     }
     return self;
 }
@@ -443,12 +445,12 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (BOOL)isNotificationContentHidden;
 {
-    return [[self.managedObjectContext persistentStoreMetadataForKey:ZMShouldHideNotificationContentKey] boolValue];
+    return [[self.managedObjectContext persistentStoreMetadataForKey:LocalNotificationDispatcher.ZMShouldHideNotificationContentKey] boolValue];
 }
 
 - (void)setIsNotificationContentHidden:(BOOL)isNotificationContentHidden;
 {
-    [self.managedObjectContext setPersistentStoreMetadata:@(isNotificationContentHidden) forKey:ZMShouldHideNotificationContentKey];
+    [self.managedObjectContext setPersistentStoreMetadata:@(isNotificationContentHidden) forKey:LocalNotificationDispatcher.ZMShouldHideNotificationContentKey];
 }
 
 - (BOOL)isLoggedIn
@@ -968,6 +970,11 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 static BOOL ZMUserSessionUseCallKit = NO;
 
 @implementation ZMUserSession (Calling)
+
+- (CallingRequestStrategy *)callingStrategy
+{
+    return self.operationLoop.syncStrategy.callingRequestStrategy;
+}
 
 + (BOOL)useCallKit
 {

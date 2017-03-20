@@ -25,10 +25,8 @@
 #import "ZMSearchResult+Internal.h"
 #import "ZMUserSession+Internal.h"
 
-static NSString * const ZMSearchEndPoint = @"/search/contacts";
-static NSString * const ZMTopSearchEndPoint = @"/search/top";
-static NSString * const ZMSuggestedSearchEndPoint = @"/search/suggestions";
 
+static NSString * const ZMSearchEndPoint = @"/search/contacts";
 
 
 @implementation ZMSearchRequestCodec

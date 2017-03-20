@@ -109,7 +109,11 @@
 {
     // given
     for (id transcoder in self.syncObjectsUsedByState) {
-        [[[transcoder stub] andReturn:@[]] requestGenerators];
+        if([transcoder conformsToProtocol:@protocol(ZMRequestGeneratorSource)]) {
+            [[[transcoder stub] andReturn:@[]] requestGenerators];
+        } else {
+            [[transcoder stub] nextRequest];
+        }
     }
     
     // expect
@@ -126,9 +130,14 @@
 {
     // given
     id<ZMRequestGenerator> generator = [self generatorReturningNiceMockRequest];
+    ZMTransportRequest *dummyRequest = [ZMTransportRequest requestGetFromPath:@"foobar"];
     
     for (id transcoder in self.syncObjectsUsedByState) {
-        [[[transcoder stub] andReturn:@[generator]] requestGenerators];
+        if([transcoder conformsToProtocol:@protocol(ZMRequestGeneratorSource)]) {
+            [[[transcoder stub] andReturn:@[generator]] requestGenerators];
+        } else {
+            [[[transcoder stub] andReturn:dummyRequest] nextRequest];
+        }
     }
     
     // expect
@@ -145,7 +154,11 @@
 {
     // given
     for (id transcoder in self.syncObjectsUsedByState) {
-        [[[transcoder stub] andReturn:nil] requestGenerators];
+        if([transcoder conformsToProtocol:@protocol(ZMRequestGeneratorSource)]) {
+            [[[transcoder stub] andReturn:@[]] requestGenerators];
+        } else {
+            [[transcoder stub] nextRequest];
+        }
     }
     
     // expect
@@ -165,7 +178,11 @@
 {
     // given
     for (id transcoder in self.syncObjectsUsedByState) {
-        [[[transcoder stub] andReturn:nil] requestGenerators];
+        if([transcoder conformsToProtocol:@protocol(ZMRequestGeneratorSource)]) {
+            [[[transcoder stub] andReturn:@[]] requestGenerators];
+        } else {
+            [[transcoder stub] nextRequest];
+        }
     }
     
     // expect

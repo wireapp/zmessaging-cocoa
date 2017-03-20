@@ -25,7 +25,7 @@ class CallStateObserverTests : MessagingTest {
     var sender : ZMUser!
     var receiver : ZMUser!
     var conversation : ZMConversation!
-    var localNotificationDispatcher : ZMLocalNotificationDispatcher!
+    var localNotificationDispatcher : LocalNotificationDispatcher!
     
     override func setUp() {
         super.setUp()
@@ -46,13 +46,13 @@ class CallStateObserverTests : MessagingTest {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .oneOnOne
             conversation.remoteIdentifier = UUID()
-            conversation.internalAddParticipant(sender, isAuthoritative: true)
-            conversation.internalAddParticipant(receiver, isAuthoritative: true)
+            conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral:sender), isAuthoritative: true)
+            conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral:receiver), isAuthoritative: true)
             
             self.conversation = conversation
         }
         
-        localNotificationDispatcher = ZMLocalNotificationDispatcher(managedObjectContext: syncMOC, sharedApplication: application)!
+        localNotificationDispatcher = LocalNotificationDispatcher(in: syncMOC, application: application)
         sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, managedObjectContext: syncMOC)
     }
     

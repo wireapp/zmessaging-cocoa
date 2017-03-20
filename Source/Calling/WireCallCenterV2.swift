@@ -240,7 +240,15 @@ public class WireCallCenterV2 : NSObject {
     
     @objc
     public func callStateDidChange(conversations: Set<ZMConversation>) {
-        conversations.forEach{ updateVoiceChannelState(forConversation: $0) }
+        conversations.forEach{
+            if updateVoiceChannelState(forConversation: $0), let context = $0.managedObjectContext {
+                NotificationDispatcher.notifyNonCoreDataChanges(
+                    objectID: $0.objectID,
+                    changedKeys: [ZMConversationListIndicatorKey],
+                    uiContext: context
+                )
+            }
+        }
         videoSnapshot?.callStateDidChange(for: conversations)
         participantSnapshot?.callStateDidChange(for: conversations)
     }

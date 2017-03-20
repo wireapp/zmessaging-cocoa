@@ -16,18 +16,18 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import Foundation
+@testable import zmessaging
 
-class ZMLocalNotificationDispatcherCallingTests : MessagingTest {
+class LocalNotificationDispatcherCallingTests : MessagingTest {
     
-    var sut : ZMLocalNotificationDispatcher!
+    var sut : LocalNotificationDispatcher!
     var sender : ZMUser!
     var conversation : ZMConversation!
     
     override func setUp() {
         super.setUp()
         
-        sut = ZMLocalNotificationDispatcher(managedObjectContext: syncMOC, sharedApplication: application)
+        sut = LocalNotificationDispatcher(in: syncMOC, application: application)
         
         syncMOC.performGroupedBlockAndWait {
             let sender = ZMUser.insertNewObject(in: self.syncMOC)
@@ -39,7 +39,7 @@ class ZMLocalNotificationDispatcherCallingTests : MessagingTest {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .oneOnOne
             conversation.remoteIdentifier = UUID()
-            conversation.internalAddParticipant(sender, isAuthoritative: true)
+            conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral:sender), isAuthoritative: true)
             
             self.conversation = conversation
         }

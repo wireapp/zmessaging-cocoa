@@ -29,7 +29,7 @@ private let zmLog = ZMSLog(tag: "userClientRS")
 
 // Register new client, update it with new keys, deletes clients.
 @objc
-public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMContextChangeTrackerSource, ZMObjectStrategy, ZMUpstreamTranscoder, ZMSingleRequestTranscoder {
+public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, ZMUpstreamTranscoder, ZMSingleRequestTranscoder {
     
     weak var clientRegistrationStatus: ZMClientRegistrationStatus?
     weak var authenticationStatus: ZMAuthenticationStatus?

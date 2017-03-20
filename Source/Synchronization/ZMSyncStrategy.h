@@ -31,7 +31,7 @@
 @class ZMAuthenticationStatus;
 @class ZMOnDemandFlowManager;
 @class ZMTransportSession;
-@class ZMLocalNotificationDispatcher;
+@class LocalNotificationDispatcher;
 @class UserProfileUpdateStatus;
 @class ProxiedRequestsStatus;
 @class ZMClientRegistrationStatus;
@@ -56,7 +56,7 @@
                                 onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                   syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                               backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
-                       localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
+                       localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
                            taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
                                  appGroupIdentifier:(NSString *)appGroupIdentifier
                                         application:(id<ZMApplication>)application;
@@ -71,6 +71,7 @@
 
 @property (nonatomic, readonly) NSManagedObjectContext *syncMOC;
 @property (nonatomic, readonly) ZMSyncStateManager *syncStateManager;
+@property (nonatomic, readonly) CallingRequestStrategy *callingRequestStrategy;
 
 - (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
 

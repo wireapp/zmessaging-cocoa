@@ -90,6 +90,11 @@
     [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturn:request] nextRequest];
 }
 
+- (void)simulateNoRequest
+{
+    [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturn:nil] nextRequest];
+}
+
 - (void)testThatItWaitsForResponse;
 {
     // given
@@ -117,7 +122,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
-    [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturn:nil] nextRequest];
+    [self simulateNoRequest];
     [[[(id) self.stateMachine expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.sut didLeaveState];
@@ -148,7 +153,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
-    [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturn:nil] nextRequest];
+    [self simulateNoRequest];
     [[[(id) self.stateMachine expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.sut didLeaveState];
@@ -178,7 +183,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
-    [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturn:nil] nextRequest];
+    [self simulateNoRequest];
     [[(id) self.stateMachine reject] goToState:OCMOCK_ANY];
     
     // when
@@ -207,7 +212,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // expect
-    [[[(id)self.objectDirectory.clientMessageTranscoder expect] andReturn:nil] nextRequest];
+    [self simulateNoRequest];
     [[[(id) self.stateMachine expect] andDo:^(NSInvocation *inv) {
         NOT_USED(inv);
         [self.sut didLeaveState];
@@ -223,7 +228,7 @@
 }
 
 - (void)testThatItTransitionsToThePreBackgroundStateWhenTimerFinishes;
-{    
+{
     // expect
     [[(id) self.stateMachine expect] goToState:self.stateMachine.preBackgroundState];
     [(ZMSyncStateMachine *)[[(id) self.stateMachine expect] andReturn:self.sut] currentState];

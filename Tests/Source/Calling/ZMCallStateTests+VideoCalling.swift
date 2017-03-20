@@ -28,6 +28,7 @@ class ZMCallStateTests : MessagingTest {
         // given
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
         conversation.conversationType = .oneOnOne
+        conversation.remoteIdentifier = UUID.create()
         self.uiMOC.saveOrRollback()
         
         // when

@@ -49,9 +49,7 @@
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMOnDemandFlowManager.h"
-#import "ZMLocalNotificationDispatcher.h"
 #import "ZMHotFix.h"
-
 #import <zmessaging/zmessaging-Swift.h>
 
 @interface ZMSyncStrategy ()
@@ -68,8 +66,8 @@
 @property (nonatomic) ZMUserTranscoder *userTranscoder;
 @property (nonatomic) ZMSelfStrategy *selfStrategy;
 @property (nonatomic) ZMConversationTranscoder *conversationTranscoder;
-@property (nonatomic) ZMMessageTranscoder *systemMessageTranscoder;
-@property (nonatomic) ZMMessageTranscoder *clientMessageTranscoder;
+@property (nonatomic) SystemMessageEventsConsumer *systemMessageEventConsumer;
+@property (nonatomic) ClientMessageTranscoder *clientMessageTranscoder;
 @property (nonatomic) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
 @property (nonatomic) ZMLastUpdateEventIDTranscoder *lastUpdateEventIDTranscoder;
 @property (nonatomic) ZMRegistrationTranscoder *registrationTranscoder;
@@ -94,11 +92,11 @@
 @property (nonatomic) PushTokenStrategy *pushTokenStrategy;
 @property (nonatomic) SearchUserImageStrategy *searchUserImageStrategy;
 
-@property (nonatomic) CallingRequestStrategy *callingRequestStrategy;
+@property (nonatomic, readwrite) CallingRequestStrategy *callingRequestStrategy;
 
 @property (nonatomic) NSManagedObjectContext *eventMOC;
 @property (nonatomic) EventDecoder *eventDecoder;
-@property (nonatomic, weak) ZMLocalNotificationDispatcher *localNotificationDispatcher;
+@property (nonatomic, weak) LocalNotificationDispatcher *localNotificationDispatcher;
 
 // Statuus
 @property (nonatomic) ZMSyncStateManager *syncStateManager;
@@ -141,7 +139,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                 onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                   syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                               backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
-                       localNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
+                       localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
                            taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
                                  appGroupIdentifier:(NSString *)appGroupIdentifier
                                         application:(id<ZMApplication>)application;
@@ -195,6 +193,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[AssetV3PreviewDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
                                    [[AssetV3FileUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
                                    [[AddressBookUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.syncStateManager],
+                                   self.clientMessageTranscoder,
                                    [[UserProfileRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC
                                                                             appStateDelegate:self.syncStateManager
                                                                             userProfileUpdateStatus:self.syncStateManager.userProfileUpdateStatus],
@@ -218,7 +217,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[LinkPreviewUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.syncStateManager.clientRegistrationStatus],
                                    self.selfStrategy,
                                    self.systemMessageTranscoder,
-                                   self.clientMessageTranscoder,
                                    self.callingRequestStrategy,
                                    self.callStateRequestStrategy,
                                    self.callFlowRequestStrategy,
@@ -237,7 +235,7 @@ ZM_EMPTY_ASSERTING_INIT()
     return self;
 }
 
-- (void)createTranscodersWithLocalNotificationsDispatcher:(ZMLocalNotificationDispatcher *)localNotificationsDispatcher
+- (void)createTranscodersWithLocalNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
                                          mediaManager:(id<AVSMediaManager>)mediaManager
                                   onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
 {

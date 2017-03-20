@@ -16,14 +16,13 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-
+@import WireMessageStrategy;
 #import <Foundation/Foundation.h>
 #import "ZMUpdateEventsBuffer.h"
 
 @class ZMConnectionTranscoder;
 @class ZMUserTranscoder;
-@class ZMSelfStrategy;
-@class ZMMessageTranscoder;
+@class ZMSelfTranscoder;
 @class ZMConversationTranscoder;
 @class ZMMissingUpdateEventsTranscoder;
 @class ZMRegistrationTranscoder;
@@ -44,8 +43,8 @@
 @property (nonatomic, readonly) ZMUserTranscoder *userTranscoder;
 @property (nonatomic, readonly) ZMSelfStrategy *selfStrategy;
 @property (nonatomic, readonly) ZMConversationTranscoder *conversationTranscoder;
-@property (nonatomic, readonly) ZMMessageTranscoder *systemMessageTranscoder;
-@property (nonatomic, readonly) ZMMessageTranscoder *clientMessageTranscoder;
+@property (nonatomic, readonly) SystemMessageEventsConsumer *systemMessageEventConsumer;
+@property (nonatomic, readonly) ClientMessageTranscoder *clientMessageTranscoder;
 @property (nonatomic, readonly) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
 @property (nonatomic, readonly) ZMLastUpdateEventIDTranscoder *lastUpdateEventIDTranscoder;
 @property (nonatomic, readonly) ZMRegistrationTranscoder *registrationTranscoder;
