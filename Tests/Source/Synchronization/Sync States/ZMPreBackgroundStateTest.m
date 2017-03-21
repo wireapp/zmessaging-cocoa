@@ -84,8 +84,7 @@
 {
     return  @[ /* Note: these must be in the same order as in the class */
               self.objectDirectory.flowTranscoder,
-              self.objectDirectory.clientMessageTranscoder,
-              self.objectDirectory.selfTranscoder,
+              self.objectDirectory.selfTranscoder
               ];
 }
 

@@ -187,6 +187,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.missingClientsRequestStrategy,
                                    self.missingUpdateEventsTranscoder,
                                    self.fetchingClientRequestStrategy,
+                                   self.clientMessageTranscoder,
                                    [[ProxiedRequestStrategy alloc] initWithRequestsStatus:proxiedRequestStatus
                                                                      managedObjectContext:self.syncMOC],
                                    [[DeleteAccountRequestStrategy alloc] initWithAuthStatus:authenticationStatus
@@ -496,7 +497,6 @@ ZM_EMPTY_ASSERTING_INIT()
              self.userTranscoder,
              self.selfTranscoder,
              self.conversationTranscoder,
-             self.clientMessageTranscoder,
              self.missingUpdateEventsTranscoder,
              self.lastUpdateEventIDTranscoder,
              self.registrationTranscoder,

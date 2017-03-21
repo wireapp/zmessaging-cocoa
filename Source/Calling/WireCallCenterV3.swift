@@ -202,7 +202,7 @@ public protocol WireCallCenterMissedCallObserver : class {
 
 struct WireCallCenterMissedCallNotification {
     
-    static let notificationName = Notification.Name("WireCallCenterNotification")
+    static let notificationName = Notification.Name("WireCallCenterMissedCallNotification")
     static let userInfoKey = notificationName.rawValue
     
     let conversationId : UUID
@@ -214,6 +214,23 @@ struct WireCallCenterMissedCallNotification {
         NotificationCenter.default.post(name: WireCallCenterMissedCallNotification.notificationName,
                                         object: nil,
                                         userInfo: [WireCallCenterMissedCallNotification.userInfoKey : self])
+    }
+}
+
+/// MARK - CBR observer
+
+public protocol WireCallCenterCBRCallObserver : class {
+    func callCenterCallIsCBR()
+}
+
+struct WireCallCenterCBRCallNotification {
+    static let notificationName = Notification.Name("WireCallCenterCBRCallNotification")
+    static let userInfoKey = notificationName.rawValue
+    
+    func post() {
+        NotificationCenter.default.post(name: WireCallCenterCBRCallNotification.notificationName,
+                                        object: nil,
+                                        userInfo: [WireCallCenterCBRCallNotification.userInfoKey : self])
     }
 }
 
@@ -235,7 +252,8 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
 @objc public class WireCallCenterV3 : NSObject {
     
     private let zmLog = ZMSLog(tag: "calling")
-    
+    @objc public static let cbrNotificationName = WireCallCenterCBRCallNotification.notificationName
+
     private let userId : UUID
     
     /// activeInstance - Currenly active instance of the WireCallCenter.
@@ -247,6 +265,12 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     public weak var transport : WireCallCenterTransport? = nil
     
     public private(set) var callingProtocol : CallingProtocol = .version2
+    
+    public var useAudioConstantBitRate: Bool = false {
+        didSet {
+            wcall_enable_audio_cbr(useAudioConstantBitRate ? 1 : 0)
+        }
+    }
     
     deinit {
         wcall_close()
@@ -358,6 +382,12 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
                 
                 DispatchQueue.main.async {
                     WireCallCenterV3VideoNotification(receivedVideoState: state).post()
+                }
+            })
+            
+            wcall_set_audio_cbr_enabled_handler({ _ in
+                DispatchQueue.main.async {
+                    WireCallCenterCBRCallNotification().post()
                 }
             })
         }
