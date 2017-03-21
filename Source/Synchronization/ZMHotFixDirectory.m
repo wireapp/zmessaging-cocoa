@@ -90,13 +90,24 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(__unused NSManagedObjectContext *context) {
                         [ZMHotFixDirectory purgePINCachesInHostBundle];
                     }],
+
+                    /// Introduction of usernames: We need to refetch all connected users as they might already
+                    /// have updated their username before we updated to a version supporting them.
                     [ZMHotFixPatch
                      patchWithVersion:@"62.3.1"
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchConnectedUsers:context];
-                     }]
-                    ]
-                    ;
+                     }],
+
+                    /// Introcution of Asset V3 Profile Pictures: We need to refetch all connected users as they might
+                    /// already have uploaded profile pictures using the /assets/v3 endpoint which we do not yet have
+                    /// locally and couldn't download before we updated to a version supporting them.
+                    [ZMHotFixPatch
+                     patchWithVersion:@"76.0.0"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchConnectedUsers:context];
+                     }],
+                    ];
     });
     return patches;
 }

@@ -91,8 +91,9 @@ extension ZMHotFixDirectory {
         }
     }
 
-    /// We need to refetch all connected users as they might alreday have updated their username before we updated to
-    /// a version supporting them. Unconnected users are refreshed with a call to `refreshData` when information is displayed.
+    /// Marks all connected users (including self) to be refetched.
+    /// Unconnected users are refreshed with a call to `refreshData` when information is displayed.
+    /// See also the related `ZMUserSession.isPendingHotFixChanges` in `ZMHotFix+PendingChanges.swift`.
     public static func refetchConnectedUsers(_ context: NSManagedObjectContext) {
         let predicate = NSPredicate(format: "connection != nil")
         let request = ZMUser.sortedFetchRequest(with: predicate)
