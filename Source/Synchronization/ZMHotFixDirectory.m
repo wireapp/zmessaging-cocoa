@@ -91,10 +91,15 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                         [ZMHotFixDirectory purgePINCachesInHostBundle];
                     }],
                     [ZMHotFixPatch
-                     patchWithVersion:@"62.3.1"
+                     patchWithVersion:@"62.3.1" // Username added
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchConnectedUsers:context];
-                     }]
+                     }],
+                    [ZMHotFixPatch
+                     patchWithVersion:@"76.0.0" // Asset v3 profile pictures
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchConnectedUsers:context];
+                     }],
                     ]
                     ;
     });

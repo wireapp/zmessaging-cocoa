@@ -607,5 +607,45 @@
     XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
 }
 
+- (void)testThatItMarksConnectedUsersToBeUpdatedFromTheBackend_76_0_0
+{
+    // As some users might already have updated their profile pictures using the /assets/v3 endpoint
+    // before the iOS client was able to download it (and the update event was alreday processed) we need
+    // to redownload all users as soon as we support downloading profile pictures using the /v3/ endpoint.
+
+    // given
+    ZMUser *connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+    connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+    connectedUser.connection.status = ZMConnectionStatusAccepted;
+    connectedUser.needsToBeUpdatedFromBackend = NO;
+
+    // We might already have uploaded a picture for the selfUser form a different client.
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    selfUser.needsToBeUpdatedFromBackend = NO;
+
+    ZMUser *unconnectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+    unconnectedUser.needsToBeUpdatedFromBackend = NO;
+
+    [self.syncMOC saveOrRollback];
+
+    XCTAssertTrue(connectedUser.isConnected);
+    XCTAssertFalse(unconnectedUser.isConnected);
+    XCTAssertFalse(connectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
+
+    // when
+    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+    [self.sut applyPatchesForCurrentVersion:@"76.0.0"];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    [self.syncMOC saveOrRollback];
+
+    // then
+    XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
+}
+
 @end
 
