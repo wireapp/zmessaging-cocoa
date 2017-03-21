@@ -170,13 +170,14 @@ extension UserImageAssetUploadStrategy: ZMDownstreamTranscoder {
         guard let whitelistSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist else { return }
         guard let user = object as? ZMUser else { return }
         guard let size = size(for: whitelistSync) else { return }
+        
+        user.setImage(data: response.rawData, size: size)
+    }
+}
 
-        switch size {
-        case .preview:
-            user.imageSmallProfileData = response.imageData
-        case .complete:
-            user.imageMediumData = response.imageData
-        }
+extension UserImageAssetUploadStrategy: ZMContextChangeTrackerSource {
+    public var contextChangeTrackers: [ZMContextChangeTracker] {
+        return Array(downsteamRequestSyncs.values)
     }
 }
 
