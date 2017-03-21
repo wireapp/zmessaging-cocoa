@@ -295,44 +295,72 @@
 
 @implementation ZMSelfTranscoderTests (UpstreamSync)
 
-- (void)testThatItGeneratesARequestForUpdatingChangedSelfUser
+- (void)testThatItGeneratesARequestForUpdatingAssetsInSelfUser
 {
+    NSString *previewKey = @"new-key-1";
+    NSString *completeKey = @"new-key-2";
     NSDictionary* uploadPayload = @{
-                                    @"name" : @"My new name testThatItGeneratesARequestForUpdatingChangedSelfUser",
-                                    @"accent_id" : @(ZMAccentColorBrightYellow)
+                                    @"assets" : @[
+                                            @{@"size" : @"preview", @"type" : @"image", @"key" : previewKey },
+                                            @{@"size" : @"complete", @"type" : @"image", @"key" : completeKey }
+                                            ],
                                     };
     
-    [self checkThatItGeneratesUpstreamUpdateRequestWithPayload:uploadPayload changedKeys:[NSSet setWithObjects:@"name", @"accentColorValue", nil]];
+    [self checkThatItGeneratesUpstreamUpdateRequestWithPayload:uploadPayload changedKeys:[NSSet setWithObjects:@"previewProfileAssetIdentifier", @"completeProfileAssetIdentifier", nil] userChangeBlock:^(ZMUser *user) {
+        user.previewProfileAssetIdentifier = previewKey;
+        user.completeProfileAssetIdentifier = completeKey;
+    }];
 }
 
 
-- (void)testThatItGeneratesARequestForUpdatingJustTheNameInChangedSelfUser
+- (void)testThatItGeneratesARequestForUpdatingChangedSelfUser
 {
+    NSString *name = @"My new name testThatItGeneratesARequestForUpdatingChangedSelfUser";
+    ZMAccentColor accentColor = ZMAccentColorBrightYellow;
     NSDictionary* uploadPayload = @{
-                                    @"name" : @"My new name testThatItGeneratesARequestForUpdatingJustTheNameInChangedSelfUser",
+                                    @"name" : name,
+                                    @"accent_id" : @(accentColor)
                                     };
     
-    [self checkThatItGeneratesUpstreamUpdateRequestWithPayload:uploadPayload changedKeys:[NSSet setWithObjects:@"name", nil]];
+    [self checkThatItGeneratesUpstreamUpdateRequestWithPayload:uploadPayload changedKeys:[NSSet setWithObjects:@"name", @"accentColorValue", nil] userChangeBlock:^(ZMUser *user) {
+        user.name = name;
+        user.accentColorValue = accentColor;
+    }];
+}
+
+- (void)testThatItGeneratesARequestForUpdatingJustTheNameInChangedSelfUser
+{
+    NSString *name = @"My new name testThatItGeneratesARequestForUpdatingJustTheNameInChangedSelfUser";
+
+    NSDictionary* uploadPayload = @{
+                                    @"name" : name
+                                    };
+    
+    [self checkThatItGeneratesUpstreamUpdateRequestWithPayload:uploadPayload changedKeys:[NSSet setWithObjects:@"name", nil] userChangeBlock:^(ZMUser *user) {
+        user.name = name;
+    }];
 }
 
 
 - (void)testThatItGeneratesARequestForUpdatingJustTheAccentColorInChangedSelfUser
 {
+    ZMAccentColor accentColor = ZMAccentColorBrightYellow;
     NSDictionary* uploadPayload = @{
-                                    @"accent_id" : @(ZMAccentColorBrightYellow)
+                                    @"accent_id" : @(accentColor)
                                     };
     
-    [self checkThatItGeneratesUpstreamUpdateRequestWithPayload:uploadPayload changedKeys:[NSSet setWithObjects:@"accentColorValue", nil]];
+    [self checkThatItGeneratesUpstreamUpdateRequestWithPayload:uploadPayload changedKeys:[NSSet setWithObjects:@"accentColorValue", nil] userChangeBlock:^(ZMUser *user) {
+        user.accentColorValue = accentColor;
+    }];
 }
 
-- (void)checkThatItGeneratesUpstreamUpdateRequestWithPayload:(NSDictionary *)expectedPayload changedKeys:(NSSet *)changedKeys
+- (void)checkThatItGeneratesUpstreamUpdateRequestWithPayload:(NSDictionary *)expectedPayload changedKeys:(NSSet *)changedKeys userChangeBlock:(void (^)(ZMUser *))userChangeBlock
 {
     
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
         ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-        selfUser.name = expectedPayload[@"name"] ?: @"Random User";
-        selfUser.accentColorValue = (ZMAccentColor) [(expectedPayload[@"accent_id"] ?: @(ZMAccentColorSoftPink)) integerValue];
+        userChangeBlock(selfUser);
         
         // when
         NSSet *updatedKeys = changedKeys;
