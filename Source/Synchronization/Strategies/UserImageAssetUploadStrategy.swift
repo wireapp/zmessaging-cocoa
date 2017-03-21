@@ -114,8 +114,8 @@ extension UserImageAssetUploadStrategy: RequestStrategy {
     public func nextRequest() -> ZMTransportRequest? {
         guard case .authenticated = authenticationStatus.currentPhase else { return nil }
         
-        let downstreamSync = ProfileImageSize.allSizes.map(downstreamRequestSync).first
-        if let request = downstreamSync?.nextRequest() {
+        let requests = ProfileImageSize.allSizes.map(downstreamRequestSync).flatMap { $0.nextRequest() }
+        if let request = requests.first {
             return request
         }
         
