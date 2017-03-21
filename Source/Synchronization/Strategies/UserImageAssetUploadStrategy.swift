@@ -56,17 +56,17 @@ internal enum AssetTransportError: Error {
     }
     
     fileprivate func whitelistUserImageSync(for size: ProfileImageSize) -> ZMDownstreamObjectSyncWithWhitelist {
-        let predicates: [NSPredicate]
+        let predicate: NSPredicate
         switch size {
         case .preview:
-            predicates = [ZMUser.previewImageDownloadFilter]
+            predicate = ZMUser.previewImageDownloadFilter
         case .complete:
-            predicates = [ZMUser.completeImageDownloadFilter]
+            predicate = ZMUser.completeImageDownloadFilter
         }
         
         return ZMDownstreamObjectSyncWithWhitelist(transcoder:self,
                                             entityName:ZMUser.entityName(),
-                                            predicateForObjectsToDownload:NSCompoundPredicate(andPredicateWithSubpredicates: predicates),
+                                            predicateForObjectsToDownload:predicate,
                                             managedObjectContext:moc)
     }
     
