@@ -91,9 +91,7 @@ extension ZMHotFixDirectory {
         }
     }
 
-    /// We need to refetch all connected users as they might alreday have updated their username (62.3.1) or uploaded profile
-    /// pictures using the /assets/v3 endpoint which we do not yet have locally and couldn't download before we updated to
-    /// a version supporting them. 
+    /// Marks all connected users (including self) to be refetched.
     /// Unconnected users are refreshed with a call to `refreshData` when information is displayed.
     /// See also the related `ZMUserSession.isPendingHotFixChanges` in `ZMHotFix+PendingChanges.swift`.
     public static func refetchConnectedUsers(_ context: NSManagedObjectContext) {
