@@ -358,7 +358,7 @@ ZM_EMPTY_ASSERTING_INIT()
             self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
             self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
             
-            self.profileImageUpdateStatus = [[UserProfileImageUpdateStatus alloc] init];
+            self.profileImageUpdateStatus = [[UserProfileImageUpdateStatus alloc] initWithManagedObjectContext:self.syncManagedObjectContext];
         }];
         
         _application = application;

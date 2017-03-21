@@ -54,6 +54,11 @@ internal protocol UserProfileImageUploadStatusProtocol: class {
     func updateImage(imageData: Data)
 }
 
+internal protocol UserProfileImageUploadStateChangeDelegate: class {
+    func didTransition(from oldState: UserProfileImageUpdateStatus.ProfileUpdateState, to currentState: UserProfileImageUpdateStatus.ProfileUpdateState)
+    func didTransition(from oldState: UserProfileImageUpdateStatus.ImageState, to currentState: UserProfileImageUpdateStatus.ImageState, for size: ProfileImageSize)
+}
+
 public final class UserProfileImageUpdateStatus: NSObject {
     
     internal enum ImageState {
@@ -62,7 +67,6 @@ public final class UserProfileImageUpdateStatus: NSObject {
         case upload(image: Data)
         case uploading
         case uploaded(assetId: String)
-        case completed
         case failed(UserProfileImageUpdateError)
         
         internal func canTransition(to newState: ImageState) -> Bool {
@@ -70,10 +74,9 @@ public final class UserProfileImageUpdateStatus: NSObject {
             case (.ready, .preprocessing),
                  (.preprocessing, .upload),
                  (.upload, .uploading),
-                 (.uploading, .uploaded),
-                 (.uploaded, .completed):
+                 (.uploading, .uploaded):
                 return true
-            case (.completed, .ready),
+            case (.uploaded, .ready),
                  (.failed, .ready):
                 return true
             case (.failed, .failed):
@@ -90,22 +93,17 @@ public final class UserProfileImageUpdateStatus: NSObject {
         case ready
         case preprocess(image: Data)
         case update(previewAssetId: String, completeAssetId: String)
-        case updating
-        case completed
         case failed(UserProfileImageUpdateError)
         
         internal func canTransition(to newState: ProfileUpdateState) -> Bool {
             switch (self, newState) {
             case (.ready, .preprocess),
-                 (.preprocess, .update),
-                 (.update, .updating),
-                 (.updating, .completed):
+                 (.preprocess, .update):
                 return true
-            case (.completed, .ready),
+            case (.update, .ready),
                  (.failed, .ready):
                 return true
-            case (.completed, .failed),
-                 (.failed, .failed):
+            case (.failed, .failed):
                 return false
             case (_, .failed):
                 return true
@@ -117,20 +115,24 @@ public final class UserProfileImageUpdateStatus: NSObject {
     
     internal var preprocessor: ZMAssetsPreprocessorProtocol?
     internal let queue: OperationQueue
-    
+    internal weak var changeDelegate: UserProfileImageUploadStateChangeDelegate?
+
     fileprivate var changeDelegates: [UserProfileImageUpdateStateDelegate] = []
     fileprivate var imageOwner: ImageOwner?
-    
+    fileprivate let managedObjectContext: NSManagedObjectContext
+
     fileprivate var imageState = [ProfileImageSize : ImageState]()
     internal fileprivate(set) var state: ProfileUpdateState = .ready
     
-    public convenience override init() {
-        self.init(preprocessor: ZMAssetsPreprocessor(delegate: nil), queue: ZMImagePreprocessor.createSuitableImagePreprocessingQueue())
+    public convenience init(managedObjectContext: NSManagedObjectContext) {
+        self.init(managedObjectContext: managedObjectContext, preprocessor: ZMAssetsPreprocessor(delegate: nil), queue: ZMImagePreprocessor.createSuitableImagePreprocessingQueue(), delegate: nil)
     }
     
-    internal init(preprocessor: ZMAssetsPreprocessorProtocol, queue: OperationQueue){
+    internal init(managedObjectContext: NSManagedObjectContext, preprocessor: ZMAssetsPreprocessorProtocol, queue: OperationQueue, delegate: UserProfileImageUploadStateChangeDelegate?){
         self.queue = queue
         self.preprocessor = preprocessor
+        self.managedObjectContext = managedObjectContext
+        self.changeDelegate = delegate
         super.init()
         self.preprocessor?.delegate = self
     }
@@ -139,24 +141,37 @@ public final class UserProfileImageUpdateStatus: NSObject {
 // MARK: Main state transitions
 extension UserProfileImageUpdateStatus {
     internal func setState(state newState: ProfileUpdateState) {
-        let currentState = state
-        guard currentState.canTransition(to: newState) else {
-            // Trying to transition to invalid state - ignore
-            return
+        managedObjectContext.performGroupedBlock {
+
+            let currentState = self.state
+            guard currentState.canTransition(to: newState) else {
+                // Trying to transition to invalid state - ignore
+                return
+            }
+            self.state = newState
+            self.didTransition(from: currentState, to: newState)
         }
-        state = newState
-        didTransition(from: currentState, to: newState)
     }
     
     internal func didTransition(from oldState: ProfileUpdateState, to currentState: ProfileUpdateState) {
+        changeDelegate?.didTransition(from: oldState, to: currentState)
         switch (oldState, currentState) {
         case let (_, .preprocess(image: data)):
             startPreprocessing(imageData: data)
+        case let (_, .update(previewAssetId: previewAssetId, completeAssetId: completeAssetId)):
+            updateUserProfile(with:previewAssetId, completeAssetId: completeAssetId)
         case (_, .failed):
             resetImageState()
         default:
             break
         }
+    }
+    
+    fileprivate func updateUserProfile(with previewAssetId: String, completeAssetId: String) {
+        let selfUser = ZMUser.selfUser(in: managedObjectContext)
+        selfUser.updateAndSyncProfileAssetIdentifiers(previewIdentifier: previewAssetId, completeIdentifier: completeAssetId)
+        managedObjectContext.saveOrRollback()
+        setState(state: .ready)
     }
     
     fileprivate func startPreprocessing(imageData: Data) {
@@ -182,21 +197,24 @@ extension UserProfileImageUpdateStatus {
     }
     
     internal func setState(state newState: ImageState, for imageSize: ProfileImageSize) {
-        let currentState = imageState(for: imageSize)
-        guard currentState.canTransition(to: newState) else {
-            // Trying to transition to invalid state - ignore
-            return
+        managedObjectContext.performGroupedBlock {
+            let currentState = self.imageState(for: imageSize)
+            guard currentState.canTransition(to: newState) else {
+                // Trying to transition to invalid state - ignore
+                return
+            }
+            
+            self.imageState[imageSize] = newState
+            self.didTransition(from: currentState, to: newState, for: imageSize)
         }
-        
-        imageState[imageSize] = newState
-        didTransition(from: currentState, to: newState)
     }
     
     internal func resetImageState() {
         imageState.removeAll()
     }
     
-    internal func didTransition(from oldState: ImageState, to currentState: ImageState) {
+    internal func didTransition(from oldState: ImageState, to currentState: ImageState, for size: ProfileImageSize) {
+        changeDelegate?.didTransition(from: oldState, to: currentState, for: size)
         switch (oldState, currentState) {
         case (_, .uploaded):
             // When one image is uploaded we check state of all other images
@@ -207,6 +225,7 @@ extension UserProfileImageUpdateStatus {
             case let (.uploaded(assetId: previewAssetId), .uploaded(assetId: completeAssetId)):
                 // If both images are uploaded we can update profile
                 setState(state: .update(previewAssetId: previewAssetId, completeAssetId: completeAssetId))
+                resetImageState()
             default:
                 break // Need to wait until both images are uploaded
             }
