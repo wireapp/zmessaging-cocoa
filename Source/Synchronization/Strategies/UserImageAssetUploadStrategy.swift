@@ -53,6 +53,8 @@ internal enum AssetTransportError: Error {
         self.imageUploadStatus = imageUploadStatus
         self.authenticationStatus = authenticationStatus
         super.init()
+        NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.previewAssetFetchNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.completeAssetFetchNotification, object: nil)
     }
     
     fileprivate func whitelistUserImageSync(for size: ProfileImageSize) -> ZMDownstreamObjectSyncWithWhitelist {
@@ -106,6 +108,23 @@ internal enum AssetTransportError: Error {
             }
         }
         return nil
+    }
+    
+    func requestAssetForNotification(note: Notification) {
+        moc.performGroupedBlock {
+            guard let objectID = note.object as? NSManagedObjectID,
+                let object = self.moc.object(with: objectID) as? ZMManagedObject
+                else { return }
+            
+            switch note.name {
+            case ZMUser.previewAssetFetchNotification:
+                self.downstreamRequestSync(for: .preview).whiteListObject(object)
+            case ZMUser.completeAssetFetchNotification:
+                self.downstreamRequestSync(for: .complete).whiteListObject(object)
+            default:
+                break
+            }
+        }
     }
     
 }
