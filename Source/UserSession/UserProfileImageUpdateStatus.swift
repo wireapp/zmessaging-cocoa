@@ -17,24 +17,7 @@
 //
 
 import Foundation
-
-internal enum ProfileImageSize {
-    case preview
-    case complete
-    
-    internal var imageFormat: ZMImageFormat {
-        switch self {
-        case .preview:
-            return .medium
-        case .complete:
-            return .profile
-        }
-    }
-    
-    internal static var allSizes: [ProfileImageSize] {
-        return [.preview, .complete]
-    }
-}
+import ZMCDataModel
 
 internal enum UserProfileImageUpdateError: Error {
     case preprocessingFailed
