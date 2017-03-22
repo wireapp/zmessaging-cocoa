@@ -74,7 +74,8 @@ public final class UserProfileImageUpdateStatus: NSObject {
             case (.ready, .preprocessing),
                  (.preprocessing, .upload),
                  (.upload, .uploading),
-                 (.uploading, .uploaded):
+                 (.uploading, .uploaded),
+                 (.ready, .upload): // When re-uploading a preprocessed v2 to v3
                 return true
             case (.uploaded, .ready),
                  (.failed, .ready):
@@ -98,7 +99,8 @@ public final class UserProfileImageUpdateStatus: NSObject {
         internal func canTransition(to newState: ProfileUpdateState) -> Bool {
             switch (self, newState) {
             case (.ready, .preprocess),
-                 (.preprocess, .update):
+                 (.preprocess, .update),
+                 (.ready, .update): // When re-uploading a preprocessed v2 to v3
                 return true
             case (.update, .ready),
                  (.failed, .ready):
@@ -135,6 +137,9 @@ public final class UserProfileImageUpdateStatus: NSObject {
         self.changeDelegate = delegate
         super.init()
         self.preprocessor?.delegate = self
+
+        // Check if we should re-upload an existing v2 in case we never uploaded a v3 asset.
+        reuploadExisingImageIfNeeded()
     }
 }
 
@@ -237,10 +242,49 @@ extension UserProfileImageUpdateStatus {
     }
 }
 
+// Called from the UI to update a v3 image
 extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
     public func updateImage(imageData: Data) {
         setState(state: .preprocess(image: imageData))
     }
+}
+
+// Called internally with existing image data to reupload to v3 (no proprocessing needed)
+extension UserProfileImageUpdateStatus: ZMContextChangeTracker {
+
+    public func objectsDidChange(_ object: Set<NSManagedObject>) {
+        guard object.contains(ZMUser.selfUser(in: managedObjectContext)) else { return }
+        reuploadExisingImageIfNeeded()
+    }
+
+    public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
+        return nil
+    }
+
+    public func addTrackedObjects(_ objects: Set<NSManagedObject>) {
+        // no-op
+    }
+
+    func reuploadExisingImageIfNeeded() {
+        // If the user updated to a build which added profile picture asset v3 support
+        // we want to re-upload existing pictures to `/assets/v3`.
+        let selfUser = ZMUser.selfUser(in: managedObjectContext)
+
+        // We need to ensure we alreday re-fetched the selfUser (see HotFix 76.0.0),
+        // as other clients could alreday have uploaded a v3 asset.
+        guard !selfUser.needsToBeUpdatedFromBackend else { return }
+
+        // We only want to re-upload in case the user did not yet upload a picture to `/assets/v3`.
+        guard nil == selfUser.previewProfileAssetIdentifier, nil == selfUser.completeProfileAssetIdentifier else { return }
+        guard let preview = selfUser.imageSmallProfileData, let complete = selfUser.imageMediumData else { return }
+        updatePreprocessedImages(preview: preview, complete: complete)
+    }
+
+    func updatePreprocessedImages(preview: Data, complete: Data) {
+        setState(state: .upload(image: preview), for: .preview)
+        setState(state: .upload(image: complete), for: .complete)
+    }
+
 }
 
 extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
