@@ -103,7 +103,6 @@
 
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic, weak) ZMClientRegistrationStatus *clientRegistrationStatus;
-@property (nonatomic, weak) UserProfileImageUpdateStatus *profileImageStatus;
 @property (nonatomic) NotificationDispatcher *notificationDispatcher;
 
 @end
@@ -147,7 +146,6 @@ ZM_EMPTY_ASSERTING_INIT()
         self.localNotificationDispatcher = localNotificationsDispatcher;
         self.authenticationStatus = authenticationStatus;
         self.clientRegistrationStatus = clientRegistrationStatus;
-        self.profileImageStatus = profileImageStatus;
         self.syncMOC = syncMOC;
         self.uiMOC = uiMOC;
         self.eventMOC = [NSManagedObjectContext createEventContextWithAppGroupIdentifier:appGroupIdentifier];
@@ -523,7 +521,7 @@ ZM_EMPTY_ASSERTING_INIT()
             }
             return nil;
         }]];
-        _allChangeTrackers = [_allChangeTrackers arrayByAddingObjectsFromArray:@[self.conversationStatusSync, self.profileImageStatus]];
+        _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:self.conversationStatusSync];
     }
     
     return _allChangeTrackers;
