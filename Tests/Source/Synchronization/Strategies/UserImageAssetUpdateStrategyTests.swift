@@ -80,31 +80,16 @@ class UserImageAssetUpdateStrategyTests : MessagingTest {
         // THEN
         XCTAssertNil(sut.nextRequest())
     }
-    
-    func testThatItDoesNotCreateRequestSyncsInitially() {
-        XCTAssertTrue(sut.requestSyncs.isEmpty)
-    }
-    
-    func testThatItCreatesRequestSyncForTheSizeWhenAsked() {
-        // WHEN
-        _ = sut.requestSync(for: .preview)
         
-        // THEN
-        XCTAssertNotNil(sut.requestSyncs[.preview])
-        XCTAssertNil(sut.requestSyncs[.complete])
-        
-        // WHEN
-        _ = sut.requestSync(for: .complete)
-        
-        // THEN
-        XCTAssertNotNil(sut.requestSyncs[.preview])
-        XCTAssertNotNil(sut.requestSyncs[.complete])
+    func testThatItCreatesRequestSyncs() {
+        XCTAssertNotNil(sut.upstreamRequestSyncs[.preview])
+        XCTAssertNotNil(sut.upstreamRequestSyncs[.complete])
     }
 
     func testThatItReturnsCorrectSizeFromRequestSync() {
         // WHEN
-        let previewSync = sut.requestSync(for: .preview)
-        let completeSync = sut.requestSync(for: .complete)
+        let previewSync = sut.upstreamRequestSyncs[.preview]!
+        let completeSync = sut.upstreamRequestSyncs[.complete]!
         
         // THEN
         XCTAssertEqual(sut.size(for: previewSync), .preview)
@@ -160,7 +145,7 @@ class UserImageAssetUpdateStrategyTests : MessagingTest {
     func testThatUploadMarkedAsFailedOnUnsuccessfulResponse() {
         // GIVEN
         let size = ProfileImageSize.preview
-        let sync = sut.requestSync(for: size)
+        let sync = sut.upstreamRequestSyncs[size]
         let failedResponse = ZMTransportResponse(payload: nil, httpStatus: 500, transportSessionError: nil)
         
         // WHEN
@@ -173,7 +158,7 @@ class UserImageAssetUpdateStrategyTests : MessagingTest {
     func testThatUploadIsMarkedAsDoneAfterSuccessfulResponse() {
         // GIVEN
         let size = ProfileImageSize.preview
-        let sync = sut.requestSync(for: size)
+        let sync = sut.upstreamRequestSyncs[size]
         let assetId = "123123"
         let payload: [String : String] = ["key" : assetId]
         let successResponse = ZMTransportResponse(payload: payload as NSDictionary, httpStatus: 200, transportSessionError: nil)
