@@ -239,6 +239,10 @@ extension UserProfileImageUpdateStatus {
 
 extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
     public func updateImage(imageData: Data) {
+        guard let uiMOC = managedObjectContext.zm_userInterface else { return }
+        let editableUser = ZMUser.selfUser(in: uiMOC) as ZMEditableUser
+        editableUser.originalProfileImageData = imageData
+
         setState(state: .preprocess(image: imageData))
     }
 }
