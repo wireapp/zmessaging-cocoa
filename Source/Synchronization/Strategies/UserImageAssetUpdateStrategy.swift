@@ -36,7 +36,7 @@ internal enum AssetTransportError: Error {
     }
 }
 
-@objc public final class UserImageAssetUploadStrategy: NSObject {
+@objc public final class UserImageAssetUpdateStrategy: NSObject {
     internal let requestFactory = AssetRequestFactory()
     internal var upstreamRequestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
     internal var downstreamRequestSyncs = [ProfileImageSize : ZMDownstreamObjectSyncWithWhitelist]()
@@ -116,7 +116,7 @@ internal enum AssetTransportError: Error {
     
 }
 
-extension UserImageAssetUploadStrategy: RequestStrategy {
+extension UserImageAssetUpdateStrategy: RequestStrategy {
     public func nextRequest() -> ZMTransportRequest? {
         guard case .authenticated = authenticationStatus.currentPhase else { return nil }
         
@@ -133,7 +133,7 @@ extension UserImageAssetUploadStrategy: RequestStrategy {
     }
 }
 
-extension UserImageAssetUploadStrategy: ZMDownstreamTranscoder {
+extension UserImageAssetUpdateStrategy: ZMDownstreamTranscoder {
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
         guard let whitelistSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist else { return nil }
         guard let user = object as? ZMUser else { return nil }
@@ -162,13 +162,13 @@ extension UserImageAssetUploadStrategy: ZMDownstreamTranscoder {
     }
 }
 
-extension UserImageAssetUploadStrategy: ZMContextChangeTrackerSource {
+extension UserImageAssetUpdateStrategy: ZMContextChangeTrackerSource {
     public var contextChangeTrackers: [ZMContextChangeTracker] {
         return Array(downstreamRequestSyncs.values)
     }
 }
 
-extension UserImageAssetUploadStrategy: ZMSingleRequestTranscoder {
+extension UserImageAssetUpdateStrategy: ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
         if let size = size(for: sync), let image = imageUploadStatus?.consumeImage(for: size) {
             return requestFactory.upstreamRequestForAsset(withData: image, shareable: true, retention: .eternal)

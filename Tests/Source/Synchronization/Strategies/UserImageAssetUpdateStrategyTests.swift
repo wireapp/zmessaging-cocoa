@@ -48,9 +48,9 @@ class MockImageUpdateStatus: zmessaging.UserProfileImageUploadStatusProtocol {
     }
 }
 
-class UserImageAssetUploadStrategyTests : MessagingTest {
+class UserImageAssetUpdateStrategyTests : MessagingTest {
     
-    var sut: zmessaging.UserImageAssetUploadStrategy!
+    var sut: zmessaging.UserImageAssetUpdateStrategy!
     var authenticationStatus: MockAuthenticationStatus!
     var updateStatus: MockImageUpdateStatus!
     
@@ -58,7 +58,7 @@ class UserImageAssetUploadStrategyTests : MessagingTest {
         super.setUp()
         self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
         self.updateStatus = MockImageUpdateStatus()
-        self.sut = zmessaging.UserImageAssetUploadStrategy(managedObjectContext: syncMOC,
+        self.sut = zmessaging.UserImageAssetUpdateStrategy(managedObjectContext: syncMOC,
                                                               imageUploadStatus: updateStatus,
                                                            authenticationStatus: authenticationStatus)
     }
