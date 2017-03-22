@@ -180,7 +180,7 @@ extension UserProfileImageUpdateStatusTests {
     }
     
     func testImageStateTransitions() {
-        ImageState.canTransition(from: .ready, onlyTo: [sampleFailedImageState, .preprocessing])
+        ImageState.canTransition(from: .ready, onlyTo: [sampleFailedImageState, .preprocessing, sampleUploadState])
         ImageState.canTransition(from: .preprocessing, onlyTo: [sampleFailedImageState, sampleUploadState])
         ImageState.canTransition(from: sampleUploadState, onlyTo: [sampleFailedImageState, .uploading])
         ImageState.canTransition(from: .uploading, onlyTo: [sampleFailedImageState, sampleUploadedState])
@@ -267,7 +267,7 @@ extension UserProfileImageUpdateStatusTests {
     }
     
     func testProfileUpdateStateTransitions() {
-        ProfileUpdateState.canTransition(from: .ready, onlyTo: [sampleFailedState, samplePreprocessState])
+        ProfileUpdateState.canTransition(from: .ready, onlyTo: [sampleFailedState, samplePreprocessState, sampleUpdateState])
         ProfileUpdateState.canTransition(from: samplePreprocessState, onlyTo: [sampleFailedState, sampleUpdateState])
         ProfileUpdateState.canTransition(from: sampleUpdateState, onlyTo: [sampleFailedState, .ready])
         ProfileUpdateState.canTransition(from: sampleFailedState, onlyTo: [.ready])
@@ -505,4 +505,58 @@ extension UserProfileImageUpdateStatusTests {
         XCTAssert(selfUser.hasLocalModifications(forKey: #keyPath(ZMUser.previewProfileAssetIdentifier)))
         XCTAssert(selfUser.hasLocalModifications(forKey: #keyPath(ZMUser.completeProfileAssetIdentifier)))
     }
+}
+
+
+// MARK: - Reuploading alreday preprocessed images
+extension UserProfileImageUpdateStatusTests {
+
+    func testThatItAdvancesStateWhenReuploadingPreprocessedImageData() {
+        // GIVEN
+        sut.updatePreprocessedImages(preview: verySmallJPEGData(), complete: mediumJPEGData())
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // WHEN
+        _ = sut.consumeImage(for: .preview)
+        _ = sut.consumeImage(for: .complete)
+
+        // THEN
+        XCTAssertEqual(sut.imageState(for: .preview), .uploading)
+        XCTAssertEqual(sut.imageState(for: .complete), .uploading)
+    }
+
+    func testThatItSetsTheCorrectStateWhenThereIsASelfUserWithoutV3AssetIDs() {
+        // GIVEN
+        let selfUser = createSelfClient().user!
+        selfUser.imageMediumData = mediumJPEGData()
+        selfUser.imageSmallProfileData = verySmallJPEGData()
+        XCTAssertNil(selfUser.completeProfileAssetIdentifier)
+        XCTAssertNil(selfUser.previewProfileAssetIdentifier)
+
+        // WHEN
+        sut.reuploadExisingImageIfNeeded()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        XCTAssertEqual(sut.imageState(for: .preview), .upload(image: verySmallJPEGData()))
+        XCTAssertEqual(sut.imageState(for: .complete), .upload(image: mediumJPEGData()))
+    }
+
+    func testThatItDoesNotSetTheCorrectStateWhenThereIsASelfUserWithV3AssetIDs() {
+        // GIVEN
+        let selfUser = createSelfClient().user!
+        selfUser.completeProfileAssetIdentifier = "complete-ID"
+        selfUser.previewProfileAssetIdentifier = "preview-ID"
+        XCTAssertNotNil(selfUser.completeProfileAssetIdentifier)
+        XCTAssertNotNil(selfUser.previewProfileAssetIdentifier)
+
+        // WHEN
+        sut.reuploadExisingImageIfNeeded()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        XCTAssertEqual(sut.imageState(for: .preview), .ready)
+        XCTAssertEqual(sut.imageState(for: .complete), .ready)
+    }
+
 }
