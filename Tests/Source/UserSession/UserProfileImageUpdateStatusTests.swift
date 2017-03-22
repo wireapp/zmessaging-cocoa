@@ -436,10 +436,6 @@ extension UserProfileImageUpdateStatusTests {
 // MARK: - Image upload status
 extension UserProfileImageUpdateStatusTests {
     
-    func testThatItReturnsAllSizes() {
-        XCTAssertEqual(sut.allSizes, [.preview, .complete])
-    }
-    
     func testThatItReturnsImageToUploadOnlyWhenInUploadState() {
         // GIVEN
         XCTAssertFalse(sut.hasImageToUpload(for: .preview))
