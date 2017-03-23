@@ -565,6 +565,36 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     XCTAssertTrue(request.shouldCompress);
 }
 
+- (void)testThatItAllowsRequestForCallsConfigWhenPushChannelIsClosed
+{
+    // given
+    [[[self.internalFlowManager stub] andReturnValue:@YES] isReady];
+    [self simulatePushChannelClose];
+    [self.sut requestWithPath:@"/calls/config" method:@"GET" mediaType:nil content:nil context:nil];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // when
+    ZMTransportRequest *request = [self.sut nextRequest];
+    
+    // then
+    XCTAssertEqual(request.path, @"/calls/config");
+}
+
+- (void)testThatItRejectsRequestWhenPushChannelIsClosed
+{
+    // given
+    [[[self.internalFlowManager stub] andReturnValue:@YES] isReady];
+    [self simulatePushChannelClose];
+    [self.sut requestWithPath:@"/calls/foo" method:@"GET" mediaType:nil content:nil context:nil];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // when
+    ZMTransportRequest *request = [self.sut nextRequest];
+    
+    // then
+    XCTAssertNil(request);
+}
+
 @end
 
 
