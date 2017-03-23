@@ -61,8 +61,15 @@ class UserImageAssetUpdateStrategyTests : MessagingTest {
         self.sut = zmessaging.UserImageAssetUpdateStrategy(managedObjectContext: syncMOC,
                                                               imageUploadStatus: updateStatus,
                                                            authenticationStatus: authenticationStatus)
+        
+        self.syncMOC.zm_userImageCache = UserImageLocalCache()
+        self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache
     }
-    
+}
+
+// MARK: - Profile image upload
+extension UserImageAssetUpdateStrategyTests {
+
     func testThatItDoesNotReturnARequestWhenThereIsNoImageToUpload() {
         // WHEN
         updateStatus.dataToConsume.removeAll()
@@ -80,7 +87,7 @@ class UserImageAssetUpdateStrategyTests : MessagingTest {
         // THEN
         XCTAssertNil(sut.nextRequest())
     }
-        
+    
     func testThatItCreatesRequestSyncs() {
         XCTAssertNotNil(sut.upstreamRequestSyncs[.preview])
         XCTAssertNotNil(sut.upstreamRequestSyncs[.complete])
@@ -172,4 +179,118 @@ class UserImageAssetUpdateStrategyTests : MessagingTest {
 
     }
     
+}
+
+// MARK: - Profile image download
+extension UserImageAssetUpdateStrategyTests {
+    func testThatItCreatesDownstreamRequestSyncs() {
+        XCTAssertNotNil(sut.downstreamRequestSyncs[.preview])
+        XCTAssertNotNil(sut.downstreamRequestSyncs[.complete])
+    }
+    
+    func testThatItReturnsCorrectSizeFromDownstreamRequestSync() {
+        // WHEN
+        let previewSync = sut.downstreamRequestSyncs[.preview]!
+        let completeSync = sut.downstreamRequestSyncs[.complete]!
+        
+        // THEN
+        XCTAssertEqual(sut.size(for: previewSync), .preview)
+        XCTAssertEqual(sut.size(for: completeSync), .complete)
+    }
+
+    
+    func testThatItWhitelistsUserOnPreviewSyncForPreviewImageNotification() {
+        // GIVEN
+        let user = ZMUser(remoteID: UUID.create(), createIfNeeded: true, in: self.syncMOC)!
+        user.previewProfileAssetIdentifier = "fooo"
+        let sync = self.sut.downstreamRequestSyncs[.preview]!
+        XCTAssertFalse(sync.hasOutstandingItems)
+        
+        // WHEN
+        user.requestPreviewAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertTrue(sync.hasOutstandingItems)
+    }
+    
+    func testThatItWhitelistsUserOnPreviewSyncForCompleteImageNotification() {
+        // GIVEN
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
+        user.completeProfileAssetIdentifier = "fooo"
+        let sync = self.sut.downstreamRequestSyncs[.complete]!
+        XCTAssertFalse(sync.hasOutstandingItems)
+        
+        // WHEN
+        user.requestCompleteAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertTrue(sync.hasOutstandingItems)
+    }
+    
+    func testThatItCreatesRequestForCorrectAssetIdentifierForPreviewImage() {
+        // GIVEN
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
+        let assetId = "foo-bar"
+        user.previewProfileAssetIdentifier = assetId
+        
+        // WHEN
+        user.requestPreviewAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        let request = self.sut.downstreamRequestSyncs[.preview]?.nextRequest()
+        XCTAssertNotNil(request)
+        XCTAssertEqual(request?.path, "/assets/v3/\(assetId)")
+        XCTAssertEqual(request?.method, .methodGET)
+    }
+    
+    func testThatItCreatesRequestForCorrectAssetIdentifierForCompleteImage() {
+        // GIVEN
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
+        let assetId = "foo-bar"
+        user.completeProfileAssetIdentifier = assetId
+        
+        // WHEN
+        user.requestCompleteAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        let request = self.sut.downstreamRequestSyncs[.complete]?.nextRequest()
+        XCTAssertNotNil(request)
+        XCTAssertEqual(request?.path, "/assets/v3/\(assetId)")
+        XCTAssertEqual(request?.method, .methodGET)
+    }
+    
+    func testThatItUpdatesCorrectUserImageDataForPreviewImage() {
+        // GIVEN
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
+        let imageData = "image".data(using: .utf8)!
+        let sync = self.sut.downstreamRequestSyncs[.preview]!
+        user.previewProfileAssetIdentifier = "foo"
+        let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
+        
+        // WHEN
+        self.sut.update(user, with: response, downstreamSync: sync)
+        
+        // THEN
+        XCTAssertEqual(user.imageSmallProfileData, imageData)
+    }
+    
+    func testThatItUpdatesCorrectUserImageDataForCompleteImage() {
+        // GIVEN
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
+        let imageData = "image".data(using: .utf8)!
+        let sync = self.sut.downstreamRequestSyncs[.complete]!
+        user.completeProfileAssetIdentifier = "foo"
+        let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
+        
+        // WHEN
+        self.sut.update(user, with: response, downstreamSync: sync)
+        
+        // THEN
+        XCTAssertEqual(user.imageMediumData, imageData)
+    }
+
 }
