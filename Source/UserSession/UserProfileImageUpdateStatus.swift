@@ -249,7 +249,7 @@ extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
     }
 }
 
-// Called internally with existing image data to reupload to v3 (no proprocessing needed)
+// Called internally with existing image data to reupload to v3 (no preprocessing needed)
 extension UserProfileImageUpdateStatus: ZMContextChangeTracker {
 
     public func objectsDidChange(_ object: Set<NSManagedObject>) {
