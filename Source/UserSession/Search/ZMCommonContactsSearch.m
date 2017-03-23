@@ -122,7 +122,7 @@ static NSString * const ZMSearchEndPoint = @"/search/contacts";
         return;
     }
 
-    NSUInteger numberOfConnections = [result numberForKey:@"total_mutual_friends"].unsignedIntegerValue;
+    NSUInteger numberOfConnections = [result optionalNumberForKey:@"total_mutual_friends"].unsignedIntegerValue;
     [self notifyDelegateWithResult:numberOfConnections];
 }
 

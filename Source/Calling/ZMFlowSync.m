@@ -162,7 +162,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 - (ZMTransportRequest *)nextRequest
 {
-    if (!self.pushChannelIsOpen && ![ZMUserSession useCallKit]) {
+    if (!self.pushChannelIsOpen && ![ZMUserSession useCallKit] && ![self nextRequestIsCallsConfig]) {
         return nil;
     }
     if ((self.application.applicationState != UIApplicationStateBackground && self.flowManager == nil) || [ZMUserSession useCallKit]) {
@@ -178,7 +178,14 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     [firstRequest setDebugInformationTranscoder:self];
     [firstRequest forceToVoipSession];
     [self.requestStack removeLastObject];
+    
     return firstRequest;
+}
+
+- (BOOL)nextRequestIsCallsConfig
+{
+    ZMTransportRequest *request = self.requestStack.lastObject;
+    return [request.path isEqualToString:@"/calls/config"];
 }
 
 - (void)processBufferedEventsIfNeeded
@@ -425,7 +432,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     VerifyActionString(methodString.length > 0, return NO, "Method for AVSFlowManager request not set");
     
     ZMTransportRequestMethod method = [ZMTransportRequest methodFromString:methodString];
-    [self.managedObjectContext performBlock:^{
+    [self.managedObjectContext performGroupedBlock:^{
         ZMTransportRequest *request = [[ZMTransportRequest alloc] initWithPath:path method:method binaryData:content type:mtype contentDisposition:nil shouldCompress:YES];
         ZM_WEAK(self);
         
@@ -435,9 +442,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         }]];
         
         [self.requestStack insertObject:request atIndex:0];
-        if (self.pushChannelIsOpen) {
-            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-        }
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }];
     return YES;
 }

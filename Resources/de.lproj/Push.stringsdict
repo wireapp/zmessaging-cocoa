@@ -69,7 +69,7 @@
         <key>push.notification.call.missed.oneonone</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ hat%2$#@new_calls@angerufen</string>
+            <string>%1$@ hat%2$#@new_calls@ angerufen</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -85,7 +85,7 @@
         <key>push.notification.call.missed.oneonone.nousername</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>Jemand hat%1$#@new_calls@angerufen</string>
+            <string>Jemand hat%1$#@new_calls@ angerufen</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>

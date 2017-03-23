@@ -28,6 +28,7 @@ private let log = ZMSLog(tag: "Calling System Message")
     var token: NSObjectProtocol?
     var callerByConversation = [ZMConversation: ZMUser]()
     var startDateByConversation = [ZMConversation: Date]()
+    var connectDateByConversation = [ZMConversation: Date]()
 
     public init(userSession: ZMUserSession) {
         super.init()
@@ -36,29 +37,38 @@ private let log = ZMSLog(tag: "Calling System Message")
 
     public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
         switch voiceChannelState {
-        case .incomingCall, .incomingCallDegraded, .outgoingCall, .outgoingCallDegraded:
+        case .outgoingCall, .outgoingCallDegraded:
+            log.info("Setting call start date for \(conversation.displayName)")
+            startDateByConversation[conversation] = Date()
+            fallthrough
+        case .incomingCall, .incomingCallDegraded:
             let caller = conversation.callingUser()
             log.info("Adding \(caller?.displayName ?? "") as caller in \"\(conversation.displayName)\"")
             callerByConversation[conversation] = conversation.callingUser()
         case .selfConnectedToActiveChannel:
             if nil == callerByConversation[conversation] { log.info("No caller present when setting call start date") }
-            log.info("Setting call start date for \(conversation.displayName)")
-            startDateByConversation[conversation] = Date()
+            log.info("Setting call connect date for \(conversation.displayName)")
+            connectDateByConversation[conversation] = Date()
         default: break
         }
     }
 
     public func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol) {
-        if let caller = callerByConversation[conversation], let startDate = startDateByConversation[conversation] {
-            let duration = -startDate.timeIntervalSinceNow
+        if let caller = callerByConversation[conversation], let connectDate = connectDateByConversation[conversation] {
+            let duration = -connectDate.timeIntervalSinceNow
             log.info("Appending performed call message: \(duration), \(caller.displayName), \"\(conversation.displayName)\"")
             conversation.appendPerformedCallMessage(with: duration, caller: caller)
+        }
+        else if let caller = callerByConversation[conversation], let startDate = startDateByConversation[conversation] {
+            log.info("Appending performed call message: \(startDate), \(caller.displayName), \"\(conversation.displayName)\"")
+            conversation.appendPerformedCallMessage(with: 0, caller: caller)
         } else {
             log.info("Call ended but no call info present in order to insert system message")
         }
 
         callerByConversation[conversation] = nil
         startDateByConversation[conversation] = nil
+        connectDateByConversation[conversation] = nil
     }
 
     public func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation) {

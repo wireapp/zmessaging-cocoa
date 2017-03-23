@@ -99,7 +99,7 @@ class CallStateObserverTests : MessagingTest {
         }
     }
     
-    func testThatMissedCallMessageIsAppendedForCallsThatTimeout() {
+    func testThatPerformedCallMessageIsAppendedForCallsThatTimeout() {
         
         // given when
         sut.callCenterDidChange(callState: .terminating(reason: .timeout), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
@@ -107,7 +107,7 @@ class CallStateObserverTests : MessagingTest {
         
         // then
         if let message =  conversation.messages.lastObject as? ZMSystemMessage {
-            XCTAssertEqual(message.systemMessageType, .missedCall)
+            XCTAssertEqual(message.systemMessageType, .performedCall)
             XCTAssertEqual(message.sender, sender)
         } else {
             XCTFail()
