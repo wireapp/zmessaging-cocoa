@@ -120,7 +120,7 @@ private final class CallingSystemMessageGenerator {
             let caller = callers[conversation] ?? sender
             conversation.appendMissedCallMessage(fromUser: caller, at: Date())
         case .terminating(reason: .timeout):
-            conversation.appendMissedCallMessage(fromUser: sender, at: Date())
+            conversation.appendPerformedCallMessage(with: 0, caller: sender)
         default:
             break
         }
