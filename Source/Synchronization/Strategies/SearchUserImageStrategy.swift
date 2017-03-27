@@ -244,6 +244,7 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
         }
     }
 
+    // TODO: Update for v3
     public static func processSingleUserProfile(response: ZMTransportResponse,
                                   for userID: UUID,
                                   mediumAssetIDCache: NSCache<NSUUID, NSUUID>) {

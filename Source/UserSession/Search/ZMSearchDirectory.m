@@ -26,7 +26,6 @@
 #import "ZMUserSession+Internal.h"
 #import "ZMSearch.h"
 #import "ZMSearchRequestCodec.h"
-#import "ZMUserIDsForSearchDirectoryTable.h"
 #import "ZMSearchResult+Internal.h"
 #import "ZMSearchRequest.h"
 #import <zmessaging/zmessaging-Swift.h>
