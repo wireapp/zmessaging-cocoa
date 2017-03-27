@@ -20,7 +20,7 @@
 #import "ZMSearchDirectory.h"
 
 @class ZMTransportSession;
-@class ZMUserIDsForSearchDirectoryTable;
+@class SearchDirectoryUserIDTable;
 
 @interface ZMSearchDirectory (Testing)
 
@@ -31,6 +31,6 @@
 
 @interface ZMSearchDirectory (Internal)
 
-+ (ZMUserIDsForSearchDirectoryTable *)userIDsMissingProfileImage;
++ (SearchDirectoryUserIDTable *)userIDsMissingProfileImage;
 
 @end

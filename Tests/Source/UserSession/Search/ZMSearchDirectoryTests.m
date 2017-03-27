@@ -92,7 +92,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     [NSManagedObjectContext resetUserInterfaceContext];
 
-    ZMUserIDsForSearchDirectoryTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
+    SearchDirectoryUserIDTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
     [table clear];
     
     [self.sut removeSearchResultObserver:self];
@@ -1808,9 +1808,9 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
     
     //then
-    ZMUserIDsForSearchDirectoryTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
+    SearchDirectoryUserIDTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
     NSSet *expectedIDs = [NSSet setWithObjects:userID1, userID2, nil];
-    XCTAssertEqualObjects(table.allUserIDs, expectedIDs);
+    XCTAssertEqualObjects(table.allUserIds, expectedIDs);
 }
 
 - (void)testThatWhenReceivingSearchUsersWeDoNotAddTheIDsToTheTableIfThereIsACorrespondingZMUser
@@ -1844,9 +1844,9 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
     
     //then
-    ZMUserIDsForSearchDirectoryTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
+    SearchDirectoryUserIDTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
     NSSet *expectedIDs = [NSSet setWithObject: userID2];
-    XCTAssertEqualObjects(table.allUserIDs, expectedIDs);
+    XCTAssertEqualObjects(table.allUserIds, expectedIDs);
 }
 
 - (void)testThatItDoesNotAddIDsToTheTableIfTheCacheHasAnImageForThatUser;
@@ -1880,9 +1880,9 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
     
     //then
-    ZMUserIDsForSearchDirectoryTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
+    SearchDirectoryUserIDTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
     NSSet *expectedIDs = [NSSet setWithObject:userID2];
-    XCTAssertEqualObjects(table.allUserIDs, expectedIDs);
+    XCTAssertEqualObjects(table.allUserIds, expectedIDs);
 }
 
 - (void)testThatItEmptiesTheMediumImageCacheOnTeardown
@@ -1904,7 +1904,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
 - (void)testThatItRemovesItselfFromTheTableOnTearDown
 {
     // expect
-    id mockTable = [OCMockObject mockForClass:ZMUserIDsForSearchDirectoryTable.class];
+    id mockTable = [OCMockObject mockForClass:SearchDirectoryUserIDTable.class];
     [[mockTable expect] removeSearchDirectory:self.sut];
     
     id mockSearch = [OCMockObject mockForClass:ZMSearchDirectory.class];

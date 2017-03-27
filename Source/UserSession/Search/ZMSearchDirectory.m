@@ -29,11 +29,12 @@
 #import "ZMUserIDsForSearchDirectoryTable.h"
 #import "ZMSearchResult+Internal.h"
 #import "ZMSearchRequest.h"
+#import <zmessaging/zmessaging-Swift.h>
 
 static const NSTimeInterval DefaultRemoteSearchTimeout = 1.5;
 static const NSTimeInterval DefaultUpdateDelay = 60;
 
-static ZMUserIDsForSearchDirectoryTable *userIDMissingProfileImageBySearch;
+static SearchDirectoryUserIDTable *userIDMissingProfileImageBySearch;
 
 @interface ZMSearchResult (AllSearchUsers)
 
@@ -281,11 +282,11 @@ static ZMUserIDsForSearchDirectoryTable *userIDMissingProfileImageBySearch;
     [self.observers removeObject:observer];
 }
 
-+ (ZMUserIDsForSearchDirectoryTable *)userIDsMissingProfileImage;
++ (SearchDirectoryUserIDTable *)userIDsMissingProfileImage;
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        userIDMissingProfileImageBySearch = [[ZMUserIDsForSearchDirectoryTable alloc] init];
+        userIDMissingProfileImageBySearch = [[SearchDirectoryUserIDTable alloc] init];
     });
     return userIDMissingProfileImageBySearch;
 }
