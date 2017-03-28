@@ -512,7 +512,7 @@
     NSUUID *userRemoteIdentifier = [NSUUID uuidWithTransportString:self.user4.identifier];
     NSUUID *mediumImageIdentifier = [NSUUID uuidWithTransportString:self.user4.mediumImageIdentifier];
 
-    XCTAssertEqualObjects([mediumAssetIDCache objectForKey:userRemoteIdentifier], mediumImageIdentifier);
+    XCTAssertEqualObjects([[mediumAssetIDCache objectForKey:userRemoteIdentifier] legacyID], mediumImageIdentifier);
     XCTAssertNil([mediumImageCache objectForKey:userRemoteIdentifier]);
 
     // when requesting medium image
@@ -523,7 +523,7 @@
     
     // then
     AssertEqualData(searchUser.imageMediumData, profileImageData);
-    XCTAssertEqualObjects([mediumAssetIDCache objectForKey:userRemoteIdentifier], mediumImageIdentifier);
+    XCTAssertEqualObjects([[mediumAssetIDCache objectForKey:userRemoteIdentifier] legacyID], mediumImageIdentifier);
     XCTAssertEqualObjects([mediumImageCache objectForKey:userRemoteIdentifier], profileImageData);
 
     [searchDirectory tearDown];
@@ -574,7 +574,7 @@
         searchUser1 = searchResult.usersInDirectory.firstObject;
         XCTAssertNotNil(searchUser1);
         
-        XCTAssertEqualObjects([mediumAssetIDCache objectForKey:userRemoteIdentifier], mediumImageIdentifier);
+        XCTAssertEqualObjects([[mediumAssetIDCache objectForKey:userRemoteIdentifier] legacyID], mediumImageIdentifier);
         XCTAssertNil([mediumImageCache objectForKey:userRemoteIdentifier]);
         
         // when requesting medium image
@@ -585,7 +585,7 @@
         
         // then
         AssertEqualData(searchUser1.imageMediumData, profileImageData);
-        XCTAssertEqualObjects([mediumAssetIDCache objectForKey:userRemoteIdentifier], mediumImageIdentifier);
+        XCTAssertEqualObjects([[mediumAssetIDCache objectForKey:userRemoteIdentifier] legacyID], mediumImageIdentifier);
         XCTAssertEqualObjects([mediumImageCache objectForKey:userRemoteIdentifier], profileImageData);
         [searchDirectory tearDown];
     }
@@ -616,7 +616,7 @@
         searchUser2 = searchResult.usersInDirectory.firstObject;
         XCTAssertNotNil(searchUser2);
         
-        XCTAssertEqualObjects([mediumAssetIDCache objectForKey:userRemoteIdentifier], mediumImageIdentifier);
+        XCTAssertEqualObjects([[mediumAssetIDCache objectForKey:userRemoteIdentifier] legacyID], mediumImageIdentifier);
         XCTAssertNil([mediumImageCache objectForKey:userRemoteIdentifier]);
         
         // when requesting medium image
@@ -627,7 +627,7 @@
         
         // then
         AssertEqualData(searchUser2.imageMediumData, profileImageData);
-        XCTAssertEqualObjects([mediumAssetIDCache objectForKey:userRemoteIdentifier], mediumImageIdentifier);
+        XCTAssertEqualObjects([[mediumAssetIDCache objectForKey:userRemoteIdentifier] legacyID], mediumImageIdentifier);
         XCTAssertEqualObjects([mediumImageCache objectForKey:userRemoteIdentifier], profileImageData);
         
         XCTAssertNotEqual(searchUser1, searchUser2);
@@ -681,7 +681,7 @@
         searchUser1 = searchResult.usersInDirectory.firstObject;
         XCTAssertNotNil(searchUser1);
         
-        XCTAssertEqualObjects([mediumAssetIDCache objectForKey:userRemoteIdentifier], mediumImageIdentifier);
+        XCTAssertEqualObjects([[mediumAssetIDCache objectForKey:userRemoteIdentifier] legacyID], mediumImageIdentifier);
         XCTAssertNil([mediumImageCache objectForKey:userRemoteIdentifier]);
         [searchDirectory tearDown];
     }
@@ -701,7 +701,7 @@
         
         // then it refetches the user and sets the mediumAssetID to fetch the data
         AssertEqualData(searchUser1.imageMediumData, profileImageData);
-        XCTAssertEqualObjects([mediumAssetIDCache objectForKey:userRemoteIdentifier], mediumImageIdentifier);
+        XCTAssertEqualObjects([[mediumAssetIDCache objectForKey:userRemoteIdentifier] legacyID], mediumImageIdentifier);
         XCTAssertEqualObjects([mediumImageCache objectForKey:userRemoteIdentifier], profileImageData);
     }
 }

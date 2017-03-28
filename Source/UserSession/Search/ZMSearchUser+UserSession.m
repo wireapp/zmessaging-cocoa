@@ -66,10 +66,12 @@
     }
     
     ZMTransportRequest *request;
-    if (self.imageSmallProfileData != nil && self.mediumAssetID == nil) {
+    if (self.imageSmallProfileData != nil && self.mediumLegacyId == nil && self.completeAssetKey == nil) {
         request = [self requestUserInfoInUserSession:userSession];
-    } else if (self.mediumAssetID != nil) {
-        request = [self requestMediumProfileImageWithExistingMediumAssetIDInUserSession:userSession];
+    } else if (self.completeAssetKey != nil) { // V3
+        request = [self requestMediumProfileImageWithExistingMediumAssetKeyInUserSession:userSession];
+    } else if (self.mediumLegacyId != nil) { // Legacy
+        request = [self requestMediumProfileImageWithExistingMediumLegacyIDInUserSession:userSession];
     }
     
     if (request == nil) {
@@ -85,7 +87,7 @@
 {
     ZMCompletionHandler *completionHandler = [ZMCompletionHandler handlerOnGroupQueue:userSession.syncManagedObjectContext block:^(ZMTransportResponse *response) {
         [SearchUserImageStrategy processSingleUserProfileWithResponse:response for:self.remoteIdentifier mediumAssetIDCache:[ZMSearchUser searchUserToMediumAssetIDCache]];
-        if (self.mediumAssetID != nil) {
+        if (self.mediumLegacyId != nil || self.completeAssetKey != nil) {
             [self privateRequestMediumProfileImageInUserSession:userSession];
         }
     }];
@@ -94,15 +96,27 @@
     return request;
 }
 
-- (ZMTransportRequest *)requestMediumProfileImageWithExistingMediumAssetIDInUserSession:(ZMUserSession *)userSession
+- (ZMTransportRequest *)requestMediumProfileImageWithExistingMediumLegacyIDInUserSession:(ZMUserSession *)userSession
 {
-    ZMTransportRequest *request = [UserImageStrategy requestForFetchingAssetWith:self.mediumAssetID forUserWith:self.remoteIdentifier];
+    ZMTransportRequest *request = [UserImageStrategy requestForFetchingAssetWith:self.mediumLegacyId forUserWith:self.remoteIdentifier];
     ZM_WEAK(self);
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:userSession.syncManagedObjectContext block:^(ZMTransportResponse *response) {
         ZM_STRONG(self);
         [self processMediumAssetResponse:response inUserSession:userSession];
     }]];
     
+    return request;
+}
+
+- (ZMTransportRequest *)requestMediumProfileImageWithExistingMediumAssetKeyInUserSession:(ZMUserSession *)userSession
+{
+    ZMTransportRequest *request = [UserImageStrategy requestForFetchingV3AssetWith:self.completeAssetKey];
+    ZM_WEAK(self);
+    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:userSession.syncManagedObjectContext block:^(ZMTransportResponse *response) {
+        ZM_STRONG(self);
+        [self processMediumAssetResponse:response inUserSession:userSession];
+    }]];
+
     return request;
 }
 
