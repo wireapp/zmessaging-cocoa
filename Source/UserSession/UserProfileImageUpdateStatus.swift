@@ -48,6 +48,8 @@ internal protocol UserProfileImageUploadStateChangeDelegate: class {
 
 public final class UserProfileImageUpdateStatus: NSObject {
     
+    fileprivate var log = ZMSLog(tag: "UserProfileImageUpdateStatus")
+    
     internal enum ImageState {
         case ready
         case preprocessing
@@ -118,15 +120,20 @@ public final class UserProfileImageUpdateStatus: NSObject {
     }
     
     internal init(managedObjectContext: NSManagedObjectContext, preprocessor: ZMAssetsPreprocessorProtocol, queue: OperationQueue, delegate: UserProfileImageUploadStateChangeDelegate?){
+        log.debug("Created")
         self.queue = queue
         self.preprocessor = preprocessor
         self.managedObjectContext = managedObjectContext
         self.changeDelegate = delegate
         super.init()
         self.preprocessor?.delegate = self
-
+        
         // Check if we should re-upload an existing v2 in case we never uploaded a v3 asset.
         reuploadExisingImageIfNeeded()
+    }
+    
+    deinit {
+        log.debug("Deallocated")
     }
 }
 
@@ -146,6 +153,7 @@ extension UserProfileImageUpdateStatus {
     }
     
     internal func didTransition(from oldState: ProfileUpdateState, to currentState: ProfileUpdateState) {
+        log.debug("Transition: [\(oldState)] -> [\(currentState)]")
         changeDelegate?.didTransition(from: oldState, to: currentState)
         switch (oldState, currentState) {
         case let (_, .preprocess(image: data)):
@@ -206,6 +214,7 @@ extension UserProfileImageUpdateStatus {
     }
     
     internal func didTransition(from oldState: ImageState, to currentState: ImageState, for size: ProfileImageSize) {
+        log.debug("Transition [\(size)]: [\(oldState)] -> [\(currentState)]")
         changeDelegate?.didTransition(from: oldState, to: currentState, for: size)
         switch (oldState, currentState) {
         case (_, .uploaded):
@@ -271,6 +280,7 @@ extension UserProfileImageUpdateStatus: ZMContextChangeTracker {
         // We only want to re-upload in case the user did not yet upload a picture to `/assets/v3`.
         guard nil == selfUser.previewProfileAssetIdentifier, nil == selfUser.completeProfileAssetIdentifier else { return }
         guard let preview = selfUser.imageSmallProfileData, let complete = selfUser.imageMediumData else { return }
+        log.debug("V3 profile picture not found, re-uploading V2")
         updatePreprocessedImages(preview: preview, complete: complete)
     }
 
