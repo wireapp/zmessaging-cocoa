@@ -494,6 +494,20 @@ extension UserProfileImageUpdateStatusTests {
         XCTAssertEqual(sut.imageState(for: .preview), .ready)
         XCTAssertEqual(sut.state, .failed(.uploadFailed(MockUploadError.failed)))
     }
+    
+    func testThatItSignalsThereIsRequestAvailableAfterPreprocessingCompletes() {
+        // GIVEN
+        sut.setState(state: .preprocessing, for: .preview)
+        expectation(forNotification: "RequestAvailableNotification", object: sut)
+        
+        // WHEN
+        sut.setState(state: .upload(image: Data()), for: .preview)
+        
+        
+        // THEN
+        XCTAssert(waitForCustomExpectations(withTimeout:0.1))
+    }
+
 }
 
 // MARK: - User profile update

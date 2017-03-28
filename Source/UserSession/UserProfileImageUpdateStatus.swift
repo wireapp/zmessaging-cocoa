@@ -217,6 +217,8 @@ extension UserProfileImageUpdateStatus {
         log.debug("Transition [\(size)]: [\(oldState)] -> [\(currentState)]")
         changeDelegate?.didTransition(from: oldState, to: currentState, for: size)
         switch (oldState, currentState) {
+        case (_, .upload):
+            RequestAvailableNotification.notifyNewRequestsAvailable(self)
         case (_, .uploaded):
             // When one image is uploaded we check state of all other images
             let previewState = imageState(for: .preview)
