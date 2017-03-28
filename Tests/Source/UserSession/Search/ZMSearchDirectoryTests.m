@@ -22,10 +22,10 @@
 @import ZMTransport;
 @import ZMCDataModel;
 
+
 #import "MessagingTest.h"
 #import "ZMSearchDirectory+Internal.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMUserIDsForSearchDirectoryTable.h"
 
 
 @interface TokenAndSearchResult : NSObject

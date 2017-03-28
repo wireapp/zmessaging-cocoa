@@ -71,7 +71,6 @@ class SearchDirectoryUserIDTableTests: MessagingTest {
         var users: Set<ZMSearchUser> = [createSearchUser(), createSearchUser()]
         let expected = users
 
-
         // When
         sut.setUsers(users, forDirectory: directory)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
@@ -82,7 +81,7 @@ class SearchDirectoryUserIDTableTests: MessagingTest {
         XCTAssertEqual(extractIds(expected), sut.allUserIds())
     }
 
-    func testThatItReplacesUserIDsWithLegacyAssetIDs() {
+    func testThatItReplacesUserIDsWithLegacyIDsAndAssetKeys() {
         // Given
         let user1 = createSearchUser(), user2 = createSearchUser(), user3 = createSearchUser(), user4 = createSearchUser()
         let legacyId1 = UUID.create(), legacyId2 = UUID.create()

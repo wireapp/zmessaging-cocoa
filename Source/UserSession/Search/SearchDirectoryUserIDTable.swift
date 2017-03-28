@@ -17,33 +17,8 @@
 //
 
 
-enum SearchUserAsset: ExpressibleByNilLiteral, Hashable {
-    case none
-    case legacyId(UUID)
-    case assetKey(String)
 
-    init(nilLiteral: ()) {
-        self = .none
-    }
-
-    var hashValue: Int {
-        switch self {
-        case .none: return 0
-        case .legacyId(let id): return id.hashValue
-        case .assetKey(let key): return key.hashValue
-        }
-    }
-}
-
-
-func ==(lhs: SearchUserAsset, rhs: SearchUserAsset) -> Bool {
-    switch (lhs, rhs) {
-    case (.none, .none): return true
-    case (.legacyId(let leftId), .legacyId(let rightId)): return leftId == rightId
-    case (.assetKey(let leftKey), .assetKey(let rightKey)): return leftKey == rightKey
-    default: return false
-    }
-}
+import ZMCDataModel
 
 
 final public class SearchUserAndAsset: NSObject {

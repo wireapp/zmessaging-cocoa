@@ -40,85 +40,72 @@ fileprivate enum AssetType: String {
 }
 
 
-struct SearchUserAssetIDs {
-    let smallImageAssetID: UUID?
-    let mediumImageAssetID: UUID?
+/// Either we have assetKeys (Strings) or old style legacy UUIDs.
+enum SearchUserAssetKeys {
+    case asset(preview: String?, complete: String?)
+    case legacy(small: UUID?, medium: UUID?)
+
+    init?(payload: [String: Any]) {
+        // V3
+        if let assetsPayload = payload[SearchUserResponseKey.assets.rawValue] as? [[String : Any]], assetsPayload.count > 0 {
+            var smallKey: String?, completeKey: String?
 
 
-    init?(userImageResponse: [[String: Any]]) {
-        var smallAssetID : UUID?
-        var mediumAssetID : UUID?
-        
-        for pictureData in userImageResponse {
-            guard let info = (pictureData[SearchUserResponseKey.pictureInfo.rawValue] as? [String : Any]),
-                let tag = info[SearchUserResponseKey.pictureTag.rawValue] as? String,
-                let uuidString = pictureData[SearchUserResponseKey.id.rawValue] as? String,
-                let uuid = UUID(uuidString: uuidString)
-                else { continue }
+            for asset in assetsPayload {
+                guard let size = (asset[SearchUserResponseKey.assetSize.rawValue] as? String).flatMap(AssetType.init),
+                    let key = asset[SearchUserResponseKey.assetKey.rawValue] as? String,
+                    let type = asset[SearchUserResponseKey.assetType.rawValue] as? String,
+                    type == "image" else { continue }
 
-            if tag == SearchUserResponseKey.smallProfileTag.rawValue {
-                smallAssetID = uuid
-            } else if tag == SearchUserResponseKey.mediumProfileTag.rawValue {
-                mediumAssetID = uuid
+                switch size {
+                case .preview: smallKey = key
+                case .complete: completeKey = key
+                }
+            }
+
+            if nil != smallKey || nil != completeKey {
+                self = .asset(preview: smallKey, complete: completeKey)
+                return
             }
         }
-        
-        if smallAssetID != nil || mediumAssetID != nil {
-            self.init(smallImageAssetID: smallAssetID, mediumImageAssetID: mediumAssetID)
-        } else {
-            return nil
-        }
-    }
-    
-    init(smallImageAssetID: UUID?, mediumImageAssetID: UUID?) {
-        self.mediumImageAssetID = mediumImageAssetID
-        self.smallImageAssetID = smallImageAssetID
-    }
-}
+        // Legacy
+        else if let pictures = payload[SearchUserResponseKey.pictures.rawValue] as? [[String : Any]] {
+            var smallId: UUID?, mediumId: UUID?
 
+            for pictureData in pictures {
+                guard let info = (pictureData[SearchUserResponseKey.pictureInfo.rawValue] as? [String : Any]),
+                    let tag = info[SearchUserResponseKey.pictureTag.rawValue] as? String,
+                    let uuid = (pictureData[SearchUserResponseKey.id.rawValue] as? String).flatMap(UUID.init) else { continue }
 
-struct SearchUserAssetKeys {
-    let smallAssetKey: String?
-    let completeAssetKey: String?
+                if tag == SearchUserResponseKey.smallProfileTag.rawValue {
+                    smallId = uuid
+                } else if tag == SearchUserResponseKey.mediumProfileTag.rawValue {
+                    mediumId = uuid
+                }
+            }
 
-    init?(response: [[String: Any]]) {
-        var smallKey: String?, completeKey: String?
-
-        for assetPayload in response {
-            guard let size = (assetPayload[SearchUserResponseKey.assetSize.rawValue] as? String).flatMap(AssetType.init),
-                let key = assetPayload[SearchUserResponseKey.assetKey.rawValue] as? String,
-                let type = assetPayload[SearchUserResponseKey.assetType.rawValue] as? String,
-                type == "image" else { continue }
-
-            switch size {
-            case .preview: smallKey = key
-            case .complete: completeKey = key
-            default: continue
+            if smallId != nil || mediumId != nil {
+                self = .legacy(small: smallId, medium: mediumId)
+                return
             }
         }
 
-        if nil != smallKey || nil != completeKey {
-            self.init(smallKey: smallKey, completeKey: completeKey)
-        } else {
-            return nil
-        }
+        return nil
     }
 
-    init(smallKey: String?, completeKey: String?) {
-        smallAssetKey = smallKey
-        completeAssetKey = completeKey
-    }
 }
 
 
 public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
 
-    fileprivate unowned var uiContext : NSManagedObjectContext
-    fileprivate unowned var syncContext : NSManagedObjectContext
-    fileprivate unowned var clientRegistrationDelegate : ClientRegistrationDelegate
-    let imagesByUserIDCache : NSCache<NSUUID, NSData>
-    let mediumAssetIDByUserIDCache : NSCache<NSUUID, NSUUID>
-    let userIDsTable : SearchDirectoryUserIDTable
+    typealias MediumAssetCache = NSCache<NSUUID, SearchUserAssetObjC>
+
+    fileprivate unowned var uiContext: NSManagedObjectContext
+    fileprivate unowned var syncContext: NSManagedObjectContext
+    fileprivate unowned var clientRegistrationDelegate: ClientRegistrationDelegate
+    let imagesByUserIDCache: NSCache<NSUUID, NSData>
+    let mediumAssetCache: MediumAssetCache
+    let userIDsTable: SearchDirectoryUserIDTable
     fileprivate var userIDsBeingRequested = Set<UUID>()
     fileprivate var assetIDsBeingRequested = Set<SearchUserAndAsset>()
     
@@ -127,20 +114,20 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
         self.uiContext = managedObjectContext.zm_userInterface
         self.clientRegistrationDelegate = clientRegistrationDelegate
         self.imagesByUserIDCache = ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>
-        self.mediumAssetIDByUserIDCache = ZMSearchUser.searchUserToMediumAssetIDCache() as! NSCache<NSUUID, NSUUID>
+        self.mediumAssetCache = ZMSearchUser.searchUserToMediumAssetIDCache() as! MediumAssetCache
         self.userIDsTable = ZMSearchDirectory.userIDsMissingProfileImage()
     }
     
     init(managedObjectContext: NSManagedObjectContext,
          clientRegistrationDelegate: ClientRegistrationDelegate,
          imagesByUserIDCache : NSCache<NSUUID, NSData>?,
-         mediumAssetIDByUserIDCache : NSCache<NSUUID, NSUUID>?,
+         mediumAssetCache: NSCache<NSUUID, SearchUserAssetObjC>?,
          userIDsTable: SearchDirectoryUserIDTable?) {
         self.syncContext = managedObjectContext
         self.uiContext = managedObjectContext.zm_userInterface
         self.clientRegistrationDelegate = clientRegistrationDelegate
         self.imagesByUserIDCache = imagesByUserIDCache ?? ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>
-        self.mediumAssetIDByUserIDCache = mediumAssetIDByUserIDCache ?? ZMSearchUser.searchUserToMediumAssetIDCache() as! NSCache<NSUUID, NSUUID>
+        self.mediumAssetCache = mediumAssetCache ?? ZMSearchUser.searchUserToMediumAssetIDCache() as! MediumAssetCache
         self.userIDsTable = userIDsTable ?? ZMSearchDirectory.userIDsMissingProfileImage()
     }
     
@@ -210,32 +197,35 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
 
     func processUserProfile(response: ZMTransportResponse, for userIDs: Set<UUID>){
         userIDsBeingRequested.subtract(userIDs)
+
         if response.result == .success {
             guard let userList = response.payload as? [[String : Any]] else { return }
 
             for userData in userList {
                 guard let userId = (userData[SearchUserResponseKey.id.rawValue] as? String).flatMap(UUID.init) else { continue }
-
-                // Check if there is a V3 asset first
-                if let assetsPayload = userData[SearchUserResponseKey.assets.rawValue] as? [[String : Any]], assetsPayload.count > 0 {
-                    let assetKeys = SearchUserAssetKeys(response: assetsPayload)
-                    if let smallKey = assetKeys?.smallAssetKey {
-                        userIDsTable.replaceUserId(userId, withAsset: .assetKey(smallKey))
-                    } else {
-                        userIDsTable.removeAllEntries(with: [userId])
+                if let assetKeys = SearchUserAssetKeys(payload: userData) {
+                    switch assetKeys {
+                    case .asset(preview: let preview, complete: let complete):
+                        if let preview = preview {
+                            userIDsTable.replaceUserId(userId, withAsset: .assetKey(preview))
+                        } else {
+                            userIDsTable.removeAllEntries(with: [userId])
+                        }
+                        if let complete = complete {
+                            mediumAssetCache.setObject(SearchUserAssetObjC(assetKey: complete), forKey: userId as NSUUID)
+                        }
+                    case .legacy(small: let small, medium: let medium):
+                        if let small = small {
+                            userIDsTable.replaceUserId(userId, withAsset: .legacyId(small))
+                        } else {
+                            userIDsTable.removeAllEntries(with: [userId])
+                        }
+                        if let medium = medium {
+                            mediumAssetCache.setObject(SearchUserAssetObjC(legacyId: medium), forKey: userId as NSUUID)
+                        }
                     }
-                }
-                // V2
-                else if let pictures = userData[SearchUserResponseKey.pictures.rawValue] as? [[String : Any]] {
-                    let assetIds = SearchUserAssetIDs(userImageResponse: pictures)
-                    if let smallImageAssetID = assetIds?.smallImageAssetID {
-                        userIDsTable.replaceUserId(userId, withAsset: .legacyId(smallImageAssetID))
-                    } else {
-                        userIDsTable.removeAllEntries(with: [userId])
-                    }
-                    if let mediumImageAssetID = assetIds?.mediumImageAssetID {
-                        mediumAssetIDByUserIDCache.setObject(mediumImageAssetID as NSUUID, forKey: userId as NSUUID)
-                    }
+                } else {
+                    userIDsTable.removeAllEntries(with: [userId])
                 }
             }
         }
@@ -247,20 +237,34 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
     // TODO: Update for v3
     public static func processSingleUserProfile(response: ZMTransportResponse,
                                   for userID: UUID,
-                                  mediumAssetIDCache: NSCache<NSUUID, NSUUID>) {
+                                  mediumAssetIDCache: NSCache<NSUUID, SearchUserAssetObjC>) {
         guard response.result == .success else { return }
-        
         guard let userList = response.payload as? [[String : Any]] else { return }
+
         for userData in userList {
-            guard let userIdString = userData[SearchUserResponseKey.id.rawValue] as? String,
-                let receivedUserID = UUID(uuidString: userIdString), receivedUserID == userID,
-                let pictures = userData[SearchUserResponseKey.pictures.rawValue] as? [[String : Any]],
-                let assetIds = SearchUserAssetIDs(userImageResponse: pictures)
-                else { continue }
-            
-            if let mediumImageAssetID = assetIds.mediumImageAssetID {
-                mediumAssetIDCache.setObject(mediumImageAssetID as NSUUID, forKey: receivedUserID as NSUUID)
+            processSingleUser(payload: userData, for: userID, cache: mediumAssetIDCache)
+        }
+    }
+
+    private static func processSingleUser(payload: [String: Any], for userId: UUID, cache: MediumAssetCache) {
+        guard let receivedId = (payload[SearchUserResponseKey.id.rawValue] as? String).flatMap(UUID.init), receivedId == userId else { return }
+        guard let asset = mediumAsset(from: payload).objcCompatibilityValue() else { return }
+        cache.setObject(asset, forKey: userId as NSUUID)
+    }
+
+    private static func mediumAsset(from payload: [String: Any]) -> SearchUserAsset {
+        guard let asset = SearchUserAssetKeys(payload: payload) else { return nil }
+        switch asset {
+        case .asset(preview: _, complete: let complete):
+            if let complete = complete {
+                return .assetKey(complete)
+            }
+        case .legacy(small: _, medium: let medium):
+            if let medium = medium {
+                return .legacyId(medium)
             }
         }
+
+        return nil
     }
 }

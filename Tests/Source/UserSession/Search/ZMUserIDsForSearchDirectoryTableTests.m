@@ -21,7 +21,6 @@
 
 #import "MessagingTest.h"
 #import "ZMSearchDirectory+Internal.h"
-#import "ZMUserIDsForSearchDirectoryTable.h"
 #import "ZMUserSession+Internal.h"
 
 @interface ZMUserIDsForSearchDirectoryTableTests: MessagingTest
@@ -43,7 +42,7 @@
 
     self.sut = nil;
     [super tearDown];
-    
+
 }
 
 - (ZMSearchDirectory *)createSearchDirectory
