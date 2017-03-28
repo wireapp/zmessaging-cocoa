@@ -48,9 +48,9 @@ class MockImageUpdateStatus: zmessaging.UserProfileImageUploadStatusProtocol {
     }
 }
 
-class UserImageAssetUploadStrategyTests : MessagingTest {
+class UserImageAssetUpdateStrategyTests : MessagingTest {
     
-    var sut: zmessaging.UserImageAssetUploadStrategy!
+    var sut: zmessaging.UserImageAssetUpdateStrategy!
     var authenticationStatus: MockAuthenticationStatus!
     var updateStatus: MockImageUpdateStatus!
     
@@ -58,11 +58,18 @@ class UserImageAssetUploadStrategyTests : MessagingTest {
         super.setUp()
         self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
         self.updateStatus = MockImageUpdateStatus()
-        self.sut = zmessaging.UserImageAssetUploadStrategy(managedObjectContext: syncMOC,
+        self.sut = zmessaging.UserImageAssetUpdateStrategy(managedObjectContext: syncMOC,
                                                               imageUploadStatus: updateStatus,
                                                            authenticationStatus: authenticationStatus)
+        
+        self.syncMOC.zm_userImageCache = UserImageLocalCache()
+        self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache
     }
-    
+}
+
+// MARK: - Profile image upload
+extension UserImageAssetUpdateStrategyTests {
+
     func testThatItDoesNotReturnARequestWhenThereIsNoImageToUpload() {
         // WHEN
         updateStatus.dataToConsume.removeAll()
@@ -81,30 +88,15 @@ class UserImageAssetUploadStrategyTests : MessagingTest {
         XCTAssertNil(sut.nextRequest())
     }
     
-    func testThatItDoesNotCreateRequestSyncsInitially() {
-        XCTAssertTrue(sut.requestSyncs.isEmpty)
-    }
-    
-    func testThatItCreatesRequestSyncForTheSizeWhenAsked() {
-        // WHEN
-        _ = sut.requestSync(for: .preview)
-        
-        // THEN
-        XCTAssertNotNil(sut.requestSyncs[.preview])
-        XCTAssertNil(sut.requestSyncs[.complete])
-        
-        // WHEN
-        _ = sut.requestSync(for: .complete)
-        
-        // THEN
-        XCTAssertNotNil(sut.requestSyncs[.preview])
-        XCTAssertNotNil(sut.requestSyncs[.complete])
+    func testThatItCreatesRequestSyncs() {
+        XCTAssertNotNil(sut.upstreamRequestSyncs[.preview])
+        XCTAssertNotNil(sut.upstreamRequestSyncs[.complete])
     }
 
     func testThatItReturnsCorrectSizeFromRequestSync() {
         // WHEN
-        let previewSync = sut.requestSync(for: .preview)
-        let completeSync = sut.requestSync(for: .complete)
+        let previewSync = sut.upstreamRequestSyncs[.preview]!
+        let completeSync = sut.upstreamRequestSyncs[.complete]!
         
         // THEN
         XCTAssertEqual(sut.size(for: previewSync), .preview)
@@ -160,7 +152,7 @@ class UserImageAssetUploadStrategyTests : MessagingTest {
     func testThatUploadMarkedAsFailedOnUnsuccessfulResponse() {
         // GIVEN
         let size = ProfileImageSize.preview
-        let sync = sut.requestSync(for: size)
+        let sync = sut.upstreamRequestSyncs[size]
         let failedResponse = ZMTransportResponse(payload: nil, httpStatus: 500, transportSessionError: nil)
         
         // WHEN
@@ -173,7 +165,7 @@ class UserImageAssetUploadStrategyTests : MessagingTest {
     func testThatUploadIsMarkedAsDoneAfterSuccessfulResponse() {
         // GIVEN
         let size = ProfileImageSize.preview
-        let sync = sut.requestSync(for: size)
+        let sync = sut.upstreamRequestSyncs[size]
         let assetId = "123123"
         let payload: [String : String] = ["key" : assetId]
         let successResponse = ZMTransportResponse(payload: payload as NSDictionary, httpStatus: 200, transportSessionError: nil)
@@ -187,4 +179,118 @@ class UserImageAssetUploadStrategyTests : MessagingTest {
 
     }
     
+}
+
+// MARK: - Profile image download
+extension UserImageAssetUpdateStrategyTests {
+    func testThatItCreatesDownstreamRequestSyncs() {
+        XCTAssertNotNil(sut.downstreamRequestSyncs[.preview])
+        XCTAssertNotNil(sut.downstreamRequestSyncs[.complete])
+    }
+    
+    func testThatItReturnsCorrectSizeFromDownstreamRequestSync() {
+        // WHEN
+        let previewSync = sut.downstreamRequestSyncs[.preview]!
+        let completeSync = sut.downstreamRequestSyncs[.complete]!
+        
+        // THEN
+        XCTAssertEqual(sut.size(for: previewSync), .preview)
+        XCTAssertEqual(sut.size(for: completeSync), .complete)
+    }
+
+    
+    func testThatItWhitelistsUserOnPreviewSyncForPreviewImageNotification() {
+        // GIVEN
+        let user = ZMUser(remoteID: UUID.create(), createIfNeeded: true, in: self.syncMOC)!
+        user.previewProfileAssetIdentifier = "fooo"
+        let sync = self.sut.downstreamRequestSyncs[.preview]!
+        XCTAssertFalse(sync.hasOutstandingItems)
+        
+        // WHEN
+        user.requestPreviewAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertTrue(sync.hasOutstandingItems)
+    }
+    
+    func testThatItWhitelistsUserOnPreviewSyncForCompleteImageNotification() {
+        // GIVEN
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
+        user.completeProfileAssetIdentifier = "fooo"
+        let sync = self.sut.downstreamRequestSyncs[.complete]!
+        XCTAssertFalse(sync.hasOutstandingItems)
+        
+        // WHEN
+        user.requestCompleteAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertTrue(sync.hasOutstandingItems)
+    }
+    
+    func testThatItCreatesRequestForCorrectAssetIdentifierForPreviewImage() {
+        // GIVEN
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
+        let assetId = "foo-bar"
+        user.previewProfileAssetIdentifier = assetId
+        
+        // WHEN
+        user.requestPreviewAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        let request = self.sut.downstreamRequestSyncs[.preview]?.nextRequest()
+        XCTAssertNotNil(request)
+        XCTAssertEqual(request?.path, "/assets/v3/\(assetId)")
+        XCTAssertEqual(request?.method, .methodGET)
+    }
+    
+    func testThatItCreatesRequestForCorrectAssetIdentifierForCompleteImage() {
+        // GIVEN
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
+        let assetId = "foo-bar"
+        user.completeProfileAssetIdentifier = assetId
+        
+        // WHEN
+        user.requestCompleteAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        let request = self.sut.downstreamRequestSyncs[.complete]?.nextRequest()
+        XCTAssertNotNil(request)
+        XCTAssertEqual(request?.path, "/assets/v3/\(assetId)")
+        XCTAssertEqual(request?.method, .methodGET)
+    }
+    
+    func testThatItUpdatesCorrectUserImageDataForPreviewImage() {
+        // GIVEN
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
+        let imageData = "image".data(using: .utf8)!
+        let sync = self.sut.downstreamRequestSyncs[.preview]!
+        user.previewProfileAssetIdentifier = "foo"
+        let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
+        
+        // WHEN
+        self.sut.update(user, with: response, downstreamSync: sync)
+        
+        // THEN
+        XCTAssertEqual(user.imageSmallProfileData, imageData)
+    }
+    
+    func testThatItUpdatesCorrectUserImageDataForCompleteImage() {
+        // GIVEN
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
+        let imageData = "image".data(using: .utf8)!
+        let sync = self.sut.downstreamRequestSyncs[.complete]!
+        user.completeProfileAssetIdentifier = "foo"
+        let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
+        
+        // WHEN
+        self.sut.update(user, with: response, downstreamSync: sync)
+        
+        // THEN
+        XCTAssertEqual(user.imageMediumData, imageData)
+    }
+
 }
