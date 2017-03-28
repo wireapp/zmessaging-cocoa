@@ -23,20 +23,23 @@ fileprivate let userPath = "/users?ids="
 fileprivate enum ResponseKey: String {
     case pictureTag = "tag"
     case pictures = "picture"
-    case smallProfileTag = "smallProfile"
-    case mediumProfileTag = "medium"
-    case id = "id"
+    case id
     case pictureInfo = "info"
-    case assets = "assets"
+    case assets
     case assetSize = "size"
     case assetKey = "key"
     case assetType = "type"
 }
 
 
+fileprivate enum ImageTag: String {
+    case smallProfile
+    case medium
+}
+
 fileprivate enum AssetSize: String {
-    case preview = "preview"
-    case complete = "complete"
+    case preview
+    case complete
 }
 
 fileprivate enum AssetType: String {
@@ -78,12 +81,12 @@ enum SearchUserAssetKeys {
 
             for pictureData in pictures {
                 guard let info = (pictureData[ResponseKey.pictureInfo.rawValue] as? [String : Any]),
-                    let tag = (info[ResponseKey.pictureTag.rawValue] as? String).flatMap(ProfileImageSize.init),
+                    let tag = (info[ResponseKey.pictureTag.rawValue] as? String).flatMap(ImageTag.init),
                     let uuid = (pictureData[ResponseKey.id.rawValue] as? String).flatMap(UUID.init) else { continue }
 
                 switch tag {
-                case .preview: smallId = uuid
-                case .complete: mediumId = uuid
+                case .smallProfile: smallId = uuid
+                case .medium: mediumId = uuid
                 }
             }
 
@@ -237,7 +240,6 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
         }
     }
 
-    // TODO: Update for v3
     public static func processSingleUserProfile(response: ZMTransportResponse,
                                   for userID: UUID,
                                   mediumAssetIDCache: NSCache<NSUUID, SearchUserAssetObjC>) {
