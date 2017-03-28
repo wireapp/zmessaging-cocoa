@@ -529,6 +529,8 @@
         return YES;
     }]];
     
+    [[transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
+
     // expect
     [[transportSession expect] setNetworkStateDelegate:OCMOCK_ANY];
     [[transportSession expect] setClientID:OCMOCK_ANY];
@@ -543,6 +545,7 @@
                                                                      application:self.application
                                                                       appVersion:@"00000"
                                                               appGroupIdentifier:self.groupIdentifier];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     [transportSession verify];

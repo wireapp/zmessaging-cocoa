@@ -18,7 +18,7 @@
 
 
 import Foundation
-
+import ZMCDataModel
 
 internal enum UserProfileImageUpdateError: Error {
     case preprocessingFailed
@@ -30,7 +30,6 @@ internal protocol UserProfileImageUpdateStateDelegate: class {
 }
 
 internal protocol UserProfileImageUploadStatusProtocol: class {
-    var allSizes: [ProfileImageSize] { get }
     func consumeImage(for size: ProfileImageSize) -> Data?
     func hasImageToUpload(for size: ProfileImageSize) -> Bool
     func uploadingDone(imageSize: ProfileImageSize, assetId: String)
@@ -168,7 +167,7 @@ extension UserProfileImageUpdateStatus {
     }
     
     fileprivate func startPreprocessing(imageData: Data) {
-        allSizes.forEach {
+        ProfileImageSize.allSizes.forEach {
             setState(state: .preprocessing, for: $0)
         }
         
@@ -285,7 +284,7 @@ extension UserProfileImageUpdateStatus: ZMContextChangeTracker {
 extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     
     public func completedDownsampleOperation(_ operation: ZMImageDownsampleOperationProtocol, imageOwner: ZMImageOwner) {
-        allSizes.forEach {
+        ProfileImageSize.allSizes.forEach {
             if operation.format == $0.imageFormat {
                 setState(state: .upload(image: operation.downsampleImageData), for: $0)
             }
@@ -302,10 +301,6 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
 }
 
 extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
-    internal var allSizes: [ProfileImageSize] {
-        return [.preview, .complete]
-    }
-    
     internal func hasImageToUpload(for size: ProfileImageSize) -> Bool {
         switch imageState(for: size) {
         case .upload:
