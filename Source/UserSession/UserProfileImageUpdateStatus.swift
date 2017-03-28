@@ -309,7 +309,13 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     
     public func didCompleteProcessingImageOwner(_ imageOwner: ZMImageOwner) {}
     
-    public func preprocessingCompleteOperation(for imageOwner: ZMImageOwner) -> Operation? { return nil }
+    public func preprocessingCompleteOperation(for imageOwner: ZMImageOwner) -> Operation? {
+        let dispatchGroup = managedObjectContext.dispatchGroup
+        dispatchGroup?.enter()
+        return BlockOperation() {
+            dispatchGroup?.leave()
+        }
+    }
 }
 
 extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
