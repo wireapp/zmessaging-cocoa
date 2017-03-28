@@ -123,10 +123,11 @@
 - (void)processMediumAssetResponse:(ZMTransportResponse *)response inUserSession:(ZMUserSession *)userSession
 {
     if(response.result == ZMTransportResponseStatusSuccess) {
-        if(response.imageData != 0) {
-            [[ZMSearchUser searchUserToMediumImageCache] setObject:response.imageData forKey:self.remoteIdentifier];
+        NSData *imageData = response.imageData ?: response.rawData;
+        if(imageData != 0) {
+            [[ZMSearchUser searchUserToMediumImageCache] setObject:imageData forKey:self.remoteIdentifier];
             [userSession.managedObjectContext performGroupedBlock:^{
-                [self setAndNotifyNewMediumImageData:response.imageData searchUserObserverCenter:userSession.managedObjectContext.searchUserObserverCenter];
+                [self setAndNotifyNewMediumImageData:imageData searchUserObserverCenter:userSession.managedObjectContext.searchUserObserverCenter];
             }];
         }
     }

@@ -163,7 +163,7 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
     func processAsset(response: ZMTransportResponse, for userAssetID: SearchUserAndAsset) {
         assetIDsBeingRequested.remove(userAssetID)
         if response.result == .success {
-            if let imageData = response.imageData {
+            if let imageData = response.imageData ?? response.rawData {
                 imagesByUserIDCache.setObject(imageData as NSData, forKey: userAssetID.userId as NSUUID)
             }
             uiContext.performGroupedBlock {
