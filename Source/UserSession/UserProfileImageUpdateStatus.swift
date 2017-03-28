@@ -16,21 +16,9 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+
 import Foundation
 
-internal enum ProfileImageSize {
-    case preview
-    case complete
-    
-    internal var imageFormat: ZMImageFormat {
-        switch self {
-        case .preview:
-            return .medium
-        case .complete:
-            return .profile
-        }
-    }
-}
 
 internal enum UserProfileImageUpdateError: Error {
     case preprocessingFailed

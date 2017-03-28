@@ -20,7 +20,7 @@
 fileprivate let userPath = "/users?ids="
 
 
-fileprivate enum SearchUserResponseKey: String {
+fileprivate enum ResponseKey: String {
     case pictureTag = "tag"
     case pictures = "picture"
     case smallProfileTag = "smallProfile"
@@ -34,9 +34,13 @@ fileprivate enum SearchUserResponseKey: String {
 }
 
 
-fileprivate enum AssetType: String {
+fileprivate enum AssetSize: String {
     case preview = "preview"
     case complete = "complete"
+}
+
+fileprivate enum AssetType: String {
+    case image
 }
 
 
@@ -47,15 +51,15 @@ enum SearchUserAssetKeys {
 
     init?(payload: [String: Any]) {
         // V3
-        if let assetsPayload = payload[SearchUserResponseKey.assets.rawValue] as? [[String : Any]], assetsPayload.count > 0 {
+        if let assetsPayload = payload[ResponseKey.assets.rawValue] as? [[String : Any]], assetsPayload.count > 0 {
             var smallKey: String?, completeKey: String?
 
 
             for asset in assetsPayload {
-                guard let size = (asset[SearchUserResponseKey.assetSize.rawValue] as? String).flatMap(AssetType.init),
-                    let key = asset[SearchUserResponseKey.assetKey.rawValue] as? String,
-                    let type = asset[SearchUserResponseKey.assetType.rawValue] as? String,
-                    type == "image" else { continue }
+                guard let size = (asset[ResponseKey.assetSize.rawValue] as? String).flatMap(AssetSize.init),
+                    let key = asset[ResponseKey.assetKey.rawValue] as? String,
+                    let type = (asset[ResponseKey.assetType.rawValue] as? String).flatMap(AssetType.init),
+                    type == .image else { continue }
 
                 switch size {
                 case .preview: smallKey = key
@@ -69,18 +73,17 @@ enum SearchUserAssetKeys {
             }
         }
         // Legacy
-        else if let pictures = payload[SearchUserResponseKey.pictures.rawValue] as? [[String : Any]] {
+        else if let pictures = payload[ResponseKey.pictures.rawValue] as? [[String : Any]] {
             var smallId: UUID?, mediumId: UUID?
 
             for pictureData in pictures {
-                guard let info = (pictureData[SearchUserResponseKey.pictureInfo.rawValue] as? [String : Any]),
-                    let tag = info[SearchUserResponseKey.pictureTag.rawValue] as? String,
-                    let uuid = (pictureData[SearchUserResponseKey.id.rawValue] as? String).flatMap(UUID.init) else { continue }
+                guard let info = (pictureData[ResponseKey.pictureInfo.rawValue] as? [String : Any]),
+                    let tag = (info[ResponseKey.pictureTag.rawValue] as? String).flatMap(ProfileImageSize.init),
+                    let uuid = (pictureData[ResponseKey.id.rawValue] as? String).flatMap(UUID.init) else { continue }
 
-                if tag == SearchUserResponseKey.smallProfileTag.rawValue {
-                    smallId = uuid
-                } else if tag == SearchUserResponseKey.mediumProfileTag.rawValue {
-                    mediumId = uuid
+                switch tag {
+                case .preview: smallId = uuid
+                case .complete: mediumId = uuid
                 }
             }
 
@@ -202,7 +205,7 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
             guard let userList = response.payload as? [[String : Any]] else { return }
 
             for userData in userList {
-                guard let userId = (userData[SearchUserResponseKey.id.rawValue] as? String).flatMap(UUID.init) else { continue }
+                guard let userId = (userData[ResponseKey.id.rawValue] as? String).flatMap(UUID.init) else { continue }
                 if let assetKeys = SearchUserAssetKeys(payload: userData) {
                     switch assetKeys {
                     case .asset(preview: let preview, complete: let complete):
@@ -247,7 +250,7 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
     }
 
     private static func processSingleUser(payload: [String: Any], for userId: UUID, cache: MediumAssetCache) {
-        guard let receivedId = (payload[SearchUserResponseKey.id.rawValue] as? String).flatMap(UUID.init), receivedId == userId else { return }
+        guard let receivedId = (payload[ResponseKey.id.rawValue] as? String).flatMap(UUID.init), receivedId == userId else { return }
         guard let asset = mediumAsset(from: payload).objcCompatibilityValue() else { return }
         cache.setObject(asset, forKey: userId as NSUUID)
     }
