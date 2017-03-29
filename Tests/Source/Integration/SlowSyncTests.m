@@ -341,14 +341,18 @@
         values = [[mockUser committedValuesForKeys:nil] copy];
     }];
     
+    BOOL emailAndPhoneMatches = YES;
+    if (user.isSelfUser) {
+        FHAssertEqualObjects(failureRecorder, user.emailAddress, values[@"email"]);
+        FHAssertEqualObjects(failureRecorder, user.phoneNumber, values[@"phone"]);
+        emailAndPhoneMatches = (user.emailAddress == values[@"email"] || [user.emailAddress isEqualToString:values[@"email"]]) &&
+                               (user.phoneNumber == values[@"phone"] || [user.phoneNumber isEqualToString:values[@"phone"]]);
+    }
     FHAssertEqualObjects(failureRecorder, user.name, values[@"name"]);
-    FHAssertEqualObjects(failureRecorder, user.emailAddress, values[@"email"]);
-    FHAssertEqualObjects(failureRecorder, user.phoneNumber, values[@"phone"]);
     FHAssertEqual(failureRecorder, user.accentColorValue, (ZMAccentColor) [values[@"accentID"] intValue]);
     
     return ((user.name == values[@"name"] || [user.name isEqualToString:values[@"name"]])
-            && (user.emailAddress == values[@"email"] || [user.emailAddress isEqualToString:values[@"email"]])
-            && (user.phoneNumber == values[@"phone"] || [user.phoneNumber isEqualToString:values[@"phone"]])
+            && emailAndPhoneMatches
             && (user.accentColorValue == (ZMAccentColor) [values[@"accentID"] intValue]));
 }
 
