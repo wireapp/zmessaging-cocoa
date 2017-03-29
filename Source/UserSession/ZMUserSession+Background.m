@@ -194,22 +194,28 @@ static NSString *ZMLogTag = @"Push";
 
 - (void)application:(id<ZMApplication>)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)())completionHandler;
 {
-    double version = floor(NSFoundationVersionNumber);
-
     if ([identifier isEqualToString:ZMCallIgnoreAction]){
         [self ignoreCallForNotification:notification withCompletionHandler:completionHandler];
+        return;
     }
-    else if ([identifier isEqualToString:ZMConversationMuteAction]) {
+    if ([identifier isEqualToString:ZMConversationMuteAction]) {
         [self muteConversationForNotification:notification withCompletionHandler:completionHandler];
+        return;
     }
-    else if ([identifier isEqualToString:ZMMessageLikeAction]) {
+    if ([identifier isEqualToString:ZMMessageLikeAction]) {
         [self likeMessageForNotification:notification WithCompletionHandler:completionHandler];
+        return;
     }
-    else if ([identifier isEqualToString:ZMConversationDirectReplyAction] && version > NSFoundationVersionNumber_iOS_8_4) {
+    
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_8_4) {
         NSString *textInput = [responseInfo optionalStringForKey:UIUserNotificationActionResponseTypedTextKey];
-        [self replyToNotification:notification withReply:textInput completionHandler:completionHandler];
+        if ([identifier isEqualToString:ZMConversationDirectReplyAction]) {
+            [self replyToNotification:notification withReply:textInput completionHandler:completionHandler];
+            return;
+        }
     }
-    else if (application.applicationState == UIApplicationStateInactive) {
+    
+    if (application.applicationState == UIApplicationStateInactive) {
         self.pendingLocalNotification = [[ZMStoredLocalNotification alloc] initWithNotification:notification
                                                                            managedObjectContext:self.managedObjectContext
                                                                                actionIdentifier:identifier
@@ -218,7 +224,7 @@ static NSString *ZMLogTag = @"Push";
             [self didEnterEventProcessingState:nil];
         }
     }
-    else if (completionHandler != nil) {
+    if (completionHandler != nil) {
         completionHandler();
     }
 }
