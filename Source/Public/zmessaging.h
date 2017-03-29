@@ -69,4 +69,5 @@
 #import <zmessaging/VoiceChannelV2+VideoCalling.h>
 #import <zmessaging/VoiceChannelV2+CallFlow.h>
 #import <zmessaging/ZMAVSBridge.h>
-
+#import <zmessaging/ZMUserSession+OperationLoop.h>
+#import <zmessaging/ZMOperationLoop+Background.h>
