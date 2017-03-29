@@ -689,7 +689,7 @@
     // (2) remove mediumAssetID from Cache
     {
         [mediumAssetIDCache removeObjectForKey:userRemoteIdentifier];
-        XCTAssertNil(searchUser1.mediumAssetID);
+        XCTAssertNil(searchUser1.mediumLegacyId);
     }
     
     // (3) when requesting medium image
@@ -904,4 +904,36 @@
     [userListener verify];
 }
 
-@end
+
+// MARK: Search User V3 Profile Assets
+
+
+- (void)testThatItDownloadsV3PreviewAssetWhenLegacyIdsArePresentInSearchUserResponse
+{
+    XCTFail();
+}
+
+- (void)testThatItDownloadsV3PreviewAssetWhenOnlyV3AssetsArePrensentInSearchUserResponse
+{
+    XCTFail();
+}
+
+- (void)testThatItDownloadsMediumPictureForSearchUserWhenAssetAndLegacyIdArePresentUsingV3
+{
+    XCTFail();
+}
+
+- (void)testThatItDownloadsMediumPictureForSearchUserWhenOnlyAssetsV3ArePresent
+{
+    XCTFail();
+}
+
+- (void)testThatItRefetchesTheSearchUserIfTheMediumAssetIDIsNotSet_V3Asset
+{
+    XCTFail();
+}
+
+- (void)testThatItNotifiesWhenANewMediumImageIsAvailableForAnUnconnectedSearchUser_V3
+{
+    XCTFail();
+}
