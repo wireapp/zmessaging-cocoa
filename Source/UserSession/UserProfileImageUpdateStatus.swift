@@ -113,6 +113,7 @@ public final class UserProfileImageUpdateStatus: NSObject {
     fileprivate let managedObjectContext: NSManagedObjectContext
 
     fileprivate var imageState = [ProfileImageSize : ImageState]()
+    fileprivate var resizedImages = [ProfileImageSize : Data]()
     internal fileprivate(set) var state: ProfileUpdateState = .ready
     
     public convenience init(managedObjectContext: NSManagedObjectContext) {
@@ -156,19 +157,21 @@ extension UserProfileImageUpdateStatus {
         log.debug("Transition: [\(oldState)] -> [\(currentState)]")
         changeDelegate?.didTransition(from: oldState, to: currentState)
         switch (oldState, currentState) {
+        case (_, .ready):
+            resizedImages.removeAll()
         case let (_, .preprocess(image: data)):
             startPreprocessing(imageData: data)
         case let (_, .update(previewAssetId: previewAssetId, completeAssetId: completeAssetId)):
             updateUserProfile(with:previewAssetId, completeAssetId: completeAssetId)
         case (_, .failed):
             resetImageState()
-        default:
-            break
         }
     }
     
     fileprivate func updateUserProfile(with previewAssetId: String, completeAssetId: String) {
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
+        selfUser.imageSmallProfileData = resizedImages[.preview]
+        selfUser.imageMediumData = resizedImages[.complete]
         selfUser.updateAndSyncProfileAssetIdentifiers(previewIdentifier: previewAssetId, completeIdentifier: completeAssetId)
         managedObjectContext.saveOrRollback()
         setState(state: .ready)
@@ -211,13 +214,15 @@ extension UserProfileImageUpdateStatus {
     
     internal func resetImageState() {
         imageState.removeAll()
+        resizedImages.removeAll()
     }
     
     internal func didTransition(from oldState: ImageState, to currentState: ImageState, for size: ProfileImageSize) {
         log.debug("Transition [\(size)]: [\(oldState)] -> [\(currentState)]")
         changeDelegate?.didTransition(from: oldState, to: currentState, for: size)
         switch (oldState, currentState) {
-        case (_, .upload):
+        case let (_, .upload(image)):
+            resizedImages[size] = image
             RequestAvailableNotification.notifyNewRequestsAvailable(self)
         case (_, .uploaded):
             // When one image is uploaded we check state of all other images

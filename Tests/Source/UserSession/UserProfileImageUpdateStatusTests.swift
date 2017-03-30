@@ -154,6 +154,7 @@ class UserProfileImageUpdateStatusTests: MessagingTest {
     var preprocessor : MockPreprocessor!
     var tinyImage: Data!
     var imageOwner: ZMImageOwner!
+    var changeDelegate: MockChangeDelegate!
     
     override func setUp() {
         super.setUp()
@@ -162,6 +163,8 @@ class UserProfileImageUpdateStatusTests: MessagingTest {
         sut = UserProfileImageUpdateStatus(managedObjectContext: syncMOC, preprocessor: preprocessor, queue: ZMImagePreprocessor.createSuitableImagePreprocessingQueue(), delegate: nil)
         tinyImage = data(forResource: "tiny", extension: "jpg")
         imageOwner = UserProfileImageOwner(imageData: tinyImage)
+        changeDelegate = MockChangeDelegate()
+        sut.changeDelegate = changeDelegate
     }
     
     func operationWithExpectation(description: String) -> Operation {
@@ -530,8 +533,31 @@ extension UserProfileImageUpdateStatusTests {
         XCTAssert(selfUser.hasLocalModifications(forKey: #keyPath(ZMUser.previewProfileAssetIdentifier)))
         XCTAssert(selfUser.hasLocalModifications(forKey: #keyPath(ZMUser.completeProfileAssetIdentifier)))
     }
-}
+    
+    func testThatItSetsResizedImagesToSelfUserAfterCompletion() {
+        // GIVEN
+        let previewData = "small".data(using: .utf8)!
+        let completeData = "laaaarge".data(using: .utf8)!
+        let previewId = "foo"
+        let completeId = "bar"
 
+        // WHEN
+        sut.updatePreprocessedImages(preview: previewData, complete: completeData)
+        _ = sut.consumeImage(for: .preview)
+        _ = sut.consumeImage(for: .complete)
+        sut.uploadingDone(imageSize: .preview, assetId: previewId)
+        sut.uploadingDone(imageSize: .complete, assetId: completeId)
+        sut.setState(state: .update(previewAssetId: previewId, completeAssetId: completeId))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        let selfUser = ZMUser.selfUser(in: syncMOC)
+        XCTAssertEqual(selfUser.imageSmallProfileData, previewData)
+        XCTAssertEqual(selfUser.imageMediumData, completeData)
+        XCTAssertEqual(selfUser.previewProfileAssetIdentifier, previewId)
+        XCTAssertEqual(selfUser.completeProfileAssetIdentifier, completeId)
+    }
+}
 
 // MARK: - Reuploading alreday preprocessed images
 extension UserProfileImageUpdateStatusTests {
