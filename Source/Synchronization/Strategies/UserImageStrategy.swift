@@ -343,7 +343,7 @@ extension UserImageStrategy {
     }
 
     public static func requestForFetchingV3Asset(with key: String) -> ZMTransportRequest {
-        return ZMTransportRequest(getFromPath: "assets/v3/\(key)")
+        return ZMTransportRequest(getFromPath: "/assets/v3/\(key)")
     }
 }
 
