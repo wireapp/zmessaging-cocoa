@@ -1923,7 +1923,7 @@
             MockUser *user = [session insertUserWithName:[NSString stringWithFormat:@"Group Call User %d", i]];
             user.email = [NSString stringWithFormat:@"group-call-%d@example.com", i];
             user.phone = [NSString stringWithFormat:@"1234%d", i];
-            user.accentID = i % 7;
+            user.accentID = i % 6 + 1;
             [session addProfilePictureToUser:user];
             [self storeRemoteIDForObject:user];
             [users addObject:user];
@@ -1982,7 +1982,7 @@
             MockUser *user = [session insertUserWithName:[NSString stringWithFormat:@"Group Call User %d", i]];
             user.email = [NSString stringWithFormat:@"group-call-%d@example.com", i];
             user.phone = [NSString stringWithFormat:@"1234%d", i];
-            user.accentID = i % 7;
+            user.accentID = i % 6 + 1;
             [session addProfilePictureToUser:user];
             [self storeRemoteIDForObject:user];
             [users addObject:user];

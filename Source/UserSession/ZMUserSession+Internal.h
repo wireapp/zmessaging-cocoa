@@ -78,7 +78,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @interface ZMUserSession (Internal) 
 
 @property (nonatomic, readonly) BOOL isLoggedIn;
-@property (nonatomic, readonly) ZMOperationLoop *operationLoop;
 @property (nonatomic, readonly) NSManagedObjectContext *managedObjectContext;
 @property (nonatomic, readonly) ZMTransportSession *transportSession;
 @property (nonatomic, readonly) NSManagedObjectContext *syncManagedObjectContext;

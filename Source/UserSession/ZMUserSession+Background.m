@@ -204,6 +204,7 @@ static NSString *ZMLogTag = @"Push";
     }
     if ([identifier isEqualToString:ZMMessageLikeAction]) {
         [self likeMessageForNotification:notification WithCompletionHandler:completionHandler];
+        return;
     }
     
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_8_4) {
