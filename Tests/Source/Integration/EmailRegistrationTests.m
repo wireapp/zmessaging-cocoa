@@ -238,7 +238,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)testThatWhenRegisteringAndNeedToWaitForEmailValidationWeKeepTryingToLogInUntilWeSucceed
 {
     
-    DefaultPendingValidationLoginAttemptInterval = 3.2;
+    DefaultPendingValidationLoginAttemptInterval = 0.2;
     NSString *password = @"No one will ever guess this";
     
     // given
@@ -286,7 +286,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)testThatWhenRegisteringAndNeedToWaitForEmailValidationWeCanCancelTheWait
 {
     // given
-    DefaultPendingValidationLoginAttemptInterval = 10;
+    DefaultPendingValidationLoginAttemptInterval = 0.2;
     NSString *password = @"thePa$$w0rd";
     ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:@"thedude@example.com" password:password];
     user.name = @"Hans Müller";
