@@ -31,7 +31,7 @@ static NSString * const ZMSearchEndPoint = @"/search/contacts";
 
 @implementation ZMSearchRequestCodec
 
-+ (ZMTransportRequest *)searchRequestForQueryString:(NSString *)queryString levels:(int)levels fetchLimit:(int)fetchLimit;
++ (ZMTransportRequest *)searchRequestForQueryString:(NSString *)queryString  fetchLimit:(int)fetchLimit;
 {
     VerifyAction(queryString != nil, queryString = @"");
     
@@ -43,7 +43,7 @@ static NSString * const ZMSearchEndPoint = @"/search/contacts";
     [set removeCharactersInString:@"=&+"];
     NSString *urlEncodedQuery = [queryString stringByAddingPercentEncodingWithAllowedCharacters:set];
     
-    NSString *path = [NSString stringWithFormat:@"%@?q=%@&l=%d&size=%d", ZMSearchEndPoint, urlEncodedQuery, levels, fetchLimit];
+    NSString *path = [NSString stringWithFormat:@"%@?q=%@&size=%d", ZMSearchEndPoint, urlEncodedQuery, fetchLimit];
     return [ZMTransportRequest requestGetFromPath:path];
     
 }

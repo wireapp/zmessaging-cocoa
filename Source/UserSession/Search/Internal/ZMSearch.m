@@ -322,7 +322,7 @@
         return;
     }
     
-    ZMTransportRequest *request = [ZMSearchRequestCodec searchRequestForQueryString:self.request.query levels:3 fetchLimit:30];
+    ZMTransportRequest *request = [ZMSearchRequestCodec searchRequestForQueryString:self.request.query fetchLimit:10];
     [request setDebugInformationTranscoder:self];
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.userInterfaceContext block:^(ZMTransportResponse *response) {
         ZM_STRONG(self);

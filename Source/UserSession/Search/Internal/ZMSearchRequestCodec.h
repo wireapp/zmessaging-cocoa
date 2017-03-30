@@ -26,7 +26,7 @@
 
 @interface ZMSearchRequestCodec : NSObject
 
-+ (ZMTransportRequest *)searchRequestForQueryString:(NSString *)queryString levels:(int)levels fetchLimit:(int)fetchLimit;
++ (ZMTransportRequest *)searchRequestForQueryString:(NSString *)queryString  fetchLimit:(int)fetchLimit;
 + (ZMSearchResult *)searchResultFromTransportResponse:(ZMTransportResponse *)response ignoredIDs:(NSArray *)ignoredIDs userSession:(ZMUserSession *)userSession query:(NSString *)query;
 
 @end
