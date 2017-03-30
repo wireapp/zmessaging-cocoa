@@ -54,16 +54,15 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
     self.mockClientRegistrationDelegate = [[ZMMockClientRegistrationStatus alloc] init];
-    [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateEventProcessing)] appState];
+    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
 
-    self.sut = [[ZMUserTranscoder alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate syncStatus:self.mockSyncStatus];
+    self.sut = [[ZMUserTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)tearDown
 {
     [self.mockClientRegistrationDelegate tearDown];
-    [self.sut tearDown];
     self.sut = nil;
     
     [super tearDown];

@@ -18,6 +18,7 @@
 
 
 #import "ObjectTranscoderTests.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @implementation ObjectTranscoderTests
 
@@ -25,7 +26,7 @@
 {
     [super setUp];
     self.syncStrategy = [OCMockObject niceMockForClass:[ZMSyncStrategy class]];
-    self.mockAppStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMAppStateDelegate)];
+    self.mockApplicationStatus = [[ZMMockApplicationStatus alloc] init];
 }
 
 - (void)tearDown

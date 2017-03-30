@@ -29,10 +29,10 @@
 
 @interface ZMConversationTranscoder : ZMAbstractRequestStrategy <ZMSyncPhase, ZMObjectStrategy>
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate NS_UNAVAILABLE;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatus:(id<ZMApplicationStatus>)applicationStatus NS_UNAVAILABLE;
 
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)syncStrategy
-                    appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                   applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                           syncStatus:(SyncStatus *)syncStatus;
 
 @property (nonatomic) NSUInteger conversationPageSize;

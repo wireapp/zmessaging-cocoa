@@ -162,13 +162,6 @@ static NSString * const PushNotificationTypeNotice = @"notice";
     return [[EventsWithIdentifier alloc] initWithEvents:events identifier:identifier isNotice:NO];
 }
 
-- (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-{
-    [self.syncMOC performGroupedBlock:^(){
-        [self.syncStrategy startBackgroundFetchWithCompletionHandler:handler];
-    }];
-}
-
 - (void)startBackgroundTaskWithCompletionHandler:(ZMBackgroundTaskHandler)handler;
 {
     [self.syncMOC performGroupedBlock:^(){

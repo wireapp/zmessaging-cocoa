@@ -23,23 +23,23 @@ class UserProfileUpdateRequestStrategyTests : MessagingTest {
     
     var sut : UserProfileRequestStrategy!
     var userProfileUpdateStatus : TestUserProfileUpdateStatus!
-    var mockAppStateDelegate : MockAppStateDelegate!
+    var mockApplicationStatus : MockApplicationStatus!
     
     override func setUp() {
         super.setUp()
-        self.mockAppStateDelegate = MockAppStateDelegate()
+        
+        self.mockApplicationStatus = MockApplicationStatus()
+        self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
         self.userProfileUpdateStatus = TestUserProfileUpdateStatus(managedObjectContext: self.uiMOC, analytics: MockAnalytics())
         self.sut = UserProfileRequestStrategy(managedObjectContext: self.uiMOC,
-                                              appStateDelegate: self.mockAppStateDelegate,
+                                              applicationStatus: self.mockApplicationStatus,
                                               userProfileUpdateStatus: self.userProfileUpdateStatus)
-        self.mockAppStateDelegate.mockAppState = .eventProcessing
-
     }
     
     override func tearDown() {
         self.sut = nil
         self.userProfileUpdateStatus = nil
-        self.mockAppStateDelegate = nil
+        self.mockApplicationStatus = nil
         super.tearDown()
     }
     
@@ -52,7 +52,7 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // GIVEN
         self.userProfileUpdateStatus.requestPhoneVerificationCode(phoneNumber: "+15553453453")
-        self.mockAppStateDelegate.mockAppState = .unauthenticated
+        self.mockApplicationStatus.mockSynchronizationState = .unauthenticated
         
         // THEN
         XCTAssertNil(self.sut.nextRequest())

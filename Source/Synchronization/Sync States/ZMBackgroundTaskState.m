@@ -95,7 +95,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
     }
     self.errorPerformingTask = YES;
     
-    [stateMachine goToState:stateMachine.preBackgroundState];
+//    [stateMachine goToState:stateMachine.preBackgroundState];
     [self markFetchAsComplete];
     
     ZMLogError(@"Timer cancelled background task after %g seconds.", fabs([self.stateEnterDate timeIntervalSinceNow]));
@@ -150,10 +150,10 @@ static NSTimeInterval const MaximumTimeInState = 25;
 
 - (void)transitionOutIfComplete;
 {
-    id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+//    id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
     
     if (self.errorPerformingTask || self.didFinishTask) {
-        [stateMachine goToState:stateMachine.preBackgroundState];
+//        [stateMachine goToState:stateMachine.preBackgroundState];
     }
 }
 

@@ -25,6 +25,7 @@
 #import "ObjectTranscoderTests.h"
 #import "ZMSelfStrategy+Internal.h"
 #import "ZMUserSession+Internal.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 @interface ZMSelfStrategyTests : ObjectTranscoderTests
 
@@ -46,14 +47,14 @@
     self.originalRequestInterval = ZMSelfStrategyPendingValidationRequestInterval;
     
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
-    [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateEventProcessing)] appState];
+    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
     self.upstreamObjectSync = [OCMockObject niceMockForClass:ZMUpstreamModifiedObjectSync.class];
     [self.syncMOC performBlockAndWait:^{
         [ZMUser selfUserInContext:self.syncMOC].needsToBeUpdatedFromBackend = NO;
         [self.syncMOC saveOrRollback];
     }];
     self.sut = (id) [[ZMSelfStrategy alloc] initWithManagedObjectContext:self.syncMOC
-                                                        appStateDelegate:self.mockAppStateDelegate
+                                                       applicationStatus:self.mockApplicationStatus
                                                 clientRegistrationStatus:self.mockClientRegistrationStatus
                                                             upstreamObjectSync:self.upstreamObjectSync];
     
@@ -66,8 +67,8 @@
     
     [self.realClientRegistrationStatus tearDown];
     self.realClientRegistrationStatus = nil;
-    [self.sut tearDown];
     self.upstreamObjectSync = nil;
+    [self.sut tearDown];
     self.sut = nil;
     [super tearDown];
 }
@@ -545,7 +546,7 @@
     [self.sut tearDown];
     //let it create an actual ZMUpstreamSync, not a mocked one
     self.sut = (id) [[ZMSelfStrategy alloc] initWithManagedObjectContext:self.syncMOC
-                                                        appStateDelegate:self.mockAppStateDelegate
+                                                       applicationStatus:self.mockApplicationStatus
                                                 clientRegistrationStatus:self.mockClientRegistrationStatus];
 }
 

@@ -18,7 +18,7 @@
 
 import Foundation
 
-@objc public class UserProfileRequestStrategy : ZMAbstractRequestStrategy {
+@objc public class UserProfileRequestStrategy : AbstractRequestStrategy {
     
     let userProfileUpdateStatus : UserProfileUpdateStatus
     
@@ -38,19 +38,18 @@ import Foundation
     
     fileprivate var handleSuggestionSearchSync : ZMSingleRequestSync! = nil
     
-    public override var configuration: ZMStrategyConfigurationOption { return [.allowsRequestsWhileUnauthenticated, .allowsRequestsDuringSync, .allowsRequestsDuringEventProcessing] }
-    
     @available (*, unavailable, message: "use `init(managedObjectContext:appStateDelegate:userProfileUpdateStatus)`instead")
-    override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
+    override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         fatalError()
     }
     
     public init(managedObjectContext: NSManagedObjectContext,
-                appStateDelegate: ZMAppStateDelegate,
+                applicationStatus: ApplicationStatus,
                 userProfileUpdateStatus: UserProfileUpdateStatus) {
         self.userProfileUpdateStatus = userProfileUpdateStatus
-        super.init(managedObjectContext: managedObjectContext, appStateDelegate: appStateDelegate)
+        super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         
+        self.configuration = [.allowsRequestsWhileUnauthenticated, .allowsRequestsDuringSync, .allowsRequestsDuringEventProcessing]
         self.phoneCodeRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.phoneUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.phoneNumberDeleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
@@ -60,9 +59,6 @@ import Foundation
         self.handleSetSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.handleSuggestionSearchSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
     }
-}
-
-extension UserProfileRequestStrategy  {
     
     @objc public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         

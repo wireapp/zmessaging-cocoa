@@ -48,9 +48,9 @@
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
-    [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateSyncing)] appState];
+    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateSynchronizing;
 
-    self.sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC appStateDelegate:self.mockAppStateDelegate syncStatus:self.mockSyncStatus objectDirectory:self.directory];
+    self.sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus objectDirectory:self.directory];
     self.sut.lastUpdateEventIDSync = self.downstreamSync;
     
     [self verifyMockLater:self.syncStrategy];
@@ -59,7 +59,6 @@
 - (void)tearDown {
     self.directory = nil;
     self.syncStrategy = nil;
-    [self.sut tearDown];
     self.sut = nil;
     self.downstreamSync = nil;
     [super tearDown];
@@ -117,15 +116,13 @@
 - (void)testThatItCreatesTheRightDownstreamSync
 {
     // when
-    ZMLastUpdateEventIDTranscoder *sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC appStateDelegate:self.mockAppStateDelegate syncStatus:self.mockSyncStatus objectDirectory:self.directory];
+    ZMLastUpdateEventIDTranscoder *sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus objectDirectory:self.directory];
     id transcoder = sut.lastUpdateEventIDSync.transcoder;
     
     // then
     XCTAssertNotNil(sut.lastUpdateEventIDSync);
     XCTAssertEqual(sut.lastUpdateEventIDSync.moc, self.uiMOC);
     XCTAssertEqual(transcoder, sut);
-    [sut tearDown];
-    
 }
 
 - (void)testThatItIsDownloadingLastUpdateEventIDWhenTheDownstreamIsInProgress

@@ -275,7 +275,8 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     if ([self isDoneWithLogin]) {
         if (self.application.applicationState == UIApplicationStateBackground) {
             ZMLogDebug(@"%@ is already logged in on enter. Launched suspended. Entering background state.", self.class);
-            [stateMachine goToState:stateMachine.backgroundState];
+            // TODO jacob
+//            [stateMachine goToState:stateMachine.backgroundState];
         } else {
             ZMLogDebug(@"%@ is already logged in on enter, starting quick sync", self.class);
             [stateMachine goToState:stateMachine.eventProcessingState];

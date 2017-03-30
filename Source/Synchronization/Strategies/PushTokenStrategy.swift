@@ -26,7 +26,7 @@ private let zmLog = ZMSLog(tag: "Push")
 
 extension ZMSingleRequestSync : ZMRequestGenerator {}
 
-public class PushTokenStrategy : ZMAbstractRequestStrategy, ZMSingleRequestTranscoder {
+public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTranscoder {
     
     fileprivate var applicationTokenSync : ZMSingleRequestSync!
     fileprivate var applicationTokenDeletionSync : ZMSingleRequestSync!
@@ -37,10 +37,9 @@ public class PushTokenStrategy : ZMAbstractRequestStrategy, ZMSingleRequestTrans
     var allRequestGenerators : [ZMRequestGenerator] {
         return [applicationTokenSync, pushKitTokenSync, applicationTokenDeletionSync, pushKitTokenDeletionSync]
     }
-    public override var configuration: ZMStrategyConfigurationOption { return .allowsRequestsDuringEventProcessing }
 
-    public override init(managedObjectContext: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
-        super.init(managedObjectContext: managedObjectContext, appStateDelegate: appStateDelegate)
+    public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+        super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         self.applicationTokenSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.applicationTokenDeletionSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.pushKitTokenSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)

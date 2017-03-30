@@ -40,8 +40,9 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 @property (nonatomic, readonly) id<PreviouslyReceivedEventIDsCollection> mockEventIDsCollection;
 @property (nonatomic, readonly) id mockPingbackStatus;
 @property (nonatomic) MockSyncStatus *mockSyncStatus;
+@property (nonatomic) ZMOperationStatus *mockOperationStatus;
 @property (nonatomic) id syncStateDelegate;
-@property (nonatomic) id mockAppStateDelegate;
+@property (nonatomic) id mockApplicationDirectory;
 
 @end
 
@@ -50,20 +51,25 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)setUp {
     [super setUp];
     
-    self.mockAppStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMAppStateDelegate)];
-    [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateSyncing)] appState];
-
+    self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
+    self.mockSyncStatus.mockPhase = SyncPhaseDone;
+    self.mockOperationStatus = [[ZMOperationStatus alloc] init];
+    self.mockOperationStatus.isInBackground = NO;
+    
+    self.mockApplicationDirectory = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
+    [[[self.mockApplicationDirectory stub] andReturnValue:@(ZMSynchronizationStateSynchronizing)] synchronizationState];
+    [[[self.mockApplicationDirectory stub] andReturn:self.mockOperationStatus] operationStatus];
+    
     _syncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
     _mockEventIDsCollection = OCMProtocolMock(@protocol(PreviouslyReceivedEventIDsCollection));
     _mockPingbackStatus = [OCMockObject niceMockForClass:BackgroundAPNSPingBackStatus.class];
     [[[(id) self.syncStrategy stub] andReturn:self.uiMOC] syncMOC];
-    [[[(id) self.syncStrategy stub] andReturn:self.mockAppStateDelegate] syncStateManager];
+    [[[(id) self.syncStrategy stub] andReturn:self.mockApplicationDirectory] applicationStatusDirectory];
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.mockPingbackStatus];
     
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
-    self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
-    self.mockSyncStatus.mockPhase = SyncPhaseDone;
+    
     _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
                                     previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
                                                              application:(id)self.application
@@ -72,7 +78,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 }
 
 - (void)tearDown {
-    [self.sut tearDown];
     _sut = nil;
     _syncStrategy = nil;
     _mockEventIDsCollection = nil;
@@ -477,8 +482,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     // then
     NSURLComponents *components = [NSURLComponents componentsWithString:request.path];
     XCTAssertTrue([components.queryItems containsObject:[NSURLQueryItem queryItemWithName:@"since" value:lastUpdateEventID.transportString]], @"missing valid since parameter");
-    
-    [sut tearDown];
 }
 
 - (void)testThatTheClientIDFromTheUserClientIsIncludedInRequest

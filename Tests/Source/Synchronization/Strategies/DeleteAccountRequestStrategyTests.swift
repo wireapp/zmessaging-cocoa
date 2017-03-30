@@ -24,12 +24,12 @@ import ZMTransport
 class DeleteAccountRequestStrategyTests: MessagingTest {
     
     fileprivate var sut : DeleteAccountRequestStrategy!
-    fileprivate var mockAppStateDelegate : MockAppStateDelegate!
+    fileprivate var mockApplicationStatus : MockApplicationStatus!
     
     override func setUp() {
         super.setUp()
-        self.mockAppStateDelegate = MockAppStateDelegate()
-        self.sut = DeleteAccountRequestStrategy(managedObjectContext: self.uiMOC, appStateDelegate:mockAppStateDelegate)
+        self.mockApplicationStatus = MockApplicationStatus()
+        self.sut = DeleteAccountRequestStrategy(withManagedObjectContext: self.uiMOC, applicationStatus:mockApplicationStatus)
     }
     
     override func tearDown() {

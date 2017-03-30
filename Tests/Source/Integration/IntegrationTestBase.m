@@ -105,6 +105,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.conversationChangeObserver = [[ConversationChangeObserver alloc] init];
     self.userChangeObserver = [[UserChangeObserver alloc] init];
     self.messageChangeObserver = [[MessageChangeObserver alloc] init];
+    [self.application simulateApplicationWillEnterForeground];
     [self.application simulateApplicationDidBecomeActive];
     WaitForEverythingToBeDoneWithTimeout(0.5);
 }

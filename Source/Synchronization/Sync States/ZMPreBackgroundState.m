@@ -37,10 +37,10 @@
 
 - (void)didEnterState
 {
-    id<ZMStateMachineDelegate> strongDelegate = self.stateMachineDelegate;
+//    id<ZMStateMachineDelegate> strongDelegate = self.stateMachineDelegate;
     if ([self canGoToBackgroundState])
     {
-        [strongDelegate goToState:strongDelegate.backgroundState];
+//        [strongDelegate goToState:strongDelegate.backgroundState];
         return;
     }
     self.activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"ZMPreBackgroundState"];
@@ -72,10 +72,10 @@
 
 - (void)dataDidChange
 {
-    id<ZMStateMachineDelegate> strongDelegate = self.stateMachineDelegate;
+//    id<ZMStateMachineDelegate> strongDelegate = self.stateMachineDelegate;
     if ([self canGoToBackgroundState])
     {
-        [strongDelegate goToState:strongDelegate.backgroundState];
+//        [strongDelegate goToState:strongDelegate.backgroundState];
     }
 }
 

@@ -466,10 +466,11 @@ NS_ASSUME_NONNULL_END
         ZMConversation *callConversation = [ZMConversation resolveConversationForPersons:contacts
                                                                                inContext:userSession.managedObjectContext];
         if (nil != callConversation) {
-            // Push channel must be open in order to process the call signaling
-            if (!userSession.pushChannelIsOpen) {
-                [userSession.transportSession restartPushChannel];
-            }
+            // TODO Jacob
+//             Push channel must be open in order to process the call signaling
+//            if (!userSession.pushChannelIsOpen) {
+//                [userSession.transportSession restartPushChannel];
+//            }
 
             [self configureAudioSession];
             [self requestStartCallInConversation:callConversation videoCall:isVideo];

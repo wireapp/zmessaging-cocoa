@@ -22,10 +22,12 @@
 #import "ZMSyncStrategy+EventProcessing.h"
 
 
+@class ZMMockApplicationStatus;
+
 
 @interface ObjectTranscoderTests : MessagingTest
 
 @property (nonatomic) ZMSyncStrategy *syncStrategy;
-@property (nonatomic) id mockAppStateDelegate;
+@property (nonatomic) ZMMockApplicationStatus *mockApplicationStatus;
 
 @end

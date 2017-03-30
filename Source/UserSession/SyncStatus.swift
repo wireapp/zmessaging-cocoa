@@ -17,8 +17,11 @@
 //
 
 
+
+
+
 @objc public enum SyncPhase : Int {
-    case idle, fetchingLastUpdateEventID, fetchingConnections, fetchingConversations, fetchingUsers, fetchingMissedEvents, done
+    case fetchingLastUpdateEventID, fetchingConnections, fetchingConversations, fetchingUsers, fetchingMissedEvents, done
     
     var isLastSlowSyncPhase : Bool {
         return self == .fetchingUsers
@@ -28,7 +31,7 @@
         switch self {
         case .fetchingMissedEvents, .fetchingLastUpdateEventID, .fetchingConnections,.fetchingUsers, .fetchingConversations:
             return true
-        case .idle, .done:
+        case .done:
             return false
         }
     }
@@ -44,7 +47,7 @@ public class SyncStatus : NSObject {
             }
         }
     }
-    
+
     fileprivate var lastUpdateEventID : UUID?
     fileprivate unowned var managedObjectContext: NSManagedObjectContext
     fileprivate unowned var syncStateDelegate: ZMSyncStateDelegate
@@ -62,6 +65,8 @@ public class SyncStatus : NSObject {
         super.init()
         
         currentSyncPhase = hasPersistedLastEventID ? .fetchingMissedEvents : .fetchingLastUpdateEventID
+        
+//        didStart(currentSyncPhase)
     }
 }
 
@@ -123,28 +128,29 @@ extension SyncStatus {
 
 // MARK: Quick Sync
 extension SyncStatus {
+
+    /// TODO jacob
+//    public func didEnterForeground() {
+//        isInBackground = false
+//        
+//        // When entering the background we might have interrupted a sync. We then would like to pick up where we left. 
+//        // If we didn't interrupt a sync, we want to perform a quicksync
+//        if currentSyncPhase == .idle {
+//            if previousPhase != .done {
+//                // continue the sync where we left off when entering the background
+//                currentSyncPhase = previousPhase
+//            } else  {
+//                // perform a quicksync
+//                currentSyncPhase = .done
+//                startQuickSyncIfNeeded()
+//            }
+//        }
+//    }
     
-    public func didEnterForeground() {
-        isInBackground = false
-        
-        // When entering the background we might have interrupted a sync. We then would like to pick up where we left. 
-        // If we didn't interrupt a sync, we want to perform a quicksync
-        if currentSyncPhase == .idle {
-            if previousPhase != .done {
-                // continue the sync where we left off when entering the background
-                currentSyncPhase = previousPhase
-            } else  {
-                // perform a quicksync
-                currentSyncPhase = .done
-                startQuickSyncIfNeeded()
-            }
-        }
-    }
-    
-    public func didEnterBackground() {
-        isInBackground = true
-        currentSyncPhase = .idle
-    }
+//    public func didEnterBackground() {
+//        isInBackground = true
+//        currentSyncPhase = .idle
+//    }
     
     public func pushChannelDidClose() {
         pushChannelIsOpen = false

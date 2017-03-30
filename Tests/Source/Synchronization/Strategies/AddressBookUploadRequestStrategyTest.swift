@@ -23,7 +23,7 @@ import ZMCLinkPreview
 class AddressBookUploadRequestStrategyTest : MessagingTest {
     
     var sut : zmessaging.AddressBookUploadRequestStrategy!
-    var mockAppStateDelegate : MockAppStateDelegate!
+    var mockApplicationStatus : MockApplicationStatus!
     var addressBook : AddressBookFake!
     var trackerFake : AddressBookTrackerFake!
     
@@ -34,16 +34,16 @@ class AddressBookUploadRequestStrategyTest : MessagingTest {
         
         let ab = self.addressBook // I don't want to capture self in closure later
         ab?.fillWithContacts(5)
-        mockAppStateDelegate = MockAppStateDelegate()
-        mockAppStateDelegate.mockAppState = .eventProcessing
+        mockApplicationStatus = MockApplicationStatus()
+        mockApplicationStatus.mockSynchronizationState = .eventProcessing
         self.sut = zmessaging.AddressBookUploadRequestStrategy(managedObjectContext: self.syncMOC,
-                                                               appStateDelegate: mockAppStateDelegate,
+                                                               applicationStatus: mockApplicationStatus,
                                                                addressBookGenerator: { return ab },
                                                                tracker: self.trackerFake)
     }
     
     override func tearDown() {
-        self.mockAppStateDelegate = nil
+        self.mockApplicationStatus = nil
         self.sut = nil
         self.addressBook = nil
         super.tearDown()

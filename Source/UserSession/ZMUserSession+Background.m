@@ -26,11 +26,12 @@
 #import "ZMOperationLoop+Private.h"
 #import "ZMPushToken.h"
 #import "ZMCallKitDelegate.h"
-
+#import "ZMSyncStrategy.h"
 #import "ZMLocalNotification.h"
 #import "ZMBackgroundFetchState.h"
 #import "ZMUserSession+UserNotificationCategories.h"
 #import "ZMStoredLocalNotification.h"
+#import "ZMMissingUpdateEventsTranscoder.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 static NSString *ZMLogTag = @"Push";
@@ -233,28 +234,10 @@ static NSString *ZMLogTag = @"Push";
 - (void)application:(id<ZMApplication>)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 {
     NOT_USED(application);
-    ZM_WEAK(self);
-    // The OS is telling us to fetch new data from the backend.
-    // Wrap the handler:
-    ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult const result){
-        ZM_STRONG(self);
-        [self.managedObjectContext performGroupedBlock:^{
-            switch (result) {
-                case ZMBackgroundFetchResultNewData:
-                    completionHandler(UIBackgroundFetchResultNewData);
-                    break;
-                case ZMBackgroundFetchResultNoData:
-                    completionHandler(UIBackgroundFetchResultNoData);
-                    break;
-                case ZMBackgroundFetchResultFailed:
-                    completionHandler(UIBackgroundFetchResultFailed);
-                    break;
-            }
-        }];
-    };
-    
-    // Transition into the ZMBackgroundFetchState which will do the fetching:
-    [self.operationLoop startBackgroundFetchWithCompletionHandler:handler];
+    [self.syncManagedObjectContext performGroupedBlock:^{
+        [self.operationLoop.syncStrategy.missingUpdateEventsTranscoder startDownloadingMissingNotifications];
+        [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundFetchWithCompletionHandler:completionHandler];
+    }];
 }
 
 - (void)application:(id<ZMApplication>)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler;

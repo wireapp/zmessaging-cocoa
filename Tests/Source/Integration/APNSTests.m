@@ -25,7 +25,6 @@
 #import "zmessaging_iOS_Tests-Swift.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
-#import "ZMSyncStateManager.h"
 
 @interface APNSTests : IntegrationTestBase
 
@@ -74,7 +73,8 @@
     NSUInteger oldCount = conversationsList.count;
     
     if(useAPNS) {
-        [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
+        self.mockTransportSession.pushChannel.keepOpen = NO;
+//        [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
     }
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
@@ -275,12 +275,13 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.2);
     
-    [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
+    self.mockTransportSession.pushChannel.keepOpen = NO;  // do not use websocket
     
     NSUUID *identifier = NSUUID.createUUID;
     __block NSDictionary *conversationTransportData;
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session simulatePushChannelClosed];
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
     }];
@@ -319,13 +320,14 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.2);
     
-    [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
+    self.mockTransportSession.pushChannel.keepOpen = NO; // do not use websocket
     
     NSUUID *identifier = NSUUID.createUUID;
 
     __block NSDictionary *conversationTransportData;
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session simulatePushChannelClosed];
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
     }];
@@ -385,7 +387,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.2);
     
-    [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
+    self.mockTransportSession.pushChannel.keepOpen = NO; // do not use websocket
     ZMUser *selfUser = [self userForMockUser:self.selfUser];
     XCTAssertEqual(selfUser.clients.count, 1u);
 
@@ -393,6 +395,7 @@
     
     __block NSString *convIdentifier;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session simulatePushChannelClosed];
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
         convIdentifier = conversation.identifier;
@@ -439,7 +442,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.2);
     
-    [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
+    self.mockTransportSession.pushChannel.keepOpen = NO;  // do not use websocket
     ZMUser *selfUser = [self userForMockUser:self.selfUser];
     XCTAssertEqual(selfUser.clients.count, 1u);
     
@@ -447,6 +450,7 @@
     
     __block NSString *convIdentifier;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session simulatePushChannelClosed];
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
         convIdentifier = conversation.identifier;
@@ -504,10 +508,11 @@
 
         ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Hello" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
         
-        [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
+        self.mockTransportSession.pushChannel.keepOpen = NO;
         __block MockEvent *event;
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-            NOT_USED(session);
+            [session simulatePushChannelClosed];
+            
             // insert message on "backend"
             event = [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:textMessage.data];
             

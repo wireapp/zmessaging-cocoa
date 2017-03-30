@@ -23,7 +23,7 @@
          <BuildActionEntry
             buildForTesting = "YES"
             buildForRunning = "NO"
-            buildForProfiling = "NO"
+            buildForProfiling = "YES"
             buildForArchiving = "NO"
             buildForAnalyzing = "NO">
             <BuildableReference
@@ -113,8 +113,8 @@
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "ZMLOG_TAGS"
-            value = "MockTransportRequests"
-            isEnabled = "NO">
+            value = "MockTransportRequests, Authentication"
+            isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
       <AdditionalOptions>
@@ -123,18 +123,19 @@
    <ProfileAction
       buildConfiguration = "Debug"
       shouldUseLaunchSchemeArgsEnv = "YES"
-      savedToolIdentifier = ""
+      savedToolIdentifier = "/Applications/Xcode.app/Contents/Applications/Instruments.app/Contents/Resources/templates/Counters.tracetemplate"
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "549815921A43232400A7CE2E"
-            BuildableName = "zmessaging.framework"
-            BlueprintName = "zmessaging-ios"
+            BlueprintIdentifier = "3E186087191A56F6000FE027"
+            BuildableName = "zmessaging Test Host.app"
+            BlueprintName = "zmessaging Test Host"
             ReferencedContainer = "container:zmessaging-cocoa.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

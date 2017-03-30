@@ -74,8 +74,8 @@ static NSTimeInterval const MaximumTimeInState = 25;
     self.updateEventIDWhenStartingFetch = strongTranscoder.lastUpdateEventID;
     
     if (self.updateEventIDWhenStartingFetch == nil) {
-        id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
-        [stateMachine goToState:stateMachine.preBackgroundState];
+//        id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+//        [stateMachine goToState:stateMachine.preBackgroundState];
     } else {
         [strongTranscoder startDownloadingMissingNotifications];
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
@@ -104,7 +104,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
         return;
     }
     
-    [stateMachine goToState:stateMachine.preBackgroundState];
+//    [stateMachine goToState:stateMachine.preBackgroundState];
     [self markFetchAsComplete];
     
     ZMLogError(@"Timer cancelled background fetch after %g seconds.", fabs([self.stateEnterDate timeIntervalSinceNow]));
@@ -149,16 +149,16 @@ static NSTimeInterval const MaximumTimeInState = 25;
 
 - (void)transitionOutIfComplete;
 {
-    id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+//    id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
     
     if (self.errorInDowloading) {
-        [stateMachine goToState:stateMachine.preBackgroundState];
+//        [stateMachine goToState:stateMachine.preBackgroundState];
     } else {
         const BOOL waitingForNotifications = self.missingUpdateEventsTranscoder.isDownloadingMissingNotifications;
         ZMLogDebug(@"Background fetch: waiting for %@", waitingForNotifications ? @"notifications " : @"");
         
         if (!waitingForNotifications) {
-            [stateMachine goToState:stateMachine.preBackgroundState];
+//            [stateMachine goToState:stateMachine.preBackgroundState];
         }
     }
 }

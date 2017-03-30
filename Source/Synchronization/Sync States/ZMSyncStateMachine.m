@@ -45,10 +45,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 @property (nonatomic) ZMSyncState *unauthenticatedState; ///< need to log in
 @property (nonatomic) ZMSyncState *unauthenticatedBackgroundState; ///< need to log in, but we are in the background
 @property (nonatomic) ZMSyncState *eventProcessingState; ///< can normally process events
-@property (nonatomic) ZMSyncState *backgroundState; ///< handles background requests
-@property (nonatomic) ZMSyncState *preBackgroundState; ///< waits until we are ready to go to background
-@property (nonatomic) ZMBackgroundFetchState *backgroundFetchState; ///< does background fetching on iOS
-@property (nonatomic) ZMBackgroundTaskState *backgroundTaskState; ///< performs background tasks
 
 @property (nonatomic, weak) id<ZMObjectStrategyDirectory> directory;
 @property (nonatomic, weak) ZMAuthenticationStatus * authenticationStatus;
@@ -70,7 +66,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
                            syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
-                            backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
                                  application:(id<ZMApplication>)application
                                slowSynStatus:(SyncStatus *)slowSynStatus;
 
@@ -89,10 +84,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
                                      ];
         self.unauthenticatedBackgroundState = [[ZMUnauthenticatedBackgroundState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
         self.eventProcessingState = [[ZMEventProcessingState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self slowSynStatus:slowSynStatus];
-        self.backgroundState = [[ZMBackgroundState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self backgroundableSession:backgroundableSession];
-        self.preBackgroundState = [[ZMPreBackgroundState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
-        self.backgroundFetchState = [[ZMBackgroundFetchState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
-        self.backgroundTaskState = [[ZMBackgroundTaskState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
         
         self.syncStateDelegate = syncStateDelegate;
         
@@ -121,10 +112,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
     [self.unauthenticatedState tearDown];
     [self.unauthenticatedBackgroundState tearDown];
     [self.eventProcessingState tearDown];
-    [self.backgroundState tearDown];
-    [self.preBackgroundState tearDown];
-    [self.backgroundFetchState tearDown];
-    [self.backgroundTaskState tearDown];
 }
 
 - (void)dealloc
@@ -132,39 +119,9 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
     [self tearDown];
 }
 
-- (void)enterBackground;
-{
-    [self.currentState didEnterBackground];
-}
-
-- (void)enterForeground
-{
-    [self.currentState didEnterForeground];
-}
-
 - (void)prepareForSuspendedState;
 {
     // No-op
-}
-
-- (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-{
-    if (self.currentState.supportsBackgroundFetch) {
-        self.backgroundFetchState.fetchCompletionHandler = handler;
-        [self goToState:self.backgroundFetchState];
-    } else {
-        handler(ZMBackgroundFetchResultNoData);
-    }
-}
-
-- (void)startBackgroundTaskWithCompletionHandler:(ZMBackgroundTaskHandler)handler
-{
-    if (self.currentState.supportsBackgroundFetch) {
-        self.backgroundTaskState.taskCompletionHandler = handler;
-        [self goToState:self.backgroundTaskState];
-    } else {
-        handler(ZMBackgroundTaskResultUnavailable);
-    }
 }
 
 - (void)goToState:(ZMSyncState *)state

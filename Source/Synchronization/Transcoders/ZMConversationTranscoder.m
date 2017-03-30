@@ -72,20 +72,20 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 
 @implementation ZMConversationTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatus:(id<ZMApplicationStatus>)applicationStatus;
 {
     Require(NO);
-    self = [super initWithManagedObjectContext:moc appStateDelegate:appStateDelegate];
+    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatus];
     NOT_USED(self);
     self = nil;
     return self;
 }
 
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)syncStrategy
-                    appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                   applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                           syncStatus:(SyncStatus *)syncStatus;
 {
-    self = [super initWithManagedObjectContext:syncStrategy.moc appStateDelegate:appStateDelegate];
+    self = [super initWithManagedObjectContext:syncStrategy.moc applicationStatus:applicationStatus];
     if (self) {
         self.syncStatus = syncStatus;
         self.modifiedSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName updatePredicate:nil filter:nil keysToSync:self.keysToSync managedObjectContext:self.managedObjectContext];
@@ -226,7 +226,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     ZMConversation *conversation = [ZMConversation conversationWithRemoteID:convRemoteID createIfNeeded:YES inContext:self.managedObjectContext created:&conversationCreated];
     [conversation updateWithTransportData:transportData];
     
-    if (conversation.conversationType != ZMConversationTypeSelf && self.appStateDelegate.appState != ZMAppStateUnauthenticated && conversationCreated) {
+    if (conversation.conversationType != ZMConversationTypeSelf && self.applicationStatus.synchronizationState != ZMSynchronizationStateUnauthenticated && conversationCreated) {
         // we just got a new conversation, we display new conversation header
         [conversation appendNewConversationSystemMessageIfNeeded];
         [self.managedObjectContext enqueueDelayedSave];

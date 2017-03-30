@@ -31,16 +31,16 @@
 @protocol ZMTransportData;
 @protocol AVSMediaManager;
 @protocol ApplicationStateOwner;
+@protocol ZMApplication;
 
 @class ZMOnDemandFlowManager;
 @class ProxiedRequestsStatus;
 @class ClientUpdateStatus;
 @class UserProfileUpdateStatus;
-
+@class ZMCookie;
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
 @class TopConversationsDirectory;
-@protocol ZMApplication;
 
 extern NSString * const ZMPushChannelStateChangeNotificationName;
 extern NSString * const ZMPushChannelIsOpenKey;

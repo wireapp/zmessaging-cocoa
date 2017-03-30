@@ -28,12 +28,6 @@
 @property (nonatomic, readonly) ZMSyncState *unauthenticatedState; ///< need to log in. Will sturtup timer to try to login while waiting for email verification.
 @property (nonatomic, readonly) ZMSyncState *unauthenticatedBackgroundState; ///< need to log in, but we are in the background. In background we don't keep trying to login on timer waiting for email verification.
 @property (nonatomic, readonly) ZMSyncState *eventProcessingState; ///< can normally process events
-
-@property (nonatomic, readonly) ZMSyncState *preBackgroundState; ///< waits until we are ready to go to background
-@property (nonatomic, readonly) ZMSyncState *backgroundState; ///< handles background requests
-
-@property (nonatomic, readonly) ZMSyncState *backgroundFetchState;  ///< does background fetching on iOS. Fetches new notifications since last that we have.
-
 @property (nonatomic, readonly) ZMSyncState *currentState;
 
 - (void)goToState:(ZMSyncState *)state;

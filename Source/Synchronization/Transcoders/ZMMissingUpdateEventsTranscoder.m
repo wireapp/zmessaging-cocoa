@@ -25,7 +25,6 @@
 #import "ZMSyncStrategy+EventProcessing.h"
 #import <zmessaging/zmessaging-Swift.h>
 #import "ZMSimpleListRequestPaginator.h"
-#import "ZMSyncStateManager.h"
 
 
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
@@ -43,6 +42,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 @property (nonatomic) BackgroundAPNSPingBackStatus *pingbackStatus;
 @property (nonatomic) EventsWithIdentifier *notificationEventsToCancel;
 @property (nonatomic, weak) SyncStatus* syncStatus;
+@property (nonatomic, weak) ZMOperationStatus* operationStatus;
 @property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
 @property (nonatomic) BOOL didStartQuickSync;
 
@@ -64,13 +64,14 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus
                           syncStatus:(SyncStatus *)syncStatus
 {
-    self = [super initWithManagedObjectContext:strategy.syncMOC appStateDelegate:strategy.syncStateManager];
+    self = [super initWithManagedObjectContext:strategy.syncMOC applicationStatus:strategy.applicationStatusDirectory];
     if(self) {
         _syncStrategy = strategy;
         self.application = application;
         self.previouslyReceivedEventIDsCollection = eventIDsCollection;
         self.pingbackStatus = backgroundAPNSPingbackStatus;
         self.syncStatus = syncStatus;
+        self.operationStatus = strategy.applicationStatusDirectory.operationStatus;
         self.listPaginator = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:NotificationsPath
                                                                            startKey:StartKey
                                                                            pageSize:ZMMissingUpdateEventsTranscoderListPageSize
@@ -83,7 +84,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsWhileInBackground;
 }
 
 - (BOOL)isDownloadingMissingNotifications
@@ -95,6 +96,11 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 {
     return self.application.applicationState == UIApplicationStateBackground &&
            self.pingbackStatus.status == PingBackStatusInProgress;
+}
+
+- (BOOL)isFetchingStreamInBackground
+{
+    return self.operationStatus.operationState == SyncEngineOperationStateBackgroundFetch;
 }
 
 - (NSUUID *)lastUpdateEventID
@@ -195,6 +201,21 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     return latestEventId;
 }
 
+- (void)updateBackgroundFetchResultWithResponse:(ZMTransportResponse *)response {
+    UIBackgroundFetchResult result;
+    if (response.result == ZMTransportResponseStatusSuccess) {
+        if ([self.class eventDictionariesFromPayload:response.payload].count > 0) {
+            result = UIBackgroundFetchResultNewData;
+        } else {
+            result = UIBackgroundFetchResultNoData;
+        }
+    } else {
+        result = UIBackgroundFetchResultFailed;
+    }
+    
+    [self.operationStatus finishBackgroundFetchWithFetchResult:result];
+}
+
 - (BOOL)hasLastUpdateEventID
 {
     return self.lastUpdateEventID != nil;
@@ -245,12 +266,12 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
 - (ZMTransportRequest *)nextRequestIfAllowed
 {
-    BOOL fetchingStream = self.isFetchingStreamForAPNS;
+    BOOL fetchingStream = self.isFetchingStreamForAPNS || self.isFetchingStreamInBackground;
     BOOL hasNewNotification = self.pingbackStatus.hasNotificationIDs;
     BOOL inProgress = self.listPaginator.status == ZMSingleRequestInProgress;
 
     // We want to create a new request if we are either currently fetching the paginated stream
-    // or if we have a new notification ID that rewuires a pingback.
+    // or if we have a new notification ID that requires a pingback.
     BOOL shouldCreateRequest = inProgress || hasNewNotification;
 
     if (fetchingStream && shouldCreateRequest) {
@@ -306,10 +327,15 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 {
     NOT_USED(paginator);
     SyncStatus *syncStatus = self.syncStatus;
+    ZMOperationStatus *operationStatus = self.operationStatus;
     
     NSString *timestamp = ((NSString *) response.payload.asDictionary[@"time"]);
     if (timestamp) {
         [self updateServerTimeDeltaWithTimestamp:timestamp];
+    }
+    
+    if (operationStatus.operationState == SyncEngineOperationStateBackgroundFetch) {
+        [self updateBackgroundFetchResultWithResponse:response];
     }
     
     NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];

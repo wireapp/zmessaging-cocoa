@@ -22,7 +22,7 @@
 
 @class ZMConnectionTranscoder;
 @class ZMUserTranscoder;
-@class ZMSelfTranscoder;
+@class ZMSelfStrategy;
 @class ZMConversationTranscoder;
 @class ZMMissingUpdateEventsTranscoder;
 @class ZMRegistrationTranscoder;

@@ -24,7 +24,7 @@ import ZMTesting
 class PushTokenStrategyTests: MessagingTest {
 
     var sut : PushTokenStrategy!
-    var mockAppStateDelegate : MockAppStateDelegate!
+    var mockApplicationStatus : MockApplicationStatus!
     let deviceTokenString = "c5e24e41e4d4329037928449349487547ef14f162c77aee3aa8e12a39c8db1d5"
     var deviceToken : Data {
         return deviceTokenString.zmDeviceTokenData()
@@ -41,9 +41,9 @@ class PushTokenStrategyTests: MessagingTest {
     
     override func setUp() {
         super.setUp()
-        mockAppStateDelegate = MockAppStateDelegate()
-        mockAppStateDelegate.mockAppState = .eventProcessing
-        sut = PushTokenStrategy(managedObjectContext: uiMOC, appStateDelegate: mockAppStateDelegate)
+        mockApplicationStatus = MockApplicationStatus()
+        mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        sut = PushTokenStrategy(withManagedObjectContext: uiMOC, applicationStatus: mockApplicationStatus)
     }
     
     override func tearDown() {
@@ -101,7 +101,7 @@ extension PushTokenStrategyTests {
     
     func testThatItReturnsNoRequestIfTheClientIsNotRegistered() {
         // given
-        mockAppStateDelegate.mockAppState = .unauthenticated
+        mockApplicationStatus.mockSynchronizationState = .unauthenticated
         insertPushKitToken(isRegistered: false)
         sut.contextChangeTrackers.forEach{$0.objectsDidChange(Set())}
         

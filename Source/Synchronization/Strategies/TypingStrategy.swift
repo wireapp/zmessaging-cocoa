@@ -47,36 +47,34 @@ public struct TypingEvent {
 }
 
 
-public class TypingStrategy : ZMAbstractRequestStrategy {
+public class TypingStrategy : AbstractRequestStrategy {
     
     fileprivate var typing : ZMTyping!
     fileprivate var conversations : [NSManagedObjectID : Bool] = [:]
     fileprivate var lastSentTypingEvent : TypingEvent?
     fileprivate var tornDown : Bool = false
-    public override var configuration: ZMStrategyConfigurationOption { return .allowsRequestsDuringEventProcessing }
 
     @available (*, unavailable)
-    override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
+    override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         fatalError()
     }
     
-    public convenience init(appStateDelegate: ZMAppStateDelegate, managedObjectContext: NSManagedObjectContext) {
-        self.init(appStateDelegate: appStateDelegate, syncContext: managedObjectContext, uiContext: managedObjectContext.zm_userInterface, typing: nil)
+    public convenience init(applicationStatus: ApplicationStatus, managedObjectContext: NSManagedObjectContext) {
+        self.init(applicationStatus: applicationStatus, syncContext: managedObjectContext, uiContext: managedObjectContext.zm_userInterface, typing: nil)
     }
     
-    init(appStateDelegate: ZMAppStateDelegate, syncContext: NSManagedObjectContext, uiContext: NSManagedObjectContext, typing: ZMTyping?) {
+    init(applicationStatus: ApplicationStatus, syncContext: NSManagedObjectContext, uiContext: NSManagedObjectContext, typing: ZMTyping?) {
         self.typing = typing ?? ZMTyping(userInterfaceManagedObjectContext: uiContext, syncManagedObjectContext: syncContext)
-        super.init(managedObjectContext: syncContext, appStateDelegate: appStateDelegate)
+        super.init(withManagedObjectContext: syncContext, applicationStatus: applicationStatus)
         NotificationCenter.default.addObserver(forName: Notification.Name(rawValue:ZMTypingNotificationName), object: nil, queue: nil, using: addConversationForNextRequest)
         NotificationCenter.default.addObserver(forName: Notification.Name(rawValue:ZMConversationClearTypingNotificationName), object: nil, queue: nil, using: shouldClearTypingForConversation)
     }
     
-    public override func tearDown() {
+    public func tearDown() {
         NotificationCenter.default.removeObserver(self)
         typing.tearDown()
         typing = nil
         tornDown = true
-        super.tearDown()
     }
     
     deinit {

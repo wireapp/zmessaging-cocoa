@@ -53,7 +53,6 @@ public final class CallStateObserver : NSObject {
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
-        notifyIfWebsocketShouldBeOpen(forCallState: callState)
         
         managedObjectContext.performGroupedBlock {
             guard
@@ -90,20 +89,21 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             self.managedObjectContext.enqueueDelayedSave()
         }
     }
-    
-    private func notifyIfWebsocketShouldBeOpen(forCallState callState: CallState) {
-        
-        let notificationName = Notification.Name(rawValue: ZMTransportSessionShouldKeepWebsocketOpenNotificationName)
-        
-        switch callState {
-        case .terminating:
-            NotificationCenter.default.post(name: notificationName, object: nil, userInfo: [ZMTransportSessionShouldKeepWebsocketOpenKey : false])
-        case .outgoing, .incoming:
-            NotificationCenter.default.post(name: notificationName, object: nil, userInfo: [ZMTransportSessionShouldKeepWebsocketOpenKey : true])
-        default:
-            break
-        }
-    }
+
+    // TODO jacob
+//    private func notifyIfWebsocketShouldBeOpen(forCallState callState: CallState) {
+//        
+//        let notificationName = Notification.Name(rawValue: ZMTransportSessionShouldKeepWebsocketOpenNotificationName)
+//        
+//        switch callState {
+//        case .terminating:
+//            NotificationCenter.default.post(name: notificationName, object: nil, userInfo: [ZMTransportSessionShouldKeepWebsocketOpenKey : false])
+//        case .outgoing, .incoming:
+//            NotificationCenter.default.post(name: notificationName, object: nil, userInfo: [ZMTransportSessionShouldKeepWebsocketOpenKey : true])
+//        default:
+//            break
+//        }
+//    }
     
 }
 

@@ -40,9 +40,10 @@
     PKPushRegistry *mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
     [self.userSession.pushRegistrant pushRegistry:mockPushRegistry didReceiveIncomingPushWithPayload:pkPayload forType:pkPayload.type];
 
-    [self.mockTransportSession closePushChannelAndRemoveConsumer];
+    // TODO jacob
+//    [self.mockTransportSession closePushChannelAndRemoveConsumer];
     [self.mockTransportSession registerPushEvent:[MockPushEvent eventWithPayload:payload uuid:identifier fromUser:user isTransient:YES]];
-    [self.mockTransportSession restartPushChannel];
+//    [self.mockTransportSession restartPushChannel];
 
     WaitForEverythingToBeDone();
 }
@@ -209,9 +210,10 @@
                                                                     sequence:@1
                                                                      session:@"session2"];
 
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session simulatePushChannelClosed];
-    }];
+    // TODO jacob
+//    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+//        [session simulatePushChannelClosed];
+//    }];
 
     NSUUID *notificationId = NSUUID.timeBasedUUID;
     WaitForAllGroupsToBeEmpty(0.5);

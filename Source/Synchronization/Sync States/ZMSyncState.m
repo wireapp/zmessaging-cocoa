@@ -82,8 +82,7 @@
 
 - (void)didEnterBackground
 {
-    NSObject<ZMStateMachineDelegate> *strongDelegate = self.stateMachineDelegate;
-    [strongDelegate goToState:strongDelegate.preBackgroundState];
+    // no-op
 }
 
 - (void)didEnterForeground

@@ -238,7 +238,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)testThatWhenRegisteringAndNeedToWaitForEmailValidationWeKeepTryingToLogInUntilWeSucceed
 {
     
-    DefaultPendingValidationLoginAttemptInterval = 0.2;
+    DefaultPendingValidationLoginAttemptInterval = 3.2;
     NSString *password = @"No one will ever guess this";
     
     // given
@@ -259,6 +259,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self.userSession registerSelfUser:user];
+    NSLog(@"## wait for registerSelfUser");
     WaitForAllGroupsToBeEmpty(1);
     
     // wait for more attempts
@@ -278,14 +279,14 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 
     [self.userSession removeAuthenticationObserverForToken:authenticationObserverToken];
     [self.userSession cancelWaitForEmailVerification]; // this cancels the requests
-    XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
+    XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.1]);
 }
 
 
 - (void)testThatWhenRegisteringAndNeedToWaitForEmailValidationWeCanCancelTheWait
 {
     // given
-    DefaultPendingValidationLoginAttemptInterval = 0.2;
+    DefaultPendingValidationLoginAttemptInterval = 10;
     NSString *password = @"thePa$$w0rd";
     ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:@"thedude@example.com" password:password];
     user.name = @"Hans Müller";
@@ -299,6 +300,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self.userSession registerSelfUser:user];
+    NSLog(@"## wait for registerSelfUser");
     WaitForAllGroupsToBeEmpty(1);
 
     // wait for more attempts

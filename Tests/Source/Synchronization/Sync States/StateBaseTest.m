@@ -68,8 +68,6 @@
     [[[(id) self.stateMachine stub] andReturn:eventProcessingState] eventProcessingState];
     [[[(id) self.stateMachine stub] andReturn:unauthenticatedState] unauthenticatedState];
     [[[(id) self.stateMachine stub] andReturn:unauthenticatedBackgroundState] unauthenticatedBackgroundState];
-    [[[(id) self.stateMachine stub] andReturn:backgroundState] backgroundState];
-    [[[(id) self.stateMachine stub] andReturn:preBackgroundState] preBackgroundState];
     
     _objectDirectory = [self createMockObjectStrategyDirectoryInMoc:self.uiMOC];
     

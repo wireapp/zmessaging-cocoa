@@ -63,10 +63,10 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 - (instancetype)initWithMediaManager:(id)mediaManager
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                 managedObjectContext:(NSManagedObjectContext *)managedObjectContext
-                    appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                   applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                          application:(id<ZMApplication>)application
 {
-    self = [super initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate];
+    self = [super initWithManagedObjectContext:managedObjectContext applicationStatus:applicationStatus];
     if(self != nil) {
         _uiManagedObjectContext = managedObjectContext.zm_userInterfaceContext;
         _mediaManager = mediaManager;
@@ -125,7 +125,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.application unregisterObserverForStateChange:self];
     [ZMUserSessionAuthenticationNotification removeObserver:self.authenticationObserverToken];
-    [super tearDown];
 }
 
 - (AVSFlowManager *)flowManager
