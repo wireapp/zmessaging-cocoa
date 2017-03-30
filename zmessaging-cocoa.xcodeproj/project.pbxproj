@@ -361,6 +361,7 @@
 		CEE02E461DDA0F4D00BA2BE2 /* avs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE5DC1A01DDA09F000D24DBA /* avs.framework */; };
 		CEF2DE7F1DB778F300451642 /* RequestLoopAnalyticsTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF2DE7E1DB778F300451642 /* RequestLoopAnalyticsTracker.swift */; };
 		F170AF211E78013A0033DC33 /* UserImageAssetUpdateStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F170AF1F1E7800CF0033DC33 /* UserImageAssetUpdateStrategyTests.swift */; };
+		F190E0AA1E8D517A003E81F8 /* UserProfileImageV3Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F190E0A81E8D516D003E81F8 /* UserProfileImageV3Tests.swift */; };
 		F19F4F3A1E5F1AE400F4D8FF /* UserProfileImageUpdateStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19F4F391E5F1AE400F4D8FF /* UserProfileImageUpdateStatus.swift */; };
 		F19F4F3C1E604AA700F4D8FF /* UserImageAssetUpdateStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19F4F3B1E604AA700F4D8FF /* UserImageAssetUpdateStrategy.swift */; };
 		F19F4F4D1E646C3C00F4D8FF /* UserProfileImageUpdateStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19F4F4C1E646C3C00F4D8FF /* UserProfileImageUpdateStatusTests.swift */; };
@@ -991,6 +992,7 @@
 		CEE02EA71DDDC49300BA2BE2 /* WireMessageStrategy.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireMessageStrategy.framework; path = "../wire-ios-message-strategy/build/Debug-iphoneos/WireMessageStrategy.framework"; sourceTree = "<group>"; };
 		CEF2DE7E1DB778F300451642 /* RequestLoopAnalyticsTracker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestLoopAnalyticsTracker.swift; sourceTree = "<group>"; };
 		F170AF1F1E7800CF0033DC33 /* UserImageAssetUpdateStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserImageAssetUpdateStrategyTests.swift; sourceTree = "<group>"; };
+		F190E0A81E8D516D003E81F8 /* UserProfileImageV3Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileImageV3Tests.swift; sourceTree = "<group>"; };
 		F19F4F391E5F1AE400F4D8FF /* UserProfileImageUpdateStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileImageUpdateStatus.swift; sourceTree = "<group>"; };
 		F19F4F3B1E604AA700F4D8FF /* UserImageAssetUpdateStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserImageAssetUpdateStrategy.swift; sourceTree = "<group>"; };
 		F19F4F4C1E646C3C00F4D8FF /* UserProfileImageUpdateStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileImageUpdateStatusTests.swift; sourceTree = "<group>"; };
@@ -1867,6 +1869,7 @@
 				541918EB195AD9D100A5023D /* SendAndReceiveMessagesTests.m */,
 				A9A3CA0E198A9967007F7BDB /* SearchTests.m */,
 				54877C9419922C0B0097FB58 /* UserProfileTests.m */,
+				F190E0A81E8D516D003E81F8 /* UserProfileImageV3Tests.swift */,
 				5454A69B1AEFA01D0022AFA4 /* EmailRegistrationTests.m */,
 				5454A69F1AEFA0A70022AFA4 /* PhoneRegistrationTests.m */,
 				3EEA678A199D079600AF7665 /* UserTests.m */,
@@ -2539,6 +2542,7 @@
 				545643D31C62C12E00A2129C /* ConversationTests+OTR.m in Sources */,
 				F9B71FAE1CB2C20D001DB03F /* VoiceChannelV2Tests.m in Sources */,
 				F9771ADC1B677BAF00BB04EC /* ZMCallStateLoggerTests.m in Sources */,
+				F190E0AA1E8D517A003E81F8 /* UserProfileImageV3Tests.swift in Sources */,
 				545434A719AB6ADA003892D9 /* ZMConnectionTranscoderTest.m in Sources */,
 				3E26BEE91A408F590071B4C9 /* ZMTypingUsersTests.m in Sources */,
 				54AB428E1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift in Sources */,
