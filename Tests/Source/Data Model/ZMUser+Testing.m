@@ -28,7 +28,7 @@
         return;
     }
     
-    if(self.isConnected) {
+    if(self.isSelfUser) {
         FHAssertEqualObjects(failureRecorder, self.emailAddress, user.email);
         FHAssertEqualObjects(failureRecorder, self.phoneNumber, user.phone);
     }
