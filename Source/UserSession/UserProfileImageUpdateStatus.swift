@@ -280,8 +280,8 @@ extension UserProfileImageUpdateStatus: ZMContextChangeTracker {
         // we want to re-upload existing pictures to `/assets/v3`.
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
 
-        // We need to ensure we alreday re-fetched the selfUser (see HotFix 76.0.0),
-        // as other clients could alreday have uploaded a v3 asset.
+        // We need to ensure we already re-fetched the selfUser (see HotFix 76.0.0),
+        // as other clients could already have uploaded a v3 asset.
         guard !selfUser.needsToBeUpdatedFromBackend else { return }
 
         // We only want to re-upload in case the user did not yet upload a picture to `/assets/v3`.
