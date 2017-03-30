@@ -56,6 +56,9 @@ internal enum AssetTransportError: Error {
         
         downstreamRequestSyncs[.preview] = whitelistUserImageSync(for: .preview)
         downstreamRequestSyncs[.complete] = whitelistUserImageSync(for: .complete)
+        downstreamRequestSyncs.forEach { (_, sync) in
+            sync.whiteListObject(ZMUser.selfUser(in: managedObjectContext))
+        }
         
         upstreamRequestSyncs[.preview] = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)!
         upstreamRequestSyncs[.complete] = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)!
