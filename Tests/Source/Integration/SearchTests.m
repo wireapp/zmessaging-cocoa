@@ -908,7 +908,7 @@
 // MARK: Search User V3 Profile Assets
 
 
-- (void)testThatItDownloadsV3PreviewAsset
+- (void)testThatItDownloadsV3PreviewAsset_ConnectedUser
 {
     // given
     __block NSData *previewProfileImageData;
@@ -960,18 +960,89 @@
     [searchDirectory tearDown];
 }
 
-- (void)testThatItDownloadsV3PreviewAssetWhenOnlyV3AssetsArePrensentInSearchUserResponse
+- (void)testThatItDownloadsV3PreviewAssetWhenOnlyV3AssetsArePrensentInSearchUserResponse_UnconnectedUser
 {
-    XCTFail();
+    // given
+    __block NSData *previewProfileImageData;
+    __block NSString *unConnectedUserName;
+
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session addV3ProfilePictureToUser:self.user4];
+        [self.user4 removeLegacyPictures];
+        previewProfileImageData = [MockAsset assetInContext:self.mockTransportSession.managedObjectContext forID:self.user4.previewProfileAssetIdentifier].data;
+        XCTAssertNotNil(previewProfileImageData);
+
+        NSArray *names = [self.user4.name componentsSeparatedByString:@" "];
+        unConnectedUserName = names.lastObject;
+        XCTAssertNotNil(unConnectedUserName);
+    }];
+
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    [self.mockTransportSession resetReceivedRequests];
+
+    // when
+    ZMSearchDirectory *searchDirectory = [[ZMSearchDirectory alloc] initWithUserSession:self.userSession];
+    [searchDirectory addSearchResultObserver:self];
+
+    self.expectation = [self expectationWithDescription:@"wait for search results"];
+    ZMSearchToken token = [searchDirectory searchForUsersAndConversationsMatchingQueryString:unConnectedUserName];
+
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then (this is just to get the searchUser)
+    ZMSearchResult *searchResult = self.searchResults[token];
+    XCTAssertNotNil(searchResult);
+    ZMSearchUser *searchUser = searchResult.usersInDirectory.firstObject;
+    XCTAssertNotNil(searchUser);
+
+    // when
+    [searchUser requestSmallProfileImageInUserSession:self.userSession];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    AssertEqualData(searchUser.imageSmallProfileData, previewProfileImageData);
+    NSArray <ZMTransportRequest *> *requests = self.mockTransportSession.receivedRequests;
+
+    NSString *searchPath = [NSString stringWithFormat:@"/search/contacts?q=%@&l=3&size=30", unConnectedUserName];
+    NSString *usersPath = [NSString stringWithFormat:@"/users?ids=%@", self.user4.identifier];
+    NSString *previewPath = [NSString stringWithFormat:@"/assets/v3/%@", self.user4.previewProfileAssetIdentifier];
+
+    XCTAssertEqual(requests.count, 3lu);
+    XCTAssertEqualObjects(requests[0].path, searchPath);        // /search/contacts
+    XCTAssertEqualObjects(requests[1].path, usersPath);         // /users
+    XCTAssertEqualObjects(requests[2].path, previewPath);       // /assets/v3
+
+    for (ZMTransportRequest *request in requests) {
+        XCTAssertEqual(request.method, ZMMethodGET);
+    }
+    
+    [searchDirectory tearDown];
 }
 
 - (void)testThatItDownloadsMediumAssetForSearchUserWhenAssetAndLegacyIdArePresentUsingV3
+{
+    [self verifyThatItDownloadsMediumV3AssetForSearchUserWithLegacyPayloadPresent:YES];
+}
+
+- (void)testThatItDownloadsMediumAssetForSearchUserLegacyIdsAreNotPresentUsingV3
+{
+    [self verifyThatItDownloadsMediumV3AssetForSearchUserWithLegacyPayloadPresent:NO];
+}
+
+- (void)verifyThatItDownloadsMediumV3AssetForSearchUserWithLegacyPayloadPresent:(BOOL)legacyPayloadPresent
 {
     // given
     __block NSData *completeProfileImageData;
     __block NSString *unConnectedUserName;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session addV3ProfilePictureToUser:self.user4];
+        if (!legacyPayloadPresent) {
+            [self.user4 removeLegacyPictures];
+        }
+
         completeProfileImageData = [MockAsset assetInContext:self.mockTransportSession.managedObjectContext forID:self.user4.completeProfileAssetIdentifier].data;
         XCTAssertNotNil(completeProfileImageData);
 
@@ -1052,14 +1123,81 @@
     (void)userToken;
 }
 
-- (void)testThatItDownloadsMediumPictureForSearchUserWhenOnlyAssetsV3ArePresent
-{
-    XCTFail();
-}
-
 - (void)testThatItRefetchesTheSearchUserIfTheMediumAssetIDIsNotSet_V3Asset
 {
-    XCTFail();
+    // given
+    __block NSData *completeProfileImageData;
+    __block NSString *unConnectedUserName;
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session addV3ProfilePictureToUser:self.user4];
+        [self.user4 removeLegacyPictures];
+
+        completeProfileImageData = [MockAsset assetInContext:self.mockTransportSession.managedObjectContext forID:self.user4.completeProfileAssetIdentifier].data;
+        XCTAssertNotNil(completeProfileImageData);
+
+        NSArray *names = [self.user4.name componentsSeparatedByString:@" "];
+        unConnectedUserName = names.lastObject;
+        XCTAssertNotNil(unConnectedUserName);
+    }];
+
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+
+
+    // search for user
+    ZMSearchDirectory *searchDirectory = [[ZMSearchDirectory alloc] initWithUserSession:self.userSession];
+    [searchDirectory addSearchResultObserver:self];
+
+    self.expectation = [self expectationWithDescription:@"wait for search results"];
+    ZMSearchToken token = [searchDirectory searchForUsersAndConversationsMatchingQueryString:unConnectedUserName];
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    ZMSearchResult *searchResult = self.searchResults[token];
+    XCTAssertNotNil(searchResult);
+    ZMSearchUser *searchUser = searchResult.usersInDirectory.firstObject;
+    XCTAssertNotNil(searchUser);
+
+    NSCache *mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache;
+    NSCache *mediumImageCache = ZMSearchUser.searchUserToMediumImageCache;
+    NSUUID *userRemoteIdentifier = [NSUUID uuidWithTransportString:self.user4.identifier];
+
+    [mediumAssetIDCache removeAllObjects];
+
+    XCTAssertNil([mediumAssetIDCache objectForKey:userRemoteIdentifier]);
+    XCTAssertNil([mediumImageCache objectForKey:userRemoteIdentifier]);
+    XCTAssertNil([searchUser completeAssetKey]);
+
+    // We reset the requests after having performed the search and fetching the users (in comparison to the other tests).
+    [self.mockTransportSession resetReceivedRequests];
+
+    // when requesting medium image
+    [self.userSession performChanges:^{
+        [searchUser requestMediumProfileImageInUserSession:self.userSession];
+    }];
+
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
+
+    // then
+    AssertEqualData(searchUser.imageMediumData, completeProfileImageData);
+    XCTAssertEqualObjects([[mediumAssetIDCache objectForKey:userRemoteIdentifier] assetKey], self.user4.completeProfileAssetIdentifier);
+    XCTAssertEqualObjects([mediumImageCache objectForKey:userRemoteIdentifier], completeProfileImageData);
+
+    NSArray <ZMTransportRequest *> *requests = self.mockTransportSession.receivedRequests;
+    NSString *usersPath = [NSString stringWithFormat:@"/users?ids=%@", self.user4.identifier];
+    NSString *completePath = [NSString stringWithFormat:@"/assets/v3/%@", self.user4.completeProfileAssetIdentifier];
+
+    XCTAssertEqual(requests.count, 2lu);
+    XCTAssertEqualObjects(requests[0].path, usersPath);         // /users
+    XCTAssertEqualObjects(requests[1].path, completePath);      // /assets/v3
+
+    for (ZMTransportRequest *request in requests) {
+        XCTAssertEqual(request.method, ZMMethodGET);
+    }
+
+    [searchDirectory tearDown];
 }
 
 @end
