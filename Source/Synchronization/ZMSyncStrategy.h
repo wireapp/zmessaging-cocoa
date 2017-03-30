@@ -72,9 +72,6 @@
 @property (nonatomic, readonly) ZMApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly) CallingRequestStrategy *callingRequestStrategy;
 
-/// Calls completionHandler when the change has gone through all transcoders
-- (void)startBackgroundTaskWithCompletionHandler:(ZMBackgroundTaskHandler)handler;
-
 - (void)transportSessionAccessTokenDidSucceedWithToken:(NSString *)token ofType:(NSString *)type;
 
 @end
