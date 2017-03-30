@@ -541,8 +541,10 @@ extension UserProfileImageUpdateStatusTests {
         let selfUser = createSelfClient().user!
         selfUser.imageMediumData = mediumJPEGData()
         selfUser.imageSmallProfileData = verySmallJPEGData()
+        selfUser.needsToBeUpdatedFromBackend = false
         XCTAssertNil(selfUser.completeProfileAssetIdentifier)
         XCTAssertNil(selfUser.previewProfileAssetIdentifier)
+        XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend)
 
         // WHEN
         sut.reuploadExisingImageIfNeeded()
