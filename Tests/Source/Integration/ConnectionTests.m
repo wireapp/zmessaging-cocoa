@@ -812,7 +812,7 @@
         WaitForEverythingToBeDone();
     }
     
-    // we should see one new active conversations
+    // we should see one new active conversation
     {
         XCTAssertEqual(activeConversations.count, activeCount+1u);
      

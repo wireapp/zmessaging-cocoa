@@ -21,12 +21,11 @@
 
 #import "MessagingTest.h"
 #import "ZMSearchDirectory+Internal.h"
-#import "ZMUserIDsForSearchDirectoryTable.h"
 #import "ZMUserSession+Internal.h"
 
 @interface ZMUserIDsForSearchDirectoryTableTests: MessagingTest
 
-@property (nonatomic) ZMUserIDsForSearchDirectoryTable *sut;
+@property (nonatomic) SearchDirectoryUserIDTable *sut;
 
 @end
 
@@ -35,7 +34,7 @@
 - (void)setUp {
     
     [super setUp];
-    self.sut = [[ZMUserIDsForSearchDirectoryTable alloc] init];
+    self.sut = [[SearchDirectoryUserIDTable alloc] init];
     
 }
 
@@ -43,7 +42,7 @@
 
     self.sut = nil;
     [super tearDown];
-    
+
 }
 
 - (ZMSearchDirectory *)createSearchDirectory
@@ -63,53 +62,6 @@
                        uiManagedObjectContext:self.uiMOC];
 
 }
-
-- (NSSet *)userIDsFromSearchUserSet:(NSSet *)searchUsers
-{
-    return [searchUsers mapWithBlock:^id(ZMSearchUser *user) {
-        return user.remoteIdentifier;
-    }];
-
-}
-
-- (void)testThatItRetrievesAllUserIDs
-{
-    // given
-    ZMSearchDirectory *directory1 = [self createSearchDirectory];
-    NSMutableSet *users1 = [NSMutableSet setWithObjects:[self createSearchUser], [self createSearchUser], nil];
-    ZMSearchDirectory *directory2 = [self createSearchDirectory];
-    NSMutableSet *users2 = [NSMutableSet setWithObjects:[self createSearchUser], [self createSearchUser], nil];
-    
-    // when
-    [self.sut setSearchUsers:users1 forSearchDirectory:directory1];
-    [self.sut setSearchUsers:users2 forSearchDirectory:directory2];
-    
-    // then
-    NSMutableSet *expectedSearchUsers = [users1 mutableCopy];
-    [expectedSearchUsers unionSet:users2];
-    
-    NSSet *retrievedSet = [self.sut allUserIDs];
-    XCTAssertEqualObjects(retrievedSet, [self userIDsFromSearchUserSet:expectedSearchUsers]);
-    
-}
-
-- (void)testThatWhenAddingIDsForASearchResultTheyAreCopied
-{
-    // given
-    ZMSearchDirectory *directory = [self createSearchDirectory];
-    NSMutableSet *userIDs = [NSMutableSet setWithObjects:[self createSearchUser], [self createSearchUser], nil];
-    NSSet *expectedSet = [userIDs copy];
-    
-    // when
-    [self.sut setSearchUsers:userIDs forSearchDirectory:directory];
-    WaitForAllGroupsToBeEmpty(0.5);
-    [userIDs removeAllObjects]; // this will check that it does a copy when inserting. It if is not copied, this will delete all IDs
-    
-    // then
-    NSSet *retrievedSet = [self.sut allUserIDs];
-    XCTAssertEqualObjects(retrievedSet, [self userIDsFromSearchUserSet:expectedSet]);
-}
-
 
 - (void)testThatWhenAddingIDsForASearchResultItIsDiscardedWhenTheSearchDirectoryIsReleased
 {
@@ -138,120 +90,8 @@
     }
     
     // then
-    NSSet *retrievedSet = [self.sut allUserIDs];
+    NSSet *retrievedSet = [self.sut allUserIds];
     XCTAssertEqual(retrievedSet.count, 0u);
-}
-
-- (void)testThatItReplacesUserIDsWithAssetIDs
-{
-    // given
-    ZMSearchUser *user1 = [self createSearchUser];
-    ZMSearchUser *user2 = [self createSearchUser];
-    ZMSearchUser *user3 = [self createSearchUser];
-    
-    NSUUID *assetID1 = [NSUUID createUUID];
-    NSUUID *assetID2 = [NSUUID createUUID];
-
-    ZMSearchDirectory *directory = [self createSearchDirectory];
-    NSMutableSet *userIDs = [NSMutableSet setWithObjects:user1, user2, user3, nil];
-    [self.sut setSearchUsers:userIDs forSearchDirectory:directory];
-    
-    NSSet *expectedUserAssets = [NSSet setWithObjects:
-                                [[ZMSearchUserAndAssetID alloc] initWithSearchUser:user1 assetID:assetID1],
-                                [[ZMSearchUserAndAssetID alloc] initWithSearchUser:user2 assetID:assetID2],
-                                nil];
-    
-    // when
-    [self.sut replaceUserIDToDownload:user1.remoteIdentifier withAssetIDToDownload:assetID1];
-    [self.sut replaceUserIDToDownload:user2.remoteIdentifier withAssetIDToDownload:assetID2];
-
-    // then
-    NSSet *retrievedUserIDs = [self.sut allUserIDs];
-    NSSet *retrievedAssetIDs = [self.sut allAssetIDs];
-    XCTAssertEqualObjects(retrievedUserIDs, [NSSet setWithObject:user3.remoteIdentifier]);
-    XCTAssertEqualObjects(retrievedAssetIDs, expectedUserAssets);
-}
-
-- (void)testThatClearingRemovesAllItems
-{
-    // given
-    ZMSearchUser *user1 = [self createSearchUser];
-    ZMSearchUser *user2 = [self createSearchUser];
-    
-    NSUUID *assetID1 = [NSUUID createUUID];
-    
-    ZMSearchDirectory *directory = [self createSearchDirectory];
-    NSMutableSet *userIDs = [NSMutableSet setWithObjects:user1, user2, nil];
-    [self.sut setSearchUsers:userIDs forSearchDirectory:directory];
-    
-    [self.sut replaceUserIDToDownload:user1.remoteIdentifier withAssetIDToDownload:assetID1];
-    
-    // when
-    [self.sut clear];
-    
-    // then
-    XCTAssertEqual(self.sut.allAssetIDs.count, 0u);
-    XCTAssertEqual(self.sut.allUserIDs.count, 0u);
-}
-
-- (void)testThatItRemovesEntriesWithUserIDs
-{
-    // given
-    ZMSearchUser *user1 = [self createSearchUser];
-    ZMSearchUser *user2 = [self createSearchUser];
-    ZMSearchUser *user3 = [self createSearchUser];
-    
-    ZMSearchDirectory *directory = [self createSearchDirectory];
-    NSMutableSet *userIDs = [NSMutableSet setWithObjects:user1, user2, user3, nil];
-    [self.sut setSearchUsers:userIDs forSearchDirectory:directory];
-    
-    // when
-    [self.sut removeAllEntriesWithUserIDs:[NSSet setWithObjects:user2.remoteIdentifier, user3.remoteIdentifier, nil]];
-    
-    // then
-    XCTAssertEqual(self.sut.allUserIDs.count, 1u);
-    XCTAssertEqual(self.sut.allUserIDs.anyObject, user1.remoteIdentifier);
-}
-
-- (void)testThatReAddingAUserIDDoesNotDeleteTheAssociatedAssetID
-{
-    // given
-    ZMSearchUser *user1 = [self createSearchUser];
-    ZMSearchUser *user2 = [self createSearchUser];
-    
-    NSUUID *assetID1 = [NSUUID createUUID];
-    
-    ZMSearchDirectory *directory = [self createSearchDirectory];
-    NSMutableSet *userIDs = [NSMutableSet setWithObjects:user1, user2, nil];
-    [self.sut setSearchUsers:userIDs forSearchDirectory:directory];
-    
-    [self.sut replaceUserIDToDownload:user1.remoteIdentifier withAssetIDToDownload:assetID1];
-    
-    // when
-    [self.sut setSearchUsers:userIDs forSearchDirectory:directory];
-    
-    // then
-    XCTAssertEqual(self.sut.allAssetIDs.count, 1u);
-    XCTAssertEqual(self.sut.allUserIDs.count, 1u);
-
-}
-
-- (void)testThatItRemovesTheSearchDirectory
-{
-    // given
-    ZMSearchUser *user1 = [self createSearchUser];
-    ZMSearchUser *user2 = [self createSearchUser];
-    
-    ZMSearchDirectory *directory = [self createSearchDirectory];
-    NSMutableSet *userIDs = [NSMutableSet setWithObjects:user1, user2, nil];
-    [self.sut setSearchUsers:userIDs forSearchDirectory:directory];
-    
-    // when
-    [self.sut removeSearchDirectory:directory];
-    
-    // then
-    XCTAssertEqual(self.sut.allAssetIDs.count, 0u);
-    XCTAssertEqual(self.sut.allUserIDs.count, 0u);
 }
 
 @end

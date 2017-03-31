@@ -42,7 +42,11 @@
 
 - (void)requestMediumProfileImageInUserSession:(ZMUserSession *)userSession
 {
-    [self privateRequestMediumProfileImageInUserSession:userSession];
+    if (self.user) {
+        [self.user requestMediumProfileImageInUserSession:userSession];
+    } else {
+        [self privateRequestMediumProfileImageInUserSession:userSession];
+    }
 }
 
 - (void)requestSmallProfileImageInUserSession:(ZMUserSession *)userSession
@@ -66,12 +70,12 @@
     }
     
     ZMTransportRequest *request;
-    if (self.imageSmallProfileData != nil && self.mediumAssetID == nil) {
+    if (self.imageSmallProfileData != nil && self.mediumLegacyId == nil && self.completeAssetKey == nil) {
         request = [self requestUserInfoInUserSession:userSession];
-    } else if (self.mediumAssetID != nil) {
-        request = [self requestMediumProfileImageWithExistingMediumAssetIDInUserSession:userSession];
+    } else if (self.completeAssetKey != nil || self.mediumLegacyId != nil) {
+        request = [self requestMediumProfileImageWithExistingAssetKeysInUserSession:userSession];
     }
-    
+
     if (request == nil) {
         return;
     }
@@ -83,36 +87,50 @@
 
 - (ZMTransportRequest *)requestUserInfoInUserSession:(ZMUserSession *)userSession
 {
+    NSUUID *remoteIdentifier = self.remoteIdentifier;
     ZMCompletionHandler *completionHandler = [ZMCompletionHandler handlerOnGroupQueue:userSession.syncManagedObjectContext block:^(ZMTransportResponse *response) {
-        [SearchUserImageStrategy processSingleUserProfileWithResponse:response for:self.remoteIdentifier mediumAssetIDCache:[ZMSearchUser searchUserToMediumAssetIDCache]];
-        if (self.mediumAssetID != nil) {
-            [self privateRequestMediumProfileImageInUserSession:userSession];
-        }
+        [SearchUserImageStrategy processSingleUserProfileWithResponse:response
+                                                                  for:remoteIdentifier
+                                                   mediumAssetIDCache:ZMSearchUser.searchUserToMediumAssetIDCache];
+        [userSession.managedObjectContext performGroupedBlock:^{
+            if (self.mediumLegacyId != nil || self.completeAssetKey != nil) {
+                [self privateRequestMediumProfileImageInUserSession:userSession];
+            }
+        }];
     }];
     ZMTransportRequest *request = [SearchUserImageStrategy requestForFetchingAssetsFor:[NSSet setWithObject:self.remoteIdentifier] completionHandler:completionHandler];
     
     return request;
 }
 
-- (ZMTransportRequest *)requestMediumProfileImageWithExistingMediumAssetIDInUserSession:(ZMUserSession *)userSession
+- (ZMTransportRequest *)requestMediumProfileImageWithExistingAssetKeysInUserSession:(ZMUserSession *)userSession
 {
-    ZMTransportRequest *request = [UserImageStrategy requestForFetchingAssetWith:self.mediumAssetID forUserWith:self.remoteIdentifier];
+    ZMTransportRequest *request;
+    if (self.completeAssetKey != nil) { // V3
+        request = [UserImageStrategy requestForFetchingV3AssetWith:self.completeAssetKey];
+    } else if (self.mediumLegacyId != nil) { // Legacy
+        request = [UserImageStrategy requestForFetchingAssetWith:self.mediumLegacyId forUserWith:self.remoteIdentifier];
+    }
+
     ZM_WEAK(self);
+    NSUUID *remoteIdentifier = self.remoteIdentifier;
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:userSession.syncManagedObjectContext block:^(ZMTransportResponse *response) {
         ZM_STRONG(self);
-        [self processMediumAssetResponse:response inUserSession:userSession];
+        [self processMediumAssetResponse:response inUserSession:userSession remoteIdentifier:remoteIdentifier];
     }]];
-    
+
     return request;
+
 }
 
-- (void)processMediumAssetResponse:(ZMTransportResponse *)response inUserSession:(ZMUserSession *)userSession
+- (void)processMediumAssetResponse:(ZMTransportResponse *)response inUserSession:(ZMUserSession *)userSession remoteIdentifier:(NSUUID *)remoteIdentifier
 {
     if(response.result == ZMTransportResponseStatusSuccess) {
-        if(response.imageData != 0) {
-            [[ZMSearchUser searchUserToMediumImageCache] setObject:response.imageData forKey:self.remoteIdentifier];
+        NSData *imageData = response.imageData ?: response.rawData;
+        if(imageData != 0) {
+            [[ZMSearchUser searchUserToMediumImageCache] setObject:imageData forKey:remoteIdentifier];
             [userSession.managedObjectContext performGroupedBlock:^{
-                [self setAndNotifyNewMediumImageData:response.imageData searchUserObserverCenter:userSession.managedObjectContext.searchUserObserverCenter];
+                [self setAndNotifyNewMediumImageData:imageData searchUserObserverCenter:userSession.managedObjectContext.searchUserObserverCenter];
             }];
         }
     }

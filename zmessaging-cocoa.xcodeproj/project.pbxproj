@@ -204,7 +204,6 @@
 		549815D31A432BC700A7CE2E /* ZMSearchDirectory.m in Sources */ = {isa = PBXBuildFile; fileRef = A9BABE6019BA1F2300E9E5A3 /* ZMSearchDirectory.m */; };
 		549815D41A432BC700A7CE2E /* ZMSearchUser+UserSession.m in Sources */ = {isa = PBXBuildFile; fileRef = A9BABE6219BA1F2300E9E5A3 /* ZMSearchUser+UserSession.m */; };
 		549815D71A432BC700A7CE2E /* ZMCommonContactsSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 54A1BE3A19E69A3400B68A76 /* ZMCommonContactsSearch.m */; };
-		549815D81A432BC700A7CE2E /* ZMUserIDsForSearchDirectoryTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 549127DE19E7FAFF005871F5 /* ZMUserIDsForSearchDirectoryTable.m */; };
 		549815D91A432BC700A7CE2E /* ZMUserSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 54BAF1BC19212EBA008042FB /* ZMUserSession.m */; };
 		549815DA1A432BC700A7CE2E /* ZMUserSession+Background.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E4F728219EC0D76002FE184 /* ZMUserSession+Background.m */; };
 		549815DC1A432BC700A7CE2E /* NSError+ZMUserSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E05F253192A50CC00F22D80 /* NSError+ZMUserSession.m */; };
@@ -337,6 +336,7 @@
 		BF36DDF11E8BACD400D61310 /* ZMUserSession+OperationLoop.h in Headers */ = {isa = PBXBuildFile; fileRef = BF36DDF01E8BACD400D61310 /* ZMUserSession+OperationLoop.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF36DDF21E8BAE3C00D61310 /* ZMOperationLoop+Background.h in Headers */ = {isa = PBXBuildFile; fileRef = F962A8E819FFC06E00FD0F80 /* ZMOperationLoop+Background.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF44A3511C71D5FC00C6928E /* store127.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = BF44A3501C71D5FC00C6928E /* store127.wiredatabase */; };
+		BF4BA0321E89085E00AE99DC /* SearchDirectoryUserIDTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4BA0311E89085E00AE99DC /* SearchDirectoryUserIDTable.swift */; };
 		BF603D201E76DE3B006E59CA /* ZMCommonContactsSearchDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = BF603D1F1E76DE3B006E59CA /* ZMCommonContactsSearchDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF6D5D031C4948830049F712 /* zmessaging124.momd in Resources */ = {isa = PBXBuildFile; fileRef = BF6D5D021C4948830049F712 /* zmessaging124.momd */; };
 		BF6D5D051C494D730049F712 /* zmessaging125.momd in Resources */ = {isa = PBXBuildFile; fileRef = BF6D5D041C494D730049F712 /* zmessaging125.momd */; };
@@ -349,6 +349,7 @@
 		BF8899931DC7AD9F00187CBD /* ZMTransport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09CC4AB91B7CCA0F00201C63 /* ZMTransport.framework */; };
 		BF889DC61D0ADE110031F3E6 /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF40AC711D096A0E00287E29 /* AnalyticsTests.swift */; };
 		BF889DC71D0ADE150031F3E6 /* ClusterizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF40AC7D1D0990A900287E29 /* ClusterizerTests.swift */; };
+		BF989D061E893AE90052BF8F /* SearchDirectoryUserIDTableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF989D051E893AE90052BF8F /* SearchDirectoryUserIDTableTests.swift */; };
 		BFAB67B01E535B4B00D67C1A /* TextSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAB67AF1E535B4B00D67C1A /* TextSearchTests.swift */; };
 		BFB524CE1C7722EC006BCE23 /* BackgroundAPNSPingBackStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB524CD1C7722EC006BCE23 /* BackgroundAPNSPingBackStatusTests.swift */; };
 		BFC747BA1CE0975D00F74333 /* zimages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFC747B91CE0975D00F74333 /* zimages.framework */; };
@@ -385,7 +386,6 @@
 		F95373F41C7C70D000BE6427 /* ZMLocalNotificationForEventTest+CallEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = F95373F31C7C70D000BE6427 /* ZMLocalNotificationForEventTest+CallEvents.m */; };
 		F95557021A1CAECD0035F0C8 /* ZMSearchRequestCodecTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F95556FE1A1CA1580035F0C8 /* ZMSearchRequestCodecTests.m */; };
 		F95706541DE5D1CC0087442C /* SearchUserImageStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95706531DE5D1CC0087442C /* SearchUserImageStrategy.swift */; };
-		F95706551DE5D6D50087442C /* ZMUserIDsForSearchDirectoryTable.h in Headers */ = {isa = PBXBuildFile; fileRef = 549127DD19E7FAFF005871F5 /* ZMUserIDsForSearchDirectoryTable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F95706561DE5D7EA0087442C /* ZMSearchDirectory+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = A9BABE6119BA1F2300E9E5A3 /* ZMSearchDirectory+Internal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F95706591DE5F6D40087442C /* SearchUserImageStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95706581DE5F6D40087442C /* SearchUserImageStrategyTests.swift */; };
 		F959F3121C5B6B9E00820A21 /* ZMBackgroundTaskState.h in Headers */ = {isa = PBXBuildFile; fileRef = F959F3101C5B6B9E00820A21 /* ZMBackgroundTaskState.h */; };
@@ -755,8 +755,6 @@
 		54877C9419922C0B0097FB58 /* UserProfileTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UserProfileTests.m; sourceTree = "<group>"; };
 		5490F8EB1AEFD2B3004696F4 /* ZMUserSessionAuthenticationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMUserSessionAuthenticationTests.m; sourceTree = "<group>"; };
 		5490F8EF1AF00B50004696F4 /* ZMAuthenticationStatus+Testing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ZMAuthenticationStatus+Testing.h"; sourceTree = "<group>"; };
-		549127DD19E7FAFF005871F5 /* ZMUserIDsForSearchDirectoryTable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMUserIDsForSearchDirectoryTable.h; sourceTree = "<group>"; };
-		549127DE19E7FAFF005871F5 /* ZMUserIDsForSearchDirectoryTable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMUserIDsForSearchDirectoryTable.m; sourceTree = "<group>"; };
 		5492C6C319ACCCA8008F41E2 /* ConnectionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = ConnectionTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		549552511D64567C004F21F6 /* AddressBookTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookTests.swift; sourceTree = "<group>"; };
 		54973A351DD48CAB007F8702 /* NSManagedObject+EncryptionContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSManagedObject+EncryptionContext.swift"; sourceTree = "<group>"; };
@@ -967,6 +965,7 @@
 		BF40AC711D096A0E00287E29 /* AnalyticsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
 		BF40AC7D1D0990A900287E29 /* ClusterizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClusterizerTests.swift; sourceTree = "<group>"; };
 		BF44A3501C71D5FC00C6928E /* store127.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; path = store127.wiredatabase; sourceTree = "<group>"; };
+		BF4BA0311E89085E00AE99DC /* SearchDirectoryUserIDTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchDirectoryUserIDTable.swift; sourceTree = "<group>"; };
 		BF603D1F1E76DE3B006E59CA /* ZMCommonContactsSearchDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMCommonContactsSearchDelegate.h; sourceTree = "<group>"; };
 		BF6D5D021C4948830049F712 /* zmessaging124.momd */ = {isa = PBXFileReference; lastKnownFileType = folder; path = zmessaging124.momd; sourceTree = "<group>"; };
 		BF6D5D041C494D730049F712 /* zmessaging125.momd */ = {isa = PBXFileReference; lastKnownFileType = folder; path = zmessaging125.momd; sourceTree = "<group>"; };
@@ -977,6 +976,7 @@
 		BF838F031C6A4885001C5BF7 /* ZMCookie.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMCookie.h; sourceTree = "<group>"; };
 		BF838F041C6A4885001C5BF7 /* ZMCookie.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMCookie.m; sourceTree = "<group>"; };
 		BF8899911DC7882F00187CBD /* ZMTransport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ZMTransport.framework; path = "../wire-ios-transport/build/Debug-iphoneos/ZMTransport.framework"; sourceTree = "<group>"; };
+		BF989D051E893AE90052BF8F /* SearchDirectoryUserIDTableTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchDirectoryUserIDTableTests.swift; sourceTree = "<group>"; };
 		BFAB67AF1E535B4B00D67C1A /* TextSearchTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextSearchTests.swift; sourceTree = "<group>"; };
 		BFB524CD1C7722EC006BCE23 /* BackgroundAPNSPingBackStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackgroundAPNSPingBackStatusTests.swift; sourceTree = "<group>"; };
 		BFC747B91CE0975D00F74333 /* zimages.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = zimages.framework; path = "../zmc-images/build/Debug-iphoneos/zimages.framework"; sourceTree = "<group>"; };
@@ -1555,6 +1555,7 @@
 				541DD5AC19EBBBFD00C02EC2 /* ZMSearchDirectoryTests.m */,
 				54773ABC1DF093AC00B484AF /* ZMSearchDirectoryAddressBookTests.swift */,
 				541DD5AF19EBBBFD00C02EC2 /* ZMUserIDsForSearchDirectoryTableTests.m */,
+				BF989D051E893AE90052BF8F /* SearchDirectoryUserIDTableTests.swift */,
 				545F601B1D6C336D00C2C55B /* AddressBookSearchTests.swift */,
 				54AB428D1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift */,
 			);
@@ -1999,8 +2000,7 @@
 				54A1BE3919E69A3400B68A76 /* ZMCommonContactsSearch.h */,
 				BF603D1F1E76DE3B006E59CA /* ZMCommonContactsSearchDelegate.h */,
 				54A1BE3A19E69A3400B68A76 /* ZMCommonContactsSearch.m */,
-				549127DD19E7FAFF005871F5 /* ZMUserIDsForSearchDirectoryTable.h */,
-				549127DE19E7FAFF005871F5 /* ZMUserIDsForSearchDirectoryTable.m */,
+				BF4BA0311E89085E00AE99DC /* SearchDirectoryUserIDTable.swift */,
 				16063CEE1BD120180097F62C /* ZMSearchRequest.m */,
 				16063CF01BD4F46B0097F62C /* ZMSearchRequest+Internal.h */,
 				54257C071DF1C94200107FE7 /* TopConversationsDirectory.swift */,
@@ -2213,7 +2213,6 @@
 				165D3A291E1D43870052E654 /* VoiceChannelV2+Testing.h in Headers */,
 				F98EDCF41D82B924001E65CB /* ZMSpellOutSmallNumbersFormatter.h in Headers */,
 				BF36DDF11E8BACD400D61310 /* ZMUserSession+OperationLoop.h in Headers */,
-				F95706551DE5D6D50087442C /* ZMUserIDsForSearchDirectoryTable.h in Headers */,
 				094CDBEE1B84D0A1004AD7BF /* ZMBackgroundFetch.h in Headers */,
 				F98EDCDA1D82B913001E65CB /* ZMLocalNotification+Internal.h in Headers */,
 				54D1751A1ADE8AA2001AA338 /* ZMUserSession+Registration.h in Headers */,
@@ -2605,6 +2604,7 @@
 				54EFF35F1D6D9B3D005DED56 /* InvitationTests.swift in Sources */,
 				3EC499971A9246DE003F9E32 /* ZMBackgroundFetchStateTests.m in Sources */,
 				F991C0AC1CB53A80004D8465 /* ZMCallTimerTests.swift in Sources */,
+				BF989D061E893AE90052BF8F /* SearchDirectoryUserIDTableTests.swift in Sources */,
 				160C31411E6DDFC30012E4BC /* VoiceChannelV3Tests.swift in Sources */,
 				BFAB67B01E535B4B00D67C1A /* TextSearchTests.swift in Sources */,
 				5430FF151CE4A359004ECFFE /* FileTransferTests.m in Sources */,
@@ -2830,6 +2830,7 @@
 				5498161B1A432BC800A7CE2E /* ZMTyping.m in Sources */,
 				54BFDF681BDA6F9A0034A3DB /* HistorySynchronizationStatus.swift in Sources */,
 				5498161D1A432BC800A7CE2E /* ZMTypingUsers.m in Sources */,
+				BF4BA0321E89085E00AE99DC /* SearchDirectoryUserIDTable.swift in Sources */,
 				F98EDCF31D82B924001E65CB /* ZMLocalNotificationSet.swift in Sources */,
 				5498161C1A432BC800A7CE2E /* ZMTypingUsersTimeout.m in Sources */,
 				5498165A1A432BC800A7CE2E /* ZMUpdateEventsBuffer.m in Sources */,
@@ -2839,7 +2840,6 @@
 				8795A3D71B2EDE030047A067 /* ZMAVSBridge.m in Sources */,
 				871667FA1BB2AE9C009C6EEA /* APSSignalingKeysStore.swift in Sources */,
 				54A343471D6B589A004B65EA /* AddressBookSearch.swift in Sources */,
-				549815D81A432BC700A7CE2E /* ZMUserIDsForSearchDirectoryTable.m in Sources */,
 				544D1C281DF95224003B2FC8 /* AddressBookIOS8.swift in Sources */,
 				F98EDCD91D82B913001E65CB /* ZMLocalNotificationForSystemMessage.swift in Sources */,
 				F98EDCEA1D82B924001E65CB /* SessionTracker.swift in Sources */,

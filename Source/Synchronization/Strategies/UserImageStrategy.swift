@@ -341,6 +341,10 @@ extension UserImageStrategy {
         let path = self.path(for: assetID, ofUserWith: userID)
         return ZMTransportRequest(path:path, method:.methodGET, payload:nil)
     }
+
+    public static func requestForFetchingV3Asset(with key: String) -> ZMTransportRequest {
+        return ZMTransportRequest(getFromPath: "/assets/v3/\(key)")
+    }
 }
 
 extension UserImageStrategy {

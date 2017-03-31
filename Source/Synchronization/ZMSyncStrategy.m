@@ -523,7 +523,13 @@ ZM_EMPTY_ASSERTING_INIT()
             }
             return nil;
         }]];
-        _allChangeTrackers = [_allChangeTrackers arrayByAddingObjectsFromArray:@[self.conversationStatusSync, self.profileImageStatus]];
+
+        _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:self.conversationStatusSync];
+        UserProfileImageUpdateStatus *strongImageStatus = self.profileImageStatus;
+        if (nil != strongImageStatus) {
+            _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:strongImageStatus];
+        }
+
     }
     
     return _allChangeTrackers;
