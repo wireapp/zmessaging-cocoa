@@ -543,11 +543,12 @@ extension UserProfileImageUpdateStatusTests {
 
         // WHEN
         sut.updatePreprocessedImages(preview: previewData, complete: completeData)
-        _ = sut.consumeImage(for: .preview)
-        _ = sut.consumeImage(for: .complete)
-        sut.uploadingDone(imageSize: .preview, assetId: previewId)
-        sut.uploadingDone(imageSize: .complete, assetId: completeId)
-        sut.setState(state: .update(previewAssetId: previewId, completeAssetId: completeId))
+        syncMOC.performGroupedBlock {
+            _ = self.sut.consumeImage(for: .preview)
+            _ = self.sut.consumeImage(for: .complete)
+            self.sut.uploadingDone(imageSize: .preview, assetId: previewId)
+            self.sut.uploadingDone(imageSize: .complete, assetId: completeId)
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN

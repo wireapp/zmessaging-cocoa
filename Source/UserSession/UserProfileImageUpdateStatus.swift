@@ -172,6 +172,7 @@ extension UserProfileImageUpdateStatus {
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         selfUser.imageSmallProfileData = resizedImages[.preview]
         selfUser.imageMediumData = resizedImages[.complete]
+        resizedImages.removeAll()
         selfUser.updateAndSyncProfileAssetIdentifiers(previewIdentifier: previewAssetId, completeIdentifier: completeAssetId)
         managedObjectContext.saveOrRollback()
         setState(state: .ready)
@@ -233,7 +234,6 @@ extension UserProfileImageUpdateStatus {
             case let (.uploaded(assetId: previewAssetId), .uploaded(assetId: completeAssetId)):
                 // If both images are uploaded we can update profile
                 setState(state: .update(previewAssetId: previewAssetId, completeAssetId: completeAssetId))
-                resetImageState()
             default:
                 break // Need to wait until both images are uploaded
             }
