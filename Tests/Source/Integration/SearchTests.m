@@ -478,7 +478,10 @@
     __block NSData *profileImageData;
     __block NSString *unConnectedUserName;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        
+        // We need not to have v3 profile pictures
+        self.user4.previewProfileAssetIdentifier = nil;
+        self.user4.completeProfileAssetIdentifier = nil;
+
         NOT_USED(session);
         profileImageData = [MockAsset assetInContext:self.mockTransportSession.managedObjectContext forID:self.user4.mediumImageIdentifier].data;
         XCTAssertNotNil(profileImageData);
@@ -536,7 +539,10 @@
     __block NSData *profileImageData;
     __block NSString *unConnectedUserName;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        
+        // We need not to have v3 profile pictures
+        self.user4.previewProfileAssetIdentifier = nil;
+        self.user4.completeProfileAssetIdentifier = nil;
+
         NOT_USED(session);
         profileImageData = [MockAsset assetInContext:self.mockTransportSession.managedObjectContext forID:self.user4.mediumImageIdentifier].data;
         XCTAssertNotNil(profileImageData);
@@ -646,6 +652,9 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         
         NOT_USED(session);
+        // We need not to have v3 profile pictures
+        self.user4.previewProfileAssetIdentifier = nil;
+        self.user4.completeProfileAssetIdentifier = nil;
         profileImageData = [MockAsset assetInContext:self.mockTransportSession.managedObjectContext forID:self.user4.mediumImageIdentifier].data;
         XCTAssertNotNil(profileImageData);
         
