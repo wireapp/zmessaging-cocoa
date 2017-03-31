@@ -250,6 +250,10 @@ ZM_EMPTY_ASSERTING_INIT()
     
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
     session.requestLoopDetectionCallback = ^(NSString *path) {
+        if ([path hasSuffix:@"/typing"]) {
+            return;
+        }
+
         //TAG analytics
         [tracker tagWithPath:path];
         ZMLogWarn(@"Request loop happening at path: %@", path);
