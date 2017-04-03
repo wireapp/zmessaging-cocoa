@@ -113,7 +113,7 @@
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "ZMLOG_TAGS"
-            value = "MockTransportRequests, Authentication"
+            value = "MockTransportRequests,Authentication,State machine"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

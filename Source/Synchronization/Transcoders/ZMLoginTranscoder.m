@@ -150,6 +150,12 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     }];
 }
 
+- (BOOL)isWaitingForEmailVerification
+{
+    ZMAuthenticationPhase authenticationPhase = self.authenticationStatus.currentPhase;
+    return authenticationPhase == ZMAuthenticationPhaseWaitingForEmailVerification || authenticationPhase == ZMAuthenticationPhaseLoginWithEmail;
+}
+
 - (ZMTransportRequest *)requestForSingleRequestSync:(ZMSingleRequestSync *)sync
 {
     if (sync == self.timedDownstreamSync ||
@@ -226,8 +232,10 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
         if (sync == self.timedDownstreamSync) {
             
             if([self isResponseForPendingEmailActionvation:response]) {
-                [authenticationStatus didFailLoginWithEmailBecausePendingValidation];
-                shouldStartTimer = YES;
+                if (self.isWaitingForEmailVerification) {
+                    [authenticationStatus didFailLoginWithEmailBecausePendingValidation];
+                    shouldStartTimer = YES;
+                }
             }
             else {
                 [authenticationStatus didFailLoginWithEmail:[self isResponseForInvalidCredentials:response]];
