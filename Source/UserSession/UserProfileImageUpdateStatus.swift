@@ -48,6 +48,8 @@ internal protocol UserProfileImageUploadStateChangeDelegate: class {
 
 public final class UserProfileImageUpdateStatus: NSObject {
     
+    fileprivate var log = ZMSLog(tag: "UserProfileImageUpdateStatus")
+    
     internal enum ImageState {
         case ready
         case preprocessing
@@ -111,6 +113,7 @@ public final class UserProfileImageUpdateStatus: NSObject {
     fileprivate let managedObjectContext: NSManagedObjectContext
 
     fileprivate var imageState = [ProfileImageSize : ImageState]()
+    fileprivate var resizedImages = [ProfileImageSize : Data]()
     internal fileprivate(set) var state: ProfileUpdateState = .ready
     
     public convenience init(managedObjectContext: NSManagedObjectContext) {
@@ -118,15 +121,20 @@ public final class UserProfileImageUpdateStatus: NSObject {
     }
     
     internal init(managedObjectContext: NSManagedObjectContext, preprocessor: ZMAssetsPreprocessorProtocol, queue: OperationQueue, delegate: UserProfileImageUploadStateChangeDelegate?){
+        log.debug("Created")
         self.queue = queue
         self.preprocessor = preprocessor
         self.managedObjectContext = managedObjectContext
         self.changeDelegate = delegate
         super.init()
         self.preprocessor?.delegate = self
-
+        
         // Check if we should re-upload an existing v2 in case we never uploaded a v3 asset.
         reuploadExisingImageIfNeeded()
+    }
+    
+    deinit {
+        log.debug("Deallocated")
     }
 }
 
@@ -146,21 +154,25 @@ extension UserProfileImageUpdateStatus {
     }
     
     internal func didTransition(from oldState: ProfileUpdateState, to currentState: ProfileUpdateState) {
+        log.debug("Transition: [\(oldState)] -> [\(currentState)]")
         changeDelegate?.didTransition(from: oldState, to: currentState)
         switch (oldState, currentState) {
+        case (_, .ready):
+            resizedImages.removeAll()
         case let (_, .preprocess(image: data)):
             startPreprocessing(imageData: data)
         case let (_, .update(previewAssetId: previewAssetId, completeAssetId: completeAssetId)):
             updateUserProfile(with:previewAssetId, completeAssetId: completeAssetId)
         case (_, .failed):
             resetImageState()
-        default:
-            break
         }
     }
     
     fileprivate func updateUserProfile(with previewAssetId: String, completeAssetId: String) {
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
+        selfUser.imageSmallProfileData = resizedImages[.preview]
+        selfUser.imageMediumData = resizedImages[.complete]
+        resizedImages.removeAll()
         selfUser.updateAndSyncProfileAssetIdentifiers(previewIdentifier: previewAssetId, completeIdentifier: completeAssetId)
         managedObjectContext.saveOrRollback()
         setState(state: .ready)
@@ -203,11 +215,16 @@ extension UserProfileImageUpdateStatus {
     
     internal func resetImageState() {
         imageState.removeAll()
+        resizedImages.removeAll()
     }
     
     internal func didTransition(from oldState: ImageState, to currentState: ImageState, for size: ProfileImageSize) {
+        log.debug("Transition [\(size)]: [\(oldState)] -> [\(currentState)]")
         changeDelegate?.didTransition(from: oldState, to: currentState, for: size)
         switch (oldState, currentState) {
+        case let (_, .upload(image)):
+            resizedImages[size] = image
+            RequestAvailableNotification.notifyNewRequestsAvailable(self)
         case (_, .uploaded):
             // When one image is uploaded we check state of all other images
             let previewState = imageState(for: .preview)
@@ -217,7 +234,6 @@ extension UserProfileImageUpdateStatus {
             case let (.uploaded(assetId: previewAssetId), .uploaded(assetId: completeAssetId)):
                 // If both images are uploaded we can update profile
                 setState(state: .update(previewAssetId: previewAssetId, completeAssetId: completeAssetId))
-                resetImageState()
             default:
                 break // Need to wait until both images are uploaded
             }
@@ -264,13 +280,14 @@ extension UserProfileImageUpdateStatus: ZMContextChangeTracker {
         // we want to re-upload existing pictures to `/assets/v3`.
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
 
-        // We need to ensure we alreday re-fetched the selfUser (see HotFix 76.0.0),
-        // as other clients could alreday have uploaded a v3 asset.
+        // We need to ensure we already re-fetched the selfUser (see HotFix 76.0.0),
+        // as other clients could already have uploaded a v3 asset.
         guard !selfUser.needsToBeUpdatedFromBackend else { return }
 
         // We only want to re-upload in case the user did not yet upload a picture to `/assets/v3`.
         guard nil == selfUser.previewProfileAssetIdentifier, nil == selfUser.completeProfileAssetIdentifier else { return }
         guard let preview = selfUser.imageSmallProfileData, let complete = selfUser.imageMediumData else { return }
+        log.debug("V3 profile picture not found, re-uploading V2")
         updatePreprocessedImages(preview: preview, complete: complete)
     }
 
@@ -297,7 +314,13 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     
     public func didCompleteProcessingImageOwner(_ imageOwner: ZMImageOwner) {}
     
-    public func preprocessingCompleteOperation(for imageOwner: ZMImageOwner) -> Operation? { return nil }
+    public func preprocessingCompleteOperation(for imageOwner: ZMImageOwner) -> Operation? {
+        let dispatchGroup = managedObjectContext.dispatchGroup
+        dispatchGroup?.enter()
+        return BlockOperation() {
+            dispatchGroup?.leave()
+        }
+    }
 }
 
 extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {

@@ -56,6 +56,9 @@ internal enum AssetTransportError: Error {
         
         downstreamRequestSyncs[.preview] = whitelistUserImageSync(for: .preview)
         downstreamRequestSyncs[.complete] = whitelistUserImageSync(for: .complete)
+        downstreamRequestSyncs.forEach { (_, sync) in
+            sync.whiteListObject(ZMUser.selfUser(in: managedObjectContext))
+        }
         
         upstreamRequestSyncs[.preview] = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)!
         upstreamRequestSyncs[.complete] = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)!
@@ -120,9 +123,11 @@ extension UserImageAssetUpdateStrategy: RequestStrategy {
     public func nextRequest() -> ZMTransportRequest? {
         guard case .authenticated = authenticationStatus.currentPhase else { return nil }
         
-        let requests = ProfileImageSize.allSizes.flatMap { downstreamRequestSyncs[$0] }.flatMap { $0.nextRequest() }
-        if let request = requests.first {
-            return request
+        for size in ProfileImageSize.allSizes {
+            let requestSync = downstreamRequestSyncs[size]
+            if let request = requestSync?.nextRequest() {
+                return request
+            }
         }
         
         guard let updateStatus = imageUploadStatus else { return nil }

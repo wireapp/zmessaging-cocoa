@@ -154,6 +154,7 @@ class UserProfileImageUpdateStatusTests: MessagingTest {
     var preprocessor : MockPreprocessor!
     var tinyImage: Data!
     var imageOwner: ZMImageOwner!
+    var changeDelegate: MockChangeDelegate!
     
     override func setUp() {
         super.setUp()
@@ -162,6 +163,8 @@ class UserProfileImageUpdateStatusTests: MessagingTest {
         sut = UserProfileImageUpdateStatus(managedObjectContext: syncMOC, preprocessor: preprocessor, queue: ZMImagePreprocessor.createSuitableImagePreprocessingQueue(), delegate: nil)
         tinyImage = data(forResource: "tiny", extension: "jpg")
         imageOwner = UserProfileImageOwner(imageData: tinyImage)
+        changeDelegate = MockChangeDelegate()
+        sut.changeDelegate = changeDelegate
     }
     
     func operationWithExpectation(description: String) -> Operation {
@@ -494,6 +497,20 @@ extension UserProfileImageUpdateStatusTests {
         XCTAssertEqual(sut.imageState(for: .preview), .ready)
         XCTAssertEqual(sut.state, .failed(.uploadFailed(MockUploadError.failed)))
     }
+    
+    func testThatItSignalsThereIsRequestAvailableAfterPreprocessingCompletes() {
+        // GIVEN
+        sut.setState(state: .preprocessing, for: .preview)
+        expectation(forNotification: "RequestAvailableNotification", object: sut)
+        
+        // WHEN
+        sut.setState(state: .upload(image: Data()), for: .preview)
+        
+        
+        // THEN
+        XCTAssert(waitForCustomExpectations(withTimeout:0.1))
+    }
+
 }
 
 // MARK: - User profile update
@@ -516,8 +533,32 @@ extension UserProfileImageUpdateStatusTests {
         XCTAssert(selfUser.hasLocalModifications(forKey: #keyPath(ZMUser.previewProfileAssetIdentifier)))
         XCTAssert(selfUser.hasLocalModifications(forKey: #keyPath(ZMUser.completeProfileAssetIdentifier)))
     }
-}
+    
+    func testThatItSetsResizedImagesToSelfUserAfterCompletion() {
+        // GIVEN
+        let previewData = "small".data(using: .utf8)!
+        let completeData = "laaaarge".data(using: .utf8)!
+        let previewId = "foo"
+        let completeId = "bar"
 
+        // WHEN
+        sut.updatePreprocessedImages(preview: previewData, complete: completeData)
+        syncMOC.performGroupedBlock {
+            _ = self.sut.consumeImage(for: .preview)
+            _ = self.sut.consumeImage(for: .complete)
+            self.sut.uploadingDone(imageSize: .preview, assetId: previewId)
+            self.sut.uploadingDone(imageSize: .complete, assetId: completeId)
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        let selfUser = ZMUser.selfUser(in: syncMOC)
+        XCTAssertEqual(selfUser.imageSmallProfileData, previewData)
+        XCTAssertEqual(selfUser.imageMediumData, completeData)
+        XCTAssertEqual(selfUser.previewProfileAssetIdentifier, previewId)
+        XCTAssertEqual(selfUser.completeProfileAssetIdentifier, completeId)
+    }
+}
 
 // MARK: - Reuploading alreday preprocessed images
 extension UserProfileImageUpdateStatusTests {
