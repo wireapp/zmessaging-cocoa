@@ -23,17 +23,21 @@ import avs
 
 class VoiceChannelParticipantSnapshot: NSObject {
     
-    fileprivate var state : SetSnapshot
-    fileprivate var activeFlowParticipantsState : NSOrderedSet
-    fileprivate var callParticipantState : NSOrderedSet
+    fileprivate var state : SetSnapshot<CallMember>
+    fileprivate var members : OrderedSetState<CallMember>
 
     fileprivate weak var conversation : ZMConversation?
 
     init(conversation: ZMConversation) {
         self.conversation = conversation
-        state = SetSnapshot(set: conversation.voiceChannelRouter!.v2.participants, moveType: .uiCollectionView)
-        activeFlowParticipantsState = conversation.activeFlowParticipants.copy() as! NSOrderedSet
-        callParticipantState = conversation.callParticipants.copy() as! NSOrderedSet
+        let members : [CallMember] = conversation.voiceChannelRouter!.v2.participants.array.map{
+            let user = $0 as! ZMUser
+            let uuid = user.remoteIdentifier!
+            let audioEstablished = conversation.activeFlowParticipants.contains(user)
+            return CallMember(userId: uuid, audioEstablished: audioEstablished)
+        }
+        self.members = members.toOrderedSetState()
+        state = SetSnapshot(set: members.toOrderedSetState(), moveType: .uiCollectionView)
     }
     
     func callStateDidChange(for conversations: Set<ZMConversation>) {
@@ -45,30 +49,32 @@ class VoiceChannelParticipantSnapshot: NSObject {
         guard let conversation = conversation,
               let voiceChannel = conversation.voiceChannel
         else { return }
-        
-        let newParticipants = voiceChannel.participants
-        let newFlowParticipants = conversation.activeFlowParticipants
-        guard newParticipants != callParticipantState || newFlowParticipants != activeFlowParticipantsState else { return }
-        
-        // participants who have an updated flow, but are still in the voiceChannel
-        let newConnected = newFlowParticipants.subtracting(orderedSet: activeFlowParticipantsState)
-        let newDisconnected = activeFlowParticipantsState.subtracting(orderedSet: newFlowParticipants)
-        
-        // participants who left the voiceChannel / call
-        let addedUsers = newParticipants.subtracting(orderedSet: state.set)
-        let removedUsers = state.set.subtracting(orderedSet: newParticipants)
-        
-        let updated = newConnected.adding(orderedSet: newDisconnected)
-            .subtracting(orderedSet: removedUsers)
-            .subtracting(orderedSet: addedUsers)
-        
-        // calculate inserts / deletes / moves
-        if let newStateUpdate = state.updatedState(updated, observedObject: conversation, newSet: newParticipants) {
-            state = newStateUpdate.newSnapshot
-            VoiceChannelParticipantNotification(setChangeInfo: newStateUpdate.changeInfo, conversation: conversation).post()
+
+        var updated = Set<CallMember>()
+        var newSet = [CallMember]()
+        voiceChannel.participants.forEach{
+            let user = $0 as! ZMUser
+            let uuid = user.remoteIdentifier!
+            let audioEstablished = conversation.activeFlowParticipants.contains(user)
+            let newMember = CallMember(userId: uuid, audioEstablished: audioEstablished)
+            if let idx = members.order[newMember] {
+                let oldMember = members.array[idx]
+                if oldMember.audioEstablished != newMember.audioEstablished {
+                    updated.insert(newMember)
+                }
+            }
+            newSet.append(newMember)
         }
-        activeFlowParticipantsState = (newFlowParticipants.copy() as? NSOrderedSet) ?? NSOrderedSet()
-        callParticipantState = (newParticipants.copy() as? NSOrderedSet) ?? NSOrderedSet()
+        let newMembers = newSet.toOrderedSetState()
+
+        guard newMembers.array != members.array || updated.count > 0 else { return }
+        members = newMembers
+
+        // calculate inserts / deletes / moves
+        if let newStateUpdate = state.updatedState(updated, observedObject: conversation, newSet: newMembers) {
+            state = newStateUpdate.newSnapshot
+            VoiceChannelParticipantNotification(setChangeInfo: newStateUpdate.changeInfo, conversationId: conversation.remoteIdentifier!).post()
+        }
     }
 }
 
@@ -334,13 +340,15 @@ extension WireCallCenterV2 {
     public class func addVoiceChannelParticipantObserver(observer: VoiceChannelParticipantObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         context.wireCallCenterV2.createParticipantSnapshotIfNeeded(for: conversation)
         
-        return NotificationCenterObserverToken(name: VoiceChannelParticipantNotification.notificationName, object: conversation, queue: .main) {
+        return NotificationCenterObserverToken(name: VoiceChannelParticipantNotification.notificationName, object: nil, queue: .main) {
             [weak observer] (note) in
             guard let note = note.userInfo?[VoiceChannelParticipantNotification.userInfoKey] as? VoiceChannelParticipantNotification,
                 let strongObserver = observer
-                else { return }
+            else { return }
             
-                strongObserver.voiceChannelParticipantsDidChange(note.setChangeInfo)
+            if note.conversationId == conversation.remoteIdentifier {
+                strongObserver.voiceChannelParticipantsDidChange(note)
+            }
         }
     }
     

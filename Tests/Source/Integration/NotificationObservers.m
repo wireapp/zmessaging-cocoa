@@ -251,8 +251,8 @@ static NSString * const Placeholder = @"Placeholder";
         [self.mutableMessages insertObject:placeHolder atIndex:idx];
     }];
     
-    [note.movedIndexPairs enumerateObjectsUsingBlock:^(ZMMovedIndex *moved, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
-        [self.mutableMessages moveObjectsAtIndexes:[NSIndexSet indexSetWithIndex:moved.from] toIndex:moved.to];
+    [note enumerateMovedIndexes:^(NSInteger from, NSInteger to) {
+        [self.mutableMessages moveObjectsAtIndexes:[NSIndexSet indexSetWithIndex:(NSUInteger)from] toIndex:(NSUInteger)to];
     }];
     
     for(NSUInteger i = 0; i < self.mutableMessages.count; ++i) {

@@ -41,7 +41,7 @@
 
 @interface V2VoiceChannelParticipantTestObserver : NSObject <VoiceChannelParticipantObserver>
 
-@property (nonatomic) NSMutableArray<SetChangeInfo *> *changes;
+@property (nonatomic) NSMutableArray<VoiceChannelParticipantNotification *> *changes;
 
 @end
 

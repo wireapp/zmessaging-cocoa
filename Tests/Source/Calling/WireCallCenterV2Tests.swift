@@ -32,9 +32,9 @@ private class CallStateRecorder : WireCallCenterV2CallStateObserver {
 
 private class VoiceChannelParticipantRecorder : VoiceChannelParticipantObserver {
     
-    var changes : [SetChangeInfo] = []
+    var changes : [VoiceChannelParticipantNotification] = []
     
-    fileprivate func voiceChannelParticipantsDidChange(_ changeInfo: SetChangeInfo) {
+    fileprivate func voiceChannelParticipantsDidChange(_ changeInfo: VoiceChannelParticipantNotification) {
         changes.append(changeInfo)
     }
     

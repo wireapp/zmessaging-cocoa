@@ -630,8 +630,8 @@
 - (NSArray *)movedIndexPairsForChangeSet:(ConversationListChangeInfo *)note
 {
     NSMutableArray *indexes = [NSMutableArray array];
-    [note enumerateMovedIndexes:^(NSUInteger from, NSUInteger to) {
-        ZMMovedIndex *index = [ZMMovedIndex movedIndexFrom:from to:to];
+    [note enumerateMovedIndexes:^(NSInteger from, NSInteger to) {
+        ZMMovedIndex *index = [ZMMovedIndex movedIndexFrom:(NSUInteger)from to:(NSUInteger)to];
         [indexes addObject:index];
     }];
     
@@ -948,7 +948,7 @@
         updatesCount += note.updatedIndexes.count;
         //should be no deletions
         XCTAssertEqual(note.deletedIndexes.count, 0u);
-        [moves addObjectsFromArray:note.movedIndexPairs];
+        [moves addObjectsFromArray:note.zm_movedIndexPairs];
         
     }
     XCTAssertEqual(updatesCount, 1);
@@ -1110,7 +1110,7 @@
     XCTAssertTrue(note);
     
     NSMutableArray *moves = [NSMutableArray array];
-    [note enumerateMovedIndexes:^(NSUInteger from, NSUInteger to) {
+    [note enumerateMovedIndexes:^(NSInteger from, NSInteger to) {
         [moves addObject:@[@(from), @(to)]];
     }];
     
@@ -1157,7 +1157,7 @@
     __block NSMutableArray *moves = [@[] mutableCopy];
     for (ConversationListChangeInfo *note in conversationListChangeObserver.notifications) {
         updatesCount += note.updatedIndexes.count;
-        [moves addObjectsFromArray:note.movedIndexPairs];
+        [moves addObjectsFromArray:note.zm_movedIndexPairs];
         XCTAssertTrue([note.updatedIndexes containsIndex:0]);
         //should be no deletions or insertions
         XCTAssertEqual(note.deletedIndexes.count, 0u);
@@ -1208,7 +1208,7 @@
         //should be no updates, insertions, moves in pending list
         XCTAssertEqual(note.insertedIndexes.count, 0u);
         XCTAssertEqual(note.updatedIndexes.count, 0u);
-        XCTAssertEqual(note.movedIndexPairs.count, 0u);
+        XCTAssertEqual(note.zm_movedIndexPairs.count, 0u);
     }
     XCTAssertEqual(deletionsCount, 1);
     

@@ -71,7 +71,7 @@
     return self;
 }
 
-- (void)voiceChannelParticipantsDidChange:(SetChangeInfo *)changeInfo
+- (void)voiceChannelParticipantsDidChange:(VoiceChannelParticipantNotification *)changeInfo
 {
     [self.changes addObject:changeInfo];
 }
@@ -364,11 +364,11 @@
     
     // then
     XCTAssertEqual(participantObserver.changes.count, 1u);
-    SetChangeInfo *partInfo2 = participantObserver.changes.lastObject;
+    VoiceChannelParticipantNotification *partInfo2 = participantObserver.changes.lastObject;
     XCTAssertEqualObjects(partInfo2.insertedIndexes, [NSIndexSet indexSetWithIndex:0]);
     XCTAssertEqualObjects(partInfo2.updatedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(partInfo2.deletedIndexes, [NSIndexSet indexSet]);
-    XCTAssertEqualObjects(partInfo2.movedIndexPairs, @[]);
+    XCTAssertEqualObjects(partInfo2.zm_movedIndexPairs, @[]);
 
     // (3) flow aquired
     //
@@ -382,11 +382,11 @@
     XCTAssertEqual(stateObserver.changes.lastObject.state, VoiceChannelV2StateSelfConnectedToActiveChannel);
     
     XCTAssertEqual(participantObserver.changes.count, 2u);
-    SetChangeInfo *partInfo3 = participantObserver.changes.lastObject;
+    VoiceChannelParticipantNotification *partInfo3 = participantObserver.changes.lastObject;
     XCTAssertEqualObjects(partInfo3.insertedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(partInfo3.updatedIndexes, [NSIndexSet indexSetWithIndex:0]);
     XCTAssertEqualObjects(partInfo3.deletedIndexes, [NSIndexSet indexSet]);
-    XCTAssertEqualObjects(partInfo3.movedIndexPairs, @[]);
+    XCTAssertEqualObjects(partInfo3.zm_movedIndexPairs, @[]);
 
     // (4) self user leaves
     //
@@ -398,11 +398,11 @@
     XCTAssertEqual(stateObserver.changes.count, 4u);
     XCTAssertEqual(stateObserver.changes.lastObject.state, VoiceChannelV2StateNoActiveUsers);
     
-    SetChangeInfo *partInfo4 = participantObserver.changes.lastObject;
+    VoiceChannelParticipantNotification *partInfo4 = participantObserver.changes.lastObject;
     XCTAssertEqualObjects(partInfo4.insertedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(partInfo4.updatedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(partInfo4.deletedIndexes, [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 1)]);
-    XCTAssertEqualObjects(partInfo4.movedIndexPairs, @[]);
+    XCTAssertEqualObjects(partInfo4.zm_movedIndexPairs, @[]);
     
     [WireCallCenterV2 removeObserverWithToken:stateToken];
     [WireCallCenterV2 removeObserverWithToken:participantToken];
@@ -410,7 +410,6 @@
 
 - (void)testThatItSendsOutAllExpectedNotificationsWhenOtherUserCalls
 {
-    ///3333333
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMConversation * NS_VALID_UNTIL_END_OF_SCOPE oneToOneConversation = self.conversationUnderTest;
@@ -1852,7 +1851,7 @@
         // we should see an insert
         NSMutableIndexSet *expectedInsert = [NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0, joinedUsers.count)];
         XCTAssertEqual(participantObserver.changes.count, 1u);
-        SetChangeInfo *lastChange = participantObserver.changes.lastObject;
+        VoiceChannelParticipantNotification *lastChange = participantObserver.changes.lastObject;
         XCTAssertEqualObjects(lastChange.updatedIndexes, [NSIndexSet indexSet]);
         XCTAssertEqualObjects(lastChange.insertedIndexes, [expectedInsert copy]);
         XCTAssertEqualObjects(lastChange.deletedIndexes, [NSIndexSet indexSet]);
@@ -1868,7 +1867,7 @@
         // then
         // we should see an update
         XCTAssertEqual(participantObserver.changes.count, 1u);
-        SetChangeInfo *lastChange = participantObserver.changes.lastObject;
+        VoiceChannelParticipantNotification *lastChange = participantObserver.changes.lastObject;
         XCTAssertEqualObjects(lastChange.updatedIndexes, [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, joinedUsers.count)]);
         XCTAssertEqualObjects(lastChange.insertedIndexes, [NSIndexSet indexSet]);
         XCTAssertEqualObjects(lastChange.deletedIndexes, [NSIndexSet indexSet]);
@@ -1889,7 +1888,7 @@
         // then
         // we should see a delete
         XCTAssertEqual(participantObserver.changes.count, 1u);
-        SetChangeInfo *lastChange = participantObserver.changes.lastObject;
+        VoiceChannelParticipantNotification *lastChange = participantObserver.changes.lastObject;
         XCTAssertEqualObjects(lastChange.deletedIndexes, [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(1, length)]);
         XCTAssertEqualObjects(lastChange.insertedIndexes, [NSIndexSet indexSet]);
         XCTAssertEqualObjects(lastChange.updatedIndexes, [NSIndexSet indexSet]);

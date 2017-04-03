@@ -3763,8 +3763,10 @@
 {
     // given
     ZMConversation *conversation = self.syncSelfToUser1Conversation;
-    [[conversation mutableOrderedSetValueForKey:@"callParticipants"] addObject:self.syncOtherUser1];
-    [[conversation mutableOrderedSetValueForKey:@"callParticipants"] addObject:self.syncSelfUser];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [[conversation mutableOrderedSetValueForKey:@"callParticipants"] addObject:self.syncOtherUser1];
+        [[conversation mutableOrderedSetValueForKey:@"callParticipants"] addObject:self.syncSelfUser];
+    }];
 
     // when
     NSDictionary *payload = [self payloadForConversation:conversation othersAreJoined:YES selfIsJoined:YES];

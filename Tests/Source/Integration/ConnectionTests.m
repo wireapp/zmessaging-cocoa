@@ -296,7 +296,7 @@
         //should be no insertions, moves, deletions in pending list
         XCTAssertEqual(note.insertedIndexes.count, 0u);
         XCTAssertEqual(note.updatedIndexes.count, 0u);
-        XCTAssertEqual(note.movedIndexPairs.count, 0u);
+        XCTAssertEqual(note.zm_movedIndexPairs.count, 0u);
     }
     XCTAssertEqual(deletionsCount, 2);
 
@@ -413,7 +413,7 @@
         XCTAssertEqualObjects(listNote1.insertedIndexes, expectedSet1);
         XCTAssertEqualObjects(listNote1.updatedIndexes, [NSIndexSet indexSet]);
         XCTAssertEqualObjects(listNote1.deletedIndexes, [NSIndexSet indexSet]);
-        XCTAssertEqual(listNote1.movedIndexPairs.count, 0u);
+        XCTAssertEqual(listNote1.zm_movedIndexPairs.count, 0u);
 
         NSArray *convNotes = convObserver.notifications;
         convNotes = convObserver.notifications;
@@ -823,7 +823,7 @@
         XCTAssertNotNil(note);
         XCTAssertEqualObjects(note.insertedIndexes, [NSIndexSet indexSetWithIndex:0]);
         XCTAssertTrue(note.deletedIndexes.count == 0);
-        XCTAssertTrue(note.movedIndexPairs.count == 0);
+        XCTAssertTrue(note.zm_movedIndexPairs.count == 0);
     }
 }
 

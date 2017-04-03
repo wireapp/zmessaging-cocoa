@@ -38,24 +38,28 @@ class LocalNotificationDispatcherTests: MessagingTest {
         self.sut = LocalNotificationDispatcher(in: self.syncMOC,
                                                application: self.application)
         
-        self.user1 = ZMUser.insertNewObject(in: self.syncMOC)
-        self.user2 = ZMUser.insertNewObject(in: self.syncMOC)
-        user1.remoteIdentifier = UUID.create()
-        user1.name = "User 1"
-        user2.remoteIdentifier = UUID.create()
-        user2.name = "User 2"
-        self.conversation1 = ZMConversation.insertNewObject(in: self.syncMOC)
-        self.conversation1.userDefinedName = "Conversation 1"
-        self.conversation2 = ZMConversation.insertNewObject(in: self.syncMOC)
-        self.conversation2.userDefinedName = "Conversation 2"
-        [self.conversation1!, self.conversation2!].forEach {
-            $0.conversationType = .group
-            $0.remoteIdentifier = UUID.create()
-            $0.addParticipant(self.user1)
+        syncMOC.performGroupedBlockAndWait {
+            self.user1 = ZMUser.insertNewObject(in: self.syncMOC)
+            self.user2 = ZMUser.insertNewObject(in: self.syncMOC)
+            self.user1.remoteIdentifier = UUID.create()
+            self.user1.name = "User 1"
+            self.user2.remoteIdentifier = UUID.create()
+            self.user2.name = "User 2"
+            self.conversation1 = ZMConversation.insertNewObject(in: self.syncMOC)
+            self.conversation1.userDefinedName = "Conversation 1"
+            self.conversation2 = ZMConversation.insertNewObject(in: self.syncMOC)
+            self.conversation2.userDefinedName = "Conversation 2"
+            [self.conversation1!, self.conversation2!].forEach {
+                $0.conversationType = .group
+                $0.remoteIdentifier = UUID.create()
+                $0.addParticipant(self.user1)
+            }
+            self.conversation2.addParticipant(self.user2)
+            
+            self.selfUser.remoteIdentifier = UUID.create()
         }
-        self.conversation2.addParticipant(self.user2)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        self.selfUser.remoteIdentifier = UUID.create()
     }
     
     override func tearDown() {

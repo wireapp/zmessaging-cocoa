@@ -120,22 +120,60 @@ struct VoiceChannelStateNotification {
 //// VoiceChannelParticipantsObserver
 ///////////
 
-@objc
-public protocol VoiceChannelParticipantObserver : class {
-    func voiceChannelParticipantsDidChange(_ changeInfo : SetChangeInfo)
+
+public struct CallMember : Hashable {
+    
+    let remoteId: UUID
+    let audioEstablished: Bool
+    
+    init(userId: UUID, audioEstablished: Bool) {
+        self.remoteId = userId
+        self.audioEstablished = audioEstablished
+    }
+    
+    public static func ==(rhs: CallMember, lhs: CallMember) -> Bool {
+        return rhs.remoteId == lhs.remoteId
+    }
+    
+    public var hashValue: Int {
+        return remoteId.hashValue
+    }
 }
 
-struct VoiceChannelParticipantNotification {
+@objc
+public protocol VoiceChannelParticipantObserver : class {
+    func voiceChannelParticipantsDidChange(_ changeInfo : VoiceChannelParticipantNotification)
+}
 
+
+@objc public class VoiceChannelParticipantNotification : NSObject, SetChangeInfoOwner {
+    public typealias ChangeInfoContent = CallMember
+    
     static let notificationName = Notification.Name("VoiceChannelParticipantNotification")
     static let userInfoKey = notificationName.rawValue
-    let setChangeInfo : SetChangeInfo
-    let conversation : ZMConversation
+    public let setChangeInfo : SetChangeInfo<CallMember>
+    let conversationId : UUID
+
+    init(setChangeInfo: SetChangeInfo<CallMember>, conversationId: UUID) {
+        self.setChangeInfo = setChangeInfo
+        self.conversationId = conversationId
+    }
     
     func post() {
         NotificationCenter.default.post(name: VoiceChannelParticipantNotification.notificationName,
-                                        object: conversation,
+                                        object: conversationId as NSUUID,
                                         userInfo: [VoiceChannelParticipantNotification.userInfoKey : self])
+    }
+    
+    public var orderedSetState : OrderedSetState<ChangeInfoContent> { return setChangeInfo.orderedSetState }
+    public var insertedIndexes : IndexSet { return setChangeInfo.insertedIndexes }
+    public var deletedIndexes : IndexSet { return setChangeInfo.deletedIndexes }
+    public var deletedObjects: Set<AnyHashable> { return setChangeInfo.deletedObjects }
+    public var updatedIndexes : IndexSet { return setChangeInfo.updatedIndexes }
+    public var movedIndexPairs : [MovedIndex] { return setChangeInfo.movedIndexPairs }
+    public var zm_movedIndexPairs : [ZMMovedIndex] { return setChangeInfo.zm_movedIndexPairs }
+    public func enumerateMovedIndexes(_ block:@escaping (_ from: Int, _ to : Int) -> Void) {
+        setChangeInfo.enumerateMovedIndexes(block)
     }
 }
 

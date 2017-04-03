@@ -123,14 +123,14 @@
     XCTAssertEqualObjects(windowInfo1.deletedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
     XCTAssertEqualObjects(windowInfo1.insertedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
     XCTAssertEqualObjects(windowInfo1.updatedIndexes, [NSIndexSet indexSet]);
-    XCTAssertEqualObjects(windowInfo1.movedIndexPairs, @[]);
+    XCTAssertEqualObjects(windowInfo1.zm_movedIndexPairs, @[]);
     
     // Sending successfully (deliveryState changes)
     MessageWindowChangeInfo *windowInfo2 = windowObserver.notifications.lastObject;
     XCTAssertEqualObjects(windowInfo2.deletedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(windowInfo2.insertedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(windowInfo2.updatedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
-    XCTAssertEqualObjects(windowInfo2.movedIndexPairs, @[]);
+    XCTAssertEqualObjects(windowInfo2.zm_movedIndexPairs, @[]);
     
     (void)convToken;
 }
@@ -370,7 +370,7 @@
     XCTAssertEqualObjects(windowInfo.deletedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
     XCTAssertEqualObjects(windowInfo.insertedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
     XCTAssertEqualObjects(windowInfo.updatedIndexes, [NSIndexSet indexSet]);
-    XCTAssertEqualObjects(windowInfo.movedIndexPairs, @[]);
+    XCTAssertEqualObjects(windowInfo.zm_movedIndexPairs, @[]);
     
     (void)convToken;
 }
