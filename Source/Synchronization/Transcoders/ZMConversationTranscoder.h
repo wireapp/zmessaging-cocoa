@@ -24,7 +24,6 @@
 @protocol ZMObjectStrategyDirectory;
 
 @class ZMAuthenticationStatus;
-@class ZMAccountStatus;
 @class SyncStatus;
 
 @interface ZMConversationTranscoder : ZMAbstractRequestStrategy <ZMSyncPhase, ZMObjectStrategy>

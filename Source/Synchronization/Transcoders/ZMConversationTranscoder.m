@@ -226,7 +226,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     ZMConversation *conversation = [ZMConversation conversationWithRemoteID:convRemoteID createIfNeeded:YES inContext:self.managedObjectContext created:&conversationCreated];
     [conversation updateWithTransportData:transportData];
     
-    if (conversation.conversationType != ZMConversationTypeSelf && self.applicationStatus.synchronizationState != ZMSynchronizationStateUnauthenticated && conversationCreated) {
+    if (conversation.conversationType != ZMConversationTypeSelf && conversationCreated) {
         // we just got a new conversation, we display new conversation header
         [conversation appendNewConversationSystemMessageIfNeeded];
         [self.managedObjectContext enqueueDelayedSave];

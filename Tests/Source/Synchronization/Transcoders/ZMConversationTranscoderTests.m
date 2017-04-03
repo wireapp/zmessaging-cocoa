@@ -2080,17 +2080,13 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertEqual(messages.count, 0u);
 }
 
-- (void)testThatItDoesAppendsNewConversationIfRegisteredDevice;
+- (void)testThatItDoesAppendsNewConversationSystemMessage
 {
     // given
     id authStatusMock = [OCMockObject niceMockForClass:[ZMAuthenticationStatus class]];
     [[[authStatusMock stub] andReturnValue:@YES] registeredOnThisDevice];
     [(ZMAuthenticationStatus *)[[authStatusMock stub] andReturnValue:OCMOCK_VALUE((ZMAuthenticationPhase){ZMAuthenticationPhaseAuthenticated})] currentPhase];
     
-    id accountStatus = [OCMockObject niceMockForClass:[ZMAccountStatus class]];
-    [[[accountStatus stub]
-      andReturnValue: OCMOCK_VALUE((AccountState){AccountStateOldDeviceActiveAccount})] currentAccountState];
-
     self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     
     __block NSDictionary *rawConversation;
@@ -2120,45 +2116,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }]].array;
     
     XCTAssertEqual(messages.count, 1u);
-}
-
-- (void)testThatItDoesNotAppendNewConversationIfNewDevice {
-    
-    // given
-    self.mockApplicationStatus.mockOperationState = ZMOperationStateForeground;
-
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
-    
-    __block NSDictionary *rawConversation;
-    [self.syncMOC performGroupedBlockAndWait:^{
-        self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateSynchronizing;
-        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
-        
-        NSArray *conversationIDs = [self createConversationIDArrayOfSize:1];
-        rawConversation = [self createRawConversationsForIds:conversationIDs][0];
-        [self setUpSyncWithConversationIDs:conversationIDs];
-    }];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    [self.syncMOC performGroupedBlockAndWait:^{
-        self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
-        
-        // when
-        ZMTransportResponse *response = [self createConversationResponseForRawConversations:@[rawConversation]];
-        [self generateRequestAndCompleteWithResponse:response];
-    }];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    ZMConversation *conv = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:rawConversation[@"id"]] createIfNeeded:NO inContext:self.syncMOC];
-    
-    NSArray *messages = [conv.messages filteredOrderedSetUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(ZMMessage * _Nonnull evaluatedObject, NSDictionary<NSString *,id> * _Nullable ZM_UNUSED bindings) {
-        return [evaluatedObject isKindOfClass:[ZMSystemMessage class]] && [(ZMSystemMessage *)evaluatedObject systemMessageType] == ZMSystemMessageTypeNewConversation;
-    }]].array;
-    
-    XCTAssertEqual(messages.count, 0u);
 }
 
 @end
