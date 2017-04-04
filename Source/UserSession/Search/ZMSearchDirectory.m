@@ -28,7 +28,7 @@
 #import "ZMSearchRequestCodec.h"
 #import "ZMSearchResult+Internal.h"
 #import "ZMSearchRequest.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static const NSTimeInterval DefaultRemoteSearchTimeout = 1.5;
 static const NSTimeInterval DefaultUpdateDelay = 60;

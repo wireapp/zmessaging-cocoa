@@ -18,11 +18,11 @@
 
 import Foundation
 import XCTest
-@testable import zmessaging
+@testable import WireSyncEngine
 
-typealias ProfileImageSize = zmessaging.ProfileImageSize
+typealias ProfileImageSize = WireSyncEngine.ProfileImageSize
 
-class MockImageUpdateStatus: zmessaging.UserProfileImageUploadStatusProtocol {
+class MockImageUpdateStatus: WireSyncEngine.UserProfileImageUploadStatusProtocol {
     var allSizes: [ProfileImageSize] { return [.preview, .complete] }
     
     var dataToConsume = [ProfileImageSize : Data]()
@@ -50,7 +50,7 @@ class MockImageUpdateStatus: zmessaging.UserProfileImageUploadStatusProtocol {
 
 class UserImageAssetUpdateStrategyTests : MessagingTest {
     
-    var sut: zmessaging.UserImageAssetUpdateStrategy!
+    var sut: WireSyncEngine.UserImageAssetUpdateStrategy!
     var authenticationStatus: MockAuthenticationStatus!
     var updateStatus: MockImageUpdateStatus!
     
@@ -58,7 +58,7 @@ class UserImageAssetUpdateStrategyTests : MessagingTest {
         super.setUp()
         self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
         self.updateStatus = MockImageUpdateStatus()
-        self.sut = zmessaging.UserImageAssetUpdateStrategy(managedObjectContext: syncMOC,
+        self.sut = WireSyncEngine.UserImageAssetUpdateStrategy(managedObjectContext: syncMOC,
                                                               imageUploadStatus: updateStatus,
                                                            authenticationStatus: authenticationStatus)
         

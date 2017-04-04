@@ -17,8 +17,8 @@
 //
 
 import XCTest
-@testable import zmessaging
-import ZMUtilities
+@testable import WireSyncEngine
+import WireUtilities
 
 var sampleUploadState: UserProfileImageUpdateStatus.ImageState {
     return UserProfileImageUpdateStatus.ImageState.upload(image: Data())
@@ -66,10 +66,10 @@ class MockOperation: NSObject, ZMImageDownsampleOperationProtocol {
     }
 }
 
-typealias ProfileUpdateState = zmessaging.UserProfileImageUpdateStatus.ProfileUpdateState
-typealias ImageState = zmessaging.UserProfileImageUpdateStatus.ImageState
+typealias ProfileUpdateState = WireSyncEngine.UserProfileImageUpdateStatus.ProfileUpdateState
+typealias ImageState = WireSyncEngine.UserProfileImageUpdateStatus.ImageState
 
-class MockChangeDelegate: zmessaging.UserProfileImageUploadStateChangeDelegate {
+class MockChangeDelegate: WireSyncEngine.UserProfileImageUploadStateChangeDelegate {
     var states = [ProfileUpdateState]()
     func didTransition(from oldState: ProfileUpdateState, to currentState: ProfileUpdateState) {
         states.append(currentState)
@@ -123,7 +123,7 @@ extension StateTransition {
     }
 }
 
-typealias UserProfileImageUpdateStatus = zmessaging.UserProfileImageUpdateStatus
+typealias UserProfileImageUpdateStatus = WireSyncEngine.UserProfileImageUpdateStatus
 
 extension UserProfileImageUpdateStatus.ImageState: Equatable {
     public static func ==(lhs: UserProfileImageUpdateStatus.ImageState, rhs: UserProfileImageUpdateStatus.ImageState) -> Bool {

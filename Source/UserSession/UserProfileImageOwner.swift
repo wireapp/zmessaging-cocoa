@@ -17,7 +17,7 @@
 //
 
 import Foundation
-import zimages
+import WireImages
 
 public final class UserProfileImageOwner: NSObject, ZMImageOwner {
     

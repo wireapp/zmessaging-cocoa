@@ -18,7 +18,7 @@
 
 
 import Foundation
-import ZMCDataModel
+import WireDataModel
 
 internal enum UserProfileImageUpdateError: Error {
     case preprocessingFailed

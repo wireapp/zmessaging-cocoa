@@ -62,7 +62,6 @@
 #import <WireSyncEngine/ZMCallKitDelegate+Internal.h>
 #import <WireSyncEngine/ZMPushToken.h>
 #import <WireSyncEngine/ZMTyping.h>
-#import <WireSyncEngine/ZMUserIDsForSearchDirectoryTable.h>
 #import <WireSyncEngine/ZMSearchDirectory+Internal.h>
 //#import <WireSyncEngine/VoiceChannelV2.h>
 #import <WireSyncEngine/VoiceChannelV2+Internal.h>

@@ -17,8 +17,8 @@
 //
 
 import Foundation
-@testable import zmessaging
-import ZMCMockTransport
+@testable import WireSyncEngine
+import WireMockTransport
 
 class UserProfileImageV3Tests: IntegrationTestBase {
     

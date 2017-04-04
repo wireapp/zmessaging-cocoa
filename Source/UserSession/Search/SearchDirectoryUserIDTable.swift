@@ -18,7 +18,7 @@
 
 
 
-import ZMCDataModel
+import WireDataModel
 
 
 final public class SearchUserAndAsset: NSObject {
