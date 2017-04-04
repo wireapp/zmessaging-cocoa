@@ -18,8 +18,8 @@
 
 
 import Foundation
-import zmessaging
-import ZMCMockTransport
+import WireSyncEngine
+import WireMockTransport
 
 class OTRTests : IntegrationTestBase {
         

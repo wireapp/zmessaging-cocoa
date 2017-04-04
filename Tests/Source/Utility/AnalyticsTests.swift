@@ -19,8 +19,8 @@
 
 import Foundation
 import XCTest
-import ZMTesting
-@testable import zmessaging
+import WireTesting
+@testable import WireSyncEngine
 
 
 
@@ -121,7 +121,7 @@ extension AnalyticsTests {
     
     func testThatItDoesTrackTheIntervalBetweenTwoUploads() {
         // given
-        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
+        let tracker = WireSyncEngine.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
         
         
         // when
@@ -139,7 +139,7 @@ extension AnalyticsTests {
     func testThatItTracksAddresBookUploadStarted() {
         // given
         let size : UInt = 345
-        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
+        let tracker = WireSyncEngine.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
         
         // when
         tracker.tagAddressBookUploadStarted(size)
@@ -157,7 +157,7 @@ extension AnalyticsTests {
     
     func assertThatItTracksAddresBookUploadEnded(_ hoursSinceLastUpload: Int? = nil, shouldTrackInterval: Bool = true, line: UInt = #line) {
         // given
-        let tracker = zmessaging.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
+        let tracker = WireSyncEngine.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
         if let hours = hoursSinceLastUpload.map(TimeInterval.init) {
             let lastDate = Date(timeIntervalSinceNow: -hours * 3600)
             tracker.managedObjectContext.lastAddressBookUploadDate = lastDate

@@ -17,7 +17,7 @@
 // 
 
 
-@import zmessaging;
+@import WireSyncEngine;
 #import "StateBaseTest.h"
 #import "ZMDownloadLastUpdateEventIDState.h"
 #import "ZMStateMachineDelegate.h"

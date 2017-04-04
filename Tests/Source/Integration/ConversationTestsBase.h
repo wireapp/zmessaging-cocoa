@@ -16,17 +16,17 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-@import ZMTransport;
-@import ZMCMockTransport;
-@import zmessaging;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireMockTransport;
+@import WireSyncEngine;
+@import WireDataModel;
 
 #import "ZMUserSession.h"
 #import "IntegrationTestBase.h"
 #import "ZMTestNotifications.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMConversationTranscoder+Internal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 
 @interface ConversationTestsBase : IntegrationTestBase

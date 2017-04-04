@@ -18,8 +18,8 @@
 
 
 @import Foundation;
-@import ZMCMockTransport;
-@import ZMCDataModel;
+@import WireMockTransport;
+@import WireDataModel;
 
 #import "IntegrationTestBase.h"
 #import "ZMSearchDirectory.h"

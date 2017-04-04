@@ -18,8 +18,8 @@
 
 
 import UIKit
-import ZMTransport
-import ZMUtilities
+import WireTransport
+import WireUtilities
 
 
 public struct SignalingKeys {

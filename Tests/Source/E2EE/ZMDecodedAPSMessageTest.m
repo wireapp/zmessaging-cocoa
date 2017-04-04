@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMTesting;
+@import WireTesting;
 #import <CommonCrypto/CommonCrypto.h>
 #import "MessagingTest.h"
 #import "ZMAPSMessageDecoder.h"

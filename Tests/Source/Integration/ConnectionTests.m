@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
-@import zmessaging;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireSyncEngine;
+@import WireDataModel;
 
 #import "IntegrationTestBase.h"
 #import "ZMSearchDirectory.h"

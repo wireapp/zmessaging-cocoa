@@ -19,10 +19,10 @@
 
 @import ZMTesting;
 @import ZMUtilities;
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "MessagingTest.h"
 #import "ZMLocalNotificationForEventTest.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 @implementation ZMLocalNotificationForEventTest (MessageEvents)

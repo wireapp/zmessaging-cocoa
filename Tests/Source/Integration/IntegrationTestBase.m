@@ -18,7 +18,7 @@
 
 
 @import CoreTelephony;
-@import ZMCDataModel;
+@import WireDataModel;
 @import WireMessageStrategy;
 
 #import "IntegrationTestBase.h"
@@ -29,15 +29,15 @@
 #import "ZMUserSession+Authentication.h"
 #import "ZMUserSession+Registration.h"
 #import "ZMCredentials.h"
-#import <zmessaging/ZMAuthenticationStatus+Testing.h>
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/ZMAuthenticationStatus+Testing.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMFlowSync.h"
 #import "ZMGSMCallHandler.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "ZMCallStateTranscoder.h"
 #import "MockLinkPreviewDetector.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 NSString * const SelfUserEmail = @"myself@user.example.com";

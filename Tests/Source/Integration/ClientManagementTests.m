@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMTesting;
+@import WireTesting;
 
 #import "IntegrationTestBase.h"
 #import "ZMUserSession+OTR.h"

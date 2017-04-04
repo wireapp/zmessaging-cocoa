@@ -17,13 +17,13 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireUtilities;
+@import WireDataModel;
 
 #import "ZMFlowSync.h"
 #import "ZMAVSBridge.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMOnDemandFlowManager.h"
 #import "VoiceChannelV2+VideoCalling.h"

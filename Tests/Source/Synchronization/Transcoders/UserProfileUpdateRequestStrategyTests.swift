@@ -17,7 +17,7 @@
 //
 
 import XCTest
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class UserProfileUpdateRequestStrategyTests : MessagingTest {
     
@@ -88,7 +88,7 @@ extension UserProfileUpdateRequestStrategyTests {
     func testThatItCreatesARequestToChangePhone() {
         
         // GIVEN
-        ZMUser.selfUser(in: self.uiMOC).phoneNumber = "+1234567890"
+        ZMUser.selfUser(in: self.uiMOC).setValue("+155534534566", forKey: #keyPath(ZMUser.phoneNumber))
         let credentials = ZMPhoneCredentials(phoneNumber: "+155523123123", verificationCode: "12345")
         self.userProfileUpdateStatus.requestPhoneNumberChange(credentials: credentials)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
@@ -108,7 +108,7 @@ extension UserProfileUpdateRequestStrategyTests {
     func testThatItCreatesARequestToAddPhone() {
         
         // GIVEN
-        ZMUser.selfUser(in: self.uiMOC).phoneNumber = nil
+        ZMUser.selfUser(in: self.uiMOC).setValue(nil, forKey: #keyPath(ZMUser.phoneNumber))
         let credentials = ZMPhoneCredentials(phoneNumber: "+155523123123", verificationCode: "12345")
         self.userProfileUpdateStatus.requestPhoneNumberChange(credentials: credentials)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
@@ -146,7 +146,7 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // GIVEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = "foo@email.com"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
 
         let newEmail = "mario@example.com"
         try! self.userProfileUpdateStatus.requestEmailChange(email: newEmail)
@@ -166,8 +166,8 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // GIVEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = "foo@email.com"
-        selfUser.phoneNumber = "+155523123123"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
+        selfUser.setValue("+155534534566", forKey: #keyPath(ZMUser.phoneNumber))
         self.userProfileUpdateStatus.requestPhoneNumberRemoval()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -296,8 +296,8 @@ extension UserProfileUpdateRequestStrategyTests {
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.count, 1)
-        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.first as? NSError else { return }
-        XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.invalidPhoneNumber.rawValue))
+        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.first else { return }
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.invalidPhoneNumber.rawValue))
     }
     
     func testThatItGetsInvalidPhoneNumberErrorOnBadRequestResponse() {
@@ -314,8 +314,8 @@ extension UserProfileUpdateRequestStrategyTests {
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.count, 1)
-        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.first as? NSError else { return }
-        XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.invalidPhoneNumber.rawValue))
+        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.first else { return }
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.invalidPhoneNumber.rawValue))
     }
     
     func testThatItGetsDuplicatePhoneNumberErrorOnDuplicatePhoneNumber() {
@@ -332,8 +332,8 @@ extension UserProfileUpdateRequestStrategyTests {
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.count, 1)
-        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.first as? NSError else { return }
-        XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.phoneNumberIsAlreadyRegistered.rawValue))
+        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.first else { return }
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.phoneNumberIsAlreadyRegistered.rawValue))
     }
     
     // MARK: - Phone number change
@@ -367,8 +367,8 @@ extension UserProfileUpdateRequestStrategyTests {
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailChangingPhone.count, 1)
-        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.first as? NSError else { return }
-        XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
+        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.first else { return }
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
     }
     
     // MARK: - Setting email and password
@@ -453,8 +453,8 @@ extension UserProfileUpdateRequestStrategyTests {
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailEmailUpdate.count, 1)
-        guard let error = self.userProfileUpdateStatus.recordedDidFailEmailUpdate.first as? NSError else { return }
-        XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.invalidEmail.rawValue))
+        guard let error = self.userProfileUpdateStatus.recordedDidFailEmailUpdate.first else { return }
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.invalidEmail.rawValue))
     }
     
     func testThatItCallsDidFailEmailUpdateWithDuplicatedEmail() {
@@ -472,8 +472,8 @@ extension UserProfileUpdateRequestStrategyTests {
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailEmailUpdate.count, 1)
-        guard let error = self.userProfileUpdateStatus.recordedDidFailEmailUpdate.first as? NSError else { return }
-        XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.emailIsAlreadyRegistered.rawValue))
+        guard let error = self.userProfileUpdateStatus.recordedDidFailEmailUpdate.first else { return }
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.emailIsAlreadyRegistered.rawValue))
     }
     
     func testThatItCallsDidFailEmailUpdateWithUnknownError() {
@@ -491,8 +491,8 @@ extension UserProfileUpdateRequestStrategyTests {
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailEmailUpdate.count, 1)
-        guard let error = self.userProfileUpdateStatus.recordedDidFailEmailUpdate.first as? NSError else { return }
-        XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
+        guard let error = self.userProfileUpdateStatus.recordedDidFailEmailUpdate.first else { return }
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
         
     }
     
@@ -501,7 +501,7 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // GIVEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = "foo@email.com"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         try! self.userProfileUpdateStatus.requestEmailChange(email: "mario@example.com")
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -518,8 +518,8 @@ extension UserProfileUpdateRequestStrategyTests {
     func testThatItCallsDidRemovePhoneNumberSuccessfully() {
         // GIVEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.phoneNumber = "+155523123123"
-        selfUser.emailAddress = "foo@email.com"
+        selfUser.setValue("+155534534566", forKey: #keyPath(ZMUser.phoneNumber))
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         self.userProfileUpdateStatus.requestPhoneNumberRemoval()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -538,8 +538,8 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // GIVEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.phoneNumber = "+155523123123"
-        selfUser.emailAddress = "foo@email.com"
+        selfUser.setValue("+155534534566", forKey: #keyPath(ZMUser.phoneNumber))
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         self.userProfileUpdateStatus.requestPhoneNumberRemoval()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -550,16 +550,16 @@ extension UserProfileUpdateRequestStrategyTests {
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.count, 1)
-        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.first as? NSError else { return }
-        XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.lastUserIdentityCantBeDeleted.rawValue))
+        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.first else { return }
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.lastUserIdentityCantBeDeleted.rawValue))
     }
     
     func testThatItCallsDidFailRemovePhoneNumberOnOtherErrors() {
         
         // GIVEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.phoneNumber = "+155523123123"
-        selfUser.emailAddress = "foo@email.com"
+        selfUser.setValue("+155534534566", forKey: #keyPath(ZMUser.phoneNumber))
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         self.userProfileUpdateStatus.requestPhoneNumberRemoval()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -570,8 +570,8 @@ extension UserProfileUpdateRequestStrategyTests {
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.count, 1)
-        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.first as? NSError else { return }
-        XCTAssertEqual(error.code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
+        guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.first else { return }
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
     }
     
     // MARK: - Check handle availability

@@ -18,9 +18,9 @@
 
 
 @import CoreData;
-@import ZMTransport;
-@import ZMCDataModel;
-@import ZMUtilities;
+@import WireTransport;
+@import WireDataModel;
+@import WireUtilities;
 
 #import "ZMSearchDirectory+Internal.h"
 #import "ZMUserSession+Internal.h"

@@ -17,14 +17,14 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMTransport;
+@import WireSystem;
+@import WireUtilities;
+@import WireTransport;
 @import UIKit;
 
 #import "ZMBlacklistDownloader+Testing.h"
 #import "ZMUserSession.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *ZMLogTag ZM_UNUSED = @"Blacklist";
 

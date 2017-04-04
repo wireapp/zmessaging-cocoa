@@ -17,13 +17,13 @@
 // 
 
 
-@import ZMUtilities;
-@import ZMTransport;
+@import WireUtilities;
+@import WireTransport;
 @import WireRequestStrategy;
 
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMSimpleListRequestPaginator.h"
 
 

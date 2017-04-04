@@ -18,7 +18,7 @@
 
 
 import XCTest
-import ZMTesting
+import WireTesting
 
 
 fileprivate class MockSearchDelegate: TextSearchQueryDelegate {

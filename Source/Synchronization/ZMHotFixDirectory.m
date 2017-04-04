@@ -17,11 +17,11 @@
 // 
 
 
-@import ZMCDataModel;
+@import WireDataModel;
 #import "ZMHotFixDirectory.h"
 #import "ZMUserSession.h"
-#import <ZMTransport/ZMTransport.h>
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireTransport/WireTransport.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
 

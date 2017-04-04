@@ -17,7 +17,7 @@
 // 
 
 
-#import <ZMCDataModel/ZMNotifications.h>
+#import <WireDataModel/ZMNotifications.h>
 #import "ZMUserSession.h"
 #import "ZMNotifications+UserSession.h"
 

@@ -17,7 +17,7 @@
 //
 
 import Foundation
-import ZMCDataModel
+import WireDataModel
 
 @objc
 public class WireCallCenterV3Factory : NSObject {

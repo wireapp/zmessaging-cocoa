@@ -17,17 +17,17 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 @import WireRequestStrategy;
 
 #import "ZMConversationTranscoder.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMSyncStrategy.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *const ConversationsPath = @"/conversations";
 static NSString *const ConversationIDsPath = @"/conversations/ids";
@@ -732,7 +732,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     BOOL const removedUsers = ([changeType isEqualToString:UserInfoRemovedValueKey]);
     
     if (addedUsers || removedUsers) {
-        BOOL needsAnotherRequest;
+        BOOL needsAnotherRequest = NO;
         if (removedUsers) {
             ZMUser *syncedUser = userInfo[UserInfoUserKey];
             [conversation synchronizeRemovedUser:syncedUser];

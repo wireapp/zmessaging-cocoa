@@ -17,15 +17,15 @@
 // 
 
 
-@import ZMTransport;
-@import Cryptobox;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireCryptobox;
+@import WireDataModel;
 @import avs;
 //@import WireMessageStrategy;
 
 #import "MessagingTest.h"
 #import "ZMSyncStrategy.h"
-#import <zmessaging/ZMUserSession.h>
+#import <WireSyncEngine/ZMUserSession.h>
 #import "MockModelObjectContextFactory.h"
 #import "MockModelObjectContextFactory.h"
 #import "ZMAuthenticationStatus.h"

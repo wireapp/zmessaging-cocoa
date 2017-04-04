@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
-@import zmessaging;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireSyncEngine;
+@import WireDataModel;
 @import WireMessageStrategy;
 
 #import "MessagingTest.h"
@@ -158,8 +158,8 @@
     
     id factory = [OCMockObject mockForClass:BackgroundActivityFactory.class];
     [(Class)[[[factory stub] andReturn:factory] classMethod] sharedInstance];
-    [[[factory expect] andReturn:mockActivity] backgroundActivityWithName:OCMOCK_ANY];
-    [[[factory reject] andReturn:mockActivity] backgroundActivityWithName:OCMOCK_ANY];
+    NOT_USED([[[factory expect] andReturn:mockActivity] backgroundActivityWithName:OCMOCK_ANY]);
+    NOT_USED([[[factory reject] andReturn:mockActivity] backgroundActivityWithName:OCMOCK_ANY]);
     
     // when (1)
     [self.sut didEnterState];

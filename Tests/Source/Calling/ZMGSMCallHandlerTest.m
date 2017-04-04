@@ -18,8 +18,8 @@
 
 
 @import CoreTelephony;
-@import zmessaging;
-@import ZMCDataModel;
+@import WireSyncEngine;
+@import WireDataModel;
 
 #import "MessagingTest.h"
 #import "ZMGSMCallHandler.h"
@@ -191,7 +191,7 @@
         // the changes are synced with the BE
         // callDeviceIsActiveIsReset
         [self.syncMOC performGroupedBlockAndWait:^{
-            [self.syncMOC.zm_callState mergeChangesFromState:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
+            NOT_USED([self.syncMOC.zm_callState mergeChangesFromState:[self.uiMOC.zm_callState createCopyAndResetHasChanges]]);
             [syncConv resetHasLocalModificationsForCallDeviceIsActive];
         }];
         
@@ -227,7 +227,7 @@
         [syncConv.voiceChannelRouter.v2 addCallParticipant:otherUser];
         [self.syncMOC saveOrRollback];
     }];
-    [self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
+    NOT_USED([self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]]);
 
     XCTAssertTrue(uiConv.callDeviceIsActive);
     XCTAssertFalse(uiConv.hasLocalModificationsForCallDeviceIsActive);
@@ -251,10 +251,10 @@
         // the changes are synced with the BE
         // callDeviceIsActiveIsReset
         [self.syncMOC performGroupedBlockAndWait:^{
-            [self.syncMOC.zm_callState mergeChangesFromState:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
+            NOT_USED([self.syncMOC.zm_callState mergeChangesFromState:[self.uiMOC.zm_callState createCopyAndResetHasChanges]]);
             [syncConv resetHasLocalModificationsForCallDeviceIsActive];
         }];
-        [self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]]);
 
         XCTAssertFalse(uiConv.hasLocalModificationsForCallDeviceIsActive);
         XCTAssertTrue(uiConv.callDeviceIsActive);
@@ -265,7 +265,7 @@
             [syncConv.voiceChannelRouter.v2 removeAllCallParticipants];
             [self.syncMOC saveOrRollback];
         }];
-        [self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]]);
         [self.uiMOC refreshObject:uiConv mergeChanges:YES];
 
         XCTAssertEqual(uiConv.voiceChannel.participants.count, 0u);
@@ -302,7 +302,7 @@
         [syncConv.voiceChannelRouter.v2 addCallParticipant:otherUser];
         [self.syncMOC saveOrRollback];
     }];
-    [self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
+    NOT_USED([self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]]);
     
     XCTAssertTrue(uiConv.callDeviceIsActive);
     XCTAssertFalse(uiConv.hasLocalModificationsForCallDeviceIsActive);
@@ -326,11 +326,11 @@
         // the changes are synced with the BE
         // callDeviceIsActiveIsReset
         [self.syncMOC performGroupedBlockAndWait:^{
-            [self.syncMOC.zm_callState mergeChangesFromState:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
+            NOT_USED([self.syncMOC.zm_callState mergeChangesFromState:[self.uiMOC.zm_callState createCopyAndResetHasChanges]]);
             [syncConv resetHasLocalModificationsForCallDeviceIsActive];
             [self.syncMOC saveOrRollback];
         }];
-        [self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([self.uiMOC.zm_callState mergeChangesFromState:[self.syncMOC.zm_callState createCopyAndResetHasChanges]]);
         
         XCTAssertFalse(uiConv.hasLocalModificationsForCallDeviceIsActive);
         XCTAssertTrue(uiConv.callDeviceIsActive);

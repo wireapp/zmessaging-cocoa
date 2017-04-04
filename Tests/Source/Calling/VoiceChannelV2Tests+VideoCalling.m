@@ -17,14 +17,14 @@
 // 
 
 
-@import zmessaging;
-@import ZMCDataModel;
+@import WireSyncEngine;
+@import WireDataModel;
 @import avs;
 
 #import "VoiceChannelV2Tests.h"
 #import "ZMUserSession+Internal.h"
 
-@import ZMCMockTransport;
+@import WireMockTransport;
 
 extern id ZMFlowSyncInternalFlowManagerOverride;
 

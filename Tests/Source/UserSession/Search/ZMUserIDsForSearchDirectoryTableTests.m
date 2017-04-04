@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import "MessagingTest.h"
 #import "ZMSearchDirectory+Internal.h"

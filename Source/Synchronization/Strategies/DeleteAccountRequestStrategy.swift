@@ -18,7 +18,7 @@
 
 
 import Foundation
-import ZMTransport
+import WireTransport
 
 /// Requests the account deletion
 @objc public final class DeleteAccountRequestStrategy: NSObject, RequestStrategy, ZMSingleRequestTranscoder {

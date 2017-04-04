@@ -18,7 +18,7 @@
 
 
 import Foundation
-import zmessaging
+import WireSyncEngine
 
 class ProxiedRequestStrategyTests: MessagingTest {
 

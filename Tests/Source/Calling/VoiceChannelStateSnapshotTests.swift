@@ -18,7 +18,7 @@
 
 
 import Foundation
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class VoiceChannelStateSnapshotTests : MessagingTest {
 

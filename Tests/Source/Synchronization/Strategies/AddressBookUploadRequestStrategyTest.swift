@@ -17,12 +17,12 @@
 //
 
 import Foundation
-import ZMCLinkPreview
-@testable import zmessaging
+import WireLinkPreview
+@testable import WireSyncEngine
 
 class AddressBookUploadRequestStrategyTest : MessagingTest {
     
-    var sut : zmessaging.AddressBookUploadRequestStrategy!
+    var sut : WireSyncEngine.AddressBookUploadRequestStrategy!
     var authenticationStatus : MockAuthenticationStatus!
     var clientRegistrationStatus : ZMMockClientRegistrationStatus!
     var addressBook : AddressBookFake!
@@ -38,7 +38,7 @@ class AddressBookUploadRequestStrategyTest : MessagingTest {
         
         let ab = self.addressBook // I don't want to capture self in closure later
         ab?.fillWithContacts(5)
-        self.sut = zmessaging.AddressBookUploadRequestStrategy(authenticationStatus: self.authenticationStatus,
+        self.sut = WireSyncEngine.AddressBookUploadRequestStrategy(authenticationStatus: self.authenticationStatus,
                                                                clientRegistrationStatus: self.clientRegistrationStatus,
                                                                managedObjectContext: self.syncMOC,
                                                                addressBookGenerator: { return ab },
@@ -73,7 +73,7 @@ extension AddressBookUploadRequestStrategyTest {
     func testThatItReturnsARequestWhenTheABIsMarkedForUpload() {
         
         // given
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         
         // when
         let nilRequest = sut.nextRequest() // this will return nil and start async processing
@@ -105,9 +105,9 @@ extension AddressBookUploadRequestStrategyTest {
     func testThatItIncludesSelfCardWithPhoneNumber() {
         
         // given
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        selfUser.phoneNumber = "+155534534566"
+        selfUser.setValue("+155534534566", forKey: #keyPath(ZMUser.phoneNumber))
         
         // when
         let nilRequest = sut.nextRequest() // this will return nil and start async processing
@@ -128,9 +128,9 @@ extension AddressBookUploadRequestStrategyTest {
     func testThatItIncludesSelfCardWithEmail() {
         
         // given
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        selfUser.emailAddress = "me@example.com"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         
         // when
         let nilRequest = sut.nextRequest() // this will return nil and start async processing
@@ -151,7 +151,7 @@ extension AddressBookUploadRequestStrategyTest {
     func testThatItUploadsOnlyOnceWhenNotAskedAgain() {
         
         // given
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
@@ -171,7 +171,7 @@ extension AddressBookUploadRequestStrategyTest {
         
         // given
         self.addressBook.fakeContacts = []
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         
         // when
         let nilRequest = sut.nextRequest() // this will return nil and start async processing
@@ -190,7 +190,7 @@ extension AddressBookUploadRequestStrategyTest {
         // (to be sure that async is done) and see that I got a non-nil only once.
         
         // given
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         let nilRequest = sut.nextRequest() // this will return nil and start async processing
         XCTAssertNil(nilRequest)
 
@@ -211,7 +211,7 @@ extension AddressBookUploadRequestStrategyTest {
     func testThatItReturnsARequestWhenTheABIsMarkedForUploadAgain() {
         
         // given
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request1 = sut.nextRequest()
@@ -219,7 +219,7 @@ extension AddressBookUploadRequestStrategyTest {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request2 = sut.nextRequest()
@@ -395,7 +395,7 @@ extension AddressBookUploadRequestStrategyTest {
     func testThatItTagsTheEventWhenStartingToUpload() {
         
         // given
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -412,7 +412,7 @@ extension AddressBookUploadRequestStrategyTest {
     func testThatItTagsTheEventWhenUploadingSuccessfully() {
         
         // given
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
@@ -431,7 +431,7 @@ extension AddressBookUploadRequestStrategyTest {
     func testThatItDoesNotTagTheEventWhenUploadingUnsuccessfully() {
         
         // given
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
@@ -494,7 +494,7 @@ extension AddressBookUploadRequestStrategyTest {
                 ],
             ]
         ]
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
@@ -536,7 +536,7 @@ extension AddressBookUploadRequestStrategyTest {
                 ],
             ]
         ]
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
@@ -580,7 +580,7 @@ extension AddressBookUploadRequestStrategyTest {
             "results" : []
         ]
 
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
@@ -614,7 +614,7 @@ extension AddressBookUploadRequestStrategyTest {
             "apples" : "oranges"
         ]
 
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
@@ -637,7 +637,7 @@ extension AddressBookUploadRequestStrategyTest {
     /// It also completes that request so that new requests will upload the next chunk
     /// of the AB
     func getNextUploadingRequest() -> ZMTransportRequest? {
-        zmessaging.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
+        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         _ = sut.nextRequest() // this will return nil and start async processing
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let request = sut.nextRequest()
@@ -674,10 +674,10 @@ extension AddressBookUploadRequestStrategyTest {
 }
 
 /// Fake to supply predefined AB hashes
-class AddressBookFake : zmessaging.AddressBook, zmessaging.AddressBookAccessor {
+class AddressBookFake : WireSyncEngine.AddressBook, WireSyncEngine.AddressBookAccessor {
     
     /// Find contact by Id
-    func contact(identifier: String) -> zmessaging.ContactRecord? {
+    func contact(identifier: String) -> WireSyncEngine.ContactRecord? {
         return fakeContacts.first { $0.localIdentifier == identifier }
     }
     
@@ -694,7 +694,7 @@ class AddressBookFake : zmessaging.AddressBook, zmessaging.AddressBookAccessor {
 
     /// Enumerates the contacts, invoking the block for each contact.
     /// If the block returns false, it will stop enumerating them.
-    func enumerateRawContacts(block: @escaping (zmessaging.ContactRecord)->(Bool)) {
+    func enumerateRawContacts(block: @escaping (WireSyncEngine.ContactRecord)->(Bool)) {
         for contact in self.fakeContacts {
             if !block(contact) {
                 return
@@ -710,7 +710,7 @@ class AddressBookFake : zmessaging.AddressBook, zmessaging.AddressBookAccessor {
         }
     }
     
-    func rawContacts(matchingQuery: String) -> [zmessaging.ContactRecord] {
+    func rawContacts(matchingQuery: String) -> [WireSyncEngine.ContactRecord] {
         guard matchingQuery != "" else {
             return fakeContacts
         }
@@ -733,7 +733,7 @@ class AddressBookFake : zmessaging.AddressBook, zmessaging.AddressBookAccessor {
     var createInfiniteContacts = false
 }
 
-struct FakeAddressBookContact : zmessaging.ContactRecord {
+struct FakeAddressBookContact : WireSyncEngine.ContactRecord {
     
     static var incrementalLocalIdentifier = 0
     
@@ -801,7 +801,7 @@ extension ZMTransportData {
 }
 
 /// Fake tracker to test upload tracking
-final class AddressBookTrackerFake : zmessaging.AddressBookTracker {
+final class AddressBookTrackerFake : WireSyncEngine.AddressBookTracker {
     
     var taggedStartEventParameters : [UInt] = []
     

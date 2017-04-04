@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMCMockTransport;
+@import WireMockTransport;
 @import WireMessageStrategy;
 
 #import "MessagingTest.h"
@@ -26,9 +26,9 @@
 
 @import MobileCoreServices;
 @import CoreData;
-@import ZMTransport;
-@import ZMCMockTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireMockTransport;
+@import WireDataModel;
 
 #import "ZMTimingTests.h"
 #import "MockModelObjectContextFactory.h"
@@ -48,8 +48,8 @@
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMUserSession+Internal.h"
-#import <zmessaging/zmessaging-Swift.h>
-#import "zmessaging_iOS_Tests-Swift.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 @interface MessagingTest () 
@@ -586,7 +586,8 @@
 - (UserClient *)createSelfClient
 {
     UserClient *selfClient = [self setupSelfClientInMoc:self.syncMOC];
-    [UserClient createOrUpdateSelfUserClient:@{@"id": selfClient.remoteIdentifier, @"type": @"permanent", @"time": [[NSDate date] transportString]} context:self.syncMOC];
+    NSDictionary *payload = @{@"id": selfClient.remoteIdentifier, @"type": @"permanent", @"time": [[NSDate date] transportString]};
+    NOT_USED([UserClient createOrUpdateSelfUserClient:payload context:self.syncMOC]);
     [self.syncMOC saveOrRollback];
     
     return selfClient;

@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
-@import ZMUtilities;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireUtilities;
+@import WireDataModel;
 
 #import "ZMBareUser+UserSession.h"
 #import "ZMUserSession+Internal.h"

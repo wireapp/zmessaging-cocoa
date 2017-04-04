@@ -17,7 +17,7 @@
 // 
 
 
-#import <zmessaging/ZMAuthenticationStatus.h>
+#import <WireSyncEngine/ZMAuthenticationStatus.h>
 
 @class UserClient;
 

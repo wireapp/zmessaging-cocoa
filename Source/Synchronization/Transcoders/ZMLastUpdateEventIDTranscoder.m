@@ -17,12 +17,12 @@
 // 
 
 
-@import ZMTransport;
+@import WireTransport;
 
 #import "ZMLastUpdateEventIDTranscoder+Internal.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMLastUpdateEventIDTranscoder ()
 

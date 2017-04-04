@@ -17,11 +17,11 @@
 // 
 
 
-@import ZMUtilities;
-@import ZMCSystem;
-@import ZMTransport;
-@import Cryptobox;
-@import ZMCDataModel;
+@import WireUtilities;
+@import WireSystem;
+@import WireTransport;
+@import WireCryptobox;
+@import WireDataModel;
 
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
@@ -29,8 +29,8 @@
 #import "ZMUserSession.h"
 #import <libkern/OSAtomic.h>
 #import <os/activity.h>
-#import "ZMessagingLogs.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import "WireSyncEngineLogs.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 NSString * const ZMPushChannelStateChangeNotificationName = @"ZMPushChannelStateChangeNotification";
 NSString * const ZMPushChannelIsOpenKey = @"pushChannelIsOpen";

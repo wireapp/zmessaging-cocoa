@@ -18,7 +18,7 @@
 
 
 import Foundation
-import ZMTesting
+import WireTesting
 
 class ClientUpdateStatusTests: MessagingTest {
     var sut : ClientUpdateStatus!

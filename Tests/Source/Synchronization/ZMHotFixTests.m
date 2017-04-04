@@ -17,13 +17,13 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireDataModel;
 
 #import "MessagingTest.h"
 #import "ZMHotFix.h"
 #import "ZMHotFixDirectory.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface VersionNumberTests : MessagingTest
 @end

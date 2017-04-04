@@ -1,3 +1,3 @@
 
-#include "zmessaging.xcconfig"
+#include "WireSyncEngine.xcconfig"
 #include "zmc-config/osx.xcconfig"

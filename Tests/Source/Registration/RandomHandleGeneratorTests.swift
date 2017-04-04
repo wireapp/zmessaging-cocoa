@@ -18,7 +18,7 @@
 
 import Foundation
 import XCTest
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class RandomHandleGeneratorTests : XCTestCase {
     
@@ -46,7 +46,7 @@ class RandomHandleGeneratorTests : XCTestCase {
         let expectedNormalized = "marialarochellevonsch"
         
         // WHEN
-        var handles : [String] = zmessaging.RandomHandleGenerator.generatePossibleHandles(
+        var handles : [String] = WireSyncEngine.RandomHandleGenerator.generatePossibleHandles(
                 displayName: "Maria La Rochelle Von Schwerigstein",
                 alternativeNames: variations
             ).reversed() // there is no popFirst, so I will revert to be able to use popLast
@@ -69,21 +69,21 @@ class RandomHandleGeneratorTests : XCTestCase {
         let twoDigits = try! NSRegularExpression(pattern: "^\(expectedNormalized.truncated(at: 19))[0-9]{2}$", options: [])
         (0..<4).forEach { _ in
             let handle = handles.popLast()
-            XCTAssertTrue(twoDigits.matches(handle), "\(handle) does not match")
+            XCTAssertTrue(twoDigits.matches(handle), "\(String(describing: handle)) does not match")
         }
         
         // then 4 with three digits
         let threeDigits = try! NSRegularExpression(pattern: "^\(expectedNormalized.truncated(at: 18))[0-9]{3}$", options: [])
         (0..<4).forEach { _ in
             let handle = handles.popLast()
-            XCTAssertTrue(threeDigits.matches(handle), "\(handle) does not match")
+            XCTAssertTrue(threeDigits.matches(handle), "\(String(describing: handle)) does not match")
         }
         
         // then 6 with four digits
         let sixDigits = try! NSRegularExpression(pattern: "^\(expectedNormalized.truncated(at: 17))[0-9]{4}$", options: [])
         (0..<6).forEach { _ in
             let handle = handles.popLast()
-            XCTAssertTrue(sixDigits.matches(handle), "\(handle) does not match")
+            XCTAssertTrue(sixDigits.matches(handle), "\(String(describing: handle)) does not match")
         }
         
         // now random words
@@ -99,7 +99,7 @@ class RandomHandleGeneratorTests : XCTestCase {
         let expectedFirstNormalized = "po"
         
         // WHEN
-        let handles : [String] = zmessaging.RandomHandleGenerator.generatePossibleHandles(displayName: "Po", alternativeNames: 0)
+        let handles : [String] = WireSyncEngine.RandomHandleGenerator.generatePossibleHandles(displayName: "Po", alternativeNames: 0)
         
         // THEN
         XCTAssertEqual(handles.first, expectedFirstNormalized)
@@ -108,7 +108,7 @@ class RandomHandleGeneratorTests : XCTestCase {
     func testThatItDoesNotSuggestsHandlesWithOneCharacters() {
         
         // WHEN
-        let handles : [String] = zmessaging.RandomHandleGenerator.generatePossibleHandles(displayName: "P", alternativeNames: 0)
+        let handles : [String] = WireSyncEngine.RandomHandleGenerator.generatePossibleHandles(displayName: "P", alternativeNames: 0)
         
         // THEN
         guard let handle = handles.first else { XCTFail(); return }

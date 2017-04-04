@@ -19,7 +19,7 @@
 
 
 #import <Foundation/Foundation.h>
-#import <ZMCDataModel/ZMManagedObject.h>
+#import <WireDataModel/ZMManagedObject.h>
 
 @interface MockEntity2 : ZMManagedObject
 

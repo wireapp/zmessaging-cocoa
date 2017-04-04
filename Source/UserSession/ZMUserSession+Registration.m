@@ -19,8 +19,8 @@
 
 @import Foundation;
 @import CoreData;
-@import ZMCSystem;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireDataModel;
 @import WireRequestStrategy;
 
 #import "ZMUserSession+Internal.h"

@@ -17,12 +17,12 @@
 //
 
 import Foundation
-import ZMCLinkPreview
-@testable import zmessaging
+import WireLinkPreview
+@testable import WireSyncEngine
 
 class SelfContactCardUploadStrategyTests : MessagingTest {
     
-    var sut : zmessaging.SelfContactCardUploadStrategy!
+    var sut : WireSyncEngine.SelfContactCardUploadStrategy!
     var authenticationStatus : MockAuthenticationStatus!
     var clientRegistrationStatus : ZMMockClientRegistrationStatus!
     
@@ -32,7 +32,7 @@ class SelfContactCardUploadStrategyTests : MessagingTest {
         self.clientRegistrationStatus = ZMMockClientRegistrationStatus()
         self.clientRegistrationStatus.mockPhase = .registered
         
-        self.sut = zmessaging.SelfContactCardUploadStrategy(authenticationStatus: self.authenticationStatus,
+        self.sut = WireSyncEngine.SelfContactCardUploadStrategy(authenticationStatus: self.authenticationStatus,
                                                                clientRegistrationStatus: self.clientRegistrationStatus,
                                                                managedObjectContext: self.syncMOC)
     }
@@ -117,7 +117,7 @@ extension SelfContactCardUploadStrategyTests {
         self.syncMOC.hasEverUploadedSelfCard = false
         self.syncMOC.selfContactCardNeedsToBeUploaded = true
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        selfUser.phoneNumber = "+155534534566"
+        selfUser.setValue("+155534534566", forKey: #keyPath(ZMUser.phoneNumber))
         
         // when
         let request = sut.nextRequest() // this will return nil and start async processing
@@ -138,7 +138,7 @@ extension SelfContactCardUploadStrategyTests {
         self.syncMOC.hasEverUploadedSelfCard = false
         self.syncMOC.selfContactCardNeedsToBeUploaded = true
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        selfUser.emailAddress = "me@example.com"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         
         // when
         let request = sut.nextRequest() // this will return nil and start async processing
@@ -159,7 +159,7 @@ extension SelfContactCardUploadStrategyTests {
         self.syncMOC.hasEverUploadedSelfCard = true
         self.syncMOC.selfContactCardNeedsToBeUploaded = true
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        selfUser.emailAddress = "me@example.com"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         
         // when
         let firstRequest = sut.nextRequest()
@@ -179,7 +179,7 @@ extension SelfContactCardUploadStrategyTests {
         self.syncMOC.hasEverUploadedSelfCard = false
         self.syncMOC.selfContactCardNeedsToBeUploaded = true
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        selfUser.emailAddress = "me@example.com"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         
         // when
         let firstRequest = sut.nextRequest()

@@ -18,10 +18,10 @@
 
 
 @import UIKit;
-@import ZMTransport;
+@import WireTransport;
 @import OCMock;
-@import zmessaging;
-@import ZMCDataModel;
+@import WireSyncEngine;
+@import WireDataModel;
 
 #import "ObjectTranscoderTests.h"
 #import "ZMConversationTranscoder.h"

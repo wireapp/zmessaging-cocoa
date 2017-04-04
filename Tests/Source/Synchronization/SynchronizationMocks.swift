@@ -18,9 +18,9 @@
 
 import Foundation
 import AddressBook
-import ZMCDataModel
-import Cryptobox
-@testable import zmessaging
+import WireDataModel
+import WireCryptobox
+@testable import WireSyncEngine
 
 class MockAuthenticationStatus: ZMAuthenticationStatus {
     

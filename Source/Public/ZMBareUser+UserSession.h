@@ -17,9 +17,9 @@
 // 
 
 
-#import <ZMCDataModel/ZMBareUser.h>
-#import <ZMCDataModel/ZMUser.h>
-#import <ZMCDataModel/ZMSearchUser.h>
+#import <WireDataModel/ZMBareUser.h>
+#import <WireDataModel/ZMUser.h>
+#import <WireDataModel/ZMSearchUser.h>
 
 @class ZMUserSession, ZMAddressBookContact;
 

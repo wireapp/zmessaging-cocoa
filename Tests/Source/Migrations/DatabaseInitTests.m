@@ -21,10 +21,10 @@
 #import <CoreData/CoreData.h>
 #import <ZMTesting/ZMTesting.h>
 #import <OCMock/OCMock.h>
-#import <zmessaging/zmessaging.h>
-#import <zmessaging/zmessaging-Swift.h>
-#import "NSManagedObjectContext+zmessaging.h"
-#import "NSManagedObjectContext+zmessaging-Internal.h"
+#import <WireSyncEngine/WireSyncEngine.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
+#import "NSManagedObjectContext+WireSyncEngine.h"
+#import "NSManagedObjectContext+WireSyncEngine-Internal.h"
 
 @interface DatabaseInitTests : ZMTBaseTest
 

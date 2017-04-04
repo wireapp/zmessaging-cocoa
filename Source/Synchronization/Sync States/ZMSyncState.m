@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMTransport;
+@import WireSystem;
+@import WireUtilities;
+@import WireTransport;
 @import WireRequestStrategy;
 
 #import "ZMSyncState.h"

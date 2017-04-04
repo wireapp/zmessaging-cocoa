@@ -19,7 +19,7 @@
 
 #import "ZMUserSessionTestsBase.h"
 #import "ZMUserSession+Registration.h"
-@import ZMCMockTransport;
+@import WireMockTransport;
 
 static NSString *const ValidPhoneNumber = @"+491234567890";
 static NSString *const ShortPhoneNumber = @"+491";

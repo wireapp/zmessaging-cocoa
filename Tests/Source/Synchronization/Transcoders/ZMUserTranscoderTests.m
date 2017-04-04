@@ -17,15 +17,15 @@
 // 
 
 
-@import ZMTransport;
-@import zmessaging;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireSyncEngine;
+@import WireDataModel;
 
 #import "ObjectTranscoderTests.h"
 #import "ZMUserTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
 #import "ZMUserSession.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMUserSession+Internal.h"
 
 
