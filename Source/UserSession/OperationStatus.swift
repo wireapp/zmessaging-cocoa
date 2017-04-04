@@ -119,14 +119,18 @@ public class OperationStatus : NSObject {
     }
     
     public func finishBackgroundFetch(withFetchResult result: UIBackgroundFetchResult) {
-        backgroundFetchHandler?(result) // TODO jacob: make sure this is called on the main thread
+        DispatchQueue.main.async {
+            self.backgroundFetchHandler?(result)
+        }
         backgroundFetchHandler = nil
         backgroundFetchTimer?.invalidate()
         backgroundFetchTimer = nil
     }
     
     public func finishBackgroundTask(withTaskResult result: BackgroundTaskResult) {
-        backgroundTaskHandler?(result) // TODO jacob: make sure this is called on the main thread
+        DispatchQueue.main.async {
+            self.backgroundTaskHandler?(result)
+        }
         backgroundTaskHandler = nil
         backgroundTaskTimer?.invalidate()
         backgroundTaskTimer = nil
