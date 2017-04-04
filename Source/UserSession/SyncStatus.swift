@@ -65,8 +65,6 @@ public class SyncStatus : NSObject {
         super.init()
         
         currentSyncPhase = hasPersistedLastEventID ? .fetchingMissedEvents : .fetchingLastUpdateEventID
-        
-//        didStart(currentSyncPhase)
     }
 }
 
@@ -128,29 +126,6 @@ extension SyncStatus {
 
 // MARK: Quick Sync
 extension SyncStatus {
-
-    /// TODO jacob
-//    public func didEnterForeground() {
-//        isInBackground = false
-//        
-//        // When entering the background we might have interrupted a sync. We then would like to pick up where we left. 
-//        // If we didn't interrupt a sync, we want to perform a quicksync
-//        if currentSyncPhase == .idle {
-//            if previousPhase != .done {
-//                // continue the sync where we left off when entering the background
-//                currentSyncPhase = previousPhase
-//            } else  {
-//                // perform a quicksync
-//                currentSyncPhase = .done
-//                startQuickSyncIfNeeded()
-//            }
-//        }
-//    }
-    
-//    public func didEnterBackground() {
-//        isInBackground = true
-//        currentSyncPhase = .idle
-//    }
     
     public func pushChannelDidClose() {
         pushChannelIsOpen = false

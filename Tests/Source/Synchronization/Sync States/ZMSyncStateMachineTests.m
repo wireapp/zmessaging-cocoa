@@ -272,25 +272,6 @@
     XCTAssertEqual(request, [self.sut nextRequest]);
 }
 
-// TODO jacob
-//- (void)testThatItForwardsDidEnterBackgroundToTheCurrentState
-//{
-//    // expect
-//    [[(id) self.sut.currentState expect] didEnterBackground];
-//    
-//    // when
-//    [self.sut enterBackground];
-//}
-//
-//- (void)testThatItForwardsDidEnterForegroundToTheCurrentState
-//{
-//    // expect
-//    [[(id) self.sut.currentState expect] didEnterForeground];
-//    
-//    // when
-//    [self.sut enterForeground];
-//}
-
 - (void)testThatWhenItReceivesDataChangeItForwardsItToTheCurrentState
 {
     // expect

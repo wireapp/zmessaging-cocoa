@@ -77,6 +77,7 @@
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects2;
 @property (nonatomic) id mockDispatcher;
 @property (nonatomic) id syncStatusMock;
+@property (nonatomic) id operationStatusMock;
 @property (nonatomic) id applicationStatusDirectoryMock;
 @end
 
@@ -96,10 +97,12 @@
     
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.syncStatusMock = [OCMockObject mockForClass:SyncStatus.class];
+    self.operationStatusMock = [OCMockObject mockForClass:ZMOperationStatus.class];
     
     self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
     [[[[self.applicationStatusDirectoryMock expect] andReturn: self.applicationStatusDirectoryMock] classMethod] alloc];
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.syncStatusMock] syncStatus];
+    [[[self.applicationStatusDirectoryMock stub] andReturn:self.operationStatusMock] operationStatus];
     
     id userTranscoder = [OCMockObject niceMockForClass:ZMUserTranscoder.class];
     [[[[userTranscoder expect] andReturn:userTranscoder] classMethod] alloc];
@@ -221,6 +224,8 @@
 
 - (void)tearDown;
 {
+    [self.operationStatusMock stopMocking];
+    self.operationStatusMock = nil;
     [self.syncStatusMock stopMocking];
     self.syncStatusMock = nil;
     [self.applicationStatusDirectoryMock stopMocking];
@@ -1162,12 +1167,10 @@
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-- (void)testThatItForwardsToStateMachineWhenTheAppEntersBackground
+- (void)testThatItUpdateOperationStatusWhenTheAppEntersBackground
 {
-    // TODO jacob
     // expect
-//    [[self.stateMachine expect] enterBackground];
-//    [[self.slowSynStatus expect] didEnterBackground];
+    [[self.operationStatusMock expect] setIsInBackground:YES];
     
     // when
     [self goToBackground];
@@ -1178,12 +1181,10 @@
 }
 
 
-- (void)testThatItForwardsToStateMachineWhenTheAppWillEnterForeground
+- (void)testThatItUpdateOperationStatusWhenTheAppWillEnterForeground
 {
-    // TODO jacob
     // expect
-//    [[self.stateMachine expect] enterForeground];
-//    [[self.slowSynStatus expect] didEnterForeground];
+    [[self.operationStatusMock expect] setIsInBackground:NO];
 
     // when
     [self goToForeground];
