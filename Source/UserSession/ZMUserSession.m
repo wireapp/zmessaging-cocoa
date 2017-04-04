@@ -322,7 +322,7 @@ ZM_EMPTY_ASSERTING_INIT()
             [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext application:application];
             
            self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
-                                                                                managedObjectContext:syncManagedObjectContext];
+                                                                                         userSession:self];
             
             self.transportSession = session;
             self.transportSession.pushChannel.clientID = self.selfUserClient.remoteIdentifier;

@@ -22,6 +22,8 @@ import Foundation
 
 public class WireCallCenterV3Mock : WireCallCenterV3 {
     
+    public static var mockNonIdleCalls : [UUID : CallState] = [:]
+    
     public var callState : CallState = .none
     public var overridenCallingProtocol : CallingProtocol = .version2
     public var startCallShouldFail : Bool = false
@@ -61,6 +63,12 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     
     public override func toogleVideo(conversationID: UUID, active: Bool) {
         
+    }
+    
+    public class override var nonIdleCalls : [UUID : CallState ] {
+        get {
+            return mockNonIdleCalls
+        }
     }
     
     public func update(callState : CallState, conversationId: UUID, userId: UUID? = nil) {

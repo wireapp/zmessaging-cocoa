@@ -26,6 +26,7 @@ class CallStateObserverTests : MessagingTest {
     var receiver : ZMUser!
     var conversation : ZMConversation!
     var localNotificationDispatcher : LocalNotificationDispatcher!
+    var mockCallCenter : WireCallCenterV3Mock?
     
     override func setUp() {
         super.setUp()
@@ -50,10 +51,12 @@ class CallStateObserverTests : MessagingTest {
             conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral:receiver), isAuthoritative: true)
             
             self.conversation = conversation
+            
+            self.syncMOC.saveOrRollback()
         }
         
         localNotificationDispatcher = LocalNotificationDispatcher(in: syncMOC, application: application)
-        sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, managedObjectContext: syncMOC)
+        sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
     }
     
     override func tearDown() {
@@ -63,7 +66,7 @@ class CallStateObserverTests : MessagingTest {
     }
     
     func testThatInstanceDoesntHaveRetainCycles() {
-        weak var instance = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, managedObjectContext: syncMOC)
+        weak var instance = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
         XCTAssertNil(instance)
     }
     
@@ -170,52 +173,51 @@ class CallStateObserverTests : MessagingTest {
         // then
         XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
     }
-
     
-// TODO jacob
-//    func testThatWeKeepTheWebsocketOpenOnIncomingCalls() {
-//        // expect
-//        expectation(forNotification: ZMTransportSessionShouldKeepWebsocketOpenNotificationName, object: nil) { (note) -> Bool in
-//            if let open = note.userInfo?[ZMTransportSessionShouldKeepWebsocketOpenKey] as? Bool, open == true {
-//                return true
-//            } else {
-//                return false
-//            }
-//        }
-//        
-//        // given when
-//        sut.callCenterDidChange(callState: .incoming(video: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
-//        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-//    }
-//    
-//    func testThatWeKeepTheWebsocketOpenOnOutgoingCalls() {
-//        // expect
-//        expectation(forNotification: ZMTransportSessionShouldKeepWebsocketOpenNotificationName, object: nil) { (note) -> Bool in
-//            if let open = note.userInfo?[ZMTransportSessionShouldKeepWebsocketOpenKey] as? Bool, open == true {
-//                return true
-//            } else {
-//                return false
-//            }
-//        }
-//        
-//        // given when
-//        sut.callCenterDidChange(callState: .outgoing, conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
-//        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-//    }
-//    
-//    func testThatWeDontKeepTheWebsocketOpenAfterACallIsTerminated() {
-//        // expect
-//        expectation(forNotification: ZMTransportSessionShouldKeepWebsocketOpenNotificationName, object: nil) { (note) -> Bool in
-//            if let open = note.userInfo?[ZMTransportSessionShouldKeepWebsocketOpenKey] as? Bool, open == false {
-//                return true
-//            } else {
-//                return false
-//            }
-//        }
-//        
-//        // given when
-//        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
-//        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-//    }
+    func testThatWeSendNotificationWhenCallStarts() {
+        
+        // expect
+        mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", registerObservers: false)
+        WireCallCenterV3Mock.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false)]
+        
+        expectation(forNotification: CallStateObserver.CallInProgressNotification.rawValue, object: nil) { (note) -> Bool in
+            if let open = note.userInfo?[CallStateObserver.CallInProgressKey] as? Bool, open == true {
+                return true
+            } else {
+                return false
+            }
+        }
+        
+        // given when
+        sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version3)
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        
+        // tear down
+        mockCallCenter = nil
+    }
+    
+    func testThatWeSendNotificationWhenCallTerminates() {
+        // given
+        mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", registerObservers: false)
+        WireCallCenterV3Mock.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false)]
+        sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version3)
+        
+        // expect
+        expectation(forNotification: CallStateObserver.CallInProgressNotification.rawValue, object: nil) { (note) -> Bool in
+            if let open = note.userInfo?[CallStateObserver.CallInProgressKey] as? Bool, open == false {
+                return true
+            } else {
+                return false
+            }
+        }
+        
+        // when
+        WireCallCenterV3Mock.mockNonIdleCalls = [:]
+        sut.callCenterDidChange(voiceChannelState: .noActiveUsers, conversation: conversation, callingProtocol: .version3)
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        
+        // tear down
+        mockCallCenter = nil
+    }
     
 }

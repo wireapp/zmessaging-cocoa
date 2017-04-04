@@ -23,11 +23,16 @@ import CoreData
 @objc(ZMCallStateObserver)
 public final class CallStateObserver : NSObject {
     
+    static public let CallInProgressNotification = Notification.Name(rawValue: "ZMCallInProgressNotification")
+    static public let CallInProgressKey = "callInProgress"
+    
     fileprivate let localNotificationDispatcher : LocalNotificationDispatcher
+    fileprivate let userSession: ZMUserSession
     fileprivate let callingSystemMessageGenerator = CallingSystemMessageGenerator()
     fileprivate let managedObjectContext : NSManagedObjectContext
     fileprivate var callStateToken : WireCallCenterObserverToken? = nil
     fileprivate var missedCalltoken : WireCallCenterObserverToken? = nil
+    fileprivate var voiceChannelStatetoken : WireCallCenterObserverToken? = nil
     
     deinit {
         if let token = callStateToken {
@@ -38,14 +43,24 @@ public final class CallStateObserver : NSObject {
         }
     }
     
-    public init(localNotificationDispatcher : LocalNotificationDispatcher, managedObjectContext: NSManagedObjectContext) {
+    public init(localNotificationDispatcher : LocalNotificationDispatcher, userSession: ZMUserSession) {
+        self.userSession = userSession
         self.localNotificationDispatcher = localNotificationDispatcher
-        self.managedObjectContext = managedObjectContext
+        self.managedObjectContext = userSession.syncManagedObjectContext
         
         super.init()
         
         self.callStateToken = WireCallCenterV3.addCallStateObserver(observer: self)
         self.missedCalltoken = WireCallCenterV3.addMissedCallObserver(observer: self)
+        self.voiceChannelStatetoken = WireCallCenter.addVoiceChannelStateObserver(observer: self, context: userSession.managedObjectContext)
+    }
+    
+    fileprivate var callInProgress : Bool = false {
+        didSet {
+            if callInProgress != oldValue {
+                NotificationCenter.default.post(name: CallStateObserver.CallInProgressNotification, object: nil, userInfo: [ CallStateObserver.CallInProgressKey : callInProgress ])
+            }
+        }
     }
     
 }
@@ -90,20 +105,21 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
         }
     }
 
-    // TODO jacob
-//    private func notifyIfWebsocketShouldBeOpen(forCallState callState: CallState) {
-//        
-//        let notificationName = Notification.Name(rawValue: ZMTransportSessionShouldKeepWebsocketOpenNotificationName)
-//        
-//        switch callState {
-//        case .terminating:
-//            NotificationCenter.default.post(name: notificationName, object: nil, userInfo: [ZMTransportSessionShouldKeepWebsocketOpenKey : false])
-//        case .outgoing, .incoming:
-//            NotificationCenter.default.post(name: notificationName, object: nil, userInfo: [ZMTransportSessionShouldKeepWebsocketOpenKey : true])
-//        default:
-//            break
-//        }
-//    }
+}
+
+extension CallStateObserver : VoiceChannelStateObserver {
+    
+    public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
+        callInProgress = WireCallCenter.nonIdleCallConversations(inUserSession: userSession).count > 0
+    }
+    
+    public func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation) {
+        // no-op
+    }
+    
+    public func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol) {
+        // no-op
+    }
     
 }
 

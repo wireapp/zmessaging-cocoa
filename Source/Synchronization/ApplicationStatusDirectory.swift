@@ -52,9 +52,20 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.accountStatus = ZMAccountStatus(managedObjectContext: managedObjectContext, cookieStorage: cookie)
         self.pingBackStatus = BackgroundAPNSPingBackStatus(syncManagedObjectContext: managedObjectContext, authenticationProvider: authenticationStatus)
         self.proxiedRequestStatus = ProxiedRequestsStatus(requestCancellation: requestCancellation)
+        
+        super.init()
+        
+        NotificationCenter.default.addObserver(forName: CallStateObserver.CallInProgressNotification, object: nil, queue: .main) { [weak self] (notification) in
+            managedObjectContext.performGroupedBlock {
+                if let callInProgress = notification.userInfo?[CallStateObserver.CallInProgressKey] as? Bool {
+                    self?.operationStatus.hasOngoingCall = callInProgress
+                }
+            }
+        }
     }
     
     deinit {
+        NotificationCenter.default.removeObserver(self)
         apnsConfirmationStatus.tearDown()
         clientRegistrationStatus.tearDown()
         clientUpdateStatus.tearDown()
