@@ -20,7 +20,7 @@
 @import ZMUtilities;
 
 #import "ZMClientUpdateNotification.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *const ClientUpdateNotificationName = @"ClientUpdateNotification";
 

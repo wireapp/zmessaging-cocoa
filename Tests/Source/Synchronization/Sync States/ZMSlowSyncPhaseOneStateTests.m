@@ -17,7 +17,7 @@
 // 
 
 
-@import zmessaging;
+@import WireSyncEngine;
 #import "ZMConnectionTranscoder.h"
 #import "ZMSlowSyncPhaseOneState.h"
 #import "ZMSyncStrategy.h"

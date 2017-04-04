@@ -16,10 +16,10 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-@import zmessaging;
+@import WireSyncEngine;
 
 #import "ZMLocalNotificationForEventTest.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface ZMLocalNotificationForCallEventTest : ZMLocalNotificationForEventTest
 

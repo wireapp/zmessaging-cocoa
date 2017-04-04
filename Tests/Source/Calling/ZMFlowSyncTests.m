@@ -20,14 +20,14 @@
 @import ZMTransport;
 @import ZMUtilities;
 @import ZMCDataModel;
-@import zmessaging;
+@import WireSyncEngine;
 @import avs;
 
 #import "MessagingTest.h"
 #import "ZMOperationLoop.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMOnDemandFlowManager.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 static NSString * const FlowEventName1 = @"conversation.message-add";
 static NSString * const FlowEventName2 = @"conversation.member-join";

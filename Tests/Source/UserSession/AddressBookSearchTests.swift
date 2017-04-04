@@ -18,17 +18,17 @@
 
 import Foundation
 import XCTest
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class AddressBookSearchTests : MessagingTest {
     
-    var sut : zmessaging.AddressBookSearch!
+    var sut : WireSyncEngine.AddressBookSearch!
     var addressBook : AddressBookFake!
     
     override func setUp() {
         super.setUp()
         self.addressBook = AddressBookFake()
-        self.sut = zmessaging.AddressBookSearch(addressBook: self.addressBook)
+        self.sut = WireSyncEngine.AddressBookSearch(addressBook: self.addressBook)
     }
     
     override func tearDown() {

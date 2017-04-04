@@ -28,7 +28,7 @@
 #import "ZMCallStateLogger.h"
 #import "ZMGSMCallHandler.h"
 #import "ZMFlowSync.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString * const StateKey = @"state";
 static NSString * const StateIdle = @"idle";

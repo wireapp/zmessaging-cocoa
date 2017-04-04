@@ -24,7 +24,7 @@
 #import "MessagingTest.h"
 #import "NotificationObservers.h"
 #import "MockLinkPreviewDetector.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @import ZMCMockTransport;
 @import Cryptobox;

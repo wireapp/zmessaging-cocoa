@@ -41,7 +41,7 @@
 #import "ZMBackgroundState.h"
 #import "ZMPreBackgroundState.h"
 #import "ZMCookie.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @implementation StateBaseTest
 

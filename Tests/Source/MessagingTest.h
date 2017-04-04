@@ -18,7 +18,7 @@
 
 
 @import ZMTesting;
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCDataModel;
 
 #import "NSManagedObjectContext+TestHelpers.h"

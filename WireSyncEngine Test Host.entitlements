@@ -4,11 +4,11 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.wire.zmessaging-Test-Host</string>
+		<string>group.com.wire.WireSyncEngine-Test-Host</string>
 	</array>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)com.wire.zmessaging-Test-Host</string>
+		<string>$(AppIdentifierPrefix)com.wire.WireSyncEngine-Test-Host</string>
 	</array>
 </dict>
 </plist>

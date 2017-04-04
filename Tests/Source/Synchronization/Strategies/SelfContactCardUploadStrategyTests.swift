@@ -18,11 +18,11 @@
 
 import Foundation
 import ZMCLinkPreview
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class SelfContactCardUploadStrategyTests : MessagingTest {
     
-    var sut : zmessaging.SelfContactCardUploadStrategy!
+    var sut : WireSyncEngine.SelfContactCardUploadStrategy!
     var authenticationStatus : MockAuthenticationStatus!
     var clientRegistrationStatus : ZMMockClientRegistrationStatus!
     
@@ -32,7 +32,7 @@ class SelfContactCardUploadStrategyTests : MessagingTest {
         self.clientRegistrationStatus = ZMMockClientRegistrationStatus()
         self.clientRegistrationStatus.mockPhase = .registered
         
-        self.sut = zmessaging.SelfContactCardUploadStrategy(authenticationStatus: self.authenticationStatus,
+        self.sut = WireSyncEngine.SelfContactCardUploadStrategy(authenticationStatus: self.authenticationStatus,
                                                                clientRegistrationStatus: self.clientRegistrationStatus,
                                                                managedObjectContext: self.syncMOC)
     }

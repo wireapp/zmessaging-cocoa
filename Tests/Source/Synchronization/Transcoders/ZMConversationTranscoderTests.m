@@ -20,7 +20,7 @@
 @import UIKit;
 @import ZMTransport;
 @import OCMock;
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCDataModel;
 
 #import "ObjectTranscoderTests.h"

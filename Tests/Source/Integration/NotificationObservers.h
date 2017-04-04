@@ -19,7 +19,7 @@
 
 @import ZMCDataModel;
 
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 typedef void(^ObserverCallback)(NSObject *note);
 

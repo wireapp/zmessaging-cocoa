@@ -18,7 +18,7 @@
 
 
 @import CoreTelephony;
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCDataModel;
 
 #import "MessagingTest.h"

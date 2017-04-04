@@ -22,7 +22,7 @@
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Background+Testing.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 @interface APNSTests : IntegrationTestBase

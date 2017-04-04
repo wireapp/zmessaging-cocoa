@@ -18,7 +18,7 @@
 
 import Foundation
 import XCTest
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class RandomHandleGeneratorTests : XCTestCase {
     
@@ -46,7 +46,7 @@ class RandomHandleGeneratorTests : XCTestCase {
         let expectedNormalized = "marialarochellevonsch"
         
         // WHEN
-        var handles : [String] = zmessaging.RandomHandleGenerator.generatePossibleHandles(
+        var handles : [String] = WireSyncEngine.RandomHandleGenerator.generatePossibleHandles(
                 displayName: "Maria La Rochelle Von Schwerigstein",
                 alternativeNames: variations
             ).reversed() // there is no popFirst, so I will revert to be able to use popLast
@@ -99,7 +99,7 @@ class RandomHandleGeneratorTests : XCTestCase {
         let expectedFirstNormalized = "po"
         
         // WHEN
-        let handles : [String] = zmessaging.RandomHandleGenerator.generatePossibleHandles(displayName: "Po", alternativeNames: 0)
+        let handles : [String] = WireSyncEngine.RandomHandleGenerator.generatePossibleHandles(displayName: "Po", alternativeNames: 0)
         
         // THEN
         XCTAssertEqual(handles.first, expectedFirstNormalized)
@@ -108,7 +108,7 @@ class RandomHandleGeneratorTests : XCTestCase {
     func testThatItDoesNotSuggestsHandlesWithOneCharacters() {
         
         // WHEN
-        let handles : [String] = zmessaging.RandomHandleGenerator.generatePossibleHandles(displayName: "P", alternativeNames: 0)
+        let handles : [String] = WireSyncEngine.RandomHandleGenerator.generatePossibleHandles(displayName: "P", alternativeNames: 0)
         
         // THEN
         guard let handle = handles.first else { XCTFail(); return }

@@ -18,7 +18,7 @@
 
 
 import XCTest
-@testable import zmessaging
+@testable import WireSyncEngine
 import ZMUtilities
 
 class UserProfileUpdateStatusTests : MessagingTest {
@@ -319,7 +319,7 @@ extension UserProfileUpdateStatusTests {
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        let error = NSError(domain: "zmessaging", code: 100, userInfo: nil)
+        let error = NSError(domain: "WireSyncEngine", code: 100, userInfo: nil)
         
         // WHEN
         self.sut.didUpdatePasswordSuccessfully()
@@ -334,7 +334,7 @@ extension UserProfileUpdateStatusTests {
     func testThatItNotifiesIfItFailsToUpdateEmail() {
         
         // GIVEN
-        let error = NSError(domain: "zmessaging", code: 100, userInfo: nil)
+        let error = NSError(domain: "WireSyncEngine", code: 100, userInfo: nil)
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         try? self.sut.requestSettingEmailAndPassword(credentials: credentials)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.2))
@@ -460,7 +460,7 @@ extension UserProfileUpdateStatusTests {
     func testThatItFailsRequestingPhoneVerificationCode() {
         
         // GIVEN
-        let error = NSError(domain: "zmessaging", code: 100, userInfo: nil)
+        let error = NSError(domain: "WireSyncEngine", code: 100, userInfo: nil)
         let phoneNumber = "+1555234342"
         
         // WHEN
@@ -498,7 +498,7 @@ extension UserProfileUpdateStatusTests {
     func testThatItNotifiesAfterFailureInRequestingPhoneVerificationCode() {
         
         // GIVEN
-        let error = NSError(domain: "zmessaging", code: 100, userInfo: nil)
+        let error = NSError(domain: "WireSyncEngine", code: 100, userInfo: nil)
         let phoneNumber = "+1555234342"
         
         // WHEN
@@ -561,7 +561,7 @@ extension UserProfileUpdateStatusTests {
     func testThatItFailsUpdatingPhoneNumber() {
         
         // GIVEN
-        let error = NSError(domain: "zmessaging", code: 100, userInfo: nil)
+        let error = NSError(domain: "WireSyncEngine", code: 100, userInfo: nil)
         let credentials = ZMPhoneCredentials(phoneNumber: "+1555234342", verificationCode: "234555")
         
         // WHEN
@@ -579,7 +579,7 @@ extension UserProfileUpdateStatusTests {
         
         // GIVEN
         let credentials = ZMPhoneCredentials(phoneNumber: "+1555234342", verificationCode: "234555")
-        let error = NSError(domain: "zmessaging", code: 100, userInfo: nil)
+        let error = NSError(domain: "WireSyncEngine", code: 100, userInfo: nil)
         
         // WHEN
         self.sut.requestPhoneNumberChange(credentials: credentials)
@@ -1167,7 +1167,7 @@ extension UserProfileUpdateStatusTests {
 // MARK: - Helpers
 class TestUserProfileUpdateObserver : NSObject, UserProfileUpdateObserver {
     
-    var invokedCallbacks : [zmessaging.UserProfileUpdateNotificationType] = []
+    var invokedCallbacks : [WireSyncEngine.UserProfileUpdateNotificationType] = []
     
     func passwordUpdateRequestDidFail() {
         invokedCallbacks.append(.passwordUpdateDidFail)

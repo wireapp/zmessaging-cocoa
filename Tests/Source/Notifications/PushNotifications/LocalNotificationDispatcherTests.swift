@@ -17,7 +17,7 @@
 //
 
 
-@testable import zmessaging
+@testable import WireSyncEngine
 import XCTest
 
 class LocalNotificationDispatcherTests: MessagingTest {

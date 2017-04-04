@@ -43,7 +43,7 @@
 #import "ZMCredentials.h"
 #import "NSURL+LaunchOptions.h"
 
-#import <zmessaging/ZMAuthenticationStatus.h>
+#import <WireSyncEngine/ZMAuthenticationStatus.h>
 
 @interface ThirdPartyServices : NSObject <ZMThirdPartyServicesDelegate>
 

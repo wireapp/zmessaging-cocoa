@@ -18,7 +18,7 @@
 
 
 @import UIKit;
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCDataModel;
 
 #import "MessagingTest.h"
@@ -33,7 +33,7 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMRegistrationTranscoder.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 

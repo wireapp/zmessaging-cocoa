@@ -29,7 +29,7 @@
 #import "ZMUserSession+OTR.h"
 
 #import "ZMCredentials.h"
-#import <zmessaging/ZMAuthenticationStatus.h>
+#import <WireSyncEngine/ZMAuthenticationStatus.h>
 
 extern NSTimeInterval DebugLoginFailureTimerOverride;
 

@@ -23,7 +23,7 @@
 
 #import "MessagingTest.h"
 #import "ZMBlacklistDownloader+Testing.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface ZMBlacklistDownloaderTest : MessagingTest
 

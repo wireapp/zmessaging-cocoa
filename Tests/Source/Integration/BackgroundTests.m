@@ -24,7 +24,7 @@
 #import "IntegrationTestBase.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 @class BackgroundTests;

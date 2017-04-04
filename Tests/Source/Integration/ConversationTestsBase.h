@@ -18,7 +18,7 @@
 
 @import ZMTransport;
 @import ZMCMockTransport;
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCDataModel;
 
 #import "ZMUserSession.h"
@@ -26,7 +26,7 @@
 #import "ZMTestNotifications.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMConversationTranscoder+Internal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 
 @interface ConversationTestsBase : IntegrationTestBase

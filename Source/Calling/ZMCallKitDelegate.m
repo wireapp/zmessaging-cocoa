@@ -27,7 +27,7 @@
 #import "ZMUserSession+Internal.h"
 #import "VoiceChannelV2+CallFlow.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 /**
  @c ZMCallKitDelegate is the main logical part of CallKit integration of wire-ios-sync-engine. 

@@ -17,7 +17,7 @@
 // 
 
 
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCLinkPreview;
 
 extern NSString * const ZMTestURLArticleWithoutPictureString;

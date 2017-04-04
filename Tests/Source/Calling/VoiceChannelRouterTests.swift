@@ -19,7 +19,7 @@
 import Foundation
 import XCTest
 
-@testable import zmessaging
+@testable import WireSyncEngine
 
 
 class VoiceChannelRouterTests : MessagingTest {

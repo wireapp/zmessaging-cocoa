@@ -17,7 +17,7 @@
 //
 
 import XCTest
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class UserProfileUpdateRequestStrategyTests : MessagingTest {
     

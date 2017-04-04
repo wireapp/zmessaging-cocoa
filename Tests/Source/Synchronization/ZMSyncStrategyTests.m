@@ -19,7 +19,7 @@
 
 @import UIKit;
 @import ZMTransport;
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCDataModel;
 @import WireMessageStrategy;
 
@@ -50,7 +50,7 @@
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "MessagingTest+EventFactory.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 @interface ZMSyncStrategyTests : MessagingTest

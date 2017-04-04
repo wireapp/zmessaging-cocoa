@@ -19,7 +19,7 @@
 
 #import "MockConversationWindowObserver.h"
 
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString * const Placeholder = @"Placeholder";
 

@@ -21,7 +21,7 @@
 @import MobileCoreServices;
 @import ZMTransport;
 @import ZMCMockTransport;
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCDataModel;
 @import WireRequestStrategy;
 

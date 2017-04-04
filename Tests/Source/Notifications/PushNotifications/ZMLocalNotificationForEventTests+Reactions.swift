@@ -17,7 +17,7 @@
 //
 
 import ZMTesting
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class ZMLocalNotificationForEventsTests_Reactions : ZMLocalNotificationForEventTest {
 }

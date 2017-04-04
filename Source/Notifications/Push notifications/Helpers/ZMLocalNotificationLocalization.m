@@ -19,7 +19,7 @@
 @import ZMCDataModel;
 #import "ZMLocalNotificationLocalization.h"
 #import "ZMUserSession.h"
-#import "zmessaging/zmessaging-Swift.h"
+#import "WireSyncEngine/WireSyncEngine-Swift.h"
 
 static NSString *localizedStringWithKeyAndArguments(NSString *key, NSArray *arguments);
 static NSString * ZMPushLocalizedString(NSString *key);

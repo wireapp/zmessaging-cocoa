@@ -21,7 +21,7 @@
 @import ZMCMockTransport;
 @import ZMCDataModel;
 
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 #import "MessagingTest+EventFactory.h"
 #import "IntegrationTestBase.h"

@@ -25,7 +25,7 @@
 #import "ZMUserSession+Internal.h"
 #import "ZMCallKitDelegate.h"
 #import "ZMAVSBridge.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 
 NSString * VoiceChannelV2VideoCallErrorDomain = @"VoiceChannelV2VideoCallErrorDomain";

@@ -17,7 +17,7 @@
 // 
 
 
-#import <zmessaging/zmessaging.h>
+#import <WireSyncEngine/WireSyncEngine.h>
 #import "MessagingTest.h"
 #import "ZMUserSessionTestsBase.h"
 #import "IntegrationTestBase.h"

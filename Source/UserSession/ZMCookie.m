@@ -18,7 +18,7 @@
 
 
 #import "ZMCookie.h"
-#import "zmessaging.h"
+#import "WireSyncEngine.h"
 
 static NSString * const CookieLabelKey = @"ZMCookieLabel";
 

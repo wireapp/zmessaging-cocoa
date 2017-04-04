@@ -23,7 +23,7 @@
 
 #import "CallingTests.h"
 #import "VoiceChannelV2+CallFlow.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMGSMCallHandler.h"
 
 @implementation TestWindowObserver

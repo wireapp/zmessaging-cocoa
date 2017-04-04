@@ -27,7 +27,7 @@
 #import "ZMAuthenticationStatus+Testing.h"
 #import "ZMCredentials.h"
 #import "NSError+ZMUserSessionInternal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 
 @interface ZMAuthenticationStatusTests : MessagingTest

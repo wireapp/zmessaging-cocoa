@@ -19,7 +19,7 @@
 @import Foundation;
 @import ZMTransport;
 @import ZMCMockTransport;
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCDataModel;
 
 #import "MessagingTest.h"

@@ -20,7 +20,7 @@ import Foundation
 import AddressBook
 import ZMCDataModel
 import Cryptobox
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class MockAuthenticationStatus: ZMAuthenticationStatus {
     

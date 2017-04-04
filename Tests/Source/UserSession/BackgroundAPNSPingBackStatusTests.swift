@@ -17,7 +17,7 @@
 // 
 
 
-@testable import zmessaging
+@testable import WireSyncEngine
 import ZMTesting
 import ZMCMockTransport
 

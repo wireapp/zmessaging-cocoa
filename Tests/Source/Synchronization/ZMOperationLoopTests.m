@@ -25,7 +25,7 @@
 
 #import "MessagingTest.h"
 #import "ZMSyncStrategy.h"
-#import <zmessaging/ZMUserSession.h>
+#import <WireSyncEngine/ZMUserSession.h>
 #import "MockModelObjectContextFactory.h"
 #import "MockModelObjectContextFactory.h"
 #import "ZMAuthenticationStatus.h"

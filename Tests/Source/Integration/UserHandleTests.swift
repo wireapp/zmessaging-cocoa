@@ -18,7 +18,7 @@
 
 
 import Foundation
-@testable import zmessaging
+@testable import WireSyncEngine
 import ZMCMockTransport
 
 class UserHandleTests : IntegrationTestBase {

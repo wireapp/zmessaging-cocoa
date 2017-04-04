@@ -17,7 +17,7 @@
 //
 
 @import Foundation;
-@import zmessaging;
+@import WireSyncEngine;
 
 NS_ASSUME_NONNULL_BEGIN
 

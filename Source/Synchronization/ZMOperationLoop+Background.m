@@ -24,7 +24,7 @@
 #import "ZMOperationLoop+Private.h"
 
 #import "ZMSyncStrategy+Internal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *ZMLogTag ZM_UNUSED = @"Network";
 

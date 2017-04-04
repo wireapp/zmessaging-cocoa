@@ -18,7 +18,7 @@
 
 
 @import ZMTransport;
-@import zmessaging;
+@import WireSyncEngine;
 
 #import <Foundation/Foundation.h>
 
@@ -26,8 +26,8 @@
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import <zmessaging/zmessaging-Swift.h>
-#import "zmessaging_iOS_Tests-Swift.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";

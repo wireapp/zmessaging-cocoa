@@ -25,7 +25,7 @@
 
 #import "VoiceChannelV2+Internal.h"
 #import "VoiceChannelV2+Testing.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 
 @implementation VoiceChannelV2ParticipantState

@@ -31,7 +31,7 @@
 #import "ZMBackgroundFetchState.h"
 #import "ZMUserSession+UserNotificationCategories.h"
 #import "ZMStoredLocalNotification.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *ZMLogTag = @"Push";
 

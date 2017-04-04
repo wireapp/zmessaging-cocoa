@@ -19,7 +19,7 @@
 
 @import zimages;
 @import ZMTransport;
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCDataModel;
 
 #import "ObjectTranscoderTests.h"

@@ -27,7 +27,7 @@
 #import "ZMLocalNotificationLocalization.h"
 #import "UILocalNotification+StringProcessing.h"
 #import "ZMUserSession+UserNotificationCategories.h"
-#import "zmessaging/zmessaging-Swift.h"
+#import "WireSyncEngine/WireSyncEngine-Swift.h"
 #import "UILocalNotification+UserInfo.h"
 
 

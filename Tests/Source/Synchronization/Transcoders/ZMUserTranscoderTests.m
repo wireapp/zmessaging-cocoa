@@ -18,14 +18,14 @@
 
 
 @import ZMTransport;
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCDataModel;
 
 #import "ObjectTranscoderTests.h"
 #import "ZMUserTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
 #import "ZMUserSession.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMUserSession+Internal.h"
 
 

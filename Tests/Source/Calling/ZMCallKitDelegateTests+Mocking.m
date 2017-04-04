@@ -17,7 +17,7 @@
 //
 
 #import "ZMCallKitDelegateTests+Mocking.h"
-@import zmessaging;
+@import WireSyncEngine;
 #import "ZMUserSession+Internal.h"
 @import OCMock;
 

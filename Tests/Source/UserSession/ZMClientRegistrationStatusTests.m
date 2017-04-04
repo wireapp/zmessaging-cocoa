@@ -23,7 +23,7 @@
 #import "MessagingTest.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMCredentials.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMClientRegistrationStatus+Internal.h"
 #import "NSError+ZMUserSession.h"
 #import "ZMUserSessionAuthenticationNotification.h"

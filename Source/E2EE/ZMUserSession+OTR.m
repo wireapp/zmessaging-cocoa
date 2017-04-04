@@ -24,7 +24,7 @@
 #import "ZMUserSession+OTR.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMCredentials.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMClientUpdateNotification.h"
 #import "ZMUserSession+OTR.h"
 

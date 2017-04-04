@@ -18,7 +18,7 @@
 
 
 import XCTest
-@testable import zmessaging
+@testable import WireSyncEngine
 import ZMProtos
 import ZMCDataModel
 import ZMUtilities

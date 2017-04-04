@@ -25,7 +25,7 @@
 #import "ZMOperationLoop.h"
 #import "ZMUserSession+Internal.h"
 
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMCallStateLogger ()
 

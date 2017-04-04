@@ -108,7 +108,7 @@ class StartupPerformanceTests: MessagingTest {
         
         class TestObserver : NSObject, ZMConversationListObserver
         {
-            @objc func conversationListDidChange(changeInfo: zmessaging.ConversationListChangeInfo!) {
+            @objc func conversationListDidChange(changeInfo: WireSyncEngine.ConversationListChangeInfo!) {
                 
             }
         }

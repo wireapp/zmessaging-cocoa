@@ -19,7 +19,7 @@
 
 @import Foundation;
 @import ZMTesting;
-@import zmessaging;
+@import WireSyncEngine;
 @import ZMCDataModel;
 @import WireMessageStrategy;
 

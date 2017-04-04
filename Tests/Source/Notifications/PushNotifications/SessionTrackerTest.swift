@@ -17,7 +17,7 @@
 //
 
 import ZMTesting
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class SessionBaseTest : MessagingTest {
     var conversation : ZMConversation!

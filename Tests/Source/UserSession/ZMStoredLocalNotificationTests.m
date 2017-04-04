@@ -24,7 +24,7 @@
 #import "ZMLocalNotification.h"
 #import "ZMStoredLocalNotification.h"
 #import "ZMUserSession+UserNotificationCategories.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface ZMStoredLocalNotificationTests : MessagingTest
 @property (nonatomic) ZMConversation *conversation;

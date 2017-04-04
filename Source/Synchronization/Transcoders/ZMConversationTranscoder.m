@@ -27,7 +27,7 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMSyncStrategy.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *const ConversationsPath = @"/conversations";
 static NSString *const ConversationIDsPath = @"/conversations/ids";
