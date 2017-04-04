@@ -712,31 +712,6 @@
     }];
 }
 
-
-// TODO jacob
-//- (void)testThatItClosesThePushChannelOnTearDown
-//{
-//    
-//    // given
-//    ZMTransportSession *transportSession = self.transportSession;
-//    [[(id) transportSession stub] openPushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
-//    
-//    ZMOperationLoop *sut = [[ZMOperationLoop alloc] initWithTransportSession:transportSession
-//                                                                syncStrategy:self.syncStrategy
-//                                                                       uiMOC:self.uiMOC
-//                                                                     syncMOC:self.syncMOC];
-//    
-//    // expect
-//    [[(id) transportSession expect] closePushChannelAndRemoveConsumer];
-//    
-//    // when
-//    [sut tearDown];
-//    
-//    // then
-//    [(id) transportSession verify];
-//}
-
-
 - (void)testThatItCalls_DataDidChange_OnSyncStrategyWhenThereIsANewRequest
 {
     // given
