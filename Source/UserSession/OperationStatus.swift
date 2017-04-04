@@ -30,7 +30,8 @@ public protocol OperationStatusDelegate : class {
 }
 
 
-@objc public enum BackgroundTaskResult : UInt {
+@objc(ZMBackgroundTaskResult)
+public enum BackgroundTaskResult : UInt {
     case finished
     case failed
 }

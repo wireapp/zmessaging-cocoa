@@ -19,7 +19,7 @@
 
 #import <zmessaging/zmessaging.h>
 #import "ZMSyncState.h"
-#import "ZMBackgroundFetch.h"
+//#import "ZMBackgroundFetch.h"
 
 
 
@@ -37,7 +37,7 @@
 ///     To enable your app to be launched directly into a suspended state, choose Product > Scheme > Edit Scheme, and select the Background Fetch checkbox.
 @interface ZMBackgroundFetchState : ZMSyncState
 
-@property (nonatomic, copy) ZMBackgroundFetchHandler fetchCompletionHandler;
+//@property (nonatomic, copy) ZMBackgroundFetchHandler fetchCompletionHandler;
 
 @end
 

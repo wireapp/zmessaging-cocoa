@@ -19,7 +19,7 @@
 
 #import <zmessaging/zmessaging.h>
 #import "ZMSyncState.h"
-#import "ZMBackgroundFetch.h"
+//#import "ZMBackgroundFetch.h"
 
 
 
@@ -34,7 +34,7 @@
 
 @interface ZMBackgroundTaskState : ZMSyncState
 
-@property (nonatomic, copy) ZMBackgroundTaskHandler taskCompletionHandler;
+//@property (nonatomic, copy) ZMBackgroundTaskHandler taskCompletionHandler;
 
 @end
 

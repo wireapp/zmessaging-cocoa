@@ -21,7 +21,6 @@
 @import ZMTransport;
 
 #import "ZMStateMachineDelegate.h"
-#import "ZMBackgroundFetch.h"
 
 @class ZMAuthenticationStatus;
 @class ZMTransportRequest;

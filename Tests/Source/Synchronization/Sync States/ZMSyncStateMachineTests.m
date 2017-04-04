@@ -157,97 +157,6 @@
     [self.eventProcessingState verify];
 }
 
-// TODO jacob
-//- (void)testThatItStartsBackgroundFetchWhenTheCurrentStateSupportsIt;
-//{
-//    // given
-//    ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult ZM_UNUSED result) {
-//        XCTFail(@"Should not get called.");
-//    };
-//    id originalState = self.sut.currentState;
-//    
-//    // expect
-//    [[[(id) originalState expect] andReturnValue:@(YES)] supportsBackgroundFetch];
-//    [[(id) originalState expect] didLeaveState];
-//    [[self.backgroundFetchState expect] didEnterState];
-//    [[self.backgroundFetchState expect] setFetchCompletionHandler:handler];
-//    
-//    // when
-//    [self.sut startBackgroundFetchWithCompletionHandler:handler];
-//    
-//    // then
-//    XCTAssertEqual(self.sut.currentState, self.backgroundFetchState);
-//    [originalState verify];
-//    [self.backgroundFetchState verify];
-//}
-
-// TODO jacob
-//- (void)testThatItDoesNotStartBackgroundFetchWhenTheCurrentStateDoesNotSupportsIt;
-//{
-//    // given
-//    XCTestExpectation *expectation = [self expectationWithDescription:@"Background fetch completed"];
-//    ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult result) {
-//        XCTAssertEqual(result, ZMBackgroundFetchResultNoData);
-//        [expectation fulfill];
-//    };
-//    
-//    // expect
-//    [[[(id) self.sut.currentState expect] andReturnValue:@(NO)] supportsBackgroundFetch];
-//    [[(id) self.sut.currentState reject] didLeaveState];
-//    
-//    // when
-//    [self.sut startBackgroundFetchWithCompletionHandler:handler];
-//    
-//    // then
-//    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-//}
-
-// TODO jacob
-//- (void)testThatItStartsBackgroundTaskWhenTheCurrentStateSupportsIt;
-//{
-//    // given
-//    ZMBackgroundTaskHandler handler = ^(ZMBackgroundTaskResult ZM_UNUSED result) {
-//        XCTFail(@"Should not get called.");
-//    };
-//    id originalState = self.sut.currentState;
-//    
-//    // expect
-//    [[[(id) originalState expect] andReturnValue:@(YES)] supportsBackgroundFetch];
-//    [[(id) originalState expect] didLeaveState];
-//    [[self.backgroundTaskState expect] didEnterState];
-//    [[self.backgroundTaskState expect] setTaskCompletionHandler:handler];
-//    
-//    // when
-//    [self.sut startBackgroundTaskWithCompletionHandler:handler];
-//    
-//    // then
-//    XCTAssertEqual(self.sut.currentState, self.backgroundTaskState);
-//    [originalState verify];
-//    [self.backgroundTaskState verify];
-//}
-
-// TODO jacob
-//- (void)testThatItDoesNotStartBackgroundTaskWhenTheCurrentStateDoesNotSupportsIt;
-//{
-//    // given
-//    XCTestExpectation *expectation = [self expectationWithDescription:@"Background fetch completed"];
-//    ZMBackgroundTaskHandler handler = ^(ZMBackgroundTaskResult result) {
-//        XCTAssertEqual(result, ZMBackgroundTaskResultUnavailable);
-//        [expectation fulfill];
-//    };
-//    
-//    // expect
-//    [[[(id) self.sut.currentState expect] andReturnValue:@(NO)] supportsBackgroundFetch];
-//    [[(id) self.sut.currentState reject] didLeaveState];
-//    
-//    // when
-//    [self.sut startBackgroundTaskWithCompletionHandler:handler];
-//    
-//    // then
-//    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-//}
-
-
 - (void)testThatItCallsNextRequestOnTheCurrentState
 {
     // given
@@ -273,7 +182,6 @@
     XCTAssertEqual(self.sut.updateEventsPolicy, ZMUpdateEventPolicyIgnore);
     XCTAssertEqual(self.sut.updateEventsPolicy, ZMUpdateEventPolicyProcess);
 }
-
 
 - (void)testThatItCallsdidFailAuthenticationOnTheCurrentState
 {

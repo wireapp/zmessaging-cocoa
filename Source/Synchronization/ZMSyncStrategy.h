@@ -23,7 +23,6 @@
 
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUpdateEventsBuffer.h"
-#import "ZMBackgroundFetch.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 @class ZMTransportRequest;

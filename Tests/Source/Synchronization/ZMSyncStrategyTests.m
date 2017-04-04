@@ -1238,33 +1238,6 @@
     XCTAssertEqual(self.application.applicationIconBadgeNumber, 1);
 }
 
-
-// TODO jacob
-//- (void)testThatItForwardsTheBackgroundFetchRequestToTheStateMachine
-//{
-//    // given
-//    XCTestExpectation *expectation = [self expectationWithDescription:@"Background fetch completed"];
-//    ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult result) {
-//        XCTAssertEqual(result, ZMBackgroundFetchResultNewData);
-//        [expectation fulfill];
-//    };
-//    
-//    // expect
-//    [(ZMSyncStrategy *)[[(id) self.stateMachine expect] andCall:@selector(forward_startBackgroundFetchWithCompletionHandler:) onObject:self] startBackgroundFetchWithCompletionHandler:OCMOCK_ANY];
-//    
-//    // when
-//    [self.sut startBackgroundFetchWithCompletionHandler:handler];
-//    
-//    // then
-//    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-//    [(id) self.stateMachine verify];
-//}
-
-- (void)forward_startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-{
-    handler(ZMBackgroundFetchResultNewData);
-}
-
 @end
 
 

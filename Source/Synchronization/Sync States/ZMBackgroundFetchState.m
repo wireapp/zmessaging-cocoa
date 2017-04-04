@@ -87,7 +87,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
     [self.timer cancel];
     self.timer = nil;
     [super didLeaveState];
-    [self markFetchAsComplete];
+//    [self markFetchAsComplete];
 }
 
 - (void)timerDidFire:(ZMTimer *)timer
@@ -105,7 +105,7 @@ static NSTimeInterval const MaximumTimeInState = 25;
     }
     
 //    [stateMachine goToState:stateMachine.preBackgroundState];
-    [self markFetchAsComplete];
+//    [self markFetchAsComplete];
     
     ZMLogError(@"Timer cancelled background fetch after %g seconds.", fabs([self.stateEnterDate timeIntervalSinceNow]));
 }
@@ -164,31 +164,31 @@ static NSTimeInterval const MaximumTimeInState = 25;
 }
 
 
-- (void)markFetchAsComplete;
-{
-    //
-    // We tell the OS if there was new data for us to download. This allows the OS to reschedule
-    // background fetching based on whether there is data. For a user that continuously has new
-    // data the OS can schedule background fetching more often. For a user the rarely has new data
-    // the OS can decide to do background fetching less often. The OS (supposedly) also uses
-    // the time of day to heuristically determine when it's a good time to schedule background
-    // fetches.
-    //
-    ZMBackgroundFetchResult const result = self.fetchResult;
-    if (self.fetchCompletionHandler != nil) {
-        self.fetchCompletionHandler(result);
-        self.fetchCompletionHandler = nil;
-    }
-}
-
-- (ZMBackgroundFetchResult)fetchResult;
-{
-    if (self.errorInDowloading) {
-        return ZMBackgroundFetchResultFailed;
-    } else {
-        return self.didDownloadEvents ? ZMBackgroundFetchResultNewData : ZMBackgroundFetchResultNoData;
-    }
-}
+//- (void)markFetchAsComplete;
+//{
+//    //
+//    // We tell the OS if there was new data for us to download. This allows the OS to reschedule
+//    // background fetching based on whether there is data. For a user that continuously has new
+//    // data the OS can schedule background fetching more often. For a user the rarely has new data
+//    // the OS can decide to do background fetching less often. The OS (supposedly) also uses
+//    // the time of day to heuristically determine when it's a good time to schedule background
+//    // fetches.
+//    //
+//    ZMBackgroundFetchResult const result = self.fetchResult;
+//    if (self.fetchCompletionHandler != nil) {
+//        self.fetchCompletionHandler(result);
+//        self.fetchCompletionHandler = nil;
+//    }
+//}
+//
+//- (ZMBackgroundFetchResult)fetchResult;
+//{
+//    if (self.errorInDowloading) {
+//        return ZMBackgroundFetchResultFailed;
+//    } else {
+//        return self.didDownloadEvents ? ZMBackgroundFetchResultNewData : ZMBackgroundFetchResultNoData;
+//    }
+//}
 
 - (BOOL)didDownloadEvents;
 {

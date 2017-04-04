@@ -36,6 +36,7 @@
 
 @property (nonatomic) id<ZMAuthenticationObserverToken> authenticationObserverToken;
 @property (nonatomic) id<ZMRegistrationObserverToken> registrationObserverToken;
+@property (nonatomic) ZMOperationStatus *operationStatus;
 
 @end
 
@@ -73,11 +74,13 @@
     self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext: self.syncMOC cookie:cookie];
     self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC loginCredentialProvider:self.authenticationStatus updateCredentialProvider:nil cookie:cookie registrationStatusDelegate:nil];
     self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
+    self.operationStatus = [[ZMOperationStatus alloc] init];
     
     id applicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
     [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.authenticationStatus] authenticationStatus];
     [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.clientRegistrationStatus] clientRegistrationStatus];
     [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.proxiedRequestStatus] proxiedRequestStatus];
+    [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.operationStatus] operationStatus];
     
     self.syncStrategy = [OCMockObject mockForClass:[ZMSyncStrategy class]];
     [(ZMSyncStrategy *)[[(id)self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];

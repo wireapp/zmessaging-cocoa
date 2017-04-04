@@ -168,11 +168,11 @@ static NSTimeInterval const MaximumTimeInState = 25;
     // the time of day to heuristically determine when it's a good time to schedule background
     // fetches.
     //
-    ZMBackgroundTaskResult const result = self.fetchResult;
-    if (self.taskCompletionHandler != nil) {
-        self.taskCompletionHandler(result);
-        self.taskCompletionHandler = nil;
-    }
+//    ZMBackgroundTaskResult const result = self.fetchResult;
+//    if (self.taskCompletionHandler != nil) {
+//        self.taskCompletionHandler(result);
+//        self.taskCompletionHandler = nil;
+//    }
 }
 
 - (ZMBackgroundTaskResult)fetchResult;
@@ -180,7 +180,8 @@ static NSTimeInterval const MaximumTimeInState = 25;
     if (self.errorPerformingTask) {
         return ZMBackgroundTaskResultFailed;
     }
-    return self.didFinishTask ? ZMBackgroundTaskResultSucceed : ZMBackgroundTaskResultFailed;
+//    return self.didFinishTask ? ZMBackgroundTaskResultSucceed : ZMBackgroundTaskResultFailed;
+    return ZMBackgroundTaskResultFailed;
 }
 
 - (ClientMessageTranscoder *)clientMessageTranscoder;

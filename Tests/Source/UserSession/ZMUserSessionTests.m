@@ -1397,38 +1397,32 @@
 
 }
 
-// TODO jacob
-//- (void)testThatItDoesNotCall_DelegateShowConversationAndAppendsAMessage_ZMConversationCategory_DirectReplyAction
-//{
-//    // given
-//    [self simulateLoggedInUser];
-//    
-//    [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
-//    
-//    UILocalNotification *note = [self notificationWithConversationForCategory:ZMConversationCategory];
-//    ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
-//    NSDictionary *responseInfo = @{UIUserNotificationActionResponseTypedTextKey: @"Hello hello"};
-//    XCTAssertEqual(conversation.messages.count, 0u);
-//
-//    // expect
-//    [self checkThatItCallsTheDelegateForNotification:note responseInfo:responseInfo actionIdentifier:ZMConversationDirectReplyAction withBlock:^(id mockDelegate) {
-//        [[self.operationLoop expect] startBackgroundTaskWithCompletionHandler:[OCMArg checkWithBlock:^BOOL((void(^completionHandler)())) {
-//            if (completionHandler != nil) {
-//                completionHandler();
-//                return YES;
-//            }
-//            return NO;
-//        }]];
-//        [[mockDelegate reject] showConversation:conversation];
-//        [[mockDelegate reject] showConversation:conversation];
-//
-//    }];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//    
-//    // then
-//    XCTAssertFalse(conversation.callDeviceIsActive);
-//    XCTAssertEqual(conversation.messages.count, 1u);
-//}
+- (void)testThatItDoesNotCall_DelegateShowConversationAndAppendsAMessage_ZMConversationCategory_DirectReplyAction
+{
+    // given
+    [self simulateLoggedInUser];
+    
+    [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
+    
+    UILocalNotification *note = [self notificationWithConversationForCategory:ZMConversationCategory];
+    ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
+    NSDictionary *responseInfo = @{UIUserNotificationActionResponseTypedTextKey: @"Hello hello"};
+    XCTAssertEqual(conversation.messages.count, 0u);
+    __block BOOL didCallCompletionHandler = NO;
+    
+    [self.sut application:self.application handleActionWithIdentifier:ZMConversationDirectReplyAction forLocalNotification:note responseInfo:responseInfo completionHandler:^{
+        didCallCompletionHandler = YES;
+    }];
+    
+    // Fake message was sent
+    [[[[self.operationLoop syncStrategy] applicationStatusDirectory] operationStatus] finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFinished];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    XCTAssertTrue(didCallCompletionHandler);
+    XCTAssertFalse(conversation.callDeviceIsActive);
+    XCTAssertEqual(conversation.messages.count, 1u);
+}
 
 
 - (void)testThatItMarksTheTokenToDeleteWhenReceivingDidInvalidateToken
@@ -1479,33 +1473,6 @@
     XCTAssertNotEqual(self.application.minimumBackgroundFetchInverval, UIApplicationBackgroundFetchIntervalNever);
     XCTAssertGreaterThanOrEqual(self.application.minimumBackgroundFetchInverval, UIApplicationBackgroundFetchIntervalMinimum);
     XCTAssertLessThanOrEqual(self.application.minimumBackgroundFetchInverval, (NSTimeInterval) (20 * 60));
-}
-
-
-// TODO jacob
-//- (void)testThatItForwardsTheBackgroundFetchRequestToTheOperationLoop
-//{
-//    // given
-//    XCTestExpectation *expectation = [self expectationWithDescription:@"Background fetch completed"];
-//    void (^handler)(UIBackgroundFetchResult) = ^(UIBackgroundFetchResult result) {
-//        XCTAssertEqual(result, UIBackgroundFetchResultNewData);
-//        [expectation fulfill];
-//    };
-//    
-//    // expect
-//    [(ZMOperationLoop *)[[(id) self.operationLoop expect] andCall:@selector(forward_startBackgroundFetchWithCompletionHandler:) onObject:self] startBackgroundFetchWithCompletionHandler:OCMOCK_ANY];
-//    
-//    // when
-//    [self.sut application:self.application performFetchWithCompletionHandler:handler];
-//    
-//    // then
-//    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-//    [(id) self.operationLoop verify];
-//}
-
-- (void)forward_startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-{
-    handler(ZMBackgroundFetchResultNewData);
 }
 
 @end
