@@ -18,9 +18,9 @@
 
 
 @import UIKit;
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireUtilities;
+@import WireDataModel;
 
 #import "ZMUnauthenticatedState+Tests.h"
 #import "ZMStateMachineDelegate.h"

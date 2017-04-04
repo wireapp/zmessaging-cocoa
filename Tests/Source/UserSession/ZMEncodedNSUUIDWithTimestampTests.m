@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMUtilities;
+@import WireUtilities;
 
 #import "MessagingTest.h"
 #import "NSURL+LaunchOptions.h"

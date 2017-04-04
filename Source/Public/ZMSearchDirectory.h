@@ -19,7 +19,7 @@
 
 @import Foundation;
 
-#import <ZMUtilities/ZMAccentColor.h>
+#import <WireUtilities/ZMAccentColor.h>
 
 @class ZMBareUser;
 @class ZMConversation;

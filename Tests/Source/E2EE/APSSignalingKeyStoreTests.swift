@@ -19,8 +19,8 @@
 
 import XCTest
 @testable import WireSyncEngine
-import ZMTesting
-import ZMTransport
+import WireTesting
+import WireTransport
 
 class APSSignalingKeyStoreTests: MessagingTest {
     

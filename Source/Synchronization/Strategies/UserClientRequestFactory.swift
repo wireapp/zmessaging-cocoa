@@ -18,7 +18,7 @@
 
 
 import Foundation
-import Cryptobox
+import WireCryptobox
 
 enum UserClientRequestError: Error {
     case noPreKeys

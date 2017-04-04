@@ -17,8 +17,8 @@
 //
 
 
-@import ZMTesting;
-@import ZMCDataModel;
+@import WireTesting;
+@import WireDataModel;
 
 #import "ConversationTestsBase.h"
 #import "NotificationObservers.h"

@@ -16,7 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import "MessagingTest.h"
 #import "ZMLoginTranscoder+Internal.h"
@@ -29,7 +29,7 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMAuthenticationStatus.h"
 
-@import ZMUtilities;
+@import WireUtilities;
 
 static NSString * const TestEmail = @"bar@example.com";
 static NSString * const TestPassword = @"super-secure-password-sijovhjs987y";

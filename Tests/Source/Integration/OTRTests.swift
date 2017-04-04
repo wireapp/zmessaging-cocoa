@@ -19,7 +19,7 @@
 
 import Foundation
 import WireSyncEngine
-import ZMCMockTransport
+import WireMockTransport
 
 class OTRTests : IntegrationTestBase {
         

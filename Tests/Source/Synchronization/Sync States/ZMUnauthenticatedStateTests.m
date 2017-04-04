@@ -19,7 +19,7 @@
 
 @import UIKit;
 @import WireSyncEngine;
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import "MessagingTest.h"
 #import "ZMUnauthenticatedState+Tests.h"

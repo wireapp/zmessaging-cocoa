@@ -17,10 +17,10 @@
 // 
 
 
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMTesting;
-@import ZMCDataModel;
+@import WireUtilities;
+@import WireTransport;
+@import WireTesting;
+@import WireDataModel;
 
 #import "MessagingTest+EventFactory.h"
 

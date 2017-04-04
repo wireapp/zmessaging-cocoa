@@ -17,7 +17,7 @@
 //
 
 import Foundation
-import ZMCLinkPreview
+import WireLinkPreview
 @testable import WireSyncEngine
 
 class AddressBookUploadRequestStrategyTest : MessagingTest {
@@ -107,7 +107,7 @@ extension AddressBookUploadRequestStrategyTest {
         // given
         WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        selfUser.phoneNumber = "+155534534566"
+        selfUser.setValue("+155534534566", forKey: #keyPath(ZMUser.phoneNumber))
         
         // when
         let nilRequest = sut.nextRequest() // this will return nil and start async processing
@@ -130,7 +130,7 @@ extension AddressBookUploadRequestStrategyTest {
         // given
         WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        selfUser.emailAddress = "me@example.com"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         
         // when
         let nilRequest = sut.nextRequest() // this will return nil and start async processing

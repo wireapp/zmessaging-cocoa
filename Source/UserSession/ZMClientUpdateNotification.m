@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMUtilities;
+@import WireUtilities;
 
 #import "ZMClientUpdateNotification.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>

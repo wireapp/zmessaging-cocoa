@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
+@import WireTransport;
 @import WireSyncEngine;
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import "MessagingTest.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"

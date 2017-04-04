@@ -18,10 +18,10 @@
 
 
 @import UIKit;
-@import zimages;
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireImages;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 @import WireMessageStrategy;
 @import WireRequestStrategy;
 

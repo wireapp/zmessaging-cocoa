@@ -19,8 +19,8 @@
 
 @import Foundation;
 @import CoreData;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireDataModel;
 
 #import "MessagingTest.h"
 #import "ZMSearchDirectory+Internal.h"

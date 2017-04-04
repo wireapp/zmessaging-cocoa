@@ -219,7 +219,7 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             
         case self.phoneNumberDeleteSync:
             if response.result == .success {
-                ZMUser.selfUser(in: managedObjectContext).phoneNumber = nil
+                ZMUser.selfUser(in: managedObjectContext).setValue(nil, forKey: #keyPath(ZMUser.phoneNumber)) // This is a horrible hack for Swift 3.1 not seeing Obj-c private headers
                 self.userProfileUpdateStatus.didRemovePhoneNumberSuccessfully()
             } else {
                 let error : Error = NSError.lastUserIdentityCantBeRemoved(with: response) ??

@@ -16,12 +16,12 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-@import ZMCDataModel;
+@import WireDataModel;
 @import WireSyncEngine;
-@import ZMTransport;
-@import ZMCMockTransport;
-@import ZMUtilities;
-@import ZMTesting;
+@import WireTransport;
+@import WireMockTransport;
+@import WireUtilities;
+@import WireTesting;
 
 #import "MessagingTest.h"
 #import "ZMUserSession.h"
@@ -2722,7 +2722,7 @@
     
     // when
     [self.userSession performChanges:^{
-        [ZMMessage edit:message newText:@"Je t'aime JCVD, plus que tout!"];
+        NOT_USED([ZMMessage edit:message newText:@"Je t'aime JCVD, plus que tout!"]);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

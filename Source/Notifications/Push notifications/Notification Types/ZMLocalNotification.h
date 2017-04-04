@@ -18,7 +18,7 @@
 
 
 @import UIKit;
-#import <ZMTransport/ZMUpdateEvent.h>
+#import <WireTransport/ZMUpdateEvent.h>
 
 @class ZMUpdateEvent;
 @class ZMConversation;

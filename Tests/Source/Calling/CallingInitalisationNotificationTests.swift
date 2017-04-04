@@ -17,7 +17,7 @@
 // 
 
 
-import ZMTesting
+import WireTesting
 
 @testable import WireSyncEngine
 

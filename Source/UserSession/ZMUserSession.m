@@ -19,9 +19,9 @@
 
 @import UIKit;
 @import CoreData;
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireUtilities;
+@import WireDataModel;
 @import CallKit;
 @import CoreTelephony;
 

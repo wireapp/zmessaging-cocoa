@@ -18,7 +18,7 @@
 
 
 @import OCMock;
-@import ZMTransport;
+@import WireTransport;
 @import UIKit;
 
 #import "MessagingTest.h"

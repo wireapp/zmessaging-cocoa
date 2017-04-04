@@ -18,7 +18,7 @@
 
 import Foundation
 import WireMessageStrategy
-import ZMCDataModel
+import WireDataModel
 
 extension ZMConversation {
     @objc (appendCallingMessageWithContent:)

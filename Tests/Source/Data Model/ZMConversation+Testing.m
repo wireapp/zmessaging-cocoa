@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMCDataModel;
-@import ZMCMockTransport;
-@import ZMTesting;
+@import WireDataModel;
+@import WireMockTransport;
+@import WireTesting;
 
 @implementation ZMConversation (Testing)
 

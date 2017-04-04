@@ -17,10 +17,10 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 @import WireRequestStrategy;
 
 #import "ZMConversationTranscoder.h"
@@ -732,7 +732,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     BOOL const removedUsers = ([changeType isEqualToString:UserInfoRemovedValueKey]);
     
     if (addedUsers || removedUsers) {
-        BOOL needsAnotherRequest;
+        BOOL needsAnotherRequest = NO;
         if (removedUsers) {
             ZMUser *syncedUser = userInfo[UserInfoUserKey];
             [conversation synchronizeRemovedUser:syncedUser];

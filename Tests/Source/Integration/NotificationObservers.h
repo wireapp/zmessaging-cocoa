@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 

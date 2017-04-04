@@ -17,8 +17,8 @@
 //
 
 @testable import WireSyncEngine
-import ZMTesting
-import ZMCMockTransport
+import WireTesting
+import WireMockTransport
 
 class FakeBackgroundActivityFactory : BackgroundActivityFactory {
     var nameToHandler : [String : ((Void) -> Void)] = [:]

@@ -18,7 +18,7 @@
 
 
 @import WireSyncEngine;
-@import ZMCLinkPreview;
+@import WireLinkPreview;
 
 extern NSString * const ZMTestURLArticleWithoutPictureString;
 extern NSString * const ZMTestURLArticleWithPictureString;

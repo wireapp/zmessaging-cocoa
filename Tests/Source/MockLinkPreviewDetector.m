@@ -18,7 +18,7 @@
 
 
 #import "MockLinkPreviewDetector.h"
-@import ZMCLinkPreview;
+@import WireLinkPreview;
 
 NSString * const ZMTestURLArticleWithoutPictureString   = @"http://someurl.com/nopicture";
 NSString * const ZMTestURLArticleWithPictureString      = @"http://someurl.com/magicpicture";

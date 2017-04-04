@@ -19,7 +19,7 @@
 
 import Foundation
 import XCTest
-import ZMTesting
+import WireTesting
 @testable import WireSyncEngine
 
 

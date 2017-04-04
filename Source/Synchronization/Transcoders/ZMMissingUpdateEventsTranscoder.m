@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMUtilities;
-@import ZMTransport;
+@import WireUtilities;
+@import WireTransport;
 @import WireRequestStrategy;
 
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"

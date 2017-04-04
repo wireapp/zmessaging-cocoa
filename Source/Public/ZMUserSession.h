@@ -19,11 +19,11 @@
 
 
 @import Foundation;
-@import ZMCSystem;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireDataModel;
 
 #import <WireSyncEngine/ZMNetworkState.h>
-#import <ZMTransport/ZMTransportRequest.h>
+#import <WireTransport/ZMTransportRequest.h>
 #import <WireSyncEngine/CallingProtocolStrategy.h>
 
 @class ZMTransportSession;

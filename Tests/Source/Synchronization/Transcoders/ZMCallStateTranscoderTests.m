@@ -120,7 +120,7 @@
     [fromContext saveOrRollback];
     
     [intoContext performGroupedBlockAndWait:^{
-        [intoContext mergeCallStateChanges:[fromContext.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([intoContext mergeCallStateChanges:[fromContext.zm_callState createCopyAndResetHasChanges]]);
     }];
 }
 
@@ -132,7 +132,7 @@
     conversation.callDeviceIsActive = callDeviceIsActive;
     XCTAssertTrue(conversation.hasLocalModificationsForCallDeviceIsActive);
     [self.uiMOC saveOrRollback];
-    [self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState];
+    NOT_USED([self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState]);
     return conversation;
 }
 
@@ -2871,7 +2871,7 @@
     conversation.callDeviceIsActive = callDeviceIsActive;
     conversation.callStateNeedsToBeUpdatedFromBackend = callStateNeedsToBeUpdatedFromBackend;
     [self.uiMOC saveOrRollback];
-    [self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState];
+    NOT_USED([self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState]);
     return conversation;
 }
 
@@ -3772,7 +3772,7 @@
     [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
+    NOT_USED([self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]]);
     // then
     XCTAssertTrue(conversation.hasLocalModificationsForCallDeviceIsActive);
     XCTAssertFalse(conversation.callDeviceIsActive);
@@ -3793,7 +3793,7 @@
     [self.sut updateObject:conversation withResponse:response downstreamSync:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
+    NOT_USED([self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]]);
     // then
     XCTAssertFalse(conversation.hasLocalModificationsForCallDeviceIsActive);
     XCTAssertTrue(conversation.callDeviceIsActive);

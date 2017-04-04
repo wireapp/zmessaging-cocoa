@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMUtilities;
+@import WireUtilities;
 
 #import <Foundation/Foundation.h>
 #import "MessagingTest.h"

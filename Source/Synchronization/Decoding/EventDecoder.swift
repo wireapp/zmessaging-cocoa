@@ -17,8 +17,8 @@
 //
 
 import Foundation
-import Cryptobox
-import ZMCDataModel
+import WireCryptobox
+import WireDataModel
 import WireMessageStrategy
 
 private let zmLog = ZMSLog(tag: "EventDecoder")
@@ -114,7 +114,7 @@ extension EventDecoder {
                 // Insert the decryted events in the event database using a `storeIndex`
                 // incrementing from the highest index currently stored in the database
                 for (idx, event) in newUpdateEvents.enumerated() {
-                    _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: idx + startIndex + 1)
+                    _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: Int64(idx) + startIndex + 1)
                 }
 
                 self.eventMOC.saveOrRollback()

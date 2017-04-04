@@ -17,10 +17,10 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMLocalNotification.h"
 

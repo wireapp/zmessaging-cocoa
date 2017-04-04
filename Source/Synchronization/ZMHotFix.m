@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 @import WireRequestStrategy;
 
 #import "ZMHotFix.h"

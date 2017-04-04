@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTesting;
+@import WireTesting;
 @import WireSyncEngine;
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import "NSManagedObjectContext+TestHelpers.h"
 
@@ -34,8 +34,8 @@
 @class ApplicationMock;
 @class ZMAssetClientMessage;
 
-@import Cryptobox;
-@import zimages;
+@import WireCryptobox;
+@import WireImages;
 @class UserClient;
 
 @class MockUser;

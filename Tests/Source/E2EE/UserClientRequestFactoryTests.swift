@@ -18,11 +18,11 @@
 
 
 import WireSyncEngine
-import ZMUtilities
-import ZMTesting
-import Cryptobox
-import ZMCMockTransport
-import ZMCDataModel
+import WireUtilities
+import WireTesting
+import WireCryptobox
+import WireMockTransport
+import WireDataModel
 
 class UserClientRequestFactoryTests: MessagingTest {
     

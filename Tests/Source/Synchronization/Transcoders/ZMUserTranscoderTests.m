@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
+@import WireTransport;
 @import WireSyncEngine;
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import "ObjectTranscoderTests.h"
 #import "ZMUserTranscoder+Internal.h"

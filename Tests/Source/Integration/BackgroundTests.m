@@ -18,8 +18,8 @@
 
 
 @import UIKit;
-@import ZMCMockTransport;
-@import ZMCDataModel;
+@import WireMockTransport;
+@import WireDataModel;
 
 #import "IntegrationTestBase.h"
 #import "ZMUserSession.h"

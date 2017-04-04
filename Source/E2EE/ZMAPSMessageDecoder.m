@@ -18,9 +18,9 @@
 
 
 @import CoreFoundation;
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMTransport;
+@import WireSystem;
+@import WireUtilities;
+@import WireTransport;
 
 #import <CommonCrypto/CommonCrypto.h>
 #import "ZMAPSMessageDecoder.h"

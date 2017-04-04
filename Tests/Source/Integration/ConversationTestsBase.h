@@ -16,10 +16,10 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-@import ZMTransport;
-@import ZMCMockTransport;
+@import WireTransport;
+@import WireMockTransport;
 @import WireSyncEngine;
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import "ZMUserSession.h"
 #import "IntegrationTestBase.h"

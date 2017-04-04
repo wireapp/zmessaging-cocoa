@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMTesting;
+@import WireTesting;
 
 #import "ZMLocalNotificationForEventTest.h"
 #import "UILocalNotification+UserInfo.h"

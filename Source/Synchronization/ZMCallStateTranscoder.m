@@ -16,10 +16,10 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMCallStateTranscoder.h"
 #import "VoiceChannelV2+CallFlow.h"

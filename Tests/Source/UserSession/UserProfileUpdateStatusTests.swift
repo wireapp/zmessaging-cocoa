@@ -19,7 +19,7 @@
 
 import XCTest
 @testable import WireSyncEngine
-import ZMUtilities
+import WireUtilities
 
 class UserProfileUpdateStatusTests : MessagingTest {
     
@@ -63,7 +63,7 @@ extension UserProfileUpdateStatusTests {
         
         // GIVEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = nil
+        selfUser.setValue(nil, forKey: #keyPath(ZMUser.emailAddress))
         
         // WHEN
         do {
@@ -89,7 +89,7 @@ extension UserProfileUpdateStatusTests {
         
         // GIVEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = "my@fo.example.com"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         
         // WHEN
         do {
@@ -145,7 +145,7 @@ extension UserProfileUpdateStatusTests {
         
         // GIVEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = "my@fo.example.com"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         let credentials = ZMEmailCredentials(email: "foo@example.com", password: "%$#@11111")
         
         // WHEN
@@ -252,7 +252,7 @@ extension UserProfileUpdateStatusTests {
         
         // WHEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = "bar@example.com"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         
         // THEN
         XCTAssertFalse(self.sut.currentlySettingEmail)
@@ -269,7 +269,7 @@ extension UserProfileUpdateStatusTests {
 
         // WHEN
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = "bar@example.com"
+        selfUser.setValue("my@fo.example.com", forKey: #keyPath(ZMUser.emailAddress))
         
         // THEN
         XCTAssertFalse(self.sut.currentlySettingEmail)

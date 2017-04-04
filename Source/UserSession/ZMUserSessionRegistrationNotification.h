@@ -18,9 +18,9 @@
 
 
 @import Foundation;
-@import ZMCSystem;
+@import WireSystem;
 
-#import <ZMCDataModel/ZMNotifications+Internal.h>
+#import <WireDataModel/ZMNotifications+Internal.h>
 
 @protocol ZMRegistrationObserverToken
 @end

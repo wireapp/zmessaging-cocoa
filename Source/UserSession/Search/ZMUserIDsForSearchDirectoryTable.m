@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMUtilities;
-@import ZMCDataModel;
+@import WireUtilities;
+@import WireDataModel;
 
 #import "ZMUserIDsForSearchDirectoryTable.h"
 

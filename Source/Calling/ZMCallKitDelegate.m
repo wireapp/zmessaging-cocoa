@@ -16,10 +16,10 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@import ZMCDataModel;
+@import WireDataModel;
 @import CallKit;
 @import UIKit;
-@import ZMCSystem;
+@import WireSystem;
 @import Intents;
 @import avs;
 #import "ZMCallKitDelegate.h"

@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCSystem;
-@import ZMUtilities;
+@import WireTransport;
+@import WireSystem;
+@import WireUtilities;
 @import WireMessageStrategy;
 
 #import "ZMBackgroundTaskState.h"

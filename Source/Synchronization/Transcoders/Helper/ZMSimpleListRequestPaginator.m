@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMSimpleListRequestPaginator+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>

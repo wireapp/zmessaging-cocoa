@@ -18,8 +18,8 @@
 
 import Foundation
 import AddressBook
-import ZMCDataModel
-import Cryptobox
+import WireDataModel
+import WireCryptobox
 @testable import WireSyncEngine
 
 class MockAuthenticationStatus: ZMAuthenticationStatus {

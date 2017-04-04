@@ -19,7 +19,7 @@
 
 import Foundation
 import PushKit
-import ZMTransport
+import WireTransport
 
 
 /// This is a generic protocol for receiving remote push notifications.

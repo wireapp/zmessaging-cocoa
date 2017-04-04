@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMTransport;
+@import WireTransport;
 
 #import "MessagingTest.h"
 #import "ZMSimpleListRequestPaginator+Internal.h"

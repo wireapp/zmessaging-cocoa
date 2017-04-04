@@ -17,10 +17,10 @@
 // 
 
 
-@import zimages;
-@import ZMTransport;
+@import WireImages;
+@import WireTransport;
 @import WireSyncEngine;
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import "ObjectTranscoderTests.h"
 #import "ZMSelfTranscoder+Internal.h"

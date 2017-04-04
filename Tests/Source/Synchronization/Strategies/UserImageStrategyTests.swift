@@ -17,7 +17,7 @@
 //
 
 @testable import WireSyncEngine
-import ZMCDataModel
+import WireDataModel
 
 class MockRequestStrategy : ImageRequestSource {
     static var mockRequest : ZMTransportRequest?

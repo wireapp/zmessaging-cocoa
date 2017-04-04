@@ -16,8 +16,8 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import ZMTesting;
-import ZMCDataModel;
+import WireTesting;
+import WireDataModel;
 @testable import WireSyncEngine
 
 

@@ -19,7 +19,7 @@
 
 import Foundation
 @testable import WireSyncEngine
-import ZMCMockTransport
+import WireMockTransport
 
 class UserHandleTests : IntegrationTestBase {
     

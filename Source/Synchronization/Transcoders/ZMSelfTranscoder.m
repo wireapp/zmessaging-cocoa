@@ -17,9 +17,9 @@
 // 
 
 
-@import zimages;
-@import ZMCSystem;
-@import ZMTransport;
+@import WireImages;
+@import WireSystem;
+@import WireTransport;
 
 #import "ZMSelfTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"

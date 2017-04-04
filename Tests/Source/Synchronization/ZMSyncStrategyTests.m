@@ -18,9 +18,9 @@
 
 
 @import UIKit;
-@import ZMTransport;
+@import WireTransport;
 @import WireSyncEngine;
-@import ZMCDataModel;
+@import WireDataModel;
 @import WireMessageStrategy;
 
 

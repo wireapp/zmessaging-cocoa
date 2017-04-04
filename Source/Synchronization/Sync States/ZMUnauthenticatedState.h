@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMUtilities;
+@import WireUtilities;
 
 #import "ZMSyncState.h"
 #import "ZMUserSession.h"

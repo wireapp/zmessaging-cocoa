@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCMockTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireMockTransport;
+@import WireDataModel;
 
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 

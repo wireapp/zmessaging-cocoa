@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCDataModel;
-@import ZMUtilities;
+@import WireTransport;
+@import WireDataModel;
+@import WireUtilities;
 
 #import "ZMSearch.h"
 #import "ZMSearchResult+Internal.h"

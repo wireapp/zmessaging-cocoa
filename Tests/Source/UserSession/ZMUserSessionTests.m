@@ -18,7 +18,7 @@
 
 
 @import PushKit;
-@import ZMCMockTransport;
+@import WireMockTransport;
 
 #include "ZMUserSessionTestsBase.h"
 #import "ZMPushToken.h"
@@ -270,7 +270,7 @@
     [self.syncMOC saveOrRollback];
     
     // when
-    [selfUser establishSessionWithClient:user1Client1 usingPreKey:@"pQABAQICoQBYIGnflzMYd4OvMaHKfcIJzlb1fvEIhBx4qN545db7ZDBrA6EAoQBYIH7q8TQbCCuaMLYW6yW7NzLsU/OA7ea7Xs/hAyXK1jETBPY="];
+    NOT_USED([selfUser establishSessionWithClient:user1Client1 usingPreKey:@"pQABAQICoQBYIGnflzMYd4OvMaHKfcIJzlb1fvEIhBx4qN545db7ZDBrA6EAoQBYIH7q8TQbCCuaMLYW6yW7NzLsU/OA7ea7Xs/hAyXK1jETBPY="]);
     
     // then
     XCTAssertNotNil(user1Client1.fingerprint);

@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Background+Testing.h"
@@ -362,7 +362,7 @@ static NSString *ZMLogTag = @"Push";
         BOOL userWantsToCallBack = ([note.category isEqualToString:ZMMissedCallCategory]);
         
         if ([WireCallCenter activeCallConversationsInUserSession:self].count == 0 && (callIsStillOngoing || userWantsToCallBack)) {
-            [note.conversation.voiceChannel joinWithVideo:NO userSession:self];
+            NOT_USED([note.conversation.voiceChannel joinWithVideo:NO userSession:self]);
             [note.conversation.managedObjectContext saveOrRollback];
         }
     }

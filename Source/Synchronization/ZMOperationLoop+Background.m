@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMTransport;
-@import Cryptobox;
+@import WireTransport;
+@import WireCryptobox;
 
 #import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"

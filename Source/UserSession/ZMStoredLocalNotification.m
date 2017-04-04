@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMStoredLocalNotification.h"
 #import "ZMLocalNotification.h"

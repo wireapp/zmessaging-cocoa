@@ -16,7 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-@import ZMCDataModel;
+@import WireDataModel;
 #import "ZMLocalNotificationLocalization.h"
 #import "ZMUserSession.h"
 #import "WireSyncEngine/WireSyncEngine-Swift.h"

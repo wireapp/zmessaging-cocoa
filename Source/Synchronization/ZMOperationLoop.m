@@ -17,11 +17,11 @@
 // 
 
 
-@import ZMUtilities;
-@import ZMCSystem;
-@import ZMTransport;
-@import Cryptobox;
-@import ZMCDataModel;
+@import WireUtilities;
+@import WireSystem;
+@import WireTransport;
+@import WireCryptobox;
+@import WireDataModel;
 
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"

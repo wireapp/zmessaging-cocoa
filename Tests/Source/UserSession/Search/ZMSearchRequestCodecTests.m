@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMTransport;
+@import WireTransport;
 
 #import "IntegrationTestBase.h"
 #import "ZMSearchRequestCodec.h"

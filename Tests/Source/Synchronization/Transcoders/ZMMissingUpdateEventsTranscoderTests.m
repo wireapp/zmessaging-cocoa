@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMTransport;
+@import WireTransport;
 @import WireSyncEngine;
 
 #import <Foundation/Foundation.h>
@@ -804,7 +804,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(status)] status];
 
     if (nil != nextEvents) {
-        [[[self.mockPingbackStatus expect] andReturn:nextEvents] nextNotificationEventsWithID];
+        NOT_USED([[[self.mockPingbackStatus expect] andReturn:nextEvents] nextNotificationEventsWithID]);
     }
 }
 

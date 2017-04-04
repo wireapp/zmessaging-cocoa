@@ -19,7 +19,7 @@
 #import "ConversationTestsBase.h"
 #import "MockLinkPreviewDetector.h"
 
-@import ZMUtilities;
+@import WireUtilities;
 
 @interface LinkPreviewTests : ConversationTestsBase
 

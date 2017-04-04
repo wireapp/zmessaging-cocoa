@@ -18,9 +18,9 @@
 
 
 @import Foundation;
-@import ZMTesting;
+@import WireTesting;
 @import WireSyncEngine;
-@import ZMCDataModel;
+@import WireDataModel;
 @import WireMessageStrategy;
 
 #import "IntegrationTestBase.h"

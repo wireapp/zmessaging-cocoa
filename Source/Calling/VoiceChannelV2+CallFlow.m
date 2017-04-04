@@ -18,7 +18,7 @@
 
 
 @import CoreTelephony;
-@import ZMCDataModel;
+@import WireDataModel;
 @import avs;
 #import "ZMOnDemandFlowManager.h"
 #import "ZMAVSBridge.h"

@@ -17,11 +17,11 @@
 // 
 
 
-@import ZMCDataModel;
-@import ZMTransport;
-@import ZMCMockTransport;
-@import ZMUtilities;
-@import ZMTesting;
+@import WireDataModel;
+@import WireTransport;
+@import WireMockTransport;
+@import WireUtilities;
+@import WireTesting;
 
 #import "MessagingTest.h"
 #import "ZMUserSession.h"

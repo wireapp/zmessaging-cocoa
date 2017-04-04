@@ -18,7 +18,7 @@
 
 
 @import CoreTelephony;
-@import ZMCDataModel;
+@import WireDataModel;
 @import WireMessageStrategy;
 
 #import "IntegrationTestBase.h"

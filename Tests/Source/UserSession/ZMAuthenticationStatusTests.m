@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCDataModel;
-@import ZMTransport;
+@import WireTransport;
+@import WireDataModel;
+@import WireTransport;
 
 #import "MessagingTest.h"
 #import "ZMUserSessionAuthenticationNotification.h"

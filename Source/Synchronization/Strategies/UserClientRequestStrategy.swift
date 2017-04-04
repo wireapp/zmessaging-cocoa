@@ -18,11 +18,11 @@
 
 
 import Foundation
-import ZMCSystem
-import ZMTransport
-import ZMUtilities
-import Cryptobox
-import ZMCDataModel
+import WireSystem
+import WireTransport
+import WireUtilities
+import WireCryptobox
+import WireDataModel
 
 private let zmLog = ZMSLog(tag: "userClientRS")
 

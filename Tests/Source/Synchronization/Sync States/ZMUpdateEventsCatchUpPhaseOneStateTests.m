@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMTransport;
+@import WireTransport;
 @import WireSyncEngine;
 
 #import "StateBaseTest.h"
