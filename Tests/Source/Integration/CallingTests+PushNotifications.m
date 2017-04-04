@@ -39,11 +39,7 @@
     [(PKPushPayload *)[[(id)pkPayload stub] andReturn:PKPushTypeVoIP] type];
     PKPushRegistry *mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
     [self.userSession.pushRegistrant pushRegistry:mockPushRegistry didReceiveIncomingPushWithPayload:pkPayload forType:pkPayload.type];
-
-    // TODO jacob
-//    [self.mockTransportSession closePushChannelAndRemoveConsumer];
     [self.mockTransportSession registerPushEvent:[MockPushEvent eventWithPayload:payload uuid:identifier fromUser:user isTransient:YES]];
-//    [self.mockTransportSession restartPushChannel];
 
     WaitForEverythingToBeDone();
 }
