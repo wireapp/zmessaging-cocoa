@@ -106,6 +106,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if(self) {
         self.conversationList = conversationList;
+        self.conversationChangeInfos = [NSMutableArray array];
         self.token = [ConversationListChangeInfo addObserver:self forList:conversationList];
     }
     return self;
@@ -117,7 +118,12 @@ ZM_EMPTY_ASSERTING_INIT()
     if (self.notificationCallback) {
         self.notificationCallback(note);
     }
+}
 
+- (void)conversationInsideList:(ZMConversationList *)list didChange:(ConversationChangeInfo *)changeInfo;
+{
+    NOT_USED(list);
+    [self.conversationChangeInfos addObject:changeInfo];
 }
 
 @end

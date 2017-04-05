@@ -38,7 +38,7 @@ class VoiceChannelRouterTests : MessagingTest {
         conversation = ZMConversation.insertNewObject(in: self.syncMOC)
         conversation?.remoteIdentifier = UUID.create()
         
-        wireCallCenterMock = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: selfClient.remoteIdentifier!, registerObservers: false)
+        wireCallCenterMock = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: selfClient.remoteIdentifier!, uiMOC: uiMOC)
     }
     
     override func tearDown() {
@@ -103,7 +103,7 @@ class VoiceChannelRouterTests : MessagingTest {
         conversation?.conversationType = .oneOnOne
         
         // when
-        wireCallCenterMock?.callState = .incoming(video: false)
+        wireCallCenterMock?.mockAVSCallState = .incoming(video: false)
         ZMUserSession.callingProtocolStrategy = .version2
         
         // then

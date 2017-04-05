@@ -30,15 +30,6 @@ private class CallStateRecorder : WireCallCenterV2CallStateObserver {
     
 }
 
-private class VoiceChannelParticipantRecorder : VoiceChannelParticipantObserver {
-    
-    var changes : [VoiceChannelParticipantNotification] = []
-    
-    fileprivate func voiceChannelParticipantsDidChange(_ changeInfo: VoiceChannelParticipantNotification) {
-        changes.append(changeInfo)
-    }
-    
-}
 
 private class ReceivedVideoRecorder : ReceivedVideoObserver {
     
@@ -179,7 +170,7 @@ class WireCallCenterV2Tests : MessagingTest {
     
     func testThatInsertedCallParticipantTriggerParticipantChange() {
         // given
-        let observer = VoiceChannelParticipantRecorder()
+        let observer = VoiceChannelParticipantTestObserver()
         token = WireCallCenterV2.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation, context: uiMOC)
         
         // when
@@ -193,7 +184,7 @@ class WireCallCenterV2Tests : MessagingTest {
     
     func testThatRemovedCallParticipantTriggerParticipantChange() {
         // given
-        let observer = VoiceChannelParticipantRecorder()
+        let observer = VoiceChannelParticipantTestObserver()
         token = WireCallCenterV2.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation, context: uiMOC)
         
         // when
@@ -212,7 +203,7 @@ class WireCallCenterV2Tests : MessagingTest {
     
     func testThatAddingActiveFlowParticipantTriggerParticpantChange() {
         // given
-        let observer = VoiceChannelParticipantRecorder()
+        let observer = VoiceChannelParticipantTestObserver()
         token = WireCallCenterV2.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation, context: uiMOC)
         
         // when

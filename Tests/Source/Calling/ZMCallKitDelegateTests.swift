@@ -186,7 +186,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let configuration = ZMCallKitDelegate.providerConfiguration()
         self.callKitProvider = MockCallKitProvider(configuration: configuration)
         self.callKitController = MockCallKitCallController()
-        self.mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: "123", registerObservers: false)
+        self.mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: "123", uiMOC: uiMOC)
         self.mockWireCallCenterV3.overridenCallingProtocol = .version2
         
         self.sut = ZMCallKitDelegate(callKitProvider: self.callKitProvider,

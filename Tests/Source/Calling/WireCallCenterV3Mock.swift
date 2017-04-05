@@ -20,52 +20,107 @@ import Foundation
 
 @testable import WireSyncEngine
 
+class MockAVSWrapper : AVSWrapperType {
+    
+    var mockCallState: CallState = .none
+    var didCallStartCall = false
+    var didCallAnswerCall = false
+    var didCallEndCall = false
+    var didCallRejectCall = false
+    var didCallClose = false
+    var answerCallShouldFail : Bool = false
+    var startCallShouldFail : Bool = false
+    var mockIsVideoCall : Bool = false
+    var hasOngoingCall: Bool = false
+    
+    
+    required init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?) {
+        // do nothing
+    }
+    
+    func getCallState(conversationId: UUID) -> CallState {
+        return mockCallState
+    }
+    
+    func startCall(conversationId: UUID, video: Bool) -> Bool {
+        didCallStartCall = true
+        return !startCallShouldFail
+    }
+    
+    func answerCall(conversationId: UUID) -> Bool {
+        didCallAnswerCall = true
+        return !answerCallShouldFail
+    }
+    
+    func endCall(conversationId: UUID) {
+        didCallEndCall = true
+    }
+    
+    func rejectCall(conversationId: UUID) {
+        didCallRejectCall = true
+    }
+    
+    func close(){
+        didCallClose = true
+    }
+    
+    func toggleVideo(conversationID: UUID, active: Bool) {
+        //
+    }
+    
+    func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
+        //
+    }
+}
+
 public class WireCallCenterV3Mock : WireCallCenterV3 {
     
-    public var callState : CallState = .none
+    public var mockAVSCallState : CallState = .none {
+        didSet {
+            (avsWrapper as! MockAVSWrapper).mockCallState = mockAVSCallState
+        }
+    }
+    
+    public var mockIsVideoCall : Bool = false {
+        didSet {
+            (avsWrapper as! MockAVSWrapper).mockIsVideoCall = mockIsVideoCall
+        }
+    }
+
     public var overridenCallingProtocol : CallingProtocol = .version2
-    public var startCallShouldFail : Bool = false
-    public var answerCallShouldFail : Bool = false
-    public var didCallStartCall : Bool = false
-    public var didCallAnswerCall : Bool = false
+    public var startCallShouldFail : Bool = false {
+        didSet{
+            (avsWrapper as! MockAVSWrapper).startCallShouldFail = startCallShouldFail
+        }
+    }
+    public var answerCallShouldFail : Bool = false {
+        didSet{
+            (avsWrapper as! MockAVSWrapper).answerCallShouldFail = answerCallShouldFail
+        }
+    }
+    
+    public var didCallStartCall : Bool {
+        return (avsWrapper as! MockAVSWrapper).didCallStartCall
+    }
+    
+    public var didCallAnswerCall : Bool {
+        return (avsWrapper as! MockAVSWrapper).didCallAnswerCall
+    }
+    public var didCallRejectCall : Bool {
+        return (avsWrapper as! MockAVSWrapper).didCallRejectCall
+    }
     
     public override var callingProtocol: CallingProtocol {
         return overridenCallingProtocol
     }
     
-    public required init(userId: UUID, clientId: String, registerObservers: Bool) {
-        super.init(userId: userId, clientId: clientId, registerObservers: false)
+    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext) {
+        super.init(userId: userId, clientId: clientId, avsWrapper: MockAVSWrapper(userId: userId, clientId: clientId, observer: nil), uiMOC: uiMOC)
     }
-    
-    override public func startCall(conversationId: UUID, video: Bool) -> Bool {
-        didCallStartCall = true
-        return !startCallShouldFail
-    }
-    
-    override public func answerCall(conversationId: UUID) -> Bool {
-        didCallAnswerCall = true
-        return !answerCallShouldFail
-    }
-    
-    override public func closeCall(conversationId: UUID) {
-        
-    }
-        
-    override public func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
-        
-    }
-    
-    public override func callState(conversationId: UUID) -> CallState {
-        return callState
-    }
-    
-    public override func toogleVideo(conversationID: UUID, active: Bool) {
-        
-    }
-    
+
     public func update(callState : CallState, conversationId: UUID, userId: UUID? = nil) {
-        self.callState = callState
+        self.mockAVSCallState = callState
         WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId).post()
     }
-    
+
 }

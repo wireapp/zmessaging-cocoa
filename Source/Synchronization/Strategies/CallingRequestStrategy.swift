@@ -46,7 +46,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         
         if let userId = selfUser.remoteIdentifier, let clientId = selfUser.selfClient()?.remoteIdentifier {
-            callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId)
+            callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface)
             callCenter?.transport = self
         }
     }
@@ -80,7 +80,7 @@ extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTracke
         
         for object in objects {
             if let  userClient = object as? UserClient, userClient.isSelfClient(), let clientId = userClient.remoteIdentifier, let userId = userClient.user?.remoteIdentifier {
-                callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId)
+                callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface)
                 callCenter?.transport = self
                 break
             }

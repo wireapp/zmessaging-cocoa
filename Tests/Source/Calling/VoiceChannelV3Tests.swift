@@ -38,7 +38,7 @@ class VoiceChannelV3Tests : MessagingTest {
         conversation = ZMConversation.insertNewObject(in: self.syncMOC)
         conversation?.remoteIdentifier = UUID.create()
         
-        wireCallCenterMock = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: selfClient.remoteIdentifier!, registerObservers: false)
+        wireCallCenterMock = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: selfClient.remoteIdentifier!, uiMOC: uiMOC)
         
         sut = VoiceChannelV3(conversation: conversation!)
     }
@@ -52,7 +52,7 @@ class VoiceChannelV3Tests : MessagingTest {
     
     func testThatItStartsACall_whenTheresNotAnIncomingCall() {
         // given
-        wireCallCenterMock?.callState = .none
+        wireCallCenterMock?.mockAVSCallState = .none
         
         // when
         _ = sut.join(video: false)
@@ -63,7 +63,7 @@ class VoiceChannelV3Tests : MessagingTest {
     
     func testThatItAnswers_whenTheresAnIncomingCall() {
         // given
-        wireCallCenterMock?.callState = .incoming(video: false)
+        wireCallCenterMock?.mockAVSCallState = .incoming(video: false)
         
         // when
         _ = sut.join(video: false)
@@ -74,7 +74,7 @@ class VoiceChannelV3Tests : MessagingTest {
     
     func testThatItDoesntAnswer_whenTheresAnIncomingDegradedCall() {
         // given
-        wireCallCenterMock?.callState = .incoming(video: false)
+        wireCallCenterMock?.mockAVSCallState = .incoming(video: false)
         conversation?.setValue(NSNumber.init(value: ZMConversationSecurityLevel.secureWithIgnored.rawValue), forKey: "securityLevel")
         
         // when

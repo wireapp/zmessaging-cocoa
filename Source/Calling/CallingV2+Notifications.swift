@@ -161,7 +161,7 @@ public protocol VoiceChannelParticipantObserver : class {
     
     func post() {
         NotificationCenter.default.post(name: VoiceChannelParticipantNotification.notificationName,
-                                        object: conversationId as NSUUID,
+                                        object: nil,
                                         userInfo: [VoiceChannelParticipantNotification.userInfoKey : self])
     }
     
