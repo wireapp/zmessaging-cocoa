@@ -121,8 +121,8 @@ public class OperationStatus : NSObject {
     public func finishBackgroundFetch(withFetchResult result: UIBackgroundFetchResult) {
         DispatchQueue.main.async {
             self.backgroundFetchHandler?(result)
+            self.backgroundFetchHandler = nil
         }
-        backgroundFetchHandler = nil
         backgroundFetchTimer?.invalidate()
         backgroundFetchTimer = nil
     }
@@ -130,8 +130,8 @@ public class OperationStatus : NSObject {
     public func finishBackgroundTask(withTaskResult result: BackgroundTaskResult) {
         DispatchQueue.main.async {
             self.backgroundTaskHandler?(result)
+            self.backgroundTaskHandler = nil
         }
-        backgroundTaskHandler = nil
         backgroundTaskTimer?.invalidate()
         backgroundTaskTimer = nil
     }

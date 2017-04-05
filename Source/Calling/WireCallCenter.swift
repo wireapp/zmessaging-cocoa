@@ -278,7 +278,6 @@ public class WireCallCenter : NSObject {
         
         let conversationsV2 = userSession.managedObjectContext.wireCallCenterV2.conversations(withVoiceChannelStates: idleStates)
         
-//        nonIdleConversations.formUnion(conversationsV3)
         nonIdleConversations.formUnion(conversationsV2)
         
         return Array(nonIdleConversations)

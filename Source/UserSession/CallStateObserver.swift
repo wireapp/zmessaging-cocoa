@@ -26,8 +26,8 @@ public final class CallStateObserver : NSObject {
     static public let CallInProgressNotification = Notification.Name(rawValue: "ZMCallInProgressNotification")
     static public let CallInProgressKey = "callInProgress"
     
+    fileprivate weak var userSession: ZMUserSession?
     fileprivate let localNotificationDispatcher : LocalNotificationDispatcher
-    fileprivate let userSession: ZMUserSession
     fileprivate let callingSystemMessageGenerator = CallingSystemMessageGenerator()
     fileprivate let managedObjectContext : NSManagedObjectContext
     fileprivate var callStateToken : WireCallCenterObserverToken? = nil
@@ -110,6 +110,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
 extension CallStateObserver : VoiceChannelStateObserver {
     
     public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
+        guard let userSession = userSession else { return }
         callInProgress = WireCallCenter.nonIdleCallConversations(inUserSession: userSession).count > 0
     }
     

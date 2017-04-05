@@ -395,7 +395,9 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     [self.application unregisterObserverForStateChange:self];
     self.mediaManager = nil;
+    self.callStateObserver = nil;
     [self.operationLoop tearDown];
+    self.operationLoop = nil;
     
     [self.localNotificationDispatcher tearDown];
     self.localNotificationDispatcher = nil;

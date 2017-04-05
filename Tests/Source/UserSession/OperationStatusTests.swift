@@ -72,6 +72,7 @@ class OperationStatusTests : MessagingTest {
         
         // when
         sut.finishBackgroundTask(withTaskResult: .finished)
+        OperationStatusTests.performRunLoopTick()
         
         // then
         XCTAssertEqual(sut.operationState, .background)
@@ -90,9 +91,11 @@ class OperationStatusTests : MessagingTest {
         
         // then
         XCTAssertEqual(sut.operationState, .backgroundFetch)
+        OperationStatusTests.performRunLoopTick()
         
         // when
         sut.finishBackgroundFetch(withFetchResult: .noData)
+        OperationStatusTests.performRunLoopTick()
         
         // then
         XCTAssertEqual(sut.operationState, .background)
@@ -157,7 +160,7 @@ class OperationStatusTests : MessagingTest {
         }
         
         // when
-        XCTAssertTrue(waitForCustomExpectations(withTimeout: 5.0))
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(sut.operationState, .background)
@@ -174,7 +177,7 @@ class OperationStatusTests : MessagingTest {
         }
         
         // when
-        XCTAssertTrue(waitForCustomExpectations(withTimeout: 5.0))
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(sut.operationState, .background)
