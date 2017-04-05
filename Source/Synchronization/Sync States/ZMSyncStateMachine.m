@@ -26,11 +26,6 @@
 #import "ZMSyncState.h"
 #import "ZMUnauthenticatedState.h"
 #import "ZMEventProcessingState.h"
-#import "ZMBackgroundState.h"
-#import "ZMPreBackgroundState.h"
-#import "ZMUnauthenticatedBackgroundState.h"
-#import "ZMBackgroundFetchState.h"
-#import "ZMBackgroundTaskState.h"
 
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMAuthenticationStatus.h"
@@ -43,7 +38,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 @interface ZMSyncStateMachine ()
 
 @property (nonatomic) ZMSyncState *unauthenticatedState; ///< need to log in
-@property (nonatomic) ZMSyncState *unauthenticatedBackgroundState; ///< need to log in, but we are in the background
 @property (nonatomic) ZMSyncState *eventProcessingState; ///< can normally process events
 
 @property (nonatomic, weak) id<ZMObjectStrategyDirectory> directory;
@@ -82,7 +76,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
                                                                             stateMachineDelegate:self
                                                                                      application:application
                                      ];
-        self.unauthenticatedBackgroundState = [[ZMUnauthenticatedBackgroundState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self];
         self.eventProcessingState = [[ZMEventProcessingState alloc] initWithAuthenticationCenter:authenticationStatus clientRegistrationStatus:clientRegistrationStatus  objectStrategyDirectory:objectStrategyDirectory stateMachineDelegate:self slowSynStatus:slowSynStatus];
         
         self.syncStateDelegate = syncStateDelegate;
@@ -110,7 +103,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
     [ZMUserSessionAuthenticationNotification removeObserver:self.authNotificationToken];
 
     [self.unauthenticatedState tearDown];
-    [self.unauthenticatedBackgroundState tearDown];
     [self.eventProcessingState tearDown];
 }
 

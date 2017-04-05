@@ -28,7 +28,6 @@
 #import "ZMCallKitDelegate.h"
 #import "ZMSyncStrategy.h"
 #import "ZMLocalNotification.h"
-#import "ZMBackgroundFetchState.h"
 #import "ZMUserSession+UserNotificationCategories.h"
 #import "ZMStoredLocalNotification.h"
 #import "ZMMissingUpdateEventsTranscoder.h"

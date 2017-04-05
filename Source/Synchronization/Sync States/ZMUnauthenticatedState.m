@@ -200,18 +200,12 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 
 - (void)didEnterBackground
 {
-    id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
-    [stateMachine goToState:stateMachine.unauthenticatedBackgroundState];
+    // nop
 }
 
 - (void)didEnterForeground
 {
-    self.didLaunchInForeground = YES;
-
-    if ([self isDoneWithLogin]) {
-        id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
-        [stateMachine goToState:stateMachine.eventProcessingState];
-    }
+    // nop
 }
 
 - (void)stopLoginTimer

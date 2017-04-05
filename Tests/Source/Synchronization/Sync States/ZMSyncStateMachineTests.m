@@ -21,7 +21,6 @@
 
 #import "ZMEventProcessingState.h"
 #import "ZMUnauthenticatedState.h"
-#import "ZMBackgroundState.h"
 
 #import "ZMUserTranscoder.h"
 #import "ZMConversationTranscoder.h"
@@ -32,8 +31,6 @@
 #import "ZMUserSession.h"
 #import "ZMSyncStateMachine+internal.h"
 #import "ZMSyncState.h"
-#import "ZMBackgroundFetchState.h"
-#import "ZMBackgroundTaskState.h"
 
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "zmessaging_iOS_Tests-Swift.h"

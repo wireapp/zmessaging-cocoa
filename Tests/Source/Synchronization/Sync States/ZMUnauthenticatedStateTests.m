@@ -163,15 +163,6 @@
     XCTAssertFalse(self.sut.supportsBackgroundFetch);
 }
 
-- (void)testThatItSwitchesToLoginBackgroundState
-{
-    // expectation
-    [[(id)self.stateMachine expect] goToState:self.stateMachine.unauthenticatedBackgroundState];
-    
-    // when
-    [self.sut didEnterBackground];
-}
-
 - (void)testThatItDoesNotSwitchesStateOnFailedAuthentication
 {
     // expectation
@@ -658,18 +649,6 @@
     
     // then
     XCTAssertNil(request);
-}
-
-- (void)testThatItStartsQuickSyncWhenEnteringForeground_LoggedIn
-{
-    // when
-    ZMUnauthenticatedState *sut = [self mockedSUTWithLaunchInForeground:YES isLoggedIn:YES];
-    
-    // expect
-    [[(id)self.stateMachine expect] goToState:self.stateMachine.eventProcessingState];
-    
-    // when
-    [sut didEnterForeground];
 }
 
 - (void)testThatItDoesNotStartQuickSyncWhenEnteringForeground_NotLoggedIn
