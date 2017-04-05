@@ -1015,7 +1015,7 @@
     AssertEqualData(searchUser.imageSmallProfileData, previewProfileImageData);
     NSArray <ZMTransportRequest *> *requests = self.mockTransportSession.receivedRequests;
 
-    NSString *searchPath = [NSString stringWithFormat:@"/search/contacts?q=%@&l=3&size=30", unConnectedUserName];
+    NSString *searchPath = [NSString stringWithFormat:@"/search/contacts?q=%@&size=10", unConnectedUserName];
     NSString *usersPath = [NSString stringWithFormat:@"/users?ids=%@", self.user4.identifier];
     NSString *previewPath = [NSString stringWithFormat:@"/assets/v3/%@", self.user4.previewProfileAssetIdentifier];
 
@@ -1112,7 +1112,7 @@
     XCTAssertEqualObjects([mediumImageCache objectForKey:userRemoteIdentifier], completeProfileImageData);
 
     NSArray <ZMTransportRequest *> *requests = self.mockTransportSession.receivedRequests;
-    NSString *searchPath = [NSString stringWithFormat:@"/search/contacts?q=%@&l=3&size=30", unConnectedUserName];
+    NSString *searchPath = [NSString stringWithFormat:@"/search/contacts?q=%@&size=10", unConnectedUserName];
     NSString *usersPath = [NSString stringWithFormat:@"/users?ids=%@", self.user4.identifier];
     NSString *previewPath = [NSString stringWithFormat:@"/assets/v3/%@", self.user4.previewProfileAssetIdentifier];
     NSString *completePath = [NSString stringWithFormat:@"/assets/v3/%@", self.user4.completeProfileAssetIdentifier];
