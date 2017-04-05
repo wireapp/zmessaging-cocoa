@@ -16,10 +16,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-
-
-
-
 @objc public enum SyncPhase : Int {
     case fetchingLastUpdateEventID, fetchingConnections, fetchingConversations, fetchingUsers, fetchingMissedEvents, done
     

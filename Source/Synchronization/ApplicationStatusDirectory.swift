@@ -72,15 +72,11 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     }
     
     public var deliveryConfirmation: DeliveryConfirmationDelegate {
-        get {
-            return apnsConfirmationStatus
-        }
+        return apnsConfirmationStatus
     }
     
     public var clientRegistrationDelegate: ClientRegistrationDelegate {
-        get {
-            return clientRegistrationStatus
-        }
+        return clientRegistrationStatus
     }
     
     public var operationState: OperationState {
