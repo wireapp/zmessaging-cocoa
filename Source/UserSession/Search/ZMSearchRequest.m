@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMCSystem;
+@import WireSystem;
 @import Foundation;
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import "ZMSearchRequest.h"
 

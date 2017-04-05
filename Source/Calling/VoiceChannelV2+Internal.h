@@ -25,8 +25,6 @@
 
 @interface VoiceChannelV2 ()
 
-@property (nonatomic, copy) NSDate *callStartDate;
-
 - (instancetype)initWithConversation:(ZMConversation *)conversation NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithConversation:(ZMConversation *)conversation callCenter:(CTCallCenter *)callCenter;
 - (VoiceChannelV2State)stateForIsSelfJoined:(BOOL)selfJoined otherJoined:(BOOL)otherJoined isDeviceActive:(BOOL)isDeviceActive flowActive:(BOOL)flowActive isIgnoringCall:(BOOL)isIgnoringCall;

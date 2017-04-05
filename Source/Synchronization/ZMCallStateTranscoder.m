@@ -16,10 +16,10 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMCallStateTranscoder.h"
 #import "VoiceChannelV2+CallFlow.h"
@@ -28,7 +28,7 @@
 #import "ZMCallStateLogger.h"
 #import "ZMGSMCallHandler.h"
 #import "ZMFlowSync.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString * const StateKey = @"state";
 static NSString * const StateIdle = @"idle";

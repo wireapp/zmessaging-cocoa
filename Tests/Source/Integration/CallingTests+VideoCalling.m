@@ -25,7 +25,7 @@
 - (void)selfJoinVideoCall
 {
     [self.userSession enqueueChanges:^{
-        [self.conversationUnderTest.voiceChannelRouter.v2 joinWithVideo:YES];
+        NOT_USED([self.conversationUnderTest.voiceChannelRouter.v2 joinWithVideo:YES]);
     }];
 }
 

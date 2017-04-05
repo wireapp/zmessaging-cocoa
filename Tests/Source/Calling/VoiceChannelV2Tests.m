@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
-@import ZMTesting;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireTesting;
+@import WireDataModel;
 
 #import "VoiceChannelV2Tests.h"
 #import "ZMFlowSync.h"
@@ -705,7 +705,7 @@
 {
     ZMConversation *uiConv = (id)[self.uiMOC objectWithID:self.syncOneOnOneConversation.objectID];
     [uiConv.voiceChannelRouter.v2 join];
-    [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
+    NOT_USED([self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]]);
 
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -721,7 +721,7 @@
     [self spinMainQueueWithTimeout:0.5];
     
     [self.syncMOC performGroupedBlockAndWait:^{
-        [self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState]; // callDeviceIsActive is set to NO on the uiContext, therefore need to merge changes
+        NOT_USED([self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState]); // callDeviceIsActive is set to NO on the uiContext, therefore need to merge changes
         [self.syncOneOnOneConversation.voiceChannelRouter.v2 removeCallParticipant:self.syncSelfUser]; // done by the BE when syncing callDeviceIsActive
         
         // then
@@ -738,7 +738,7 @@
 {
     ZMConversation *uiConv = (id)[self.uiMOC objectWithID:self.syncGroupConversation.objectID];
     [uiConv.voiceChannelRouter.v2 join];
-    [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
+    NOT_USED([self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]]);
 
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
@@ -753,7 +753,7 @@
     [self spinMainQueueWithTimeout:0.5];
     
     [self.syncMOC performGroupedBlockAndWait:^{
-        [self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState]; // callTimedOut is set to YES on the uiContext, therefore need to merge changes
+        NOT_USED([self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState]); // callTimedOut is set to YES on the uiContext, therefore need to merge changes
         
         // then
         XCTAssertTrue(self.syncGroupConversation.isOutgoingCall);
@@ -828,7 +828,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMConversation *conversation = self.syncGroupConversation;
         conversation.callTimedOut = NO;
-        [self.uiMOC mergeCallStateChanges:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([self.uiMOC mergeCallStateChanges:[self.syncMOC.zm_callState createCopyAndResetHasChanges]]);
         
         XCTAssertFalse(conversation.callTimedOut);
 
@@ -841,7 +841,7 @@
     [self spinMainQueueWithTimeout:0.5];
     
     [self.syncMOC performGroupedBlockAndWait:^{
-        [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]]);
         
         // then
         XCTAssertTrue(self.syncGroupConversation.callTimedOut);
@@ -854,7 +854,7 @@
         ZMConversation *conversation = self.syncOneOnOneConversation;
         conversation.callTimedOut = NO;
         conversation.isOutgoingCall = NO;
-        [self.uiMOC mergeCallStateChanges:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([self.uiMOC mergeCallStateChanges:[self.syncMOC.zm_callState createCopyAndResetHasChanges]]);
         
         XCTAssertFalse(conversation.callTimedOut);
         
@@ -867,7 +867,7 @@
     [self spinMainQueueWithTimeout:0.5];
     
     [self.syncMOC performGroupedBlockAndWait:^{
-        [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]]);
         
         // then
         XCTAssertTrue(self.syncOneOnOneConversation.callTimedOut);
@@ -880,7 +880,7 @@
         ZMConversation *conversation = self.syncOneOnOneConversation;
         conversation.callTimedOut = NO;
         conversation.isOutgoingCall = YES;
-        [self.uiMOC mergeCallStateChanges:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([self.uiMOC mergeCallStateChanges:[self.syncMOC.zm_callState createCopyAndResetHasChanges]]);
         
         XCTAssertFalse(conversation.callTimedOut);
         
@@ -890,7 +890,7 @@
         [self.syncMOC zm_addAndStartCallTimer:conversation];
         [self spinMainQueueWithTimeout:0.5];
         
-        [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]]);
         
         // then
         XCTAssertFalse(conversation.callTimedOut);
@@ -1067,7 +1067,7 @@
         XCTAssertFalse(self.syncGroupConversation.isIgnoringCall);
         XCTAssertEqual(self.syncGroupConversation.voiceChannelRouter.v2.state, VoiceChannelV2StateSelfIsJoiningActiveChannel);
         [self.syncMOC saveOrRollback];
-        [self.uiMOC mergeCallStateChanges:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([self.uiMOC mergeCallStateChanges:[self.syncMOC.zm_callState createCopyAndResetHasChanges]]);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1096,7 +1096,7 @@
 {
     ZMConversation *uiConv = (id)[self.uiMOC objectWithID:self.syncGroupConversation.objectID];
     [uiConv.voiceChannelRouter.v2 join];
-    [self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]];
+    NOT_USED([self.syncMOC mergeCallStateChanges:[self.uiMOC.zm_callState createCopyAndResetHasChanges]]);
     
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
@@ -1105,7 +1105,7 @@
         XCTAssertFalse(self.syncGroupConversation.isIgnoringCall);
         XCTAssertEqual(self.syncGroupConversation.voiceChannelRouter.v2.state, VoiceChannelV2StateOutgoingCall);
         [self.syncMOC saveOrRollback];
-        [self.uiMOC mergeCallStateChanges:[self.syncMOC.zm_callState createCopyAndResetHasChanges]];
+        NOT_USED([self.uiMOC mergeCallStateChanges:[self.syncMOC.zm_callState createCopyAndResetHasChanges]]);
     }];
     [self.uiMOC refreshObject:uiConv mergeChanges:YES];
 
@@ -1162,7 +1162,7 @@
     // the selfuser calls first
     [self.conversation.voiceChannelRouter.v2 join];
     [self.uiMOC saveOrRollback];
-    [self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState.createCopyAndResetHasChanges];
+    NOT_USED([self.syncMOC mergeCallStateChanges:self.uiMOC.zm_callState.createCopyAndResetHasChanges]);
     XCTAssertTrue(self.conversation.isOutgoingCall);
 
     // the BE returns and other users join
@@ -1173,7 +1173,7 @@
         [syncConv.voiceChannelRouter.v2 addCallParticipant:self.syncUser2];
         [self.syncMOC saveOrRollback];
     }];
-    [self.uiMOC mergeCallStateChanges:self.syncMOC.zm_callState.createCopyAndResetHasChanges];
+    NOT_USED([self.uiMOC mergeCallStateChanges:self.syncMOC.zm_callState.createCopyAndResetHasChanges]);
     XCTAssertTrue(self.conversation.isOutgoingCall);
 
     // (1) when the BE force idles the call
@@ -1184,7 +1184,7 @@
         [syncConv.voiceChannelRouter.v2 removeCallParticipant:self.selfUser];
         [self.syncMOC saveOrRollback];
     }];
-    [self.uiMOC mergeCallStateChanges:self.syncMOC.zm_callState.createCopyAndResetHasChanges];
+    NOT_USED([self.uiMOC mergeCallStateChanges:self.syncMOC.zm_callState.createCopyAndResetHasChanges]);
     
     // then
     // we reset isOutgoingCall
@@ -1197,7 +1197,7 @@
         [self.syncMOC saveOrRollback];
     }];
     [self.uiMOC refreshObject:self.conversation mergeChanges:NO];
-    [self.uiMOC mergeCallStateChanges:self.syncMOC.zm_callState.createCopyAndResetHasChanges];
+    NOT_USED([self.uiMOC mergeCallStateChanges:self.syncMOC.zm_callState.createCopyAndResetHasChanges]);
 
     [self.conversation.voiceChannelRouter.v2 join];
     

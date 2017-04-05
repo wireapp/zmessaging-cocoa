@@ -17,15 +17,15 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMStoredLocalNotification.h"
 #import "ZMLocalNotification.h"
 #import "ZMUserSession+UserNotificationCategories.h"
 #import "ZMOperationLoop+Background.h"
 #import "UILocalNotification+UserInfo.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @implementation ZMStoredLocalNotification
 

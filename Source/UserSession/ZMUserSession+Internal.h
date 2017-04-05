@@ -17,14 +17,14 @@
 // 
 
 
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMUserSession.h"
-#import <zmessaging/ZMAuthenticationStatus.h>
+#import <WireSyncEngine/ZMAuthenticationStatus.h>
 #import "ZMSyncStateDelegate.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @class NSManagedObjectContext;
 @class ZMTransportRequest;

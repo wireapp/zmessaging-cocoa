@@ -17,8 +17,8 @@
 //
 
 
-import ZMTesting
-@testable import zmessaging
+import WireTesting
+@testable import WireSyncEngine
 
 class EventDecoderTest: MessagingTest {
     
@@ -290,7 +290,7 @@ extension EventDecoderTest {
     func insert(_ events: [ZMUpdateEvent], startIndex: Int64 = 0) {
         eventMOC.performGroupedBlockAndWait {
             events.enumerated().forEach { index, event  in
-                let _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: startIndex + index)
+                let _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: Int64(startIndex) + Int64(index))
             }
             
             XCTAssert(self.eventMOC.saveOrRollback())

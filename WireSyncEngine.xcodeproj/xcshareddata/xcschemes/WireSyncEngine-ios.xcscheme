@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0820"
+   LastUpgradeVersion = "0830"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "549815921A43232400A7CE2E"
-               BuildableName = "zmessaging.framework"
-               BlueprintName = "zmessaging-ios"
-               ReferencedContainer = "container:zmessaging-cocoa.xcodeproj">
+               BuildableName = "WireSyncEngine.framework"
+               BlueprintName = "WireSyncEngine-ios"
+               ReferencedContainer = "container:WireSyncEngine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -29,9 +29,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "3E186087191A56F6000FE027"
-               BuildableName = "zmessaging Test Host.app"
-               BlueprintName = "zmessaging Test Host"
-               ReferencedContainer = "container:zmessaging-cocoa.xcodeproj">
+               BuildableName = "WireSyncEngine Test Host.app"
+               BlueprintName = "WireSyncEngine Test Host"
+               ReferencedContainer = "container:WireSyncEngine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -48,9 +48,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "3E1860C2191A649D000FE027"
-               BuildableName = "zmessaging-iOS-Tests.xctest"
-               BlueprintName = "zmessaging-iOS-Tests"
-               ReferencedContainer = "container:zmessaging-cocoa.xcodeproj">
+               BuildableName = "WireSyncEngine-iOS-Tests.xctest"
+               BlueprintName = "WireSyncEngine-iOS-Tests"
+               ReferencedContainer = "container:WireSyncEngine.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -58,9 +58,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "549815921A43232400A7CE2E"
-            BuildableName = "zmessaging.framework"
-            BlueprintName = "zmessaging-ios"
-            ReferencedContainer = "container:zmessaging-cocoa.xcodeproj">
+            BuildableName = "WireSyncEngine.framework"
+            BlueprintName = "WireSyncEngine-ios"
+            ReferencedContainer = "container:WireSyncEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -80,9 +80,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "549815921A43232400A7CE2E"
-            BuildableName = "zmessaging.framework"
-            BlueprintName = "zmessaging-ios"
-            ReferencedContainer = "container:zmessaging-cocoa.xcodeproj">
+            BuildableName = "WireSyncEngine.framework"
+            BlueprintName = "WireSyncEngine-ios"
+            ReferencedContainer = "container:WireSyncEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <CommandLineArguments>
@@ -130,9 +130,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "549815921A43232400A7CE2E"
-            BuildableName = "zmessaging.framework"
-            BlueprintName = "zmessaging-ios"
-            ReferencedContainer = "container:zmessaging-cocoa.xcodeproj">
+            BuildableName = "WireSyncEngine.framework"
+            BlueprintName = "WireSyncEngine-ios"
+            ReferencedContainer = "container:WireSyncEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

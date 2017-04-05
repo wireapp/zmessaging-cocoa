@@ -18,7 +18,7 @@
 
 
 @import CoreTelephony;
-@import ZMCDataModel;
+@import WireDataModel;
 @import avs;
 #import "ZMOnDemandFlowManager.h"
 #import "ZMAVSBridge.h"
@@ -27,7 +27,7 @@
 #import "VoiceChannelV2+CallFlow.h"
 #import "VoiceChannelV2+VideoCalling.h"
 #import "ZMCallKitDelegate.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 
 @implementation VoiceChannelV2 (CallFlow)

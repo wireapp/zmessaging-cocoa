@@ -18,10 +18,10 @@
 
 
 @import UIKit;
-@import zimages;
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireImages;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 @import WireMessageStrategy;
 @import WireRequestStrategy;
 
@@ -42,10 +42,10 @@
 #import "ZMCallStateTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
-#import "ZMessagingLogs.h"
+#import "WireSyncEngineLogs.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMOnDemandFlowManager.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMSyncStrategy ()
 {
@@ -103,6 +103,7 @@
 
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic, weak) ZMClientRegistrationStatus *clientRegistrationStatus;
+@property (nonatomic, weak) UserProfileImageUpdateStatus *profileImageStatus;
 @property (nonatomic) NotificationDispatcher *notificationDispatcher;
 
 @end
@@ -121,6 +122,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (instancetype)initWithAuthenticationCenter:(ZMAuthenticationStatus *)authenticationStatus
                      userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileStatus
+                userProfileImageUpdateStatus:(UserProfileImageUpdateStatus *)profileImageStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                           clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
                         proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
@@ -145,6 +147,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.localNotificationDispatcher = localNotificationsDispatcher;
         self.authenticationStatus = authenticationStatus;
         self.clientRegistrationStatus = clientRegistrationStatus;
+        self.profileImageStatus = profileImageStatus;
         self.syncMOC = syncMOC;
         self.uiMOC = uiMOC;
         self.eventMOC = [NSManagedObjectContext createEventContextWithAppGroupIdentifier:appGroupIdentifier];
@@ -226,6 +229,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[TypingStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[SearchUserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[UserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC imageProcessingQueue:imageProcessingQueue clientRegistrationDelegate:clientRegistrationStatus],
+                                   [[UserImageAssetUpdateStrategy alloc] initWithManagedObjectContext:self.syncMOC imageUpdateStatus:profileImageStatus authenticationStatus:authenticationStatus],
                                    [[LinkPreviewUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[GenericMessageNotificationRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus]
                                    ];
@@ -519,7 +523,13 @@ ZM_EMPTY_ASSERTING_INIT()
             }
             return nil;
         }]];
+
         _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:self.conversationStatusSync];
+        UserProfileImageUpdateStatus *strongImageStatus = self.profileImageStatus;
+        if (nil != strongImageStatus) {
+            _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:strongImageStatus];
+        }
+
     }
     
     return _allChangeTrackers;

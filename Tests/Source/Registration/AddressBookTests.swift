@@ -18,7 +18,7 @@
 
 import Foundation
 import AddressBook
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class AddressBookTests : XCTestCase {
     

@@ -16,7 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import ZMCDataModel
+import WireDataModel
 
 let ImageMediumDataKey = "imageMediumData"
 let ImageSmallProfileDataKey = "imageSmallProfileData"
@@ -340,6 +340,10 @@ extension UserImageStrategy {
     public static func requestForFetchingAsset(with assetID: UUID, forUserWith userID: UUID) -> ZMTransportRequest? {
         let path = self.path(for: assetID, ofUserWith: userID)
         return ZMTransportRequest(path:path, method:.methodGET, payload:nil)
+    }
+
+    public static func requestForFetchingV3Asset(with key: String) -> ZMTransportRequest {
+        return ZMTransportRequest(getFromPath: "/assets/v3/\(key)")
     }
 }
 

@@ -36,6 +36,7 @@
 @class ProxiedRequestsStatus;
 @class ClientUpdateStatus;
 @class UserProfileUpdateStatus;
+@class UserProfileImageUpdateStatus;
 
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
@@ -54,6 +55,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                     authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
                  userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileUpdateStatus
+            userProfileImageUpdateStatus:(UserProfileImageUpdateStatus *)profileImageStatus
                 clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                       clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
                     proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus

@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMCSystem;
+@import WireSystem;
 
-#import <zmessaging/ZMUserSession.h>
+#import <WireSyncEngine/ZMUserSession.h>
 
 @class ZMCompleteRegistrationUser;
 @protocol ZMRegistrationObserverToken;

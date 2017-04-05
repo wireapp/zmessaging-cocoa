@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCDataModel;
-@import ZMTransport;
+@import WireTransport;
+@import WireDataModel;
+@import WireTransport;
 
 #import "MessagingTest.h"
 #import "ZMUserSessionAuthenticationNotification.h"
@@ -27,7 +27,7 @@
 #import "ZMAuthenticationStatus+Testing.h"
 #import "ZMCredentials.h"
 #import "NSError+ZMUserSessionInternal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 
 @interface ZMAuthenticationStatusTests : MessagingTest

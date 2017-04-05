@@ -18,7 +18,7 @@
 
 
 import UIKit
-import ZMTransport
+import WireTransport
 
 
 @objc public protocol ZMSynchonizableKeyValueStore : KeyValueStore {

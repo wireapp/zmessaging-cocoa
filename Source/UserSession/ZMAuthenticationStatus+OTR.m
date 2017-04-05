@@ -18,7 +18,7 @@
 
 
 #import "ZMAuthenticationStatus+OTR.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMOperationLoop.h"
 #import "ZMAuthenticationStatus_Internal.h"
 #import "ZMUserSessionAuthenticationNotification.h"

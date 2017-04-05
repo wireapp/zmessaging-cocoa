@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMTransport;
+@import WireTransport;
 
 #import "ZMDownloadLastUpdateEventIDState.h"
 #import "ZMObjectStrategyDirectory.h"

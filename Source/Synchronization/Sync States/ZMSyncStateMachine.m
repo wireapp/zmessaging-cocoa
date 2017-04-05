@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMUserTranscoder.h"
 #import "ZMSyncStateMachine+internal.h"
@@ -41,7 +41,7 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 NSString *const ZMApplicationDidEnterEventProcessingStateNotificationName = @"ZMApplicationDidEnterEventProcessingStateNotification";
 

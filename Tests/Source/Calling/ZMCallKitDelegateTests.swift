@@ -17,9 +17,9 @@
 //
 
 import Foundation
-import ZMCDataModel
+import WireDataModel
 import Intents
-@testable import zmessaging
+@testable import WireSyncEngine
 
 @available(iOS 10.0, *)
 class MockCallKitProvider: NSObject, CallKitProviderType {
@@ -217,7 +217,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(configuration.supportsVideo, true)
-        XCTAssertEqual(configuration.localizedName, "zmessaging Test Host")
+        XCTAssertEqual(configuration.localizedName, "WireSyncEngine Test Host")
         XCTAssertTrue(configuration.supportedHandleTypes.contains(.generic))
     }
     

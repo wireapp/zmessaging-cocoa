@@ -31,7 +31,7 @@
     UIViewController *vc = [[UIViewController alloc] init];
     
     UITextView *textView = [[UITextView alloc] init];
-    textView.text = @"This is the test host application for zmessaging-cocoa tests.";
+    textView.text = @"This is the test host application for WireSyncEngine tests.";
     [vc.view addSubview:textView];
     textView.backgroundColor = [UIColor greenColor];
     textView.textContainerInset = UIEdgeInsetsMake(22, 22, 22, 22);

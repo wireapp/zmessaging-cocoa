@@ -17,8 +17,8 @@
 //
 
 
-import ZMTesting
-@testable import zmessaging
+import WireTesting
+@testable import WireSyncEngine
 
 class StoreUpdateEventTests: MessagingTest {
 

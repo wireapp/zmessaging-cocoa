@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMCDataModel;
+@import WireDataModel;
 #import "ZMPushToken.h"
 
 #import <stdio.h>

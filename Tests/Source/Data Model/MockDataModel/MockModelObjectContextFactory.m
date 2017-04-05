@@ -17,10 +17,10 @@
 // 
 
 
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import <CoreData/CoreData.h>
-#import <ZMUtilities/ZMUtilities.h>
+#import <WireUtilities/WireUtilities.h>
 
 #import "MockModelObjectContextFactory.h"
 #import "MockEntity.h"

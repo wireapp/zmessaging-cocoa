@@ -30,6 +30,8 @@
         return;
     }
     
+    [self requestCompleteAsset];
+    
     if (self.localMediumRemoteIdentifier != nil) {
         self.localMediumRemoteIdentifier = nil;
         ZMSDispatchGroup *group = [ZMSDispatchGroup groupWithLabel:@"ZMUser"];
@@ -53,6 +55,8 @@
         return;
     }
     
+    [self requestPreviewAsset];
+
     if (self.localSmallProfileRemoteIdentifier != nil) {
         self.localSmallProfileRemoteIdentifier = nil;
         ZMSDispatchGroup *group = [ZMSDispatchGroup groupWithLabel:@"ZMUser"];

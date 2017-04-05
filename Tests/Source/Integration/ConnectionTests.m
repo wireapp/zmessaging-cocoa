@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
-@import zmessaging;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireSyncEngine;
+@import WireDataModel;
 
 #import "IntegrationTestBase.h"
 #import "ZMSearchDirectory.h"
@@ -812,7 +812,7 @@
         WaitForEverythingToBeDone();
     }
     
-    // we should see one new active conversations
+    // we should see one new active conversation
     {
         XCTAssertEqual(activeConversations.count, activeCount+1u);
      

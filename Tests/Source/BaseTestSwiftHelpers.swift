@@ -18,7 +18,7 @@
 
 
 import Foundation
-import ZMTesting
+import WireTesting
 
 
 func AssertKeyPathDictionaryHasOptionalValue<T: NSObject>(_ dictionary: @autoclosure () -> [KeyPath: T?], key: @autoclosure () -> KeyPath, expected: @autoclosure () -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {

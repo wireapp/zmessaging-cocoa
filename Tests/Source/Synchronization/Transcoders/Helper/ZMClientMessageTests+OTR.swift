@@ -18,7 +18,7 @@
 
 
 import XCTest
-import zmessaging
+import WireSyncEngine
 import ZMCDataModel
 
 class ClientMessageTests_OTR: BaseZMClientMessageTests {

@@ -18,7 +18,7 @@
 
 
 @import Foundation;
-#import <ZMTransport/ZMUpdateEvent.h>
+#import <WireTransport/ZMUpdateEvent.h>
 #import "ZMAuthenticationStatus.h"
 #import "ZMUpdateEventsBuffer.h"
 

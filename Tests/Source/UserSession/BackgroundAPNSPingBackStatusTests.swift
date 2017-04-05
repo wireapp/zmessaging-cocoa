@@ -17,9 +17,9 @@
 // 
 
 
-@testable import zmessaging
-import ZMTesting
-import ZMCMockTransport
+@testable import WireSyncEngine
+import WireTesting
+import WireMockTransport
 
 
 // MARK: - Mocks

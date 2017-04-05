@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMCDataModel;
+@import WireDataModel;
 
 @interface MockEntity : ZMManagedObject
 

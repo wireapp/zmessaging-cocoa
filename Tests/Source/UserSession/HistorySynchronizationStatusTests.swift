@@ -17,7 +17,7 @@
 // 
 
 
-import zmessaging
+import WireSyncEngine
 import XCTest
 
 class HistorySynchronizationStatusTests: MessagingTest {

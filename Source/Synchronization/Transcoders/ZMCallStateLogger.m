@@ -17,15 +17,15 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMCallStateLogger.h"
 #import "ZMFlowSync.h"
 #import "ZMOperationLoop.h"
 #import "ZMUserSession+Internal.h"
 
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMCallStateLogger ()
 

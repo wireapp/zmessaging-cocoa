@@ -18,7 +18,7 @@
 
 
 #import "MessagingTest.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMPushRegistrant.h"
 @import PushKit;
 @import UIKit;

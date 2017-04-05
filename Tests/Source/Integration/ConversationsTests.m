@@ -16,12 +16,12 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-@import ZMCDataModel;
-@import zmessaging;
-@import ZMTransport;
-@import ZMCMockTransport;
-@import ZMUtilities;
-@import ZMTesting;
+@import WireDataModel;
+@import WireSyncEngine;
+@import WireTransport;
+@import WireMockTransport;
+@import WireUtilities;
+@import WireTesting;
 
 #import "MessagingTest.h"
 #import "ZMUserSession.h"
@@ -29,7 +29,7 @@
 #import "ZMTestNotifications.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMConversationTranscoder+Internal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ConversationTestsBase.h"
 
 @interface ZMConversationList (ObjectIDs)
@@ -2722,7 +2722,7 @@
     
     // when
     [self.userSession performChanges:^{
-        [ZMMessage edit:message newText:@"Je t'aime JCVD, plus que tout!"];
+        NOT_USED([ZMMessage edit:message newText:@"Je t'aime JCVD, plus que tout!"]);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

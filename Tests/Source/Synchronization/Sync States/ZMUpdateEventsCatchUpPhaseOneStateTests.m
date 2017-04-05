@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMTransport;
-@import zmessaging;
+@import WireTransport;
+@import WireSyncEngine;
 
 #import "StateBaseTest.h"
 #import "ZMUpdateEventsCatchUpPhaseOneState.h"

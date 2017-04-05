@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMTransport;
-@import zmessaging;
+@import WireTransport;
+@import WireSyncEngine;
 
 #import <Foundation/Foundation.h>
 
@@ -26,8 +26,8 @@
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import <zmessaging/zmessaging-Swift.h>
-#import "zmessaging_iOS_Tests-Swift.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
@@ -804,7 +804,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(status)] status];
 
     if (nil != nextEvents) {
-        [[[self.mockPingbackStatus expect] andReturn:nextEvents] nextNotificationEventsWithID];
+        NOT_USED([[[self.mockPingbackStatus expect] andReturn:nextEvents] nextNotificationEventsWithID]);
     }
 }
 

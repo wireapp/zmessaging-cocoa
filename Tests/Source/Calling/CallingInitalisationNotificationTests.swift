@@ -17,9 +17,9 @@
 // 
 
 
-import ZMTesting
+import WireTesting
 
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class CallingInitialisationNotificationTests : MessagingTest {
     

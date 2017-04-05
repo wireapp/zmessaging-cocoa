@@ -17,7 +17,7 @@
 //
 
 import Foundation
-import ZMCDataModel
+import WireDataModel
 import CoreData
 
 @objc(ZMCallStateObserver)

@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMUpdateEventsCatchUpPhaseOneState.h"
 #import "ZMMissingUpdateEventsTranscoder.h"

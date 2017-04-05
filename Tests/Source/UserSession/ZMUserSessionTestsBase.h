@@ -18,8 +18,8 @@
 
 
 #import <CoreData/CoreData.h>
-#import <ZMTransport/ZMTransport.h>
-#import <ZMCDataModel/ZMCDataModel.h>
+#import <WireTransport/WireTransport.h>
+#import <WireDataModel/WireDataModel.h>
 
 #import "MessagingTest.h"
 #import "ZMUserSession+Internal.h"
@@ -43,7 +43,7 @@
 #import "ZMCredentials.h"
 #import "NSURL+LaunchOptions.h"
 
-#import <zmessaging/ZMAuthenticationStatus.h>
+#import <WireSyncEngine/ZMAuthenticationStatus.h>
 
 @interface ThirdPartyServices : NSObject <ZMThirdPartyServicesDelegate>
 

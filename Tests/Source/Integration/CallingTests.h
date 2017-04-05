@@ -17,11 +17,11 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCMockTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireMockTransport;
+@import WireDataModel;
 
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 #import "MessagingTest+EventFactory.h"
 #import "IntegrationTestBase.h"

@@ -16,8 +16,8 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import ZMTesting
-@testable import zmessaging
+import WireTesting
+@testable import WireSyncEngine
 
 class SessionBaseTest : MessagingTest {
     var conversation : ZMConversation!

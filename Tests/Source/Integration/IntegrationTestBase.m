@@ -18,7 +18,7 @@
 
 
 @import CoreTelephony;
-@import ZMCDataModel;
+@import WireDataModel;
 @import WireMessageStrategy;
 
 #import "IntegrationTestBase.h"
@@ -29,15 +29,15 @@
 #import "ZMUserSession+Authentication.h"
 #import "ZMUserSession+Registration.h"
 #import "ZMCredentials.h"
-#import <zmessaging/ZMAuthenticationStatus+Testing.h>
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/ZMAuthenticationStatus+Testing.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMFlowSync.h"
 #import "ZMGSMCallHandler.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "ZMCallStateTranscoder.h"
 #import "MockLinkPreviewDetector.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 NSString * const SelfUserEmail = @"myself@user.example.com";
@@ -192,6 +192,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         self.selfUser.phone = @"";
         self.selfUser.accentID = 2;
         [session addProfilePictureToUser:self.selfUser];
+        [session addV3ProfilePictureToUser:self.selfUser];
         [self storeRemoteIDForObject:self.selfUser];
         
         self.user1 = [session insertUserWithName:@"Extra User1"];
@@ -199,6 +200,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         self.user1.phone = @"6543";
         self.user1.accentID = 3;
         [session addProfilePictureToUser:self.user1];
+        [session addV3ProfilePictureToUser:self.user1];
         [self storeRemoteIDForObject:self.user1];
 
         self.user2 = [session insertUserWithName:@"Extra User2"];
@@ -212,6 +214,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         self.user3.phone = @"340958";
         self.user3.accentID = 4;
         [session addProfilePictureToUser:self.user3];
+        [session addV3ProfilePictureToUser:self.user3];
         [self storeRemoteIDForObject:self.user3];
 
         self.user4 = [session insertUserWithName:@"Extra User4"];
@@ -219,6 +222,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         self.user4.phone = @"2349857";
         self.user4.accentID = 7;
         [session addProfilePictureToUser:self.user4];
+        [session addV3ProfilePictureToUser:self.user4];
         [self storeRemoteIDForObject:self.user4];
         
         self.user5 = [session insertUserWithName:@"Extra User5"];

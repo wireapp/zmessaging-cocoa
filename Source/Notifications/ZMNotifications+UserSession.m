@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMTransport;
+@import WireSystem;
+@import WireTransport;
 
 #import "ZMNotifications+UserSession.h"
 #import "ZMUserSession+Internal.h"

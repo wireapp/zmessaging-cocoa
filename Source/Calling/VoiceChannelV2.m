@@ -19,13 +19,13 @@
 
 @import UIKit;
 @import CoreTelephony;
-@import ZMUtilities;
-@import ZMCSystem;
-@import ZMTransport;
+@import WireUtilities;
+@import WireSystem;
+@import WireTransport;
 
 #import "VoiceChannelV2+Internal.h"
 #import "VoiceChannelV2+Testing.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 
 @implementation VoiceChannelV2ParticipantState

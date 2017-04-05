@@ -17,10 +17,11 @@
 //
 
 @import Foundation;
-@import ZMTransport;
-@import ZMCMockTransport;
-@import zmessaging;
-@import ZMCDataModel;
+@import WireRequestStrategy;
+@import WireTransport;
+@import WireMockTransport;
+@import WireSyncEngine;
+@import WireDataModel;
 
 #import "MessagingTest.h"
 #import "ZMUserSession+Internal.h"
@@ -29,6 +30,7 @@
 #import "ZMLoginTranscoder+Internal.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMConversation+Testing.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 @interface SlowSyncTests : IntegrationTestBase
@@ -116,31 +118,83 @@
     [actualGroupConversation assertMatchesConversation:self.groupConversation failureRecorder:NewFailureRecorder()];
 }
 
-- (void)testThatItGeneratesOnlyTheExpectedRequests
+- (NSArray *)commonRequestsOnLogin {
+    return @[
+             [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:ZMMethodPOST payload:@{@"email":[self.selfUser.email copy], @"password":[self.selfUser.password copy], @"label": self.userSession.authenticationStatus.cookieLabel} authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken],
+             [ZMTransportRequest requestGetFromPath:@"/self"],
+             [ZMTransportRequest requestGetFromPath:@"/clients"],
+             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/notifications/last?client=%@",  [ZMUser selfUserInContext:self.syncMOC].selfClient.remoteIdentifier]],
+             [ZMTransportRequest requestGetFromPath:@"/connections?size=90"],
+             [ZMTransportRequest requestGetFromPath:@"/conversations/ids?size=100"],
+             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", self.selfConversation.identifier,self.selfToUser1Conversation.identifier,self.selfToUser2Conversation.identifier,self.groupConversation.identifier]],
+             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@,%@", self.selfUser.identifier, self.user1.identifier, self.user2.identifier]],
+             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", self.user3.identifier]],
+             [ZMTransportRequest requestGetFromPath:@"/self"],
+             [ZMTransportRequest requestWithPath:@"/onboarding/v3" method:ZMMethodPOST payload:@{
+                                                                                                                @"cards" : @[],
+                                                                                                                @"self" : @[@"r6E0oILa7PsAlgL+tap6ZEYhOm2y3SVfKJe1eDTVKcw="]
+                                                                                                                      }]
+             ];
+
+}
+
+- (void)testThatItGeneratesOnlyTheExpectedRequestsForUserWithoutV3ProfilePicture
+{
+    // when
+    [[self mockTransportSession] performRemoteChanges:^(id<MockTransportSessionObjectCreation> session) {
+        NOT_USED(session);
+        self.selfUser.completeProfileAssetIdentifier = nil;
+        self.selfUser.previewProfileAssetIdentifier = nil;
+    }];
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    [NSThread sleepForTimeInterval:0.2]; // sleep to wait for spurious calls
+    
+    NSDictionary *assetsUpdatePayload = @{
+                                          @"assets":
+                                              @[
+                                                  @{@"key" : self.selfUser.previewProfileAssetIdentifier, @"type" : @"image", @"size" : @"preview"},
+                                                  @{@"key" : self.selfUser.completeProfileAssetIdentifier, @"type" : @"image", @"size" : @"complete"},
+                                                  ]
+                                          };
+    
+    ZMUser *localUser = [ZMUser selfUserInContext:self.syncMOC];
+    AssetRequestFactory *factory = [[AssetRequestFactory alloc] init];
+
+    // given
+    NSArray *expectedRequests = [[self commonRequestsOnLogin] arrayByAddingObjectsFromArray: @[
+                                  [factory profileImageAssetRequestWithData:localUser.imageMediumData],
+                                  [factory profileImageAssetRequestWithData:localUser.imageSmallProfileData],
+                                  [ZMTransportRequest requestWithPath:@"/self" method:ZMMethodPUT payload:assetsUpdatePayload],
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@",self.selfUser.smallProfileImageIdentifier,self.selfUser.identifier]],
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@",self.selfUser.mediumImageIdentifier, self.selfUser.identifier]]
+                                  ]];
+    
+    // then
+    NSMutableArray *mutableRequests = [self.mockTransportSession.receivedRequests mutableCopy];
+    __block NSUInteger clientRegistrationCallCount = 0;
+    [self.mockTransportSession.receivedRequests enumerateObjectsUsingBlock:^(ZMTransportRequest *request, NSUInteger idx, BOOL *stop) {
+        NOT_USED(stop);
+        if ([request.path containsString:@"clients"] && request.method == ZMMethodPOST) {
+            [mutableRequests removeObjectAtIndex:idx];
+            clientRegistrationCallCount++;
+        }
+    }];
+    XCTAssertEqual(clientRegistrationCallCount, 1u);
+    
+    AssertArraysContainsSameObjects(expectedRequests, mutableRequests);
+}
+
+- (void)testThatItGeneratesOnlyTheExpectedRequestsForUserWithV3ProfilePicture
 {
     // when
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     [NSThread sleepForTimeInterval:0.2]; // sleep to wait for spurious calls
     
     // given
-    NSArray *expectedRequests = @[
-                                  [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:ZMMethodPOST payload:@{@"email":[self.selfUser.email copy], @"password":[self.selfUser.password copy], @"label": self.userSession.authenticationStatus.cookieLabel} authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken],
-                                  [ZMTransportRequest requestGetFromPath:@"/self"],
-                                  [ZMTransportRequest requestGetFromPath:@"/clients"],
-                                  [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/notifications/last?client=%@",  [ZMUser selfUserInContext:self.syncMOC].selfClient.remoteIdentifier]],
-                                  [ZMTransportRequest requestGetFromPath:@"/connections?size=90"],
-                                  [ZMTransportRequest requestGetFromPath:@"/conversations/ids?size=100"],
-                                  [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", self.selfConversation.identifier,self.selfToUser1Conversation.identifier,self.selfToUser2Conversation.identifier,self.groupConversation.identifier]],
-                                  [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@,%@", self.selfUser.identifier, self.user1.identifier, self.user2.identifier]],
-                                  [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", self.user3.identifier]],
-                                  [ZMTransportRequest requestGetFromPath:@"/self"],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@",self.selfUser.smallProfileImageIdentifier,self.selfUser.identifier]],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@",self.selfUser.mediumImageIdentifier, self.selfUser.identifier]],
-                                  [ZMTransportRequest requestWithPath:@"/onboarding/v3" method:ZMMethodPOST payload:@{
-                                                                                                                      @"cards" : @[],
-                                                                                                                      @"self" : @[@"r6E0oILa7PsAlgL+tap6ZEYhOm2y3SVfKJe1eDTVKcw="]
-                                                                                                                      }]
-                                  ];
+    NSArray *expectedRequests = [[self commonRequestsOnLogin] arrayByAddingObjectsFromArray: @[
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.previewProfileAssetIdentifier]],
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.completeProfileAssetIdentifier]]
+                                  ]];
     
     // then
     NSMutableArray *mutableRequests = [self.mockTransportSession.receivedRequests mutableCopy];

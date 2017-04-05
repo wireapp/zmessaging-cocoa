@@ -24,7 +24,7 @@
 
 NSString *ZMOnDemandFlowManagerDidBecomeAvailableNotification = @"ZMOnDemandFlowManagerDidBecomeAvailableNotification";
 
-@import ZMCSystem;
+@import WireSystem;
 
 @interface ZMOnDemandFlowManager ()
 @property (nonatomic) id mediaManager;

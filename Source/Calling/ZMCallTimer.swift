@@ -19,7 +19,7 @@
 
 import Foundation
 import CoreData
-import ZMCSystem
+import WireSystem
 
 
 private let zmLog = ZMSLog(tag: "Calling")

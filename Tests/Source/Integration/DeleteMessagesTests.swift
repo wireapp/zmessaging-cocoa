@@ -18,7 +18,7 @@
 
 
 import XCTest
-import ZMTesting
+import WireTesting
 
 class DeleteMessagesTests: ConversationTestsBase {
 

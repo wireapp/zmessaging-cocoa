@@ -17,7 +17,7 @@
 //
 
 import Foundation
-import ZMTesting
+import WireTesting
 
 
 private class CallStateRecorder : WireCallCenterV2CallStateObserver {

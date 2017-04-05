@@ -20,7 +20,7 @@
 #import "MessagingTest.h"
 #import "ZMBlacklistDownloader.h"
 #import "ZMBlacklistVerificator+Testing.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @class MockBlacklistDownloader;
 static MockBlacklistDownloader *generatedDownloader;

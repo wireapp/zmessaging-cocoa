@@ -21,8 +21,8 @@
 #import "ConversationTestsBase.h"
 #import "NotificationObservers.h"
 
-@import ZMCDataModel;
-@import ZMUtilities;
+@import WireDataModel;
+@import WireUtilities;
 @import WireMessageStrategy;
 
 @interface ConversationTestsOTR : ConversationTestsBase

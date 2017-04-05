@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireDataModel;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -78,7 +78,7 @@ typedef NS_ENUM(uint8_t, VoiceChannelV2CallEndReason) {
 @property (nonatomic, readonly, weak, nullable) ZMConversation *conversation; ///< The owning conversation
 
 /// The date and time of current call start
-@property (nonatomic, copy, readonly, nullable) NSDate *callStartDate;
+@property (nonatomic, copy, nullable) NSDate *callStartDate;
 
 /// Voice channel participants. May be a subset of conversation participants.
 @property (nonatomic, readonly) NSOrderedSet *participants;

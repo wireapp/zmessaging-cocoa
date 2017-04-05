@@ -38,7 +38,7 @@ void ZMLogPushKit(NSString *format, ...)
         NSURL *logURL = [fm URLForDirectory:NSCachesDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:NO error:nil];
         logURL = [logURL URLByAppendingPathComponent:@"Logs"];
         [fm createDirectoryAtURL:logURL withIntermediateDirectories:YES attributes:nil error:nil];
-        logURL = [logURL URLByAppendingPathComponent:@"zmessaging-PushKit.log"];
+        logURL = [logURL URLByAppendingPathComponent:@"WireSyncEngine-PushKit.log"];
         // Open and add:
         mode_t const mode = S_IRUSR | S_IWUSR | S_IRGRP;
         int const fd = open(logURL.fileSystemRepresentation, O_WRONLY | O_APPEND | O_CREAT, mode);

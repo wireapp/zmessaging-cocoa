@@ -17,11 +17,11 @@
 // 
 
 
-@import ZMUtilities;
-@import ZMCSystem;
-@import ZMTransport;
-@import Cryptobox;
-@import ZMCDataModel;
+@import WireUtilities;
+@import WireSystem;
+@import WireTransport;
+@import WireCryptobox;
+@import WireDataModel;
 
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
@@ -29,8 +29,8 @@
 #import "ZMUserSession.h"
 #import <libkern/OSAtomic.h>
 #import <os/activity.h>
-#import "ZMessagingLogs.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import "WireSyncEngineLogs.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 NSString * const ZMPushChannelStateChangeNotificationName = @"ZMPushChannelStateChangeNotification";
 NSString * const ZMPushChannelIsOpenKey = @"pushChannelIsOpen";
@@ -67,6 +67,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                     authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
                  userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileUpdateStatus
+            userProfileImageUpdateStatus:(UserProfileImageUpdateStatus *)profileImageStatus
                 clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                       clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
                       proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
@@ -84,6 +85,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
     ZMSyncStrategy *syncStrategy = [[ZMSyncStrategy alloc] initWithAuthenticationCenter:authenticationStatus
                                                                 userProfileUpdateStatus:userProfileUpdateStatus
+                                                           userProfileImageUpdateStatus:profileImageStatus
                                                                clientRegistrationStatus:clientRegistrationStatus
                                                                      clientUpdateStatus:clientUpdateStatus
                                                                      proxiedRequestStatus:proxiedRequestStatus

@@ -18,12 +18,12 @@
 
 
 @import CoreTelephony;
-@import ZMCDataModel;
+@import WireDataModel;
 @import avs;
 
 #import "CallingTests.h"
 #import "VoiceChannelV2+CallFlow.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMGSMCallHandler.h"
 
 @implementation TestWindowObserver
@@ -196,7 +196,7 @@
 - (void)selfJoinCall
 {
     [self.userSession enqueueChanges:^{
-        [self.conversationUnderTest.voiceChannelRouter.v2 joinWithVideo:NO];
+        NOT_USED([self.conversationUnderTest.voiceChannelRouter.v2 joinWithVideo:NO]);
     }];
 }
 
@@ -1958,7 +1958,7 @@
 
     // when
     [self.userSession performChanges:^{
-        [bigGroupConversation.voiceChannelRouter.v2 joinWithVideo:NO];
+        NOT_USED([bigGroupConversation.voiceChannelRouter.v2 joinWithVideo:NO]);
     }];
     
     WaitForAllGroupsToBeEmpty(0.5f);
@@ -2026,7 +2026,7 @@
     
     // when
     [self.userSession performChanges:^{
-        [bigGroupConversation.voiceChannelRouter.v2 joinWithVideo:NO];
+        NOT_USED([bigGroupConversation.voiceChannelRouter.v2 joinWithVideo:NO]);
     }];
     
     WaitForAllGroupsToBeEmpty(0.5f);
@@ -2499,7 +2499,7 @@
     
     // when: it tries to join
     [self.userSession performChanges:^{
-        [conversation.voiceChannelRouter.v2 joinWithVideo:NO];
+        NOT_USED([conversation.voiceChannelRouter.v2 joinWithVideo:NO]);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2514,7 +2514,7 @@
     
     // when: it tries to join again
     [self.userSession performChanges:^{
-        [conversation.voiceChannelRouter.v2 joinWithVideo:NO];
+        NOT_USED([conversation.voiceChannelRouter.v2 joinWithVideo:NO]);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
