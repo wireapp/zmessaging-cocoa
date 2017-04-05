@@ -141,16 +141,14 @@ public final class UserProfileImageUpdateStatus: NSObject {
 // MARK: Main state transitions
 extension UserProfileImageUpdateStatus {
     internal func setState(state newState: ProfileUpdateState) {
-        managedObjectContext.performGroupedBlock {
-
-            let currentState = self.state
-            guard currentState.canTransition(to: newState) else {
-                // Trying to transition to invalid state - ignore
-                return
-            }
-            self.state = newState
-            self.didTransition(from: currentState, to: newState)
+        let currentState = self.state
+        guard currentState.canTransition(to: newState) else {
+            log.debug("Invalid transition: [\(currentState)] -> [\(newState)], ignoring")
+            // Trying to transition to invalid state - ignore
+            return
         }
+        self.state = newState
+        self.didTransition(from: currentState, to: newState)
     }
     
     internal func didTransition(from oldState: ProfileUpdateState, to currentState: ProfileUpdateState) {
@@ -165,6 +163,7 @@ extension UserProfileImageUpdateStatus {
             updateUserProfile(with:previewAssetId, completeAssetId: completeAssetId)
         case (_, .failed):
             resetImageState()
+            setState(state: .ready)
         }
     }
     
@@ -201,16 +200,14 @@ extension UserProfileImageUpdateStatus {
     }
     
     internal func setState(state newState: ImageState, for imageSize: ProfileImageSize) {
-        managedObjectContext.performGroupedBlock {
-            let currentState = self.imageState(for: imageSize)
-            guard currentState.canTransition(to: newState) else {
-                // Trying to transition to invalid state - ignore
-                return
-            }
-            
-            self.imageState[imageSize] = newState
-            self.didTransition(from: currentState, to: newState, for: imageSize)
+        let currentState = self.imageState(for: imageSize)
+        guard currentState.canTransition(to: newState) else {
+            // Trying to transition to invalid state - ignore
+            return
         }
+        
+        self.imageState[imageSize] = newState
+        self.didTransition(from: currentState, to: newState, for: imageSize)
     }
     
     internal func resetImageState() {
@@ -253,8 +250,8 @@ extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
             uiMOC.performGroupedBlock {
                 let editableUser = ZMUser.selfUser(in: uiMOC) as ZMEditableUser
                 editableUser.originalProfileImageData = imageData
-                self.setState(state: .preprocess(image: imageData))
             }
+            self.setState(state: .preprocess(image: imageData))
         }
     }
 }
@@ -301,15 +298,19 @@ extension UserProfileImageUpdateStatus: ZMContextChangeTracker {
 extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     
     public func completedDownsampleOperation(_ operation: ZMImageDownsampleOperationProtocol, imageOwner: ZMImageOwner) {
-        ProfileImageSize.allSizes.forEach {
-            if operation.format == $0.imageFormat {
-                setState(state: .upload(image: operation.downsampleImageData), for: $0)
+        managedObjectContext.performGroupedBlock {
+            ProfileImageSize.allSizes.forEach {
+                if operation.format == $0.imageFormat {
+                    self.setState(state: .upload(image: operation.downsampleImageData), for: $0)
+                }
             }
         }
     }
     
     public func failedPreprocessingImageOwner(_ imageOwner: ZMImageOwner) {
-        setState(state: .failed(.preprocessingFailed))
+        managedObjectContext.performGroupedBlock {
+            self.setState(state: .failed(.preprocessingFailed))
+        }
     }
     
     public func didCompleteProcessingImageOwner(_ imageOwner: ZMImageOwner) {}
