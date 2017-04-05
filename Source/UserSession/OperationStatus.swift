@@ -119,21 +119,21 @@ public class OperationStatus : NSObject {
     }
     
     public func finishBackgroundFetch(withFetchResult result: UIBackgroundFetchResult) {
+        backgroundFetchTimer?.invalidate()
+        backgroundFetchTimer = nil
         DispatchQueue.main.async {
             self.backgroundFetchHandler?(result)
             self.backgroundFetchHandler = nil
         }
-        backgroundFetchTimer?.invalidate()
-        backgroundFetchTimer = nil
     }
     
     public func finishBackgroundTask(withTaskResult result: BackgroundTaskResult) {
+        backgroundTaskTimer?.invalidate()
+        backgroundTaskTimer = nil
         DispatchQueue.main.async {
             self.backgroundTaskHandler?(result)
             self.backgroundTaskHandler = nil
         }
-        backgroundTaskTimer?.invalidate()
-        backgroundTaskTimer = nil
     }
     
     fileprivate func updateOperationState() {
