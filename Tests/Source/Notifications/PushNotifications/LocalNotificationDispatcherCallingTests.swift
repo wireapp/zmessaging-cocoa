@@ -56,7 +56,7 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
     
     func testThatIncomingCallCreatesCallingNotification() {
         // when
-        sut.process(callState: .incoming(video: false), in: conversation, sender: sender)
+        sut.process(callState: .incoming(video: false, shouldRing: false), in: conversation, sender: sender)
         
         // then
         XCTAssertEqual(sut.callingNotifications.notifications.count, 1)
@@ -79,7 +79,7 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
     
     func testThatIncomingCallIsReplacedByCanceledCallNotification() {
         // given 
-        sut.process(callState: .incoming(video: false), in: conversation, sender: sender)
+        sut.process(callState: .incoming(video: false, shouldRing: false), in: conversation, sender: sender)
         XCTAssertEqual(sut.callingNotifications.notifications.count, 1)
         XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
         let incomingCallNotification = application.scheduledLocalNotifications.first!
@@ -95,7 +95,7 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
     
     func testThatIncomingCallIsClearedWhenCallIsAnsweredElsewhere() {
         // given
-        sut.process(callState: .incoming(video: false), in: conversation, sender: sender)
+        sut.process(callState: .incoming(video: false, shouldRing: false), in: conversation, sender: sender)
         XCTAssertEqual(sut.callingNotifications.notifications.count, 1)
         XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
         let incomingCallNotification = application.scheduledLocalNotifications.first!

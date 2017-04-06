@@ -340,13 +340,14 @@ extension WireCallCenterV2 {
     public class func addVoiceChannelParticipantObserver(observer: VoiceChannelParticipantObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         context.wireCallCenterV2.createParticipantSnapshotIfNeeded(for: conversation)
         
+        let remoteID = conversation.remoteIdentifier!
         return NotificationCenterObserverToken(name: VoiceChannelParticipantNotification.notificationName, object: nil, queue: .main) {
             [weak observer] (note) in
             guard let note = note.userInfo?[VoiceChannelParticipantNotification.userInfoKey] as? VoiceChannelParticipantNotification,
                 let strongObserver = observer
             else { return }
             
-            if note.conversationId == conversation.remoteIdentifier {
+            if note.conversationId == remoteID {
                 strongObserver.voiceChannelParticipantsDidChange(note)
             }
         }

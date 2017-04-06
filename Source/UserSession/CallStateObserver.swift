@@ -56,7 +56,6 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
         notifyIfWebsocketShouldBeOpen(forCallState: callState)
         
         managedObjectContext.performGroupedBlock {
-            
             guard
                 let userId = userId,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.managedObjectContext),
@@ -69,8 +68,36 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 self.localNotificationDispatcher.process(callState: callState, in: conversation, sender: user)
             }
             
+            self.updateConversationListIndicator(convObjectID: conversation.objectID, callState: callState)
+            
             self.callingSystemMessageGenerator.process(callState: callState, in: conversation, sender: user)
             self.managedObjectContext.enqueueDelayedSave()
+        }
+    }
+    
+    public func updateConversationListIndicator(convObjectID: NSManagedObjectID, callState: CallState){
+        // We need to switch to the uiContext here because we are making changes that need to be present on the UI when the change notification fires
+        guard let uiMOC = self.managedObjectContext.zm_userInterface else { return }
+        uiMOC.performGroupedBlock {
+            guard let uiConv = (try? uiMOC.existingObject(with: convObjectID)) as? ZMConversation else { return }
+            switch callState {
+            case .incoming(video: _, shouldRing: let shouldRing):
+                uiConv.isIgnoringCallV3 = !shouldRing
+                uiConv.isCallDeviceActiveV3 = false
+            case .terminating, .none:
+                uiConv.isCallDeviceActiveV3 = false
+                uiConv.isIgnoringCallV3 = false
+            case .outgoing, .answered, .established:
+                uiConv.isCallDeviceActiveV3 = true
+            case .unknown:
+                break
+            }
+            
+            if uiMOC.zm_hasChanges {
+                NotificationDispatcher.notifyNonCoreDataChanges(objectID: convObjectID,
+                                                                changedKeys: [ZMConversationListIndicatorKey],
+                                                                uiContext: uiMOC)
+            }
         }
     }
     

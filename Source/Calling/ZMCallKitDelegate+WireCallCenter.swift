@@ -82,14 +82,15 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
         }
         
         switch callState {
-        case .incoming(video: let video):
+        case .incoming(video: let video, shouldRing: let shouldRing):
             guard
                 let userId = userId,
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: userSession.managedObjectContext) else {
                     break
             }
-            
-            indicateIncomingCall(from: user, in: conversation, video: video)
+            if shouldRing {
+                indicateIncomingCall(from: user, in: conversation, video: video)
+            }
         case let .terminating(reason: reason) where !(reason == .normal && userId == ZMUser.selfUser(inUserSession: userSession).remoteIdentifier):
             if #available(iOS 10.0, *) {
                 provider.reportCall(with: conversationId, endedAt: nil, reason: UInt(reason.CXCallEndedReason.rawValue))

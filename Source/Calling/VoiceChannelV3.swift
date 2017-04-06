@@ -37,28 +37,42 @@ public class VoiceChannelV3 : NSObject, CallProperties {
     
     /// Voice channel participants. May be a subset of conversation participants.
     public var participants: NSOrderedSet {
-        return conversation?.activeParticipants ?? NSOrderedSet()
+        guard let callCenter = WireCallCenterV3.activeInstance,
+              let conversationId = conversation?.remoteIdentifier,
+              let context = conversation?.managedObjectContext
+        else { return NSOrderedSet() }
+        
+        let userIds = callCenter.callParticipants(conversationId: conversationId)
+        let users = userIds.flatMap{ ZMUser(remoteID: $0, createIfNeeded: false, in:context) }
+        return NSOrderedSet(array: users)
     }
     
     init(conversation: ZMConversation) {
         self.conversation = conversation
-        
         super.init()
     }
 
     public func state(forParticipant participant: ZMUser) -> VoiceChannelV2ParticipantState {
-        let participantState = VoiceChannelV2ParticipantState()
+        guard let conv = self.conversation,
+            let convID = conv.remoteIdentifier,
+            let userID = participant.remoteIdentifier,
+            let callCenter = WireCallCenterV3.activeInstance
+        else { return VoiceChannelV2ParticipantState() }
         
-        participantState.connectionState = .connected
-        participantState.muted = false
-        participantState.isSendingVideo = false
-        
-        return participantState
+        let state = VoiceChannelV2ParticipantState()
+        state.isSendingVideo = false
+        if participant.isSelfUser {
+            state.connectionState = selfUserConnectionState
+        } else {
+            state.connectionState = callCenter.connectionState(forUserWith: userID, in: convID)
+        }
+        return state;
     }
-
+    
     public var state: VoiceChannelV2State {
         if let conversation = conversation, let remoteIdentifier = conversation.remoteIdentifier, let callCenter = WireCallCenterV3.activeInstance {
-            return callCenter.callState(conversationId:remoteIdentifier).voiceChannelState(securityLevel: conversation.securityLevel)
+            let callState = callCenter.callState(conversationId:remoteIdentifier)
+            return callState.voiceChannelState(securityLevel: conversation.securityLevel)
         } else {
             return .noActiveUsers
         }
@@ -81,31 +95,41 @@ public class VoiceChannelV3 : NSObject, CallProperties {
 extension VoiceChannelV3 : CallActionsInternal {
     
     public func join(video: Bool) -> Bool {
-        guard let conversation = conversation, let remoteIdentifier = conversation.remoteIdentifier else { return false }
+        guard let conversation = conversation,
+              let remoteIdentifier = conversation.remoteIdentifier
+        else { return false }
+        
+        let isGroup = (conversation.conversationType == .group)
         var joined = false
         
         switch state {
-        case .incomingCall:
-            joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier) ?? false
+        case .incomingCall, .incomingCallInactive:
+            joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier, isGroup: isGroup) ?? false
         case .incomingCallDegraded:
             joined = true // Don't answer call
         default:
-            joined = WireCallCenterV3.activeInstance?.startCall(conversationId: remoteIdentifier, video: video) ?? false
+            joined = WireCallCenterV3.activeInstance?.startCall(conversationId: remoteIdentifier, video: video, isGroup: isGroup) ?? false
         }
         
         return joined
     }
     
     public func leave() {
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
+        guard let conv = conversation,
+              let remoteID = conv.remoteIdentifier
+        else { return }
         
-        WireCallCenterV3.activeInstance?.closeCall(conversationId: remoteIdentifier)
+        let isGroup = (conv.conversationType == .group)
+        WireCallCenterV3.activeInstance?.closeCall(conversationId: remoteID, isGroup: isGroup)
     }
     
     public func ignore() {
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
+        guard let conv = conversation,
+              let remoteID = conv.remoteIdentifier
+        else { return }
         
-        WireCallCenterV3.activeInstance?.rejectCall(conversationId: remoteIdentifier)
+        let isGroup = (conv.conversationType == .group)
+        WireCallCenterV3.activeInstance?.rejectCall(conversationId: remoteID, isGroup: isGroup)
     }
     
 }
@@ -129,6 +153,8 @@ public extension CallState {
             return .noActiveUsers
         case .incoming where securityLevel == .secureWithIgnored:
             return .incomingCallDegraded
+        case .incoming(video:_, shouldRing: let shouldRing) where shouldRing == false:
+            return .incomingCallInactive
         case .incoming:
             return .incomingCall
         case .answered where securityLevel == .secureWithIgnored:

@@ -53,7 +53,7 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
     }
     
     public var currentVoiceChannel : VoiceChannelInternal {
-        if v2.state != .noActiveUsers || v2.conversation?.conversationType != .oneOnOne {
+        if v2.state != .noActiveUsers {
             return v2
         }
         
