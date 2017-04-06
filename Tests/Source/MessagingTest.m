@@ -379,6 +379,7 @@
     if (nil == _mockUserSession) {
         id mockUserSession = [OCMockObject niceMockForClass:[ZMUserSession class]];
         [[[mockUserSession stub] andReturn:self.uiMOC] managedObjectContext];
+        [[[mockUserSession stub] andReturn:self.syncMOC] syncManagedObjectContext];
         _mockUserSession = mockUserSession;
     }
     

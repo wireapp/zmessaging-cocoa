@@ -46,19 +46,11 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 
 @implementation ZMUserTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
-{
-    NOT_USED(moc);
-    NOT_USED(appStateDelegate);
-    RequireString(NO, "Use the other init");
-    return nil;
-}
-
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                                   syncStatus:(SyncStatus *)syncStatus;
 {
-    self = [super initWithManagedObjectContext:moc appStateDelegate:appStateDelegate];
+    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatus];
     if (self) {
         self.syncStatus = syncStatus;
         self.remoteIDObjectSync = [[ZMRemoteIdentifierObjectSync alloc] initWithTranscoder:self managedObjectContext:self.managedObjectContext];

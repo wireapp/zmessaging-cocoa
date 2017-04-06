@@ -55,7 +55,7 @@ class ImageRequestFactory : ImageRequestSource {
 }
 
 
-public class UserImageStrategy : ZMAbstractRequestStrategy, ZMDownstreamTranscoder, ZMUpstreamTranscoder {
+public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder, ZMUpstreamTranscoder {
     
     var requestFactory : ImageRequestSource
     var smallProfileDownstreamSync: ZMDownstreamObjectSyncWithWhitelist!
@@ -65,21 +65,19 @@ public class UserImageStrategy : ZMAbstractRequestStrategy, ZMDownstreamTranscod
     let imageProcessingQueue: OperationQueue
     var tornDown :Bool = false
     
-    public override var configuration: ZMStrategyConfigurationOption { return .allowsRequestsDuringEventProcessing }
-    
     @available (*, unavailable)
-    override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
+    override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         fatalError()
     }
     
-    @objc public convenience init(managedObjectContext:NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate, imageProcessingQueue: OperationQueue) {
-        self.init(managedObjectContext: managedObjectContext, appStateDelegate: appStateDelegate, imageProcessingQueue: imageProcessingQueue, requestFactory: nil)
+    @objc public convenience init(managedObjectContext:NSManagedObjectContext, applicationStatus: ApplicationStatus, imageProcessingQueue: OperationQueue) {
+        self.init(managedObjectContext: managedObjectContext, applicationStatus: applicationStatus, imageProcessingQueue: imageProcessingQueue, requestFactory: nil)
     }
     
-    init(managedObjectContext:NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate, imageProcessingQueue: OperationQueue, requestFactory : ImageRequestSource?) {
+    init(managedObjectContext:NSManagedObjectContext, applicationStatus: ApplicationStatus, imageProcessingQueue: OperationQueue, requestFactory : ImageRequestSource?) {
         self.imageProcessingQueue = imageProcessingQueue;
         self.requestFactory = requestFactory ?? ImageRequestFactory()
-        super.init(managedObjectContext: managedObjectContext, appStateDelegate: appStateDelegate)
+        super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         
         // Small profiles
         let filterForSmallImage = NSCompoundPredicate(andPredicateWithSubpredicates:[ ZMUser.predicateForSmallImageNeedingToBeUpdatedFromBackend(),
@@ -119,11 +117,10 @@ public class UserImageStrategy : ZMAbstractRequestStrategy, ZMDownstreamTranscod
         self.recoverFromInconsistentUserImageStatus()
     }
     
-    public override func tearDown() {
+    public func tearDown() {
         tornDown = true
         assetPreprocessingTracker.tearDown()
         NotificationCenter.default.removeObserver(self)
-        super.tearDown()
     }
     
     deinit {
@@ -144,6 +141,15 @@ public class UserImageStrategy : ZMAbstractRequestStrategy, ZMDownstreamTranscod
             self.smallProfileDownstreamSync.whiteListObject(selfUser)
             self.mediumDownstreamSync.whiteListObject(selfUser)
         }
+    }
+    
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
+        for sync in [self.smallProfileDownstreamSync, self.mediumDownstreamSync, self.upstreamSync] as [ZMRequestGenerator] {
+            if let request = sync.nextRequest() {
+                return request
+            }
+        }
+        return nil
     }
     
     func requestAssetForNotification(note: Notification) {
@@ -326,14 +332,6 @@ extension UserImageStrategy : ZMContextChangeTrackerSource {
         return [self.assetPreprocessingTracker, self.smallProfileDownstreamSync, self.mediumDownstreamSync, self.upstreamSync]
     }
     
-    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        for sync in [self.smallProfileDownstreamSync, self.mediumDownstreamSync, self.upstreamSync] as [ZMRequestGenerator] {
-            if let request = sync.nextRequest() {
-                return request
-            }
-        }
-        return nil
-    }
 }
 
 

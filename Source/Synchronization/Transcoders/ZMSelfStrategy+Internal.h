@@ -28,7 +28,7 @@ extern NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval;
 @interface ZMSelfStrategy ()
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                           upstreamObjectSync:(ZMUpstreamModifiedObjectSync *)upstreamObjectSync NS_DESIGNATED_INITIALIZER;
 

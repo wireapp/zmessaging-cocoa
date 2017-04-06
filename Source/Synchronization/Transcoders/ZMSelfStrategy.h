@@ -23,17 +23,21 @@
 @class NSOperationQueue;
 @class ZMUpstreamModifiedObjectSync;
 @class ZMClientRegistrationStatus;
+@class ZMApplicationStatusDirectory;
 
 @interface ZMSelfStrategy : ZMAbstractRequestStrategy <ZMContextChangeTrackerSource>
 
 @property (nonatomic, readonly) BOOL isSelfUserComplete;
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate NS_UNAVAILABLE;
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus NS_UNAVAILABLE;
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                           applicationStatus:(id<ZMApplicationStatus>)appplicationStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus;
+
+- (void)tearDown;
+
 @end
 
 

@@ -77,7 +77,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     ++self.authenticationSuccessCount;
 }
 
-
 - (void)testThatItNotifiesIfTheClientNeedsToBeRegistered
 {
     // given

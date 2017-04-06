@@ -26,8 +26,6 @@
 @import CoreTelephony;
 
 #import "ZMUserSession+Background.h"
-#import "ZMSyncStateManager.h"
-
 #import "ZMUserSession+Internal.h"
 #import "ZMSyncStrategy.h"
 #import "NSError+ZMUserSessionInternal.h"
@@ -324,10 +322,10 @@ ZM_EMPTY_ASSERTING_INIT()
             [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext application:application];
             
            self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
-                                                                                managedObjectContext:syncManagedObjectContext];
+                                                                                         userSession:self];
             
             self.transportSession = session;
-            self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
+            self.transportSession.pushChannel.clientID = self.selfUserClient.remoteIdentifier;
             self.transportSession.networkStateDelegate = self;
             self.mediaManager = mediaManager;
             
@@ -397,7 +395,9 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     [self.application unregisterObserverForStateChange:self];
     self.mediaManager = nil;
+    self.callStateObserver = nil;
     [self.operationLoop tearDown];
+    self.operationLoop = nil;
     
     [self.localNotificationDispatcher tearDown];
     self.localNotificationDispatcher = nil;
@@ -837,8 +837,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)didRegisterUserClient:(UserClient *)userClient
 {
-    self.transportSession.clientID = userClient.remoteIdentifier;
-    [self.transportSession restartPushChannel];
+    self.transportSession.pushChannel.clientID = userClient.remoteIdentifier;
 }
 
 @end
@@ -1022,32 +1021,32 @@ static CallingProtocolStrategy ZMUserSessionCallingProtocolStrategy = CallingPro
 
 - (ZMAuthenticationStatus *)authenticationStatus;
 {
-    return self.operationLoop.syncStrategy.syncStateManager.authenticationStatus;
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.authenticationStatus;
 }
 
 - (UserProfileUpdateStatus *)userProfileUpdateStatus;
 {
-    return self.operationLoop.syncStrategy.syncStateManager.userProfileUpdateStatus;
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.userProfileUpdateStatus;
 }
 
 - (ZMClientRegistrationStatus *)clientRegistrationStatus;
 {
-    return self.operationLoop.syncStrategy.syncStateManager.clientRegistrationStatus;
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.clientRegistrationStatus;
 }
 
 - (ClientUpdateStatus *)clientUpdateStatus;
 {
-    return self.operationLoop.syncStrategy.syncStateManager.clientUpdateStatus;
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.clientUpdateStatus;
 }
 
 - (ZMAccountStatus *)accountStatus;
 {
-    return self.operationLoop.syncStrategy.syncStateManager.accountStatus;
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.accountStatus;
 }
 
 - (ProxiedRequestsStatus *)proxiedRequestStatus;
 {
-    return self.operationLoop.syncStrategy.syncStateManager.proxiedRequestStatus;
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.proxiedRequestStatus;
 }
 
 @end

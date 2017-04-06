@@ -54,9 +54,9 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 
 @implementation ZMConnectionTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate syncStatus:(SyncStatus *)syncStatus;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatus:(id<ZMApplicationStatus>)applicationStatus syncStatus:(SyncStatus *)syncStatus;
 {
-    self = [super initWithManagedObjectContext:moc appStateDelegate:appStateDelegate];
+    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatus];
     if(self) {
         self.syncStatus = syncStatus;
         self.modifiedObjectSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self entityName:ZMConnection.entityName managedObjectContext:self.managedObjectContext];

@@ -30,9 +30,7 @@
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 #import "ZMSyncStrategy+EventProcessing.h"
-
 #import "ZMOperationLoop+Background.h"
-#import "ZMSyncStateManager.h"
 
 @interface ZMOperationLoopTests : MessagingTest
 
@@ -53,7 +51,7 @@
     self.pushChannelNotifications = [NSMutableArray array];
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
     self.syncStrategy = [OCMockObject niceMockForClass:[ZMSyncStrategy class]];
-    id syncStateManager = [OCMockObject niceMockForClass:[ZMSyncStateManager class]];
+    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
     
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.transportSession];
@@ -63,8 +61,10 @@
     
     // I expect this to be called, at least until we implement the soft sync
     [[[self.syncStrategy stub] andReturn:self.syncMOC] syncMOC];
-    [(ZMSyncStateManager *)[[syncStateManager stub] andReturn:self.pingBackStatus] pingBackStatus];
-    [(ZMSyncStrategy *)[[self.syncStrategy stub] andReturn:syncStateManager] syncStateManager];
+    
+    
+    [(ZMApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturn:self.pingBackStatus] pingBackStatus];
+    [(ZMSyncStrategy *)[[self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];
 
     self.sut = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
                                                     syncStrategy:self.syncStrategy
@@ -125,9 +125,9 @@
     
     // given
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
-    [[self.transportSession stub] closePushChannelAndRemoveConsumer];
+//    [[self.transportSession stub] closePushChannelAndRemoveConsumer];
     XCTestExpectation *expectation = [self expectationWithDescription:@"Open push channel opened"];
-    [[self.transportSession expect] openPushChannelWithConsumer:[OCMArg checkWithBlock:^BOOL(id obj) {
+    [[self.transportSession expect] configurePushChannelWithConsumer:[OCMArg checkWithBlock:^BOOL(id obj) {
         receivedConsumer = obj;
         [expectation fulfill];
         return YES;
@@ -712,30 +712,6 @@
     }];
 }
 
-
-- (void)testThatItClosesThePushChannelOnTearDown
-{
-    
-    // given
-    ZMTransportSession *transportSession = self.transportSession;
-    [[(id) transportSession stub] openPushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
-    
-    ZMOperationLoop *sut = [[ZMOperationLoop alloc] initWithTransportSession:transportSession
-                                                                syncStrategy:self.syncStrategy
-                                                                       uiMOC:self.uiMOC
-                                                                     syncMOC:self.syncMOC];
-    
-    // expect
-    [[(id) transportSession expect] closePushChannelAndRemoveConsumer];
-    
-    // when
-    [sut tearDown];
-    
-    // then
-    [(id) transportSession verify];
-}
-
-
 - (void)testThatItCalls_DataDidChange_OnSyncStrategyWhenThereIsANewRequest
 {
     // given
@@ -1043,30 +1019,6 @@
     
     // then
     [self.syncStrategy verify];
-}
-
-- (void)testThatItForwardsTheBackgroundFetchRequestToTheSyncStrategy
-{
-    // given
-    XCTestExpectation *expectation = [self expectationWithDescription:@"Background fetch completed"];
-    ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult result) {
-        XCTAssertEqual(result, ZMBackgroundFetchResultNewData);
-        [expectation fulfill];
-    };
-    
-    // expect
-    [(ZMSyncStrategy *)[[(id) self.syncStrategy expect] andCall:@selector(forward_startBackgroundFetchWithCompletionHandler:) onObject:self] startBackgroundFetchWithCompletionHandler:OCMOCK_ANY];
-    
-    // when
-    [self.sut startBackgroundFetchWithCompletionHandler:handler];
-    // then
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    [(id) self.syncStrategy verify];
-}
-
-- (void)forward_startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-{
-    handler(ZMBackgroundFetchResultNewData);
 }
 
 - (void)testThatItForwardsNoticeNotificationsToTheSyncStrategyAndPingBackStatus

@@ -64,7 +64,7 @@ struct SearchUserAssetIDs {
 }
 
 
-public class SearchUserImageStrategy : ZMAbstractRequestStrategy {
+public class SearchUserImageStrategy : AbstractRequestStrategy {
 
     fileprivate unowned var uiContext : NSManagedObjectContext
     let imagesByUserIDCache : NSCache<NSUUID, NSData>
@@ -72,22 +72,21 @@ public class SearchUserImageStrategy : ZMAbstractRequestStrategy {
     let userIDsTable : ZMUserIDsForSearchDirectoryTable
     fileprivate var userIDsBeingRequested = Set<UUID>()
     fileprivate var assetIDsBeingRequested = Set<ZMSearchUserAndAssetID>()
-    public override var configuration: ZMStrategyConfigurationOption { return .allowsRequestsDuringEventProcessing }
-
+    
     @available (*, unavailable)
-    public override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
+    public override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         fatalError()
     }
     
-    public convenience init(appStateDelegate: ZMAppStateDelegate, managedObjectContext: NSManagedObjectContext){
-        self.init(appStateDelegate: appStateDelegate,
+    public convenience init(applicationStatus: ApplicationStatus, managedObjectContext: NSManagedObjectContext){
+        self.init(applicationStatus: applicationStatus,
                   managedObjectContext: managedObjectContext,
                   imagesByUserIDCache: nil,
                   mediumAssetIDByUserIDCache: nil,
                   userIDsTable: nil)
     }
     
-    internal init(appStateDelegate: ZMAppStateDelegate,
+    internal init(applicationStatus: ApplicationStatus,
          managedObjectContext: NSManagedObjectContext,
          imagesByUserIDCache : NSCache<NSUUID, NSData>?,
          mediumAssetIDByUserIDCache : NSCache<NSUUID, NSUUID>?,
@@ -97,7 +96,7 @@ public class SearchUserImageStrategy : ZMAbstractRequestStrategy {
         self.imagesByUserIDCache = imagesByUserIDCache ?? ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>
         self.mediumAssetIDByUserIDCache = mediumAssetIDByUserIDCache ?? ZMSearchUser.searchUserToMediumAssetIDCache() as! NSCache<NSUUID, NSUUID>
         self.userIDsTable = userIDsTable ?? ZMSearchDirectory.userIDsMissingProfileImage()
-        super.init(managedObjectContext: managedObjectContext, appStateDelegate: appStateDelegate)
+        super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
     }
     
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {

@@ -21,18 +21,15 @@ import Foundation
 import ZMTransport
 
 /// Requests the account deletion
-@objc public final class DeleteAccountRequestStrategy: ZMAbstractRequestStrategy, ZMSingleRequestTranscoder {
+@objc public final class DeleteAccountRequestStrategy: AbstractRequestStrategy, ZMSingleRequestTranscoder {
 
     fileprivate static let path: String = "/self"
     public static let userDeletionInitiatedKey: String = "ZMUserDeletionInitiatedKey"
     fileprivate(set) var deleteSync: ZMSingleRequestSync! = nil
     
-    public override var configuration: ZMStrategyConfigurationOption {
-        return [.allowsRequestsDuringSync, .allowsRequestsWhileUnauthenticated, .allowsRequestsDuringEventProcessing]
-    }
-    
-    public override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
-        super.init(managedObjectContext: moc, appStateDelegate: appStateDelegate)
+    public override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+        super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
+        self.configuration = [.allowsRequestsDuringSync, .allowsRequestsWhileUnauthenticated, .allowsRequestsDuringEventProcessing]
         self.deleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: self.managedObjectContext)
     }
     

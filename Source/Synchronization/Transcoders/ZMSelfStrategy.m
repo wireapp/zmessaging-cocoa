@@ -25,7 +25,6 @@
 #import "ZMSyncStrategy.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMClientRegistrationStatus.h"
-#import "ZMSyncStateManager.h"
 
 static NSString *SelfPath = @"/self";
 
@@ -63,18 +62,18 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 @implementation ZMSelfStrategy
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
 {
-    return [self initWithManagedObjectContext:moc appStateDelegate:appStateDelegate clientRegistrationStatus:clientRegistrationStatus upstreamObjectSync:nil];
+    return [self initWithManagedObjectContext:moc applicationStatus:applicationStatus clientRegistrationStatus:clientRegistrationStatus upstreamObjectSync:nil];
 }
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                           upstreamObjectSync:(ZMUpstreamModifiedObjectSync *)upstreamObjectSync
 {
-    self = [super initWithManagedObjectContext:moc appStateDelegate:appStateDelegate];
+    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatus];
     if(self) {
         self.clientStatus = clientRegistrationStatus;
         self.upstreamObjectSync = upstreamObjectSync;
@@ -105,7 +104,6 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 - (void)tearDown
 {
     [self.timedDownstreamSync invalidate];
-    [super tearDown];
 }
 
 - (ZMTransportRequest *)nextRequestIfAllowed;

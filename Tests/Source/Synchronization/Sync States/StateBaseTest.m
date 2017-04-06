@@ -33,9 +33,6 @@
 
 #import "ZMEventProcessingState.h"
 #import "ZMUnauthenticatedState.h"
-#import "ZMUnauthenticatedBackgroundState.h"
-#import "ZMBackgroundState.h"
-#import "ZMPreBackgroundState.h"
 #import "ZMCookie.h"
 #import "zmessaging_iOS_Tests-Swift.h"
 
@@ -57,19 +54,10 @@
     [self verifyMockLater:eventProcessingState];
     id unauthenticatedState = [OCMockObject mockForClass:ZMUnauthenticatedState.class];
     [self verifyMockLater:unauthenticatedState];
-    id unauthenticatedBackgroundState = [OCMockObject mockForClass:ZMUnauthenticatedBackgroundState.class];
-    [self verifyMockLater:unauthenticatedBackgroundState];
-    id backgroundState = [OCMockObject mockForClass:ZMBackgroundState.class];
-    [self verifyMockLater:backgroundState];
-    id preBackgroundState = [OCMockObject mockForClass:ZMPreBackgroundState.class];
-    [self verifyMockLater:preBackgroundState];
     
     
     [[[(id) self.stateMachine stub] andReturn:eventProcessingState] eventProcessingState];
     [[[(id) self.stateMachine stub] andReturn:unauthenticatedState] unauthenticatedState];
-    [[[(id) self.stateMachine stub] andReturn:unauthenticatedBackgroundState] unauthenticatedBackgroundState];
-    [[[(id) self.stateMachine stub] andReturn:backgroundState] backgroundState];
-    [[[(id) self.stateMachine stub] andReturn:preBackgroundState] preBackgroundState];
     
     _objectDirectory = [self createMockObjectStrategyDirectoryInMoc:self.uiMOC];
     

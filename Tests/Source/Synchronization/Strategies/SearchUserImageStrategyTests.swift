@@ -28,14 +28,14 @@ class SearchUserImageStrategyTests : MessagingTest {
     var userIDsTable: ZMUserIDsForSearchDirectoryTable!
     var imagesCache = NSCache<NSUUID, NSData>()
     var assetIDCache = NSCache<NSUUID, NSUUID>()
-    var mockAppStateDelegate : MockAppStateDelegate!
+    var mockApplicationStatus : MockApplicationStatus!
     
     override func setUp() {
         super.setUp()
         userIDsTable = ZMUserIDsForSearchDirectoryTable()
-        mockAppStateDelegate = MockAppStateDelegate()
-        mockAppStateDelegate.mockAppState = .eventProcessing
-        sut = SearchUserImageStrategy(appStateDelegate: mockAppStateDelegate, managedObjectContext: uiMOC, imagesByUserIDCache: imagesCache, mediumAssetIDByUserIDCache: assetIDCache, userIDsTable: userIDsTable)
+        mockApplicationStatus = MockApplicationStatus()
+        mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        sut = SearchUserImageStrategy(applicationStatus: mockApplicationStatus, managedObjectContext: uiMOC, imagesByUserIDCache: imagesCache, mediumAssetIDByUserIDCache: assetIDCache, userIDsTable: userIDsTable)
     }
     
     override func tearDown() {
@@ -98,7 +98,7 @@ extension SearchUserImageStrategyTests {
     
     func testThatTheDefaultInitCreatesTheCorrectTables() {
         // when
-        let strategy = SearchUserImageStrategy(appStateDelegate:mockAppStateDelegate, managedObjectContext:self.syncMOC)
+        let strategy = SearchUserImageStrategy(applicationStatus:mockApplicationStatus, managedObjectContext:self.syncMOC)
         
         // then
         XCTAssertEqual(strategy.userIDsTable, ZMSearchDirectory.userIDsMissingProfileImage())
@@ -137,7 +137,7 @@ extension SearchUserImageStrategyTests {
     func testThatNextRequestDoesNotCreateARequestClientNotReady(){
         // given
         _ = setupSearchDirectory(userCount: 3)
-        mockAppStateDelegate.mockAppState = .unauthenticated
+        mockApplicationStatus.mockSynchronizationState = .unauthenticated
         
         // when
         let request = sut.nextRequest()

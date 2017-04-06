@@ -31,7 +31,7 @@ class UserImageStrategyTests : MessagingTest {
     var sut : UserImageStrategy!
     var queue : OperationQueue!
     var requestStrategy : MockRequestStrategy!
-    var mockAppStateDelegate : MockAppStateDelegate!
+    var mockApplicationStatus : MockApplicationStatus!
     var user1 : ZMUser!
     var user1ID: UUID!
     
@@ -43,11 +43,11 @@ class UserImageStrategyTests : MessagingTest {
         queue = OperationQueue()
         queue.name = name
         queue.maxConcurrentOperationCount = 1
-        mockAppStateDelegate = MockAppStateDelegate()
-        mockAppStateDelegate.mockAppState = .eventProcessing
+        mockApplicationStatus = MockApplicationStatus()
+        mockApplicationStatus.mockSynchronizationState = .eventProcessing
 
         requestStrategy = MockRequestStrategy()
-        sut = UserImageStrategy(managedObjectContext: syncMOC, appStateDelegate:mockAppStateDelegate, imageProcessingQueue: queue, requestFactory: requestStrategy)
+        sut = UserImageStrategy(managedObjectContext: syncMOC, applicationStatus:mockApplicationStatus, imageProcessingQueue: queue, requestFactory: requestStrategy)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         self.user1ID = UUID()
@@ -62,7 +62,7 @@ class UserImageStrategyTests : MessagingTest {
     
     override func tearDown() {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        mockAppStateDelegate = nil
+        mockApplicationStatus = nil
         self.sut.tearDown()
         self.sut = nil;
         self.user1 = nil;
@@ -579,7 +579,7 @@ extension UserImageStrategyTests {
         XCTAssertNil(selfUser.imageMediumData)
         
         // when
-        let localSUT = UserImageStrategy(managedObjectContext:self.syncMOC, appStateDelegate:mockAppStateDelegate, imageProcessingQueue:self.queue)
+        let localSUT = UserImageStrategy(managedObjectContext:self.syncMOC, applicationStatus:mockApplicationStatus, imageProcessingQueue:self.queue)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then

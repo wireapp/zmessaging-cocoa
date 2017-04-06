@@ -21,7 +21,6 @@
 #import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStateMachine.h"
-#import "ZMSyncStateManager.h"
 
 @implementation ZMSyncStrategy (EventProcessing)
 
@@ -45,7 +44,7 @@
         return !event.isFlowEvent;
     }];
     
-    if (self.syncStateManager.syncStatus.isSyncing) {
+    if (self.applicationStatusDirectory.syncStatus.isSyncing) {
         for(ZMUpdateEvent *event in notFlowEvents) {
             [self.eventsBuffer addUpdateEvent:event];
         }
@@ -85,9 +84,8 @@
         
         ZMFetchRequestBatch *fetchRequest = [self fetchRequestBatchForEvents:decryptedEvents];
         ZMFetchRequestBatchResult *prefetchResult = [self.syncMOC executeFetchRequestBatchOrAssert:fetchRequest];
-        NSArray *allObjectStrategies = [self.allTranscoders arrayByAddingObjectsFromArray:self.requestStrategies];
         
-        for(id obj in allObjectStrategies) {
+        for(id obj in self.eventConsumers) {
             @autoreleasepool {
                 if ([obj conformsToProtocol:@protocol(ZMEventConsumer)]) {
                     [obj processEvents:decryptedEvents liveEvents:YES prefetchResult:prefetchResult];
@@ -97,6 +95,11 @@
         [self.localNotificationDispatcher processEvents:decryptedEvents liveEvents:YES prefetchResult:nil];
         [self.syncMOC enqueueDelayedSave];
     }];
+}
+
+- (NSArray *)eventConsumers {
+    return [[self.allTranscoders arrayByAddingObjectsFromArray:self.requestStrategies]
+            arrayByAddingObject:self.systemMessageEventConsumer];
 }
 
 - (void)processDownloadedEvents:(NSArray <ZMUpdateEvent *>*)events;

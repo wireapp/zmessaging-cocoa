@@ -90,19 +90,19 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 @implementation ZMCallStateRequestStrategy
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                      callFlowRequestStrategy:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy
 {
-    return [self initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate callFlowRequestStrategy:callFlowRequestStrategy gsmCallHandler:nil];
+    return [self initWithManagedObjectContext:managedObjectContext applicationStatus:applicationStatus callFlowRequestStrategy:callFlowRequestStrategy gsmCallHandler:nil];
 }
 
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                      callFlowRequestStrategy:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy
                               gsmCallHandler:(ZMGSMCallHandler *)gsmCallHandler
 {
-    self = [super initWithManagedObjectContext:managedObjectContext appStateDelegate:appStateDelegate];
+    self = [super initWithManagedObjectContext:managedObjectContext applicationStatus:applicationStatus];
     if (self) {
         self.uiManagedObjectContext = managedObjectContext.zm_userInterfaceContext;
         self.callFlowRequestStrategy = callFlowRequestStrategy;
@@ -149,7 +149,6 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
     self.lastConversation = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.gsmCallHandler tearDown];
-    [super tearDown];
 }
 
 - (void)dealloc

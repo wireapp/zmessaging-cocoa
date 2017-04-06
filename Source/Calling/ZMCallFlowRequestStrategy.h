@@ -40,7 +40,7 @@ extern id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
 - (instancetype)initWithMediaManager:(id)mediaManager
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                 managedObjectContext:(NSManagedObjectContext *)managedObjectContext
-                    appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                   applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                          application:(id<ZMApplication>)application;
 
 
@@ -51,5 +51,6 @@ extern id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
 - (void)addJoinedCallParticipant:(ZMUser *)user inConversation:(ZMConversation *)conversation;
 - (void)accessTokenDidChangeWithToken:(NSString *)token ofType:(NSString *)type;
 - (void)updateFlowsForConversation:(ZMConversation *)conversation;
+- (void)tearDown;
 
 @end

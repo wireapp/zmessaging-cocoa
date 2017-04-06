@@ -163,15 +163,6 @@
     XCTAssertFalse(self.sut.supportsBackgroundFetch);
 }
 
-- (void)testThatItSwitchesToLoginBackgroundState
-{
-    // expectation
-    [[(id)self.stateMachine expect] goToState:self.stateMachine.unauthenticatedBackgroundState];
-    
-    // when
-    [self.sut didEnterBackground];
-}
-
 - (void)testThatItDoesNotSwitchesStateOnFailedAuthentication
 {
     // expectation
@@ -195,25 +186,6 @@
     [self.application setActive];
     [[(id)self.stateMachine expect] goToState:self.stateMachine.eventProcessingState];
     [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@YES] isSelfUserComplete]; //we also check for remoteIdentifier directly
-    
-    // when
-    [self.sut didEnterState];
-}
-
-- (void)testThatWeSwitchToTheBackgroundStateWhenEnteringTheStateAndAlreadyLoggedInAndInTheBackground;
-{
-    // given
-    [self recreateSUT];
-    
-    [ZMUser selfUserInContext:self.uiMOC].remoteIdentifier = [NSUUID createUUID];
-    [self.uiMOC setPersistentStoreMetadata:@"someD" forKey:ZMPersistedClientIdKey];
-
-    [self.authenticationStatus setAuthenticationCookieData:[@"foo" dataUsingEncoding:NSUTF8StringEncoding]];
-    
-    // expect
-    [self.application setBackground];
-    [[(id)self.stateMachine expect] goToState:self.stateMachine.backgroundState];
-    [[[(id)self.objectDirectory.selfStrategy stub] andReturnValue:@YES] isSelfUserComplete];
     
     // when
     [self.sut didEnterState];
@@ -677,18 +649,6 @@
     
     // then
     XCTAssertNil(request);
-}
-
-- (void)testThatItStartsQuickSyncWhenEnteringForeground_LoggedIn
-{
-    // when
-    ZMUnauthenticatedState *sut = [self mockedSUTWithLaunchInForeground:YES isLoggedIn:YES];
-    
-    // expect
-    [[(id)self.stateMachine expect] goToState:self.stateMachine.eventProcessingState];
-    
-    // when
-    [sut didEnterForeground];
 }
 
 - (void)testThatItDoesNotStartQuickSyncWhenEnteringForeground_NotLoggedIn

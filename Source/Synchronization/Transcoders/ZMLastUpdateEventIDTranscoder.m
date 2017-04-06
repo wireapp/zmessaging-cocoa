@@ -39,11 +39,11 @@
 @implementation ZMLastUpdateEventIDTranscoder
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                                   syncStatus:(SyncStatus *)syncStatus
                              objectDirectory:(id<ZMObjectStrategyDirectory>)directory;
 {
-    self = [super initWithManagedObjectContext:moc appStateDelegate:appStateDelegate];
+    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatus];
     if(self) {
         self.syncStatus = syncStatus;
         self.directory = directory;

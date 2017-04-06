@@ -19,6 +19,7 @@
 
 #import "ZMCallStateRequestStrategyTests.h"
 #import "MessagingTest+EventFactory.h"
+#import "zmessaging_iOS_Tests-Swift.h"
 
 
 @implementation ZMCallStateRequestStrategyTests
@@ -70,9 +71,9 @@
     self.gsmCallHandler = [OCMockObject niceMockForClass:[ZMGSMCallHandler class]];
     [self verifyMockLater:self.gsmCallHandler];
     
-    [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateEventProcessing)] appState];
+    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
 
-    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
 
     [self simulateOpeningPushChannel];
 }
@@ -90,7 +91,6 @@
     self.syncSelfToUser1Conversation = nil;
     self.syncSelfToUser2Conversation = nil;
 
-    [self.sut tearDown];
     self.sut = nil;
     [super tearDown];
 }
@@ -3598,8 +3598,7 @@
     [[[self.gsmCallHandler expect] andReturnValue:@YES] isInterruptedCallConversation:conversation];
     
     // when
-    [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -3619,8 +3618,7 @@
     [[self.gsmCallHandler reject] isInterruptedCallConversation:conversation];
     
     // when
-    [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -3647,8 +3645,7 @@
     [[[self.gsmCallHandler expect] andReturnValue:@NO] isInterruptedCallConversation:conversation];
     
     // when
-    [self.sut tearDown];
-    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
+    self.sut = (id) [[ZMCallStateRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus callFlowRequestStrategy:self.callFlowRequestStrategy gsmCallHandler:self.gsmCallHandler];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

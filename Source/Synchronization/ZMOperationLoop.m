@@ -26,7 +26,6 @@
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 #import "ZMSyncStrategy+EventProcessing.h"
-#import "ZMSyncStateManager.h"
 
 #import "ZMUserTranscoder.h"
 #import "ZMUserSession.h"
@@ -65,6 +64,10 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @end
 
 
+@interface ZMOperationLoop (OperationStatus) <ZMOperationStatusDelegate>
+@end
+
+
 @implementation ZMOperationLoop
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
@@ -85,7 +88,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                                                                                   mediaManager:mediaManager
                                                                            onDemandFlowManager:onDemandFlowManager
                                                                              syncStateDelegate:syncStateDelegate
-                                                                         backgroundableSession:transportSession
                                                                   localNotificationsDispatcher:dispatcher
                                                                       taskCancellationProvider:transportSession
                                                                             appGroupIdentifier:appGroupIdentifier
@@ -115,6 +117,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
         self.syncStrategy = syncStrategy;
         self.syncMOC = syncMOC;
         self.shouldStopEnqueueing = NO;
+        self.syncStrategy.applicationStatusDirectory.operationStatus.delegate = self;
 
         if (uiMOC != nil) {
             [[NSNotificationCenter defaultCenter] addObserver:self
@@ -133,7 +136,8 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
         
         // this is needed to avoid loading from syncMOC on the main queue
         [self.syncMOC performGroupedBlock:^{
-            [self.transportSession openPushChannelWithConsumer:self groupQueue:self.syncMOC];
+            [self.transportSession configurePushChannelWithConsumer:self groupQueue:self.syncMOC];
+            [self.transportSession.pushChannel setKeepOpen:syncStrategy.applicationStatusDirectory.operationStatus.operationState == SyncEngineOperationStateForeground];
         }];
     }
 
@@ -145,7 +149,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     self.tornDown = YES;
     self.shouldStopEnqueueing = true;
     
-    [self.transportSession closePushChannelAndRemoveConsumer];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [ZMRequestAvailableNotification removeObserver:self];
     
@@ -305,7 +308,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 - (BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
 {
-    return self.syncStrategy.syncStateManager.pingBackStatus;
+    return self.syncStrategy.applicationStatusDirectory.pingBackStatus;
 }
 
 @end
@@ -357,3 +360,11 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 @end
 
+@implementation ZMOperationLoop (OperationStatus)
+
+- (void)operationStatusWithDidChangeState:(enum SyncEngineOperationState)state
+{
+    self.transportSession.pushChannel.keepOpen = state == SyncEngineOperationStateForeground || state == SyncEngineOperationStateBackgroundCall;
+}
+
+@end

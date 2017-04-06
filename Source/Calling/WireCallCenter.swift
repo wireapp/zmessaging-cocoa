@@ -259,10 +259,14 @@ public class WireCallCenter : NSObject {
     // Returns conversations with a non idle call state
     public class func nonIdleCallConversations(inUserSession userSession: ZMUserSession) -> [ZMConversation] {
         var nonIdleConversations : Set<ZMConversation> = Set()
-        
-        let conversationsV3 = WireCallCenterV3.nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
-            return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
-        })
+
+        if let callCenter = WireCallCenterV3.activeInstance {
+            let conversationsV3 = type(of: callCenter).nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
+                return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
+            })
+            
+            nonIdleConversations.formUnion(conversationsV3)
+        }
         
         let idleStates : [VoiceChannelV2State] = [.deviceTransferReady,
                                                   .incomingCall,
@@ -274,7 +278,6 @@ public class WireCallCenter : NSObject {
         
         let conversationsV2 = userSession.managedObjectContext.wireCallCenterV2.conversations(withVoiceChannelStates: idleStates)
         
-        nonIdleConversations.formUnion(conversationsV3)
         nonIdleConversations.formUnion(conversationsV2)
         
         return Array(nonIdleConversations)

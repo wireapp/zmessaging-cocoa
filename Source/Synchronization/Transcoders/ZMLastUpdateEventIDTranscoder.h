@@ -27,12 +27,12 @@
 
 @property (nonatomic, readonly) BOOL isDownloadingLastUpdateEventID;
 
-- (instancetype _Nonnull)initWithManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc appStateDelegate:(id<ZMAppStateDelegate> _Nonnull)appStateDelegate NS_UNAVAILABLE;
+- (instancetype _Nonnull)initWithManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc applicationStatus:(id<ZMApplicationStatus> _Nonnull)applicationStatus NS_UNAVAILABLE;
 
 - (instancetype _Nonnull)initWithManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
-                             appStateDelegate:(id<ZMAppStateDelegate> _Nonnull)appStateDelegate
-                                  syncStatus:(SyncStatus * _Nonnull)syncStatus
-                             objectDirectory:(id<ZMObjectStrategyDirectory> _Nonnull)directory;
+                                    applicationStatus:(id<ZMApplicationStatus> _Nonnull)applicationStatus
+                                           syncStatus:(SyncStatus * _Nonnull)syncStatus
+                                      objectDirectory:(id<ZMObjectStrategyDirectory> _Nonnull)directory;
 
 
 - (void)startRequestingLastUpdateEventIDWithoutPersistingIt;

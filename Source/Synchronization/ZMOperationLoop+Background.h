@@ -21,17 +21,11 @@
 
 #import "ZMOperationLoop.h"
 #import "ZMPushRegistrant.h"
-#import "ZMBackgroundFetch.h"
 
 
 @interface ZMOperationLoop (Background)
 
 /// Process the payload of the remote notification. This may cause a @c UILocalNotification to be displayed.
 - (void)saveEventsAndSendNotificationForPayload:(NSDictionary *)payload fetchCompletionHandler:(ZMPushResultHandler)completionHandler source:(ZMPushNotficationType)source;
-
-- (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-
-/// Performs a task and calls the completionHandler when all transcoders are done processing it
-- (void)startBackgroundTaskWithCompletionHandler:(ZMBackgroundTaskHandler)handler;
 
 @end

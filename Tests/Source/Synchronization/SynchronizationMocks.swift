@@ -23,15 +23,29 @@ import Cryptobox
 @testable import zmessaging
 
 
-public class MockAppStateDelegate : NSObject, ZMAppStateDelegate, DeliveryConfirmationDelegate, ClientRegistrationDelegate, ZMRequestCancellation {
+@objc(ZMMockApplicationStatus)
+public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfirmationDelegate, ClientRegistrationDelegate, ZMRequestCancellation {
     
     public var confirmationDelegate : DeliveryConfirmationDelegate { return self }
     public var taskCancellationDelegate : ZMRequestCancellation { return self }
     public var clientRegistrationDelegate : ClientRegistrationDelegate { return self }
     
-    public var mockAppState = ZMAppState.unauthenticated
-    public var appState: ZMAppState {
-        return mockAppState
+    public var mockSynchronizationState = SynchronizationState.unauthenticated
+    public var synchronizationState: SynchronizationState {
+        return mockSynchronizationState
+    }
+    
+    public var mockOperationState = OperationState.foreground
+    public var operationState: OperationState {
+        return mockOperationState
+    }
+    
+    public var deliveryConfirmation: DeliveryConfirmationDelegate {
+        return self
+    }
+    
+    public var requestCancellation: ZMRequestCancellation {
+        return self
     }
     
     //MARK ZMRequestCancellation

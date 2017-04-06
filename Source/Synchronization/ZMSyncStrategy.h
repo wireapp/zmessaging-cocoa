@@ -23,7 +23,6 @@
 
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUpdateEventsBuffer.h"
-#import "ZMBackgroundFetch.h"
 #import <zmessaging/zmessaging-Swift.h>
 
 @class ZMTransportRequest;
@@ -38,7 +37,7 @@
 @class ClientUpdateStatus;
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
-@class ZMSyncStateManager;
+@class ZMApplicationStatusDirectory;
 
 @protocol ZMTransportData;
 @protocol AVSMediaManager;
@@ -55,7 +54,6 @@
                                        mediaManager:(id<AVSMediaManager>)mediaManager
                                 onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                   syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
-                              backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
                        localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
                            taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
                                  appGroupIdentifier:(NSString *)appGroupIdentifier
@@ -70,13 +68,8 @@
 - (void)tearDown;
 
 @property (nonatomic, readonly) NSManagedObjectContext *syncMOC;
-@property (nonatomic, readonly) ZMSyncStateManager *syncStateManager;
+@property (nonatomic, readonly) ZMApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly) CallingRequestStrategy *callingRequestStrategy;
-
-- (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-
-/// Calls completionHandler when the change has gone through all transcoders
-- (void)startBackgroundTaskWithCompletionHandler:(ZMBackgroundTaskHandler)handler;
 
 - (void)transportSessionAccessTokenDidSucceedWithToken:(NSString *)token ofType:(NSString *)type;
 

@@ -63,7 +63,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride = self.deploymentEnvironment;
     [[[self.deploymentEnvironment stub] andReturnValue:OCMOCK_VALUE(ZMDeploymentEnvironmentTypeInternal)] environmentType];
     
-    [[[self.mockAppStateDelegate stub] andReturnValue:@(ZMAppStateEventProcessing)] appState];
+    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
 
     [self recreateSUT];
     
@@ -87,8 +87,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 - (void)recreateSUT;
 {
-    [self.sut tearDown];
-    self.sut = (id) [[ZMCallFlowRequestStrategy alloc] initWithMediaManager:nil onDemandFlowManager:self.onDemandFlowManager managedObjectContext:self.syncMOC appStateDelegate:self.mockAppStateDelegate application:self.application];
+    self.sut = (id) [[ZMCallFlowRequestStrategy alloc] initWithMediaManager:nil onDemandFlowManager:self.onDemandFlowManager managedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus application:self.application];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 

@@ -33,7 +33,7 @@ extension ProxiedRequestType {
 }
 
 /// Perform requests to the Giphy search API
-@objc public final class ProxiedRequestStrategy : ZMAbstractRequestStrategy, RequestStrategy {
+@objc public final class ProxiedRequestStrategy : AbstractRequestStrategy {
     
     static fileprivate let BasePath = "/proxy"
     
@@ -43,17 +43,14 @@ extension ProxiedRequestType {
     /// Requests fail after this interval if the network is unreachable
     fileprivate static let RequestExpirationTime : TimeInterval = 20
     
-    /// Defines when requests for this Strategy are allowed to be sent
-    public override var configuration: ZMStrategyConfigurationOption { return .allowsRequestsDuringEventProcessing }
-
-    @available (*, unavailable, message: "use `init(managedObjectContext:appStateDelegate:requestsStatus:)` instead")
-    override init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate) {
+    @available (*, unavailable, message: "use `init(withManagedObjectContext:applicationStatus:requestsStatus:)` instead")
+    override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         fatalError()
     }
     
-    public init(managedObjectContext moc: NSManagedObjectContext, appStateDelegate: ZMAppStateDelegate, requestsStatus: ProxiedRequestsStatus) {
+    public init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus, requestsStatus: ProxiedRequestsStatus) {
         self.requestsStatus = requestsStatus
-        super.init(managedObjectContext: moc, appStateDelegate: appStateDelegate)
+        super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
     }
     
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {

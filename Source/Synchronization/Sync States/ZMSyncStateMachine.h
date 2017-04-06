@@ -21,7 +21,6 @@
 @import ZMTransport;
 
 #import "ZMStateMachineDelegate.h"
-#import "ZMBackgroundFetch.h"
 
 @class ZMAuthenticationStatus;
 @class ZMTransportRequest;
@@ -35,7 +34,7 @@
 @protocol HistorySynchronizationStatus;
 @protocol ZMApplication;
 
-@interface ZMSyncStateMachine : NSObject <ZMStateMachineDelegate, ZMBackgroundable>
+@interface ZMSyncStateMachine : NSObject <ZMStateMachineDelegate>
 
 @property (nonatomic, readonly) ZMUpdateEventsPolicy updateEventsPolicy;
 
@@ -43,7 +42,6 @@
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                      objectStrategyDirectory:(id<ZMObjectStrategyDirectory>)objectStrategyDirectory
                            syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
-                       backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
                                  application:(id<ZMApplication>)application
                                slowSynStatus:(SyncStatus *)slowSynStatus;
 
@@ -54,9 +52,6 @@
 
 ///called at the beginning of event processing loop if something in data model could change and context was saved
 - (void)dataDidChange;
-
-- (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-- (void)startBackgroundTaskWithCompletionHandler:(ZMBackgroundTaskHandler)handler;
 
 - (void)tearDown;
 

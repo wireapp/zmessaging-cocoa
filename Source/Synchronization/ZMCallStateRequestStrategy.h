@@ -37,10 +37,10 @@ typedef NS_ENUM(uint8_t, ZMCallEventSource) {
 @interface ZMCallStateRequestStrategy : ZMAbstractRequestStrategy <ZMEventConsumer, ZMContextChangeTrackerSource>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate NS_UNAVAILABLE;
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus NS_UNAVAILABLE;
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                      callFlowRequestStrategy:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy;
 
 - (NSNumber *)lastSequenceForConversation:(ZMConversation *)conversation;
@@ -53,7 +53,7 @@ typedef NS_ENUM(uint8_t, ZMCallEventSource) {
 @interface ZMCallStateRequestStrategy (Testing)
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
-                            appStateDelegate:(id<ZMAppStateDelegate>)appStateDelegate
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                      callFlowRequestStrategy:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy
                               gsmCallHandler:(ZMGSMCallHandler *)gsmCallHandler;
 
