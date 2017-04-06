@@ -71,7 +71,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatTheIncomingCallHandlerPostsTheRightNotification_IsVideo(){
         checkThatItPostsNotification(expectedCallState: .incoming(video: true, shouldRing: false)) { (conversationIdRef, userIdRef, context) in
-            WireSyncEngine.IncomingCallHandler(conversationId: conversationIdRef,
+            WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef,
                                 userId: userIdRef,
                                 isVideoCall: 1,
                                 shouldRing: 0,
@@ -81,7 +81,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatTheIncomingCallHandlerPostsTheRightNotification(){
         checkThatItPostsNotification(expectedCallState: .incoming(video: false, shouldRing: false)) { (conversationIdRef, userIdRef, context) in
-            WireSyncEngine.IncomingCallHandler(conversationId: conversationIdRef,
+            WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef,
                                 userId: userIdRef,
                                 isVideoCall: 0,
                                 shouldRing: 0,
@@ -91,7 +91,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatTheIncomingCallHandlerPostsTheRightNotification_IsVideo_ShouldRing(){
         checkThatItPostsNotification(expectedCallState: .incoming(video: true, shouldRing: true)) { (conversationIdRef, userIdRef, context) in
-            WireSyncEngine.IncomingCallHandler(conversationId: conversationIdRef,
+            WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef,
                                 userId: userIdRef,
                                 isVideoCall: 1,
                                 shouldRing: 1,
@@ -101,7 +101,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatTheIncomingCallHandlerPostsTheRightNotification_ShouldRing(){
         checkThatItPostsNotification(expectedCallState: .incoming(video: false, shouldRing: true)) { (conversationIdRef, userIdRef, context) in
-            WireSyncEngine.IncomingCallHandler(conversationId: conversationIdRef,
+            WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef,
                                 userId: userIdRef,
                                 isVideoCall: 0,
                                 shouldRing: 1,
@@ -131,7 +131,7 @@ class WireCallCenterV3Tests: MessagingTest {
         }
         
         // when
-        WireSyncEngine.MissedCallHandler(conversationId: conversationIdRef, messageTime: UInt32(timestamp.timeIntervalSince1970), userId: userIdRef, isVideoCall: 0, contextRef: context)
+        WireSyncEngine.missedCallHandler(conversationId: conversationIdRef, messageTime: UInt32(timestamp.timeIntervalSince1970), userId: userIdRef, isVideoCall: 0, contextRef: context)
         
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
@@ -139,13 +139,13 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatTheAnsweredCallHandlerPostsTheRightNotification(){
         checkThatItPostsNotification(expectedCallState: .answered, userIsNil: true) { (conversationIdRef, userIdRef, context) in
-            WireSyncEngine.AnsweredCallHandler(conversationId: conversationIdRef, contextRef: context)
+            WireSyncEngine.answeredCallHandler(conversationId: conversationIdRef, contextRef: context)
         }
     }
     
     func testThatTheEstablishedHandlerPostsTheRightNotification(){
         checkThatItPostsNotification(expectedCallState: .established) { (conversationIdRef, userIdRef, context) in
-            WireSyncEngine.EstablishedCallHandler(conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
+            WireSyncEngine.establishedCallHandler(conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
         }
     }
     
@@ -155,7 +155,7 @@ class WireCallCenterV3Tests: MessagingTest {
 
         // when
         checkThatItPostsNotification(expectedCallState: .established) { (conversationIdRef, userIdRef, context) in
-            WireSyncEngine.EstablishedCallHandler(conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
+            WireSyncEngine.establishedCallHandler(conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
         }
         
         // then
@@ -164,7 +164,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatTheClosedCallHandlerPostsTheRightNotification(){
         checkThatItPostsNotification(expectedCallState: .terminating(reason: .canceled)) { (conversationIdRef, userIdRef, context) in
-            WireSyncEngine.ClosedCallHandler(reason: WCALL_REASON_CANCELED, conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
+            WireSyncEngine.closedCallHandler(reason: WCALL_REASON_CANCELED, conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
         }
     }
     
@@ -176,7 +176,7 @@ class WireCallCenterV3Tests: MessagingTest {
         let userIdRef = userId.transportString().cString(using: .utf8)
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
         
-        WireSyncEngine.IncomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
         
         // expect
         expectation(forNotification: WireCallCenterCallStateNotification.notificationName.rawValue, object: nil) { wrappedNote in
@@ -203,7 +203,7 @@ class WireCallCenterV3Tests: MessagingTest {
         let userIdRef = userId.transportString().cString(using: .utf8)
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
         
-        WireSyncEngine.IncomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
         
         // expect
         expectation(forNotification: WireCallCenterCallStateNotification.notificationName.rawValue, object: nil) { wrappedNote in
@@ -378,7 +378,7 @@ extension WireCallCenterV3Tests {
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
 
         // when
-        WireSyncEngine.IncomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
         
         // then
         XCTAssertEqual(sut.callParticipants(conversationId: conversationId), [userId])
@@ -386,7 +386,7 @@ extension WireCallCenterV3Tests {
     
     func callBackMemberHandler(conversationIdRef: UnsafePointer<Int8>?, userId: UUID, audioEstablished: Bool, context: UnsafeMutableRawPointer?) {
         sut.mockMembers = [CallMember(userId: userId, audioEstablished: audioEstablished)]
-        WireSyncEngine.GroupMemberHandler(conversationIdRef: conversationIdRef, contextRef: context)
+        WireSyncEngine.groupMemberHandler(conversationIdRef: conversationIdRef, contextRef: context)
     }
     
     func testThatItUpdatesTheParticipantsWhenGroupHandlerIsCalled(){
@@ -412,7 +412,7 @@ extension WireCallCenterV3Tests {
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
 
         // when
-        WireSyncEngine.IncomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
 
         // then
         let connectingState = sut.connectionState(forUserWith: userId, in: conversationId)

@@ -209,7 +209,7 @@ public extension UUID {
 /// Handles incoming calls
 /// In order to be passed to C, this function needs to be global
 
-internal func IncomingCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, isVideoCall: Int32, shouldRing: Int32, contextRef: UnsafeMutableRawPointer?)
+internal func incomingCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, isVideoCall: Int32, shouldRing: Int32, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
@@ -218,7 +218,7 @@ internal func IncomingCallHandler(conversationId: UnsafePointer<Int8>?, userId: 
 
 /// Handles missed calls
 /// In order to be passed to C, this function needs to be global
-internal func MissedCallHandler(conversationId: UnsafePointer<Int8>?, messageTime: UInt32, userId: UnsafePointer<Int8>?, isVideoCall: Int32, contextRef: UnsafeMutableRawPointer?)
+internal func missedCallHandler(conversationId: UnsafePointer<Int8>?, messageTime: UInt32, userId: UnsafePointer<Int8>?, isVideoCall: Int32, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
@@ -230,7 +230,7 @@ internal func MissedCallHandler(conversationId: UnsafePointer<Int8>?, messageTim
 
 /// Handles answered calls
 /// In order to be passed to C, this function needs to be global
-internal func AnsweredCallHandler(conversationId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?){
+internal func answeredCallHandler(conversationId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?){
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId) else { return }
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     callCenter.handleCallState(callState: .answered, conversationId: convID, userId: nil)
@@ -238,7 +238,7 @@ internal func AnsweredCallHandler(conversationId: UnsafePointer<Int8>?, contextR
 
 /// Handles established calls
 /// In order to be passed to C, this function needs to be global
-internal func EstablishedCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?,contextRef: UnsafeMutableRawPointer?)
+internal func establishedCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?,contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
     
@@ -251,7 +251,7 @@ internal func EstablishedCallHandler(conversationId: UnsafePointer<Int8>?, userI
 
 /// Handles ended calls
 /// In order to be passed to C, this function needs to be global
-internal func ClosedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
+internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId) else { return }
     let userID = UUID(cString: userId)
@@ -262,13 +262,13 @@ internal func ClosedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8
 }
 
 /// Handles call metrics
-internal func CallMetricsHandler(conversationId: UnsafePointer<Int8>?, metrics: UnsafePointer<Int8>?, contextRef:UnsafeMutableRawPointer?){
-
+internal func callMetricsHandler(conversationId: UnsafePointer<Int8>?, metrics: UnsafePointer<Int8>?, contextRef:UnsafeMutableRawPointer?){
+    // TODO Sabine: parse metrics (JSON) & forward metrics to analytics
 }
 
 /// Handles sending call messages
 /// In order to be passed to C, this function needs to be global
-internal func SendCallMessageHandler(token: UnsafeMutableRawPointer?, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, clientId: UnsafePointer<Int8>?, data: UnsafePointer<UInt8>?, dataLength: Int, contextRef: UnsafeMutableRawPointer?) -> Int32
+internal func sendCallMessageHandler(token: UnsafeMutableRawPointer?, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, clientId: UnsafePointer<Int8>?, data: UnsafePointer<UInt8>?, dataLength: Int, contextRef: UnsafeMutableRawPointer?) -> Int32
 {
     guard let token = token, let contextRef = contextRef, let conversationId = UUID(cString: conversationId), let userId = UUID(cString: userId), let clientId = String(cString: clientId), let data = data else {
         return EINVAL // invalid argument
@@ -285,7 +285,7 @@ internal func SendCallMessageHandler(token: UnsafeMutableRawPointer?, conversati
 
 /// Sets the calling protocol when AVS is ready
 /// In order to be passed to C, this function needs to be global
-internal func ReadyHandler(version: Int32, contextRef: UnsafeMutableRawPointer?)
+internal func readyHandler(version: Int32, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef else { return }
     
@@ -299,7 +299,7 @@ internal func ReadyHandler(version: Int32, contextRef: UnsafeMutableRawPointer?)
 
 /// Handles other users joining / leaving / connecting
 /// In order to be passed to C, this function needs to be global
-internal func GroupMemberHandler(conversationIdRef: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
+internal func groupMemberHandler(conversationIdRef: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationIdRef) else { return }
     

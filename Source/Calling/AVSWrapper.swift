@@ -44,14 +44,14 @@ public class AVSWrapper : AVSWrapperType {
         let resultValue = wcall_init(
             userId.transportString(),
             clientId,
-            ReadyHandler,
-            SendCallMessageHandler,
-            IncomingCallHandler,
-            MissedCallHandler,
-            AnsweredCallHandler,
-            EstablishedCallHandler,
-            ClosedCallHandler,
-            CallMetricsHandler,
+            readyHandler,
+            sendCallMessageHandler,
+            incomingCallHandler,
+            missedCallHandler,
+            answeredCallHandler,
+            establishedCallHandler,
+            closedCallHandler,
+            callMetricsHandler,
             observer)
         
         if resultValue != 0 {
@@ -66,7 +66,7 @@ public class AVSWrapper : AVSWrapperType {
             }
         })
         
-        wcall_set_group_changed_handler(GroupMemberHandler, observer)
+        wcall_set_group_changed_handler(groupMemberHandler, observer)
 
         wcall_set_audio_cbr_enabled_handler({ _ in
             DispatchQueue.main.async {

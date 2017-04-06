@@ -110,7 +110,7 @@ class CallingV3Tests : IntegrationTestBase {
         (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .incoming(video: isVideoCall, shouldRing: shouldRing)
 
         let userIdRef = user.remoteIdentifier!.transportString().cString(using: .utf8)
-        WireSyncEngine.IncomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: isVideoCall ? 1 : 0, shouldRing: shouldRing ? 1 : 0, contextRef: wireCallCenterRef)
+        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: isVideoCall ? 1 : 0, shouldRing: shouldRing ? 1 : 0, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
@@ -120,7 +120,7 @@ class CallingV3Tests : IntegrationTestBase {
         if useGroupConversation {
             participantsChanged(members: [(user: user, establishedFlow: false)])
         } else {
-            WireSyncEngine.AnsweredCallHandler(conversationId: conversationIdRef, contextRef: wireCallCenterRef)
+            WireSyncEngine.answeredCallHandler(conversationId: conversationIdRef, contextRef: wireCallCenterRef)
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         }
     }
@@ -137,7 +137,7 @@ class CallingV3Tests : IntegrationTestBase {
         (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .established
 
         let userIdRef = user.remoteIdentifier!.transportString().cString(using: .utf8)
-        WireSyncEngine.EstablishedCallHandler(conversationId: conversationIdRef, userId: userIdRef, contextRef: wireCallCenterRef)
+        WireSyncEngine.establishedCallHandler(conversationId: conversationIdRef, userId: userIdRef, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
@@ -145,7 +145,7 @@ class CallingV3Tests : IntegrationTestBase {
         let mappedMembers = members.map{CallMember(userId: $0.user.remoteIdentifier!, audioEstablished: $0.establishedFlow)}
         (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockMembers = mappedMembers
 
-        WireSyncEngine.GroupMemberHandler(conversationIdRef: conversationIdRef, contextRef: wireCallCenterRef)
+        WireSyncEngine.groupMemberHandler(conversationIdRef: conversationIdRef, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
 
@@ -153,7 +153,7 @@ class CallingV3Tests : IntegrationTestBase {
         (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .none
 
         let userIdRef = user.remoteIdentifier!.transportString().cString(using: .utf8)
-        WireSyncEngine.ClosedCallHandler(reason: reason.rawValue, conversationId: conversationIdRef, userId: userIdRef, contextRef: wireCallCenterRef)
+        WireSyncEngine.closedCallHandler(reason: reason.rawValue, conversationId: conversationIdRef, userId: userIdRef, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
@@ -161,7 +161,7 @@ class CallingV3Tests : IntegrationTestBase {
         otherStartCall(user: user)
 
         let userIdRef = user.remoteIdentifier!.transportString().cString(using: .utf8)
-        WireSyncEngine.MissedCallHandler(conversationId: conversationIdRef, messageTime: UInt32(Date().timeIntervalSince1970), userId: userIdRef, isVideoCall: 0, contextRef: wireCallCenterRef)
+        WireSyncEngine.missedCallHandler(conversationId: conversationIdRef, messageTime: UInt32(Date().timeIntervalSince1970), userId: userIdRef, isVideoCall: 0, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
