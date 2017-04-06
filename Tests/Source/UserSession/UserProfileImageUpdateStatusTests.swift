@@ -255,6 +255,8 @@ extension UserProfileImageUpdateStatusTests {
 
             // THEN
             self.changeDelegate.check(lastStates: [.update(previewAssetId: previewAssetId, completeAssetId: completeAssetId), .ready])
+            XCTAssertEqual(self.sut.imageState(for: .preview), .ready)
+            XCTAssertEqual(self.sut.imageState(for: .complete), .ready)
         }
     }
     
@@ -300,10 +302,10 @@ extension UserProfileImageUpdateStatusTests {
     func testThatProfileUpdateStateDoesntTransitionToInvalidState() {
         syncMOC.performGroupedBlockAndWait {
             // WHEN
-            self.sut.setState(state: sampleUpdateState)
-
+            self.sut.setState(state: .ready)
+            
             // THEN
-            XCTAssertEqual(self.sut.state, .ready)
+            XCTAssertEqual(self.changeDelegate.states, [])
         }
     }
     
@@ -582,11 +584,14 @@ extension UserProfileImageUpdateStatusTests {
             XCTAssertEqual(selfUser.imageMediumData, completeData)
             XCTAssertEqual(selfUser.previewProfileAssetIdentifier, previewId)
             XCTAssertEqual(selfUser.completeProfileAssetIdentifier, completeId)
+            XCTAssertEqual(self.sut.imageState(for: .preview), .ready)
+            XCTAssertEqual(self.sut.imageState(for: .complete), .ready)
+            XCTAssertEqual(self.sut.state, .ready)
         }
     }
 }
 
-// MARK: - Reuploading alreday preprocessed images
+// MARK: - Reuploading already preprocessed images
 extension UserProfileImageUpdateStatusTests {
 
     func testThatItAdvancesStateWhenReuploadingPreprocessedImageData() {

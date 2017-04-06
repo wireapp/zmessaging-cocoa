@@ -156,7 +156,7 @@ extension UserProfileImageUpdateStatus {
         changeDelegate?.didTransition(from: oldState, to: currentState)
         switch (oldState, currentState) {
         case (_, .ready):
-            resizedImages.removeAll()
+            resetImageState()
         case let (_, .preprocess(image: data)):
             startPreprocessing(imageData: data)
         case let (_, .update(previewAssetId: previewAssetId, completeAssetId: completeAssetId)):
@@ -171,7 +171,7 @@ extension UserProfileImageUpdateStatus {
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         selfUser.imageSmallProfileData = resizedImages[.preview]
         selfUser.imageMediumData = resizedImages[.complete]
-        resizedImages.removeAll()
+        resetImageState()
         selfUser.updateAndSyncProfileAssetIdentifiers(previewIdentifier: previewAssetId, completeIdentifier: completeAssetId)
         managedObjectContext.saveOrRollback()
         setState(state: .ready)
