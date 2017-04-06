@@ -38,7 +38,7 @@ class MockAVSWrapper : AVSWrapperType {
         // do nothing
     }
     
-    func getCallState(conversationId: UUID) -> CallState {
+    func callState(conversationId: UUID) -> CallState {
         return mockCallState
     }
     
@@ -70,6 +70,22 @@ class MockAVSWrapper : AVSWrapperType {
     
     func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
         //
+    }
+    
+    func isVideoCall(conversationId: UUID) -> Bool {
+        return mockIsVideoCall
+    }
+    
+    func setVideoSendActive(userId: UUID, active: Bool) {
+        // do nothing
+    }
+    
+    func enableAudioCbr(shouldUseCbr: Bool) {
+        // do nothing
+    }
+    
+    func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
+        // do nothing
     }
 }
 

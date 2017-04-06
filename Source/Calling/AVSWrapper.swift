@@ -21,14 +21,19 @@ import avs
 
 public protocol AVSWrapperType {
     init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?)
-    func getCallState(conversationId: UUID) -> CallState
+    func callState(conversationId: UUID) -> CallState
     func startCall(conversationId: UUID, video: Bool) -> Bool
     func answerCall(conversationId: UUID) -> Bool
     func endCall(conversationId: UUID)
     func rejectCall(conversationId: UUID)
     func close()
     func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String)
-    func toggleVideo(conversationID: UUID, active: Bool) 
+    func toggleVideo(conversationID: UUID, active: Bool)
+    
+    func isVideoCall(conversationId: UUID) -> Bool
+    func setVideoSendActive(userId: UUID, active: Bool)
+    func enableAudioCbr(shouldUseCbr: Bool)
+    func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
 }
 
 /// Wraps AVS calls for dependency injection and better testing
@@ -39,7 +44,7 @@ public class AVSWrapper : AVSWrapperType {
             userId.transportString(),
             clientId,
             ReadyHandler,
-            SendCallHandler,
+            SendCallMessageHandler,
             IncomingCallHandler,
             MissedCallHandler,
             AnsweredCallHandler,
@@ -67,7 +72,7 @@ public class AVSWrapper : AVSWrapperType {
         })
     }
     
-    public func getCallState(conversationId: UUID) -> CallState {
+    public func callState(conversationId: UUID) -> CallState {
         return CallState(wcallState:wcall_get_state(conversationId.transportString()))
     }
     
@@ -91,6 +96,22 @@ public class AVSWrapper : AVSWrapperType {
     
     public func close(){
         wcall_close()
+    }
+    
+    public func isVideoCall(conversationId: UUID) -> Bool {
+        return (wcall_is_video_call(conversationId.transportString()) == 1)
+    }
+    
+    public func setVideoSendActive(userId: UUID, active: Bool) {
+        wcall_set_video_send_active(userId.transportString(), active ? 1 : 0)
+    }
+    
+    public func enableAudioCbr(shouldUseCbr: Bool) {
+        wcall_enable_audio_cbr(shouldUseCbr ? 1 : 0)
+    }
+
+    public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
+        wcall_resp(Int32(httpStatus), "", context)
     }
     
     public func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {

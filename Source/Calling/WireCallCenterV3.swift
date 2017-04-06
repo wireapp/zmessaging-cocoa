@@ -215,10 +215,11 @@ internal func AnsweredCallHandler(conversationId: UnsafePointer<Int8>?, contextR
 internal func EstablishedCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?,contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
-    if wcall_is_video_call(convID.transportString()) == 1 {
-        wcall_set_video_send_active(userID.transportString(), 1)
-    }
+    
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+    if callCenter.avsWrapper.isVideoCall(conversationId: convID) {
+        callCenter.avsWrapper.setVideoSendActive(userId: userID, active: true)
+    }
     callCenter.handleCallState(callState: .established, conversationId: convID, userId: userID)
 }
 
@@ -235,7 +236,7 @@ internal func ClosedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8
 
 /// Handles sending call messages
 /// In order to be passed to C, this function needs to be global
-internal func SendCallHandler(token: UnsafeMutableRawPointer?, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, clientId: UnsafePointer<Int8>?, data: UnsafePointer<UInt8>?, dataLength: Int, contextRef: UnsafeMutableRawPointer?) -> Int32
+internal func SendCallMessageHandler(token: UnsafeMutableRawPointer?, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, clientId: UnsafePointer<Int8>?, data: UnsafePointer<UInt8>?, dataLength: Int, contextRef: UnsafeMutableRawPointer?) -> Int32
 {
     guard let token = token, let contextRef = contextRef, let conversationId = UUID(cString: conversationId), let userId = UUID(cString: userId), let clientId = String(cString: clientId), let data = data else {
         return EINVAL // invalid argument
@@ -272,7 +273,7 @@ public protocol WireCallCenterTransport: class {
     func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((_ status: Int) -> Void))
 }
 
-private typealias WireCallMessageToken = UnsafeMutableRawPointer
+public typealias WireCallMessageToken = UnsafeMutableRawPointer
 
 
 
@@ -301,11 +302,11 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     public fileprivate(set) var callingProtocol : CallingProtocol = .version2
     
     var avsWrapper : AVSWrapperType!
-    weak var uiMOC : NSManagedObjectContext!
+    let uiMOC : NSManagedObjectContext
     
     public var useAudioConstantBitRate: Bool = false {
         didSet {
-            wcall_enable_audio_cbr(useAudioConstantBitRate ? 1 : 0)
+            avsWrapper.enableAudioCbr(shouldUseCbr: useAudioConstantBitRate)
         }
     }
     
@@ -334,20 +335,13 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
         let transformedData = Data(buffer: bytes)
         
         transport?.send(data: transformedData, conversationId: conversationId, userId: userId, completionHandler: { status in
-            wcall_resp(Int32(status), "", token)
+            self.avsWrapper.handleResponse(httpStatus: status, reason: "", context: token)
         })
-        
-        let currentState = callState(conversationId: conversationId)
-        if let uiMOC = uiMOC {
-            currentState.postNotificationOnMain(conversationID: conversationId, userID: userId, uiMOC: uiMOC)
-        }
-
         return 0
     }
     
     fileprivate func handleCallState(callState: CallState, conversationId: UUID, userId: UUID?) {
         callState.logState()
-        guard let uiMOC = uiMOC else { return }
 
         switch callState {
         case .established:
@@ -363,7 +357,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     fileprivate func missed(conversationId: UUID, userId: UUID, timestamp: Date, isVideoCall: Bool) {
         zmLog.debug("missed call")
         
-        uiMOC?.performGroupedBlock {
+        uiMOC.performGroupedBlock {
             WireCallCenterMissedCallNotification(conversationId: conversationId, userId:userId, timestamp: timestamp, video: isVideoCall).post()
         }
     }
@@ -440,7 +434,7 @@ private typealias WireCallMessageToken = UnsafeMutableRawPointer
     /// Gets the current callState from AVS
     /// If the group call was ignored or left, it return .incoming where shouldRing is set to false
     public func callState(conversationId: UUID) -> CallState {
-        return avsWrapper.getCallState(conversationId: conversationId)
+        return avsWrapper.callState(conversationId: conversationId)
     }
 
 }
