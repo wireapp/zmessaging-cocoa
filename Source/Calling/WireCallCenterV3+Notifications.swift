@@ -107,15 +107,8 @@ public protocol WireCallCenterCBRCallObserver : class {
     func callCenterCallIsCBR()
 }
 
-struct WireCallCenterCBRCallNotification {
+struct WireCallCenterCBRCallNotification : SelfPostingNotification {
     static let notificationName = Notification.Name("WireCallCenterCBRCallNotification")
-    static let userInfoKey = notificationName.rawValue
-    
-    func post() {
-        NotificationCenter.default.post(name: WireCallCenterCBRCallNotification.notificationName,
-                                        object: nil,
-                                        userInfo: [WireCallCenterCBRCallNotification.userInfoKey : self])
-    }
 }
 
 
