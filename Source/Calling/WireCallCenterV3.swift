@@ -334,7 +334,9 @@ public typealias WireCallMessageToken = UnsafeMutableRawPointer
         let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
         let transformedData = Data(buffer: bytes)
         
-        transport?.send(data: transformedData, conversationId: conversationId, userId: userId, completionHandler: { status in
+        transport?.send(data: transformedData, conversationId: conversationId, userId: userId, completionHandler: { [weak self] status in
+            guard let `self` = self else { return }
+            
             self.avsWrapper.handleResponse(httpStatus: status, reason: "", context: token)
         })
         return 0
