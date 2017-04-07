@@ -19,7 +19,7 @@
 
 #import <Foundation/Foundation.h>
 #include "ZMUserSessionTestsBase.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @implementation ThirdPartyServices
 

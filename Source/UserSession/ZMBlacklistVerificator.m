@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMCSystem;
+@import WireSystem;
 
 #import "ZMBlacklistVerificator+Testing.h"
 #import "ZMBlacklistDownloader.h"

@@ -16,9 +16,9 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@testable import zmessaging
-import ZMTesting
-import ZMCMockTransport
+@testable import WireSyncEngine
+import WireTesting
+import WireMockTransport
 
 class FakeBackgroundActivityFactory : BackgroundActivityFactory {
     var nameToHandler : [String : ((Void) -> Void)] = [:]

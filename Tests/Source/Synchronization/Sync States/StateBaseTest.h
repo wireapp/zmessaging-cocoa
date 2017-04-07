@@ -17,7 +17,7 @@
 // 
 
 
-@import zmessaging;
+@import WireSyncEngine;
 #import "ZMSyncState.h"
 #import "MessagingTest.h"
 #import "ZMUserSession.h"
@@ -25,7 +25,7 @@
 #import "ZMStateMachineDelegate.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMClientRegistrationStatus.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @protocol ZMRequestGenerator;
 

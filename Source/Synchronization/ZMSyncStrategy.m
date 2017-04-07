@@ -18,10 +18,10 @@
 
 
 @import UIKit;
-@import zimages;
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireImages;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 @import WireMessageStrategy;
 @import WireRequestStrategy;
 
@@ -43,10 +43,11 @@
 #import "ZMCallStateRequestStrategy.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
+#import "WireSyncEngineLogs.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMOnDemandFlowManager.h"
 #import "ZMHotFix.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMSyncStrategy ()
 {
@@ -217,6 +218,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.callStateRequestStrategy,
                                    self.callFlowRequestStrategy,
                                    [[GenericMessageNotificationRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.applicationStatusDirectory.clientRegistrationStatus]
+                                   [[UserImageAssetUpdateStrategy alloc] initWithManagedObjectContext:self.syncMOC imageUpdateStatus:profileImageStatus authenticationStatus:authenticationStatus],
                                    ];
         
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
@@ -367,7 +369,13 @@ ZM_EMPTY_ASSERTING_INIT()
             }
             return nil;
         }]];
+
         _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:self.conversationStatusSync];
+        UserProfileImageUpdateStatus *strongImageStatus = self.profileImageStatus;
+        if (nil != strongImageStatus) {
+            _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:strongImageStatus];
+        }
+
     }
     
     return _allChangeTrackers;

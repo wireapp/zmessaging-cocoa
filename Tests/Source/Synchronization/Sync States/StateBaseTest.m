@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMTransport;
+@import WireTransport;
 
 #import "StateBaseTest.h"
 #import "ZMObjectStrategyDirectory.h"
@@ -34,7 +34,7 @@
 #import "ZMEventProcessingState.h"
 #import "ZMUnauthenticatedState.h"
 #import "ZMCookie.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @implementation StateBaseTest
 

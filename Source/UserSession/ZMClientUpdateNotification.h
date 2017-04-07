@@ -17,7 +17,7 @@
 // 
 
 
-#import <ZMCDataModel/ZMNotifications.h>
+#import <WireDataModel/ZMNotifications.h>
 
 typedef NS_ENUM (NSInteger, ZMClientUpdateNotificationType) {
     ZMClientUpdateNotificationTypeFetchCompleted,

@@ -23,7 +23,7 @@
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMNotifications+UserSession.h"
 #import "ZMClientRegistrationStatus+Internal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMCookie.h"
 
 @import UIKit;

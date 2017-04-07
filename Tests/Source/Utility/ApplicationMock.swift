@@ -17,7 +17,7 @@
 //
 
 import Foundation
-import zmessaging
+import WireSyncEngine
 
 /// A mock of Application that records the calls
 @objc public final class ApplicationMock : NSObject {

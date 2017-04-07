@@ -19,14 +19,15 @@
 
 @import UIKit;
 @import CoreData;
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireUtilities;
+@import WireDataModel;
 @import CallKit;
 @import CoreTelephony;
 
 #import "ZMUserSession+Background.h"
 #import "ZMUserSession+Internal.h"
+#import "ZMUserSession+OperationLoop.h"
 #import "ZMSyncStrategy.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
@@ -39,14 +40,14 @@
 #import "ZMSyncStateMachine.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "NSURL+LaunchOptions.h"
-#import "ZMessagingLogs.h"
+#import "WireSyncEngineLogs.h"
 #import "ZMAVSBridge.h"
 #import "ZMOnDemandFlowManager.h"
 #import "ZMCookie.h"
 #import "ZMCallFlowRequestStrategy.h"
 #import "ZMCallKitDelegate.h"
 #import "ZMOperationLoop+Private.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 #import "ZMEnvironmentsSetup.h"
 #import "ZMClientRegistrationStatus.h"
@@ -73,7 +74,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
-
 
 @property (nonatomic) BOOL isVersionBlacklisted;
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
@@ -241,6 +241,10 @@ ZM_EMPTY_ASSERTING_INIT()
     
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
     session.requestLoopDetectionCallback = ^(NSString *path) {
+        if ([path hasSuffix:@"/typing"]) {
+            return;
+        }
+
         //TAG analytics
         [tracker tagWithPath:path];
         ZMLogWarn(@"Request loop happening at path: %@", path);
@@ -368,7 +372,7 @@ ZM_EMPTY_ASSERTING_INIT()
         [self registerForBackgroundNotifications];
         [self registerForRequestToOpenConversationNotification];
         
-        [self.syncManagedObjectContext performBlockAndWait:^{
+        [self.syncManagedObjectContext performGroupedBlockAndWait:^{
             [self enablePushNotifications];
         }];
         [self enableBackgroundFetch];
@@ -1047,6 +1051,15 @@ static CallingProtocolStrategy ZMUserSessionCallingProtocolStrategy = CallingPro
 - (ProxiedRequestsStatus *)proxiedRequestStatus;
 {
     return self.operationLoop.syncStrategy.applicationStatusDirectory.proxiedRequestStatus;
+}
+
+@end
+
+@implementation ZMUserSession (ProfilePictureUpdate)
+
+- (id<UserProfileImageUpdateProtocol>)profileUpdate
+{
+    return self.profileImageUpdateStatus;
 }
 
 @end

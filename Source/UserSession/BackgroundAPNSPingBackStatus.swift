@@ -18,7 +18,7 @@
 
 
 import Foundation
-import ZMCDataModel
+import WireDataModel
 
 
 private let lastUpdateEventIDKey = "LastUpdateEventID"
@@ -57,7 +57,7 @@ extension ZMAuthenticationStatus: AuthenticationStatusProvider {}
 
 extension EventsWithIdentifier {
     override public var debugDescription: String {
-        return "<EventsWithIdentifier>: identifier: \(identifier), events: \(events)"
+        return "<EventsWithIdentifier>: identifier: \(identifier), events: \(String(describing: events))"
     }
 }
 

@@ -19,12 +19,12 @@
 
 
 @import Foundation;
-@import ZMCSystem;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireDataModel;
 
-#import <zmessaging/ZMNetworkState.h>
-#import <ZMTransport/ZMTransportRequest.h>
-#import <zmessaging/CallingProtocolStrategy.h>
+#import <WireSyncEngine/ZMNetworkState.h>
+#import <WireTransport/ZMTransportRequest.h>
+#import <WireSyncEngine/CallingProtocolStrategy.h>
 
 @class ZMTransportSession;
 @class ZMSearchDirectory;
@@ -41,6 +41,7 @@
 @protocol ZMNetworkAvailabilityObserver;
 @protocol ZMRequestsToOpenViewsDelegate;
 @protocol ZMThirdPartyServicesDelegate;
+@protocol UserProfileImageUpdateProtocol;
 @class TopConversationsDirectory;
 
 @protocol ZMAVSLogObserver <NSObject>
@@ -57,7 +58,7 @@ extern NSString * const ZMPhoneVerificationCodeKey;
 extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 extern NSString * const ZMTransportRequestLoopNotificationName;
 
-/// The main entry point for the zmessaging API.
+/// The main entry point for the WireSyncEngine API.
 ///
 /// The client app should create this object upon launch and keep a reference to it
 @interface ZMUserSession : NSObject <ZMManagedObjectContextProvider>
@@ -213,5 +214,11 @@ typedef NS_ENUM (NSInteger, ProxiedRequestType){
 @property (nonatomic, readonly) id<UserProfile> userProfile;
 
 - (UserClient *)selfUserClient;
+@end
+
+@interface ZMUserSession (ProfilePictureUpdate)
+
+@property (nonatomic, readonly) id<UserProfileImageUpdateProtocol> profileUpdate;
+
 @end
 

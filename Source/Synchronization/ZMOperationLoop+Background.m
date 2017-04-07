@@ -17,15 +17,15 @@
 // 
 
 
-@import ZMTransport;
-@import Cryptobox;
+@import WireTransport;
+@import WireCryptobox;
 
 #import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+EventProcessing.h"
 
 #import "ZMSyncStrategy+Internal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *ZMLogTag ZM_UNUSED = @"Network";
 

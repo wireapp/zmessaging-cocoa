@@ -17,17 +17,17 @@
 // 
 
 
-@import ZMTransport;
-@import ZMUtilities;
-@import ZMCDataModel;
-@import zmessaging;
+@import WireTransport;
+@import WireUtilities;
+@import WireDataModel;
+@import WireSyncEngine;
 @import avs;
 
 #import "ObjectTranscoderTests.h"
 #import "ZMOperationLoop.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMOnDemandFlowManager.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 static NSString * const FlowEventName1 = @"conversation.message-add";
 static NSString * const FlowEventName2 = @"conversation.member-join";
@@ -356,12 +356,12 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         conversation.remoteIdentifier = conversationID;
         [self.syncMOC saveOrRollback];
     }];
-    [self.uiMOC.zm_callState mergeChangesFromState:self.syncMOC.zm_callState];
+    NOT_USED([self.uiMOC.zm_callState mergeChangesFromState:self.syncMOC.zm_callState]);
     
     // when
     [self.sut errorHandler:-34 conversationId:conversationID.transportString context:(const void*)context];
     WaitForAllGroupsToBeEmpty(0.5);
-    [self.syncMOC.zm_callState mergeChangesFromState:self.uiMOC.zm_callState];
+    NOT_USED([self.syncMOC.zm_callState mergeChangesFromState:self.uiMOC.zm_callState]);
 
     // then
     ZMConversation *uiConv = (id)[self.uiMOC objectWithID:conversation.objectID];
@@ -571,6 +571,36 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     XCTAssertTrue(request.shouldCompress);
 }
 
+- (void)testThatItAllowsRequestForCallsConfigWhenPushChannelIsClosed
+{
+    // given
+    [[[self.internalFlowManager stub] andReturnValue:@YES] isReady];
+    [self simulatePushChannelClose];
+    [self.sut requestWithPath:@"/calls/config" method:@"GET" mediaType:nil content:nil context:nil];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // when
+    ZMTransportRequest *request = [self.sut nextRequest];
+    
+    // then
+    XCTAssertEqual(request.path, @"/calls/config");
+}
+
+- (void)testThatItRejectsRequestWhenPushChannelIsClosed
+{
+    // given
+    [[[self.internalFlowManager stub] andReturnValue:@YES] isReady];
+    [self simulatePushChannelClose];
+    [self.sut requestWithPath:@"/calls/foo" method:@"GET" mediaType:nil content:nil context:nil];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // when
+    ZMTransportRequest *request = [self.sut nextRequest];
+    
+    // then
+    XCTAssertNil(request);
+}
+
 @end
 
 
@@ -708,7 +738,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         XCTAssertEqual(conv.voiceChannel.state, VoiceChannelV2StateSelfIsJoiningActiveChannel);
         [self.syncMOC saveOrRollback];
     }];
-    [self.uiMOC.zm_callState mergeChangesFromState:self.syncMOC.zm_callState]; // This is done by ZMSyncStrategy when merging contexts
+    NOT_USED([self.uiMOC.zm_callState mergeChangesFromState:self.syncMOC.zm_callState]); // This is done by ZMSyncStrategy when merging contexts
 
     
     ZMConversation *uiConv = (id)[self.uiMOC objectWithID:conv.objectID];
@@ -721,7 +751,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
         [conv.voiceChannelRouter.v2 tearDown];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    [self.syncMOC.zm_callState mergeChangesFromState:self.uiMOC.zm_callState]; // This is done by ZMSyncStrategy when merging contexts
+    NOT_USED([self.syncMOC.zm_callState mergeChangesFromState:self.uiMOC.zm_callState]); // This is done by ZMSyncStrategy when merging contexts
 
     // then
     XCTAssertFalse(uiConv.callDeviceIsActive);

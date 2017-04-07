@@ -18,8 +18,8 @@
 
 
 import Foundation
-import zmessaging
-import ZMTransport
+import WireSyncEngine
+import WireTransport
 
 class DeleteAccountRequestStrategyTests: MessagingTest {
     

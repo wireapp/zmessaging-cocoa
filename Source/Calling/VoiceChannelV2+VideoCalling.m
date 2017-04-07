@@ -16,8 +16,8 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-@import ZMCDataModel;
-@import ZMTransport;
+@import WireDataModel;
+@import WireTransport;
 @import avs;
 
 #import "VoiceChannelV2+VideoCalling.h"
@@ -25,7 +25,7 @@
 #import "ZMUserSession+Internal.h"
 #import "ZMCallKitDelegate.h"
 #import "ZMAVSBridge.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 
 NSString * VoiceChannelV2VideoCallErrorDomain = @"VoiceChannelV2VideoCallErrorDomain";

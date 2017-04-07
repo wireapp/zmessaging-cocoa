@@ -17,14 +17,14 @@
 // 
 
 
-@import ZMTransport;
-@import zmessaging;
+@import WireTransport;
+@import WireSyncEngine;
 
 #import "ObjectTranscoderTests.h"
 #import "ZMLastUpdateEventIDTranscoder+Internal.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMLastUpdateEventIDTranscoderTests : ObjectTranscoderTests
 

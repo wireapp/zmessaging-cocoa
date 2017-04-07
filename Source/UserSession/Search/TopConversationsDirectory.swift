@@ -17,7 +17,7 @@
 //
 
 import Foundation
-import ZMCDataModel
+import WireDataModel
 
 /// Directory of various conversation lists
 /// This object is expected to be used on the UI context only

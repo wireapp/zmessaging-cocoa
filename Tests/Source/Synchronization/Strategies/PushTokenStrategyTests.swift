@@ -16,9 +16,9 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@testable import zmessaging
+@testable import WireSyncEngine
 import WireRequestStrategy
-import ZMTesting
+import WireTesting
 
 
 class PushTokenStrategyTests: MessagingTest {

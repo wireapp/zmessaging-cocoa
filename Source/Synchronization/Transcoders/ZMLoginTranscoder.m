@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMLoginTranscoder+Internal.h"
 #import "ZMAuthenticationStatus.h"

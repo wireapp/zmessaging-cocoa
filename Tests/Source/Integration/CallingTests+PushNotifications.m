@@ -20,7 +20,7 @@
 @import PushKit;
 #import "CallingTests.h"
 #import "ZMUserSession+UserNotificationCategories.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 

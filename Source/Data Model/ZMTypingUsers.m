@@ -17,13 +17,13 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireUtilities;
+@import WireDataModel;
 
 #import "ZMTypingUsers.h"
 #import "ZMNotifications+UserSession.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString * const ZMTypingUsersKey = @"ZMTypingUsers";
 

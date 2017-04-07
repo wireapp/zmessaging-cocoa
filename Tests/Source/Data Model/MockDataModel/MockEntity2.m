@@ -20,7 +20,7 @@
 
 #import "MockEntity2.h"
 
-#import <ZMCDataModel/ZMManagedObject+Internal.h>
+#import <WireDataModel/ZMManagedObject+Internal.h>
 
 @implementation MockEntity2
 

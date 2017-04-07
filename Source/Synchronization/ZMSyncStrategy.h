@@ -23,7 +23,7 @@
 
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUpdateEventsBuffer.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @class ZMTransportRequest;
 @class ZMPushChannelConnection;

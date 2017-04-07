@@ -17,8 +17,8 @@
 // 
 
 
-import ZMTransport
-import ZMCDataModel
+import WireTransport
+import WireDataModel
 
 @objc public enum AccountState : UInt {
     case newDeviceNewAccount // we don't want to show any system message

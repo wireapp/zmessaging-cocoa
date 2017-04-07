@@ -18,7 +18,7 @@
 
 
 import Foundation
-import ZMTransport
+import WireTransport
 
 
 extension ProxiedRequestType {

@@ -18,12 +18,12 @@
 
 
 @import CoreTelephony;
-@import ZMCDataModel;
+@import WireDataModel;
 @import avs;
 
 #import "CallingTests.h"
 #import "VoiceChannelV2+CallFlow.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMGSMCallHandler.h"
 
 @implementation TestWindowObserver
@@ -71,7 +71,7 @@
     return self;
 }
 
-- (void)voiceChannelParticipantsDidChange:(SetChangeInfo *)changeInfo
+- (void)voiceChannelParticipantsDidChange:(VoiceChannelParticipantNotification *)changeInfo
 {
     [self.changes addObject:changeInfo];
 }
@@ -196,7 +196,7 @@
 - (void)selfJoinCall
 {
     [self.userSession enqueueChanges:^{
-        [self.conversationUnderTest.voiceChannelRouter.v2 joinWithVideo:NO];
+        NOT_USED([self.conversationUnderTest.voiceChannelRouter.v2 joinWithVideo:NO]);
     }];
 }
 
@@ -364,11 +364,11 @@
     
     // then
     XCTAssertEqual(participantObserver.changes.count, 1u);
-    SetChangeInfo *partInfo2 = participantObserver.changes.lastObject;
+    VoiceChannelParticipantNotification *partInfo2 = participantObserver.changes.lastObject;
     XCTAssertEqualObjects(partInfo2.insertedIndexes, [NSIndexSet indexSetWithIndex:0]);
     XCTAssertEqualObjects(partInfo2.updatedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(partInfo2.deletedIndexes, [NSIndexSet indexSet]);
-    XCTAssertEqualObjects(partInfo2.movedIndexPairs, @[]);
+    XCTAssertEqualObjects(partInfo2.zm_movedIndexPairs, @[]);
 
     // (3) flow aquired
     //
@@ -382,11 +382,11 @@
     XCTAssertEqual(stateObserver.changes.lastObject.state, VoiceChannelV2StateSelfConnectedToActiveChannel);
     
     XCTAssertEqual(participantObserver.changes.count, 2u);
-    SetChangeInfo *partInfo3 = participantObserver.changes.lastObject;
+    VoiceChannelParticipantNotification *partInfo3 = participantObserver.changes.lastObject;
     XCTAssertEqualObjects(partInfo3.insertedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(partInfo3.updatedIndexes, [NSIndexSet indexSetWithIndex:0]);
     XCTAssertEqualObjects(partInfo3.deletedIndexes, [NSIndexSet indexSet]);
-    XCTAssertEqualObjects(partInfo3.movedIndexPairs, @[]);
+    XCTAssertEqualObjects(partInfo3.zm_movedIndexPairs, @[]);
 
     // (4) self user leaves
     //
@@ -398,11 +398,11 @@
     XCTAssertEqual(stateObserver.changes.count, 4u);
     XCTAssertEqual(stateObserver.changes.lastObject.state, VoiceChannelV2StateNoActiveUsers);
     
-    SetChangeInfo *partInfo4 = participantObserver.changes.lastObject;
+    VoiceChannelParticipantNotification *partInfo4 = participantObserver.changes.lastObject;
     XCTAssertEqualObjects(partInfo4.insertedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(partInfo4.updatedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(partInfo4.deletedIndexes, [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 1)]);
-    XCTAssertEqualObjects(partInfo4.movedIndexPairs, @[]);
+    XCTAssertEqualObjects(partInfo4.zm_movedIndexPairs, @[]);
     
     [WireCallCenterV2 removeObserverWithToken:stateToken];
     [WireCallCenterV2 removeObserverWithToken:participantToken];
@@ -410,7 +410,6 @@
 
 - (void)testThatItSendsOutAllExpectedNotificationsWhenOtherUserCalls
 {
-    ///3333333
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMConversation * NS_VALID_UNTIL_END_OF_SCOPE oneToOneConversation = self.conversationUnderTest;
@@ -1856,7 +1855,7 @@
         // we should see an insert
         NSMutableIndexSet *expectedInsert = [NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0, joinedUsers.count)];
         XCTAssertEqual(participantObserver.changes.count, 1u);
-        SetChangeInfo *lastChange = participantObserver.changes.lastObject;
+        VoiceChannelParticipantNotification *lastChange = participantObserver.changes.lastObject;
         XCTAssertEqualObjects(lastChange.updatedIndexes, [NSIndexSet indexSet]);
         XCTAssertEqualObjects(lastChange.insertedIndexes, [expectedInsert copy]);
         XCTAssertEqualObjects(lastChange.deletedIndexes, [NSIndexSet indexSet]);
@@ -1872,7 +1871,7 @@
         // then
         // we should see an update
         XCTAssertEqual(participantObserver.changes.count, 1u);
-        SetChangeInfo *lastChange = participantObserver.changes.lastObject;
+        VoiceChannelParticipantNotification *lastChange = participantObserver.changes.lastObject;
         XCTAssertEqualObjects(lastChange.updatedIndexes, [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, joinedUsers.count)]);
         XCTAssertEqualObjects(lastChange.insertedIndexes, [NSIndexSet indexSet]);
         XCTAssertEqualObjects(lastChange.deletedIndexes, [NSIndexSet indexSet]);
@@ -1893,7 +1892,7 @@
         // then
         // we should see a delete
         XCTAssertEqual(participantObserver.changes.count, 1u);
-        SetChangeInfo *lastChange = participantObserver.changes.lastObject;
+        VoiceChannelParticipantNotification *lastChange = participantObserver.changes.lastObject;
         XCTAssertEqualObjects(lastChange.deletedIndexes, [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(1, length)]);
         XCTAssertEqualObjects(lastChange.insertedIndexes, [NSIndexSet indexSet]);
         XCTAssertEqualObjects(lastChange.updatedIndexes, [NSIndexSet indexSet]);
@@ -1927,7 +1926,7 @@
             MockUser *user = [session insertUserWithName:[NSString stringWithFormat:@"Group Call User %d", i]];
             user.email = [NSString stringWithFormat:@"group-call-%d@example.com", i];
             user.phone = [NSString stringWithFormat:@"1234%d", i];
-            user.accentID = i % 7;
+            user.accentID = i % 6 + 1;
             [session addProfilePictureToUser:user];
             [self storeRemoteIDForObject:user];
             [users addObject:user];
@@ -1963,7 +1962,7 @@
 
     // when
     [self.userSession performChanges:^{
-        [bigGroupConversation.voiceChannelRouter.v2 joinWithVideo:NO];
+        NOT_USED([bigGroupConversation.voiceChannelRouter.v2 joinWithVideo:NO]);
     }];
     
     WaitForAllGroupsToBeEmpty(0.5f);
@@ -1986,7 +1985,7 @@
             MockUser *user = [session insertUserWithName:[NSString stringWithFormat:@"Group Call User %d", i]];
             user.email = [NSString stringWithFormat:@"group-call-%d@example.com", i];
             user.phone = [NSString stringWithFormat:@"1234%d", i];
-            user.accentID = i % 7;
+            user.accentID = i % 6 + 1;
             [session addProfilePictureToUser:user];
             [self storeRemoteIDForObject:user];
             [users addObject:user];
@@ -2031,7 +2030,7 @@
     
     // when
     [self.userSession performChanges:^{
-        [bigGroupConversation.voiceChannelRouter.v2 joinWithVideo:NO];
+        NOT_USED([bigGroupConversation.voiceChannelRouter.v2 joinWithVideo:NO]);
     }];
     
     WaitForAllGroupsToBeEmpty(0.5f);
@@ -2504,7 +2503,7 @@
     
     // when: it tries to join
     [self.userSession performChanges:^{
-        [conversation.voiceChannelRouter.v2 joinWithVideo:NO];
+        NOT_USED([conversation.voiceChannelRouter.v2 joinWithVideo:NO]);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2519,7 +2518,7 @@
     
     // when: it tries to join again
     [self.userSession performChanges:^{
-        [conversation.voiceChannelRouter.v2 joinWithVideo:NO];
+        NOT_USED([conversation.voiceChannelRouter.v2 joinWithVideo:NO]);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

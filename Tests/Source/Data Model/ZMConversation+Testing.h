@@ -17,9 +17,9 @@
 // 
 
 
-@import zmessaging;
+@import WireSyncEngine;
 
-@import ZMCMockTransport;
+@import WireMockTransport;
 
 @interface ZMConversation (Testing)
 

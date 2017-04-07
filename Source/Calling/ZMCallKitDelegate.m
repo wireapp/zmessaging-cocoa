@@ -16,10 +16,10 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@import ZMCDataModel;
+@import WireDataModel;
 @import CallKit;
 @import UIKit;
-@import ZMCSystem;
+@import WireSystem;
 @import Intents;
 @import avs;
 #import "ZMCallKitDelegate.h"
@@ -27,7 +27,7 @@
 #import "ZMUserSession+Internal.h"
 #import "VoiceChannelV2+CallFlow.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 /**
  @c ZMCallKitDelegate is the main logical part of CallKit integration of wire-ios-sync-engine. 

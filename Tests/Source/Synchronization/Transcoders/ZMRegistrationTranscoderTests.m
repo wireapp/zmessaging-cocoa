@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ObjectTranscoderTests.h"
 #import "ZMRegistrationTranscoder.h"
@@ -57,7 +57,7 @@
     (void) [[[self.registrationDownstreamSync expect] andReturn:self.registrationDownstreamSync] syncWithSingleRequestTranscoder:OCMOCK_ANY managedObjectContext:self.uiMOC];
     [self verifyMockLater:self.registrationDownstreamSync];
     
-    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"com.wearezeta.test-zmessaging"];
+    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"com.wearezeta.test-WireSyncEngine"];
     ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.uiMOC cookieStorage:self.cookieStorage];
     self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:cookie];
     

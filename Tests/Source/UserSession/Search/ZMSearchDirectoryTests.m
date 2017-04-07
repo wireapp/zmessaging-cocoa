@@ -19,13 +19,13 @@
 
 @import Foundation;
 @import CoreData;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireDataModel;
+
 
 #import "MessagingTest.h"
 #import "ZMSearchDirectory+Internal.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMUserIDsForSearchDirectoryTable.h"
 
 
 @interface TokenAndSearchResult : NSObject
@@ -92,7 +92,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     [NSManagedObjectContext resetUserInterfaceContext];
 
-    ZMUserIDsForSearchDirectoryTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
+    SearchDirectoryUserIDTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
     [table clear];
     
     [self.sut removeSearchResultObserver:self];
@@ -864,7 +864,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
 - (void)testThatItSendsASearchRequest
 {
     // given
-    NSString *searchURL = @"/search/contacts?q=Steve%20O'Hara%20%26%20S%C3%B6hne&l=3&size=30";
+    NSString *searchURL = @"/search/contacts?q=Steve%20O'Hara%20%26%20S%C3%B6hne&size=10";
     ZMTransportRequest *expectedRequest = [ZMTransportRequest requestGetFromPath:searchURL];
 
     // expect
@@ -884,7 +884,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
 - (void)testThatItEncodesAPlusCharacterInTheSearchURL
 {
     // given
-    NSString *searchURL = @"/search/contacts?q=foo%2Bbar@example.com&l=3&size=30";
+    NSString *searchURL = @"/search/contacts?q=foo%2Bbar@example.com&size=10";
     ZMTransportRequest *expectedRequest = [ZMTransportRequest requestGetFromPath:searchURL];
     
     // expect
@@ -907,7 +907,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     NSString *croppedString = [@"f" stringByPaddingToLength:200 withString:@"o" startingAtIndex:0];
     NSString *tooLongString = [@"f" stringByPaddingToLength:400 withString:@"o" startingAtIndex:0];
     
-    NSString *searchURL = [NSString stringWithFormat:@"/search/contacts?q=%@&l=3&size=30", croppedString];
+    NSString *searchURL = [NSString stringWithFormat:@"/search/contacts?q=%@&size=10", croppedString];
     ZMTransportRequest *expectedRequest = [ZMTransportRequest requestGetFromPath:searchURL];
     
     // expect
@@ -932,7 +932,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     // "The characters slash ("/") and question mark ("?") may represent data within the query component."
     
     // given
-    NSString *searchURL = @"/search/contacts?q=$%26%2B,/:;%3D?@&l=3&size=30";
+    NSString *searchURL = @"/search/contacts?q=$%26%2B,/:;%3D?@&size=10";
     ZMTransportRequest *expectedRequest = [ZMTransportRequest requestGetFromPath:searchURL];
     
     // expect
@@ -1808,9 +1808,9 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
     
     //then
-    ZMUserIDsForSearchDirectoryTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
+    SearchDirectoryUserIDTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
     NSSet *expectedIDs = [NSSet setWithObjects:userID1, userID2, nil];
-    XCTAssertEqualObjects(table.allUserIDs, expectedIDs);
+    XCTAssertEqualObjects(table.allUserIds, expectedIDs);
 }
 
 - (void)testThatWhenReceivingSearchUsersWeDoNotAddTheIDsToTheTableIfThereIsACorrespondingZMUser
@@ -1844,9 +1844,9 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
     
     //then
-    ZMUserIDsForSearchDirectoryTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
+    SearchDirectoryUserIDTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
     NSSet *expectedIDs = [NSSet setWithObject: userID2];
-    XCTAssertEqualObjects(table.allUserIDs, expectedIDs);
+    XCTAssertEqualObjects(table.allUserIds, expectedIDs);
 }
 
 - (void)testThatItDoesNotAddIDsToTheTableIfTheCacheHasAnImageForThatUser;
@@ -1880,9 +1880,9 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
     
     //then
-    ZMUserIDsForSearchDirectoryTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
+    SearchDirectoryUserIDTable *table = [ZMSearchDirectory userIDsMissingProfileImage];
     NSSet *expectedIDs = [NSSet setWithObject:userID2];
-    XCTAssertEqualObjects(table.allUserIDs, expectedIDs);
+    XCTAssertEqualObjects(table.allUserIds, expectedIDs);
 }
 
 - (void)testThatItEmptiesTheMediumImageCacheOnTeardown
@@ -1904,7 +1904,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
 - (void)testThatItRemovesItselfFromTheTableOnTearDown
 {
     // expect
-    id mockTable = [OCMockObject mockForClass:ZMUserIDsForSearchDirectoryTable.class];
+    id mockTable = [OCMockObject mockForClass:SearchDirectoryUserIDTable.class];
     [[mockTable expect] removeSearchDirectory:self.sut];
     
     id mockSearch = [OCMockObject mockForClass:ZMSearchDirectory.class];

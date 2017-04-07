@@ -18,11 +18,11 @@
 
 
 import XCTest
-@testable import zmessaging
-import ZMUtilities
-import ZMTesting
-import ZMCMockTransport
-import ZMCDataModel
+@testable import WireSyncEngine
+import WireUtilities
+import WireTesting
+import WireMockTransport
+import WireDataModel
 
 
 class UserClientRequestStrategyTests: RequestStrategyTestBase {
@@ -250,7 +250,7 @@ extension UserClientRequestStrategyTests {
         clientRegistrationStatus.mockPhase = .unregistered
 
         let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
-        selfUser.emailAddress = "hello@example.com";
+        selfUser.setValue("hello@example.com", forKey: #keyPath(ZMUser.emailAddress))
         
         let client = createSelfClient(sut.managedObjectContext)
         sut.notifyChangeTrackers(client)

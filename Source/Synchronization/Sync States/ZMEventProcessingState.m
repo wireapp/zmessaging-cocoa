@@ -17,7 +17,7 @@
 // 
 
 
-@import ZMUtilities;
+@import WireUtilities;
 @import WireRequestStrategy;
 
 #import "ZMEventProcessingState.h"

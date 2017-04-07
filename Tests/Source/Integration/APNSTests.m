@@ -16,15 +16,16 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import "IntegrationTestBase.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Background+Testing.h"
-#import "zmessaging_iOS_Tests-Swift.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
+
 
 @interface APNSTests : IntegrationTestBase
 

@@ -16,7 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-@import ZMCDataModel;
+@import WireDataModel;
 
 #import "NotificationObservers.h"
 
@@ -106,6 +106,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if(self) {
         self.conversationList = conversationList;
+        self.conversationChangeInfos = [NSMutableArray array];
         self.token = [ConversationListChangeInfo addObserver:self forList:conversationList];
     }
     return self;
@@ -117,7 +118,12 @@ ZM_EMPTY_ASSERTING_INIT()
     if (self.notificationCallback) {
         self.notificationCallback(note);
     }
+}
 
+- (void)conversationInsideList:(ZMConversationList *)list didChange:(ConversationChangeInfo *)changeInfo;
+{
+    NOT_USED(list);
+    [self.conversationChangeInfos addObject:changeInfo];
 }
 
 @end
@@ -251,8 +257,8 @@ static NSString * const Placeholder = @"Placeholder";
         [self.mutableMessages insertObject:placeHolder atIndex:idx];
     }];
     
-    [note.movedIndexPairs enumerateObjectsUsingBlock:^(ZMMovedIndex *moved, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
-        [self.mutableMessages moveObjectsAtIndexes:[NSIndexSet indexSetWithIndex:moved.from] toIndex:moved.to];
+    [note enumerateMovedIndexes:^(NSInteger from, NSInteger to) {
+        [self.mutableMessages moveObjectsAtIndexes:[NSIndexSet indexSetWithIndex:(NSUInteger)from] toIndex:(NSUInteger)to];
     }];
     
     for(NSUInteger i = 0; i < self.mutableMessages.count; ++i) {

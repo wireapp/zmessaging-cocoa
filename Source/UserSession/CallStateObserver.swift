@@ -17,7 +17,7 @@
 //
 
 import Foundation
-import ZMCDataModel
+import WireDataModel
 import CoreData
 
 @objc(ZMCallStateObserver)
@@ -70,12 +70,13 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
         
         managedObjectContext.performGroupedBlock {
+            
             guard
                 let userId = userId,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.managedObjectContext),
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: self.managedObjectContext)
-                else {
-                    return
+            else {
+                return
             }
             
             if !ZMUserSession.useCallKit {
@@ -137,7 +138,7 @@ private final class CallingSystemMessageGenerator {
             let caller = callers[conversation] ?? sender
             conversation.appendMissedCallMessage(fromUser: caller, at: Date())
         case .terminating(reason: .timeout):
-            conversation.appendMissedCallMessage(fromUser: sender, at: Date())
+            conversation.appendPerformedCallMessage(with: 0, caller: sender)
         default:
             break
         }

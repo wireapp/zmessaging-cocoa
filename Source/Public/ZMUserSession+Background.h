@@ -17,7 +17,7 @@
 // 
 
 
-#import <zmessaging/ZMUserSession.h>
+#import <WireSyncEngine/ZMUserSession.h>
 
 @import UIKit;
 

@@ -18,8 +18,8 @@
 
 
 @import UIKit;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireDataModel;
 
 static NSString * const ConversationIDStringKey = @"conversationIDString";
 static NSString * const MessageNonceIDStringKey = @"messageNonceString";

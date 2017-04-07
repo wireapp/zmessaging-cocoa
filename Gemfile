@@ -1,3 +1,4 @@
 source 'https://rubygems.org'
 
-gem 'danger'
+gem 'danger', '~>4'
+gem 'slather'

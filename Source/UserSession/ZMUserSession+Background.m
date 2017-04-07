@@ -17,8 +17,8 @@
 // 
 
 
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Background+Testing.h"
@@ -31,7 +31,7 @@
 #import "ZMUserSession+UserNotificationCategories.h"
 #import "ZMStoredLocalNotification.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *ZMLogTag = @"Push";
 
@@ -205,6 +205,7 @@ static NSString *ZMLogTag = @"Push";
     }
     if ([identifier isEqualToString:ZMMessageLikeAction]) {
         [self likeMessageForNotification:notification WithCompletionHandler:completionHandler];
+        return;
     }
     
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_8_4) {
@@ -342,7 +343,7 @@ static NSString *ZMLogTag = @"Push";
         BOOL userWantsToCallBack = ([note.category isEqualToString:ZMMissedCallCategory]);
         
         if ([WireCallCenter activeCallConversationsInUserSession:self].count == 0 && (callIsStillOngoing || userWantsToCallBack)) {
-            [note.conversation.voiceChannel joinWithVideo:NO userSession:self];
+            NOT_USED([note.conversation.voiceChannel joinWithVideo:NO userSession:self]);
             [note.conversation.managedObjectContext saveOrRollback];
         }
     }

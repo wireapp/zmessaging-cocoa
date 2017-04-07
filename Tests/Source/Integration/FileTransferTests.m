@@ -17,18 +17,18 @@
 // 
 
 
-@import ZMCDataModel;
-@import ZMTransport;
-@import ZMCMockTransport;
-@import ZMUtilities;
-@import ZMTesting;
+@import WireDataModel;
+@import WireTransport;
+@import WireMockTransport;
+@import WireUtilities;
+@import WireTesting;
 
 #import "MessagingTest.h"
 #import "ZMUserSession.h"
 #import "IntegrationTestBase.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMConversationTranscoder+Internal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ConversationTestsBase.h"
 
 @interface FileTransferTests : ConversationTestsBase

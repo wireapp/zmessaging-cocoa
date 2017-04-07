@@ -18,13 +18,13 @@
 
 
 @import CoreTelephony;
-@import ZMCSystem;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireDataModel;
 
 #import "ZMGSMCallHandler.h"
 #import "ZMCallStateLogger.h"
 #import "ZMSyncStateMachine.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConversationObjectID";
 

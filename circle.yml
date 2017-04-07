@@ -1,0 +1,40 @@
+machine:
+  xcode:
+    version: "8.3"
+  environment:
+    # Used for compatibility with scripts made for Jenkins
+    WORKSPACE: $(pwd) 
+    JENKINS_HOME: WORKSPACE
+
+checkout:
+  post:
+    # Copy the code to a subdirectory
+    - mkdir -p "${CIRCLE_PROJECT_REPONAME}"
+    - rsync -a . "${CIRCLE_PROJECT_REPONAME}/" --exclude "${CIRCLE_PROJECT_REPONAME}"
+    # Clone scripts repo if not already cached
+    - if [ ! -d "wire-ios-scripts" ]; then git clone https://github.com/wireapp/wire-ios-scripts.git; fi
+
+dependencies:
+  override:
+    - bundle install:
+        pwd:
+          $CIRCLE_PROJECT_REPONAME
+    - ./CI/bot-setup.sh:
+        pwd:
+          wire-ios-scripts
+    - ./CI/Bots/bot-pre-build.swift:
+        pwd:
+          wire-ios-scripts
+  cache_directories:
+    - wire-ios-scripts
+
+test:
+  override:
+    - ./CI/Bots/bot-build.swift --workspace "../${CIRCLE_PROJECT_REPONAME}":
+        pwd:
+          wire-ios-scripts
+  post:
+    - mkdir -p $CIRCLE_TEST_REPORTS/junit/
+    - mkdir -p $CIRCLE_TEST_REPORTS/code_coverage/
+    - cp $CIRCLE_PROJECT_REPONAME/tests.xml $CIRCLE_TEST_REPORTS/junit/
+    - rsync -auv $CIRCLE_PROJECT_REPONAME/code-coverage/ $CIRCLE_TEST_REPORTS/code-coverage/

@@ -17,7 +17,7 @@
 //
 
 import Foundation
-@testable import zmessaging
+@testable import WireSyncEngine
 
 class InvitationsTests : IntegrationTestBase {
     
@@ -29,13 +29,13 @@ class InvitationsTests : IntegrationTestBase {
         super.setUp()
         self.addressBook = AddressBookFake()
         self.searchDirectory = ZMSearchDirectory(userSession: self.userSession)
-        zmessaging.debug_searchResultAddressBookOverride = self.addressBook
+        WireSyncEngine.debug_searchResultAddressBookOverride = self.addressBook
     }
     
     override func tearDown() {
         self.searchDirectory?.tearDown()
         self.searchDirectory = nil
-        zmessaging.debug_searchResultAddressBookOverride = nil
+        WireSyncEngine.debug_searchResultAddressBookOverride = nil
         super.tearDown()
     }
 }

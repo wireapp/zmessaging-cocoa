@@ -16,9 +16,9 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@import ZMTransport;
-@import ZMCMockTransport;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireMockTransport;
+@import WireDataModel;
 
 #import "NSError+ZMUserSessionInternal.h"
 #import "IntegrationTestBase.h"
@@ -29,7 +29,7 @@
 #import "ZMUserSession+OTR.h"
 
 #import "ZMCredentials.h"
-#import <zmessaging/ZMAuthenticationStatus.h>
+#import <WireSyncEngine/ZMAuthenticationStatus.h>
 
 extern NSTimeInterval DebugLoginFailureTimerOverride;
 

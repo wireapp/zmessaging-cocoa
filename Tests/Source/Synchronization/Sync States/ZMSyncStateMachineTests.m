@@ -33,7 +33,7 @@
 #import "ZMSyncState.h"
 
 #import "ZMUserSessionAuthenticationNotification.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface ZMSyncStateMachineTests : MessagingTest
 

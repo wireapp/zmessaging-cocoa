@@ -17,10 +17,10 @@
 // 
 
 
-import ZMTesting;
-import ZMCDataModel;
+import WireTesting;
+import WireDataModel;
 
-@testable import zmessaging;
+@testable import WireSyncEngine;
 
 public final class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
 

@@ -17,14 +17,14 @@
 // 
 
 
-@import ZMUtilities;
-@import ZMTransport;
-@import ZMCDataModel;
+@import WireUtilities;
+@import WireTransport;
+@import WireDataModel;
 
 #import "ZMUserSession.h"
-#import <zmessaging/ZMAuthenticationStatus.h>
+#import <WireSyncEngine/ZMAuthenticationStatus.h>
 #import "ZMSyncStateDelegate.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @class NSManagedObjectContext;
 @class ZMTransportRequest;
@@ -76,7 +76,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @interface ZMUserSession (Internal) 
 
 @property (nonatomic, readonly) BOOL isLoggedIn;
-@property (nonatomic, readonly) ZMOperationLoop *operationLoop;
 @property (nonatomic, readonly) NSManagedObjectContext *managedObjectContext;
 @property (nonatomic, readonly) ZMTransportSession *transportSession;
 @property (nonatomic, readonly) NSManagedObjectContext *syncManagedObjectContext;

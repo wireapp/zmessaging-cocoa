@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMTransport;
-@import ZMUtilities;
-@import ZMCDataModel;
+@import WireTransport;
+@import WireUtilities;
+@import WireDataModel;
 
 #include "ZMAuthenticationStatus.h"
 #include "ZMCredentials+Internal.h"

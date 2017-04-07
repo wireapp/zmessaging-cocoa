@@ -17,12 +17,12 @@
 // 
 
 
-@import ZMUtilities;
+@import WireUtilities;
 
 #import "ZMSyncState.h"
 #import "ZMUserSession.h"
 #import "ZMAuthenticationStatus.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @class ZMTimer;
 

@@ -17,9 +17,9 @@
 // 
 
 
-@import ZMCSystem;
-@import ZMUtilities;
-@import ZMCDataModel;
+@import WireSystem;
+@import WireUtilities;
+@import WireDataModel;
 
 #import "ZMTyping.h"
 #import "ZMTypingUsersTimeout.h"
