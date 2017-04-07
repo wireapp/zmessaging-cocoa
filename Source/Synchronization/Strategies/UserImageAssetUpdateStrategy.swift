@@ -176,7 +176,9 @@ extension UserImageAssetUpdateStrategy: ZMContextChangeTrackerSource {
 extension UserImageAssetUpdateStrategy: ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
         if let size = size(for: sync), let image = imageUploadStatus?.consumeImage(for: size) {
-            return requestFactory.upstreamRequestForAsset(withData: image, shareable: true, retention: .eternal)
+            let request = requestFactory.upstreamRequestForAsset(withData: image, shareable: true, retention: .eternal)
+            request?.addContentDebugInformation("Uploading to /assets/V3: [\(size)]  [\(image)] ")
+            return request
         }
         return nil
     }
