@@ -256,6 +256,7 @@ extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
             uiMOC.performGroupedBlock {
                 let editableUser = ZMUser.selfUser(in: uiMOC) as ZMEditableUser
                 editableUser.originalProfileImageData = imageData
+                uiMOC.saveOrRollback()
             }
             self.setState(state: .preprocess(image: imageData))
         }
