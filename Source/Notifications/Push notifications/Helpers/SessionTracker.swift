@@ -136,29 +136,29 @@ public final class Session : NSObject, NSCoding, NSCopying {
     }
     
     open func encode(with aCoder: NSCoder) {
-        aCoder.encode(callStarted, forKey: "callStarted")
-        aCoder.encode(othersJoined, forKey: "othersJoined")
-        aCoder.encode(selfUserJoined, forKey: "selfUserJoined")
-        aCoder.encode(callEnded, forKey: "callEnded")
-        aCoder.encode(isVideo, forKey: "isVideo")
-        aCoder.encode(lastSequence, forKey: "lastSequence")
-        aCoder.encode(sessionID, forKey: "sessionID")
-        aCoder.encode(initiatorID, forKey: "iniatorID")
-        aCoder.encode(conversationID, forKey: "conversationID")
+        aCoder.encode(callStarted, forKey: #keyPath(callStarted))
+        aCoder.encode(othersJoined, forKey: #keyPath(othersJoined))
+        aCoder.encode(selfUserJoined, forKey: #keyPath(selfUserJoined))
+        aCoder.encode(callEnded, forKey: #keyPath(callEnded))
+        aCoder.encode(isVideo, forKey: #keyPath(isVideo))
+        aCoder.encode(lastSequence, forKey: #keyPath(lastSequence))
+        aCoder.encode(sessionID, forKey: #keyPath(sessionID))
+        aCoder.encode(initiatorID, forKey: #keyPath(initiatorID))
+        aCoder.encode(conversationID, forKey: #keyPath(conversationID))
     }
     
     convenience required public init?(coder aDecoder: NSCoder) {
-        guard let sessionID = aDecoder.decodeObject(forKey: "sessionID") as? String,
-        let initiatorID = aDecoder.decodeObject(forKey: "initiatorID") as? UUID,
-        let conversationID = aDecoder.decodeObject(forKey: "conversationID") as? UUID else {return nil}
+        guard let sessionID = aDecoder.decodeObject(forKey: #keyPath(sessionID)) as? String,
+            let initiatorID = aDecoder.decodeObject(forKey: #keyPath(initiatorID)) as? UUID,
+            let conversationID = aDecoder.decodeObject(forKey: #keyPath(conversationID)) as? UUID else {return nil}
         
         self.init(sessionID: sessionID, conversationID: conversationID, initiatorID: initiatorID)
-        self.callStarted = aDecoder.decodeBool(forKey: "callStarted")
-        self.othersJoined = aDecoder.decodeBool(forKey: "othersJoined")
-        self.selfUserJoined = aDecoder.decodeBool(forKey: "selfUserJoined")
-        self.callEnded = aDecoder.decodeBool(forKey: "callEnded")
-        self.isVideo = aDecoder.decodeBool(forKey: "isVideo")
-        self.lastSequence = aDecoder.decodeInteger(forKey: "lastSequence")
+        self.callStarted = aDecoder.decodeBool(forKey: #keyPath(callStarted))
+        self.othersJoined = aDecoder.decodeBool(forKey: #keyPath(othersJoined))
+        self.selfUserJoined = aDecoder.decodeBool(forKey: #keyPath(selfUserJoined))
+        self.callEnded = aDecoder.decodeBool(forKey: #keyPath(callEnded))
+        self.isVideo = aDecoder.decodeBool(forKey: #keyPath(isVideo))
+        self.lastSequence = aDecoder.decodeInteger(forKey: #keyPath(lastSequence))
     }
     
     open func copy(with zone: NSZone?) -> Any {
