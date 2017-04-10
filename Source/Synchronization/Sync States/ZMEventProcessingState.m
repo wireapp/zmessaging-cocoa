@@ -26,7 +26,7 @@
 #import "ZMSyncStrategy.h"
 #import "ZMSyncStateDelegate.h"
 #import "ZMStateMachineDelegate.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMEventProcessingState ()
 

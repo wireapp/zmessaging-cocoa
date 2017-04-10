@@ -19,7 +19,7 @@
 
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
-#import "ZMessagingLogs.h"
+#import "WireSyncEngineLogs.h"
 
 @implementation ZMSyncStrategy (ManagedObjectChanges)
 

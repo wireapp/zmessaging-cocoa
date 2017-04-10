@@ -177,7 +177,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatWeSendNotificationWhenCallStarts() {
         
         // expect
-        mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", registerObservers: false)
+        mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC)
         WireCallCenterV3Mock.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false)]
         
         expectation(forNotification: CallStateObserver.CallInProgressNotification.rawValue, object: nil) { (note) -> Bool in
@@ -198,7 +198,7 @@ class CallStateObserverTests : MessagingTest {
     
     func testThatWeSendNotificationWhenCallTerminates() {
         // given
-        mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", registerObservers: false)
+        mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC)
         WireCallCenterV3Mock.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false)]
         sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version3)
         

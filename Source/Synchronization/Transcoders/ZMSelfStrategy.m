@@ -40,7 +40,7 @@ static NSString * const ImageSmallProfileDataKey = @"imageSmallProfileData";
 static NSString * const PreviewProfileAssetIdentifierKey = @"previewProfileAssetIdentifier";
 static NSString * const CompleteProfileAssetIdentifierKey = @"completeProfileAssetIdentifier";
 
-NSTimeInterval ZMSelfTranscoderPendingValidationRequestInterval = 5;
+NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 
 @interface ZMSelfStrategy ()
 {

@@ -19,7 +19,7 @@
 
 #import "ZMCallStateRequestStrategyTests.h"
 #import "MessagingTest+EventFactory.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 @implementation ZMCallStateRequestStrategyTests

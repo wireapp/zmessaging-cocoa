@@ -20,11 +20,11 @@
 @import WireTransport;
 @import WireSyncEngine;
 
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 #import "ObjectTranscoderTests.h"
 #import "ZMLastUpdateEventIDTranscoder+Internal.h"
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMLastUpdateEventIDTranscoderTests : ObjectTranscoderTests
 
@@ -165,7 +165,7 @@
 
     // when
     self.mockSyncStatus.mockPhase = SyncPhaseFetchingLastUpdateEventID;
-    [self.sut nextRequest];
+    XCTAssertNil([self.sut nextRequest]);
 }
 
 - (void)testThatItForwardsNextRequestToTheSingleRequestSync

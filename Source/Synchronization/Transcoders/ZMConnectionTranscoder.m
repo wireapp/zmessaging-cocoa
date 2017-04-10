@@ -26,7 +26,7 @@
 #import "ZMOperationLoop.h"
 #import "ZMSimpleListRequestPaginator.h"
 #import "ZMNotifications+UserSessionInternal.h"
-#import <zmessaging/zmessaging-Swift.h>
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *const PathConnections = @"/connections";
 

@@ -682,6 +682,11 @@ ZM_EMPTY_ASSERTING_INIT()
     return self.onDemandFlowManager.flowManager;
 }
 
+- (ZMOperationStatus *)operationStatus
+{
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus;
+}
+
 @end
 
 
@@ -1059,7 +1064,7 @@ static CallingProtocolStrategy ZMUserSessionCallingProtocolStrategy = CallingPro
 
 - (id<UserProfileImageUpdateProtocol>)profileUpdate
 {
-    return self.profileImageUpdateStatus;
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.userProfileImageUpdateStatus;
 }
 
 @end

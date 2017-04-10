@@ -217,8 +217,8 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.callingRequestStrategy,
                                    self.callStateRequestStrategy,
                                    self.callFlowRequestStrategy,
-                                   [[GenericMessageNotificationRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.applicationStatusDirectory.clientRegistrationStatus]
-                                   [[UserImageAssetUpdateStrategy alloc] initWithManagedObjectContext:self.syncMOC imageUpdateStatus:profileImageStatus authenticationStatus:authenticationStatus],
+                                   [[GenericMessageNotificationRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.applicationStatusDirectory.clientRegistrationStatus],
+                                   [[UserImageAssetUpdateStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatusDirectory:self.applicationStatusDirectory],
                                    ];
         
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
@@ -371,11 +371,7 @@ ZM_EMPTY_ASSERTING_INIT()
         }]];
 
         _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:self.conversationStatusSync];
-        UserProfileImageUpdateStatus *strongImageStatus = self.profileImageStatus;
-        if (nil != strongImageStatus) {
-            _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:strongImageStatus];
-        }
-
+        _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:self.applicationStatusDirectory.userProfileImageUpdateStatus];
     }
     
     return _allChangeTrackers;

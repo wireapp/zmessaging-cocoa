@@ -27,7 +27,7 @@
 #import "ZMConversationTranscoder.h"
 #import "ZMConversationTranscoder+Internal.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 static NSString *const CONVERSATIONS_PATH = @"/conversations";

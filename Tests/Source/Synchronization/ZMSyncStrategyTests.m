@@ -32,7 +32,7 @@
 #import "ZMUpdateEventsBuffer.h"
 #import "ZMOperationLoop.h"
 #import "MessagingTest+EventFactory.h"
-#import "zmessaging_iOS_Tests-Swift.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 #import "ZMNotifications+UserSession.h"
 
 // States

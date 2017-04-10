@@ -24,28 +24,33 @@ extension ZMUserSession {
 
     @objc(likeMessageForNotification:WithCompletionHandler:)
     public func likeMessage(for note: UILocalNotification, completion: (() -> Void)?) {
-        let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Like Message Activity")
-        guard let conversation = note.conversation(in: managedObjectContext) else { completion?(); return }
-        guard let message = note.message(in: conversation, in: managedObjectContext) else { completion?(); return }
-
-        operationLoop.startBackgroundTask { [weak self] result in
-            guard let `self` = self else { return }
-            switch result {
-            case .failed: fallthrough // We might want to display a local notification to indicate failure in the future
-            case .unavailable: log.error("Error performing background task liking from notification: \(result.rawValue)")
-            default: break
-            }
-
-            self.managedObjectContext.performGroupedBlock {
-                activity?.end()
-                completion?()
-            }
-        }
-
-        managedObjectContext.performGroupedBlock { [weak managedObjectContext] in
-            ZMMessage.addReaction(.like, toMessage: message)
-            managedObjectContext?.saveOrRollback()
-        }
+        
+        
+        // TODO jacob
+//        let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Like Message Activity")
+//        guard let conversation = note.conversation(in: managedObjectContext) else { completion?(); return }
+//        guard let message = note.message(in: conversation, in: managedObjectContext) else { completion?(); return }
+//        
+////        let operationStatus = operationLoop.syncStrategy.applicationStatusDirectory.operationStatus
+//        
+//        operationStatus.startBackgroundTask { [weak self] result in
+//            guard let `self` = self else { return }
+//            switch result {
+//            case .failed: fallthrough // We might want to display a local notification to indicate failure in the future
+//            case .unavailable: log.error("Error performing background task liking from notification: \(result.rawValue)")
+//            default: break
+//            }
+//
+//            self.managedObjectContext.performGroupedBlock {
+//                activity?.end()
+//                completion?()
+//            }
+//        }
+//
+//        managedObjectContext.performGroupedBlock { [weak managedObjectContext] in
+//            ZMMessage.addReaction(.like, toMessage: message)
+//            managedObjectContext?.saveOrRollback()
+//        }
     }
 
 }

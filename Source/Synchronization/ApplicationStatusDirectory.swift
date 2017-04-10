@@ -23,6 +23,7 @@ import WireMessageStrategy
 @objc(ZMApplicationStatusDirectory)
 public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     
+    public let userProfileImageUpdateStatus : UserProfileImageUpdateStatus
     public let apnsConfirmationStatus : BackgroundAPNSConfirmationStatus
     public let authenticationStatus : ZMAuthenticationStatus
     public let userProfileUpdateStatus : UserProfileUpdateStatus
@@ -52,6 +53,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.accountStatus = ZMAccountStatus(managedObjectContext: managedObjectContext, cookieStorage: cookie)
         self.pingBackStatus = BackgroundAPNSPingBackStatus(syncManagedObjectContext: managedObjectContext, authenticationProvider: authenticationStatus)
         self.proxiedRequestStatus = ProxiedRequestsStatus(requestCancellation: requestCancellation)
+        self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)
         
         super.init()
         

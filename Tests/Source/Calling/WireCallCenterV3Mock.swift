@@ -22,8 +22,6 @@ import Foundation
 
 class MockAVSWrapper : AVSWrapperType {
     
-    public static var mockNonIdleCalls : [UUID : CallState] = [:]
-
     var mockCallState: CallState = .none
     var didCallStartCall = false
     var didCallAnswerCall = false
@@ -91,6 +89,8 @@ class MockAVSWrapper : AVSWrapperType {
 }
 
 public class WireCallCenterV3Mock : WireCallCenterV3 {
+    
+    public static var mockNonIdleCalls : [UUID : CallState] = [:]
     
     public var mockAVSCallState : CallState = .none {
         didSet {
