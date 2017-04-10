@@ -204,10 +204,15 @@ public final class Session : NSObject, NSCoding, NSCopying {
     
     /// unarchives previous calls that haven't been cancelled yet
     func unarchiveOldSessions(){
-        guard let archive = managedObjectContext.persistentStoreMetadata(forKey: SessionTracker.ArchivingKey) as? Data,
-            let archivedSessions =  NSKeyedUnarchiver.unarchiveObject(with: archive) as? [Session]
-            else { return }
-        self.sessions = archivedSessions
+        guard let archive = managedObjectContext.persistentStoreMetadata(forKey: SessionTracker.ArchivingKey) as? Data else { return }
+        let unarchiver = NSKeyedUnarchiver(forReadingWith: archive)
+        
+        // NSCoding prefixes classes with module name, after project rename so to unarchive 
+        // "old" data we need to explicitly specify the class through delegate method
+        unarchiver.delegate = self
+        if let archivedSessions = unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? [Session] {
+            self.sessions = archivedSessions
+        }
     }
     
     /// Archives sessions
@@ -259,4 +264,9 @@ public final class Session : NSObject, NSCoding, NSCopying {
     }
 }
 
-
+extension SessionTracker: NSKeyedUnarchiverDelegate {
+    public func unarchiver(_ unarchiver: NSKeyedUnarchiver, cannotDecodeObjectOfClassName name: String, originalClasses classNames: [String]) -> Swift.AnyClass? {
+        // If we encounter unknown class it was probably archived when `WireSyncEngine` was called `zmessaging` and full class name doesn't match
+        return Session.self
+    }
+}
