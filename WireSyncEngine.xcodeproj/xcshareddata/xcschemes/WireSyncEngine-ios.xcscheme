@@ -114,7 +114,7 @@
          <EnvironmentVariable
             key = "ZMLOG_TAGS"
             value = "MockTransportRequests"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </EnvironmentVariable>
       </EnvironmentVariables>
       <AdditionalOptions>
