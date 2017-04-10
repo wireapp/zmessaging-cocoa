@@ -137,8 +137,6 @@ private final class CallingSystemMessageGenerator {
         case .terminating(reason: .canceled):
             let caller = callers[conversation] ?? sender
             conversation.appendMissedCallMessage(fromUser: caller, at: Date())
-        case .terminating(reason: .timeout):
-            conversation.appendPerformedCallMessage(with: 0, caller: sender)
         default:
             break
         }

@@ -110,7 +110,8 @@ public final class UserProfileImageUpdateStatus: NSObject {
 
     fileprivate var changeDelegates: [UserProfileImageUpdateStateDelegate] = []
     fileprivate var imageOwner: ImageOwner?
-    fileprivate let managedObjectContext: NSManagedObjectContext
+    fileprivate let syncMOC: NSManagedObjectContext
+    fileprivate let uiMOC: NSManagedObjectContext
 
     fileprivate var imageState = [ProfileImageSize : ImageState]()
     fileprivate var resizedImages = [ProfileImageSize : Data]()
@@ -124,7 +125,8 @@ public final class UserProfileImageUpdateStatus: NSObject {
         log.debug("Created")
         self.queue = queue
         self.preprocessor = preprocessor
-        self.managedObjectContext = managedObjectContext
+        self.syncMOC = managedObjectContext
+        self.uiMOC = managedObjectContext.zm_userInterface
         self.changeDelegate = delegate
         super.init()
         self.preprocessor?.delegate = self
@@ -168,13 +170,13 @@ extension UserProfileImageUpdateStatus {
     }
     
     private func updateUserProfile(with previewAssetId: String, completeAssetId: String) {
-        let selfUser = ZMUser.selfUser(in: managedObjectContext)
-        selfUser.imageSmallProfileData = resizedImages[.preview]
-        selfUser.imageMediumData = resizedImages[.complete]
-        resetImageState()
+        let selfUser = ZMUser.selfUser(in: self.syncMOC)
         selfUser.updateAndSyncProfileAssetIdentifiers(previewIdentifier: previewAssetId, completeIdentifier: completeAssetId)
-        managedObjectContext.saveOrRollback()
-        setState(state: .ready)
+        selfUser.imageSmallProfileData = self.resizedImages[.preview]
+        selfUser.imageMediumData = self.resizedImages[.complete]
+        self.resetImageState()
+        self.syncMOC.saveOrRollback()
+        self.setState(state: .ready)
     }
     
     private func startPreprocessing(imageData: Data) {
@@ -251,12 +253,9 @@ extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
     ///
     /// - Parameter imageData: image data of the new profile picture
     public func updateImage(imageData: Data) {
-        managedObjectContext.performGroupedBlock {
-            guard let uiMOC = self.managedObjectContext.zm_userInterface else { return }
-            uiMOC.performGroupedBlock {
-                let editableUser = ZMUser.selfUser(in: uiMOC) as ZMEditableUser
-                editableUser.originalProfileImageData = imageData
-            }
+        let editableUser = ZMUser.selfUser(in: uiMOC) as ZMEditableUser
+        editableUser.originalProfileImageData = imageData
+        syncMOC.performGroupedBlock {
             self.setState(state: .preprocess(image: imageData))
         }
     }
@@ -266,7 +265,7 @@ extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
 extension UserProfileImageUpdateStatus: ZMContextChangeTracker {
 
     public func objectsDidChange(_ object: Set<NSManagedObject>) {
-        guard object.contains(ZMUser.selfUser(in: managedObjectContext)) else { return }
+        guard object.contains(ZMUser.selfUser(in: syncMOC)) else { return }
         reuploadExisingImageIfNeeded()
     }
 
@@ -281,7 +280,7 @@ extension UserProfileImageUpdateStatus: ZMContextChangeTracker {
     internal func reuploadExisingImageIfNeeded() {
         // If the user updated to a build which added profile picture asset v3 support
         // we want to re-upload existing pictures to `/assets/v3`.
-        let selfUser = ZMUser.selfUser(in: managedObjectContext)
+        let selfUser = ZMUser.selfUser(in: syncMOC)
 
         // We need to ensure we already re-fetched the selfUser (see HotFix 76.0.0),
         // as other clients could already have uploaded a v3 asset.
@@ -304,7 +303,7 @@ extension UserProfileImageUpdateStatus: ZMContextChangeTracker {
 extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     
     public func completedDownsampleOperation(_ operation: ZMImageDownsampleOperationProtocol, imageOwner: ZMImageOwner) {
-        managedObjectContext.performGroupedBlock {
+        syncMOC.performGroupedBlock {
             ProfileImageSize.allSizes.forEach {
                 if operation.format == $0.imageFormat {
                     self.setState(state: .upload(image: operation.downsampleImageData), for: $0)
@@ -314,7 +313,7 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     }
     
     public func failedPreprocessingImageOwner(_ imageOwner: ZMImageOwner) {
-        managedObjectContext.performGroupedBlock {
+        syncMOC.performGroupedBlock {
             self.setState(state: .failed(.preprocessingFailed))
         }
     }
@@ -322,7 +321,7 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     public func didCompleteProcessingImageOwner(_ imageOwner: ZMImageOwner) {}
     
     public func preprocessingCompleteOperation(for imageOwner: ZMImageOwner) -> Operation? {
-        let dispatchGroup = managedObjectContext.dispatchGroup
+        let dispatchGroup = syncMOC.dispatchGroup
         dispatchGroup?.enter()
         return BlockOperation() {
             dispatchGroup?.leave()
