@@ -198,6 +198,29 @@ class WireCallCenterV3Tests: MessagingTest {
         }
     }
     
+    func testThatItSetsTheCallStartTimeBeforePostingTheNotification(){
+        // given
+        let conversationId = UUID()
+        let userId = UUID()
+        let conversationIdRef = conversationId.transportString().cString(using: .utf8)
+        let userIdRef = userId.transportString().cString(using: .utf8)
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        XCTAssertNil(sut.establishedDate)
+        
+        // expect
+        expectation(forNotification: WireCallCenterCallStateNotification.notificationName.rawValue, object: nil) { wrappedNote in
+            XCTAssertNotNil(self.sut.establishedDate)
+            return true
+        }
+        
+        // when
+        WireSyncEngine.EstablishedCallHandler(conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
+        
+        // then
+        XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
+    
+    }
+    
 }
 
 

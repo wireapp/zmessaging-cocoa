@@ -128,12 +128,12 @@ public enum CallState : Equatable {
         }
     }
     
-    func postNotificationOnMain(conversationID: UUID, userID: UUID?, uiMOC: NSManagedObjectContext, completion: ((Void) -> Void)? = nil){
+    func postNotificationOnMain(conversationID: UUID, userID: UUID?, uiMOC: NSManagedObjectContext, performBeforePost: ((Void) -> Void)? = nil){
         uiMOC.performGroupedBlock {
+            performBeforePost?()
             WireCallCenterCallStateNotification(callState: self,
                                                 conversationId: conversationID,
                                                 userId: userID).post()
-            completion?()
         }
     }
     
