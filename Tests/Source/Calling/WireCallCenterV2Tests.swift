@@ -312,4 +312,43 @@ class WireCallCenterV2Tests : MessagingTest {
         XCTAssertEqual(volume, 0.5)
     }
     
+    
+    func testThatItNotifiesChangedConversationIndicatorWhenThereIsAnotherChangeOnTheUI(){
+        // given
+        let dispatcher = NotificationDispatcher(managedObjectContext: uiMOC)
+        
+        conversation.callDeviceIsActive = true
+        notifyCallStateChange(in: [conversation])
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(conversation.conversationListIndicator, .activeCall)
+        
+        let observer = ConversationChangeObserver(conversation: conversation)!
+        
+        // when
+        conversation.callDeviceIsActive = false
+
+        // another change happens before the save causing a NSManagedObjectsDidChange Notification
+        // The change being a lastReadTimestamp is more likely, however for convenience we change the userDefinedName here
+        conversation.userDefinedName = "foo"
+        uiMOC.processPendingChanges()
+        
+        // the context merges, we update the state snapshots
+        uiMOC.saveOrRollback()
+        notifyCallStateChange(in: [conversation])
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(conversation.conversationListIndicator, .none)
+        XCTAssertTrue(observer.notifications.count >= 1)
+        var hasConversationListChange = false
+        observer.notifications.forEach{
+            guard let change = $0 as? ConversationChangeInfo else { return }
+            if change.conversationListIndicatorChanged {
+                hasConversationListChange = true
+            }
+        }
+        XCTAssertTrue(hasConversationListChange)
+    
+        dispatcher.tearDown()
+    }
 }
