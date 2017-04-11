@@ -66,8 +66,8 @@ public class TypingStrategy : NSObject {
         self.clientRegistrationDelegate = clientRegistrationDelegate
         self.typing = typing ?? ZMTyping(userInterfaceManagedObjectContext: uiContext, syncManagedObjectContext: syncContext)
         super.init()
-        NotificationCenter.default.addObserver(forName: Notification.Name(rawValue:ZMTypingNotificationName), object: nil, queue: nil, using: addConversationForNextRequest)
-        NotificationCenter.default.addObserver(forName: Notification.Name(rawValue:ZMConversationClearTypingNotificationName), object: nil, queue: nil, using: shouldClearTypingForConversation)
+        NotificationCenter.default.addObserver(self, selector: #selector(addConversationForNextRequest), name: Notification.Name(rawValue: ZMTypingNotificationName), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(shouldClearTypingForConversation), name: Notification.Name(rawValue: ZMConversationClearTypingNotificationName), object: nil)
     }
     
     public func tearDown() {
@@ -81,7 +81,7 @@ public class TypingStrategy : NSObject {
         assert(tornDown, "Need to tearDown TypingStrategy")
     }
     
-    fileprivate func addConversationForNextRequest(note : Notification) {
+    fileprivate dynamic func addConversationForNextRequest(note : Notification) {
         guard let conversation = note.object as? ZMConversation, conversation.remoteIdentifier != nil
         else { return }
         
@@ -89,10 +89,9 @@ public class TypingStrategy : NSObject {
         let clearIsTyping = (note.userInfo?[ClearIsTypingKey] as? NSNumber)?.boolValue ?? false
         
         add(conversation:conversation, isTyping:isTyping, clearIsTyping:clearIsTyping)
-        RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
     
-    fileprivate func shouldClearTypingForConversation(note: Notification) {
+    fileprivate dynamic func shouldClearTypingForConversation(note: Notification) {
         guard let conversation = note.object as? ZMConversation, conversation.remoteIdentifier != nil
         else { return }
         
