@@ -347,9 +347,9 @@ public typealias WireCallMessageToken = UnsafeMutableRawPointer
 
         switch callState {
         case .established:
-            callState.postNotificationOnMain(conversationID: conversationId, userID: userId, uiMOC: uiMOC){
+            callState.postNotificationOnMain(conversationID: conversationId, userID: userId, uiMOC: uiMOC, performBeforePost: {
                 self.establishedDate = Date()
-            }
+            })
         default:
             callState.postNotificationOnMain(conversationID: conversationId, userID: userId, uiMOC: uiMOC)
         }
