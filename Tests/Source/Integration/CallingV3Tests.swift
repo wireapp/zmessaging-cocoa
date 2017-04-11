@@ -180,7 +180,7 @@ class CallingV3Tests : IntegrationTestBase {
         // when
         selfDropCall()
         closeCall(user: self.localSelfUser, reason: .canceled)
-
+        
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
         stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
