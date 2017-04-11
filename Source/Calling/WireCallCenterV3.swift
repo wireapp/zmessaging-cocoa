@@ -128,15 +128,6 @@ public enum CallState : Equatable {
         }
     }
     
-    func postNotificationOnMain(conversationID: UUID, userID: UUID?, uiMOC: NSManagedObjectContext, completion: ((Void) -> Void)? = nil){
-        uiMOC.performGroupedBlock {
-            WireCallCenterCallStateNotification(callState: self,
-                                                conversationId: conversationID,
-                                                userId: userID).post()
-            completion?()
-        }
-    }
-    
     func logState(){
         switch self {
         case .answered:
@@ -372,15 +363,13 @@ public typealias WireCallMessageToken = UnsafeMutableRawPointer
             }
         }
     
-        callState.postNotificationOnMain(conversationID: conversationId, userID: userId, uiMOC: uiMOC)
+        WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId).post()
     }
     
     fileprivate func missed(conversationId: UUID, userId: UUID, timestamp: Date, isVideoCall: Bool) {
         zmLog.debug("missed call")
         
-        uiMOC.performGroupedBlock {
-            WireCallCenterMissedCallNotification(conversationId: conversationId, userId:userId, timestamp: timestamp, video: isVideoCall).post()
-        }
+        WireCallCenterMissedCallNotification(conversationId: conversationId, userId:userId, timestamp: timestamp, video: isVideoCall).post()
     }
     
     public func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
