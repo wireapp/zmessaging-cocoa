@@ -236,7 +236,13 @@ public class WireCallCenterV2 : NSObject {
         let changedConversations = changedObjects.flatMap({ $0 as? ZMConversation })
         
         for conversation in changedConversations {
-            updateVoiceChannelState(forConversation: conversation)
+            if updateVoiceChannelState(forConversation: conversation) {
+                NotificationDispatcher.notifyNonCoreDataChanges(
+                    objectID: conversation.objectID,
+                    changedKeys: [ZMConversationListIndicatorKey],
+                    uiContext: context
+                )
+            }
             
             if participantSnapshot?.conversation == conversation {
                 participantSnapshot?.recalculateSet()
@@ -246,6 +252,7 @@ public class WireCallCenterV2 : NSObject {
     
     @objc
     public func callStateDidChange(conversations: Set<ZMConversation>) {
+        
         conversations.forEach{
             if updateVoiceChannelState(forConversation: $0), let context = $0.managedObjectContext {
                 NotificationDispatcher.notifyNonCoreDataChanges(
