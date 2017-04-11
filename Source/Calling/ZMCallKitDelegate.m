@@ -258,6 +258,10 @@ NS_ASSUME_NONNULL_END
         
         // If we see "ongoing" calls when app starts we need to end them. App cannot have calls when it is not running.
         [self endAllOngoingCallKitCallsExcept:nil];
+
+        // -setUiStartsAudio: Should be set when CallKit is used.
+        // Then AVS will not start the audio before the audio session is active
+        [mediaManager setUiStartsAudio:YES];
     }
     return self;
 }
