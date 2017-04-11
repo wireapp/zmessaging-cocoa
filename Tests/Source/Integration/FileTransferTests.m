@@ -2107,6 +2107,7 @@
 - (void)testThatItSendsAFileMessage_V3
 {
     // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2126,7 +2127,7 @@
 
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil] version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2152,11 +2153,14 @@
     XCTAssertEqualObjects(message.fileMessageData.filename.stringByDeletingPathExtension, @"foofile");
     XCTAssertEqualObjects(message.fileMessageData.filename.pathExtension, @"dat");
     XCTAssertEqual(message.fileMessageData.size, 256lu);
+
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItSendsNoneVideoFileMessage_withThumbnail_V3
 {
     // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2177,7 +2181,7 @@
 
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData] version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2209,11 +2213,13 @@
     XCTAssertEqualObjects(message.fileMessageData.filename.stringByDeletingPathExtension, @"foogile");
     XCTAssertEqualObjects(message.fileMessageData.filename.pathExtension, @"dat");
     XCTAssertEqual(message.fileMessageData.size, 256lu);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItResendsAFailedFileMessage_V3
 {
     // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2236,7 +2242,7 @@
     // when
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil] version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(1.0);
 
@@ -2254,11 +2260,13 @@
     // then
     XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItSendsATextMessageAfterAFileMessage_V3
 {
     // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2272,7 +2280,7 @@
     // when
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil] version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2287,11 +2295,13 @@
     XCTAssertEqual(fileMessage.fileMessageData.transferState, ZMFileTransferStateDownloaded);
     XCTAssertEqual(textMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(conversation.messages.count, 3lu);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesNotSendAFileWhenTheOriginalRequestFails_V3
 {
     // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2315,7 +2325,7 @@
 
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil] version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2326,11 +2336,13 @@
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
     XCTAssertEqual(requests.count, 1lu); // Asset.Original
     XCTAssertEqualObjects(requests.firstObject.path, expectedMessageAddPath);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheFileDataUploadFails_400_V3
 {
     // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2359,7 +2371,7 @@
 
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil] version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2377,11 +2389,13 @@
     ZMMessage *message = conversation.messages.lastObject;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheFileDataUploadFails_NetworkError_V3
 {
     // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2410,7 +2424,7 @@
 
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil] version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2428,11 +2442,13 @@
     ZMMessage *message = conversation.messages.lastObject;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesSendACancelledUploadMessageWhenTheFileDataUploadIsCancelled_V3
 {
     // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2461,7 +2477,7 @@
     [self.mockTransportSession resetReceivedRequests];
 
     [self.userSession performChanges:^{
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil] version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2484,11 +2500,13 @@
     ZMMessage *message = conversation.messages.lastObject;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesNotSendACancelledUploadMessageWhenThePlaceholderUploadFails_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2513,7 +2531,7 @@
     [self.mockTransportSession resetReceivedRequests];
 
     [self.userSession performChanges:^{
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil] version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2529,11 +2547,13 @@
     ZMMessage *message = conversation.messages.lastObject;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesReuploadTheAssetMetadataAfterReceivingA_412_MissingClients_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2554,7 +2574,7 @@
 
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil] version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil]];
     }];
 
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2585,6 +2605,7 @@
     ZMMessage *message = conversation.messages.lastObject;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 
@@ -2593,6 +2614,7 @@
 - (void)testThatItSendsAFileMessage_WithVideo_V3
 {
     // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForEverythingToBeDone();
@@ -2615,7 +2637,7 @@
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForEverythingToBeDone();
 
@@ -2658,11 +2680,13 @@
 
     XCTAssertNil(error);
     XCTAssertEqual(message.fileMessageData.size, size);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItResendsAFailedFileMessage_WithVideo_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2685,7 +2709,7 @@
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2711,11 +2735,13 @@
 
     XCTAssertNil(error);
     XCTAssertEqual(fileMessage.fileMessageData.size, size);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItResendsAFailedFileMessage_WithVideo_ThumbnailGenericMessageUploadFailed_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2741,7 +2767,7 @@
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertEqual(genericMessageUploadCount, 2lu);
@@ -2768,11 +2794,14 @@
 
     XCTAssertNil(error);
     XCTAssertEqual(fileMessage.fileMessageData.size, size);
+
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItResendsAFailedFileMessage_UploadingFullAssetFails_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2796,7 +2825,7 @@
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2822,11 +2851,14 @@
 
     XCTAssertNil(error);
     XCTAssertEqual(fileMessage.fileMessageData.size, size);
+
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItResendsAFailedFileMessage_UploadingFullAssetGenericMessageFails_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2852,7 +2884,7 @@
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     // Asset.Original, Asset.Preview, Asset.Uploaded, Asset.NOTUploaded
@@ -2880,11 +2912,13 @@
 
     XCTAssertNil(error);
     XCTAssertEqual(fileMessage.fileMessageData.size, size);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesNotSendAFileWhenTheOriginalRequestFails_WithVideo_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2909,7 +2943,7 @@
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2920,11 +2954,13 @@
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
     XCTAssertEqual(requests.count, 1lu); // Asset.Original
     XCTAssertEqualObjects(requests.firstObject.path, expectedMessageAddPath);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheThumbnailUploadFails_400_WithVideo_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2954,7 +2990,7 @@
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -2973,11 +3009,13 @@
     ZMMessage *message = conversation.messages.lastObject;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheFullAssetUploadFails_400_WithVideo_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3009,7 +3047,7 @@
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -3031,11 +3069,13 @@
     ZMMessage *message = conversation.messages.lastObject;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheThumbnailUploadFails_NetworkError_WithVideo_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3064,7 +3104,7 @@
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -3083,11 +3123,13 @@
     ZMMessage *message = conversation.messages.lastObject;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheFileDataUploadFails_NetworkError_WithVideo_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3119,7 +3161,7 @@
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -3141,11 +3183,13 @@
     ZMMessage *message = conversation.messages.lastObject;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesSendACancelledUploadMessageWhenTheThumbnailDataUploadIsCancelled_WithVideo_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3175,7 +3219,7 @@
 
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForEverythingToBeDone();
 
@@ -3208,11 +3252,13 @@
 
     XCTAssertNil(error);
     XCTAssertEqual(message.fileMessageData.size, size);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesSendACancelledUploadMessageWhenTheFileDataUploadIsCancelled_WithVideo_V3
 {
-    //given
+    // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3244,7 +3290,7 @@
 
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -3280,11 +3326,13 @@
 
     XCTAssertNil(error);
     XCTAssertEqual(message.fileMessageData.size, size);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesNotSendACancelledUploadMessageWhenThePlaceholderUploadFails_WithVideo_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3310,7 +3358,7 @@
 
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -3326,11 +3374,13 @@
     ZMMessage *message = conversation.messages.lastObject;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItDoesReuploadTheAssetMetadataAfterReceivingA_412_MissingClients_WithVideo_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3356,7 +3406,7 @@
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
 
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3393,11 +3443,13 @@
     ZMMessage *message = conversation.messages.lastObject;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItSendsARegularFileMessageForAFileWithVideoButNilThumbnail_V3
 {
     //given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3419,7 +3471,7 @@
     __block ZMMessage *fileMessage;
     [self.userSession performChanges:^{
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:nil]; // No thumbnail
-        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata version3:YES];
+        fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -3451,6 +3503,7 @@
 
     XCTAssertNil(error);
     XCTAssertEqual(message.fileMessageData.size, size);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 #pragma mark Downloading
@@ -3458,6 +3511,7 @@
 - (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_Downloaded_AfterSuccesfullDecryption_V3
 {
     // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
 
@@ -3511,11 +3565,13 @@
     NSString *expectedPath = [NSString stringWithFormat:@"/assets/v3/%@", assetID.transportString];
     XCTAssertEqualObjects(lastRequest.path, expectedPath);
     XCTAssertEqual(message.transferState, ZMFileTransferStateDownloaded);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 - (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_FailedDownload_AfterFailedDecryption_V3
 {
     // given
+    [ZMConversation setUseVersion3Assets:YES];
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3570,6 +3626,7 @@
     NSString *expectedPath = [NSString stringWithFormat:@"/assets/v3/%@", assetID.transportString];
     XCTAssertEqualObjects(lastRequest.path, expectedPath);
     XCTAssertEqual(message.transferState, ZMFileTransferStateFailedDownload);
+    [ZMConversation setUseVersion3Assets:NO];
 }
 
 @end
