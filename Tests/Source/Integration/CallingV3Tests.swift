@@ -687,7 +687,7 @@ extension CallingV3Tests {
         XCTAssertFalse(conversationUnderTest.isArchived)
     }
     
-    func testThatItDoesNotCreateASystemMessageWhenTheCallIsEndedWithoutBeingMissed() {
+    func testThatItCreatesAPerformedCallSystemMessageWhenTheCallIsEnded() {
         
         // given
         XCTAssertTrue(logInAndWaitForSyncToBeComplete())
@@ -697,10 +697,44 @@ extension CallingV3Tests {
     
         // when
         otherStartCall(user: user)
+        selfJoinCall(isStart: false)
+        establishedFlow(user: user)
         closeCall(user: user, reason: .canceled)
         
-        // we DO NOT receive a systemMessage
-        XCTAssertEqual(conversationUnderTest.messages.count, messageCount)
+        // we receive a performed call systemMessage
+        XCTAssertEqual(conversationUnderTest.messages.count, messageCount+1)
+        guard let systemMessage = conversationUnderTest.messages.lastObject as? ZMSystemMessage
+            else {
+                return XCTFail("Did not insert a system message")
+        }
+        
+        XCTAssertNotNil(systemMessage.systemMessageData);
+        XCTAssertEqual(systemMessage.systemMessageData?.systemMessageType, ZMSystemMessageType.performedCall);
+    }
+    
+    func testThatThePerformedCallSystemMessageUnarchivesTheConversation() {
+        // given
+        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        fetchAllClients()
+        let user = conversationUnderTest.connectedUser!
+        
+        self.userSession.performChanges {
+            self.conversationUnderTest.isArchived = true
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        XCTAssertTrue(conversationUnderTest.isArchived)
+        let messageCount = conversationUnderTest.messages.count;
+
+        // when
+        otherStartCall(user: user)
+        selfJoinCall(isStart: false)
+        establishedFlow(user: user)
+        closeCall(user: user, reason: .canceled)
+        
+        // the conversation is unarchived
+        XCTAssertEqual(conversationUnderTest.messages.count, messageCount+1)
+        XCTAssertFalse(conversationUnderTest.isArchived)
     }
 }
 
