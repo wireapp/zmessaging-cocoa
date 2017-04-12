@@ -106,6 +106,13 @@ class CallingV3Tests : IntegrationTestBase {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
+    func selfIgnoreCall(){
+        userSession.performChanges{
+            self.conversationUnderTest.voiceChannelRouter?.v3.ignore()
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout:0.5))
+    }
+    
     func otherStartCall(user: ZMUser, isVideoCall: Bool = false, shouldRing: Bool = true) {
         (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .incoming(video: isVideoCall, shouldRing: shouldRing)
 
@@ -435,10 +442,7 @@ class CallingV3Tests : IntegrationTestBase {
         
         // (2) we ignore
         // when
-        userSession.performChanges{
-            self.conversationUnderTest.voiceChannelRouter?.v3.ignore()
-        }
-        XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
+        selfIgnoreCall()
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
@@ -492,10 +496,7 @@ class CallingV3Tests : IntegrationTestBase {
         
         // (2) Self ignores call
         // and when
-        userSession.performChanges{
-            self.conversationUnderTest.voiceChannelRouter?.v3.ignore()
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout:0.5))
+        selfIgnoreCall()
         
         // then
         XCTAssertEqual(convObserver!.notifications.count, 2)
@@ -576,10 +577,7 @@ class CallingV3Tests : IntegrationTestBase {
         otherStartCall(user: user)
         
         // Self ignores call
-        userSession.performChanges{
-            self.conversationUnderTest.voiceChannelRouter?.v3.ignore()
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout:0.5))
+        selfIgnoreCall()
         
         // Other user ends call
         closeCall(user: user, reason: .canceled)
@@ -603,10 +601,7 @@ class CallingV3Tests : IntegrationTestBase {
         otherStartCall(user: user)
         
         // Self ignores call
-        userSession.performChanges{
-            self.conversationUnderTest.voiceChannelRouter?.v3.ignore()
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout:0.5))
+        selfIgnoreCall()
         
         // Other user ends call
         closeCall(user: user, reason: .canceled)
@@ -736,5 +731,5 @@ extension CallingV3Tests {
         XCTAssertEqual(conversationUnderTest.messages.count, messageCount+1)
         XCTAssertFalse(conversationUnderTest.isArchived)
     }
+    
 }
-

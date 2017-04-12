@@ -64,6 +64,7 @@ class WireCallCenterV3Tests: MessagingTest {
         
         // when
         actionBlock(conversationIdRef, userIdRef, context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
@@ -132,6 +133,7 @@ class WireCallCenterV3Tests: MessagingTest {
         
         // when
         WireSyncEngine.missedCallHandler(conversationId: conversationIdRef, messageTime: UInt32(timestamp.timeIntervalSince1970), userId: userIdRef, isVideoCall: 0, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
@@ -177,6 +179,7 @@ class WireCallCenterV3Tests: MessagingTest {
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
         
         WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // expect
         expectation(forNotification: WireCallCenterCallStateNotification.notificationName.rawValue, object: nil) { wrappedNote in
@@ -204,6 +207,7 @@ class WireCallCenterV3Tests: MessagingTest {
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
         
         WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // expect
         expectation(forNotification: WireCallCenterCallStateNotification.notificationName.rawValue, object: nil) { wrappedNote in
@@ -262,7 +266,7 @@ class WireCallCenterV3Tests: MessagingTest {
         }
         
         // when
-        WireSyncEngine.EstablishedCallHandler(conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
+        WireSyncEngine.establishedCallHandler(conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
         
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
@@ -402,6 +406,7 @@ extension WireCallCenterV3Tests {
 
         // when
         WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(sut.callParticipants(conversationId: conversationId), [userId])
@@ -421,6 +426,7 @@ extension WireCallCenterV3Tests {
 
         // when
         callBackMemberHandler(conversationIdRef: conversationIdRef, userId: userId, audioEstablished: false, context: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(sut.callParticipants(conversationId: conversationId), [userId])
@@ -436,14 +442,16 @@ extension WireCallCenterV3Tests {
 
         // when
         WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
-
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
         // then
         let connectingState = sut.connectionState(forUserWith: userId, in: conversationId)
         XCTAssertEqual(connectingState, .connecting)
         
         // when
         callBackMemberHandler(conversationIdRef: conversationIdRef, userId: userId, audioEstablished: true, context: context)
-
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
         // then
         let connectedState = sut.connectionState(forUserWith: userId, in: conversationId)
         XCTAssertEqual(connectedState, .connected)
