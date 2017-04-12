@@ -246,13 +246,15 @@ internal func SendCallMessageHandler(token: UnsafeMutableRawPointer?, conversati
     }
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-    
+    let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
+    let transformedData = Data(buffer: bytes)
+
     callCenter.uiMOC.performGroupedBlock {
         callCenter.send(token: token,
                         conversationId: conversationId,
                         userId: userId,
                         clientId: clientId,
-                        data: data,
+                        data: transformedData,
                         dataLength: dataLength)
     }
     
@@ -340,12 +342,8 @@ public typealias WireCallMessageToken = UnsafeMutableRawPointer
         WireCallCenterV3.activeInstance = self
     }
     
-    fileprivate func send(token: WireCallMessageToken, conversationId: UUID, userId: UUID, clientId: String, data: UnsafePointer<UInt8>, dataLength: Int) {
-        
-        let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
-        let transformedData = Data(buffer: bytes)
-        
-        transport?.send(data: transformedData, conversationId: conversationId, userId: userId, completionHandler: { [weak self] status in
+    fileprivate func send(token: WireCallMessageToken, conversationId: UUID, userId: UUID, clientId: String, data: Data, dataLength: Int) {
+        transport?.send(data: data, conversationId: conversationId, userId: userId, completionHandler: { [weak self] status in
             guard let `self` = self else { return }
             
             self.avsWrapper.handleResponse(httpStatus: status, reason: "", context: token)
