@@ -72,7 +72,6 @@
 @property (nonatomic) ZMFlowSync *flowTranscoder;
 @property (nonatomic) ZMCallStateTranscoder *callStateTranscoder;
 @property (nonatomic) LinkPreviewAssetUploadRequestStrategy *linkPreviewAssetUploadRequestStrategy;
-@property (nonatomic) ImageUploadRequestStrategy *imageUploadRequestStrategy;
 @property (nonatomic) ImageDownloadRequestStrategy *imageDownloadRequestStrategy;
 
 @property (nonatomic) ZMSyncStateMachine *stateMachine;
@@ -82,7 +81,6 @@
 @property (nonatomic) UserClientRequestStrategy *userClientRequestStrategy;
 @property (nonatomic) FetchingClientRequestStrategy *fetchingClientRequestStrategy;
 @property (nonatomic) MissingClientsRequestStrategy *missingClientsRequestStrategy;
-@property (nonatomic) FileUploadRequestStrategy *fileUploadRequestStrategy;
 @property (nonatomic) LinkPreviewAssetDownloadRequestStrategy *linkPreviewAssetDownloadRequestStrategy;
 @property (nonatomic) PushTokenStrategy *pushTokenStrategy;
 @property (nonatomic) SearchUserImageStrategy *searchUserImageStrategy;
@@ -162,8 +160,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                backgroundAPNSPingBackStatus:backgroundAPNSPingBackStatus
                                               accountStatus:accountStatus
                                                mediaManager:mediaManager
-                                        onDemandFlowManager:onDemandFlowManager
-                                   taskCancellationProvider:taskCancellationProvider];
+                                        onDemandFlowManager:onDemandFlowManager];
         
         self.stateMachine = [[ZMSyncStateMachine alloc] initWithAuthenticationStatus:authenticationStatus
                                                             clientRegistrationStatus:clientRegistrationStatus
@@ -219,11 +216,9 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[SelfContactCardUploadStrategy alloc] initWithAuthenticationStatus:authenticationStatus
                                                                               clientRegistrationStatus:clientRegistrationStatus
                                                                                   managedObjectContext:self.syncMOC],
-                                   self.fileUploadRequestStrategy,
                                    self.linkPreviewAssetDownloadRequestStrategy,
                                    self.linkPreviewAssetUploadRequestStrategy,
                                    self.imageDownloadRequestStrategy,
-                                   self.imageUploadRequestStrategy,
                                    self.callingRequestStrategy,
                                    [[PushTokenStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
                                    [[TypingStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:clientRegistrationStatus],
@@ -253,7 +248,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                         accountStatus:(ZMAccountStatus *)accountStatus
                                          mediaManager:(id<AVSMediaManager>)mediaManager
                                   onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-                             taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
 {
     NSManagedObjectContext *uiMOC = self.uiMOC;
 
@@ -274,11 +268,9 @@ ZM_EMPTY_ASSERTING_INIT()
     self.loginCodeRequestTranscoder = [[ZMLoginCodeRequestTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
     self.phoneNumberVerificationTranscoder = [[ZMPhoneNumberVerificationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authenticationStatus];
     self.conversationStatusSync = [[ConversationStatusStrategy alloc] initWithManagedObjectContext:self.syncMOC];
-    self.fileUploadRequestStrategy = [[FileUploadRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC taskCancellationProvider:taskCancellationProvider];
     self.linkPreviewAssetDownloadRequestStrategy = [[LinkPreviewAssetDownloadRequestStrategy alloc] initWithAuthStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
     self.linkPreviewAssetUploadRequestStrategy = [[LinkPreviewAssetUploadRequestStrategy alloc] initWithClientRegistrationDelegate:clientRegistrationStatus managedObjectContext:self.syncMOC];
     self.imageDownloadRequestStrategy = [[ImageDownloadRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus  managedObjectContext:self.syncMOC];
-    self.imageUploadRequestStrategy = [[ImageUploadRequestStrategy alloc] initWithClientRegistrationStatus:clientRegistrationStatus managedObjectContext:self.syncMOC];
 }
 
 - (void)appDidEnterBackground:(NSNotification *)note
@@ -347,7 +339,6 @@ ZM_EMPTY_ASSERTING_INIT()
     }
     [self.notificationDispatcher tearDown];
     [self.conversationStatusSync tearDown];
-    [self.fileUploadRequestStrategy tearDown];
 }
 
 - (void)processAllEventsInBuffer
