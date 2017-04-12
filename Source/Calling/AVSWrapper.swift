@@ -13,8 +13,9 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
+// along with this program. If not, see http://www.gnu.org/licenses/.
 //
+
 
 import Foundation
 import avs
@@ -80,11 +81,13 @@ public class AVSWrapper : AVSWrapperType {
     }
     
     public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {
-        return wcall_start(conversationId.transportString(), video ? 1 : 0, (isGroup ? 1 : 0)) == 0
+        let didStart = wcall_start(conversationId.transportString(), video ? 1 : 0, isGroup ? 1 : 0)
+        return didStart == 0
     }
     
     public func answerCall(conversationId: UUID, isGroup: Bool) -> Bool {
-        return wcall_answer(conversationId.transportString(), isGroup ? 1 : 0) == 0
+        let didAnswer = wcall_answer(conversationId.transportString(), isGroup ? 1 : 0)
+        return didAnswer == 0
     }
     
     public func endCall(conversationId: UUID, isGroup: Bool) {

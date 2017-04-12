@@ -140,7 +140,6 @@ class SessionTests : SessionBaseTest {
     }
 }
 
-
 class SessionTrackerTest : SessionBaseTest {
     
     var sut: SessionTracker!
@@ -194,5 +193,35 @@ class SessionTrackerTest : SessionBaseTest {
         XCTAssertEqual(session1?.currentState, Session.State.incoming)
         XCTAssertEqual(session2?.currentState, Session.State.sessionEnded)
     }
+    
+    func testThatItRestoresOldSessions() {
+        // given
+        let event = callStateEvent(in: conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1, session: "session1")
+        sut.addEvent(event!)
+
+        // when
+        sut = SessionTracker(managedObjectContext: uiMOC)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(sut.sessions.count, 1)
+        XCTAssertEqual(sut.sessions.first?.sessionID, "session1")
+    }
+    
+    func testThatItUnarchivesSessionFromBeforeProjectRenameWithoutCrashing() {
+        // given
+        NSKeyedArchiver.setClassName("zmessaging.Session", for: Session.self) // Class name before the project rename
+        let event = callStateEvent(in: conversation, joinedUsers: [sender], videoSendingUsers: [], sequence: 1, session: "session1")
+        sut.addEvent(event!)
+
+        // when
+        NSKeyedArchiver.setClassName("WireSyncEngine.Session", for: Session.self) // Class name after project rename
+        sut = SessionTracker(managedObjectContext: uiMOC)
+        
+        // then
+        XCTAssertEqual(sut.sessions.count, 1)
+        XCTAssertEqual(sut.sessions.first?.sessionID, "session1")
+    }
+    
 }
 

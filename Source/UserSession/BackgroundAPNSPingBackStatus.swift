@@ -156,7 +156,7 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
             updateStatus()
         }
 
-        RequestAvailableNotification.notifyNewRequestsAvailable(self)
+        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
 
     @objc(didReceiveEncryptedEvents:originalEvents:hasMore:)
