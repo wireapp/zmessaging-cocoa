@@ -69,11 +69,11 @@ class OTRTests : IntegrationTestBase {
         // then
         XCTAssertNotNil(message)
         let requests = mockTransportSession.receivedRequests()
-        let expected = "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/assets"
-        XCTAssertEqual(requests[0].path, expected)
-        XCTAssertEqual(requests[1].path, "/users/prekeys")
-        XCTAssertEqual(requests[2].path, expected)
-        XCTAssertEqual(requests[3].path, expected)
+        let messageSendingPath = "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/messages"
+        XCTAssertEqual(requests[0].path, "/assets/v3")
+        XCTAssertEqual(requests[1].path, messageSendingPath)
+        XCTAssertEqual(requests[2].path, "/users/prekeys")
+        XCTAssertEqual(requests[3].path, messageSendingPath)
     }
     
     func testThatItSendsARequestToUpdateSignalingKeys() {

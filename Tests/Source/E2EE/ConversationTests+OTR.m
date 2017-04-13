@@ -124,7 +124,7 @@
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
     ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRAssetAdd);
+    XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
@@ -284,7 +284,7 @@
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
     ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRAssetAdd);
+    XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
@@ -432,39 +432,29 @@
     }];
 
     // THEN
-    NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets", conversation.remoteIdentifier.transportString];
+    NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     
-    // then we expect it to receive a bomb preview and medium
+    // then we expect it to receive a bomb medium
     // when resending after fetching the (faulty) prekeys
-    NSUInteger previewReceived = 0;
-    NSUInteger mediumReceived = 0;
+    NSUInteger bombsReceived = 0;
     
     for (ZMTransportRequest *req in self.mockTransportSession.receivedRequests) {
-
-        if (! [req.path hasPrefix:expectedPath]) {
+        if (! [req.path hasPrefix:expectedPath] || nil == req.binaryData) {
             continue;
         }
-
-        ZMMultipartBodyItem *metaData = req.multipartBodyItems.firstObject;
-        ZMMultipartBodyItem *imageData = req.multipartBodyItems.lastObject;
         
-        ZMOtrAssetMeta *otrMessage = [ZMOtrAssetMeta parseFromData:metaData.data];
+        ZMOtrAssetMeta *otrMessage = [ZMOtrAssetMeta parseFromData:req.binaryData];
         XCTAssertNotNil(otrMessage);
         
         NSArray <ZMUserEntry *>* userEntries = otrMessage.recipients;
         ZMClientEntry *clientEntry = [userEntries.firstObject.clients firstObject];
         
         if ([clientEntry.text isEqualToData:[@"💣" dataUsingEncoding:NSUTF8StringEncoding]]) {
-            if (imageData.data.length > 1000) {
-                mediumReceived++;
-            } else {
-                previewReceived++;
-            }
+            bombsReceived++;
         }
     }
-    
-    XCTAssertEqual(previewReceived, 1lu);
-    XCTAssertEqual(mediumReceived, 1lu);
+
+    XCTAssertEqual(bombsReceived, 1lu);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
 }
 
