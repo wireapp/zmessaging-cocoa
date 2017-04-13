@@ -154,4 +154,9 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
         WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId).post()
     }
 
+    var mockInitiator : ZMUser?
+    
+    override public func initiatorForCall(conversationId: UUID) -> UUID? {
+        return mockInitiator?.remoteIdentifier
+    }
 }

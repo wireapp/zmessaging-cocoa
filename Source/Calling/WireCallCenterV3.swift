@@ -431,11 +431,11 @@ public typealias WireCallMessageToken = UnsafeMutableRawPointer
             ignoredConversations.insert(conversationId)
         } else {
             ignoredConversations.remove(conversationId)
-            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
-                                                                                     selfUserID: selfUserId,
-                                                                                     members: [CallMember(userId: userId, audioEstablished: false)],
-                                                                                     initiator: userId)
         }
+        participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
+                                                                                 selfUserID: selfUserId,
+                                                                                 members: [CallMember(userId: userId, audioEstablished: false)],
+                                                                                 initiator: userId)
     }
     
     fileprivate func missed(conversationId: UUID, userId: UUID, timestamp: Date, isVideoCall: Bool) {

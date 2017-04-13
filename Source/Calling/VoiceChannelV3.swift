@@ -60,7 +60,7 @@ public class VoiceChannelV3 : NSObject, CallProperties {
         else { return VoiceChannelV2ParticipantState() }
         
         let state = VoiceChannelV2ParticipantState()
-        state.isSendingVideo = false
+        state.isSendingVideo = false // TODO Sabine
         if participant.isSelfUser {
             state.connectionState = selfUserConnectionState
         } else {
@@ -82,6 +82,16 @@ public class VoiceChannelV3 : NSObject, CallProperties {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
         
         return WireCallCenterV3.isVideoCall(conversationId: remoteIdentifier)
+    }
+    
+    public var initiator : ZMUser? {
+        guard let context = conversation?.managedObjectContext,
+              let convId = conversation?.remoteIdentifier,
+              let userId = WireCallCenterV3.activeInstance?.initiatorForCall(conversationId: convId)
+        else {
+            return nil
+        }
+        return ZMUser.fetch(withRemoteIdentifier: userId, in: context)
     }
     
     public func toggleVideo(active: Bool) throws {

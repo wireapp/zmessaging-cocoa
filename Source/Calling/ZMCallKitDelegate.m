@@ -351,7 +351,8 @@ NS_ASSUME_NONNULL_END
 
 - (void)requestStartCallInConversation:(ZMConversation *)conversation videoCall:(BOOL)video
 {
-    if (conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall || conversation.voiceChannel.state == VoiceChannelV2StateIncomingCallDegraded) {
+    VoiceChannelV2State state = conversation.voiceChannel.state;
+    if (state == VoiceChannelV2StateIncomingCall || state == VoiceChannelV2StateIncomingCallDegraded || state == VoiceChannelV2StateIncomingCallInactive) {
         CXAnswerCallAction *answerAction = [[CXAnswerCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
         CXTransaction *callAnswerTransaction = [[CXTransaction alloc] initWithAction:answerAction];
         [self.callController requestTransaction:callAnswerTransaction completion:^(NSError * _Nullable error) {

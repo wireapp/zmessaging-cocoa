@@ -34,7 +34,12 @@ public enum CaptureDevice : Int {
     }
 }
 
-extension VoiceChannelV2 : VoiceChannelInternal { }
+extension VoiceChannelV2 : VoiceChannelInternal {
+
+    public var initiator : ZMUser? {
+        return nil
+    }
+}
 
 extension VoiceChannelV3 : VoiceChannelInternal { }
 
@@ -122,6 +127,9 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
         flowManager.setVideoCaptureDevice(device.deviceIdentifier, forConversation: remoteIdentifier.transportString())
     }
     
+    public var initiator: ZMUser? {
+        return currentVoiceChannel.initiator
+    }
 }
 
 extension VoiceChannelRouter : CallObservers {
