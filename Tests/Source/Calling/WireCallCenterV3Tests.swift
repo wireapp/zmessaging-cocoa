@@ -221,6 +221,32 @@ class WireCallCenterV3Tests: MessagingTest {
     
     }
     
+    func testThatItBuffersEventsUntilAVSIsReady(){
+        // given
+        let conversationId = UUID()
+        let userId = UUID()
+        let clientId = "foo"
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        let data = self.verySmallJPEGData()
+        
+        // when
+        sut.received(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: conversationId, userId: userId, clientId: clientId)
+        XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 0)
+        
+        // and when
+        WireSyncEngine.ReadyHandler(version: 2, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 1)
+        if let event = (sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.last {
+            XCTAssertEqual(event.conversationId, conversationId)
+            XCTAssertEqual(event.userId, userId)
+            XCTAssertEqual(event.clientId, clientId)
+            XCTAssertEqual(event.data, data)
+        }
+    }
+    
 }
 
 

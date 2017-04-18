@@ -272,6 +272,7 @@ internal func ReadyHandler(version: Int32, contextRef: UnsafeMutableRawPointer?)
         
         callCenter.uiMOC.performGroupedBlock {
             callCenter.callingProtocol = callingProtocol
+            callCenter.isReady = true
         }
     } else {
         zmLog.error("wcall initialized with unknown protocol version: \(version)")
@@ -289,6 +290,14 @@ public protocol WireCallCenterTransport: class {
 public typealias WireCallMessageToken = UnsafeMutableRawPointer
 
 
+public struct CallEvent {
+    let data: Data
+    let currentTimestamp: Date
+    let serverTimestamp: Date
+    let conversationId: UUID
+    let userId: UUID
+    let clientId: String
+}
 
 /// MARK - WireCallCenterV3
 
@@ -312,8 +321,18 @@ public typealias WireCallMessageToken = UnsafeMutableRawPointer
     
     public weak var transport : WireCallCenterTransport? = nil
     
-    public fileprivate(set) var callingProtocol : CallingProtocol = .version2
+    var bufferedEvents : [CallEvent]  = []
     
+    fileprivate var isReady : Bool = false {
+        didSet {
+            if isReady {
+                bufferedEvents.forEach{ avsWrapper.received(callEvent: $0) }
+                bufferedEvents = []
+            }
+        }
+    }
+
+    public fileprivate(set) var callingProtocol : CallingProtocol = .version2
     var avsWrapper : AVSWrapperType!
     let uiMOC : NSManagedObjectContext
     
@@ -371,7 +390,13 @@ public typealias WireCallMessageToken = UnsafeMutableRawPointer
     }
     
     public func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
-        avsWrapper.received(data: data, currentTimestamp: currentTimestamp, serverTimestamp: serverTimestamp, conversationId: conversationId, userId: userId, clientId: clientId)
+        let callEvent = CallEvent(data: data, currentTimestamp: currentTimestamp, serverTimestamp: serverTimestamp, conversationId: conversationId, userId: userId, clientId: clientId)
+        
+        if isReady {
+            avsWrapper.received(callEvent: callEvent)
+        } else {
+            bufferedEvents.append(callEvent)
+        }
     }
     
     // MARK - Call state methods

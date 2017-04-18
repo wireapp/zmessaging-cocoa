@@ -32,7 +32,7 @@ class MockAVSWrapper : AVSWrapperType {
     var startCallShouldFail : Bool = false
     var mockIsVideoCall : Bool = false
     var hasOngoingCall: Bool = false
-    
+    var receivedCallEvents : [CallEvent] = []
     
     required init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?) {
         // do nothing
@@ -68,8 +68,8 @@ class MockAVSWrapper : AVSWrapperType {
         //
     }
     
-    func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
-        //
+    func received(callEvent: CallEvent) {
+        receivedCallEvents.append(callEvent)
     }
     
     func isVideoCall(conversationId: UUID) -> Bool {
