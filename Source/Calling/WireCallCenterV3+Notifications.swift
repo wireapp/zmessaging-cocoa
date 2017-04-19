@@ -173,21 +173,6 @@ class VoiceChannelParticipantV3Snapshot {
 
         self.members = (members ?? callCenter.avsWrapper.members(in: conversationId)).toOrderedSetState()
         state = SetSnapshot(set: self.members, moveType: .uiCollectionView)
-        notifyInitialChange()
-    }
-    
-    func notifyInitialChange(){
-        let changedIndexes = ChangedIndexes(start: OrderedSetState(array: []),
-                                            end: members,
-                                            updated: Set())
-        let changeInfo = SetChangeInfo(observedObject: conversationId as NSUUID,
-                                         changeSet: changedIndexes,
-                                         orderedSetState: OrderedSetState<CallMember>(array: []))
-        
-        DispatchQueue.main.async { [weak self] in
-            guard let `self` = self else { return }
-            VoiceChannelParticipantNotification(setChangeInfo: changeInfo, conversationId: self.conversationId).post()
-        }
     }
     
     func callParticipantsChanged(newParticipants: [CallMember]) {
