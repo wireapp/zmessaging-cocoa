@@ -40,6 +40,7 @@ static NSString *ZMLogTag = @"Push";
 - (void)ignoreCallForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
 - (void)replyToNotification:(UILocalNotification *)notification withReply:(NSString*)reply completionHandler:(void (^)())completionHandler;
 - (void)muteConversationForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
+- (void)likeMessageForNotification:(UILocalNotification *)note withCompletionHandler:(void (^)(void))completionHandler;
 
 @end
 
@@ -204,7 +205,7 @@ static NSString *ZMLogTag = @"Push";
         return;
     }
     if ([identifier isEqualToString:ZMMessageLikeAction]) {
-        [self likeMessageForNotification:notification WithCompletionHandler:completionHandler];
+        [self likeMessageForNotification:notification withCompletionHandler:completionHandler];
         return;
     }
     
@@ -434,6 +435,41 @@ static NSString *ZMLogTag = @"Push";
             completionHandler();
         }
     }
+}
+
+- (void)likeMessageForNotification:(UILocalNotification *)note withCompletionHandler:(void (^)(void))completionHandler
+{
+    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"Like Message Activity"];
+    ZMConversation *conversation = [note conversationInManagedObjectContext:self.managedObjectContext];
+    ZMMessage *message = [note messageInConversation:conversation inManagedObjectContext:self.managedObjectContext];
+
+    if (message == nil) {
+        [activity endActivity];
+        if (completionHandler != nil) {
+            completionHandler();
+        }
+        return;
+    }
+    
+    ZM_WEAK(self);
+    [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
+        ZM_STRONG(self);
+        self.likeMesssageObserverToken = nil;
+        if (result == ZMBackgroundTaskResultFailed) {
+            ZMLogDebug(@"Failed to send reaction via notification");
+        }
+        
+        [activity endActivity];
+        if (completionHandler != nil) {
+            completionHandler();
+        }
+    }];
+    
+    [self.managedObjectContext performGroupedBlock:^{
+        id<ZMConversationMessage> reactionMesssage = [ZMMessage addReaction:MessageReactionLike toMessage:message];
+        self.likeMesssageObserverToken = [MessageChangeInfo addObserver:self forMessage:reactionMesssage];
+        [self.managedObjectContext saveOrRollback];
+    }];
 }
 
 @end

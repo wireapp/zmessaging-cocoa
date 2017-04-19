@@ -64,6 +64,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic) ZMCallStateObserver *callStateObserver;
 @property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 @property (nonatomic) id<NSObject> messageReplyObserverToken;
+@property (nonatomic) id<NSObject> likeMesssageObserverToken;
 
 - (void)notifyThirdPartyServices;
 - (void)start;
