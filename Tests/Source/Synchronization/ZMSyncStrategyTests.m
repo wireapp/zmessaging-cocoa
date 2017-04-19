@@ -80,6 +80,7 @@
 @property (nonatomic) id syncStatusMock;
 @property (nonatomic) id operationStatusMock;
 @property (nonatomic) id applicationStatusDirectoryMock;
+@property (nonatomic) id userProfileImageUpdateStatus;
 @end
 
 
@@ -99,11 +100,14 @@
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.syncStatusMock = [OCMockObject mockForClass:SyncStatus.class];
     self.operationStatusMock = [OCMockObject mockForClass:ZMOperationStatus.class];
+    self.userProfileImageUpdateStatus = [OCMockObject niceMockForClass:UserProfileImageUpdateStatus.class];
     
     self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
     [[[[self.applicationStatusDirectoryMock expect] andReturn: self.applicationStatusDirectoryMock] classMethod] alloc];
+    (void) [[[self.applicationStatusDirectoryMock expect] andReturn:self.applicationStatusDirectoryMock] initWithManagedObjectContext:OCMOCK_ANY cookie:OCMOCK_ANY requestCancellation:OCMOCK_ANY application:OCMOCK_ANY syncStateDelegate:OCMOCK_ANY];
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.syncStatusMock] syncStatus];
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.operationStatusMock] operationStatus];
+    [(ZMApplicationStatusDirectory *)[[self.applicationStatusDirectoryMock stub] andReturn:self.userProfileImageUpdateStatus] userProfileImageUpdateStatus];
     
     id userTranscoder = [OCMockObject niceMockForClass:ZMUserTranscoder.class];
     [[[[userTranscoder expect] andReturn:userTranscoder] classMethod] alloc];
@@ -231,6 +235,8 @@
     self.syncStatusMock = nil;
     [self.applicationStatusDirectoryMock stopMocking];
     self.applicationStatusDirectoryMock = nil;
+    [self.userProfileImageUpdateStatus stopMocking];
+    self.userProfileImageUpdateStatus = nil;
     
     [self.sut tearDown];
     for (id syncObject in self.syncObjects) {
@@ -1020,7 +1026,7 @@
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
     
     [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-//    [[[self.slowSynStatus stub] andReturnValue:@(NO)] isSyncing];
+    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
 
     // expect
     for(id obj in events) {
@@ -1197,6 +1203,7 @@
 - (void)testThatItNotifiesTheOperationLoopOfNewOperationWhenEnteringBackground
 {
     // expect
+    [[self.operationStatusMock expect] setIsInBackground:YES];
     id mockRequestNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     [[[mockRequestNotification expect] classMethod] notifyNewRequestsAvailable:OCMOCK_ANY];
 
@@ -1211,6 +1218,7 @@
 - (void)testThatItNotifiesTheOperationLoopOfNewOperationWhenEnteringForeground
 {
     // expect
+    [[self.operationStatusMock expect] setIsInBackground:NO];
     id mockRequestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     [[mockRequestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
     
