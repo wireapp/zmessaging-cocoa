@@ -75,6 +75,8 @@
 
 - (void)tearDown;
 {
+    WaitForAllGroupsToBeEmpty(0.5);
+    
     self.mockPushChannel = nil;
     self.transportSession = nil;
     self.syncStrategy = nil;
