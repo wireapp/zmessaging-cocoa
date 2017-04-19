@@ -1391,7 +1391,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
     ZMConversation *conversation = self.conversationUnderTest;
-    [ZMCallTimer setTestCallTimeout: 0.2];
+    [ZMCallTimer setTestCallTimeout: 0.5];
     
     // when other user calls
     [self otherJoinCall];
@@ -1461,7 +1461,7 @@
     self.useGroupConversation = YES;
     
     ZMConversation *conversation = self.conversationUnderTest;
-    [ZMCallTimer setTestCallTimeout: 0.2];
+    [ZMCallTimer setTestCallTimeout: 0.5];
     
     // when selfUser calls
     [self selfJoinCall];

@@ -198,6 +198,55 @@ class WireCallCenterV3Tests: MessagingTest {
         }
     }
     
+    func testThatItSetsTheCallStartTimeBeforePostingTheNotification(){
+        // given
+        let conversationId = UUID()
+        let userId = UUID()
+        let conversationIdRef = conversationId.transportString().cString(using: .utf8)
+        let userIdRef = userId.transportString().cString(using: .utf8)
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        XCTAssertNil(sut.establishedDate)
+        
+        // expect
+        expectation(forNotification: WireCallCenterCallStateNotification.notificationName.rawValue, object: nil) { wrappedNote in
+            XCTAssertNotNil(self.sut.establishedDate)
+            return true
+        }
+        
+        // when
+        WireSyncEngine.EstablishedCallHandler(conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
+        
+        // then
+        XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
+    
+    }
+    
+    func testThatItBuffersEventsUntilAVSIsReady(){
+        // given
+        let conversationId = UUID()
+        let userId = UUID()
+        let clientId = "foo"
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        let data = self.verySmallJPEGData()
+        
+        // when
+        sut.received(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: conversationId, userId: userId, clientId: clientId)
+        XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 0)
+        
+        // and when
+        WireSyncEngine.ReadyHandler(version: 2, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 1)
+        if let event = (sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.last {
+            XCTAssertEqual(event.conversationId, conversationId)
+            XCTAssertEqual(event.userId, userId)
+            XCTAssertEqual(event.clientId, clientId)
+            XCTAssertEqual(event.data, data)
+        }
+    }
+    
 }
 
 

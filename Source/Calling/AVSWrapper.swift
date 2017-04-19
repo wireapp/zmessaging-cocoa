@@ -28,7 +28,7 @@ public protocol AVSWrapperType {
     func endCall(conversationId: UUID)
     func rejectCall(conversationId: UUID)
     func close()
-    func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String)
+    func received(callEvent: CallEvent)
     func toggleVideo(conversationID: UUID, active: Bool)
     
     func isVideoCall(conversationId: UUID) -> Bool
@@ -115,12 +115,12 @@ public class AVSWrapper : AVSWrapperType {
         wcall_resp(Int32(httpStatus), "", context)
     }
     
-    public func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
-        data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
-            let currentTime = UInt32(currentTimestamp.timeIntervalSince1970)
-            let serverTime = UInt32(serverTimestamp.timeIntervalSince1970)
+    public func received(callEvent: CallEvent) {
+        callEvent.data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
+            let currentTime = UInt32(callEvent.currentTimestamp.timeIntervalSince1970)
+            let serverTime = UInt32(callEvent.serverTimestamp.timeIntervalSince1970)
             
-            wcall_recv_msg(bytes, data.count, currentTime, serverTime, conversationId.transportString(), userId.transportString(), clientId)
+            wcall_recv_msg(bytes, callEvent.data.count, currentTime, serverTime, callEvent.conversationId.transportString(), callEvent.userId.transportString(), callEvent.clientId)
         }
     }
     

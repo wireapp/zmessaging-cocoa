@@ -74,7 +74,6 @@
 @property (nonatomic) ZMCallFlowRequestStrategy *callFlowRequestStrategy;
 @property (nonatomic) ZMCallStateRequestStrategy *callStateRequestStrategy;
 @property (nonatomic) LinkPreviewAssetUploadRequestStrategy *linkPreviewAssetUploadRequestStrategy;
-@property (nonatomic) ImageUploadRequestStrategy *imageUploadRequestStrategy;
 @property (nonatomic) ImageDownloadRequestStrategy *imageDownloadRequestStrategy;
 
 @property (nonatomic) ZMSyncStateMachine *stateMachine;
@@ -84,7 +83,6 @@
 @property (nonatomic) UserClientRequestStrategy *userClientRequestStrategy;
 @property (nonatomic) FetchingClientRequestStrategy *fetchingClientRequestStrategy;
 @property (nonatomic) MissingClientsRequestStrategy *missingClientsRequestStrategy;
-@property (nonatomic) FileUploadRequestStrategy *fileUploadRequestStrategy;
 @property (nonatomic) LinkPreviewAssetDownloadRequestStrategy *linkPreviewAssetDownloadRequestStrategy;
 @property (nonatomic) PushTokenStrategy *pushTokenStrategy;
 @property (nonatomic) SearchUserImageStrategy *searchUserImageStrategy;
@@ -198,11 +196,9 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[SelfContactCardUploadStrategy alloc] initWithAuthenticationStatus:self.applicationStatusDirectory.authenticationStatus
                                                                               clientRegistrationStatus:self.applicationStatusDirectory.clientRegistrationStatus
                                                                                   managedObjectContext:self.syncMOC],
-                                   self.fileUploadRequestStrategy,
                                    self.linkPreviewAssetDownloadRequestStrategy,
                                    self.linkPreviewAssetUploadRequestStrategy,
                                    self.imageDownloadRequestStrategy,
-                                   self.imageUploadRequestStrategy,
                                    [[PushTokenStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory],
                                    [[TypingStrategy alloc] initWithApplicationStatus:self.applicationStatusDirectory managedObjectContext:self.syncMOC],
                                    [[SearchUserImageStrategy alloc] initWithApplicationStatus:self.applicationStatusDirectory managedObjectContext:self.syncMOC],
@@ -254,11 +250,9 @@ ZM_EMPTY_ASSERTING_INIT()
     self.loginCodeRequestTranscoder = [[ZMLoginCodeRequestTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.applicationStatusDirectory.authenticationStatus];
     self.phoneNumberVerificationTranscoder = [[ZMPhoneNumberVerificationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:self.applicationStatusDirectory.authenticationStatus];
     self.conversationStatusSync = [[ConversationStatusStrategy alloc] initWithManagedObjectContext:self.syncMOC];
-    self.fileUploadRequestStrategy = [[FileUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory];
     self.linkPreviewAssetDownloadRequestStrategy = [[LinkPreviewAssetDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory];
     self.linkPreviewAssetUploadRequestStrategy = [[LinkPreviewAssetUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory linkPreviewPreprocessor:nil previewImagePreprocessor:nil];
     self.imageDownloadRequestStrategy = [[ImageDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory];
-    self.imageUploadRequestStrategy = [[ImageUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory maxConcurrentImageOperation:nil];
 }
 
 - (void)appDidEnterBackground:(NSNotification *)note

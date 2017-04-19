@@ -90,13 +90,13 @@ class TypingStrategyTests : MessagingTest {
     }
     
     override func tearDown() {
-        self.conversationA = nil;
-        self.userA = nil;
+        self.conversationA = nil
+        self.userA = nil
         
         self.sut.tearDown()
         XCTAssertTrue(typing.didTearDown)
-        self.typing = nil;
-        self.sut = nil;
+        self.typing = nil
+        self.sut = nil
         
         ZMTypingDefaultTimeout = originalTimeout;
         super.tearDown()
@@ -339,7 +339,7 @@ extension TypingStrategyTests {
         var result = [ZMTransportRequest?]()
         let conversation = insertUIConversation()
         
-        isTyping.forEach{
+        isTyping.forEach {
             TypingStrategy.notifyTranscoderThatUser(isTyping: $0, in: conversation)
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             if delay == .delay {
@@ -363,7 +363,7 @@ extension TypingStrategyTests {
     
     func testThatItDoesReturn_OnlyOne_RequestsWhenReceiving_AnotherIdentical_TypingNotification() {
         // when
-        let (conversation, requests) = requestsForSendingNotifications(isTyping:[true, true], delay:.noDelay)
+        let (conversation, requests) = requestsForSendingNotifications(isTyping:[true, true], delay: .noDelay)
         XCTAssertEqual(requests.count, 2)
         let request1 = requests.first!
         let request2 = requests.last!
