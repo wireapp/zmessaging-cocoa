@@ -303,6 +303,7 @@ internal func readyHandler(version: Int32, contextRef: UnsafeMutableRawPointer?)
         
         callCenter.uiMOC.performGroupedBlock {
             callCenter.callingProtocol = callingProtocol
+            callCenter.isReady = true
         }
     } else {
         zmLog.error("wcall initialized with unknown protocol version: \(version)")
@@ -333,6 +334,14 @@ public protocol WireCallCenterTransport: class {
 public typealias WireCallMessageToken = UnsafeMutableRawPointer
 
 
+public struct CallEvent {
+    let data: Data
+    let currentTimestamp: Date
+    let serverTimestamp: Date
+    let conversationId: UUID
+    let userId: UUID
+    let clientId: String
+}
 
 /// MARK - WireCallCenterV3
 
@@ -355,6 +364,19 @@ public typealias WireCallMessageToken = UnsafeMutableRawPointer
     public private(set) var establishedDate : Date?
     
     public weak var transport : WireCallCenterTransport? = nil
+    
+    /// Used to collect incoming events (e.g. from fetching the notification stream) until AVS is ready to process them
+    var bufferedEvents : [CallEvent]  = []
+    
+    /// Set to true once AVS calls the ReadyHandler. Setting it to true forwards all previously buffered events to AVS
+    fileprivate var isReady : Bool = false {
+        didSet {
+            if isReady {
+                bufferedEvents.forEach{ avsWrapper.received(callEvent: $0) }
+                bufferedEvents = []
+            }
+        }
+    }
     
     public fileprivate(set) var callingProtocol : CallingProtocol = .version2
     
@@ -443,7 +465,13 @@ public typealias WireCallMessageToken = UnsafeMutableRawPointer
     }
     
     public func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
-        avsWrapper.received(data: data, currentTimestamp: currentTimestamp, serverTimestamp: serverTimestamp, conversationId: conversationId, userId: userId, clientId: clientId)
+        let callEvent = CallEvent(data: data, currentTimestamp: currentTimestamp, serverTimestamp: serverTimestamp, conversationId: conversationId, userId: userId, clientId: clientId)
+        
+        if isReady {
+            avsWrapper.received(callEvent: callEvent)
+        } else {
+            bufferedEvents.append(callEvent)
+        }
     }
     
     // MARK - Call state methods
