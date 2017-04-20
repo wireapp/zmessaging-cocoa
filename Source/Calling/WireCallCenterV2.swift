@@ -46,6 +46,8 @@ class VoiceChannelParticipantSnapshot: NSObject {
     }
     
     func recalculateSet() {
+        guard conversation?.voiceChannelRouter?.currentVoiceChannel is VoiceChannelV2 else { return }
+        
         guard let conversation = conversation,
               let voiceChannel = conversation.voiceChannel
         else { return }

@@ -199,12 +199,7 @@ class VoiceChannelParticipantV3Snapshot {
         else { return}
         
         state = newStateUpdate.newSnapshot
-        
-        DispatchQueue.main.async { [weak self] in
-            guard let `self` = self else { return }
-            VoiceChannelParticipantNotification(setChangeInfo: newStateUpdate.changeInfo, conversationId: self.conversationId).post()
-        }
-        
+        VoiceChannelParticipantNotification(setChangeInfo: newStateUpdate.changeInfo, conversationId: self.conversationId).post()
     }
     
     public func connectionState(forUserWith userId: UUID) -> VoiceChannelV2ConnectionState {

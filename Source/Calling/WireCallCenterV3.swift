@@ -258,8 +258,8 @@ internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     callCenter.uiMOC.performGroupedBlock {
-        callCenter.handleCallState(callState: .terminating(reason: CallClosedReason(reason: reason)), conversationId: convID, userId: userID)
         callCenter.clearSnapshot(conversationId: convID)
+        callCenter.handleCallState(callState: .terminating(reason: CallClosedReason(reason: reason)), conversationId: convID, userId: userID)
     }
 }
 
@@ -507,9 +507,11 @@ public struct CallEvent {
         
         if isGroup {
             ignoredConversations.insert(conversationId)
-            WireCallCenterCallStateNotification(callState: .incoming(video: false, shouldRing: false),
-                                                conversationId: conversationId,
-                                                userId: initiatorForCall(conversationId: conversationId) ?? selfUserId).post()
+            if callParticipants(conversationId: conversationId).count >= 2 {
+                WireCallCenterCallStateNotification(callState: .incoming(video: false, shouldRing: false),
+                                                    conversationId: conversationId,
+                                                    userId: initiatorForCall(conversationId: conversationId) ?? selfUserId).post()
+            }
         }
     }
     
