@@ -276,11 +276,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 }
 
 - (void)executeNextOperation
-{
-    [self.syncMOC performGroupedBlock:^{
-        [self.syncStrategy dataDidChange];
-    }];
-    
+{    
     if (self.shouldStopEnqueueing) {
         return;
     }

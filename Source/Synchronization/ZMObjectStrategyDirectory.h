@@ -53,6 +53,4 @@
 @property (nonatomic, readonly) ZMLoginCodeRequestTranscoder *loginCodeRequestTranscoder;
 @property (nonatomic, readonly) NSManagedObjectContext *moc;
 
-- (NSArray *)allTranscoders;
-
 @end

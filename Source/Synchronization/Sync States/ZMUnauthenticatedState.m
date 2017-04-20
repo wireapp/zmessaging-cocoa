@@ -44,7 +44,7 @@ NSTimeInterval DebugLoginFailureTimerOverride = 0;
 static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 
 // if the request will fail in less than 50ms, don't even start it
-static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
+//static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 
 @interface ZMUnauthenticatedState ()
 
@@ -127,71 +127,71 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 
 - (ZMTransportRequest *)nextRequest
 {
-    if([self isDoneWithLogin]) {
-        if (self.shouldEnterEventProcessingState) {
-            id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
-            [stateMachine goToState:stateMachine.eventProcessingState];
-        }
-        return nil;
-    }
+//    if([self isDoneWithLogin]) {
+//        if (self.shouldEnterEventProcessingState) {
+//            id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
+//            [stateMachine goToState:stateMachine.eventProcessingState];
+//        }
+//        return nil;
+//    }
     
     //TODO: sync strategy should ask transcoders for next request and they should ask auth status for current state to decide if they need to return request
-    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
-    ZMClientRegistrationPhase clientRegPhase  = self.clientRegistrationStatus.currentPhase;
+//    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
+//    ZMClientRegistrationPhase clientRegPhase  = self.clientRegistrationStatus.currentPhase;
 
-    switch(self.authenticationStatus.currentPhase) {
-        case ZMAuthenticationPhaseLoginWithEmail:
-        case ZMAuthenticationPhaseLoginWithPhone:
-        case ZMAuthenticationPhaseWaitingForEmailVerification:
-            return [self loginRequest];
-        case ZMAuthenticationPhaseRegisterWithEmail:
-        case ZMAuthenticationPhaseRegisterWithPhone:
-            return [[directory.registrationTranscoder requestGenerators] nextRequest];
-        case ZMAuthenticationPhaseRequestPhoneVerificationCodeForRegistration:
-        case ZMAuthenticationPhaseVerifyPhoneForRegistration:
-            return [directory.phoneNumberVerificationTranscoder nextRequest];
-        case ZMAuthenticationPhaseRequestPhoneVerificationCodeForLogin:
-            return [[[directory loginCodeRequestTranscoder] requestGenerators] nextRequest];
-        case ZMAuthenticationPhaseUnauthenticated:
-            return [self loginRequest]; // this will, confusingly, also resend verification emails
-        case ZMAuthenticationPhaseAuthenticated:
-            if (clientRegPhase == ZMClientRegistrationPhaseWaitingForEmailVerfication) {
-                return [self loginRequest];
-            }
+//    switch(self.authenticationStatus.currentPhase) {
+//        case ZMAuthenticationPhaseLoginWithEmail:
+//        case ZMAuthenticationPhaseLoginWithPhone:
+//        case ZMAuthenticationPhaseWaitingForEmailVerification:
+//            return [self loginRequest];
+//        case ZMAuthenticationPhaseRegisterWithEmail:
+//        case ZMAuthenticationPhaseRegisterWithPhone:
+//            return [[directory.registrationTranscoder requestGenerators] nextRequest];
+//        case ZMAuthenticationPhaseRequestPhoneVerificationCodeForRegistration:
+//        case ZMAuthenticationPhaseVerifyPhoneForRegistration:
+//            return [directory.phoneNumberVerificationTranscoder nextRequest];
+//        case ZMAuthenticationPhaseRequestPhoneVerificationCodeForLogin:
+//            return [[[directory loginCodeRequestTranscoder] requestGenerators] nextRequest];
+//        case ZMAuthenticationPhaseUnauthenticated:
+//            return [self loginRequest]; // this will, confusingly, also resend verification emails
+//        case ZMAuthenticationPhaseAuthenticated:
+//            if (clientRegPhase == ZMClientRegistrationPhaseWaitingForEmailVerfication) {
+//                return [self loginRequest];
+//            }
             return nil;
-    }
+//    }
 }
 
-- (ZMTransportRequest *)loginRequest
-{
-    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
-    ZMTransportRequest *request = [[directory.loginTranscoder requestGenerators] nextRequest];
-    
-    if (self.shouldRunTimerForLoginExpiration)
-    {
-        if(self.lastTimerStart == nil) {
-            [self startLoginTimer];
-        }
-        
-        // Fail the login if I did not get a response within the timeout, no matter what
-        NSTimeInterval diff = [ZMUnauthenticatedState loginTimeout] - [[NSDate date] timeIntervalSinceDate:self.lastTimerStart] - RequestFailureTimeIntervalBufferTime;
-        if (diff > 0) {
-            [request expireAfterInterval:diff];
-            return request;
-        }
-        return nil;
-    }
-    
-    ZM_WEAK(self);
-    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:directory.moc block:^(ZMTransportResponse * response) {
-        NOT_USED(response);
-        ZM_STRONG(self);
-        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-    }]];
-    
-    // this could be any other request
-    return request;
-}
+//- (ZMTransportRequest *)loginRequest
+//{
+//    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
+//    ZMTransportRequest *request = [[directory.loginTranscoder requestGenerators] nextRequest];
+//    
+//    if (self.shouldRunTimerForLoginExpiration)
+//    {
+//        if(self.lastTimerStart == nil) {
+//            [self startLoginTimer];
+//        }
+//        
+//        // Fail the login if I did not get a response within the timeout, no matter what
+//        NSTimeInterval diff = [ZMUnauthenticatedState loginTimeout] - [[NSDate date] timeIntervalSinceDate:self.lastTimerStart] - RequestFailureTimeIntervalBufferTime;
+//        if (diff > 0) {
+//            [request expireAfterInterval:diff];
+//            return request;
+//        }
+//        return nil;
+//    }
+//    
+//    ZM_WEAK(self);
+//    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:directory.moc block:^(ZMTransportResponse * response) {
+//        NOT_USED(response);
+//        ZM_STRONG(self);
+//        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
+//    }]];
+//    
+//    // this could be any other request
+//    return request;
+//}
 
 - (void)didFailAuthentication {
     // nop
@@ -225,21 +225,21 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
     [self.loginFailureTimer fireAfterTimeInterval:[ZMUnauthenticatedState loginTimeout]];
 }
 
-- (void)didChangeAuthenticationData
-{
-    ZMAuthenticationStatus *authStatus  = self.authenticationStatus;
-
-    [self.loginFailureTimer cancel];
-    self.loginFailureTimer = nil;
-    if (authStatus.currentPhase == ZMAuthenticationPhaseLoginWithEmail || authStatus.currentPhase == ZMAuthenticationPhaseLoginWithPhone)
-    {
-        [self startLoginTimer];
-    }
-    if (authStatus.currentPhase == ZMAuthenticationPhaseRegisterWithEmail || authStatus.currentPhase == ZMAuthenticationPhaseRegisterWithPhone) {
-        [self.objectStrategyDirectory.registrationTranscoder resetRegistrationState];
-    }
-    [self dataDidChange];
-}
+//- (void)didChangeAuthenticationData
+//{
+//    ZMAuthenticationStatus *authStatus  = self.authenticationStatus;
+//
+//    [self.loginFailureTimer cancel];
+//    self.loginFailureTimer = nil;
+//    if (authStatus.currentPhase == ZMAuthenticationPhaseLoginWithEmail || authStatus.currentPhase == ZMAuthenticationPhaseLoginWithPhone)
+//    {
+//        [self startLoginTimer];
+//    }
+//    if (authStatus.currentPhase == ZMAuthenticationPhaseRegisterWithEmail || authStatus.currentPhase == ZMAuthenticationPhaseRegisterWithPhone) {
+//        [self.objectStrategyDirectory.registrationTranscoder resetRegistrationState];
+//    }
+//    [self dataDidChange];
+//}
 
 - (ZMUpdateEventsPolicy)updateEventsPolicy
 {
@@ -262,7 +262,7 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
 
 - (void)didEnterState
 {
-    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
+//    id<ZMObjectStrategyDirectory> directory = self.objectStrategyDirectory;
 
     id<ZMStateMachineDelegate> stateMachine = self.stateMachineDelegate;
     
@@ -272,21 +272,21 @@ static NSTimeInterval const RequestFailureTimeIntervalBufferTime = 0.05;
         return;
     }
     
-    ZMAuthenticationStatus *authenticationStatus = self.authenticationStatus;
+//    ZMAuthenticationStatus *authenticationStatus = self.authenticationStatus;
     
-    [directory.registrationTranscoder resetRegistrationState];
+//    [directory.registrationTranscoder resetRegistrationState];
+//    
+//    if (self.shouldRunTimerForLoginExpiration) {
+//        [self startLoginTimer];
+//    }
     
-    if (self.shouldRunTimerForLoginExpiration) {
-        [self startLoginTimer];
-    }
-    
-    [authenticationStatus addAuthenticationCenterObserver:self];
+//    [authenticationStatus addAuthenticationCenterObserver:self];
 }
 
 - (void)didLeaveState
 {
     [self stopLoginTimer];
-    [self.authenticationStatus removeAuthenticationCenterObserver:self];
+//    [self.authenticationStatus removeAuthenticationCenterObserver:self];
 }
 
 @end

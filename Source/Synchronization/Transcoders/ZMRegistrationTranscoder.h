@@ -18,14 +18,16 @@
 
 
 @import WireRequestStrategy;
+@import WireMessageStrategy;
 
 @class ZMTransportResponse;
-@class ZMAuthenticationStatus;
+@class ZMApplicationStatusDirectory;
 
 
-@interface ZMRegistrationTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
+@interface ZMRegistrationTranscoder : ZMAbstractRequestStrategy
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext applicationStatus:(id<ZMApplicationStatus>)applicationStatus NS_UNAVAILABLE;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory;
 - (void)resetRegistrationState;
 
 

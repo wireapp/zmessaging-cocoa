@@ -64,6 +64,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 @property (nonatomic) ZMLoginTranscoder *sut;
 @property (nonatomic) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic) id mockClientRegistrationStatus;
+@property (nonatomic) id mockApplicationStatusDirectory;
 
 @property (nonatomic) ZMCredentials *testEmailCredentials;
 @property (nonatomic) ZMCredentials *testPhoneNumberCredentials;
@@ -83,10 +84,16 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:cookie];
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
     
+    self.mockApplicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
+    [[[self.mockApplicationStatusDirectory stub] andReturn:self.authenticationStatus] authenticationStatus];
+    [[[self.mockApplicationStatusDirectory stub] andReturn:self.mockClientRegistrationStatus] clientRegistrationStatus];
+    [[[self.mockApplicationStatusDirectory stub] andReturnValue:@(ZMSynchronizationStateUnauthenticated)] synchronizationState];
+    [(ZMApplicationStatusDirectory *)[[self.mockApplicationStatusDirectory stub] andReturnValue:@(ZMOperationStateForeground)] operationState];
+    
     self.mockLocale = [OCMockObject niceMockForClass:[NSLocale class]];
     [[[self.mockLocale stub] andReturn:[NSLocale localeWithLocaleIdentifier:@"fr_FR"]] currentLocale];
     
-    self.sut = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus clientRegistrationStatus:self.mockClientRegistrationStatus];
+    self.sut = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatusDirectory:self.mockApplicationStatusDirectory];
     
     self.testEmailCredentials = [ZMEmailCredentials credentialsWithEmail:TestEmail password:TestPassword];
     self.testPhoneNumberCredentials = [ZMPhoneCredentials credentialsWithPhoneNumber:TestPhoneNumber verificationCode:TestPhoneCode];
@@ -102,30 +109,10 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [super tearDown];
 }
 
-
-- (void)testThatItGeneratesRequestsItSelf
-{
-    // when
-    NSArray *generators = self.sut.requestGenerators;
-    
-    // then
-    XCTAssertEqual(generators.count, 1u);
-    XCTAssertEqual(generators.firstObject, self.sut);
-}
-
-- (void)testThatItReturnsTheContextChangeTrackers;
-{
-    // when
-    NSArray *trackers = self.sut.contextChangeTrackers;
-    
-    // then
-    XCTAssertEqual(trackers.count, 0u);
-}
-
 - (void)testThatItCreatesTheTimedRequestSyncWithZeroDelayInDefaultConstructor
 {
     // given
-    ZMLoginTranscoder *sut = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus clientRegistrationStatus:self.mockClientRegistrationStatus];
+    ZMLoginTranscoder *sut = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatusDirectory:self.mockApplicationStatusDirectory];
     
     // then
     XCTAssertNotNil(sut.timedDownstreamSync);
@@ -209,7 +196,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)testThatItReturnsNoLoginRequestWhenTheUserSessionHasNoCredentials
 {
     // when
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertNil(request);
@@ -227,7 +214,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [self.authenticationStatus prepareForLoginWithCredentials:self.testEmailCredentials];
 
     // when
-    ZMTransportRequest *request = [[self.sut requestGenerators] nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertEqualObjects(request, expectedRequest);
@@ -243,7 +230,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [self.authenticationStatus prepareForLoginWithCredentials:self.testPhoneNumberCredentials];
     
     // when
-    ZMTransportRequest *request = [[self.sut requestGenerators] nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertEqualObjects(request, expectedRequest);
@@ -252,7 +239,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)testThatItDoesNotGenerateALoginRequestWhenTheUserSessionHasNoCredentials
 {
     // when
-    ZMTransportRequest *request = [[self.sut requestGenerators] nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertNil(request);
@@ -264,7 +251,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [self.authenticationStatus setAuthenticationCookieData:[@"foo" dataUsingEncoding:NSUTF8StringEncoding]];
     
     // when
-    ZMTransportRequest *request = [[self.sut requestGenerators] nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertNil(request);
@@ -284,7 +271,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    ZMTransportRequest *request = [[self.sut requestGenerators] nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertEqualObjects(request, expectedRequest);
@@ -302,7 +289,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     ZMTransportRequest *rejectedRequest = [[ZMTransportRequest alloc] initWithPath:ZMResendVerificationURL method:ZMMethodPOST payload:payload authentication:ZMTransportRequestAuthNone];
     
     // when
-    ZMTransportRequest *request = [[self.sut requestGenerators] nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertNotEqualObjects(request, rejectedRequest);
@@ -327,7 +314,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     // when
     
     [self expectAuthenticationSucceedAfter:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -344,7 +331,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 
     // when
     [self expectAuthenticationSucceedAfter:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -360,7 +347,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self expectAuthenticationFailedWithError:ZMUserSessionInvalidCredentials after:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -380,7 +367,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 
     // when
     [self expectRegistrationFailedWithError:ZMUserSessionEmailIsAlreadyRegistered after:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -397,7 +384,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self expectAuthenticationFailedWithError:ZMUserSessionInvalidCredentials after:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -410,7 +397,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 
     // when
     [self expectAuthenticationFailedWithError:ZMUserSessionUnkownError after:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -426,7 +413,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self expectAuthenticationFailedWithError:ZMUserSessionAccountIsPendingActivation after:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -443,7 +430,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self expectAuthenticationFailedWithError:ZMUserSessionInvalidCredentials after:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
     
@@ -464,7 +451,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self expectAuthenticationFailedWithError:ZMUserSessionInvalidCredentials after:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
     
@@ -485,7 +472,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self expectAuthenticationSucceedAfter:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         [self.authenticationStatus setAuthenticationCookieData:[@"foo" dataUsingEncoding:NSUTF8StringEncoding]];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
@@ -508,7 +495,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self expectAuthenticationSucceedAfter:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         [self.authenticationStatus setAuthenticationCookieData:[@"foo" dataUsingEncoding:NSUTF8StringEncoding]];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
@@ -541,7 +528,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self expectAuthenticationSucceedAfter:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
     
@@ -564,7 +551,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self expectAuthenticationFailedWithError:ZMUserSessionAccountIsPendingActivation after:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:response];
+        [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -591,13 +578,13 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self expectAuthenticationFailedWithError:ZMUserSessionAccountIsPendingActivation after:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:responsePending];
+        [[self.sut nextRequest] completeWithResponse:responsePending];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
     
     // when
     [self expectAuthenticationSucceedAfter:^{
-        [[[self.sut requestGenerators] nextRequest] completeWithResponse:responseValid];
+        [[self.sut nextRequest] completeWithResponse:responseValid];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
 }
@@ -613,7 +600,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    ZMTransportRequest *request = [[self.sut requestGenerators] nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertNotNil(request);
@@ -638,7 +625,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    ZMTransportRequest *request = [[self.sut requestGenerators] nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertNotNil(request);

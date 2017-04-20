@@ -18,7 +18,6 @@
 
 
 #import "ZMSyncStrategy.h"
-@class ZMSyncStateMachine;
 @class ZMGSMCallHandler;
 
 @interface ZMSyncStrategy (Internal)
@@ -26,12 +25,12 @@
 @property (atomic, readonly) BOOL tornDown;
 @property (nonatomic, weak, readonly) NSManagedObjectContext *uiMOC;
 @property (nonatomic, readonly) EventDecoder *eventDecoder;
-@property (nonatomic, readonly) ZMSyncStateMachine *stateMachine;
 @property (nonatomic, readonly) ZMUpdateEventsBuffer *eventsBuffer;
 @property (nonatomic, weak, readonly) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic, readonly) NotificationDispatcher *notificationDispatcher;
 @property (nonatomic, readonly) NSArray<ZMObjectSyncStrategy *> *requestStrategies;
 @property (nonatomic, readonly) NSArray<id<ZMContextChangeTracker>> *allChangeTrackers;
+@property (nonatomic, readonly) NSArray<id<ZMEventConsumer>> *eventConsumers;
 
 @end
 

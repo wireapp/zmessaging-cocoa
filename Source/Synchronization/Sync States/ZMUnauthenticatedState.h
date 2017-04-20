@@ -30,7 +30,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
 
 
-@interface ZMUnauthenticatedState : ZMSyncState <ZMTimerClient, ZMAuthenticationStatusObserver>
+@interface ZMUnauthenticatedState : ZMSyncState <ZMTimerClient>
 
 @property (nonatomic, readonly) ZMTimer*  _Nonnull loginFailureTimer;
 

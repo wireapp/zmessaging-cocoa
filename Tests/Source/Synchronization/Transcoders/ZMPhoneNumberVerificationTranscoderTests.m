@@ -40,11 +40,17 @@
     [super setUp];
     
     self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:nil];
-    self.sut = [[ZMPhoneNumberVerificationTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus];
+    
+    id applicationStatusDirectory = [OCMockObject mockForClass:[ZMApplicationStatusDirectory class]];
+    [[[applicationStatusDirectory stub] andReturn:self.authenticationStatus] authenticationStatus];
+    [[[applicationStatusDirectory stub] andReturnValue:@(ZMSynchronizationStateUnauthenticated)] synchronizationState];
+    [(ZMApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturnValue:@(ZMOperationStateForeground)] operationState];
+    
+    self.sut = [[ZMPhoneNumberVerificationTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatusDirectory:applicationStatusDirectory];
 }
 
 - (void)tearDown {
-    [self.sut tearDown];
+    self.authenticationStatus = nil;
     self.sut = nil;
     [super tearDown];
 }
@@ -62,7 +68,7 @@
     ZMTransportRequest *expectedRequest = [[ZMTransportRequest alloc] initWithPath:@"/activate/send" method:ZMMethodPOST payload:payload authentication:ZMTransportRequestAuthNone];
 
     // when
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // then
     XCTAssertEqualObjects(request, expectedRequest);
@@ -81,7 +87,7 @@
     
     //when
     ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    request = [self.sut nextRequest];
     
     //then
     XCTAssertEqualObjects(expectedRequest, request);
@@ -90,7 +96,7 @@
 - (void)testThatItDoesNotReturnRequestIfThereIsNoPhoneNumberAndNoVerificationCode
 {
     ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    request = [self.sut nextRequest];
     XCTAssertNil(request);
 }
 
@@ -100,7 +106,7 @@
     [self.authenticationStatus didCompletePhoneVerificationSuccessfully];
     
     ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    request = [self.sut nextRequest];
     XCTAssertNil(request);
 }
 
@@ -112,11 +118,11 @@
 
     //when
     ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    request = [self.sut nextRequest];
     
     //then
     XCTAssertNotNil(request);
-    ZM_ALLOW_MISSING_SELECTOR(XCTAssertNil([self.sut.requestGenerators firstNonNilReturnedFromSelector:@selector(nextRequest)]));
+    XCTAssertNil([self.sut nextRequest]);
     
     //and when
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"code": @0,
@@ -130,8 +136,7 @@
     [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForRegistration:phoneNumber];
     [self.sut resetVerificationState];
     
-    ZMTransportRequest *newRequest;
-    ZM_ALLOW_MISSING_SELECTOR(newRequest = [self.sut.requestGenerators firstNonNilReturnedFromSelector:@selector(nextRequest)]);
+    ZMTransportRequest *newRequest = [self.sut nextRequest];
     
     //then
     XCTAssertEqualObjects(request, newRequest);
@@ -148,12 +153,11 @@
     [self.authenticationStatus prepareForRegistrationPhoneVerificationWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phoneNumber verificationCode:code]];
     [self.sut verifyPhoneNumber];
     
-    ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     //then
     XCTAssertNotNil(request);
-    ZM_ALLOW_MISSING_SELECTOR(XCTAssertNil([self.sut.requestGenerators firstNonNilReturnedFromSelector:@selector(nextRequest)]));
+    XCTAssertNil([self.sut nextRequest]);
     
     //and when
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"code": @0,
@@ -167,8 +171,7 @@
     [self.authenticationStatus prepareForRegistrationPhoneVerificationWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phoneNumber verificationCode:code]];
     [self.sut resetVerificationState];
     
-    ZMTransportRequest *newRequest;
-    ZM_ALLOW_MISSING_SELECTOR(newRequest = [self.sut.requestGenerators firstNonNilReturnedFromSelector:@selector(nextRequest)]);
+    ZMTransportRequest *newRequest = [self.sut nextRequest];
     
     //then
     XCTAssertEqualObjects(request, newRequest);
@@ -188,7 +191,7 @@
     
     //then
     ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    request = [self.sut nextRequest];
     XCTAssertEqualObjects(expectedRequest, request);
 
     //and when
@@ -201,7 +204,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     //then
-    request = [self.sut.requestGenerators nextRequest];
+    request = [self.sut nextRequest];
     XCTAssertNil(request);
     
     //and when
@@ -209,7 +212,7 @@
     [self.sut verifyPhoneNumber];
     
     //then
-    request = [self.sut.requestGenerators nextRequest];
+    request = [self.sut nextRequest];
     XCTAssertEqualObjects(expectedRequest, request);
 }
 
@@ -219,8 +222,7 @@
     NSString *phoneNumber = @"+712434235";
     [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForRegistration:phoneNumber];
     
-    ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"code": @0,
                                                                                @"message": @"",
                                                                                @"label": @"key-exists"}
@@ -242,9 +244,7 @@
     NSString *phoneNumber = @"+712434235";
     [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForRegistration:phoneNumber];
 
-    ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
-
+    ZMTransportRequest *request = [self.sut nextRequest];
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"code": @0,
                                                                                @"message": @"",
                                                                                @"label": @""}
@@ -267,8 +267,7 @@
     NSString *phoneNumber = @"+712434235";
     [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForRegistration:phoneNumber];
 
-    ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     //given
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"code": @0,
@@ -311,8 +310,7 @@
     [self.sut verifyPhoneNumber];
     
     //when
-    ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
 
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{}
                                                                   HTTPStatus:200
@@ -342,8 +340,7 @@
     [self.sut verifyPhoneNumber];
 
     //when
-    ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
 
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -379,8 +376,7 @@
     [self.sut verifyPhoneNumber];
     
     //when
-    ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -413,8 +409,7 @@
     [self.sut verifyPhoneNumber];
     
     //when
-    ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
