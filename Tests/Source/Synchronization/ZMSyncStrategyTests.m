@@ -278,7 +278,6 @@
         if ([obj conformsToProtocol:@protocol(ZMEventConsumer)] && obj != self.sut.conversationTranscoder) {
             [[obj stub] processEvents:OCMOCK_ANY liveEvents:YES prefetchResult:OCMOCK_ANY];
         }
-//        }
     }
     
     [self expectSyncObjectsToProcessEvents:NO
@@ -496,69 +495,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-- (void)testThatItDoesProcessCallEventsIfTheCurrentEventPolicyIsIgnore;
-{
-    NSDictionary *eventData = @{
-                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-                                @"payload" : @[
-                                        @{
-                                            @"type" : @"call.state",
-                                            @"foo" : @"bar"
-                                            }
-                                        ]
-                                };
-    NSMutableArray *expectedEvents = [NSMutableArray array];
-    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
-    XCTAssertGreaterThan(expectedEvents.count, 0u);
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
-    
-    // expect
-    [self expectSyncObjectsToProcessEvents:YES
-                                liveEvents:YES
-                             decryptEvents:YES
-                   returnIDsForPrefetching:YES
-                                withEvents:expectedEvents];
-    [[self.updateEventsBuffer reject] addUpdateEvent:OCMOCK_ANY];
-
-    // when
-    [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
-//- (void)testThatItDoesProcessesCallingUpdateEventsIfTheCurrentEventPolicyIsBuffer;
-//{
-//    // given
-//    NSDictionary *eventData = @{
-//                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-//                                @"payload" : @[
-//                                        @{
-//                                            @"type" : @"call.state",
-//                                            @"foo" : @"bar"
-//                                            }
-//                                        ]
-//                                };
-//    NSMutableArray *expectedEvents = [NSMutableArray array];
-//    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
-//    XCTAssertGreaterThan(expectedEvents.count, 0u);
-//    
-////    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-//    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
-//    
-//    // expect
-//    [self expectSyncObjectsToProcessEvents:NO
-//                                liveEvents:YES
-//                             decryptEvents:NO
-//                   returnIDsForPrefetching:NO
-//                                withEvents:expectedEvents];
-//    
-//    [[self.updateEventsBuffer expect] addUpdateEvent:OCMOCK_ANY];
-//    
-//    // when
-//    [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//}
-
-- (void)testThatItDoesProcessUpdateEventsIfTheCurrentStateShouldIgnoreThemButIgnoreBuffesIsYes
+- (void)testThatItDoesProcessUpdateEventsIfTheCurrentStateShouldIgnoreThemButIgnoreBufferIsYes
 {
     // given
     NSDictionary *eventData = @{
@@ -574,7 +511,6 @@
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
-//    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyIgnore)] updateEventsPolicy];
     [[[self.syncStatusMock stub] andReturnValue:@(YES)] isSyncing];
     
     // expect
@@ -674,7 +610,6 @@
 - (void)testThatCallingNextRequestFetchesObjectsAndDistributesThemToTheChangeTracker
 {
     // given
-//    [[[(id)self.stateMachine stub] andReturn:OCMOCK_ANY] nextRequest];
     __block ZMUser *user;
     __block ZMConversation *conversation;
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -703,25 +638,6 @@
     // when
     (void)[self.sut nextRequest];
 }
-
-
-//- (void)testThatNextRequestReturnsTheRequestReturnedByTheStateMachine
-//{
-//    // given
-//    ZMTransportRequest *dummyRequest = [OCMockObject mockForClass:ZMTransportRequest.class];
-//    [(ZMUpstreamModifiedObjectSync*)[self.mockUpstreamSync1 stub] fetchRequestForTrackedObjects];
-//    [(ZMUpstreamModifiedObjectSync*)[self.mockUpstreamSync2 stub] fetchRequestForTrackedObjects];
-//
-//    // expect
-//    [[[(id)self.stateMachine expect] andReturn:dummyRequest] nextRequest];
-//    
-//    // when
-//    ZMTransportRequest *request = [self.sut nextRequest];
-//    
-//    // then
-//    XCTAssertEqualObjects(dummyRequest, request);
-//
-//}
 
 - (void)testThatManagedObjectChangesArePassedToAllSyncObjectsCaches
 {
@@ -826,8 +742,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-
-
 - (void)testThatItSynchronizesChangesInSyncContextToUIContext
 {
     __block ZMUser *syncUser;
@@ -874,15 +788,6 @@
     // when
     [self.sut processAllEventsInBuffer];
 }
-
-//- (void)testThatItCallsDataDidChangeOnStateMachineWhenDataDidChange
-//{
-//    // expect
-//    [[self.stateMachine expect] dataDidChange];
-//    
-//    // when
-//    [self.sut dataDidChange];
-//}
 
 - (void)testThatARollbackTriggersAnObjectsDidChange;
 {
@@ -981,7 +886,6 @@
 
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
     
-//    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
     [[[self.syncStatusMock stub] andReturnValue:@(YES)] isSyncing];
 
     // expect
@@ -1028,7 +932,6 @@
     
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
     
-//    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
     [[[self.syncStatusMock stub] andReturnValue:@(YES)] isSyncing];
 
     // expect
@@ -1142,9 +1045,6 @@
     // when
     [self goToBackground];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-//    [self.stateMachine verify];
 }
 
 
@@ -1155,9 +1055,6 @@
 
     // when
     [self goToForeground];
-    
-    // then
-//    [self.stateMachine verify];
 }
 
 - (void)testThatItNotifiesTheOperationLoopOfNewOperationWhenEnteringBackground
