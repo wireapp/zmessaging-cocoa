@@ -20,13 +20,12 @@
 
 #import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMSyncStrategy+Internal.h"
-#import "ZMSyncStateMachine.h"
 
 @implementation ZMSyncStrategy (EventProcessing)
 
 - (void)processUpdateEvents:(NSArray *)events ignoreBuffer:(BOOL)ignoreBuffer;
 {
-    if(ignoreBuffer) {
+    if (ignoreBuffer) {
         [self consumeUpdateEvents:events];
         return;
     }
@@ -37,9 +36,6 @@
     if(flowEvents.count > 0) {
         [self consumeUpdateEvents:flowEvents];
     }
-    NSArray *callstateEvents = [events filterWithBlock:^BOOL(ZMUpdateEvent* event) {
-        return event.type == ZMUpdateEventCallState;
-    }];
     NSArray *notFlowEvents = [events filterWithBlock:^BOOL(ZMUpdateEvent* event) {
         return !event.isFlowEvent;
     }];
@@ -50,26 +46,7 @@
         }
     }
     else {
-        switch(self.stateMachine.updateEventsPolicy) {
-            case ZMUpdateEventPolicyIgnore: {
-                if(callstateEvents.count > 0) {
-                    [self consumeUpdateEvents:callstateEvents];
-                }
-                break;
-            }
-            case ZMUpdateEventPolicyBuffer: {
-                for(ZMUpdateEvent *event in notFlowEvents) {
-                    [self.eventsBuffer addUpdateEvent:event];
-                }
-                break;
-            }
-            case ZMUpdateEventPolicyProcess: {
-                if(notFlowEvents.count > 0) {
-                    [self consumeUpdateEvents:notFlowEvents];
-                }
-                break;
-            }
-        }
+        [self consumeUpdateEvents:notFlowEvents];
     }
 }
 
@@ -85,21 +62,14 @@
         ZMFetchRequestBatch *fetchRequest = [self fetchRequestBatchForEvents:decryptedEvents];
         ZMFetchRequestBatchResult *prefetchResult = [self.syncMOC executeFetchRequestBatchOrAssert:fetchRequest];
         
-        for(id obj in self.eventConsumers) {
+        for (id<ZMEventConsumer> eventConsumer in self.eventConsumers) {
             @autoreleasepool {
-                if ([obj conformsToProtocol:@protocol(ZMEventConsumer)]) {
-                    [obj processEvents:decryptedEvents liveEvents:YES prefetchResult:prefetchResult];
-                }
+                [eventConsumer processEvents:decryptedEvents liveEvents:YES prefetchResult:prefetchResult];
             }
         }
         [self.localNotificationDispatcher processEvents:decryptedEvents liveEvents:YES prefetchResult:nil];
         [self.syncMOC enqueueDelayedSave];
     }];
-}
-
-- (NSArray *)eventConsumers {
-    return [[self.allTranscoders arrayByAddingObjectsFromArray:self.requestStrategies]
-            arrayByAddingObject:self.systemMessageEventConsumer];
 }
 
 - (void)processDownloadedEvents:(NSArray <ZMUpdateEvent *>*)events;
@@ -114,14 +84,11 @@
         ZMFetchRequestBatch *fetchRequest = [self fetchRequestBatchForEvents:decryptedEvents];
         ZMFetchRequestBatchResult *prefetchResult = [self.moc executeFetchRequestBatchOrAssert:fetchRequest];
         
-        NSArray *allEventConsumers = [self.allTranscoders arrayByAddingObjectsFromArray:self.requestStrategies];
-        for(id<ZMEventConsumer> obj in allEventConsumers) {
+        for(id<ZMEventConsumer> eventConsumer in self.eventConsumers) {
             @autoreleasepool {
-                if ([obj conformsToProtocol:@protocol(ZMEventConsumer)]) {
-                    ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:5 label:[NSString stringWithFormat:@"Processing downloaded events in %@", [obj class]]];
-                    [obj processEvents:decryptedEvents liveEvents:NO prefetchResult:prefetchResult];
-                    [tp warnIfLongerThanInterval];
-                }
+                ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:5 label:[NSString stringWithFormat:@"Processing downloaded events in %@", [eventConsumer class]]];
+                [eventConsumer processEvents:decryptedEvents liveEvents:NO prefetchResult:prefetchResult];
+                [tp warnIfLongerThanInterval];
             }
         }
     }];

@@ -35,16 +35,9 @@
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 #import "ZMNotifications+UserSession.h"
 
-// States
-#import "ZMSyncStateMachine.h"
-#import "ZMSyncState.h"
-#import "ZMUnauthenticatedState.h"
-#import "ZMEventProcessingState.h"
-
 // Status
 #import "ZMAuthenticationStatus.h"
 #import "ZMClientRegistrationStatus.h"
-
 
 // Transcoders & strategies
 #import "ZMUserTranscoder.h"
@@ -65,7 +58,6 @@
 
 @property (nonatomic) ZMSyncStrategy *sut;
 
-@property (nonatomic) id stateMachine;
 @property (nonatomic) NSArray *syncObjects;
 @property (nonatomic) id updateEventsBuffer;
 @property (nonatomic) id syncStateDelegate;
@@ -133,7 +125,7 @@
 
     id registrationTranscoder = [OCMockObject niceMockForClass:ZMRegistrationTranscoder.class];
     [[[[registrationTranscoder expect] andReturn:registrationTranscoder] classMethod] alloc];
-    (void) [[[registrationTranscoder expect] andReturn:registrationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:OCMOCK_ANY];
+    (void) [[[registrationTranscoder expect] andReturn:registrationTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatusDirectory:OCMOCK_ANY];
 
     id missingUpdateEventsTranscoder = [OCMockObject niceMockForClass:ZMMissingUpdateEventsTranscoder.class];
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
@@ -149,24 +141,11 @@
         
     id loginCodeRequestTranscoder = [OCMockObject niceMockForClass:ZMLoginCodeRequestTranscoder.class];
     [[[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] classMethod] alloc];
-    (void) [[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:OCMOCK_ANY];
+    (void) [[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatusDirectory:OCMOCK_ANY];
     
     id phoneNumberVerificationTranscoder = [OCMockObject niceMockForClass:ZMPhoneNumberVerificationTranscoder.class];
     [[[[phoneNumberVerificationTranscoder expect] andReturn:phoneNumberVerificationTranscoder] classMethod] alloc];
-    (void) [[[phoneNumberVerificationTranscoder expect] andReturn:phoneNumberVerificationTranscoder] initWithManagedObjectContext:self.syncMOC authenticationStatus:OCMOCK_ANY];
-    
-    
-    self.stateMachine = [OCMockObject mockForClass:ZMSyncStateMachine.class];
-    [[[[self.stateMachine expect] andReturn:self.stateMachine] classMethod] alloc];
-    [[self.stateMachine stub] tearDown];
-    
-    (void) [[[self.stateMachine expect] andReturn:self.stateMachine] initWithAuthenticationStatus:OCMOCK_ANY
-                                                                         clientRegistrationStatus:OCMOCK_ANY
-                                                                          objectStrategyDirectory:OCMOCK_ANY
-                                                                                syncStateDelegate:OCMOCK_ANY
-                                                                                      application:self.application
-                                                                                    slowSynStatus:OCMOCK_ANY];
-    [self verifyMockLater:self.stateMachine];
+    (void) [[[phoneNumberVerificationTranscoder expect] andReturn:phoneNumberVerificationTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatusDirectory:OCMOCK_ANY];
     
     self.updateEventsBuffer = [OCMockObject mockForClass:ZMUpdateEventsBuffer.class];
     [[[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] classMethod] alloc];
@@ -221,8 +200,10 @@
 - (void)stubChangeTrackerBootstrapInitialization
 {
     for(ZMObjectSyncStrategy *strategy in self.syncObjects) {
-        [[[(id)strategy expect] andReturn:@[self.mockUpstreamSync1, self.mockUpstreamSync2]] contextChangeTrackers];
-        [self verifyMockLater:strategy];
+        if ([strategy conformsToProtocol:@protocol(ZMContextChangeTrackerSource)]) {
+            [[[(id)strategy expect] andReturn:@[self.mockUpstreamSync1, self.mockUpstreamSync2]] contextChangeTrackers];
+            [self verifyMockLater:strategy];
+        }
     }
 }
 
@@ -242,8 +223,6 @@
     for (id syncObject in self.syncObjects) {
         [syncObject stopMocking];
     }
-    [self.stateMachine stopMocking];
-    self.stateMachine = nil;
     
     [self.updateEventsBuffer stopMocking];
     self.updateEventsBuffer = nil;
@@ -296,7 +275,7 @@
     
     // expect
     for(id obj in self.syncObjects) {
-        if(obj != self.sut.conversationTranscoder) {
+        if ([obj conformsToProtocol:@protocol(ZMEventConsumer)] && obj != self.sut.conversationTranscoder) {
             [[obj stub] processEvents:OCMOCK_ANY liveEvents:YES prefetchResult:OCMOCK_ANY];
         }
     }
@@ -395,7 +374,6 @@
     NSMutableArray *expectedEvents = [NSMutableArray array];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     
-    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyProcess)] updateEventsPolicy];
     [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
     
     // expect
@@ -427,8 +405,7 @@
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
-    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
+    [[[self.syncStatusMock stub] andReturnValue:@(YES)] isSyncing];
     
     // expect
     [self expectSyncObjectsToProcessEvents:NO
@@ -462,7 +439,6 @@
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
-    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
     [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
 
     // expect
@@ -475,36 +451,6 @@
     
     // when
     [self.sut processUpdateEvents:expectedEvents ignoreBuffer:YES];
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
-- (void)testThatItDoesNotProcessUpdateEventsIfTheCurrentStateShouldIgnoreThem
-{
-    // given
-    NSDictionary *eventData = @{
-                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-                                @"payload" : @[
-                                        @{
-                                            @"type" : @"conversation.message-add",
-                                            @"foo" : @"bar"
-                                            }
-                                        ]
-                                };
-    NSMutableArray *expectedEvents = [NSMutableArray array];
-    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
-    XCTAssertGreaterThan(expectedEvents.count, 0u);
-    
-    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyIgnore)] updateEventsPolicy];
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
-
-    
-    // expect
-    for(id obj in self.syncObjects) {
-        [[obj reject] processEvents:OCMOCK_ANY liveEvents:YES prefetchResult:OCMOCK_ANY];
-    }
-    
-    // when
-    [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -532,7 +478,7 @@
             [expectedEvents addObject:event];
         }
     }
-    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyProcess)] updateEventsPolicy];
+    
     [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
@@ -549,70 +495,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-- (void)testThatItDoesProcessCallEventsIfTheCurrentEventPolicyIsIgnore;
-{
-    NSDictionary *eventData = @{
-                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-                                @"payload" : @[
-                                        @{
-                                            @"type" : @"call.state",
-                                            @"foo" : @"bar"
-                                            }
-                                        ]
-                                };
-    NSMutableArray *expectedEvents = [NSMutableArray array];
-    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
-    XCTAssertGreaterThan(expectedEvents.count, 0u);
-    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyIgnore)] updateEventsPolicy];
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
-    
-    // expect
-    [self expectSyncObjectsToProcessEvents:YES
-                                liveEvents:YES
-                             decryptEvents:YES
-                   returnIDsForPrefetching:YES
-                                withEvents:expectedEvents];
-    [[self.updateEventsBuffer reject] addUpdateEvent:OCMOCK_ANY];
-
-    // when
-    [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
-- (void)testThatItDoesProcessesCallingUpdateEventsIfTheCurrentEventPolicyIsBuffer;
-{
-    // given
-    NSDictionary *eventData = @{
-                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-                                @"payload" : @[
-                                        @{
-                                            @"type" : @"call.state",
-                                            @"foo" : @"bar"
-                                            }
-                                        ]
-                                };
-    NSMutableArray *expectedEvents = [NSMutableArray array];
-    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
-    XCTAssertGreaterThan(expectedEvents.count, 0u);
-    
-    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
-    
-    // expect
-    [self expectSyncObjectsToProcessEvents:NO
-                                liveEvents:YES
-                             decryptEvents:NO
-                   returnIDsForPrefetching:NO
-                                withEvents:expectedEvents];
-    
-    [[self.updateEventsBuffer expect] addUpdateEvent:OCMOCK_ANY];
-    
-    // when
-    [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
-- (void)testThatItDoesProcessUpdateEventsIfTheCurrentStateShouldIgnoreThemButIgnoreBuffesIsYes
+- (void)testThatItDoesProcessUpdateEventsIfTheCurrentStateShouldIgnoreThemButIgnoreBufferIsYes
 {
     // given
     NSDictionary *eventData = @{
@@ -628,8 +511,7 @@
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
-    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyIgnore)] updateEventsPolicy];
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
+    [[[self.syncStatusMock stub] andReturnValue:@(YES)] isSyncing];
     
     // expect
     [self expectSyncObjectsToProcessEvents:YES
@@ -728,7 +610,6 @@
 - (void)testThatCallingNextRequestFetchesObjectsAndDistributesThemToTheChangeTracker
 {
     // given
-    [[[(id)self.stateMachine stub] andReturn:OCMOCK_ANY] nextRequest];
     __block ZMUser *user;
     __block ZMConversation *conversation;
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -741,8 +622,14 @@
     
     // expect
     for (id<ZMObjectStrategy> syncObject in self.syncObjects) {
+        
+        if (![syncObject conformsToProtocol:@protocol(ZMContextChangeTrackerSource)]) {
+            continue;
+        }
+        
         [(ZMUpstreamModifiedObjectSync*)[[self.mockUpstreamSync1 stub] andReturn:self.fetchRequestForTrackedObjects1] fetchRequestForTrackedObjects];
         [(ZMUpstreamModifiedObjectSync*)[[self.mockUpstreamSync2 stub] andReturn:self.fetchRequestForTrackedObjects2] fetchRequestForTrackedObjects];
+        
         [[self.mockUpstreamSync1 expect] addTrackedObjects:[NSSet setWithObject:user]];
         [[self.mockUpstreamSync2 expect] addTrackedObjects:[NSSet setWithObject:conversation]];
         [self verifyMockLater:syncObject];
@@ -750,25 +637,6 @@
     
     // when
     (void)[self.sut nextRequest];
-}
-
-
-- (void)testThatNextRequestReturnsTheRequestReturnedByTheStateMachine
-{
-    // given
-    ZMTransportRequest *dummyRequest = [OCMockObject mockForClass:ZMTransportRequest.class];
-    [(ZMUpstreamModifiedObjectSync*)[self.mockUpstreamSync1 stub] fetchRequestForTrackedObjects];
-    [(ZMUpstreamModifiedObjectSync*)[self.mockUpstreamSync2 stub] fetchRequestForTrackedObjects];
-
-    // expect
-    [[[(id)self.stateMachine expect] andReturn:dummyRequest] nextRequest];
-    
-    // when
-    ZMTransportRequest *request = [self.sut nextRequest];
-    
-    // then
-    XCTAssertEqualObjects(dummyRequest, request);
-
 }
 
 - (void)testThatManagedObjectChangesArePassedToAllSyncObjectsCaches
@@ -789,6 +657,10 @@
     
     // expect
     for (id<ZMObjectStrategy> syncObject in self.syncObjects) {
+        if (![syncObject conformsToProtocol:@protocol(ZMContextChangeTrackerSource)]) {
+            continue;
+        }
+        
         [(id<ZMContextChangeTracker>)[self.mockUpstreamSync1 expect] objectsDidChange:totalSet];
         [(id<ZMContextChangeTracker>)[self.mockUpstreamSync2 expect] objectsDidChange:totalSet];
         
@@ -870,8 +742,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-
-
 - (void)testThatItSynchronizesChangesInSyncContextToUIContext
 {
     __block ZMUser *syncUser;
@@ -917,15 +787,6 @@
     
     // when
     [self.sut processAllEventsInBuffer];
-}
-
-- (void)testThatItCallsDataDidChangeOnStateMachineWhenDataDidChange
-{
-    // expect
-    [[self.stateMachine expect] dataDidChange];
-    
-    // when
-    [self.sut dataDidChange];
 }
 
 - (void)testThatARollbackTriggersAnObjectsDidChange;
@@ -1025,8 +886,7 @@
 
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
     
-    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
+    [[[self.syncStatusMock stub] andReturnValue:@(YES)] isSyncing];
 
     // expect
     for(id obj in events) {
@@ -1072,8 +932,7 @@
     
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
     
-    [[[(id) self.stateMachine stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventPolicyBuffer)] updateEventsPolicy];
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
+    [[[self.syncStatusMock stub] andReturnValue:@(YES)] isSyncing];
 
     // expect
     for(id obj in events) {
@@ -1133,6 +992,10 @@
     NOT_USED(decyptEvents);
     
     for (id obj in self.syncObjects) {
+        if (![obj conformsToProtocol:@protocol(ZMEventConsumer)]) {
+            continue;
+        }
+        
         if (process) {
             [[obj expect] processEvents:[OCMArg checkWithBlock:^BOOL(NSArray *receivedEvents) {
                 return [receivedEvents isEqualToArray:events];
@@ -1182,9 +1045,6 @@
     // when
     [self goToBackground];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    [self.stateMachine verify];
 }
 
 
@@ -1195,9 +1055,6 @@
 
     // when
     [self goToForeground];
-    
-    // then
-    [self.stateMachine verify];
 }
 
 - (void)testThatItNotifiesTheOperationLoopOfNewOperationWhenEnteringBackground

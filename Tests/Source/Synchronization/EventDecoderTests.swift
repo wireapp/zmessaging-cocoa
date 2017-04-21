@@ -262,6 +262,7 @@ extension EventDecoderTest {
     }
     
     override func tearDown() {
+        EventDecoder.testingBatchSize = nil
         eventMOC.tearDown()
         super.tearDown()
     }

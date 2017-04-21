@@ -63,7 +63,6 @@
 - (void)didEstablishUpdateEventsStream;
 
 - (ZMTransportRequest *)nextRequest;
-- (void)dataDidChange;
 
 - (void)tearDown;
 

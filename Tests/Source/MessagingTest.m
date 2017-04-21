@@ -348,7 +348,6 @@
     id loginCodeRequestTranscoder = [OCMockObject mockForClass:ZMLoginCodeRequestTranscoder.class];
     [self verifyMockLater:loginCodeRequestTranscoder];
     
-    
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
     [[[objectDirectory stub] andReturn:selfStrategy] selfStrategy];
     [[[objectDirectory stub] andReturn:registrationTranscoder] registrationTranscoder];
@@ -356,17 +355,6 @@
     [[[objectDirectory stub] andReturn:missingUpdateEventsTranscoder] missingUpdateEventsTranscoder];
     [[[objectDirectory stub] andReturn:loginTranscoder] loginTranscoder];
     [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
-    
-    [[[objectDirectory stub] andReturn:@[
-                                        clientMessageTranscoder,
-                                        selfStrategy,
-                                        registrationTranscoder,
-                                        phoneNumberVerificationTranscoder,
-                                        missingUpdateEventsTranscoder,
-                                        loginTranscoder,
-                                        loginCodeRequestTranscoder,
-                                        ]] allTranscoders];
-    
     
     [[[objectDirectory stub] andReturn:moc] moc];
     [self verifyMockLater:objectDirectory];

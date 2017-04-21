@@ -24,7 +24,6 @@
 #import "MessagingTest.h"
 #import "ZMGSMCallHandler.h"
 #import "ZMCallStateLogger.h"
-#import "ZMSyncStateMachine.h"
 
 @interface ZMGSMCallHandlerTest : MessagingTest
 
