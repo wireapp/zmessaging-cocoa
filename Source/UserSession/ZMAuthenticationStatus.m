@@ -186,7 +186,8 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     return cookie != nil;
 }
 
-- (void)startLoginTimer {
+- (void)startLoginTimer
+{
     [self.loginTimer cancel];
     self.loginTimer = nil;
     self.loginTimer = [ZMTimer timerWithTarget:self];
