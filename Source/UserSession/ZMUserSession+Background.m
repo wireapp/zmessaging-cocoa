@@ -125,10 +125,9 @@ static NSString *ZMLogTag = @"Push";
             [self.managedObjectContext forceSaveOrRollback];
         }];
     };
+    
     self.pushRegistrant = [[ZMPushRegistrant alloc] initWithDidUpdateCredentials:updatePushKitCredentials didReceivePayload:didReceivePayload didInvalidateToken:didInvalidateToken];
-    [self.managedObjectContext performGroupedBlock:^{
-        self.pushRegistrant.analytics = self.syncManagedObjectContext.analytics;
-    }];
+    self.pushRegistrant.analytics = self.syncManagedObjectContext.analytics;
 }
 
 @end
