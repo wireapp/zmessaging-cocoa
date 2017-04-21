@@ -33,7 +33,6 @@
 #import "ZMUserTranscoder.h"
 #import "ZMSelfStrategy.h"
 #import "ZMConversationTranscoder.h"
-#import "ZMSyncStateMachine.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMLastUpdateEventIDTranscoder.h"

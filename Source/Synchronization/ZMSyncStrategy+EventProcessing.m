@@ -20,7 +20,6 @@
 
 #import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMSyncStrategy+Internal.h"
-#import "ZMSyncStateMachine.h"
 
 @implementation ZMSyncStrategy (EventProcessing)
 

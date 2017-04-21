@@ -52,6 +52,11 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     return self;
 }
 
+- (void)dealloc
+{
+    [self stopLoginTimer];
+}
+
 - (ZMCredentials *)loginCredentials
 {
     return self.internalLoginCredentials;
@@ -223,7 +228,6 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     self.cookie.data = nil;
     self.isWaitingForLogin = YES;
     [self resetLoginAndRegistrationStatus];
-    [self startLoginTimer];
     self.registrationUser = user;
 }
 

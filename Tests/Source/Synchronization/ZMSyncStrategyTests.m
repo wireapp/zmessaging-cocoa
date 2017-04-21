@@ -35,15 +35,9 @@
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 #import "ZMNotifications+UserSession.h"
 
-// States
-#import "ZMSyncState.h"
-#import "ZMUnauthenticatedState.h"
-#import "ZMEventProcessingState.h"
-
 // Status
 #import "ZMAuthenticationStatus.h"
 #import "ZMClientRegistrationStatus.h"
-
 
 // Transcoders & strategies
 #import "ZMUserTranscoder.h"
