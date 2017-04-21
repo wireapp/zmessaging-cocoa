@@ -32,6 +32,7 @@
 @class ZMClientRegistrationStatus;
 
 FOUNDATION_EXPORT NSString * const RegisteredOnThisDeviceKey;
+FOUNDATION_EXPORT NSTimeInterval DebugLoginFailureTimerOverride;
 
 /// Invoked when the credentials are changed
 @protocol ZMAuthenticationStatusObserver <NSObject>

@@ -39,7 +39,7 @@
 #import "ZMPhoneNumberVerificationTranscoder.h"
 
 static NSString *const TimerInfoOriginalCredentialsKey = @"originalCredentials";
-NSTimeInterval DebugLoginFailureTimerOverride = 0;
+//NSTimeInterval DebugLoginFailureTimerOverride = 0;
 
 static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 
@@ -61,9 +61,9 @@ static NSString *ZMLogTag ZM_UNUSED = @"State machine";
 
 + (NSTimeInterval)loginTimeout;
 {
-    if (DebugLoginFailureTimerOverride > 0) {
-        return DebugLoginFailureTimerOverride;
-    }
+//    if (DebugLoginFailureTimerOverride > 0) {
+//        return DebugLoginFailureTimerOverride;
+//    }
     return 30.0;
 }
 

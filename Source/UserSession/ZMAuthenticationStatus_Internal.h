@@ -19,7 +19,7 @@
 
 #import <WireSyncEngine/WireSyncEngine.h>
 
-@interface ZMAuthenticationStatus ()
+@interface ZMAuthenticationStatus () <ZMTimerClient>
 
 @property (nonatomic) ZMCookie *cookie;
 @property (nonatomic, copy) NSString *registrationPhoneNumberThatNeedsAValidationCode;
@@ -39,6 +39,8 @@
 
 @property (nonatomic) NSManagedObjectContext *moc;
 @property (nonatomic) BOOL canClearCredentials;
+
+@property (nonatomic) ZMTimer *loginTimer;
 
 
 - (void)resetLoginAndRegistrationStatus;

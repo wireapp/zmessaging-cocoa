@@ -26,7 +26,7 @@
 
 @class ZMTimer;
 
-extern NSTimeInterval DebugLoginFailureTimerOverride;
+//extern NSTimeInterval DebugLoginFailureTimerOverride;
 
 
 
