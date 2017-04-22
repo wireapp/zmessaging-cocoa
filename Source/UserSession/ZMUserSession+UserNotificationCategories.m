@@ -22,6 +22,7 @@
 
 NSString *const ZMConversationCategory = @"conversationCategory";
 NSString *const ZMConversationCategoryIncludingLike = @"conversationCategoryWithLike";
+NSString *const ZMConversationCategoryImage = @"conversationCategoryImage";
 NSString *const ZMConversationOpenAction = @"conversationOpenAction";
 NSString *const ZMConversationDirectReplyAction = @"conversationDirectReplyAction";
 NSString *const ZMConversationMuteAction = @"conversationMuteAction";
@@ -73,18 +74,31 @@ static NSString * ZMPushActionLocalizedString(NSString *key)
 
 - (UIUserNotificationCategory *)replyCategory
 {
-    return [self replyCategoryInlcudingLike:NO];
+    return [self replyCategoryInlcudingLike:NO image:NO];
+}
+
+- (UIUserNotificationCategory *)replyCategoryImage
+{
+    return [self replyCategoryInlcudingLike:YES image:YES];
 }
 
 - (UIUserNotificationCategory *)replyCategoryIncludingLike
 {
-    return [self replyCategoryInlcudingLike:YES];
+    return [self replyCategoryInlcudingLike:YES image:NO];
 }
 
-- (UIUserNotificationCategory *)replyCategoryInlcudingLike:(BOOL)includingLike
+- (UIUserNotificationCategory *)replyCategoryInlcudingLike:(BOOL)includingLike image:(BOOL)isImage
 {
     UIMutableUserNotificationCategory *category = [[UIMutableUserNotificationCategory alloc] init];
-    category.identifier = includingLike ? ZMConversationCategoryIncludingLike : ZMConversationCategory;
+    NSString *identifier = ZMConversationCategory;
+    if (includingLike) {
+        identifier = ZMConversationCategoryIncludingLike;
+    }
+    if (isImage) {
+        identifier = ZMConversationCategoryImage;
+    }
+
+    category.identifier = identifier;
     NSMutableArray *actions = @[[self replyActionDirectMessage: NO], [self muteConversationBackgroundAction]].mutableCopy;
 
     if (includingLike) {

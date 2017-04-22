@@ -68,6 +68,7 @@ extension NotificationForMessage {
     func conversationCategory(ephemeral: Bool) -> String {
         guard !ephemeral else { return ZMConversationCategory }
         switch contentType {
+        case .image: return ZMConversationCategoryImage
         case .knock, .system(_), .undefined : return ZMConversationCategory
         default: return ZMConversationCategoryIncludingLike
         }

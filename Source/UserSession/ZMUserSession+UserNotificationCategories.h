@@ -21,8 +21,10 @@
 
 #import "ZMUserSession.h"
 
-extern NSString *const ZMConversationCategory;
-extern NSString *const ZMConversationCategoryIncludingLike;
+extern NSString *const ZMConversationCategory; // Non ephemeral messages (excluding images).
+extern NSString *const ZMConversationCategoryImage; // Non ephemeral image messages.
+extern NSString *const ZMConversationCategoryIncludingLike; // Ehemeral messages.
+
 extern NSString *const ZMConversationOpenAction;
 extern NSString *const ZMConversationDirectReplyAction;
 extern NSString *const ZMConversationMuteAction;
@@ -43,7 +45,9 @@ extern NSString *const ZMConnectAcceptAction;
 @interface ZMUserSession (UserNotificationCategories)
 
 - (UIUserNotificationCategory *)replyCategory;
+- (UIUserNotificationCategory *)replyCategoryImage;
 - (UIUserNotificationCategory *)replyCategoryIncludingLike;
+
 - (UIUserNotificationCategory *)incomingCallCategory;
 - (UIUserNotificationCategory *)missedCallCategory;
 
