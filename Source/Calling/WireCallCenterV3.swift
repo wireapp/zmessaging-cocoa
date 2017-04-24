@@ -584,7 +584,8 @@ public struct CallEvent {
     }
     
     func initiatorForCall(conversationId: UUID) -> UUID? {
-        return participantSnapshots[conversationId]?.initiator
+        let snapshot = participantSnapshots[conversationId]
+        return snapshot?.initiator
     }
     
     /// Call this method when the callParticipants changed and avs calls the handler `wcall_group_changed_h`

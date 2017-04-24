@@ -286,7 +286,7 @@ class WireCallCenterV3Tests: MessagingTest {
         XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 0)
         
         // and when
-        WireSyncEngine.ReadyHandler(version: 2, contextRef: context)
+        WireSyncEngine.readyHandler(version: 2, contextRef: context)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then

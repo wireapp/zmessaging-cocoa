@@ -159,6 +159,6 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     var mockInitiator : ZMUser?
     
     override public func initiatorForCall(conversationId: UUID) -> UUID? {
-        return mockInitiator?.remoteIdentifier
+        return mockInitiator?.remoteIdentifier ?? super.initiatorForCall(conversationId: conversationId)
     }
 }

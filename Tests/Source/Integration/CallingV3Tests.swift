@@ -206,7 +206,7 @@ class CallingV3Tests : IntegrationTestBase {
         stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
     }
     
-    func testJoiningAndLeavingAnEmptyVoiceChannel_Group(){
+    func testJoiningAndLeavingAnVoiceChannel_Group_2ParticipantsLeft(){
         // given
         XCTAssertTrue(logInAndWaitForSyncToBeComplete());
         useGroupConversation = true
@@ -220,18 +220,52 @@ class CallingV3Tests : IntegrationTestBase {
         stateObserver.checkLastNotificationHasCallState(.outgoingCall)
         
         // when
+        (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .answered
+        participantsChanged(members: [(user: conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser, establishedFlow: false),
+                                      (user: conversationUnderTest.otherActiveParticipants.lastObject as! ZMUser, establishedFlow: false)])
+        stateObserver.changes = []
+
+        // when
         selfDropCall()
         
         // then
-        XCTAssertEqual(stateObserver.changes.count, 2)
+        XCTAssertEqual(stateObserver.changes.count, 1)
         stateObserver.checkLastNotificationHasCallState(.incomingCallInactive)
 
         // and when
         closeCall(user: self.localSelfUser, reason: .canceled)
 
-        XCTAssertEqual(stateObserver.changes.count, 3)
+        XCTAssertEqual(stateObserver.changes.count, 2)
         stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
     }
+    
+    func testJoiningAndLeavingAnEmptyVoiceChannel_Group(){
+        // given
+        XCTAssertTrue(logInAndWaitForSyncToBeComplete());
+        useGroupConversation = true
+        stateObserver.observe(conversation: conversationUnderTest, context: uiMOC)
+        
+        // when
+        selfJoinCall(isStart: true)
+        
+        // then
+        XCTAssertEqual(stateObserver.changes.count, 1)
+        stateObserver.checkLastNotificationHasCallState(.outgoingCall)
+        stateObserver.changes = []
+        
+        // when
+        selfDropCall()
+        
+        // then
+        XCTAssertEqual(stateObserver.changes.count, 0)
+        
+        // and when
+        closeCall(user: self.localSelfUser, reason: .canceled)
+        
+        XCTAssertEqual(stateObserver.changes.count, 1)
+        stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
+    }
+    
     
     func testThatItSendsOutAllExpectedNotificationsWhenSelfUserCalls_OneOnOne() {
     
@@ -306,13 +340,7 @@ class CallingV3Tests : IntegrationTestBase {
         participantsChanged(members: [(user: otherUser, establishedFlow: false)])
         
         // then
-        XCTAssertEqual(participantObserver.changes.count, 1)
-        if let partInfo =  participantObserver.changes.last {
-            XCTAssertEqual(partInfo.insertedIndexes, [0])
-            XCTAssertEqual(partInfo.updatedIndexes, [])
-            XCTAssertEqual(partInfo.deletedIndexes, [])
-            XCTAssertEqual(partInfo.movedIndexPairs, [])
-        }
+        XCTAssertEqual(participantObserver.changes.count, 0)
         
         // (3) flow aquired
         //
@@ -320,7 +348,7 @@ class CallingV3Tests : IntegrationTestBase {
         participantsChanged(members: [(user: otherUser, establishedFlow: true)])
         
         // then
-        XCTAssertEqual(participantObserver.changes.count, 2)
+        XCTAssertEqual(participantObserver.changes.count, 1)
         if let partInfo =  participantObserver.changes.last {
             XCTAssertEqual(partInfo.insertedIndexes, [])
             XCTAssertEqual(partInfo.updatedIndexes, [0])
@@ -522,12 +550,13 @@ class CallingV3Tests : IntegrationTestBase {
         XCTAssertTrue(logInAndWaitForSyncToBeComplete())
         useGroupConversation = true
         
-        let user = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
+        let localUser1 = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
+        let localUser2 = conversationUnderTest.otherActiveParticipants.lastObject as! ZMUser
         let convObserver = ConversationChangeObserver(conversation: conversationUnderTest)
         
         // (1) Other user calls
         // when
-        otherStartCall(user: user)
+        otherStartCall(user: localUser1)
         
         // then
         XCTAssertEqual(conversationUnderTest.conversationListIndicator, .none)
@@ -535,7 +564,10 @@ class CallingV3Tests : IntegrationTestBase {
         // (2) Self joins the call
         // and when
         selfJoinCall(isStart: false)
-        otherJoinCall(user: localSelfUser)
+
+        // second user joins        
+        participantsChanged(members: [(user: localUser1, establishedFlow: false),
+                                      (user: localUser2, establishedFlow: false)])
 
         // then
         XCTAssertEqual(convObserver!.notifications.count, 2)
@@ -557,7 +589,7 @@ class CallingV3Tests : IntegrationTestBase {
         
         // (4) other user ends call
         // and when
-        closeCall(user: localSelfUser, reason: .canceled)
+        closeCall(user: localUser1, reason: .canceled)
         
         // then
         XCTAssertEqual(convObserver!.notifications.count, 4)

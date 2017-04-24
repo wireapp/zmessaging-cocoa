@@ -257,7 +257,7 @@ NS_ASSUME_NONNULL_END
         self.missedCallsObserverToken = [self observeMissedCalls];
         
         // If we see "ongoing" calls when app starts we need to end them. App cannot have calls when it is not running.
-        [self endAllOngoingCallKitCallsExcept:nil];
+        [self endAllOngoingCallKitCallsExcept:nil voiceChannelState:VoiceChannelV2StateInvalid];
 
         // -setUiStartsAudio: Should be set when CallKit is used.
         // Then AVS will not start the audio before the audio session is active
@@ -313,11 +313,11 @@ NS_ASSUME_NONNULL_END
     [self.onDemandFlowManager.flowManager appendLogForConversation:conversationId message:messageWithLine];
 }
 
-- (void)endAllOngoingCallKitCallsExcept:(ZMConversation *)conversation
+- (void)endAllOngoingCallKitCallsExcept:(ZMConversation *)conversation voiceChannelState:(VoiceChannelV2State)state
 {
     for (CXCall *call in self.callController.callObserver.calls) {
         
-        if (nil != conversation && [conversation.remoteIdentifier isEqual:call.UUID]) {
+        if (nil != conversation && [conversation.remoteIdentifier isEqual:call.UUID] && state != VoiceChannelV2StateNoActiveUsers) {
             continue;
         }
         
@@ -362,7 +362,7 @@ NS_ASSUME_NONNULL_END
         }];
     }
     else {
-        [self endAllOngoingCallKitCallsExcept:conversation];
+        [self endAllOngoingCallKitCallsExcept:conversation voiceChannelState:state];
         
         CXHandle *handle = conversation.callKitHandle;
         
