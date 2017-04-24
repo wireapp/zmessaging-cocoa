@@ -218,11 +218,26 @@ class SpyUserClientKeyStore : UserClientKeysStore {
 }
 
 public class MockSyncStatus : SyncStatus {
+    
+    var didCallFailCurrentSyncPhase = false
+    var didCallFinishCurrentSyncPhase = false
 
     public var mockPhase : SyncPhase = .done {
         didSet {
             currentSyncPhase = mockPhase
         }
+    }
+    
+    public override func didFailCurrentSyncPhase() {
+        didCallFailCurrentSyncPhase = true
+        
+        super.didFailCurrentSyncPhase()
+    }
+    
+    public override func didFinishCurrentSyncPhase() {
+        didCallFinishCurrentSyncPhase = true
+        
+        super.didFinishCurrentSyncPhase()
     }
 }
 

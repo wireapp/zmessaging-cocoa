@@ -29,9 +29,7 @@
 @property (nonatomic) ZMSingleRequestSync *lastUpdateEventIDSync;
 @property (nonatomic, weak) id<ZMObjectStrategyDirectory> directory;
 @property (nonatomic) NSUUID *lastUpdateEventID;
-
 @property (nonatomic, weak) SyncStatus *syncStatus;
-@property (nonatomic) BOOL didStartSlowSync;
 
 @end
 
@@ -77,29 +75,18 @@
     return self.lastUpdateEventIDSync.status == ZMSingleRequestInProgress;
 }
 
-- (void)setNeedsSlowSync
+- (SyncPhase)isSyncing
 {
-    [self startRequestingLastUpdateEventIDWithoutPersistingIt];
-    [self.syncStatus didStart:self.expectedSyncPhase];
-}
-
-- (BOOL)isSlowSyncDone
-{
-    return YES;
-}
-
-- (SyncPhase)expectedSyncPhase
-{
-    return SyncPhaseFetchingLastUpdateEventID;
+    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingLastUpdateEventID;
 }
 
 - (ZMTransportRequest *)nextRequestIfAllowed
 {
-    SyncStatus *status = self.syncStatus;
-    if (status.currentSyncPhase == self.expectedSyncPhase && !self.isDownloadingLastUpdateEventID) {
-        [self setNeedsSlowSync];
+    if (self.isSyncing && !self.isDownloadingLastUpdateEventID) {
+        [self startRequestingLastUpdateEventIDWithoutPersistingIt];
         return [self.requestGenerators nextRequest];
     }
+    
     return nil;
 }
 
@@ -138,7 +125,7 @@
     NOT_USED(sync);
     SyncStatus *status = self.syncStatus;
     if(response.payload == nil) {
-        [status didFail:self.expectedSyncPhase];
+        [status didFailCurrentSyncPhase];
         return;
     }
     
@@ -147,7 +134,7 @@
         self.lastUpdateEventID = lastNotificationID;
         if (status.currentSyncPhase == SyncPhaseFetchingLastUpdateEventID) {
             [status updateLastUpdateEventIDWithEventID:lastNotificationID];
-            [status didFinish:self.expectedSyncPhase];
+            [status didFinishCurrentSyncPhase];
         }
     }
     

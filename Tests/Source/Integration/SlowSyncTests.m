@@ -386,15 +386,12 @@
     [observer verify];
     [ZMNetworkAvailabilityChangeNotification removeNetworkAvailabilityObserver:observer];
     
-    XCTAssertEqual(receivedNotes.count, 2u);
+    XCTAssertEqual(receivedNotes.count, 1u);
     ZMNetworkAvailabilityChangeNotification *note1 = receivedNotes[0];
-    ZMNetworkAvailabilityChangeNotification *note2 = receivedNotes[1];
 
     XCTAssertNotNil(note1);
-    XCTAssertNotNil(note2);
 
-    XCTAssertEqual(note1.networkState, ZMNetworkStateOnlineSynchronizing);
-    XCTAssertEqual(note2.networkState, ZMNetworkStateOnline);
+    XCTAssertEqual(note1.networkState, ZMNetworkStateOnline);
     
     XCTAssertEqual(self.userSession.networkState, ZMNetworkStateOnline);
 }

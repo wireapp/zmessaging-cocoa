@@ -270,8 +270,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItProcessesListPaginatorRequestsBeforeRemoteIDRequestsDuringSlowSync
 {
     // given
-    [self.sut setNeedsSlowSync];
-    XCTAssertFalse(self.sut.isSlowSyncDone);
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
     
     // when
     NSArray *generators = self.sut.requestGenerators;
@@ -285,7 +284,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItProcessesDownstreamRequestsBeforeUpstreamWhenSlowSyncIsDone
 {
     // given
-    XCTAssertTrue(self.sut.isSlowSyncDone);
+    self.mockSyncStatus.mockPhase = SyncPhaseDone;
     
     // when
     NSArray *generators = self.sut.requestGenerators;
@@ -309,11 +308,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
     NSArray *expected = @[ZMDownstreamObjectSync.class, ZMUpstreamInsertedObjectSync.class, ZMUpstreamModifiedObjectSync.class];
     XCTAssertEqualObjects(classes, expected);
-}
-
-- (void)testThatItIsCreatedWithIsSlowSyncDoneTrue
-{
-    XCTAssertTrue(self.sut.isSlowSyncDone);
 }
 
 - (void)testThatItDoesNotGenerateARequestIfSlowSyncIsDone {
@@ -1042,7 +1036,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         // when
         ZMTransportRequest *request = [self.sut nextRequest];
-        XCTAssertFalse(self.sut.isSlowSyncDone);
 
         // then
         NSString *expectedPath = [NSString stringWithFormat:@"/conversations/ids?size=100"];
@@ -1097,7 +1090,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
         [self checkThatThereAreConversationsForAllRawConversations:rawConversations failureRecorder:NewFailureRecorder()];
-        XCTAssertTrue(self.sut.isSlowSyncDone);
+//        XCTAssertTrue(self.sut.isSlowSyncDone);
+        XCTAssertNotEqual(self.mockSyncStatus.currentSyncPhase, SyncPhaseFetchingConversations);
     }];
 }
 
@@ -1245,22 +1239,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertEqual(self.sut.conversationPageSize, ZMConversationTranscoderDefaultConversationPageSize);
 }
 
-- (void)testThatSetNeedsSlowSyncChangesIsSlowSyncDone
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // given
-        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
-        (void)[self.sut nextRequest];
-        
-        // when
-        BOOL isSlowSyncDone = [self.sut isSlowSyncDone];
-        
-        // then
-        XCTAssertFalse(isSlowSyncDone);
-    }];
-}
-
-
 - (void)testThatIsSlowSyncDoneIsTrueWhenAllConversationsAreFetched
 {
     __block NSArray *rawConversations;
@@ -1282,7 +1260,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
-        XCTAssertTrue(self.sut.isSlowSyncDone);
+        XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
     }];
 }
 
@@ -1319,7 +1297,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         // then
         XCTAssertNil(request);
-        XCTAssertTrue(self.sut.isSlowSyncDone);
+        XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
     }];
 }
 

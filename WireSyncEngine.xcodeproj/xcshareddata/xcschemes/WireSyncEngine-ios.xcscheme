@@ -52,6 +52,11 @@
                BlueprintName = "WireSyncEngine-iOS-Tests"
                ReferencedContainer = "container:WireSyncEngine.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "ZMConversationTranscoderTests/testThatIsResets_NeedsToUpdateFromBackend_OnExistingConversationsInAResponse">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
       <MacroExpansion>
@@ -114,7 +119,7 @@
          <EnvironmentVariable
             key = "ZMLOG_TAGS"
             value = "MockTransportRequests"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
       <AdditionalOptions>

@@ -23,7 +23,7 @@
 
 @class SyncStatus;
 
-@interface ZMConnectionTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy, ZMSyncPhase>
+@interface ZMConnectionTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatus:(id<ZMApplicationStatus>)applicationStatus NS_UNAVAILABLE;
 

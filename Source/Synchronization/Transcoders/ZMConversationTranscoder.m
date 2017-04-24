@@ -53,7 +53,6 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 @property (nonatomic) ZMSimpleListRequestPaginator *listPaginator;
 
 @property (nonatomic, weak) SyncStatus *syncStatus;
-@property (nonatomic) BOOL didStartSlowSync;
 
 @end
 
@@ -149,40 +148,36 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     }];
     NSSet *conversationUUIDSet = [NSSet setWithArray:conversationUUIDs];
     [self.remoteIDSync addRemoteIdentifiersThatNeedDownload:conversationUUIDSet];
+    
+    
+    if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
+        [self.syncStatus didFailCurrentSyncPhase];
+    }
+    
+    [self finishSyncIfCompleted];
+    
     return conversationUUIDs.lastObject;
 }
 
-- (void)setNeedsSlowSync
+- (void)finishSyncIfCompleted
 {
-    [self.listPaginator resetFetching];
-    [self.remoteIDSync setRemoteIdentifiersAsNeedingDownload:[NSSet set]];
+    if (!self.listPaginator.hasMoreToFetch && self.remoteIDSync.isDone && self.isSyncing) {
+        [self.syncStatus didFinishCurrentSyncPhase];
+    }
 }
 
-
-- (BOOL)isSlowSyncDone
+- (BOOL)isSyncing
 {
-    return ( ! self.listPaginator.hasMoreToFetch )  && (self.remoteIDSync.isDone);
-}
-
-- (SyncPhase)expectedSyncPhase
-{
-    return SyncPhaseFetchingConversations;
+    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingConversations;
 }
 
 - (ZMTransportRequest *)nextRequestIfAllowed
 {
-    SyncStatus *status = self.syncStatus;
-    if (status.currentSyncPhase == self.expectedSyncPhase) {
-        if (!self.didStartSlowSync) {
-            [self setNeedsSlowSync];
-            self.didStartSlowSync = YES;
-            [status didStart:self.expectedSyncPhase];
-        }
-        else if ([self isSlowSyncDone]) {
-            self.didStartSlowSync = NO;
-            [status didFinish:self.expectedSyncPhase];
-        }
+    if (self.isSyncing && self.listPaginator.status != ZMSingleRequestInProgress && self.remoteIDSync.isDone) {
+        [self.listPaginator resetFetching];
+        [self.remoteIDSync setRemoteIdentifiersAsNeedingDownload:[NSSet set]];
     }
+    
     return [self.requestGenerators nextRequest];
 }
 
@@ -193,7 +188,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 
 - (NSArray *)requestGenerators;
 {
-    if (! self.isSlowSyncDone) {
+    if (self.isSyncing) {
         return  @[self.listPaginator, self.remoteIDSync];
     } else {
         return  @[self.downstreamSync, self.insertedSync, self.modifiedSync];
@@ -937,10 +932,12 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
         ZMConversation *conv = [self createConversationFromTransportData:rawConversation];
         conv.needsToBeUpdatedFromBackend = NO;
     }
-    if (response.result == ZMTransportResponseStatusPermanentError && self.didStartSlowSync) {
-        self.didStartSlowSync = NO;
-        [self.syncStatus didFail:self.expectedSyncPhase];
+    
+    if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
+        [self.syncStatus didFailCurrentSyncPhase];
     }
+    
+    [self finishSyncIfCompleted];
 }
 
 @end
