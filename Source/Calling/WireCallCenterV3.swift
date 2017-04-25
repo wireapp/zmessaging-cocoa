@@ -43,6 +43,8 @@ public enum CallClosedReason : Int32 {
     case canceled
     /// Incoming call was answered on another device
     case anweredElsewhere
+    /// Call left by the selfUser but continues until everyone else leaves or AVS closes it
+    case stillOngoing
     /// Call was closed for an unknown reason. This is most likely a bug.
     case unknown
     
@@ -62,6 +64,8 @@ public enum CallClosedReason : Int32 {
             self = .internalError
         case WCALL_REASON_IO_ERROR:
             self = .inputOutputError
+        case WCALL_REASON_STILL_ONGOING:
+            self = .stillOngoing
         default:
             self = .unknown
         }
@@ -258,7 +262,6 @@ internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     callCenter.uiMOC.performGroupedBlock {
-        callCenter.clearSnapshot(conversationId: convID)
         callCenter.handleCallState(callState: .terminating(reason: CallClosedReason(reason: reason)), conversationId: convID, userId: userID)
     }
 }
@@ -431,19 +434,31 @@ public struct CallEvent {
     
     fileprivate func handleCallState(callState: CallState, conversationId: UUID, userId: UUID?) {
         callState.logState()
-
-        if case .established = callState {
+        var finalCallState = callState
+        var finalUserId = userId
+        defer {
+            WireCallCenterCallStateNotification(callState: finalCallState, conversationId: conversationId, userId: finalUserId).post()
+        }
+        
+        switch callState {
+        case .established:
             establishedDate = Date()
-            
             if avsWrapper.isVideoCall(conversationId: conversationId) {
                 avsWrapper.setVideoSendActive(userId: conversationId, active: true)
             }
-        }
-        if case let .incoming(video: _, shouldRing: shouldRing) = callState {
+        case .incoming(video: _, shouldRing: let shouldRing):
             updatedSnapshotsForIncomingCall(conversationId: conversationId, userId: userId!, shouldRing: shouldRing)
+        case .terminating(reason: let reason):
+            if reason == .stillOngoing {
+                ignoredConversations.insert(conversationId)
+                finalCallState = .incoming(video: false, shouldRing: false)
+                finalUserId = initiatorForCall(conversationId: conversationId) ?? selfUserId
+            } else {
+                clearSnapshot(conversationId: conversationId)
+            }
+        default:
+            break
         }
-    
-        WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId).post()
     }
     
     fileprivate func updatedSnapshotsForIncomingCall(conversationId: UUID, userId: UUID, shouldRing: Bool) {
@@ -504,14 +519,8 @@ public struct CallEvent {
     @objc(closeCallForConversationID:isGroup:)
     public func closeCall(conversationId: UUID, isGroup: Bool) {
         avsWrapper.endCall(conversationId: conversationId, isGroup: isGroup)
-        
         if isGroup {
             ignoredConversations.insert(conversationId)
-            if callParticipants(conversationId: conversationId).count >= 2 {
-                WireCallCenterCallStateNotification(callState: .incoming(video: false, shouldRing: false),
-                                                    conversationId: conversationId,
-                                                    userId: initiatorForCall(conversationId: conversationId) ?? selfUserId).post()
-            }
         }
     }
     
@@ -519,16 +528,6 @@ public struct CallEvent {
     public func rejectCall(conversationId: UUID, isGroup: Bool) {
         avsWrapper.rejectCall(conversationId: conversationId, isGroup: isGroup)
         ignoredConversations.insert(conversationId)
-
-        if isGroup {
-            WireCallCenterCallStateNotification(callState: .incoming(video: false, shouldRing: false),
-                                                conversationId: conversationId,
-                                                userId: initiatorForCall(conversationId: conversationId) ?? selfUserId).post()
-        } else {
-            WireCallCenterCallStateNotification(callState: .terminating(reason: .canceled),
-                                                conversationId: conversationId,
-                                                userId: initiatorForCall(conversationId: conversationId) ?? selfUserId).post()
-        }
     }
     
     @objc(toogleVideoForConversationID:isActive:)

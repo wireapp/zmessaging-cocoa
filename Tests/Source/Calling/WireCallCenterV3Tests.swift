@@ -192,7 +192,8 @@ class WireCallCenterV3Tests: MessagingTest {
         
         // when
         sut.rejectCall(conversationId: conversationId, isGroup: true)
-        
+        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
+
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
         XCTAssertTrue(sut.didCallRejectCall)
@@ -214,13 +215,14 @@ class WireCallCenterV3Tests: MessagingTest {
             guard let note = wrappedNote.userInfo?[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification else { return false }
             XCTAssertEqual(note.conversationId, conversationId)
             XCTAssertEqual(note.userId, userId)
-            XCTAssertEqual(note.callState, .terminating(reason: .canceled))
+            XCTAssertEqual(note.callState, .incoming(video: false, shouldRing: false))
             return true
         }
         
         // when
         sut.rejectCall(conversationId: conversationId, isGroup: false)
-        
+        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
+
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
         XCTAssertTrue(sut.didCallRejectCall)

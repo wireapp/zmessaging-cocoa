@@ -82,6 +82,7 @@ class CallingV3Tests : IntegrationTestBase {
     
     override func tearDown() {
         stateObserver = nil
+        participantObserver = nil
         super.tearDown()
     }
     
@@ -99,16 +100,27 @@ class CallingV3Tests : IntegrationTestBase {
     
     func selfDropCall(){
         (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .terminating(reason: .canceled)
-
+        let convIdRef = self.conversationIdRef
+        let userIdRef = self.selfUser.identifier.cString(using: .utf8)
         userSession.enqueueChanges {
             self.conversationUnderTest.voiceChannelRouter?.v3.leave()
+            WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
+                                             conversationId: convIdRef,
+                                             userId: userIdRef,
+                                             contextRef: self.wireCallCenterRef)
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func selfIgnoreCall(){
+        let convIdRef = self.conversationIdRef
+        let userIdRef = self.selfUser.identifier.cString(using: .utf8)
         userSession.performChanges{
             self.conversationUnderTest.voiceChannelRouter?.v3.ignore()
+            WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
+                                             conversationId: convIdRef,
+                                             userId: userIdRef,
+                                             contextRef: self.wireCallCenterRef)
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout:0.5))
     }
@@ -202,7 +214,7 @@ class CallingV3Tests : IntegrationTestBase {
         closeCall(user: self.localSelfUser, reason: .canceled)
         
         // then
-        XCTAssertEqual(stateObserver.changes.count, 2)
+        XCTAssertEqual(stateObserver.changes.count, 3)
         stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
     }
     
@@ -257,12 +269,13 @@ class CallingV3Tests : IntegrationTestBase {
         selfDropCall()
         
         // then
-        XCTAssertEqual(stateObserver.changes.count, 0)
-        
+        XCTAssertEqual(stateObserver.changes.count, 1)
+        stateObserver.checkLastNotificationHasCallState(.incomingCallInactive)
+
         // and when
         closeCall(user: self.localSelfUser, reason: .canceled)
         
-        XCTAssertEqual(stateObserver.changes.count, 1)
+        XCTAssertEqual(stateObserver.changes.count, 2)
         stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
     }
     
@@ -308,7 +321,7 @@ class CallingV3Tests : IntegrationTestBase {
         closeCall(user: self.localSelfUser, reason: .canceled)
         
         // then
-        XCTAssertEqual(stateObserver.changes.count, 4)
+        XCTAssertEqual(stateObserver.changes.count, 5)
         stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
     }
     
@@ -474,6 +487,14 @@ class CallingV3Tests : IntegrationTestBase {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
+        stateObserver.checkLastNotificationHasCallState(.incomingCallInactive)
+
+        // (3) the call is closed
+        // when
+        closeCall(user: user, reason: .canceled)
+        
+        // then
+        XCTAssertEqual(stateObserver.changes.count, 3)
         stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
     }
     
@@ -487,15 +508,11 @@ class CallingV3Tests : IntegrationTestBase {
         // (1) other user joins and we ignore
         // when
         otherStartCall(user: user)
-
-        userSession.performChanges{
-            self.conversationUnderTest.voiceChannelRouter?.v3.ignore()
-        }
-        XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
+        selfIgnoreCall()
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
-        stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
+        stateObserver.checkLastNotificationHasCallState(.incomingCallInactive)
 
         // (2) we join
         // when
@@ -520,6 +537,7 @@ class CallingV3Tests : IntegrationTestBase {
         otherStartCall(user: user)
 
         // then
+        XCTAssertEqual(convObserver!.notifications.count, 1)
         XCTAssertEqual(conversationUnderTest.conversationListIndicator, .none)
         
         // (2) Self ignores call
