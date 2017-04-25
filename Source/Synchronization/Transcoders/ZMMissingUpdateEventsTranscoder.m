@@ -44,7 +44,6 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 @property (nonatomic, weak) SyncStatus* syncStatus;
 @property (nonatomic, weak) ZMOperationStatus* operationStatus;
 @property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
-@property (nonatomic) BOOL didStartQuickSync;
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response;
 
@@ -95,7 +94,8 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 - (BOOL)isFetchingStreamForAPNS
 {
     return self.application.applicationState == UIApplicationStateBackground &&
-           self.pingbackStatus.status == PingBackStatusInProgress;
+           self.pingbackStatus.status == PingBackStatusInProgress &&
+           self.pingbackStatus.hasNotificationIDs;
 }
 
 - (BOOL)isFetchingStreamInBackground
@@ -252,59 +252,43 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     }
 }
 
-- (BOOL)isSlowSyncDone
-{
-    return self.lastUpdateEventID != nil && !self.listPaginator.hasMoreToFetch;
-}
-
-- (void)setNeedsSlowSync
-{
-    self.didStartQuickSync = YES;
-    [self startDownloadingMissingNotifications];
-    [self.syncStatus didStart:self.expectedSyncPhase];
-}
-
 - (ZMTransportRequest *)nextRequestIfAllowed
 {
-    BOOL fetchingStream = self.isFetchingStreamForAPNS || self.isFetchingStreamInBackground;
-    BOOL hasNewNotification = self.pingbackStatus.hasNotificationIDs;
-    BOOL inProgress = self.listPaginator.status == ZMSingleRequestInProgress;
-
-    // We want to create a new request if we are either currently fetching the paginated stream
-    // or if we have a new notification ID that requires a pingback.
-    BOOL shouldCreateRequest = inProgress || hasNewNotification;
-
-    if (fetchingStream && shouldCreateRequest) {
+    BOOL fetchingStream = self.isFetchingStreamForAPNS || self.isFetchingStreamInBackground || self.isSyncing;
+    
+    // If we receive an APNS while fetching the notification stream we cancel the previous request
+    // and start another one.
+    if (self.pingbackStatus.hasNotificationIDs) {
         EventsWithIdentifier *newEvents = self.pingbackStatus.nextNotificationEventsWithID;
 
         if (nil != newEvents && ![newEvents isEqual:self.notificationEventsToCancel]) {
             self.notificationEventsToCancel = newEvents;
             [self.listPaginator resetFetching];
         }
+    }
 
-        if (nil != self.notificationEventsToCancel) {
-            ZMTransportRequest *request = self.listPaginator.nextRequest;
+    // We want to create a new request if we are either currently fetching the paginated stream
+    // or if we have a new notification ID that requires a pingback.
+    if (fetchingStream) {
+        if (self.listPaginator.status != ZMSingleRequestInProgress) {
+            [self.listPaginator resetFetching];
+        }
+        
+        ZMTransportRequest *request = [self.listPaginator nextRequest];
+        
+        if (self.notificationEventsToCancel != nil) {
             [request forceToVoipSession];
-            return request;
         }
+                
+        return request;
+    } else {
+        return nil;
     }
-    SyncStatus *syncStatus = self.syncStatus;
-    if (syncStatus.currentSyncPhase == self.expectedSyncPhase) {
-        if (!self.didStartQuickSync) {
-            [self setNeedsSlowSync];
-        }
-        else if ([self isSlowSyncDone]) {
-            self.didStartQuickSync = NO;
-            [syncStatus didFinish:self.expectedSyncPhase];
-        }
-        return self.requestGenerators.nextRequest;
-    }
-    return [self.listPaginator nextRequest];
 }
 
-- (SyncPhase)expectedSyncPhase
+- (BOOL)isSyncing
 {
-    return SyncPhaseFetchingMissedEvents;
+    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingMissedEvents;
 }
 
 - (NSArray <NSURLQueryItem *> *)additionalQueryItems
@@ -317,8 +301,6 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 }
 
 @end
-
-
 
 
 @implementation ZMMissingUpdateEventsTranscoder (Pagination)
@@ -340,7 +322,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     
     NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
     if (latestEventId != nil) {
-        if (response.HTTPStatus == 404 && syncStatus.currentSyncPhase == SyncPhaseFetchingMissedEvents) {
+        if (response.HTTPStatus == 404 && self.isSyncing) {
             // If we fail during quick sync we need to re-enter slow sync and should not store the lastUpdateEventID until after the slowSync has been completed
             // Otherwise, if the device crashes or is restarted during slow sync, we lose the information that we need to perform a slow sync
             [syncStatus updateLastUpdateEventIDWithEventID:latestEventId];
@@ -351,16 +333,25 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         }
     }
     
-    BOOL hasMore = ((NSNumber *) response.payload.asDictionary[@"has_more"]).boolValue;
-    if(!hasMore) {
+    if (!self.listPaginator.hasMoreToFetch) {
         [self.previouslyReceivedEventIDsCollection discardListOfAlreadyReceivedPushEventIDs];
     }
+    
     [self appendPotentialGapSystemMessageIfNeededWithResponse:response];
     
-    if (response.result == ZMTransportResponseStatusPermanentError && self.didStartQuickSync){
-        self.didStartQuickSync = NO;
-        [syncStatus didFail:self.expectedSyncPhase];
+    if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing){
+        [syncStatus failCurrentSyncPhase];
     }
+    
+    if (!self.listPaginator.hasMoreToFetch && self.lastUpdateEventID != nil && self.isSyncing) {
+        
+        // The fetch of the notification stream was initiated after the push channel was established
+        // so we must restart the fetching to be sure that we haven't missed any notifications.
+        if (syncStatus.pushChannelEstablishedDate.timeIntervalSinceReferenceDate < self.listPaginator.lastResetFetchDate.timeIntervalSinceReferenceDate) {
+            [syncStatus finishCurrentSyncPhase];
+        }
+    }
+    
     return self.lastUpdateEventID;
 }
 

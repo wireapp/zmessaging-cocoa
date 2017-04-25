@@ -35,6 +35,9 @@
 /// Status of the underlying singleRequestTranscoder
 @property (nonatomic, readonly) ZMSingleRequestProgress status;
 
+/// Date of last call to `resetFetching`
+@property (nonatomic, readonly) NSDate *lastResetFetchDate;
+
 
 - (instancetype)initWithBasePath:(NSString *)basePath
                         startKey:(NSString *)startKey

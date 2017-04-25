@@ -33,6 +33,7 @@
 @property (nonatomic) ZMSingleRequestSync *singleRequestSync;
 @property (nonatomic) BOOL hasMoreToFetch;
 @property (nonatomic) NSUUID *lastUUIDOfPreviousPage;
+@property (nonatomic) NSDate *lastResetFetchDate;
 
 @property (nonatomic) BOOL includeClientID;
 
@@ -148,6 +149,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)resetFetching
 {
     self.hasMoreToFetch = YES;
+    self.lastResetFetchDate = [NSDate date];
     self.lastUUIDOfPreviousPage = nil;
     id strongTranscoder = self.transcoder;
     if ([strongTranscoder respondsToSelector:@selector(startUUID)]) {

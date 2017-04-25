@@ -102,8 +102,7 @@
 - (void)testThatItDoesNotProcessDownstreamRequestsDuringSlowSync;
 {
     // given
-    [self.sut setNeedsSlowSync];
-    XCTAssertFalse(self.sut.isSlowSyncDone);
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
 
     // when
     NSArray *generators = self.sut.requestGenerators;
@@ -130,11 +129,6 @@
     XCTAssertEqualObjects(classes, expected);
 }
 
-- (void)testThatIsSlowSyncDoneIsTrueAtCreation
-{
-    XCTAssertTrue(self.sut.isSlowSyncDone);
-}
-
 - (void)testThatWhenSlowSyncIsNotDoneRequestIsGenerated
 {
     // given
@@ -142,7 +136,6 @@
     
     // when
     ZMTransportRequest *request = [self.sut nextRequest];
-    XCTAssertFalse([self.sut isSlowSyncDone]);
 
     // then
     XCTAssertNotNil(request);
@@ -151,7 +144,7 @@
     XCTAssertEqual(request.method, ZMMethodGET);
 }
 
-- (void)testThatASuccessfulResponseWithHasMore_NO_SetsIsSlowSyncDone
+- (void)testThatASuccessfulResponseWithHasMore_NO_DoesFinishSyncPhase
 {
     // given
     NSDictionary *payload = [self validPayloadWithHasMore:NO];
@@ -163,10 +156,10 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertTrue([self.sut isSlowSyncDone]);
+    XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
-- (void)testThatASuccessfulResponseWithHasMore_YES_DoesNotSetIsSlowSyncDone
+- (void)testThatASuccessfulResponseWithHasMore_YES_DoesNotFinishSyncPhase
 {
     // given
     NSDictionary *payload = [self validPayloadWithHasMore:YES];
@@ -178,7 +171,7 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertFalse([self.sut isSlowSyncDone]);
+    XCTAssertFalse(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
 - (void)testThatAfterASuccessfulSlowSyncNoRequestIsGenerated
@@ -197,7 +190,7 @@
     
     // then
     XCTAssertNil(request);
-    XCTAssertTrue([self.sut isSlowSyncDone]);
+    XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
 - (void)testThatATemporaryFailedRequestDoesNotSetIsSlowSyncDone
@@ -211,7 +204,7 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertFalse([self.sut isSlowSyncDone]);
+    XCTAssertFalse(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
 
@@ -241,7 +234,7 @@
     
     // then
     XCTAssertNil(request);
-    XCTAssertFalse([self.sut isSlowSyncDone]);
+    XCTAssertFalse(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
 
@@ -282,7 +275,7 @@
 }
 
 
-- (void)testThatTheHardSyncIsMarkedAsDoneAfterAFailedSlowSyncRequest
+- (void)testThatTheCurrentSyncPhaseFailsAfterAFailedSlowSyncRequest
 {
     // given
     self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
@@ -293,7 +286,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue(self.sut.isSlowSyncDone);
+    XCTAssertTrue(self.mockSyncStatus.didCallFailCurrentSyncPhase);
 }
 
 - (void)testThatConnectionsAreParsedFromASuccessfulResponse
@@ -316,7 +309,6 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertTrue([self.sut isSlowSyncDone]);
 
     [self.syncMOC performBlockAndWait:^{
         __block NSUInteger index = 0;

@@ -50,7 +50,12 @@ public class SyncStatus : NSObject {
     
     public internal (set) var isInBackground : Bool = false
     public internal (set) var needsToRestartQuickSync : Bool = false
-    fileprivate var pushChannelIsOpen : Bool = false
+    public internal (set) var pushChannelEstablishedDate : Date?
+    
+    fileprivate var pushChannelIsOpen : Bool {
+        return pushChannelEstablishedDate != nil
+    }
+    
     public var isSyncing : Bool {
         return currentSyncPhase.isSyncing
     }
@@ -61,27 +66,23 @@ public class SyncStatus : NSObject {
         super.init()
         
         currentSyncPhase = hasPersistedLastEventID ? .fetchingMissedEvents : .fetchingLastUpdateEventID
+        
+        self.syncStateDelegate.didStartSync()
     }
 }
 
 // MARK: Slow Sync
 extension SyncStatus {
     
-    public func didStart(_ phase: SyncPhase){
-        guard !previousPhase.isSyncing else { return }
-        syncStateDelegate.didStartSync()
-    }
-    
-    public func didFinish(_ phase: SyncPhase) {
-        guard phase == currentSyncPhase,
-              let newPhase = SyncPhase(rawValue:currentSyncPhase.rawValue+1)
-        else { return }
+    public func finishCurrentSyncPhase() {
+        guard let nextPhase = SyncPhase(rawValue:currentSyncPhase.rawValue+1) else { return }
         
-        if phase.isLastSlowSyncPhase {
+        if currentSyncPhase.isLastSlowSyncPhase {
             persistLastUpdateEventID()
         }
         
-        currentSyncPhase = newPhase
+        currentSyncPhase = nextPhase
+        
         if currentSyncPhase == .done {
             if needsToRestartQuickSync && pushChannelIsOpen {
                 // If the push channel closed while fetching notifications
@@ -98,9 +99,8 @@ extension SyncStatus {
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
     
-    public func didFail(_ phase: SyncPhase) {
-        guard phase == currentSyncPhase else { return }
-        if phase == .fetchingMissedEvents {
+    public func failCurrentSyncPhase() {
+        if currentSyncPhase == .fetchingMissedEvents {
             currentSyncPhase = hasPersistedLastEventID ? .fetchingConnections : .fetchingLastUpdateEventID
             needsToRestartQuickSync = false
         }
@@ -124,7 +124,7 @@ extension SyncStatus {
 extension SyncStatus {
     
     public func pushChannelDidClose() {
-        pushChannelIsOpen = false
+        pushChannelEstablishedDate = nil
         
         if !currentSyncPhase.isSyncing {
             // As soon as the pushChannel closes we should notify the UI that we are syncing (if we are not already syncing)
@@ -133,13 +133,19 @@ extension SyncStatus {
     }
     
     public func pushChannelDidOpen() {
-        pushChannelIsOpen = true
+        pushChannelEstablishedDate = Date()
+        
+        if !currentSyncPhase.isSyncing {
+            // As soon as the pushChannel opens we should notify the UI that we are syncing (if we are not already syncing)
+            self.syncStateDelegate.didStartSync()
+        }
         
         if currentSyncPhase == .fetchingMissedEvents {
             // If the pushChannel closed while we are fetching the notifications, we might be missing notifications that are sent between the server response and the channel reopening
             // We therefore need to mark the quicksync to be restarted
             needsToRestartQuickSync = true
         }
+        
         startQuickSyncIfNeeded()
     }
     

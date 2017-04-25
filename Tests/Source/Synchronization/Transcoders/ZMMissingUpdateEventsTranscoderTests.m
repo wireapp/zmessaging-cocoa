@@ -101,27 +101,30 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     return [NSUUID uuidWithTransportString:@"54ad4672-be09-11e5-9912-ba0be0483c18"];
 }
 
-- (void)testThatItReturnSlowSyncNotDoneIfItHasNoLastUpdateEventID
-{
-    XCTAssertFalse(self.sut.isSlowSyncDone);
-}
-
-- (void)testThatItReturnSlowSyncDoneIfItHasALastUpdateEventID
+- (void)testThatItGenerateARequestToFetchNotificationStreamWhenSyncing
 {
     // given
-    [self setLastUpdateEventID:[NSUUID createUUID] hasMore:NO];
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingMissedEvents;
+    
+    // when
+    ZMTransportRequest *request = self.sut.nextRequest;
     
     // then
-    XCTAssertTrue(self.sut.isSlowSyncDone);
+    XCTAssertEqualObjects(request.path, @"/notifications?size=500");
 }
 
-- (void)testThatItDoesNotSetLastUpdateEventIDAndSlowSyncDoneWhenThereIsMoreToFetch
+- (void)testThatItFinishCurrentSyncPhaseIfThereIsNoMoreNotificationsToFetch
 {
     // given
-    [self setLastUpdateEventID:[NSUUID createUUID] hasMore:YES];
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingMissedEvents;
+    
+    // when
+    ZMTransportRequest *request = self.sut.nextRequest;
+    [request completeWithResponse:[self responseForSettingLastUpdateEventID:[NSUUID createUUID] hasMore:NO]];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertFalse(self.sut.isSlowSyncDone);
+    XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
 - (void)testThatItforwardsToDownstreamSyncOnStartDownloadingMissingNotifications
@@ -798,10 +801,10 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 @implementation ZMMissingUpdateEventsTranscoderTests (FallbackCancellation)
 
 
-- (void)expectMockPingBackStatus:(PingBackStatus)status hasNotifications:(BOOL)hasNotifications nextEvents:(EventsWithIdentifier *)nextEvents inBackground:(BOOL)backgroudned
+- (void)expectMockPingBackStatus:(PingBackStatus)status hasNotifications:(BOOL)hasNotifications nextEvents:(EventsWithIdentifier *)nextEvents inBackground:(BOOL)backgrounded
 {
-    self.application.applicationState = backgroudned ? UIApplicationStateBackground : UIApplicationStateActive;
-    [[[self.mockPingbackStatus expect] andReturnValue:@(hasNotifications)] hasNotificationIDs];
+    self.application.applicationState = backgrounded ? UIApplicationStateBackground : UIApplicationStateActive;
+    [[[self.mockPingbackStatus stub] andReturnValue:@(hasNotifications)] hasNotificationIDs];
     [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(status)] status];
 
     if (nil != nextEvents) {
@@ -995,6 +998,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     // given
     self.application.applicationState = UIApplicationStateBackground;
     [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(PingBackStatusInProgress)] status];
+    [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(YES)] hasNotificationIDs];
 
     // then
     XCTAssertTrue(self.sut.isFetchingStreamForAPNS);

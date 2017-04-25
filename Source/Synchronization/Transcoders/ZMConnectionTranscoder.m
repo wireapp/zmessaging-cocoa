@@ -38,7 +38,6 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 @property (nonatomic) ZMUpstreamInsertedObjectSync *insertedObjectSync;
 @property (nonatomic) ZMDownstreamObjectSync *downstreamSync;
 @property (nonatomic) ZMSimpleListRequestPaginator *conversationsListSync;
-@property (nonatomic) BOOL didStartSlowSync;
 
 @property (nonatomic, weak) SyncStatus *syncStatus;
 @property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
@@ -72,35 +71,17 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
-- (void)setNeedsSlowSync
+- (BOOL)isSyncing
 {
-    [self.conversationsListSync resetFetching];
-}
-
-- (BOOL)isSlowSyncDone {
-    return ! self.conversationsListSync.hasMoreToFetch;
-}
-
-- (SyncPhase)expectedSyncPhase
-{
-    return SyncPhaseFetchingConnections;
+    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingConnections;
 }
 
 - (ZMTransportRequest *)nextRequestIfAllowed
 {
-    SyncStatus *status = self.syncStatus;
-    if (status.currentSyncPhase == self.expectedSyncPhase) {
-        if (!self.didStartSlowSync) {
-            [self setNeedsSlowSync];
-            self.didStartSlowSync = YES;
-            [status didStart:self.expectedSyncPhase];
-        }
-        else if ([self isSlowSyncDone]) {
-            self.didStartSlowSync = NO;
-            [status didFinish:self.expectedSyncPhase];
-            return nil;
-        }
+    if (self.isSyncing && !self.conversationsListSync.hasMoreToFetch) {
+        [self.conversationsListSync resetFetching];
     }
+    
     return [self.requestGenerators nextRequest];
 }
 
@@ -112,10 +93,11 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 
 - (NSArray *)requestGenerators;
 {
-    if (! self.isSlowSyncDone) {
+    if (self.isSyncing) {
         return @[self.conversationsListSync, self.insertedObjectSync, self.modifiedObjectSync];
+    } else {
+        return @[self.conversationsListSync, self.downstreamSync, self.insertedObjectSync, self.modifiedObjectSync];
     }
-    return @[self.conversationsListSync, self.downstreamSync, self.insertedObjectSync, self.modifiedObjectSync];
 }
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> *)events
@@ -330,14 +312,22 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
             [allUIDs addObject:connection.to.remoteIdentifier];
         }
     }
+    
+    SyncStatus *syncStatus = self.syncStatus;
+    
+    if (!self.conversationsListSync.hasMoreToFetch && self.isSyncing) {
+        [syncStatus finishCurrentSyncPhase];
+    }
+    
     return allUIDs.lastObject;
 }
 
 - (BOOL)shouldParseErrorForResponse:(ZMTransportResponse*)response
 {
-    if (response.result == ZMTransportResponseStatusPermanentError && self.didStartSlowSync) {
-        self.didStartSlowSync = NO;
-        [self.syncStatus didFail:self.expectedSyncPhase];
+    SyncStatus *syncStatus = self.syncStatus;
+    
+    if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
+        [syncStatus failCurrentSyncPhase];
     }
     return NO;
 }

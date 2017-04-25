@@ -25,7 +25,7 @@
 @protocol PreviouslyReceivedEventIDsCollection;
 @protocol ZMApplication;
 
-@interface ZMMissingUpdateEventsTranscoder : ZMAbstractRequestStrategy <ZMSyncPhase, ZMObjectStrategy>
+@interface ZMMissingUpdateEventsTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy>
 
 @property (nonatomic, readonly) BOOL hasLastUpdateEventID;
 @property (nonatomic, readonly) BOOL isDownloadingMissingNotifications;

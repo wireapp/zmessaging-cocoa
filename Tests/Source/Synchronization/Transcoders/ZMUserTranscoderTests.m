@@ -84,11 +84,6 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
               } mutableCopy];
 }
 
-- (void)testThatItIsCreatedWithIsSlowSyncDoneTrue
-{
-    XCTAssertTrue(self.sut.isSlowSyncDone);
-}
-
 - (void)testThatItOnlyProcessesRemoteIDRequests
 {
     // when
@@ -448,7 +443,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     }
 }
 
-- (void)testThatIsSlowSyncDoneIsTrueWhenAllConnectedUsersAndSelfAreFetched
+- (void)testThatCurrentSyncPhaseIsFinishedWhenAllConnectedUsersAndSelfAreFetched
 {
     // given
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -477,11 +472,11 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue(self.sut.isSlowSyncDone);
+    XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
     
 }
 
-- (void)testThatIsSlowSyncDoneIsTrueWhenAllConnectedUsersAreFetchedWithMultipleRequests
+- (void)testThatCurrentSyncPhaseIsFinishedWhenAllConnectedUsersAreFetchedWithMultipleRequests
 {
     // given
     NSUInteger numRequests = 3;
@@ -510,10 +505,10 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     }
     
     // then
-    XCTAssertTrue(self.sut.isSlowSyncDone);
+    XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
-- (void)testThatIsSlowSyncDoneIsFalseWhenOnlySomeConnectedUsersAreFetched
+- (void)testThatCurrentSyncPhaseIsNotFinishedWhenOnlySomeConnectedUsersAreFetched
 {
     // given
     NSUInteger const userCount = ZMUserTranscoderNumberOfUUIDsPerRequest * 2 + 10;
@@ -538,7 +533,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertFalse(self.sut.isSlowSyncDone);
+    XCTAssertFalse(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
 - (void)testThatItDoesNotClearNeedsToBeUpdatedFromBackendWhenItIsUpdatedFromPushChannelData
