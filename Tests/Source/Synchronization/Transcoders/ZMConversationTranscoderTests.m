@@ -1090,8 +1090,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
         [self checkThatThereAreConversationsForAllRawConversations:rawConversations failureRecorder:NewFailureRecorder()];
-//        XCTAssertTrue(self.sut.isSlowSyncDone);
-        XCTAssertNotEqual(self.mockSyncStatus.currentSyncPhase, SyncPhaseFetchingConversations);
+        XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
     }];
 }
 

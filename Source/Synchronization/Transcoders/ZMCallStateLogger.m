@@ -40,7 +40,7 @@
 {
     self = [super init];
     if (self) {
-        self.callFlowRequestStrategy= callFlowRequestStrategy;
+        self.callFlowRequestStrategy = callFlowRequestStrategy;
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appendLogMessageWithNotification:) name:ZMAppendAVSLogNotificationName object:nil];
     }
     return self;

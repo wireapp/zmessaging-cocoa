@@ -127,12 +127,11 @@ public class SearchUserImageStrategy : AbstractRequestStrategy {
                   userIDsTable: nil)
     }
     
-// TODO jacob indent
     internal init(applicationStatus: ApplicationStatus,
-         managedObjectContext: NSManagedObjectContext,
-         imagesByUserIDCache : NSCache<NSUUID, NSData>?,
-         mediumAssetCache: NSCache<NSUUID, SearchUserAssetObjC>?,
-         userIDsTable: SearchDirectoryUserIDTable?) {
+                  managedObjectContext: NSManagedObjectContext,
+                  imagesByUserIDCache : NSCache<NSUUID, NSData>?,
+                  mediumAssetCache: NSCache<NSUUID, SearchUserAssetObjC>?,
+                  userIDsTable: SearchDirectoryUserIDTable?) {
         self.syncContext = managedObjectContext
         self.uiContext = managedObjectContext.zm_userInterface
         self.imagesByUserIDCache = imagesByUserIDCache ?? ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>

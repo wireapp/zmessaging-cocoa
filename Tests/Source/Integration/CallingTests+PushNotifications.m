@@ -206,11 +206,6 @@
                                                                     sequence:@1
                                                                      session:@"session2"];
 
-    // TODO jacob
-//    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-//        [session simulatePushChannelClosed];
-//    }];
-
     NSUUID *notificationId = NSUUID.timeBasedUUID;
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -248,7 +243,6 @@
         // then
         XCTAssertFalse([self lastRequestContainsSelfStateJoined]);
         XCTAssertTrue(self.userSession.didStartInitialSync);
-//        XCTAssertTrue(self.userSession.isPerformingSync); // TODO jacob 
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 1u);
     }
 
