@@ -34,6 +34,12 @@ class ApplicationStatusDirectoryTests : MessagingTest {
         sut = ApplicationStatusDirectory(withManagedObjectContext: syncMOC, cookie: cookie!, requestCancellation: self, application: mockApplication, syncStateDelegate: self)
     }
     
+    override func tearDown() {
+        sut = nil
+        
+        super.tearDown()
+    }
+    
     func testThatOperationStatusIsUpdatedWhenCallStarts() {
         // given
         let note = Notification(name: CallStateObserver.CallInProgressNotification, object: nil, userInfo: [CallStateObserver.CallInProgressKey : true ])

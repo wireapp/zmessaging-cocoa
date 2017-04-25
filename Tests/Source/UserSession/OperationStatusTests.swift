@@ -31,6 +31,12 @@ class OperationStatusTests : MessagingTest {
         sut = OperationStatus()
     }
     
+    override func tearDown() {
+        sut = nil
+        
+        super.tearDown()
+    }
+    
     func testOperationState_whenInForeground() {
         // when
         sut.isInBackground = false

@@ -133,6 +133,7 @@
     [self.sut.authenticationStatus removeAuthenticationCenterObserver:self];
     self.authenticationStatus = nil;
     self.proxiedRequestStatus = nil;
+    self.operationStatus = nil;
     
     ZMUserSession.callingProtocolStrategy = CallingProtocolStrategyNegotiate;
     [self tearDownUserInfoObjectsOfMOC:self.syncMOC];

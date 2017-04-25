@@ -77,7 +77,9 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
     [self.sut tearDown];
     self.sut = nil;
     [self.internalFlowManager stopMocking];
-
+    self.internalFlowManager = nil;
+    self.onDemandFlowManager = nil;
+    
     self.deploymentEnvironment = nil;
     ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride = nil;
     ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;

@@ -62,6 +62,13 @@ class CallStateObserverTests : MessagingTest {
     override func tearDown() {
         localNotificationDispatcher.tearDown()
         
+        sut = nil
+        sender = nil
+        receiver = nil
+        conversation = nil
+        localNotificationDispatcher = nil
+        mockCallCenter = nil
+        
         super.tearDown()
     }
     

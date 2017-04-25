@@ -29,7 +29,7 @@ class InitialSyncObserver : NSObject, ZMInitialSyncCompletionObserver {
         ZMUserSession.addInitalSyncCompletionObserver(self)
     }
     
-    func tearDown(){
+    func tearDown() {
         ZMUserSession.removeInitalSyncCompletionObserver(self)
     }
     
@@ -50,7 +50,9 @@ class SyncStatusTests : MessagingTest {
     }
     
     override func tearDown() {
-        self.uiMOC.zm_lastNotificationID = nil
+        uiMOC.zm_lastNotificationID = nil
+        mockSyncDelegate = nil
+        sut = nil
         super.tearDown()
     }
     
