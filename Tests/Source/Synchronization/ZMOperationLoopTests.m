@@ -125,7 +125,6 @@
     
     // given
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
-//    [[self.transportSession stub] closePushChannelAndRemoveConsumer];
     XCTestExpectation *expectation = [self expectationWithDescription:@"Open push channel opened"];
     [[self.transportSession expect] configurePushChannelWithConsumer:[OCMArg checkWithBlock:^BOOL(id obj) {
         receivedConsumer = obj;
