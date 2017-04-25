@@ -74,7 +74,7 @@ public class SyncStatus : NSObject {
 // MARK: Slow Sync
 extension SyncStatus {
     
-    public func didFinishCurrentSyncPhase() {
+    public func finishCurrentSyncPhase() {
         guard let nextPhase = SyncPhase(rawValue:currentSyncPhase.rawValue+1) else { return }
         
         if currentSyncPhase.isLastSlowSyncPhase {
@@ -99,7 +99,7 @@ extension SyncStatus {
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
     
-    public func didFailCurrentSyncPhase() {
+    public func failCurrentSyncPhase() {
         if currentSyncPhase == .fetchingMissedEvents {
             currentSyncPhase = hasPersistedLastEventID ? .fetchingConnections : .fetchingLastUpdateEventID
             needsToRestartQuickSync = false

@@ -267,7 +267,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
             
             if (self.remoteIDObjectSync.isDone && self.isSyncing) {
                 self.didStartSyncing = NO;
-                [syncStatus didFinishCurrentSyncPhase];
+                [syncStatus finishCurrentSyncPhase];
             }
             break;
         }
@@ -276,7 +276,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
             [self updateUsersFromPayload:nil expectedRemoteIdentifiers:remoteIdentifiers];
             if (self.isSyncing) {
                 self.didStartSyncing = NO;
-                [syncStatus didFailCurrentSyncPhase];
+                [syncStatus failCurrentSyncPhase];
             }
             break;
         }

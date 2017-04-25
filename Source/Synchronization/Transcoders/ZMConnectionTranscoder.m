@@ -316,7 +316,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     SyncStatus *syncStatus = self.syncStatus;
     
     if (!self.conversationsListSync.hasMoreToFetch && self.isSyncing) {
-        [syncStatus didFinishCurrentSyncPhase];
+        [syncStatus finishCurrentSyncPhase];
     }
     
     return allUIDs.lastObject;
@@ -327,7 +327,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     SyncStatus *syncStatus = self.syncStatus;
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
-        [syncStatus didFailCurrentSyncPhase];
+        [syncStatus failCurrentSyncPhase];
     }
     return NO;
 }

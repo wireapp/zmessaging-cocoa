@@ -151,7 +151,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
-        [self.syncStatus didFailCurrentSyncPhase];
+        [self.syncStatus failCurrentSyncPhase];
     }
     
     [self finishSyncIfCompleted];
@@ -162,7 +162,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 - (void)finishSyncIfCompleted
 {
     if (!self.listPaginator.hasMoreToFetch && self.remoteIDSync.isDone && self.isSyncing) {
-        [self.syncStatus didFinishCurrentSyncPhase];
+        [self.syncStatus finishCurrentSyncPhase];
     }
 }
 
@@ -934,7 +934,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     }
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
-        [self.syncStatus didFailCurrentSyncPhase];
+        [self.syncStatus failCurrentSyncPhase];
     }
     
     [self finishSyncIfCompleted];

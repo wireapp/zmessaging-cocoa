@@ -125,7 +125,7 @@
     NOT_USED(sync);
     SyncStatus *status = self.syncStatus;
     if(response.payload == nil) {
-        [status didFailCurrentSyncPhase];
+        [status failCurrentSyncPhase];
         return;
     }
     
@@ -134,7 +134,7 @@
         self.lastUpdateEventID = lastNotificationID;
         if (status.currentSyncPhase == SyncPhaseFetchingLastUpdateEventID) {
             [status updateLastUpdateEventIDWithEventID:lastNotificationID];
-            [status didFinishCurrentSyncPhase];
+            [status finishCurrentSyncPhase];
         }
     }
     

@@ -340,7 +340,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     [self appendPotentialGapSystemMessageIfNeededWithResponse:response];
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing){
-        [syncStatus didFailCurrentSyncPhase];
+        [syncStatus failCurrentSyncPhase];
     }
     
     if (!self.listPaginator.hasMoreToFetch && self.lastUpdateEventID != nil && self.isSyncing) {
@@ -348,7 +348,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         // The fetch of the notification stream was initiated after the push channel was established
         // so we must restart the fetching to be sure that we haven't missed any notifications.
         if (syncStatus.pushChannelEstablishedDate.timeIntervalSinceReferenceDate < self.listPaginator.lastResetFetchDate.timeIntervalSinceReferenceDate) {
-            [syncStatus didFinishCurrentSyncPhase];
+            [syncStatus finishCurrentSyncPhase];
         }
     }
     
