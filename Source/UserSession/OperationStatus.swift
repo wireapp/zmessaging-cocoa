@@ -26,6 +26,8 @@ let OperationStatusChangedNotification : Notification.Name  = Notification.Name(
 
 @objc(ZMOperationStatusDelegate)
 public protocol OperationStatusDelegate : class {
+    
+    @objc(operationStatusDidChangeState:)
     func operationStatus(didChangeState state: SyncEngineOperationState)
 }
 
