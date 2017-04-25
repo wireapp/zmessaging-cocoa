@@ -223,15 +223,7 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 - (ZMTransportRequest *)nextRequestIfAllowed
 {
-    for (id<ZMRequestGenerator> requestGenerator in @[self.downstreamSync, self.upstreamSync]) {
-        ZMTransportRequest *request = [requestGenerator nextRequest];
-        
-        if (request != nil) {
-            return request;
-        }
-    }
-    
-    return nil;
+    return [@[self.downstreamSync, self.upstreamSync] nextRequest];
 }
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> *)events
