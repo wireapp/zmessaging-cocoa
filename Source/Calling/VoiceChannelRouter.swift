@@ -34,7 +34,12 @@ public enum CaptureDevice : Int {
     }
 }
 
-extension VoiceChannelV2 : VoiceChannelInternal { }
+extension VoiceChannelV2 : VoiceChannelInternal {
+
+    public var initiator : ZMUser? {
+        return nil
+    }
+}
 
 extension VoiceChannelV3 : VoiceChannelInternal { }
 
@@ -53,7 +58,7 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
     }
     
     public var currentVoiceChannel : VoiceChannelInternal {
-        if v2.state != .noActiveUsers || v2.conversation?.conversationType != .oneOnOne {
+        if v2.state != .noActiveUsers {
             return v2
         }
         
@@ -63,6 +68,12 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
         
         switch ZMUserSession.callingProtocolStrategy {
         case .negotiate:
+            
+            if v2.conversation?.conversationType == .group {
+                // FIXME: remove this to enable group calling V3 for all
+                return v2
+            }
+            
             guard let callingProtocol = WireCallCenterV3.activeInstance?.callingProtocol else {
                 zmLog.warn("Attempt to use voice channel without an active call center")
                 return v2
@@ -116,6 +127,9 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
         flowManager.setVideoCaptureDevice(device.deviceIdentifier, forConversation: remoteIdentifier.transportString())
     }
     
+    public var initiator: ZMUser? {
+        return currentVoiceChannel.initiator
+    }
 }
 
 extension VoiceChannelRouter : CallObservers {

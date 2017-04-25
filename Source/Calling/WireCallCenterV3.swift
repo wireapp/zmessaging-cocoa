@@ -77,7 +77,7 @@ public enum CallState : Equatable {
     /// Outgoing call is pending
     case outgoing
     /// Incoming call is pending
-    case incoming(video: Bool)
+    case incoming(video: Bool, shouldRing: Bool)
     /// Call is answered
     case answered
     /// Call is established (media is flowing)
@@ -93,8 +93,6 @@ public enum CallState : Equatable {
             fallthrough
         case (.outgoing, .outgoing):
             fallthrough
-        case (.incoming, .incoming):
-            fallthrough
         case (.answered, .answered):
             fallthrough
         case (.established, .established):
@@ -103,6 +101,8 @@ public enum CallState : Equatable {
             fallthrough
         case (.unknown, .unknown):
             return true
+        case (.incoming(video: let lVideo, shouldRing: let lShouldRing), .incoming(video: let rVideo, shouldRing: let rShouldRing)):
+            return lVideo == rVideo && lShouldRing == rShouldRing
         default:
             return false
         }
@@ -113,7 +113,7 @@ public enum CallState : Equatable {
         case WCALL_STATE_NONE:
             self = .none
         case WCALL_STATE_INCOMING:
-            self = .incoming(video: false)
+            self = .incoming(video: false, shouldRing: true)
         case WCALL_STATE_OUTGOING:
             self = .outgoing
         case WCALL_STATE_ANSWERED:
@@ -132,12 +132,12 @@ public enum CallState : Equatable {
         switch self {
         case .answered:
             zmLog.debug("answered call")
+        case .incoming(video: let isVideo, shouldRing: let shouldRing):
+            zmLog.debug("incoming call, isVideo: \(isVideo), shouldRing: \(shouldRing)")
         case .established:
             zmLog.debug("established call")
         case .outgoing:
             zmLog.debug("outgoing call")
-        case .incoming(video: let isVideo):
-            zmLog.debug("incoming call with isVideo \(isVideo)")
         case .terminating(reason: let reason):
             zmLog.debug("terminating call reason: \(reason)")
         case .none:
@@ -145,6 +145,31 @@ public enum CallState : Equatable {
         case .unknown:
             zmLog.debug("unknown call state")
         }
+    }
+}
+
+public struct CallMember : Hashable {
+
+    let remoteId : UUID
+    let audioEstablished : Bool
+    
+    init?(wcallMember: wcall_member) {
+        guard let remoteId = UUID(cString:wcallMember.userid) else { return nil }
+        self.remoteId = remoteId
+        audioEstablished = (wcallMember.audio_estab != 0)
+    }
+    
+    init(userId : UUID, audioEstablished: Bool) {
+        self.remoteId = userId
+        self.audioEstablished = audioEstablished
+    }
+    
+    public var hashValue: Int {
+        return remoteId.hashValue
+    }
+    
+    public static func ==(lhs: CallMember, rhs: CallMember) -> Bool {
+        return lhs.remoteId == rhs.remoteId
     }
 }
 
@@ -174,19 +199,20 @@ public extension UUID {
 
 /// Handles incoming calls
 /// In order to be passed to C, this function needs to be global
-internal func IncomingCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, isVideoCall: Int32, contextRef: UnsafeMutableRawPointer?)
+
+internal func incomingCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, isVideoCall: Int32, shouldRing: Int32, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
     callCenter.uiMOC.performGroupedBlock {
-        callCenter.handleCallState(callState: .incoming(video: isVideoCall != 0), conversationId: convID, userId: userID)
+        callCenter.handleCallState(callState: .incoming(video: isVideoCall != 0, shouldRing: shouldRing != 0), conversationId: convID, userId: userID)
     }
 }
 
 /// Handles missed calls
 /// In order to be passed to C, this function needs to be global
-internal func MissedCallHandler(conversationId: UnsafePointer<Int8>?, messageTime: UInt32, userId: UnsafePointer<Int8>?, isVideoCall: Int32, contextRef: UnsafeMutableRawPointer?)
+internal func missedCallHandler(conversationId: UnsafePointer<Int8>?, messageTime: UInt32, userId: UnsafePointer<Int8>?, isVideoCall: Int32, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
@@ -201,7 +227,7 @@ internal func MissedCallHandler(conversationId: UnsafePointer<Int8>?, messageTim
 
 /// Handles answered calls
 /// In order to be passed to C, this function needs to be global
-internal func AnsweredCallHandler(conversationId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?){
+internal func answeredCallHandler(conversationId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?){
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId) else { return }
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
@@ -212,7 +238,7 @@ internal func AnsweredCallHandler(conversationId: UnsafePointer<Int8>?, contextR
 
 /// Handles established calls
 /// In order to be passed to C, this function needs to be global
-internal func EstablishedCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?,contextRef: UnsafeMutableRawPointer?)
+internal func establishedCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?,contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
     
@@ -225,21 +251,26 @@ internal func EstablishedCallHandler(conversationId: UnsafePointer<Int8>?, userI
 
 /// Handles ended calls
 /// In order to be passed to C, this function needs to be global
-internal func ClosedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, metrics:UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
+internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId) else { return }
     let userID = UUID(cString: userId)
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-    
     callCenter.uiMOC.performGroupedBlock {
+        callCenter.clearSnapshot(conversationId: convID)
         callCenter.handleCallState(callState: .terminating(reason: CallClosedReason(reason: reason)), conversationId: convID, userId: userID)
     }
 }
 
+/// Handles call metrics
+internal func callMetricsHandler(conversationId: UnsafePointer<Int8>?, metrics: UnsafePointer<Int8>?, contextRef:UnsafeMutableRawPointer?){
+    // TODO Sabine: parse metrics (JSON) & forward metrics to analytics
+}
+
 /// Handles sending call messages
 /// In order to be passed to C, this function needs to be global
-internal func SendCallMessageHandler(token: UnsafeMutableRawPointer?, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, clientId: UnsafePointer<Int8>?, data: UnsafePointer<UInt8>?, dataLength: Int, contextRef: UnsafeMutableRawPointer?) -> Int32
+internal func sendCallMessageHandler(token: UnsafeMutableRawPointer?, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, clientId: UnsafePointer<Int8>?, data: UnsafePointer<UInt8>?, dataLength: Int, contextRef: UnsafeMutableRawPointer?) -> Int32
 {
     guard let token = token, let contextRef = contextRef, let conversationId = UUID(cString: conversationId), let userId = UUID(cString: userId), let clientId = String(cString: clientId), let data = data else {
         return EINVAL // invalid argument
@@ -263,7 +294,7 @@ internal func SendCallMessageHandler(token: UnsafeMutableRawPointer?, conversati
 
 /// Sets the calling protocol when AVS is ready
 /// In order to be passed to C, this function needs to be global
-internal func ReadyHandler(version: Int32, contextRef: UnsafeMutableRawPointer?)
+internal func readyHandler(version: Int32, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef else { return }
     
@@ -276,6 +307,19 @@ internal func ReadyHandler(version: Int32, contextRef: UnsafeMutableRawPointer?)
         }
     } else {
         zmLog.error("wcall initialized with unknown protocol version: \(version)")
+    }
+}
+
+/// Handles other users joining / leaving / connecting
+/// In order to be passed to C, this function needs to be global
+internal func groupMemberHandler(conversationIdRef: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
+{
+    guard let contextRef = contextRef, let convID = UUID(cString: conversationIdRef) else { return }
+    
+    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+    let members = callCenter.avsWrapper.members(in: convID)
+    callCenter.uiMOC.performGroupedBlock {
+        callCenter.callParticipantsChanged(conversationId: convID, participants: members)
     }
 }
 
@@ -321,8 +365,10 @@ public struct CallEvent {
     
     public weak var transport : WireCallCenterTransport? = nil
     
+    /// Used to collect incoming events (e.g. from fetching the notification stream) until AVS is ready to process them
     var bufferedEvents : [CallEvent]  = []
     
+    /// Set to true once AVS calls the ReadyHandler. Setting it to true forwards all previously buffered events to AVS
     fileprivate var isReady : Bool = false {
         didSet {
             if isReady {
@@ -331,8 +377,22 @@ public struct CallEvent {
             }
         }
     }
-
+    
     public fileprivate(set) var callingProtocol : CallingProtocol = .version2
+    
+    /// We keep a snapshot of all participants so that we can notify the UI when a user is connected or when the stereo sorting changes
+    fileprivate var participantSnapshots : [UUID : VoiceChannelParticipantV3Snapshot] = [:]
+    
+    /// If a user ignores a call in a group conversation, it is added to this list
+    /// The list is reset when the call is closed or a new call is started by the selfUser
+    fileprivate var ignoredConversations = Set<UUID>()
+    
+    /// Removes the participantSnapshot and remove the conversation from the list of ignored conversations
+    fileprivate func clearSnapshot(conversationId: UUID) {
+        ignoredConversations.remove(conversationId)
+        participantSnapshots.removeValue(forKey: conversationId)
+    }
+    
     var avsWrapper : AVSWrapperType!
     let uiMOC : NSManagedObjectContext
     
@@ -379,8 +439,23 @@ public struct CallEvent {
                 avsWrapper.setVideoSendActive(userId: conversationId, active: true)
             }
         }
+        if case let .incoming(video: _, shouldRing: shouldRing) = callState {
+            updatedSnapshotsForIncomingCall(conversationId: conversationId, userId: userId!, shouldRing: shouldRing)
+        }
     
         WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId).post()
+    }
+    
+    fileprivate func updatedSnapshotsForIncomingCall(conversationId: UUID, userId: UUID, shouldRing: Bool) {
+        if !shouldRing {
+            ignoredConversations.insert(conversationId)
+        } else {
+            ignoredConversations.remove(conversationId)
+        }
+        participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
+                                                                                 selfUserID: selfUserId,
+                                                                                 members: [CallMember(userId: userId, audioEstablished: false)],
+                                                                                 initiator: userId)
     }
     
     fileprivate func missed(conversationId: UUID, userId: UUID, timestamp: Date, isVideoCall: Bool) {
@@ -401,36 +476,59 @@ public struct CallEvent {
     
     // MARK - Call state methods
 
-    @objc(answerCallForConversationID:)
-    public func answerCall(conversationId: UUID) -> Bool {
-        let answered = avsWrapper.answerCall(conversationId: conversationId)
+
+    @objc(answerCallForConversationID:isGroup:)
+    public func answerCall(conversationId: UUID, isGroup: Bool) -> Bool {
+        ignoredConversations.remove(conversationId)
+        
+        let answered = avsWrapper.answerCall(conversationId: conversationId, isGroup: isGroup)
         if answered {
             WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.selfUserId).post()
         }
         return answered
     }
     
-    @objc(startCallForConversationID:video:)
-    public func startCall(conversationId: UUID, video: Bool) -> Bool {
-        let started = avsWrapper.startCall(conversationId: conversationId, video: video)
+
+    @objc(startCallForConversationID:video:isGroup:)
+    public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {
+        clearSnapshot(conversationId: conversationId) // make sure we don't have an old state for this conversation
+        
+        let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup)
         if started {
             WireCallCenterCallStateNotification(callState: .outgoing, conversationId: conversationId, userId: selfUserId).post()
         }
         return started
     }
     
-    @objc(closeCallForConversationID:)
-    public func closeCall(conversationId: UUID) {
-        avsWrapper.endCall(conversationId: conversationId)
+
+    @objc(closeCallForConversationID:isGroup:)
+    public func closeCall(conversationId: UUID, isGroup: Bool) {
+        avsWrapper.endCall(conversationId: conversationId, isGroup: isGroup)
+        
+        if isGroup {
+            ignoredConversations.insert(conversationId)
+            if callParticipants(conversationId: conversationId).count >= 2 {
+                WireCallCenterCallStateNotification(callState: .incoming(video: false, shouldRing: false),
+                                                    conversationId: conversationId,
+                                                    userId: initiatorForCall(conversationId: conversationId) ?? selfUserId).post()
+            }
+        }
     }
     
-    @objc(rejectCallForConversationID:)
-    public func rejectCall(conversationId: UUID) {
-        avsWrapper.rejectCall(conversationId: conversationId)
+    @objc(rejectCallForConversationID:isGroup:)
+    public func rejectCall(conversationId: UUID, isGroup: Bool) {
+        avsWrapper.rejectCall(conversationId: conversationId, isGroup: isGroup)
+        ignoredConversations.insert(conversationId)
 
-        WireCallCenterCallStateNotification(callState: .terminating(reason: .canceled),
+        if isGroup {
+            WireCallCenterCallStateNotification(callState: .incoming(video: false, shouldRing: false),
                                                 conversationId: conversationId,
-                                                userId: selfUserId).post()
+                                                userId: initiatorForCall(conversationId: conversationId) ?? selfUserId).post()
+        } else {
+            WireCallCenterCallStateNotification(callState: .terminating(reason: .canceled),
+                                                conversationId: conversationId,
+                                                userId: initiatorForCall(conversationId: conversationId) ?? selfUserId).post()
+        }
     }
     
     @objc(toogleVideoForConversationID:isActive:)
@@ -465,7 +563,49 @@ public struct CallEvent {
     /// Gets the current callState from AVS
     /// If the group call was ignored or left, it return .incoming where shouldRing is set to false
     public func callState(conversationId: UUID) -> CallState {
-        return avsWrapper.callState(conversationId: conversationId)
+        let callState = avsWrapper.callState(conversationId: conversationId)
+        let isIgnored = ignoredConversations.contains(conversationId)
+        switch callState {
+        case .incoming(video: let video, shouldRing: _) where isIgnored == true:
+            return .incoming(video: video, shouldRing: false)
+        case .established where isIgnored == true:
+            return .incoming(video: false, shouldRing: false)
+        default:
+            return callState
+        }
+    }
+    
+
+    // MARK - WireCallCenterV3 - Call Participants
+
+    /// Returns the callParticipants currently in the conversation
+    func callParticipants(conversationId: UUID) -> [UUID] {
+        return participantSnapshots[conversationId]?.members.map{ $0.remoteId } ?? []
+    }
+    
+    func initiatorForCall(conversationId: UUID) -> UUID? {
+        let snapshot = participantSnapshots[conversationId]
+        return snapshot?.initiator
+    }
+    
+    /// Call this method when the callParticipants changed and avs calls the handler `wcall_group_changed_h`
+    func callParticipantsChanged(conversationId: UUID, participants: [CallMember]) {
+        if let snapshot = participantSnapshots[conversationId] {
+            snapshot.callParticipantsChanged(newParticipants: participants)
+        } else if participants.count > 0 {
+            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
+                                                                                     selfUserID: selfUserId,
+                                                                                     members: participants)
+        }
+    }
+    
+    /// Returns the connectionState of a user in a conversation
+    /// We keep a snapshot of the callParticipants and activeFlowParticipants
+    /// If the user is contained in the callParticipants and in the activeFlowParticipants, he is connected
+    /// If the user is only contained in the callParticipants, he is connecting
+    /// Otherwise he is notConnected
+    public func connectionState(forUserWith userId: UUID, in conversationId: UUID) -> VoiceChannelV2ConnectionState {
+        return participantSnapshots[conversationId]?.connectionState(forUserWith:userId) ?? .invalid
     }
 
 }

@@ -30,9 +30,13 @@ private let log = ZMSLog(tag: "Calling System Message")
     var startDateByConversation = [ZMConversation: Date]()
     var connectDateByConversation = [ZMConversation: Date]()
 
-    public init(userSession: ZMUserSession) {
+    public convenience init(userSession: ZMUserSession) {
+        self.init(managedObjectContext: userSession.managedObjectContext!)
+    }
+    
+    internal init(managedObjectContext: NSManagedObjectContext) {
         super.init()
-        token = VoiceChannelRouter.addStateObserver(self, userSession: userSession)
+        token =  WireCallCenter.addVoiceChannelStateObserver(observer: self, context: managedObjectContext)
     }
 
     public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
@@ -41,10 +45,10 @@ private let log = ZMSLog(tag: "Calling System Message")
             log.info("Setting call start date for \(conversation.displayName)")
             startDateByConversation[conversation] = Date()
             fallthrough
-        case .incomingCall, .incomingCallDegraded:
-            let caller = conversation.callingUser()
+        case .incomingCall, .incomingCallDegraded, .incomingCallInactive:
+            let caller = conversation.callingUser(callingProtocol: callingProtocol, voiceChannelState: voiceChannelState)
             log.info("Adding \(caller?.displayName ?? "") as caller in \"\(conversation.displayName)\"")
-            callerByConversation[conversation] = conversation.callingUser()
+            callerByConversation[conversation] = caller
         case .selfConnectedToActiveChannel:
             if nil == callerByConversation[conversation] { log.info("No caller present when setting call start date") }
             log.info("Setting call connect date for \(conversation.displayName)")
@@ -80,17 +84,20 @@ private let log = ZMSLog(tag: "Calling System Message")
 
 private extension ZMConversation {
 
-    func callingUser() -> ZMUser? {
+    func callingUser(callingProtocol: CallingProtocol, voiceChannelState: VoiceChannelV2State) -> ZMUser? {
         guard let selfUser = managedObjectContext.map(ZMUser.selfUser) else { return nil }
-        guard let voiceChannel = voiceChannel else { return nil }
-
-        switch voiceChannel.state {
+        
+        switch voiceChannelState {
         case .outgoingCall, .outgoingCallDegraded, .outgoingCallInactive:
             return selfUser
         case .incomingCall, .incomingCallDegraded, .incomingCallInactive:
+            if callingProtocol == .version3, let initiator = voiceChannel?.initiator {
+                return initiator
+            }
             return outgoingCallingUser(selfUser)
         default: return nil
         }
+        
     }
 
     private func outgoingCallingUser(_ selfUser: ZMUser) -> ZMUser? {

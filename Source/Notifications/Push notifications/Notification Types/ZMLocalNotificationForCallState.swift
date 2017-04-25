@@ -62,7 +62,7 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
     
     func configureAlertBody() -> String {
         switch (callState) {
-        case .incoming(let video):
+        case .incoming(video: let video, shouldRing: _):
             let baseString = video ? ZMPushStringVideoCallStarts : ZMPushStringCallStarts
             return baseString.localizedString(with: sender, conversation: conversation, count: nil)
         case .terminating,

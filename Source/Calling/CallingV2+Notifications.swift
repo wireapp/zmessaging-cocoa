@@ -121,25 +121,6 @@ struct VoiceChannelStateNotification {
 ///////////
 
 
-public struct CallMember : Hashable {
-    
-    let remoteId: UUID
-    let audioEstablished: Bool
-    
-    init(userId: UUID, audioEstablished: Bool) {
-        self.remoteId = userId
-        self.audioEstablished = audioEstablished
-    }
-    
-    public static func ==(rhs: CallMember, lhs: CallMember) -> Bool {
-        return rhs.remoteId == lhs.remoteId
-    }
-    
-    public var hashValue: Int {
-        return remoteId.hashValue
-    }
-}
-
 @objc
 public protocol VoiceChannelParticipantObserver : class {
     func voiceChannelParticipantsDidChange(_ changeInfo : VoiceChannelParticipantNotification)

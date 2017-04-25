@@ -74,6 +74,7 @@ extension UIDevice {
         case "iPad2,1", "iPad2,2", "iPad2,3", "iPad2,4":return "iPad 2"
         case "iPad3,1", "iPad3,2", "iPad3,3":           return "iPad 3"
         case "iPad3,4", "iPad3,5", "iPad3,6":           return "iPad 4"
+        case "iPad6,11", "iPad6,12":                    return "iPad (5th generation)"
         case "iPad4,1", "iPad4,2", "iPad4,3":           return "iPad Air"
         case "iPad5,3", "iPad5,4":                      return "iPad Air 2"
         case "iPad2,5", "iPad2,6", "iPad2,7":           return "iPad Mini"

@@ -380,7 +380,7 @@
 {
     ZMSearchResult *combined = [[ZMSearchResult alloc] init];
     
-    [combined addUsersInContacts:  remoteResult.usersInContacts  ?: localResult.usersInContacts];
+    [combined addUsersInContacts: localResult.usersInContacts];
     [combined addUsersInDirectory: remoteResult.usersInDirectory ?: localResult.usersInDirectory];
     [combined addGroupConversations:localResult.groupConversations];
     

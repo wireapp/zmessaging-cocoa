@@ -152,3 +152,62 @@ extension WireCallCenterV3 {
     
 }
 
+
+class VoiceChannelParticipantV3Snapshot {
+    
+    fileprivate var state : SetSnapshot<CallMember>
+    public private(set) var members : OrderedSetState<CallMember>
+    
+    fileprivate let conversationId : UUID
+    fileprivate let selfUserID : UUID
+    let initiator : UUID
+    
+    init(conversationId: UUID, selfUserID: UUID, members: [CallMember]?, initiator: UUID? = nil) {
+        self.conversationId = conversationId
+        self.selfUserID = selfUserID
+        self.initiator = initiator ?? selfUserID
+        
+        guard let callCenter = WireCallCenterV3.activeInstance else {
+            fatal("WireCallCenterV3 not accessible")
+        }
+
+        self.members = (members ?? callCenter.avsWrapper.members(in: conversationId)).toOrderedSetState()
+        state = SetSnapshot(set: self.members, moveType: .uiCollectionView)
+    }
+    
+    func callParticipantsChanged(newParticipants: [CallMember]) {
+        var updated : Set<CallMember> = Set()
+        var newMembers = [CallMember]()
+        
+        for m in newParticipants {
+            if let idx = members.order[m], members.array[idx].audioEstablished != m.audioEstablished {
+                updated.insert(m)
+            }
+            newMembers.append(m)
+        }
+        guard newMembers != members.array || updated.count > 0 else { return }
+        
+        members = newMembers.toOrderedSetState()
+        recalculateSet(updated: updated)
+    }
+    
+    /// calculate inserts / deletes / moves
+    func recalculateSet(updated: Set<CallMember>) {
+        guard let newStateUpdate = state.updatedState(updated,
+                                                      observedObject: conversationId as NSUUID,
+                                                      newSet: members)
+        else { return}
+        
+        state = newStateUpdate.newSnapshot
+        VoiceChannelParticipantNotification(setChangeInfo: newStateUpdate.changeInfo, conversationId: self.conversationId).post()
+    }
+    
+    public func connectionState(forUserWith userId: UUID) -> VoiceChannelV2ConnectionState {
+        let tempMember = CallMember(userId: userId, audioEstablished: false)
+        guard let idx = members.order[tempMember] else {
+            return .notConnected
+        }
+        let member = members.array[idx]
+        return member.audioEstablished ? .connected : .connecting
+    }
+}

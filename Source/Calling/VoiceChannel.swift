@@ -46,6 +46,7 @@ public protocol CallProperties : NSObjectProtocol {
     func state(forParticipant: ZMUser) -> VoiceChannelV2ParticipantState
     
     var isVideoCall : Bool { get }
+    var initiator : ZMUser? { get }
     
     @objc(toggleVideoActive:error:)
     func toggleVideo(active: Bool) throws

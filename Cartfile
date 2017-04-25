@@ -1,3 +1,3 @@
 github "wireapp/wire-ios-message-strategy" ~> 33.0.0
-github "wireapp/avs-ios-binaries" == 3.3.93
+github "wireapp/avs-ios-binaries" ~> 3.4.100
 

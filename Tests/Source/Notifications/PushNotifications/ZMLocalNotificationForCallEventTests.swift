@@ -48,7 +48,7 @@ class ZMLocalNotificationForCallStateTests : MessagingTest {
         
         // given
         let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
-        note.update(forCallState: .incoming(video: false))
+        note.update(forCallState: .incoming(video: false, shouldRing: false))
         
         // when
         let uiNote = note.notifications.first!
@@ -63,7 +63,7 @@ class ZMLocalNotificationForCallStateTests : MessagingTest {
         
         // given
         let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
-        note.update(forCallState: .incoming(video: true))
+        note.update(forCallState: .incoming(video: true, shouldRing: false))
         
         // when
         let uiNote = note.notifications.first!

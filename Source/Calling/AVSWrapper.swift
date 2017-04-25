@@ -23,10 +23,10 @@ import avs
 public protocol AVSWrapperType {
     init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?)
     func callState(conversationId: UUID) -> CallState
-    func startCall(conversationId: UUID, video: Bool) -> Bool
-    func answerCall(conversationId: UUID) -> Bool
-    func endCall(conversationId: UUID)
-    func rejectCall(conversationId: UUID)
+    func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool
+    func answerCall(conversationId: UUID, isGroup: Bool) -> Bool
+    func endCall(conversationId: UUID, isGroup: Bool)
+    func rejectCall(conversationId: UUID, isGroup: Bool)
     func close()
     func received(callEvent: CallEvent)
     func toggleVideo(conversationID: UUID, active: Bool)
@@ -35,6 +35,7 @@ public protocol AVSWrapperType {
     func setVideoSendActive(userId: UUID, active: Bool)
     func enableAudioCbr(shouldUseCbr: Bool)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
+    func members(in conversationId: UUID) -> [CallMember]
 }
 
 /// Wraps AVS calls for dependency injection and better testing
@@ -44,13 +45,14 @@ public class AVSWrapper : AVSWrapperType {
         let resultValue = wcall_init(
             userId.transportString(),
             clientId,
-            ReadyHandler,
-            SendCallMessageHandler,
-            IncomingCallHandler,
-            MissedCallHandler,
-            AnsweredCallHandler,
-            EstablishedCallHandler,
-            ClosedCallHandler,
+            readyHandler,
+            sendCallMessageHandler,
+            incomingCallHandler,
+            missedCallHandler,
+            answeredCallHandler,
+            establishedCallHandler,
+            closedCallHandler,
+            callMetricsHandler,
             observer)
         
         if resultValue != 0 {
@@ -65,6 +67,7 @@ public class AVSWrapper : AVSWrapperType {
             }
         })
         
+        wcall_set_group_changed_handler(groupMemberHandler, observer)
 
         wcall_set_audio_cbr_enabled_handler({ _ in
             DispatchQueue.main.async {
@@ -77,22 +80,22 @@ public class AVSWrapper : AVSWrapperType {
         return CallState(wcallState:wcall_get_state(conversationId.transportString()))
     }
     
-    public func startCall(conversationId: UUID, video isVideo: Bool) -> Bool {
-        let didStart = wcall_start(conversationId.transportString(), (Bool(isVideo) ? 1 : 0))
+    public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {
+        let didStart = wcall_start(conversationId.transportString(), video ? 1 : 0, isGroup ? 1 : 0)
         return didStart == 0
     }
     
-    public func answerCall(conversationId: UUID) -> Bool {
-        let didAnswer = wcall_answer(conversationId.transportString())
+    public func answerCall(conversationId: UUID, isGroup: Bool) -> Bool {
+        let didAnswer = wcall_answer(conversationId.transportString(), isGroup ? 1 : 0)
         return didAnswer == 0
     }
     
-    public func endCall(conversationId: UUID) {
-        wcall_end(conversationId.transportString())
+    public func endCall(conversationId: UUID, isGroup: Bool) {
+        wcall_end(conversationId.transportString(), isGroup ? 1 : 0)
     }
     
-    public func rejectCall(conversationId: UUID) {
-        wcall_reject(conversationId.transportString())
+    public func rejectCall(conversationId: UUID, isGroup: Bool) {
+        wcall_reject(conversationId.transportString(), isGroup ? 1 : 0)
     }
     
     public func close(){
@@ -126,5 +129,21 @@ public class AVSWrapper : AVSWrapperType {
     
     public func toggleVideo(conversationID: UUID, active: Bool) {
         wcall_set_video_send_active(conversationID.transportString(), active ? 1 : 0)
+    }
+    
+    public func members(in conversationId: UUID) -> [CallMember] {
+        guard let membersRef = wcall_get_members(conversationId.transportString()) else { return [] }
+        
+        let cMembers = membersRef.pointee
+        var callMembers = [CallMember]()
+        for i in 0..<cMembers.membc {
+            guard let cMember = cMembers.membv?[Int(i)],
+                let member = CallMember(wcallMember: cMember)
+                else { continue }
+            callMembers.append(member)
+        }
+        wcall_free_members(membersRef)
+        
+        return callMembers
     }
 }

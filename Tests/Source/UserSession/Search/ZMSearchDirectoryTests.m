@@ -1002,7 +1002,36 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     XCTAssertEqual(self.numberOfSearchResultUpdates, 1);
 }
 
-
+- (void)testThatItRetunsLocalResultsForConnectedUsersAfterRemoteResultReceived
+{
+    // given
+    ZMUser *user1 = [self createConnectedUserWithName:@"User1"];
+    user1.emailAddress = @"user1@example.com";
+    
+    [self.uiMOC saveOrRollback];
+    
+    // expect
+    __block ZMTransportRequest *request;
+    [[self.transportSession expect] enqueueSearchRequest:ZM_ARG_SAVE(request)];
+    
+    NSArray *searchUsers = @[];
+    NSDictionary *responseData = [self responseDataForUsers:searchUsers];
+    
+    // when
+    ZMSearchToken token = [self.sut searchForUsersAndConversationsMatchingQueryString:@"User"];
+    
+    XCTAssertNotNil(request);
+    if (request) {
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responseData HTTPStatus:200 transportSessionError:nil];
+        [request completeWithResponse:response];
+    }
+    [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
+    
+    //then
+    [self.transportSession verify];
+    [self verifyThatResultWithToken:token containsUsers:@[user1] failureRecorder:NewFailureRecorder()];
+    XCTAssertEqual(self.numberOfSearchResultUpdates, 1);
+}
 
 - (void)testThatItIncludesGroupConversationsInRemoteSearchResults
 {

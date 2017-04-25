@@ -73,7 +73,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatMissedCallMessageIsAppendedForCanceledCallByReceiver() {
         
         // given when
-        sut.callCenterDidChange(callState: .incoming(video: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
         sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversationId: conversation.remoteIdentifier!, userId: receiver.remoteIdentifier!)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -89,7 +89,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatMissedCallMessageIsAppendedForCanceledCallBySender() {
         
         // given when
-        sut.callCenterDidChange(callState: .incoming(video: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
         sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -110,8 +110,10 @@ class CallStateObserverTests : MessagingTest {
                                                .terminating(reason: .lostMedia),
                                                .terminating(reason: .internalError),
                                                .terminating(reason: .unknown),
-                                               .incoming(video: true),
-                                               .incoming(video: false),
+                                               .incoming(video: true, shouldRing: false),
+                                               .incoming(video: false, shouldRing: false),
+                                               .incoming(video: true, shouldRing: true),
+                                               .incoming(video: false, shouldRing: true),
                                                .answered,
                                                .established,
                                                .outgoing]
@@ -152,7 +154,7 @@ class CallStateObserverTests : MessagingTest {
     
     func testThatCallStatesAreForwardedToTheNotificationDispatcher() {
         // given when
-        sut.callCenterDidChange(callState: .incoming(video: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -161,6 +163,12 @@ class CallStateObserverTests : MessagingTest {
     
     func testThatWeSendNotificationWhenCallStarts() {
         
+        // given when
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!)
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
+    func testThatWeKeepTheWebsocketOpenOnOutgoingCalls() {
         // expect
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC)
         WireCallCenterV3Mock.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false)]

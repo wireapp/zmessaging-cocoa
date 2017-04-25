@@ -72,6 +72,18 @@ class VoiceChannelRouterTests : MessagingTest {
         XCTAssertTrue(sut.currentVoiceChannel === sut.v3)
     }
     
+    func testCurrenVoiceChannel_group_idle_version2Selected() {
+        // given
+        let sut = VoiceChannelRouter(conversation: conversation!)
+        conversation?.conversationType = .group
+        
+        // when
+        ZMUserSession.callingProtocolStrategy = .version2
+        
+        // then
+        XCTAssertTrue(sut.currentVoiceChannel === sut.v2)
+    }
+    
     func testCurrenVoiceChannel_group_idle_version3Selected() {
         // given
         let sut = VoiceChannelRouter(conversation: conversation!)
@@ -79,6 +91,18 @@ class VoiceChannelRouterTests : MessagingTest {
         
         // when
         ZMUserSession.callingProtocolStrategy = .version3
+        
+        // then
+        XCTAssertTrue(sut.currentVoiceChannel === sut.v3)
+    }
+    
+    func testCurrenVoiceChannel_group_idle_negotiateSelected() {
+        // given
+        let sut = VoiceChannelRouter(conversation: conversation!)
+        conversation?.conversationType = .group
+        
+        // when
+        ZMUserSession.callingProtocolStrategy = .negotiate
         
         // then
         XCTAssertTrue(sut.currentVoiceChannel === sut.v2)
@@ -103,7 +127,7 @@ class VoiceChannelRouterTests : MessagingTest {
         conversation?.conversationType = .oneOnOne
         
         // when
-        wireCallCenterMock?.mockAVSCallState = .incoming(video: false)
+        wireCallCenterMock?.mockAVSCallState = .incoming(video: false, shouldRing: false)
         ZMUserSession.callingProtocolStrategy = .version2
         
         // then

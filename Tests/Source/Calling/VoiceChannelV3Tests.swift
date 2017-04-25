@@ -63,7 +63,7 @@ class VoiceChannelV3Tests : MessagingTest {
     
     func testThatItAnswers_whenTheresAnIncomingCall() {
         // given
-        wireCallCenterMock?.mockAVSCallState = .incoming(video: false)
+        wireCallCenterMock?.mockAVSCallState = .incoming(video: false, shouldRing: false)
         
         // when
         _ = sut.join(video: false)
@@ -74,7 +74,7 @@ class VoiceChannelV3Tests : MessagingTest {
     
     func testThatItDoesntAnswer_whenTheresAnIncomingDegradedCall() {
         // given
-        wireCallCenterMock?.mockAVSCallState = .incoming(video: false)
+        wireCallCenterMock?.mockAVSCallState = .incoming(video: false, shouldRing: false)
         conversation?.setValue(NSNumber.init(value: ZMConversationSecurityLevel.secureWithIgnored.rawValue), forKey: "securityLevel")
         
         // when
@@ -86,7 +86,7 @@ class VoiceChannelV3Tests : MessagingTest {
     
     func testMappingFromCallStateToVoiceChannelV2State() {
         // given
-        let callStates : [CallState] =  [.none, .incoming(video: false), .answered, .established, .outgoing, .terminating(reason: CallClosedReason.normal), .unknown]
+        let callStates : [CallState] =  [.none, .incoming(video: false, shouldRing: true), .answered, .established, .outgoing, .terminating(reason: CallClosedReason.normal), .unknown]
         let notSecureMapping : [VoiceChannelV2State] = [.noActiveUsers, .incomingCall, .selfIsJoiningActiveChannel, .selfConnectedToActiveChannel, .outgoingCall, .noActiveUsers, .invalid]
         let secureWithIgnoredMapping : [VoiceChannelV2State] = [.noActiveUsers, .incomingCallDegraded, .selfIsJoiningActiveChannelDegraded, .selfConnectedToActiveChannel, .outgoingCallDegraded, .noActiveUsers, .invalid]
         
