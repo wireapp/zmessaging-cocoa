@@ -259,7 +259,6 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self.userSession registerSelfUser:user];
-    NSLog(@"## wait for registerSelfUser");
     
     // wait for more attempts
     [self spinMainQueueWithTimeout:1];
@@ -299,7 +298,6 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self.userSession registerSelfUser:user];
-    NSLog(@"## wait for registerSelfUser");
 
     // wait for more attempts
     [NSThread sleepForTimeInterval:0.5];

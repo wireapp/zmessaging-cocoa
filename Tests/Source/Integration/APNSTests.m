@@ -75,7 +75,6 @@
     
     if(useAPNS) {
         self.mockTransportSession.pushChannel.keepOpen = NO;
-//        [self.mockTransportSession closePushChannelAndRemoveConsumer]; // do not use websocket
     }
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
