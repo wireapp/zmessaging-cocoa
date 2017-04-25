@@ -36,6 +36,8 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let operationStatus : OperationStatus
     public let requestCancellation: ZMRequestCancellation
     
+    fileprivate var callInProgressObserverToken : NSObjectProtocol? = nil
+    
     public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookie : ZMCookie, requestCancellation: ZMRequestCancellation, application : Application, syncStateDelegate: ZMSyncStateDelegate) {
         self.requestCancellation = requestCancellation
         self.apnsConfirmationStatus = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: managedObjectContext, backgroundActivityFactory: BackgroundActivityFactory.sharedInstance())
@@ -57,7 +59,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         
         super.init()
         
-        NotificationCenter.default.addObserver(forName: CallStateObserver.CallInProgressNotification, object: nil, queue: .main) { [weak self] (notification) in
+        callInProgressObserverToken = NotificationCenter.default.addObserver(forName: CallStateObserver.CallInProgressNotification, object: nil, queue: .main) { [weak self] (notification) in
             managedObjectContext.performGroupedBlock {
                 if let callInProgress = notification.userInfo?[CallStateObserver.CallInProgressKey] as? Bool {
                     self?.operationStatus.hasOngoingCall = callInProgress
@@ -67,7 +69,10 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     }
     
     deinit {
-        NotificationCenter.default.removeObserver(self)
+        if let token = callInProgressObserverToken {
+            NotificationCenter.default.removeObserver(token)
+        }
+        
         apnsConfirmationStatus.tearDown()
         clientRegistrationStatus.tearDown()
         clientUpdateStatus.tearDown()
@@ -82,25 +87,21 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     }
     
     public var operationState: OperationState {
-        get {
-            switch operationStatus.operationState {
-            case .foreground:
-                return .foreground
-            case .background, .backgroundCall, .backgroundFetch, .backgroundTask:
-                return .background
-            }
+        switch operationStatus.operationState {
+        case .foreground:
+            return .foreground
+        case .background, .backgroundCall, .backgroundFetch, .backgroundTask:
+            return .background
         }
     }
     
     public var synchronizationState: SynchronizationState {
-        get {
-            if !clientRegistrationStatus.clientIsReadyForRequests() {
-                return .unauthenticated
-            } else if syncStatus.isSyncing {
-                return .synchronizing
-            } else {
-                return .eventProcessing
-            }
+        if !clientRegistrationStatus.clientIsReadyForRequests() {
+            return .unauthenticated
+        } else if syncStatus.isSyncing {
+            return .synchronizing
+        } else {
+            return .eventProcessing
         }
     }
     

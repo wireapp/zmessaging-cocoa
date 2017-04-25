@@ -17,7 +17,12 @@
 //
 
 @objc public enum SyncPhase : Int {
-    case fetchingLastUpdateEventID, fetchingConnections, fetchingConversations, fetchingUsers, fetchingMissedEvents, done
+    case fetchingLastUpdateEventID
+    case fetchingConnections
+    case fetchingConversations
+    case fetchingUsers
+    case fetchingMissedEvents
+    case done
     
     var isLastSlowSyncPhase : Bool {
         return self == .fetchingUsers
