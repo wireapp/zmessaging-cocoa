@@ -24,6 +24,8 @@ public typealias BackgroundTaskHandler = (_ taskResult: BackgroundTaskResult) ->
 
 let OperationStatusChangedNotification : Notification.Name  = Notification.Name(rawValue: "OperationStatusChangedNotification")
 
+private let zmLog = ZMSLog(tag: "OperationStatus")
+
 @objc(ZMOperationStatusDelegate)
 public protocol OperationStatusDelegate : class {
     
@@ -38,12 +40,27 @@ public enum BackgroundTaskResult : UInt {
     case failed
 }
 
-@objc public enum SyncEngineOperationState : UInt {
+@objc public enum SyncEngineOperationState : UInt, CustomStringConvertible {
     case background
     case backgroundCall
     case backgroundFetch
     case backgroundTask
     case foreground
+    
+    public var description : String {
+        switch self {
+        case .background:
+            return "background"
+        case .backgroundCall:
+            return "backgroundCall"
+        case .backgroundFetch:
+            return "backgroundFetch"
+        case .backgroundTask:
+            return "backgroundTask"
+        case .foreground:
+            return "foreground"
+        }
+    }
 }
 
 @objc(ZMOperationStatus)
@@ -143,6 +160,7 @@ public class OperationStatus : NSObject {
         let newOperationState = calculatedOperationState
         
         if newOperationState != oldOperationState {
+            zmLog.debug("operation state changed from \(oldOperationState) to \(newOperationState)")
             operationState = newOperationState
         }
     }

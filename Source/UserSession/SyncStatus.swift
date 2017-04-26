@@ -16,7 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@objc public enum SyncPhase : Int {
+@objc public enum SyncPhase : Int, CustomStringConvertible {
     case fetchingLastUpdateEventID
     case fetchingConnections
     case fetchingConversations
@@ -36,7 +36,26 @@
             return false
         }
     }
+    
+    public var description: String {
+        switch self {
+        case .fetchingLastUpdateEventID:
+            return "fetchingLastUpdateEventID"
+        case .fetchingConnections:
+            return "fetchingConnections"
+        case .fetchingConversations:
+            return "fetchingConversations"
+        case .fetchingUsers:
+            return "fetchingUsers"
+        case .fetchingMissedEvents:
+            return "fetchingMissedEvents"
+        case .done:
+            return "done"
+        }
+    }
 }
+
+private let zmLog = ZMSLog(tag: "SyncStatus")
 
 public class SyncStatus : NSObject {
 
@@ -44,6 +63,7 @@ public class SyncStatus : NSObject {
     public internal (set) var currentSyncPhase : SyncPhase = .done {
         didSet {
             if currentSyncPhase != oldValue {
+                zmLog.debug("did change sync phase: \(currentSyncPhase)")
                 previousPhase = oldValue
             }
         }
@@ -116,11 +136,13 @@ extension SyncStatus {
     }
     
     public func updateLastUpdateEventID(eventID : UUID) {
+        zmLog.debug("update last eventID: \(eventID)")
         lastUpdateEventID = eventID
     }
     
     public func persistLastUpdateEventID() {
         guard let lastUpdateEventID = lastUpdateEventID else { return }
+        zmLog.debug("persist last eventID: \(lastUpdateEventID)")
         managedObjectContext.zm_lastNotificationID = lastUpdateEventID
     }
 }
