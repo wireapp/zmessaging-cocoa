@@ -100,7 +100,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsWhileInBackground;
 }
 
 - (void)setUpFlowManagerIfNeeded
