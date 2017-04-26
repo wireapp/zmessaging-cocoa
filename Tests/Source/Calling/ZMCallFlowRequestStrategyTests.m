@@ -107,7 +107,7 @@ static NSString * const FlowEventName2 = @"conversation.member-join";
 
 - (void)testThatUsesCorrectRequestStrategyConfiguration
 {
-    XCTAssertEqual(self.sut.configuration, ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync);
+    XCTAssertEqual(self.sut.configuration, ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsWhileInBackground);
 }
 
 - (void)testThatItReleasesTheFlowForCallDeviceIsActive_No
