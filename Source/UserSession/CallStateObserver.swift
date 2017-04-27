@@ -80,9 +80,10 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
         guard let uiMOC = self.managedObjectContext.zm_userInterface else { return }
         uiMOC.performGroupedBlock {
             guard let uiConv = (try? uiMOC.existingObject(with: convObjectID)) as? ZMConversation else { return }
+            
             switch callState {
             case .incoming(video: _, shouldRing: let shouldRing):
-                uiConv.isIgnoringCallV3 = !shouldRing
+                uiConv.isIgnoringCallV3 = uiConv.isSilenced || !shouldRing
                 uiConv.isCallDeviceActiveV3 = false
             case .terminating, .none:
                 uiConv.isCallDeviceActiveV3 = false

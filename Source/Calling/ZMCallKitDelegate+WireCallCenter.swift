@@ -88,7 +88,7 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: userSession.managedObjectContext) else {
                     break
             }
-            if shouldRing {
+            if shouldRing && !conversation.isSilenced {
                 indicateIncomingCall(from: user, in: conversation, video: video)
             }
         case let .terminating(reason: reason) where !(reason == .normal && userId == ZMUser.selfUser(inUserSession: userSession).remoteIdentifier):
@@ -123,7 +123,9 @@ extension ZMCallKitDelegate : VoiceChannelStateObserver {
     
         if voiceChannelState == .incomingCall {
             guard let user = conversation.voiceChannelRouter?.v2.participants.firstObject as? ZMUser else { return }
-            indicateIncomingCall(from: user, in: conversation, video: conversation.voiceChannelRouter?.v2.isVideoCall ?? false)
+            if !conversation.isSilenced {
+                indicateIncomingCall(from: user, in: conversation, video: conversation.voiceChannelRouter?.v2.isVideoCall ?? false)
+            }
         }
         
         if voiceChannelState == .selfIsJoiningActiveChannel {

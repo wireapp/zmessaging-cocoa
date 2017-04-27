@@ -69,15 +69,22 @@ class MockCallKitCallController: NSObject, CallKitCallController {
         return nil
     }
     
+    public var mockTransactionErrorCode : CXErrorCodeRequestTransactionError?
+    public var mockErrorCount : Int = 0
     public var timesRequestTransactionCalled: Int = 0
-    public var requestedTransaction: CXTransaction? = .none
+    public var requestedTransactions: [CXTransaction] = []
     
     
     @available(iOS 10.0, *)
     public func request(_ transaction: CXTransaction, completion: @escaping (Error?) -> Void) {
         timesRequestTransactionCalled = timesRequestTransactionCalled + 1
-        requestedTransaction = transaction
-        completion(.none)
+        requestedTransactions.append(transaction)
+        if mockErrorCount >= 1 {
+            mockErrorCount = mockErrorCount-1
+            completion(mockTransactionErrorCode)
+        } else {
+            completion(.none)
+        }
     }
 }
 
@@ -256,8 +263,8 @@ class ZMCallKitDelegateTest: MessagingTest {
         // then
         XCTAssertEqual(self.callKitProvider.timesReportCallUpdatedCalled, 0)
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
-        XCTAssertTrue(self.callKitController.requestedTransaction!.actions.first! is CXStartCallAction)
-        let action = self.callKitController.requestedTransaction!.actions.first! as! CXStartCallAction
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
 
         XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
         XCTAssertEqual(action.handle.type, .emailAddress)
@@ -274,9 +281,9 @@ class ZMCallKitDelegateTest: MessagingTest {
         // then
         XCTAssertEqual(self.callKitProvider.timesReportCallUpdatedCalled, 0)
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
-        XCTAssertTrue(self.callKitController.requestedTransaction!.actions.first! is CXStartCallAction)
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         
-        let action = self.callKitController.requestedTransaction!.actions.first! as! CXStartCallAction
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
         XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
         XCTAssertEqual(action.handle.type, .generic)
         XCTAssertEqual(action.handle.value, conversation.remoteIdentifier?.transportString())
@@ -295,9 +302,62 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
-        XCTAssertTrue(self.callKitController.requestedTransaction!.actions.first! is CXStartCallAction)
-        let action = self.callKitController.requestedTransaction!.actions.first! as! CXStartCallAction
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
         
+        XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
+        XCTAssertEqual(action.handle.type, .emailAddress)
+        XCTAssertEqual(action.handle.value, otherUser.emailAddress)
+        XCTAssertTrue(action.isVideo)
+    }
+    
+    func testThatItReportsTheStartCallRequest_CallAlreadyExists() {
+        // given
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        createOneOnOneConversation(user: otherUser)
+        let conversation = otherUser.oneToOneConversation!
+        self.uiMOC.saveOrRollback()
+        
+        self.callKitController.mockErrorCount = 1
+        let error = NSError(domain: "foo", code: CXErrorCodeRequestTransactionError.Code.callUUIDAlreadyExists.rawValue, userInfo: nil)
+        self.callKitController.mockTransactionErrorCode = CXErrorCodeRequestTransactionError(_nsError: error)
+        
+        // when
+        self.sut.requestStartCall(in: conversation, videoCall: true)
+        
+        // then
+        XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 2)
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
+        XCTAssertTrue(self.callKitController.requestedTransactions.last!.actions.first! is CXAnswerCallAction)
+
+        let action = self.callKitController.requestedTransactions.last!.actions.last! as! CXAnswerCallAction
+        XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
+    }
+    
+    func testThatItReportsTheAnswerCallRequest_CallDoesNotExist() {
+        // given
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        createOneOnOneConversation(user: otherUser)
+        let conversation = otherUser.oneToOneConversation!
+        self.uiMOC.saveOrRollback()
+        
+        
+        self.callKitController.mockErrorCount = 1
+        let error = NSError(domain: "foo", code: CXErrorCodeRequestTransactionError.Code.unknownCallUUID.rawValue, userInfo: nil)
+        self.callKitController.mockTransactionErrorCode = CXErrorCodeRequestTransactionError(_nsError: error)
+        
+        mockWireCallCenterV3.mockAVSCallState = .incoming(video: true, shouldRing: true)
+        XCTAssertEqual(conversation.voiceChannel!.state, VoiceChannelV2State.incomingCall)
+        
+        // when
+        self.sut.requestStartCall(in: conversation, videoCall: true)
+        
+        // then
+        XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 2)
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXAnswerCallAction)
+        XCTAssertTrue(self.callKitController.requestedTransactions.last!.actions.first! is CXStartCallAction)
+        
+        let action = self.callKitController.requestedTransactions.last!.actions.last! as! CXStartCallAction
         XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
         XCTAssertEqual(action.handle.type, .emailAddress)
         XCTAssertEqual(action.handle.value, otherUser.emailAddress)
@@ -417,9 +477,9 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
-        XCTAssertTrue(self.callKitController.requestedTransaction!.actions.first! is CXEndCallAction)
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXEndCallAction)
         
-        let action = self.callKitController.requestedTransaction!.actions.first! as! CXEndCallAction
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXEndCallAction
         XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
     }
     
@@ -432,9 +492,9 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
-        XCTAssertTrue(self.callKitController.requestedTransaction!.actions.first! is CXEndCallAction)
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXEndCallAction)
         
-        let action = self.callKitController.requestedTransaction!.actions.first! as! CXEndCallAction
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXEndCallAction
         XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
     }
     
@@ -474,9 +534,9 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
-        XCTAssertTrue(self.callKitController.requestedTransaction!.actions.first! is CXStartCallAction)
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         
-        let action = self.callKitController.requestedTransaction!.actions.first! as! CXStartCallAction
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
         XCTAssertEqual(action.callUUID, otherUser.oneToOneConversation.remoteIdentifier)
         XCTAssertFalse(action.isVideo)
     }
@@ -498,9 +558,9 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
-        XCTAssertTrue(self.callKitController.requestedTransaction!.actions.first! is CXStartCallAction)
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         
-        let action = self.callKitController.requestedTransaction!.actions.first! as! CXStartCallAction
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
         XCTAssertEqual(action.callUUID, otherUser.oneToOneConversation.remoteIdentifier)
         XCTAssertFalse(action.isVideo)
     }
@@ -522,9 +582,9 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
-        XCTAssertTrue(self.callKitController.requestedTransaction!.actions.first! is CXStartCallAction)
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         
-        let action = self.callKitController.requestedTransaction!.actions.first! as! CXStartCallAction
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
         XCTAssertEqual(action.callUUID, otherUser.oneToOneConversation.remoteIdentifier)
         XCTAssertTrue(action.isVideo)
     }
@@ -543,9 +603,9 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
-        XCTAssertTrue(self.callKitController.requestedTransaction!.actions.first! is CXStartCallAction)
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         
-        let action = self.callKitController.requestedTransaction!.actions.first! as! CXStartCallAction
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
         XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
         XCTAssertFalse(action.isVideo)
     }
@@ -629,11 +689,12 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
     
-    /* NOTE disabled because we had to disable this behaviour
-    func testThatItIgnoresNewIncomingCall_v2_Incoming_Silenced() {
+    
+    func testThatItDoesNotReportNewIncomingCall_v2_Incoming_Silenced() {
         // given
         let conversation = self.conversation()
         conversation.isSilenced = true
+        
         let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
         mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
         
@@ -646,7 +707,6 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
-    */
     
     func testThatItStoresConnectedConversation_v2_Answered() {
         // given
@@ -723,7 +783,6 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
     
-    /* NOTE disabled because we had to disable this behaviour
     func testThatItIgnoresNewIncomingCall_v3_Incoming_Silenced() {
         // given
         let conversation = self.conversation()
@@ -731,7 +790,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .incoming(video: false), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
@@ -739,7 +798,6 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
-    */
     
     func testThatItReportCallEndedAt_v3_Terminating_normal() {
         // given
