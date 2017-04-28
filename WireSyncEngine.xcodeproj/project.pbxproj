@@ -255,7 +255,6 @@
 		54AB428E1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AB428D1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift */; };
 		54ADA7631E3B3D8E00B90C7D /* IntegrationTestBase+Encryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54ADA7611E3B3CBE00B90C7D /* IntegrationTestBase+Encryption.swift */; };
 		54B2A0891DAE71F100BB40B1 /* AddressBookTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B2A0831DAE71F100BB40B1 /* AddressBookTracker.swift */; };
-		54B2A08B1DAE71F100BB40B1 /* APNSPerformanceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B2A0851DAE71F100BB40B1 /* APNSPerformanceTracker.swift */; };
 		54B2A08C1DAE71F100BB40B1 /* Clusterizer+VOIP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B2A0861DAE71F100BB40B1 /* Clusterizer+VOIP.swift */; };
 		54B2A08D1DAE71F100BB40B1 /* Clusterizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B2A0871DAE71F100BB40B1 /* Clusterizer.swift */; };
 		54B717F6194078CA00B798FA /* ZMSyncStateTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54B717F4194078CA00B798FA /* ZMSyncStateTests.m */; };
@@ -785,7 +784,6 @@
 		54AB428D1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TopConversationsDirectoryTests.swift; sourceTree = "<group>"; };
 		54ADA7611E3B3CBE00B90C7D /* IntegrationTestBase+Encryption.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "IntegrationTestBase+Encryption.swift"; sourceTree = "<group>"; };
 		54B2A0831DAE71F100BB40B1 /* AddressBookTracker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookTracker.swift; sourceTree = "<group>"; };
-		54B2A0851DAE71F100BB40B1 /* APNSPerformanceTracker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = APNSPerformanceTracker.swift; sourceTree = "<group>"; };
 		54B2A0861DAE71F100BB40B1 /* Clusterizer+VOIP.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Clusterizer+VOIP.swift"; sourceTree = "<group>"; };
 		54B2A0871DAE71F100BB40B1 /* Clusterizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Clusterizer.swift; sourceTree = "<group>"; };
 		54B717EE1940788E00B798FA /* ZMSyncState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMSyncState.h; sourceTree = "<group>"; };
@@ -1631,7 +1629,6 @@
 			children = (
 				54B2A0831DAE71F100BB40B1 /* AddressBookTracker.swift */,
 				BF7ED2E11DF6BD16003A4397 /* Analytics+HandleSuggestions.swift */,
-				54B2A0851DAE71F100BB40B1 /* APNSPerformanceTracker.swift */,
 				54B2A0861DAE71F100BB40B1 /* Clusterizer+VOIP.swift */,
 				54B2A0871DAE71F100BB40B1 /* Clusterizer.swift */,
 				CEF2DE7E1DB778F300451642 /* RequestLoopAnalyticsTracker.swift */,
@@ -2874,7 +2871,6 @@
 				549816471A432BC800A7CE2E /* ZMSyncStrategy.m in Sources */,
 				549816591A432BC800A7CE2E /* ZMTestNotifications.m in Sources */,
 				F98EDCD31D82B913001E65CB /* ZMLocalNotificationForCallEvent.swift in Sources */,
-				54B2A08B1DAE71F100BB40B1 /* APNSPerformanceTracker.swift in Sources */,
 				5498161B1A432BC800A7CE2E /* ZMTyping.m in Sources */,
 				54BFDF681BDA6F9A0034A3DB /* HistorySynchronizationStatus.swift in Sources */,
 				5498161D1A432BC800A7CE2E /* ZMTypingUsers.m in Sources */,
