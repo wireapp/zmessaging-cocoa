@@ -100,6 +100,43 @@ class EventsWithIdentifierTests: ZMTBaseTest {
         sut = EventsWithIdentifier(events: events, identifier: identifier, isNotice:true)
     }
     
+    override func tearDown() {
+        super.tearDown()
+        sut = nil
+        events = nil
+        identifier = nil
+    }
+    
+    func testEquatable() {
+        //given
+        let a = EventsWithIdentifier(events: nil, identifier: UUID.create(), isNotice: true)
+        let a1 = EventsWithIdentifier(events: nil, identifier: a.identifier, isNotice: true)
+        
+        let b = EventsWithIdentifier(events: events, identifier: UUID.create(), isNotice: false)
+        let b1 = EventsWithIdentifier(events: b.events, identifier: b.identifier, isNotice: false)
+        
+        let c = EventsWithIdentifier(events: events, identifier: UUID.create(), isNotice: false)
+
+        // then
+        XCTAssertEqual(a, a)
+        XCTAssert(a.isEqual(a))
+
+        XCTAssertEqual(a, a1)
+        XCTAssert(a.isEqual(a1))
+        
+        XCTAssertEqual(b, b1)
+        XCTAssert(b.isEqual(b1))
+
+        XCTAssertNotEqual(a, b)
+        XCTAssertFalse(a.isEqual(b))
+
+        XCTAssertNotEqual(a, c)
+        XCTAssertFalse(a.isEqual(c))
+
+        XCTAssertNotEqual(b, c)
+        XCTAssertFalse(b.isEqual(c))
+    }
+    
     func testThatItCreatesTheEventsWithIdentifierCorrectly() {
         // then
         XCTAssertEqual(identifier, sut.identifier)
@@ -148,6 +185,8 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     override func tearDown() {
         observer = nil
         BackgroundActivityFactory.tearDownInstance()
+        sut = nil
+        authenticationProvider = nil
         super.tearDown()
     }
 
