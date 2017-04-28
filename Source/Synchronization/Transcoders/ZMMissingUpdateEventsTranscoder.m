@@ -236,7 +236,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     BOOL inProgress = self.listPaginator.status == ZMSingleRequestInProgress;
 
     // We want to create a new request if we are either currently fetching the paginated stream
-    // or if we have a new notification ID that rewuires a pingback.
+    // or if we have a new notification ID that requires a pingback.
     BOOL shouldCreateRequest = inProgress || hasNewNotification;
 
     if (fetchingStream && shouldCreateRequest) {

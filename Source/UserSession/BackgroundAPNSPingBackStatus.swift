@@ -34,7 +34,6 @@ extension ZMAuthenticationStatus: AuthenticationStatusProvider {}
 
 
 // MARK: - EventsWithIdentifier
-
 @objc public final class EventsWithIdentifier: NSObject  {
     public let events: [ZMUpdateEvent]?
     public let identifier: UUID
@@ -52,6 +51,22 @@ extension ZMAuthenticationStatus: AuthenticationStatusProvider {}
             return !nonces.contains(nonce)
         }
         return EventsWithIdentifier(events: filteredEvents, identifier: identifier, isNotice: isNotice)
+    }
+    
+    public override func isEqual(_ object: Any?) -> Bool {
+        guard let rhs = object as? EventsWithIdentifier else { return false }
+        let lhs = self
+        
+        let eventsEqual: Bool
+        switch (lhs.events, rhs.events) {
+        case (.none, .none):
+            eventsEqual = true
+        case let (.some(lhs_events), .some(rhs_events)):
+            eventsEqual = (lhs_events == rhs_events)
+        default:
+            eventsEqual = false
+        }
+        return eventsEqual && lhs.identifier == rhs.identifier && lhs.isNotice == rhs.isNotice
     }
 }
 
