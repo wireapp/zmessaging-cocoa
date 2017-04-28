@@ -29,13 +29,8 @@ static NSString * const StagingBackendHost = @"staging-nginz-https.zinfra.io";
 static NSString * const StagingBackendWSHost = @"staging-nginz-ssl.zinfra.io";
 static NSString * const StagingFrontendHost = @"staging-website.zinfra.io";
 
-static NSString * const EdgeBackendHost = @"edge-nginz-https.zinfra.io";
-static NSString * const EdgeBackendWSHost = @"edge-nginz-ssl.zinfra.io";
-static NSString * const EdgeFrontendHost = @"edge-website.zinfra.io";
-
 static NSString * const ZMBlacklistEndPoint_IOS = @"clientblacklist.wire.com/prod/ios";
 static NSString * const ZMBlacklistEndPoint_IOS_Staging = @"clientblacklist.wire.com/staging/ios";
-static NSString * const ZMBlacklistEndPoint_IOS_Edge = @"clientblacklist.wire.com/edge/ios";
 
 static NSString *const CertificateNameProduction = @"com.wire";
 static NSString *const CertificateNameAlpha = @"com.wire.ent";
@@ -64,12 +59,6 @@ void zmSetupEnvironments(void)
                                               wsHost:StagingBackendWSHost
                                    blackListEndpoint:ZMBlacklistEndPoint_IOS_Staging
                                         frontendHost:StagingFrontendHost];
-        
-        [ZMBackendEnvironment setupEnvironmentOfType:ZMBackendEnvironmentTypeEdge
-                                     withBackendHost:EdgeBackendHost
-                                              wsHost:EdgeBackendWSHost
-                                   blackListEndpoint:ZMBlacklistEndPoint_IOS_Edge
-                                        frontendHost:EdgeFrontendHost];
         
         [ZMAPNSEnvironment setupForProductionWithCertificateName:CertificateNameProduction];
         
