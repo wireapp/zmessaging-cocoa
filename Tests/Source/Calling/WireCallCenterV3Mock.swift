@@ -153,7 +153,7 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
 
     public func update(callState : CallState, conversationId: UUID, userId: UUID? = nil) {
         self.mockAVSCallState = callState
-        WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId).post()
+        WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId, messageTime: nil).post()
     }
 
     var mockInitiator : ZMUser?

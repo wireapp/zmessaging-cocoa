@@ -129,7 +129,7 @@ class CallingV3Tests : IntegrationTestBase {
         (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .incoming(video: isVideoCall, shouldRing: shouldRing)
 
         let userIdRef = user.remoteIdentifier!.transportString().cString(using: .utf8)
-        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, userId: userIdRef, isVideoCall: isVideoCall ? 1 : 0, shouldRing: shouldRing ? 1 : 0, contextRef: wireCallCenterRef)
+        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, messageTime: UInt32(Date().timeIntervalSince1970), userId: userIdRef, isVideoCall: isVideoCall ? 1 : 0, shouldRing: shouldRing ? 1 : 0, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
@@ -780,6 +780,20 @@ extension CallingV3Tests {
         // the conversation is unarchived
         XCTAssertEqual(conversationUnderTest.messages.count, messageCount+1)
         XCTAssertFalse(conversationUnderTest.isArchived)
+    }
+    
+    func testThatItUpdatesTheLastModifiedDateOfTheConversationWithTheIncomingCallTimestamp(){
+        // given
+        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        let user = conversationUnderTest.connectedUser!
+        
+        XCTAssertNotEqualWithAccuracy(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, Date().timeIntervalSince1970, 1.0)
+        
+        // when
+        otherStartCall(user: user)
+        
+        // then
+        XCTAssertEqualWithAccuracy(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, Date().timeIntervalSince1970, accuracy: 1.0)
     }
     
 }

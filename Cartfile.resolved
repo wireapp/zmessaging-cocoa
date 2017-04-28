@@ -1,5 +1,5 @@
 github "wireapp/PINCache" "2.3-swift3.1"
-github "wireapp/avs-ios-binaries" "3.4.101"
+github "wireapp/avs-ios-binaries" "3.4.103"
 github "wireapp/libPhoneNumber-iOS" "0.9.2-swift3.1"
 github "wireapp/ocmock" "v3.3.2"
 github "wireapp/ono" "1.4.0"

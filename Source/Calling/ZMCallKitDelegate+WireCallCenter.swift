@@ -76,7 +76,7 @@ public class CallObserver : NSObject, VoiceChannelStateObserver {
 
 extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
-    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
+    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
         guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext) else {
             return
         }

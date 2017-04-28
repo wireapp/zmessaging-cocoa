@@ -204,13 +204,13 @@ public extension UUID {
 /// Handles incoming calls
 /// In order to be passed to C, this function needs to be global
 
-internal func incomingCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, isVideoCall: Int32, shouldRing: Int32, contextRef: UnsafeMutableRawPointer?)
+internal func incomingCallHandler(conversationId: UnsafePointer<Int8>?, messageTime: UInt32, userId: UnsafePointer<Int8>?, isVideoCall: Int32, shouldRing: Int32, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
     callCenter.uiMOC.performGroupedBlock {
-        callCenter.handleCallState(callState: .incoming(video: isVideoCall != 0, shouldRing: shouldRing != 0), conversationId: convID, userId: userID)
+        callCenter.handleCallState(callState: .incoming(video: isVideoCall != 0, shouldRing: shouldRing != 0), conversationId: convID, userId: userID, messageTime: Date(timeIntervalSince1970: TimeInterval(messageTime)))
     }
 }
 
@@ -432,12 +432,12 @@ public struct CallEvent {
         })
     }
     
-    fileprivate func handleCallState(callState: CallState, conversationId: UUID, userId: UUID?) {
+    fileprivate func handleCallState(callState: CallState, conversationId: UUID, userId: UUID?, messageTime: Date? = nil) {
         callState.logState()
         var finalCallState = callState
         var finalUserId = userId
         defer {
-            WireCallCenterCallStateNotification(callState: finalCallState, conversationId: conversationId, userId: finalUserId).post()
+            WireCallCenterCallStateNotification(callState: finalCallState, conversationId: conversationId, userId: finalUserId, messageTime: messageTime).post()
         }
         
         switch callState {
@@ -498,7 +498,7 @@ public struct CallEvent {
         
         let answered = avsWrapper.answerCall(conversationId: conversationId, isGroup: isGroup)
         if answered {
-            WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.selfUserId).post()
+            WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.selfUserId, messageTime:nil).post()
         }
         return answered
     }
@@ -510,7 +510,7 @@ public struct CallEvent {
         
         let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup)
         if started {
-            WireCallCenterCallStateNotification(callState: .outgoing, conversationId: conversationId, userId: selfUserId).post()
+            WireCallCenterCallStateNotification(callState: .outgoing, conversationId: conversationId, userId: selfUserId, messageTime:nil).post()
         }
         return started
     }

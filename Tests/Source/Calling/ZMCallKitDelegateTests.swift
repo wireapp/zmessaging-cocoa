@@ -774,7 +774,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 1)
@@ -790,7 +790,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
@@ -805,7 +805,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
@@ -821,7 +821,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .lostMedia), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .terminating(reason: .lostMedia), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.lastEndedReason, UInt(CXCallEndedReason.failed.rawValue))
@@ -833,7 +833,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .timeout), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .terminating(reason: .timeout), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.lastEndedReason, UInt(CXCallEndedReason.unanswered.rawValue))
@@ -845,7 +845,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .anweredElsewhere), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .terminating(reason: .anweredElsewhere), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.lastEndedReason, UInt(CXCallEndedReason.answeredElsewhere.rawValue))
@@ -857,7 +857,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversationId: conversation.remoteIdentifier!, userId: selfUser.remoteIdentifier!)
+        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversationId: conversation.remoteIdentifier!, userId: selfUser.remoteIdentifier!, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)

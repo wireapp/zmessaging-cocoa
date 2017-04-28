@@ -52,7 +52,7 @@ public final class CallStateObserver : NSObject {
 
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
-    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
+    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
         notifyIfWebsocketShouldBeOpen(forCallState: callState)
         
         managedObjectContext.performGroupedBlock {
@@ -70,7 +70,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             self.updateConversationListIndicator(convObjectID: conversation.objectID, callState: callState)
             
-            self.callingSystemMessageGenerator.process(callState: callState, in: conversation, sender: user)
+            self.callingSystemMessageGenerator.process(callState: callState, in: conversation, sender: user, timeStamp: timeStamp)
             self.managedObjectContext.enqueueDelayedSave()
         }
     }
@@ -140,11 +140,14 @@ private final class CallingSystemMessageGenerator {
     
     var callers : [ZMConversation : ZMUser] = [:]
     
-    func process(callState: CallState, in conversation: ZMConversation, sender: ZMUser) {
+    func process(callState: CallState, in conversation: ZMConversation, sender: ZMUser, timeStamp: Date?) {
         
         switch callState {
         case .incoming, .outgoing:
             callers[conversation] = sender
+            if let timeStamp = timeStamp {
+                conversation.updateLastModifiedDateIfNeeded(timeStamp)
+            }
         case .terminating(reason: .canceled):
             let caller = callers[conversation] ?? sender
             conversation.appendMissedCallMessage(fromUser: caller, at: Date())

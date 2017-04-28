@@ -55,7 +55,7 @@ struct WireCallCenterV3VideoNotification : SelfPostingNotification {
 /// MARK - Call state observer
 
 public protocol WireCallCenterCallStateObserver : class {
-    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?)
+    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?)
 }
 
 public struct WireCallCenterCallStateNotification : SelfPostingNotification {
@@ -64,6 +64,7 @@ public struct WireCallCenterCallStateNotification : SelfPostingNotification {
     let callState : CallState
     let conversationId : UUID
     let userId : UUID?
+    let messageTime : Date?
 }
 
 
@@ -121,7 +122,7 @@ extension WireCallCenterV3 {
     public class func addCallStateObserver(observer: WireCallCenterCallStateObserver) -> WireCallCenterObserverToken  {
         return NotificationCenter.default.addObserver(forName: WireCallCenterCallStateNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
             if let note = note.userInfo?[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification {
-                observer?.callCenterDidChange(callState: note.callState, conversationId: note.conversationId, userId: note.userId)
+                observer?.callCenterDidChange(callState: note.callState, conversationId: note.conversationId, userId: note.userId, timeStamp: note.messageTime)
             }
         }
     }
