@@ -51,7 +51,8 @@ class CallStateObserverTests : MessagingTest {
             
             self.conversation = conversation
         }
-        
+        ZMUserSession.callingProtocolStrategy = .version3
+
         localNotificationDispatcher = LocalNotificationDispatcher(in: syncMOC, application: application)
         sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, managedObjectContext: syncMOC)
     }
@@ -69,7 +70,7 @@ class CallStateObserverTests : MessagingTest {
     
     func testThatMissedCallMessageIsAppendedForCanceledCallByReceiver() {
         
-        // given when
+        // when
         sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
         sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversationId: conversation.remoteIdentifier!, userId: receiver.remoteIdentifier!, timeStamp: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

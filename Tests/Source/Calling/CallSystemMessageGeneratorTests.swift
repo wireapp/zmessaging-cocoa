@@ -19,15 +19,16 @@
 import Foundation
 @testable import WireSyncEngine
 
-class SystemMessageCallObserverTests : MessagingTest {
-    
-    var sut : SystemMessageCallObserverV2!
+class CallSystemMessageGeneratorTests : MessagingTest {
+
+    var sut : WireSyncEngine.CallSystemMessageGenerator!
     var mockWireCallCenterV3 : WireCallCenterV3Mock!
     var selfUserID : UUID!
     var clientID: String!
     var conversation : ZMConversation!
     var user : ZMUser!
     var selfUser : ZMUser!
+    
     override func setUp() {
         super.setUp()
         conversation = ZMConversation.insertNewObject(in: uiMOC)
@@ -43,7 +44,7 @@ class SystemMessageCallObserverTests : MessagingTest {
         selfUserID = selfUser.remoteIdentifier
         clientID = "foo"
         
-        sut = WireSyncEngine.SystemMessageCallObserverV2(managedObjectContext:uiMOC)
+        sut = WireSyncEngine.CallSystemMessageGenerator()
         mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUserID, clientId: clientID, uiMOC: uiMOC)
     }
     
@@ -54,19 +55,15 @@ class SystemMessageCallObserverTests : MessagingTest {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
-    func testThatItAppendsPerformedCallSystemMessage_OutgoingCall_V2(){
+    func testThatItAppendsPerformedCallSystemMessage_OutgoingCall_V3(){
         // given
-        ZMUserSession.callingProtocolStrategy = .version2
+        ZMUserSession.callingProtocolStrategy = .version3
         let messageCount = conversation.messages.count
-
-        let mutableCallPart = conversation.mutableOrderedSetValue(forKey: "callParticipants")
-        mutableCallPart.add(user)
-        mutableCallPart.add(selfUser)
         
         // when
-        sut.callCenterDidChange(voiceChannelState: .outgoingCall, conversation: conversation, callingProtocol: .version2)
-        sut.callCenterDidChange(voiceChannelState: .selfConnectedToActiveChannel , conversation: conversation, callingProtocol: .version2)
-        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version2)
+        sut.callCenterDidChange(callState: .outgoing, conversation: conversation, user: selfUser, timeStamp: nil)
+        sut.callCenterDidChange(callState: .established, conversation: conversation, user: selfUser, timeStamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversation: conversation, user: user, timeStamp: nil)
         
         // then
         XCTAssertEqual(conversation.messages.count, messageCount+1)
@@ -76,24 +73,39 @@ class SystemMessageCallObserverTests : MessagingTest {
         }
     }
     
-    func testThatItAppendsPerformedCallSystemMessage_IncomingCall_V2(){
+    func testThatItAppendsPerformedCallSystemMessage_IncomingCall_V3(){
         // given
-        ZMUserSession.callingProtocolStrategy = .version2
+        ZMUserSession.callingProtocolStrategy = .version3
         let messageCount = conversation.messages.count
-
-        let mutableCallPart = conversation.mutableOrderedSetValue(forKey: "callParticipants")
-        mutableCallPart.add(user)
-        mutableCallPart.add(selfUser)
         
         // when
-        sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version2)
-        sut.callCenterDidChange(voiceChannelState: .selfConnectedToActiveChannel , conversation: conversation, callingProtocol: .version2)
-        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version2)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true), conversation: conversation, user: user, timeStamp: nil)
+        sut.callCenterDidChange(callState: .established , conversation: conversation, user: user, timeStamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversation: conversation, user: user, timeStamp: nil)
         
         // then
         XCTAssertEqual(conversation.messages.count, messageCount+1)
         if let message = conversation.messages.lastObject as? ZMSystemMessage {
             XCTAssertEqual(message.systemMessageType, .performedCall)
+            XCTAssertTrue(message.users.contains(user))
+        }
+    }
+    
+    func testThatItAppendsMissedCallSystemMessage_UnansweredIncomingCall_V3(){
+        // given
+        ZMUserSession.callingProtocolStrategy = .version3
+        let messageCount = conversation.messages.count
+        
+        // when
+        sut.callCenterDidChange(callState: .incoming(video:false, shouldRing: true), conversation: conversation, user: user, timeStamp: nil)
+        self.performIgnoringZMLogError { 
+            self.sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversation: self.conversation, user: self.user, timeStamp: nil)
+        }
+
+        // then
+        XCTAssertEqual(conversation.messages.count, messageCount+1)
+        if let message = conversation.messages.lastObject as? ZMSystemMessage {
+            XCTAssertEqual(message.systemMessageType, .missedCall)
             XCTAssertTrue(message.users.contains(user))
         }
     }

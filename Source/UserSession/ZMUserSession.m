@@ -97,7 +97,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) NSURL *keyStoreURL;
 @property (nonatomic, readwrite) NSURL *sharedContainerURL;
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
-@property (nonatomic) SystemMessageCallObserver *systemMessageCallObserver;
+@property (nonatomic) SystemMessageCallObserverV2 *systemMessageCallObserver;
 
 
 /// Build number of the Wire app
@@ -429,7 +429,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                          mediaManager:(AVSMediaManager *)mediaManager];
         }
 
-        self.systemMessageCallObserver = [[SystemMessageCallObserver alloc] initWithUserSession:self];
+        self.systemMessageCallObserver = [[SystemMessageCallObserverV2 alloc] initWithUserSession:self];
     }
     return self;
 }
