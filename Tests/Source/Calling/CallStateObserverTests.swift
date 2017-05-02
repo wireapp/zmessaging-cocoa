@@ -189,7 +189,7 @@ class CallStateObserverTests : MessagingTest {
         }
         
         // given when
-        sut.callCenterDidChange(callState: .outgoing, conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(voiceChannelState: .outgoingCall, conversation: conversation, callingProtocol: .version3)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // tear down
@@ -213,7 +213,7 @@ class CallStateObserverTests : MessagingTest {
         
         // when
         WireCallCenterV3Mock.mockNonIdleCalls = [:]
-        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(voiceChannelState: .noActiveUsers, conversation: conversation, callingProtocol: .version3)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // tear down

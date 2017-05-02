@@ -60,20 +60,16 @@
 - (void)testThatItInitializesTheBackendEnvironments
 {
     // given
-    ZMBackendEnvironment *edge = [ZMBackendEnvironment environmentWithType:ZMBackendEnvironmentTypeEdge];
     ZMBackendEnvironment *prod = [ZMBackendEnvironment environmentWithType:ZMBackendEnvironmentTypeProduction];
     ZMBackendEnvironment *staging = [ZMBackendEnvironment environmentWithType:ZMBackendEnvironmentTypeStaging];
     
     // then
-    XCTAssertEqualObjects(edge.backendURL, [NSURL URLWithString:@"https://edge-nginz-https.zinfra.io"]);
     XCTAssertEqualObjects(prod.backendURL, [NSURL URLWithString:@"https://prod-nginz-https.wire.com"]);
     XCTAssertEqualObjects(staging.backendURL, [NSURL URLWithString:@"https://staging-nginz-https.zinfra.io"]);
     
-    XCTAssertEqualObjects(edge.backendWSURL, [NSURL URLWithString:@"https://edge-nginz-ssl.zinfra.io"]);
     XCTAssertEqualObjects(prod.backendWSURL, [NSURL URLWithString:@"https://prod-nginz-ssl.wire.com"]);
     XCTAssertEqualObjects(staging.backendWSURL, [NSURL URLWithString:@"https://staging-nginz-ssl.zinfra.io"]);
     
-    XCTAssertEqualObjects(edge.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/edge/ios"]);
     XCTAssertEqualObjects(prod.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/prod/ios"]);
     XCTAssertEqualObjects(staging.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/staging/ios"]);
 }
