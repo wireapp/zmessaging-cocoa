@@ -102,7 +102,7 @@ final class CallSystemMessageGenerator: NSObject {
             log.info("Setting call start date for \(conversation.displayName)")
             startDateByConversation[conversation] = Date()
             fallthrough
-        case .incoming(video: _, shouldRing: _):
+        case .incoming:
             log.info("Adding \(user?.displayName ?? "") as caller in \"\(conversation.displayName)\"")
             callerByConversation[conversation] = user
         case .established:

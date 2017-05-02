@@ -50,6 +50,11 @@ class CallSystemMessageGeneratorTests : MessagingTest {
     
     override func tearDown() {
         sut = nil
+        selfUserID = nil
+        clientID = nil
+        selfUser = nil
+        conversation = nil
+        user = nil
         super.tearDown()
         mockWireCallCenterV3 = nil
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -70,6 +75,8 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         if let message = conversation.messages.lastObject as? ZMSystemMessage {
             XCTAssertEqual(message.systemMessageType, .performedCall)
             XCTAssertTrue(message.users.contains(selfUser))
+        } else {
+            XCTFail("No system message inserted")
         }
     }
     
@@ -88,6 +95,8 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         if let message = conversation.messages.lastObject as? ZMSystemMessage {
             XCTAssertEqual(message.systemMessageType, .performedCall)
             XCTAssertTrue(message.users.contains(user))
+        } else {
+            XCTFail("No system message inserted")
         }
     }
     
@@ -107,6 +116,8 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         if let message = conversation.messages.lastObject as? ZMSystemMessage {
             XCTAssertEqual(message.systemMessageType, .missedCall)
             XCTAssertTrue(message.users.contains(user))
+        } else {
+            XCTFail("No system message inserted")
         }
     }
 }

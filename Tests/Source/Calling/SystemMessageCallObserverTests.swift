@@ -49,7 +49,13 @@ class SystemMessageCallObserverTests : MessagingTest {
     
     override func tearDown() {
         sut = nil
+        selfUserID = nil
+        clientID = nil
+        selfUser = nil
+        conversation = nil
+        user = nil
         super.tearDown()
+        
         mockWireCallCenterV3 = nil
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
