@@ -70,14 +70,9 @@ private let log = ZMSLog(tag: "Calling System Message")
             log.info("Appending performed call message: \(duration), \(caller.displayName), \"\(conversation.displayName)\"")
             conversation.appendPerformedCallMessage(with: duration, caller: caller)
         }
-        else if let caller = callerByConversation[conversation] {
-            if let startDate = startDateByConversation[conversation] {
-                log.info("Appending performed call message: \(startDate), \(caller.displayName), \"\(conversation.displayName)\"")
-                conversation.appendPerformedCallMessage(with: 0, caller: caller)
-            } else {
-                log.info("Appending missed call message: \(caller.displayName), \"\(conversation.displayName)\"")
-                conversation.appendMissedCallMessage(fromUser: caller, at: Date())
-            }
+        else if let caller = callerByConversation[conversation], let startDate = startDateByConversation[conversation] {
+            log.info("Appending performed call message: \(startDate), \(caller.displayName), \"\(conversation.displayName)\"")
+            conversation.appendPerformedCallMessage(with: 0, caller: caller)
         } else {
             log.info("Call ended but no call info present in order to insert system message")
         }
