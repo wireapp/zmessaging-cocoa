@@ -76,7 +76,7 @@ public class CallObserver : NSObject, VoiceChannelStateObserver {
 
 extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
-    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
+    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
         guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext) else {
             return
         }
@@ -88,7 +88,7 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: userSession.managedObjectContext) else {
                     break
             }
-            if shouldRing {
+            if shouldRing && !conversation.isSilenced {
                 indicateIncomingCall(from: user, in: conversation, video: video)
             }
         case let .terminating(reason: reason) where !(reason == .normal && userId == ZMUser.selfUser(inUserSession: userSession).remoteIdentifier):
@@ -123,7 +123,9 @@ extension ZMCallKitDelegate : VoiceChannelStateObserver {
     
         if voiceChannelState == .incomingCall {
             guard let user = conversation.voiceChannelRouter?.v2.participants.firstObject as? ZMUser else { return }
-            indicateIncomingCall(from: user, in: conversation, video: conversation.voiceChannelRouter?.v2.isVideoCall ?? false)
+            if !conversation.isSilenced {
+                indicateIncomingCall(from: user, in: conversation, video: conversation.voiceChannelRouter?.v2.isVideoCall ?? false)
+            }
         }
         
         if voiceChannelState == .selfIsJoiningActiveChannel {

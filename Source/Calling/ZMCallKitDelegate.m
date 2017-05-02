@@ -352,39 +352,57 @@ NS_ASSUME_NONNULL_END
 - (void)requestStartCallInConversation:(ZMConversation *)conversation videoCall:(BOOL)video
 {
     VoiceChannelV2State state = conversation.voiceChannel.state;
-    if (state == VoiceChannelV2StateIncomingCall || state == VoiceChannelV2StateIncomingCallDegraded) {
-        CXAnswerCallAction *answerAction = [[CXAnswerCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
-        CXTransaction *callAnswerTransaction = [[CXTransaction alloc] initWithAction:answerAction];
-        [self.callController requestTransaction:callAnswerTransaction completion:^(NSError * _Nullable error) {
-            if (nil != error) {
-                [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot answer call: %@", error];
-            }
-        }];
+    if (!conversation.isSilenced && (state == VoiceChannelV2StateIncomingCall || state == VoiceChannelV2StateIncomingCallDegraded)) {
+        [self requestAnswerCallActionInConversation:conversation videoCall:video];
     }
     else {
-        [self endAllOngoingCallKitCallsExcept:conversation voiceChannelState:state];
-        
-        CXHandle *handle = conversation.callKitHandle;
-        
-        if (handle == nil) {
-            [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot get call kit handle for conversation"];
-            return;
-        }
-        
-        CXStartCallAction *startCallAction = [[CXStartCallAction alloc] initWithCallUUID:conversation.remoteIdentifier
-                                                                                  handle:handle];
-        startCallAction.video = video;
-        startCallAction.contactIdentifier = [conversation localizedCallerNameWithCallFromUser:[ZMUser selfUserInUserSession:self.userSession]];
-        
-        CXTransaction *startCallTransaction = [[CXTransaction alloc] initWithAction:startCallAction];
-        
-        [self.callController requestTransaction:startCallTransaction completion:^(NSError * _Nullable error) {
-            if (nil != error) {
-                [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot start call: %@", error];
-            }
-        }];
+        [self requestStartCallActionInConversation:conversation videoCall:video];
     }
 }
+
+- (void)requestAnswerCallActionInConversation:(ZMConversation *)conversation videoCall:(BOOL)video
+{
+    CXAnswerCallAction *answerAction = [[CXAnswerCallAction alloc] initWithCallUUID:conversation.remoteIdentifier];
+    CXTransaction *callAnswerTransaction = [[CXTransaction alloc] initWithAction:answerAction];
+    [self.callController requestTransaction:callAnswerTransaction completion:^(NSError * _Nullable error) {
+        if (nil != error) {
+            [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot answer call: %@", error];
+            if (error.code == CXErrorCodeRequestTransactionErrorUnknownCallUUID) {
+                [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Requesting start of new call, because call with conversationId does not exist yet"];
+                [self requestStartCallActionInConversation:conversation videoCall:video];
+            }
+        }
+    }];
+}
+
+- (void)requestStartCallActionInConversation:(ZMConversation *)conversation videoCall:(BOOL)video
+{
+    [self endAllOngoingCallKitCallsExcept:conversation voiceChannelState:conversation.voiceChannel.state];
+    
+    CXHandle *handle = conversation.callKitHandle;
+    
+    if (handle == nil) {
+        [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot get call kit handle for conversation"];
+        return;
+    }
+    
+    CXStartCallAction *startCallAction = [[CXStartCallAction alloc] initWithCallUUID:conversation.remoteIdentifier handle:handle];
+    startCallAction.video = video;
+    startCallAction.contactIdentifier = [conversation localizedCallerNameWithCallFromUser:[ZMUser selfUserInUserSession:self.userSession]];
+    
+    CXTransaction *startCallTransaction = [[CXTransaction alloc] initWithAction:startCallAction];
+    
+    [self.callController requestTransaction:startCallTransaction completion:^(NSError * _Nullable error) {
+        if (nil != error) {
+            [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot start call: %@", error];
+            if (error.code == CXErrorCodeRequestTransactionErrorCallUUIDAlreadyExists) {
+                [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Call with conversationId already exists, requesting to answer existing call"];
+                [self requestAnswerCallActionInConversation:conversation videoCall:video];
+            }
+        }
+    }];
+}
+
 
 - (void)requestEndCallInConversation:(ZMConversation *)conversation
 {

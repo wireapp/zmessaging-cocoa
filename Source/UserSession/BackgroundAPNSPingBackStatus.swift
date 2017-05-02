@@ -34,7 +34,6 @@ extension ZMAuthenticationStatus: AuthenticationStatusProvider {}
 
 
 // MARK: - EventsWithIdentifier
-
 @objc public final class EventsWithIdentifier: NSObject  {
     public let events: [ZMUpdateEvent]?
     public let identifier: UUID
@@ -52,6 +51,22 @@ extension ZMAuthenticationStatus: AuthenticationStatusProvider {}
             return !nonces.contains(nonce)
         }
         return EventsWithIdentifier(events: filteredEvents, identifier: identifier, isNotice: isNotice)
+    }
+    
+    public override func isEqual(_ object: Any?) -> Bool {
+        guard let rhs = object as? EventsWithIdentifier else { return false }
+        let lhs = self
+        
+        let eventsEqual: Bool
+        switch (lhs.events, rhs.events) {
+        case (.none, .none):
+            eventsEqual = true
+        case let (.some(lhs_events), .some(rhs_events)):
+            eventsEqual = (lhs_events == rhs_events)
+        default:
+            eventsEqual = false
+        }
+        return eventsEqual && lhs.identifier == rhs.identifier && lhs.isNotice == rhs.isNotice
     }
 }
 
@@ -85,7 +100,7 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
         }
 
         get {
-            guard let uuidString = self.persistentStoreMetadata(forKey: "LastUpdateEventID") as? String,
+            guard let uuidString = self.persistentStoreMetadata(forKey: lastUpdateEventIDKey) as? String,
                 let uuid = UUID(uuidString: uuidString)
                 else { return nil }
             return uuid
@@ -100,8 +115,15 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
 
 // MARK: - BackgroundAPNSPingBackStatus
 
-@objc public enum PingBackStatus: UInt8 {
+@objc public enum PingBackStatus: UInt8, CustomStringConvertible {
     case done, inProgress
+
+    public var description: String {
+        switch self {
+        case .done: return "done"
+        case .inProgress: return "inProgress"
+        }
+    }
 }
 
 @objc open class BackgroundAPNSPingBackStatus: NSObject {
@@ -111,14 +133,19 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
     
     public private(set) var eventsWithHandlerByNotificationID: [UUID: EventsWithHandler] = [:]
     public private(set) var backgroundActivity: ZMBackgroundActivity?
-    public var status: PingBackStatus = .done
+
+    public var status: PingBackStatus = .done {
+        didSet {
+            zmLog.debug("Updating pingback status from \(oldValue.description) to \(status.description)")
+        }
+    }
 
     public var hasNotificationIDs: Bool {
         return nil != notificationIDs.first
     }
 
     internal private(set) var notificationIDs: [EventsWithIdentifier] = []
-    private var notificationIDToEventsMap : [UUID : [ZMUpdateEvent]] = [:]
+    private var notificationIDToEventsMap: [UUID : [ZMUpdateEvent]] = [:]
     
     private var syncManagedObjectContext: NSManagedObjectContext
     private weak var authenticationStatusProvider: AuthenticationStatusProvider?
@@ -138,13 +165,7 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
     }
     
     public func didReceiveVoIPNotification(_ eventsWithID: EventsWithIdentifier, handler: @escaping PingBackResultHandler) {
-        APNSPerformanceTracker.sharedTracker.trackNotification(
-            eventsWithID.identifier,
-            state: .pingBackStatus,
-            analytics: syncManagedObjectContext.analytics
-        )
-
-        zmLog.debug("Notification fetch triggered for \(eventsWithID.identifier)")
+        zmLog.debug("Adding notification ID to list of Ids to fetch: \(eventsWithID.identifier)")
         notificationIDs.append(eventsWithID)
 
         eventsWithHandlerByNotificationID[eventsWithID.identifier] = (eventsWithID.events, handler)
@@ -166,10 +187,11 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
         let receivedOriginal = receivedIdentifiers.contains(identifier)
 
         if let index = notificationIDs.index(of: originalEvents) {
+            zmLog.debug("Removing successfully fetched notification ID from list of IDs to fetch: \(identifier)")
             notificationIDs.remove(at: index)
         }
 
-        zmLog.debug("Received events from notification stream for \(identifier), received original: \(receivedOriginal), hasMore: \(hasMore)")
+        zmLog.debug("Received events from notification stream for: \(identifier), included original: \(receivedOriginal), hasMore: \(hasMore)")
 
         // If we do not have any more notifications to fetch we want to 
         // update the status, end the background activity and remove the handler
@@ -187,9 +209,12 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
 
     @objc(didFailDownloadingOriginalEvents:)
     public func didFailDownloading(originalEvents: EventsWithIdentifier) {
+        zmLog.debug("Failed to download stream for events with ID: \(originalEvents.identifier)")
         if let index = notificationIDs.index(of: originalEvents) {
+            zmLog.debug("Removing NOT fetched notification ID from list of IDs to fetch: \(originalEvents.identifier)")
             notificationIDs.remove(at: index)
         }
+
         updateStatus()
         guard let handler = eventsWithHandlerByNotificationID.removeValue(forKey: originalEvents.identifier)?.handler else { return }
         handler(.failure, [])

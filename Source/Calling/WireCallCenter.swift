@@ -60,7 +60,7 @@ extension CallClosedReason {
         switch self {
         case .lostMedia:
             return VoiceChannelV2CallEndReason.disconnected
-        case .normal, .anweredElsewhere, .canceled:
+        case .normal, .anweredElsewhere, .canceled, .stillOngoing:
             return user?.isSelfUser == true ? .requestedSelf : .requested
         case .timeout:
             return VoiceChannelV2CallEndReason.requestedAVS
@@ -123,7 +123,7 @@ class VoiceChannelStateObserverToken : NSObject, WireCallCenterV2CallStateObserv
         })
     }
     
-    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
+    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
         guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: context) else { return }
         let voiceChannelState = callState.voiceChannelState(securityLevel: conversation.securityLevel)
         observer?.callCenterDidChange(voiceChannelState: voiceChannelState, conversation: conversation, callingProtocol: .version3)

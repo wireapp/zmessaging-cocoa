@@ -99,8 +99,6 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, forType type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) did receive '\(payload.type)' payload: \(payload.dictionaryPayload)")
         if let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Process PushKit payload") {
-            APNSPerformanceTracker.trackReceivedNotification(analytics)
-            
             didReceivePayload(payload.dictionaryPayload as NSDictionary, .voIP) {
                 result in
                 ZMLogPushKit_swift("Registry \(self.registry.description) did finish background task")

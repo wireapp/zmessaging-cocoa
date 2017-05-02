@@ -67,7 +67,7 @@ public final class CallStateObserver : NSObject {
 
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
-    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?) {
+    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
         
         managedObjectContext.performGroupedBlock {
             guard
@@ -84,7 +84,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             self.updateConversationListIndicator(convObjectID: conversation.objectID, callState: callState)
             
-            self.callingSystemMessageGenerator.process(callState: callState, in: conversation, sender: user)
+            self.callingSystemMessageGenerator.process(callState: callState, in: conversation, sender: user, timeStamp: timeStamp)
             self.managedObjectContext.enqueueDelayedSave()
         }
     }
@@ -94,9 +94,10 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
         guard let uiMOC = self.managedObjectContext.zm_userInterface else { return }
         uiMOC.performGroupedBlock {
             guard let uiConv = (try? uiMOC.existingObject(with: convObjectID)) as? ZMConversation else { return }
+            
             switch callState {
             case .incoming(video: _, shouldRing: let shouldRing):
-                uiConv.isIgnoringCallV3 = !shouldRing
+                uiConv.isIgnoringCallV3 = uiConv.isSilenced || !shouldRing
                 uiConv.isCallDeviceActiveV3 = false
             case .terminating, .none:
                 uiConv.isCallDeviceActiveV3 = false
@@ -156,11 +157,14 @@ private final class CallingSystemMessageGenerator {
     
     var callers : [ZMConversation : ZMUser] = [:]
     
-    func process(callState: CallState, in conversation: ZMConversation, sender: ZMUser) {
+    func process(callState: CallState, in conversation: ZMConversation, sender: ZMUser, timeStamp: Date?) {
         
         switch callState {
         case .incoming, .outgoing:
             callers[conversation] = sender
+            if let timeStamp = timeStamp {
+                conversation.updateLastModifiedDateIfNeeded(timeStamp)
+            }
         case .terminating(reason: .canceled):
             let caller = callers[conversation] ?? sender
             conversation.appendMissedCallMessage(fromUser: caller, at: Date())

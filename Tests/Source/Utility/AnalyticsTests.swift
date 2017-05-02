@@ -56,52 +56,6 @@ class AnalyticsTests: XCTestCase {
     }
 }
 
-// MARK: - Calling
-extension AnalyticsTests {
-    
-    func testVOIPTimeDifferenceTracking() {
-        // given
-        let notificationID = UUID.create()
-        let serverTime = Date(timeIntervalSince1970: 1234567890)
-        let currentTime = serverTime.addingTimeInterval(4.5) // Simulate VoIP arriving in OperationLoop after 4.5 sec
-        let referenceDate = currentTime.addingTimeInterval(0.25) // Simulate VoIP arriving in PingBackStatus after 250 ms
-
-        // when
-        let tracker = APNSPerformanceTracker()
-
-        let operationLoopState = NotificationFunnelState.operationLoop(serverTimestamp: serverTime, notificationsEnabled: true, background: true, currentDate: currentTime)
-        tracker.trackNotification(notificationID, state: operationLoopState, analytics: analytics, currentDate: currentTime)
-        tracker.trackNotification(notificationID, state: .pingBackStatus, analytics: analytics, currentDate: referenceDate)
-
-        // then
-        XCTAssertTrue(analytics.taggedEvents.isEmpty)
-        XCTAssertEqual(analytics.taggedEventsWithAttributes.count, 2) // UserSession & OperationLoop
-        let firstEventWithAttribute = analytics.taggedEventsWithAttributes.first
-        let secondEventWithAttribute = analytics.taggedEventsWithAttributes.last
-
-        let firstExpected = EventWithAttributes(event: "apns_performance", attributes: [
-            "server_timestamp_difference": "4000-5000" as NSObject,
-            "notification_identifier": notificationID.transportString() as NSObject,
-            "state_description": "OperationLoop" as NSObject,
-            "state_index": 0 as NSObject,
-            "allowed_notifications": NSNumber(value:true),
-            "background": NSNumber(value:true)
-        ])
-
-        XCTAssertEqual(firstEventWithAttribute, firstExpected)
-
-        let secondExpected = EventWithAttributes(event: "apns_performance", attributes: [
-            "notification_identifier": notificationID.transportString() as NSObject,
-            "state_description": "PingBackStatus" as NSObject,
-            "state_index": 1 as NSObject,
-            "time_since_last": "200-500" as NSObject
-        ])
-        
-        XCTAssertEqual(secondEventWithAttribute, secondExpected)
-    }
-    
-}
-
 // MARK: - Address book tag
 extension AnalyticsTests {
     

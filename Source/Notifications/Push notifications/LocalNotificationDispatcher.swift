@@ -99,9 +99,6 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
                 return
             }
             self.application.scheduleLocalNotification(localNote)
-            if let id = id, let analyticsType = self.syncMOC.analytics {
-                APNSPerformanceTracker.trackVOIPNotificationInNotificationDispatcher(id, analytics: analyticsType)
-            }
         }
     }
     
