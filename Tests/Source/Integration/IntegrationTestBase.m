@@ -24,18 +24,18 @@
 #import "IntegrationTestBase.h"
 #import "ZMHotfix.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMTestNotifications.h"
 #import "ZMSearchDirectory.h"
 #import "ZMUserSession+Authentication.h"
 #import "ZMUserSession+Registration.h"
 #import "ZMCredentials.h"
 #import <WireSyncEngine/ZMAuthenticationStatus+Testing.h>
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMGSMCallHandler.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
-#import "ZMCallStateTranscoder.h"
+#import "ZMSyncStrategy+Internal.h"
+#import "ZMCallStateRequestStrategy.h"
 #import "MockLinkPreviewDetector.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
@@ -77,7 +77,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 + (instancetype)getInstance
 {
-    return ZMFlowSyncInternalFlowManagerOverride;
+    return ZMCallFlowRequestStrategyInternalFlowManagerOverride;
 }
 
 @end
@@ -95,7 +95,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.mockObjectIDToRemoteID = [NSMutableDictionary dictionary];
     self.mockFlowManager = self.mockTransportSession.mockFlowManager;
 
-    ZMFlowSyncInternalFlowManagerOverride = self.mockFlowManager;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = self.mockFlowManager;
     WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3Mock.self;
     
     [self createObjects];
@@ -105,13 +105,14 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.conversationChangeObserver = [[ConversationChangeObserver alloc] init];
     self.userChangeObserver = [[UserChangeObserver alloc] init];
     self.messageChangeObserver = [[MessageChangeObserver alloc] init];
+    [self.application simulateApplicationWillEnterForeground];
     [self.application simulateApplicationDidBecomeActive];
     WaitForEverythingToBeDoneWithTimeout(0.5);
 }
 
 - (ZMGSMCallHandler *)gsmCallHandler
 {
-    return self.userSession.operationLoop.syncStrategy.callStateTranscoder.gsmCallHandler;
+    return self.userSession.operationLoop.syncStrategy.gsmCallHandler;
 }
 
 - (void)tearDown
@@ -128,7 +129,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
     WaitForAllGroupsToBeEmpty(0.5);
     
-    ZMFlowSyncInternalFlowManagerOverride = nil;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
     
     [self.userSession tearDown];
     WaitForAllGroupsToBeEmpty(0.5);

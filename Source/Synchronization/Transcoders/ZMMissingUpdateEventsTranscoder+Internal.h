@@ -31,5 +31,6 @@ extern NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize;
 @property (nonatomic) NSUUID *lastUpdateEventID;
 
 @property (nonatomic, readonly) BOOL isFetchingStreamForAPNS;
+@property (nonatomic, readonly) BOOL isFetchingStreamInBackground;
 
 @end

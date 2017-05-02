@@ -19,15 +19,21 @@
 
 @import Foundation;
 @import WireRequestStrategy;
+@import WireMessageStrategy;
 
 @class NSManagedObjectContext;
-@class ZMAuthenticationStatus;
-@class ZMClientRegistrationStatus;
+@class ZMApplicationStatusDirectory;
 
-@interface ZMLoginTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
+NS_ASSUME_NONNULL_BEGIN;
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                        authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus;
+@interface ZMLoginTranscoder : ZMAbstractRequestStrategy
+
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext applicationStatus:(id<ZMApplicationStatus>)applicationStatus NS_UNAVAILABLE;
+
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory;
+
+- (void)tearDown;
 
 @end
+
+NS_ASSUME_NONNULL_END;

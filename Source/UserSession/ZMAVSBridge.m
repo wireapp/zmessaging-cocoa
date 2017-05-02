@@ -22,7 +22,7 @@
 
 #import "ZMAVSBridge.h"
 
-id ZMFlowSyncInternalFlowManagerOverride;
+id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
 
 @implementation ZMAVSBridge
 
@@ -31,8 +31,8 @@ id ZMFlowSyncInternalFlowManagerOverride;
     Class flowManagerClass = NSClassFromString(@"AVSFlowManager");
     RequireString(flowManagerClass != nil, "No AVS library linked? Missing FlowManager class");
     
-    if (ZMFlowSyncInternalFlowManagerOverride != nil) {
-        flowManagerClass = [ZMFlowSyncInternalFlowManagerOverride class];
+    if (ZMCallFlowRequestStrategyInternalFlowManagerOverride != nil) {
+        flowManagerClass = [ZMCallFlowRequestStrategyInternalFlowManagerOverride class];
     } 
     
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"ZMDisableAVS"]) {
@@ -44,7 +44,7 @@ id ZMFlowSyncInternalFlowManagerOverride;
 
 + (id)overrideFlowManager 
 {
-    return ZMFlowSyncInternalFlowManagerOverride;
+    return ZMCallFlowRequestStrategyInternalFlowManagerOverride;
 }
 
 + (AVSFlowManager *)flowManagerInstance

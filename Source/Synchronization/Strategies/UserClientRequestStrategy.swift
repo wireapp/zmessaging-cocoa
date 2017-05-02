@@ -369,14 +369,6 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
         return nil
     }
     
-    public var isSlowSyncDone: Bool {
-        return true
-    }
-    
-    public func setNeedsSlowSync() {
-        //no op
-    }
-    
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
         events.forEach(processUpdateEvent)
     }

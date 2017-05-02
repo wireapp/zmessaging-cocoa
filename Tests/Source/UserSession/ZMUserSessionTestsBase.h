@@ -36,7 +36,7 @@
 #import "ZMCredentials.h"
 #import "ZMSyncStrategy.h"
 #import "ZMOperationLoop.h"
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMPushToken.h"
 #import "ZMCommonContactsSearch.h"
 
@@ -71,4 +71,7 @@
 @property (nonatomic) id<ZMAuthenticationObserver> authenticationObserver;
 @property (nonatomic) id<ZMRegistrationObserver> registrationObserver;
 
+@property (nonatomic) ZMAuthenticationStatus * authenticationStatus;
+@property (nonatomic) ZMClientRegistrationStatus * clientRegistrationStatus;
+@property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 @end

@@ -20,6 +20,8 @@
 @import WireTransport;
 @import WireRequestStrategy;
 
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
+
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMAuthenticationStatus.h"
@@ -36,54 +38,25 @@
 
 @implementation ZMLoginCodeRequestTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
 {
-    NOT_USED(moc);
-    RequireString(NO, "Do not use this init");
-    return nil;
-}
-
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-{
-    self = [super initWithManagedObjectContext:moc];
+    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatusDirectory];
     if (self != nil) {
-        self.authenticationStatus = authenticationStatus;
+        self.authenticationStatus = applicationStatusDirectory.authenticationStatus;
         self.codeRequestSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self managedObjectContext:moc];
         [self.codeRequestSync readyForNextRequest];
     }
     return self;
 }
 
-- (void)setNeedsSlowSync;
+- (ZMStrategyConfigurationOption)configuration
 {
-    
+    return ZMStrategyConfigurationOptionAllowsRequestsWhileUnauthenticated;
 }
 
-- (void)processEvents:(NSArray<ZMUpdateEvent *> __unused *)events
-           liveEvents:(BOOL __unused)liveEvents
-prefetchResult:(ZMFetchRequestBatchResult __unused *)prefetchResult;
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
-    // no op
-}
-
-- (BOOL)isSlowSyncDone
-{
-    return YES;
-}
-
-- (NSArray *)contextChangeTrackers
-{
-    return [NSArray array];
-}
-
-- (NSArray *)requestGenerators
-{
-    return @[self];
-}
-
-- (ZMTransportRequest *)nextRequest
-{
-    if(self.authenticationStatus.currentPhase == ZMAuthenticationPhaseRequestPhoneVerificationCodeForLogin) {
+    if (self.authenticationStatus.currentPhase == ZMAuthenticationPhaseRequestPhoneVerificationCodeForLogin) {
         [self.codeRequestSync readyForNextRequestIfNotBusy];
         return [self.codeRequestSync nextRequest];
     }

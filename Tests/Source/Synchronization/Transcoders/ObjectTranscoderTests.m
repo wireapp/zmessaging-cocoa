@@ -18,6 +18,7 @@
 
 
 #import "ObjectTranscoderTests.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @implementation ObjectTranscoderTests
 
@@ -25,6 +26,7 @@
 {
     [super setUp];
     self.syncStrategy = [OCMockObject niceMockForClass:[ZMSyncStrategy class]];
+    self.mockApplicationStatus = [[ZMMockApplicationStatus alloc] init];
 }
 
 - (void)tearDown

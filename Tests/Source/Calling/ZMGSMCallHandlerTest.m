@@ -24,7 +24,6 @@
 #import "MessagingTest.h"
 #import "ZMGSMCallHandler.h"
 #import "ZMCallStateLogger.h"
-#import "ZMSyncStateMachine.h"
 
 @interface ZMGSMCallHandlerTest : MessagingTest
 
@@ -72,8 +71,7 @@
     self.sut = [[ZMGSMCallHandler alloc] initWithUIManagedObjectContext:self.uiMOC
                                                syncManagedObjectContext:self.syncMOC
                                                         callStateLogger:self.mockCallStateLogger];
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
+    [ZMUserSession notifyInitialSyncCompleted];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -452,7 +450,7 @@
     XCTAssertTrue(self.activeUICallConversation.callDeviceIsActive);
     
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
+    [ZMUserSession notifyInitialSyncCompleted];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -497,7 +495,7 @@
     XCTAssertTrue(self.activeUICallConversation.callDeviceIsActive);
     
     // and when
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
+    [ZMUserSession notifyInitialSyncCompleted];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

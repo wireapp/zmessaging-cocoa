@@ -26,8 +26,8 @@
 #import "ObjectTranscoderTests.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMConversationTranscoder+Internal.h"
-#import "ZMSyncStrategy.h"
 #import "ZMSimpleListRequestPaginator.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 static NSString *const CONVERSATIONS_PATH = @"/conversations";
@@ -43,6 +43,9 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 @property (nonatomic) NSMutableArray *downloadedEvents;
 @property (nonatomic) ZMConversationTranscoder<ZMUpstreamTranscoder, ZMDownstreamTranscoder> *sut;
 @property (nonatomic) NSUUID *selfUserID;
+@property (nonatomic) MockSyncStatus *mockSyncStatus;
+@property (nonatomic) ZMMockClientRegistrationStatus *mockClientRegistrationDelegate;
+@property (nonatomic) id syncStateDelegate;
 
 @end
 
@@ -53,10 +56,10 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)setUp
 {
     [super setUp];
-
     self.selfUserID = NSUUID.createUUID;
     [self setupSelfConversation]; // when updating lastRead we are posting to the selfConversation
 
+    [[[(id)self.syncStrategy stub] andReturn:self.syncMOC] moc];
     [self verifyMockLater:self.syncStrategy];
     
     NSMutableArray *downloadedEvents = [NSMutableArray array];
@@ -70,20 +73,24 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [[[authStatusMock stub] andReturnValue:@YES] registeredOnThisDevice];
     
     self.downloadedEvents = downloadedEvents;
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authStatusMock accountStatus:nil syncStrategy:self.syncStrategy];
+    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
+    self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
+    self.mockSyncStatus.mockPhase = SyncPhaseDone;
+    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
+
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)setSut:(ZMConversationTranscoder<ZMUpstreamTranscoder,ZMDownstreamTranscoder> *)sut
 {
-    [self.sut tearDown];
     _sut = sut;
 }
 
 - (void)tearDown
 {
     WaitForAllGroupsToBeEmpty(0.5);
-    [self.sut tearDown];
+    [self.mockClientRegistrationDelegate tearDown];
     self.sut = nil;
     [super tearDown];
 }
@@ -123,7 +130,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
             [tracker objectsDidChange:[NSSet setWithObject:syncConv]];
         }
         
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         // when
@@ -263,8 +270,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItProcessesListPaginatorRequestsBeforeRemoteIDRequestsDuringSlowSync
 {
     // given
-    [self.sut setNeedsSlowSync];
-    XCTAssertFalse(self.sut.isSlowSyncDone);
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
     
     // when
     NSArray *generators = self.sut.requestGenerators;
@@ -278,7 +284,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItProcessesDownstreamRequestsBeforeUpstreamWhenSlowSyncIsDone
 {
     // given
-    XCTAssertTrue(self.sut.isSlowSyncDone);
+    self.mockSyncStatus.mockPhase = SyncPhaseDone;
     
     // when
     NSArray *generators = self.sut.requestGenerators;
@@ -304,11 +310,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertEqualObjects(classes, expected);
 }
 
-- (void)testThatItIsCreatedWithIsSlowSyncDoneTrue
-{
-    XCTAssertTrue(self.sut.isSlowSyncDone);
-}
-
 - (void)testThatItDoesNotGenerateARequestIfSlowSyncIsDone {
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -320,7 +321,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNil(request);
@@ -346,7 +347,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     __block ZMTransportRequest *request;
     [self.syncMOC performGroupedBlockAndWait:^{
         block(conversation);
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -397,7 +398,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
     __block ZMTransportRequest *request;
     [self.syncMOC performGroupedBlockAndWait:^{
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -496,7 +497,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         // when
         ZMTransportRequest *request;
         do {
-            request = [self.sut.requestGenerators nextRequest];
+            request = [self.sut nextRequest];
             if (request == nil) {
                 break;
             }
@@ -565,7 +566,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     __block ZMTransportRequest *request;
     [self.syncMOC performGroupedBlockAndWait:^{
         conversation.remoteIdentifier = nil;
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -629,7 +630,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation = [self createModifiedSyncMocConversationAndAddToTrackedObjectsWithID:conversationID name:name];
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         // then
@@ -733,7 +734,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
             [tracker objectsDidChange:[NSSet setWithObject:conversation]];
         }
         
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNil(request);
     }];
 }
@@ -960,7 +961,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
 - (void)generateRequestAndCompleteWithResponse:(ZMTransportResponse *)response checkRequest:(void(^)(ZMTransportRequest *))block {
     [self.syncMOC performGroupedBlockAndWait:^{
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         if (block) {
             block(request);
@@ -1031,11 +1032,11 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.sut setNeedsSlowSync];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-        
+        ZMTransportRequest *request = [self.sut nextRequest];
+
         // then
         NSString *expectedPath = [NSString stringWithFormat:@"/conversations/ids?size=100"];
         XCTAssertNotNil(request);
@@ -1050,7 +1051,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     __block NSArray *conversationIDs;
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.sut setNeedsSlowSync];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         
         conversationIDs = [self createConversationIDArrayOfSize:20];
         [self setUpSyncWithConversationIDs:conversationIDs];
@@ -1058,7 +1059,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         [self checkThatRequest:request isGetRequestForConversationIDs:conversationIDs failureRecorder:NewFailureRecorder()];
@@ -1071,7 +1072,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     __block NSArray *rawConversations;
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.sut setNeedsSlowSync];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         
         NSArray *conversationIDs = [self createConversationIDArrayOfSize:3];
         rawConversations = [self createRawConversationsForIds:conversationIDs];
@@ -1089,6 +1090,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
         [self checkThatThereAreConversationsForAllRawConversations:rawConversations failureRecorder:NewFailureRecorder()];
+        XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
     }];
 }
 
@@ -1099,7 +1101,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     __block NSArray *conversationIDs;
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.sut setNeedsSlowSync];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         
         conversationIDs = [self createConversationIDArrayOfSize:3];
         rawConversations = [self createRawConversationsForIds:conversationIDs];
@@ -1136,7 +1138,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     NSMutableArray *requestedIDs = [NSMutableArray array];
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.sut setNeedsSlowSync];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         
         NSUInteger pageSize = 13;
         self.sut.conversationPageSize = pageSize;
@@ -1164,7 +1166,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         __block ZMTransportRequest *page2Request;
         [self.syncMOC performGroupedBlockAndWait:^{
-            page2Request = [self.sut.requestGenerators nextRequest];
+            page2Request = [self.sut nextRequest];
         }];
         
         [self addIDsFromRequest:page2Request toArray:requestedIDs];
@@ -1190,7 +1192,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.sut setNeedsSlowSync];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         
         NSUInteger pageSize = 13;
         self.sut.conversationPageSize = pageSize;
@@ -1221,7 +1223,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     WaitForAllGroupsToBeEmpty(0.15);
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNil(request);
     }];
 }
@@ -1236,29 +1238,12 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertEqual(self.sut.conversationPageSize, ZMConversationTranscoderDefaultConversationPageSize);
 }
 
-
-- (void)testThatSetNeedsSlowSyncChangesIsSlowSyncDone
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // given
-        [self.sut setNeedsSlowSync];
-        
-        // when
-        BOOL isSlowSyncDone = [self.sut isSlowSyncDone];
-        
-        // then
-        XCTAssertFalse(isSlowSyncDone);
-    }];
-}
-
-
 - (void)testThatIsSlowSyncDoneIsTrueWhenAllConversationsAreFetched
 {
     __block NSArray *rawConversations;
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.sut setNeedsSlowSync];
-        XCTAssertFalse(self.sut.isSlowSyncDone);
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         
         NSArray *conversationIDs = [self createConversationIDArrayOfSize:3];
         rawConversations = [self createRawConversationsForIds:conversationIDs];
@@ -1274,7 +1259,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
-        XCTAssertTrue(self.sut.isSlowSyncDone);
+        XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
     }];
 }
 
@@ -1283,12 +1268,12 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.sut setNeedsSlowSync];
-        ZMTransportRequest *firstRequest = [self.sut.requestGenerators nextRequest];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
+        ZMTransportRequest *firstRequest = [self.sut nextRequest];
         XCTAssertNotNil(firstRequest);
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNil(request);
@@ -1300,18 +1285,18 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.sut setNeedsSlowSync];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         [self setUpSyncWithConversationIDs:@[]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNil(request);
-        XCTAssertTrue(self.sut.isSlowSyncDone);
+        XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
     }];
 }
 
@@ -1322,7 +1307,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.sut setNeedsSlowSync];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         
         ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user1.remoteIdentifier = [NSUUID createUUID];
@@ -1336,14 +1321,14 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         
         // - this is the hard sync request
-        ZMTransportRequest *request1 = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request1 = [self.sut nextRequest];
         XCTAssertNotNil(request1);
         NSString *expectedPath = @"/conversations/ids?size=100";
         XCTAssertEqualObjects(expectedPath, request1.path);
         XCTAssertEqual(ZMMethodGET, request1.method);
         
         // when
-        ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request2 = [self.sut nextRequest];
         
         // then
         XCTAssertNil(request2);
@@ -1354,7 +1339,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self.sut setNeedsSlowSync];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         
         ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user1.remoteIdentifier = [NSUUID createUUID];
@@ -1371,7 +1356,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         // - this is the hard sync request
-        ZMTransportRequest *request1 = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request1 = [self.sut nextRequest];
         XCTAssertNotNil(request1);
         NSString *expectedPath = @"/conversations/ids?size=100";
         XCTAssertEqualObjects(expectedPath, request1.path);
@@ -1383,7 +1368,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
-        ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
+        self.mockSyncStatus.mockPhase = SyncPhaseDone;
+        ZMTransportRequest *request2 = [self.sut nextRequest];
         
         // then
         XCTAssertNotNil(request2);
@@ -1430,7 +1416,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         
         // then
@@ -1473,7 +1459,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         
         // then
@@ -1670,9 +1656,9 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         // when
-        ZMTransportRequest *request1 = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request1 = [self.sut nextRequest];
         XCTAssertNotNil(request1);
-        ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request2 = [self.sut nextRequest];
         
         // then
         XCTAssertNil(request2);
@@ -1738,7 +1724,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
         [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     }];
     
@@ -1813,7 +1799,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
         [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     }];
     
@@ -1845,7 +1831,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
             [tracker objectsDidChange:[NSSet setWithObject:insertedConversation]];
         }
         
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
     }];
     
     // when
@@ -1883,13 +1869,13 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     id authStatusMock = [OCMockObject mockForClass:[ZMAuthenticationStatus class]];
     [[[authStatusMock stub] andReturnValue:@YES] registeredOnThisDevice];
     
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authStatusMock accountStatus:nil syncStrategy:self.syncStrategy];
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [ZMChangeTrackerBootstrap bootStrapChangeTrackers:self.sut.contextChangeTrackers onContext:self.syncMOC];
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertEqualObjects(@"/conversations", request.path);
@@ -1943,7 +1929,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         // when
         
         
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
@@ -2011,7 +1997,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     // when
     [self.syncMOC performGroupedBlockAndWait:^{
         
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
@@ -2044,7 +2030,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
     __block NSDictionary *rawConversation;
     [self.syncMOC performGroupedBlockAndWait:^{
-        [self.sut setNeedsSlowSync];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         
         NSArray *conversationIDs = [self createConversationIDArrayOfSize:1];
         rawConversation = [self createRawConversationsForIds:conversationIDs][0];
@@ -2071,22 +2057,18 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertEqual(messages.count, 0u);
 }
 
-- (void)testThatItDoesAppendsNewConversationIfRegisteredDevice;
+- (void)testThatItDoesAppendsNewConversationSystemMessage
 {
     // given
     id authStatusMock = [OCMockObject niceMockForClass:[ZMAuthenticationStatus class]];
     [[[authStatusMock stub] andReturnValue:@YES] registeredOnThisDevice];
     [(ZMAuthenticationStatus *)[[authStatusMock stub] andReturnValue:OCMOCK_VALUE((ZMAuthenticationPhase){ZMAuthenticationPhaseAuthenticated})] currentPhase];
     
-    id accountStatus = [OCMockObject niceMockForClass:[ZMAccountStatus class]];
-    [[[accountStatus stub]
-      andReturnValue: OCMOCK_VALUE((AccountState){AccountStateOldDeviceActiveAccount})] currentAccountState];
-
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authStatusMock accountStatus:accountStatus syncStrategy:self.syncStrategy];
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     
     __block NSDictionary *rawConversation;
     [self.syncMOC performGroupedBlockAndWait:^{
-        [self.sut setNeedsSlowSync];
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
         
         NSArray *conversationIDs = [self createConversationIDArrayOfSize:1];
         rawConversation = [self createRawConversationsForIds:conversationIDs][0];
@@ -2111,47 +2093,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }]].array;
     
     XCTAssertEqual(messages.count, 1u);
-}
-
-- (void)testThatItDoesNotAppendNewConversationIfNewDevice {
-    
-    // given
-    id authStatusMock = [OCMockObject niceMockForClass:[ZMAuthenticationStatus class]];
-    [[[authStatusMock stub] andReturnValue:@NO] registeredOnThisDevice];
-    id accountStatusMock = [OCMockObject niceMockForClass:[ZMAccountStatus class]];
-    
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC
-                                                              authenticationStatus:authStatusMock
-                                                                     accountStatus:accountStatusMock
-                                                                      syncStrategy:self.syncStrategy];
-    
-    __block NSDictionary *rawConversation;
-    [self.syncMOC performGroupedBlockAndWait:^{
-        [self.sut setNeedsSlowSync];
-        
-        NSArray *conversationIDs = [self createConversationIDArrayOfSize:1];
-        rawConversation = [self createRawConversationsForIds:conversationIDs][0];
-        [self setUpSyncWithConversationIDs:conversationIDs];
-    }];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-    [self.syncMOC performGroupedBlockAndWait:^{
-        
-        // when
-        ZMTransportResponse *response = [self createConversationResponseForRawConversations:@[rawConversation]];
-        [self generateRequestAndCompleteWithResponse:response];
-    }];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    ZMConversation *conv = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:rawConversation[@"id"]] createIfNeeded:NO inContext:self.syncMOC];
-    
-    NSArray *messages = [conv.messages filteredOrderedSetUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(ZMMessage * _Nonnull evaluatedObject, NSDictionary<NSString *,id> * _Nullable ZM_UNUSED bindings) {
-        return [evaluatedObject isKindOfClass:[ZMSystemMessage class]] && [(ZMSystemMessage *)evaluatedObject systemMessageType] == ZMSystemMessageTypeNewConversation;
-    }]].array;
-    
-    XCTAssertEqual(messages.count, 0u);
 }
 
 @end
@@ -2281,7 +2222,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         [tracker objectsDidChange:[NSSet setWithObject:conversation]];
     }
     
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     XCTAssertNotNil(request);
     XCTAssertNotNil(request.expirationDate);
     
@@ -2355,13 +2296,13 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     ZMTransportResponse *response2 = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
     
     // when
-    ZMTransportRequest *request1 = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request1 = [self.sut nextRequest];
     [request1 completeWithResponse:response1];
     WaitForAllGroupsToBeEmpty(0.5);
-    ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request2 = [self.sut nextRequest];
     [request2 completeWithResponse:response2];
     WaitForAllGroupsToBeEmpty(0.5);
-    ZMTransportRequest *request3 = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request3 = [self.sut nextRequest];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.syncMOC saveOrRollback];
@@ -2420,7 +2361,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         
         // when
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2478,7 +2419,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         lastReadTimeStamp = [responsePayload dateForKey:@"time"];
 
         // when
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2567,7 +2508,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         
         // when
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -2619,7 +2560,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         XCTAssertNotNil(request.expirationDate);
         
@@ -2733,14 +2674,14 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         response = [ZMTransportResponse responseWithPayload:responsePayload HTTPStatus:200 transportSessionError:nil];
         
         // when
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
     __block ZMTransportRequest *request2;
     [self.syncMOC performGroupedBlockAndWait:^{
-        request2 = [self.sut.requestGenerators nextRequest];
+        request2 = [self.sut nextRequest];
         [request2 completeWithResponse:response];
     }];
     
@@ -2794,7 +2735,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         for (id<ZMContextChangeTracker> t in self.sut.contextChangeTrackers) {
             [t objectsDidChange:[NSSet setWithObject:conversation]];
         }
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNil(request);
@@ -2813,7 +2754,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertEqualObjects(conversation.keysThatHaveLocalModifications, [NSSet set]);
         XCTAssertTrue(conversation.isSelfAnActiveMember);
         XCTAssertTrue(conversation.needsToBeUpdatedFromBackend);
-        ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request2 = [self.sut nextRequest];
         XCTAssertNil(request2);
     }];
 }
@@ -2854,7 +2795,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:403 transportSessionError:nil];
         
         // when
-        request1 = [self.sut.requestGenerators nextRequest];
+        request1 = [self.sut nextRequest];
         [request1 completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -3078,10 +3019,10 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
             [tracker objectsDidChange:[NSSet setWithObject:syncConv]];
         }
         
-        request = [self.sut.requestGenerators nextRequest];
+        request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
-        request2 = [self.sut.requestGenerators nextRequest];
+        request2 = [self.sut nextRequest];
         
         // when
         response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
@@ -3539,7 +3480,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [[[accountStatus stub]
       andReturnValue: OCMOCK_VALUE((AccountState){AccountStateOldDeviceActiveAccount})] currentAccountState];
     
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC authenticationStatus:authStatusMock accountStatus:accountStatus syncStrategy:self.syncStrategy];
+    self.sut = (id) [[ZMConversationTranscoder alloc]  initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
 
     
     NSUUID *otherUserID = [NSUUID createUUID];

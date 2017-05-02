@@ -21,6 +21,8 @@
 @import WireUtilities;
 @import WireTransport;
 
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
+
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMCredentials+Internal.h"
@@ -38,54 +40,25 @@
 
 @implementation ZMPhoneNumberVerificationTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory;
 {
-    NOT_USED(moc);
-    RequireString(NO, "Do not use this init");
-    return nil;
-}
-
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-{
-    self = [super initWithManagedObjectContext:moc];
+    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatusDirectory];
     if (self) {
         self.codeRequestSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self managedObjectContext:moc];
         [self.codeRequestSync readyForNextRequest];
         
         self.codeVerificationSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self managedObjectContext:moc];
-        self.authenticationStatus = authenticationStatus;
+        self.authenticationStatus = applicationStatusDirectory.authenticationStatus;
     }
     return self;
 }
 
-- (void)setNeedsSlowSync;
+- (ZMStrategyConfigurationOption)configuration
 {
-    
+    return ZMStrategyConfigurationOptionAllowsRequestsWhileUnauthenticated;
 }
 
-- (void)processEvents:(NSArray<ZMUpdateEvent *> __unused *)events
-           liveEvents:(BOOL __unused)liveEvents
-       prefetchResult:(__unused ZMFetchRequestBatchResult *)prefetchResult;
-{
-    // no op
-}
-
-- (BOOL)isSlowSyncDone
-{
-    return YES;
-}
-
-- (NSArray *)contextChangeTrackers
-{
-    return [NSArray array];
-}
-
-- (NSArray *)requestGenerators
-{
-    return @[self];
-}
-
-- (ZMTransportRequest *)nextRequest
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
     ZMAuthenticationPhase currentAuthPhase  = self.authenticationStatus.currentPhase;
 

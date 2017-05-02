@@ -16,8 +16,19 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
+@class UserClient;
 
-@protocol ZMSyncStateDelegate <NSObject>
+
+
+@protocol ZMClientRegistrationStatusDelegate <NSObject>
+
+- (void)didRegisterUserClient:(UserClient *)userClient;
+
+@end
+
+
+
+@protocol ZMSyncStateDelegate <ZMClientRegistrationStatusDelegate>
 
 - (void)didStartSync;
 - (void)didFinishSync;

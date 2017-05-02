@@ -99,6 +99,7 @@ class MockAVSWrapper : AVSWrapperType {
 
 public class WireCallCenterV3Mock : WireCallCenterV3 {
     
+    public static var mockNonIdleCalls : [UUID : CallState] = [:]
     
     var mockMembers : [CallMember] {
         set {
@@ -145,6 +146,12 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     
     public override var callingProtocol: CallingProtocol {
         return overridenCallingProtocol
+    }
+    
+    public class override var nonIdleCalls : [UUID : CallState ] {
+        get {
+            return mockNonIdleCalls
+        }
     }
     
     public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext) {

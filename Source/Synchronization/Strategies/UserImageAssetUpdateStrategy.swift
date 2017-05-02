@@ -36,23 +36,21 @@ internal enum AssetTransportError: Error {
     }
 }
 
-@objc public final class UserImageAssetUpdateStrategy: NSObject {
+@objc public final class UserImageAssetUpdateStrategy: AbstractRequestStrategy {
     internal let requestFactory = AssetRequestFactory()
     internal var upstreamRequestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
     internal var downstreamRequestSyncs = [ProfileImageSize : ZMDownstreamObjectSyncWithWhitelist]()
     internal let moc: NSManagedObjectContext
     internal weak var imageUploadStatus: UserProfileImageUploadStatusProtocol?
-    internal let authenticationStatus: AuthenticationStatusProvider
     
-    @objc public convenience init(managedObjectContext: NSManagedObjectContext, imageUpdateStatus: UserProfileImageUpdateStatus, authenticationStatus: AuthenticationStatusProvider) {
-        self.init(managedObjectContext: managedObjectContext, imageUploadStatus: imageUpdateStatus, authenticationStatus: authenticationStatus)
+    @objc public convenience init(managedObjectContext: NSManagedObjectContext, applicationStatusDirectory: ApplicationStatusDirectory) {
+        self.init(managedObjectContext: managedObjectContext, applicationStatus: applicationStatusDirectory, imageUploadStatus: applicationStatusDirectory.userProfileImageUpdateStatus)
     }
 
-    internal init(managedObjectContext: NSManagedObjectContext, imageUploadStatus: UserProfileImageUploadStatusProtocol, authenticationStatus: AuthenticationStatusProvider) {
+    internal init(managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus, imageUploadStatus: UserProfileImageUploadStatusProtocol) {
         self.moc = managedObjectContext
         self.imageUploadStatus = imageUploadStatus
-        self.authenticationStatus = authenticationStatus
-        super.init()
+        super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         
         downstreamRequestSyncs[.preview] = whitelistUserImageSync(for: .preview)
         downstreamRequestSyncs[.complete] = whitelistUserImageSync(for: .complete)
@@ -117,12 +115,7 @@ internal enum AssetTransportError: Error {
         }
     }
     
-}
-
-extension UserImageAssetUpdateStrategy: RequestStrategy {
-    public func nextRequest() -> ZMTransportRequest? {
-        guard case .authenticated = authenticationStatus.currentPhase else { return nil }
-        
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         for size in ProfileImageSize.allSizes {
             let requestSync = downstreamRequestSyncs[size]
             if let request = requestSync?.nextRequest() {

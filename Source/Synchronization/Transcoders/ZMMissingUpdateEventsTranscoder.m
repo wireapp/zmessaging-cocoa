@@ -22,7 +22,7 @@
 @import WireRequestStrategy;
 
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import "ZMSyncStrategy.h"
+#import "ZMSyncStrategy+EventProcessing.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMSimpleListRequestPaginator.h"
 
@@ -41,6 +41,9 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 @property (nonatomic, weak) id <ZMApplication> application;
 @property (nonatomic) BackgroundAPNSPingBackStatus *pingbackStatus;
 @property (nonatomic) EventsWithIdentifier *notificationEventsToCancel;
+@property (nonatomic, weak) SyncStatus* syncStatus;
+@property (nonatomic, weak) ZMOperationStatus* operationStatus;
+@property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response;
 
@@ -53,17 +56,21 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 @implementation ZMMissingUpdateEventsTranscoder
 
+
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
 previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
                          application:(id <ZMApplication>)application
         backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus
+                          syncStatus:(SyncStatus *)syncStatus
 {
-    self = [super initWithManagedObjectContext:strategy.syncMOC];
+    self = [super initWithManagedObjectContext:strategy.syncMOC applicationStatus:strategy.applicationStatusDirectory];
     if(self) {
         _syncStrategy = strategy;
         self.application = application;
         self.previouslyReceivedEventIDsCollection = eventIDsCollection;
         self.pingbackStatus = backgroundAPNSPingbackStatus;
+        self.syncStatus = syncStatus;
+        self.operationStatus = strategy.applicationStatusDirectory.operationStatus;
         self.listPaginator = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:NotificationsPath
                                                                            startKey:StartKey
                                                                            pageSize:ZMMissingUpdateEventsTranscoderListPageSize
@@ -74,6 +81,11 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     return self;
 }
 
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsWhileInBackground;
+}
+
 - (BOOL)isDownloadingMissingNotifications
 {
     return self.listPaginator.hasMoreToFetch;
@@ -82,7 +94,13 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 - (BOOL)isFetchingStreamForAPNS
 {
     return self.application.applicationState == UIApplicationStateBackground &&
-           self.pingbackStatus.status == PingBackStatusInProgress;
+           self.pingbackStatus.status == PingBackStatusInProgress &&
+           self.pingbackStatus.hasNotificationIDs;
+}
+
+- (BOOL)isFetchingStreamInBackground
+{
+    return self.operationStatus.operationState == SyncEngineOperationStateBackgroundFetch;
 }
 
 - (NSUUID *)lastUpdateEventID
@@ -183,6 +201,21 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     return latestEventId;
 }
 
+- (void)updateBackgroundFetchResultWithResponse:(ZMTransportResponse *)response {
+    UIBackgroundFetchResult result;
+    if (response.result == ZMTransportResponseStatusSuccess) {
+        if ([self.class eventDictionariesFromPayload:response.payload].count > 0) {
+            result = UIBackgroundFetchResultNewData;
+        } else {
+            result = UIBackgroundFetchResultNoData;
+        }
+    } else {
+        result = UIBackgroundFetchResultFailed;
+    }
+    
+    [self.operationStatus finishBackgroundFetchWithFetchResult:result];
+}
+
 - (BOOL)hasLastUpdateEventID
 {
     return self.lastUpdateEventID != nil;
@@ -219,42 +252,43 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     }
 }
 
-- (BOOL)isSlowSyncDone
+- (ZMTransportRequest *)nextRequestIfAllowed
 {
-    return self.lastUpdateEventID != nil && !self.listPaginator.hasMoreToFetch;
-}
-
-- (void)setNeedsSlowSync
-{
-    // no op
-}
-
-- (ZMTransportRequest *)nextRequest
-{
-    BOOL fetchingStream = self.isFetchingStreamForAPNS;
-    BOOL hasNewNotification = self.pingbackStatus.hasNotificationIDs;
-    BOOL inProgress = self.listPaginator.status == ZMSingleRequestInProgress;
-
-    // We want to create a new request if we are either currently fetching the paginated stream
-    // or if we have a new notification ID that requires a pingback.
-    BOOL shouldCreateRequest = inProgress || hasNewNotification;
-
-    if (fetchingStream && shouldCreateRequest) {
+    BOOL fetchingStream = self.isFetchingStreamForAPNS || self.isFetchingStreamInBackground || self.isSyncing;
+    
+    // If we receive an APNS while fetching the notification stream we cancel the previous request
+    // and start another one.
+    if (self.pingbackStatus.hasNotificationIDs) {
         EventsWithIdentifier *newEvents = self.pingbackStatus.nextNotificationEventsWithID;
 
         if (nil != newEvents && ![newEvents isEqual:self.notificationEventsToCancel]) {
             self.notificationEventsToCancel = newEvents;
             [self.listPaginator resetFetching];
         }
-
-        if (nil != self.notificationEventsToCancel) {
-            ZMTransportRequest *request = self.listPaginator.nextRequest;
-            [request forceToVoipSession];
-            return request;
-        }
     }
 
-    return nil;
+    // We want to create a new request if we are either currently fetching the paginated stream
+    // or if we have a new notification ID that requires a pingback.
+    if (fetchingStream) {
+        if (self.listPaginator.status != ZMSingleRequestInProgress) {
+            [self.listPaginator resetFetching];
+        }
+        
+        ZMTransportRequest *request = [self.listPaginator nextRequest];
+        
+        if (self.notificationEventsToCancel != nil) {
+            [request forceToVoipSession];
+        }
+                
+        return request;
+    } else {
+        return nil;
+    }
+}
+
+- (BOOL)isSyncing
+{
+    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingMissedEvents;
 }
 
 - (NSArray <NSURLQueryItem *> *)additionalQueryItems
@@ -269,29 +303,55 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 @end
 
 
-
-
 @implementation ZMMissingUpdateEventsTranscoder (Pagination)
 
 - (NSUUID *)nextUUIDFromResponse:(ZMTransportResponse *)response forListPaginator:(ZMSimpleListRequestPaginator *)paginator
 {
     NOT_USED(paginator);
+    SyncStatus *syncStatus = self.syncStatus;
+    ZMOperationStatus *operationStatus = self.operationStatus;
     
     NSString *timestamp = ((NSString *) response.payload.asDictionary[@"time"]);
     if (timestamp) {
         [self updateServerTimeDeltaWithTimestamp:timestamp];
     }
     
-    NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
-    if (latestEventId != nil) {
-        self.lastUpdateEventID = latestEventId;
+    if (operationStatus.operationState == SyncEngineOperationStateBackgroundFetch) {
+        [self updateBackgroundFetchResultWithResponse:response];
     }
     
-    BOOL hasMore = ((NSNumber *) response.payload.asDictionary[@"has_more"]).boolValue;
-    if(!hasMore) {
+    NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
+    if (latestEventId != nil) {
+        if (response.HTTPStatus == 404 && self.isSyncing) {
+            // If we fail during quick sync we need to re-enter slow sync and should not store the lastUpdateEventID until after the slowSync has been completed
+            // Otherwise, if the device crashes or is restarted during slow sync, we lose the information that we need to perform a slow sync
+            [syncStatus updateLastUpdateEventIDWithEventID:latestEventId];
+            // TODO Sabine: What happens when we receive a 404 when we are fetching the notification for a push notification? In theory we would have to enter slow sync as well or at least not store the lastUpdateEventID until the next proper sync in the foreground
+        }
+        else {
+            self.lastUpdateEventID = latestEventId;
+        }
+    }
+    
+    if (!self.listPaginator.hasMoreToFetch) {
         [self.previouslyReceivedEventIDsCollection discardListOfAlreadyReceivedPushEventIDs];
     }
+    
     [self appendPotentialGapSystemMessageIfNeededWithResponse:response];
+    
+    if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing){
+        [syncStatus failCurrentSyncPhase];
+    }
+    
+    if (!self.listPaginator.hasMoreToFetch && self.lastUpdateEventID != nil && self.isSyncing) {
+        
+        // The fetch of the notification stream was initiated after the push channel was established
+        // so we must restart the fetching to be sure that we haven't missed any notifications.
+        if (syncStatus.pushChannelEstablishedDate.timeIntervalSinceReferenceDate < self.listPaginator.lastResetFetchDate.timeIntervalSinceReferenceDate) {
+            [syncStatus finishCurrentSyncPhase];
+        }
+    }
+    
     return self.lastUpdateEventID;
 }
 
@@ -300,9 +360,9 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     return self.lastUpdateEventID;
 }
 
-- (BOOL)shouldParseErrorResponseForStatusCode:(NSInteger)statusCode;
+- (BOOL)shouldParseErrorForResponse:(ZMTransportResponse *)response
 {
-    if (statusCode == 404) {
+    if (response.HTTPStatus == 404) {
         return YES;
     }
 

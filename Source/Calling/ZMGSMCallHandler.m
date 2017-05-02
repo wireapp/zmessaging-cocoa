@@ -23,12 +23,11 @@
 
 #import "ZMGSMCallHandler.h"
 #import "ZMCallStateLogger.h"
-#import "ZMSyncStateMachine.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConversationObjectID";
 
-@interface ZMGSMCallHandler ()
+@interface ZMGSMCallHandler () <ZMInitialSyncCompletionObserver>
 
 @property (nonatomic) NSManagedObjectContext *uiManagedObjectContext;
 @property (nonatomic) NSManagedObjectContext *syncManagedObjectContext;
@@ -71,7 +70,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
         self.callCenter.callEventHandler = self.callEventHandler;
         self.canUpdateCallState = NO;
         self.activeCallUIConversationObjectID = [self storedConversationInContext:self.syncManagedObjectContext].objectID;
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didFinishSync:) name:ZMApplicationDidEnterEventProcessingStateNotificationName object:nil];
+        [ZMUserSession addInitalSyncCompletionObserver:self];
     }
     return self;
 }
@@ -81,7 +80,7 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     self.tornDown = YES;
     self.callCenter.callEventHandler = nil;
     self.callCenter = nil;
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [ZMUserSession removeInitalSyncCompletionObserver:self];
 }
 
 - (void)dealloc
@@ -89,13 +88,13 @@ NSString *const ZMInterruptedCallConversationObjectIDKey = @"InterruptedCallConv
     Require(self.tornDown);
 }
 
-- (void)didFinishSync:(NSNotification *)note
+- (void)initialSyncCompleted:(NSNotification *)notification
 {
     if ([ZMUserSession useCallKit]) {
         return;
     }
 
-    NOT_USED(note);
+    NOT_USED(notification);
     self.canUpdateCallState = YES;
     
     [self.uiManagedObjectContext performGroupedBlock:^{

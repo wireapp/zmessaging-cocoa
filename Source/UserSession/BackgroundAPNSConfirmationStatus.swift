@@ -18,7 +18,7 @@
 
 import UIKit
 
-@objc open class BackgroundAPNSConfirmationStatus : NSObject {
+@objc open class BackgroundAPNSConfirmationStatus : NSObject, DeliveryConfirmationDelegate {
     
     /// Switch for sending delivery receipts
     public static let sendDeliveryReceipts : Bool = true

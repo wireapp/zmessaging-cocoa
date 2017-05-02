@@ -35,6 +35,9 @@
 /// Status of the underlying singleRequestTranscoder
 @property (nonatomic, readonly) ZMSingleRequestProgress status;
 
+/// Date of last call to `resetFetching`
+@property (nonatomic, readonly) NSDate *lastResetFetchDate;
+
 
 - (instancetype)initWithBasePath:(NSString *)basePath
                         startKey:(NSString *)startKey
@@ -64,7 +67,7 @@
 
 /// Returns YES, if the error response for a specific statusCode should be parsed (e.g. if the payload contains content that needs to be processed)
 @optional
-- (BOOL)shouldParseErrorResponseForStatusCode:(NSInteger)statusCode;
+- (BOOL)shouldParseErrorForResponse:(ZMTransportResponse*)response;
 
 /// Any additional query parameters the paginator should append to the request
 @property (nonatomic, readonly) NSArray <NSURLQueryItem *> * additionalQueryItems;

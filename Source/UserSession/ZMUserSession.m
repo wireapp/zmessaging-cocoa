@@ -26,7 +26,6 @@
 @import CoreTelephony;
 
 #import "ZMUserSession+Background.h"
-
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+OperationLoop.h"
 #import "ZMSyncStrategy.h"
@@ -38,14 +37,13 @@
 #import "ZMPushToken.h"
 #import "ZMCommonContactsSearch.h"
 #import "ZMBlacklistVerificator.h"
-#import "ZMSyncStateMachine.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "NSURL+LaunchOptions.h"
 #import "WireSyncEngineLogs.h"
 #import "ZMAVSBridge.h"
 #import "ZMOnDemandFlowManager.h"
 #import "ZMCookie.h"
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMCallKitDelegate.h"
 #import "ZMOperationLoop+Private.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
@@ -75,15 +73,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
-@property (nonatomic) ZMAuthenticationStatus *authenticationStatus;
-@property (nonatomic) UserProfileUpdateStatus *userProfileUpdateStatus;
-@property (nonatomic) ZMClientRegistrationStatus *clientRegistrationStatus;
-@property (nonatomic) ClientUpdateStatus *clientUpdateStatus;
-@property (nonatomic) BackgroundAPNSPingBackStatus *pingBackStatus;
-@property (nonatomic) ZMAccountStatus *accountStatus;
-@property (nonatomic) UserProfileImageUpdateStatus *profileImageUpdateStatus;
-
-@property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 
 @property (nonatomic) BOOL isVersionBlacklisted;
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
@@ -332,54 +321,29 @@ ZM_EMPTY_ASSERTING_INIT()
             self.syncManagedObjectContext.zm_userImageCache = userImageCache;
             self.syncManagedObjectContext.zm_fileAssetCache = fileAssetCache;
             
-            ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.syncManagedObjectContext cookieStorage:session.cookieStorage];
-            self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:syncManagedObjectContext cookie:cookie];
-            self.userProfileUpdateStatus = [[UserProfileUpdateStatus alloc] initWithManagedObjectContext:syncManagedObjectContext];
-            self.clientUpdateStatus = [[ClientUpdateStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext];
-            
-            self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:syncManagedObjectContext
-                                                                                     loginCredentialProvider:self.authenticationStatus
-                                                                                    updateCredentialProvider:self.userProfileUpdateStatus
-                                                                                                      cookie:cookie
-                                                                                  registrationStatusDelegate:self];
-            self.accountStatus = [[ZMAccountStatus alloc] initWithManagedObjectContext: syncManagedObjectContext cookieStorage: session.cookieStorage];
-            
-            
-            
             self.localNotificationDispatcher =
             [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext application:application];
             
-            self.pingBackStatus = [[BackgroundAPNSPingBackStatus alloc] initWithSyncManagedObjectContext:syncManagedObjectContext
-                                                                                  authenticationProvider:self.authenticationStatus];
-
-            self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
-                                                                                 managedObjectContext:syncManagedObjectContext];
+           self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
+                                                                                         userSession:self];
             
             self.transportSession = session;
-            self.transportSession.clientID = self.selfUserClient.remoteIdentifier;
+            self.transportSession.pushChannel.clientID = self.selfUserClient.remoteIdentifier;
             self.transportSession.networkStateDelegate = self;
             self.mediaManager = mediaManager;
             
             self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
-            self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
-            
-            self.profileImageUpdateStatus = [[UserProfileImageUpdateStatus alloc] initWithManagedObjectContext:self.syncManagedObjectContext];
         }];
-        
+
+
         _application = application;
         self.topConversationsDirectory = [[TopConversationsDirectory alloc] initWithManagedObjectContext:self.managedObjectContext];
         
         [self.syncManagedObjectContext performBlockAndWait:^{
     
+            ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.syncManagedObjectContext cookieStorage:session.cookieStorage];
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
-                                                                               authenticationStatus:self.authenticationStatus
-                                                                            userProfileUpdateStatus:self.userProfileUpdateStatus
-                                                                       userProfileImageUpdateStatus:self.profileImageUpdateStatus
-                                                                           clientRegistrationStatus:self.clientRegistrationStatus
-                                                                                 clientUpdateStatus:self.clientUpdateStatus
-                                                                               proxiedRequestStatus:self.proxiedRequestStatus
-                                                                                      accountStatus:self.accountStatus
-                                                                       backgroundAPNSPingBackStatus:self.pingBackStatus
+                                                                                             cookie:cookie
                                                                         localNotificationdispatcher:self.localNotificationDispatcher
                                                                                        mediaManager:mediaManager
                                                                                 onDemandFlowManager:self.onDemandFlowManager
@@ -414,10 +378,6 @@ ZM_EMPTY_ASSERTING_INIT()
 
         self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithSharedContainerURL:self.sharedContainerURL];
         
-        ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self
-                                                                           selector:@selector(didEnterEventProcessingState:)
-                                                                               name:ZMApplicationDidEnterEventProcessingStateNotificationName
-                                                                             object:nil]);
         if ([self.class useCallKit]) {
             CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[ZMCallKitDelegate providerConfiguration]];
             CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
@@ -438,7 +398,10 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     [self.application unregisterObserverForStateChange:self];
     self.mediaManager = nil;
+    self.callStateObserver = nil;
     [self.operationLoop tearDown];
+    self.operationLoop = nil;
+    
     [self.localNotificationDispatcher tearDown];
     self.localNotificationDispatcher = nil;
     [self.blackList teardown];
@@ -447,13 +410,6 @@ ZM_EMPTY_ASSERTING_INIT()
         [self.transportSession tearDown];
         self.transportSession = nil;
     }
-    [self.clientUpdateStatus tearDown];
-    self.clientUpdateStatus = nil;
-    [self.clientRegistrationStatus tearDown];
-    self.clientRegistrationStatus = nil;
-    self.authenticationStatus = nil;
-    self.userProfileUpdateStatus = nil;
-    self.proxiedRequestStatus = nil;
     
     __block NSMutableArray *keysToRemove = [NSMutableArray array];
     [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
@@ -725,6 +681,11 @@ ZM_EMPTY_ASSERTING_INIT()
     return self.onDemandFlowManager.flowManager;
 }
 
+- (ZMOperationStatus *)operationStatus
+{
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus;
+}
+
 @end
 
 
@@ -878,7 +839,13 @@ ZM_EMPTY_ASSERTING_INIT()
         self.isPerformingSync = NO;
         [self changeNetworkStateAndNotify];
         [self notifyThirdPartyServices];
+        [self processPendingNotificationActions];
     }];
+}
+
+- (void)didRegisterUserClient:(UserClient *)userClient
+{
+    self.transportSession.pushChannel.clientID = userClient.remoteIdentifier;
 }
 
 @end
@@ -1056,12 +1023,38 @@ static CallingProtocolStrategy ZMUserSessionCallingProtocolStrategy = CallingPro
 
 @end
 
-@implementation ZMUserSession (ClientRegistrationStatus)
 
-- (void)didRegisterUserClient:(UserClient *)userClient
+
+@implementation ZMUserSession (AuthenticationStatus)
+
+- (ZMAuthenticationStatus *)authenticationStatus;
 {
-    self.transportSession.clientID = userClient.remoteIdentifier;
-    [self.transportSession restartPushChannel];
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.authenticationStatus;
+}
+
+- (UserProfileUpdateStatus *)userProfileUpdateStatus;
+{
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.userProfileUpdateStatus;
+}
+
+- (ZMClientRegistrationStatus *)clientRegistrationStatus;
+{
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.clientRegistrationStatus;
+}
+
+- (ClientUpdateStatus *)clientUpdateStatus;
+{
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.clientUpdateStatus;
+}
+
+- (ZMAccountStatus *)accountStatus;
+{
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.accountStatus;
+}
+
+- (ProxiedRequestsStatus *)proxiedRequestStatus;
+{
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.proxiedRequestStatus;
 }
 
 @end
@@ -1070,7 +1063,7 @@ static CallingProtocolStrategy ZMUserSessionCallingProtocolStrategy = CallingPro
 
 - (id<UserProfileImageUpdateProtocol>)profileUpdate
 {
-    return self.profileImageUpdateStatus;
+    return self.operationLoop.syncStrategy.applicationStatusDirectory.userProfileImageUpdateStatus;
 }
 
 @end

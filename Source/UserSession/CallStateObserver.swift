@@ -23,12 +23,17 @@ import CoreData
 @objc(ZMCallStateObserver)
 public final class CallStateObserver : NSObject {
     
+    static public let CallInProgressNotification = Notification.Name(rawValue: "ZMCallInProgressNotification")
+    static public let CallInProgressKey = "callInProgress"
+    
+    fileprivate weak var userSession: ZMUserSession?
     fileprivate let localNotificationDispatcher : LocalNotificationDispatcher
     fileprivate let syncManagedObjectContext : NSManagedObjectContext
     fileprivate var callStateToken : WireCallCenterObserverToken? = nil
     fileprivate var missedCalltoken : WireCallCenterObserverToken? = nil
     fileprivate let systemMessageGenerator = CallSystemMessageGenerator()
-    
+    fileprivate var voiceChannelStatetoken : WireCallCenterObserverToken? = nil
+
     deinit {
         if let token = callStateToken {
             WireCallCenterV3.removeObserver(token: token)
@@ -38,13 +43,24 @@ public final class CallStateObserver : NSObject {
         }
     }
     
-    public init(localNotificationDispatcher : LocalNotificationDispatcher, managedObjectContext: NSManagedObjectContext) {
+    public init(localNotificationDispatcher : LocalNotificationDispatcher, userSession: ZMUserSession) {
+        self.userSession = userSession
         self.localNotificationDispatcher = localNotificationDispatcher
-        self.syncManagedObjectContext = managedObjectContext
+        self.syncManagedObjectContext = userSession.syncManagedObjectContext
+        
         super.init()
         
         self.callStateToken = WireCallCenterV3.addCallStateObserver(observer: self)
         self.missedCalltoken = WireCallCenterV3.addMissedCallObserver(observer: self)
+        self.voiceChannelStatetoken = WireCallCenter.addVoiceChannelStateObserver(observer: self, context: userSession.managedObjectContext)
+    }
+    
+    fileprivate var callInProgress : Bool = false {
+        didSet {
+            if callInProgress != oldValue {
+                NotificationCenter.default.post(name: CallStateObserver.CallInProgressNotification, object: nil, userInfo: [ CallStateObserver.CallInProgressKey : callInProgress ])
+            }
+        }
     }
     
 }
@@ -52,7 +68,6 @@ public final class CallStateObserver : NSObject {
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
-        notifyIfWebsocketShouldBeOpen(forCallState: callState)
         
         syncManagedObjectContext.performGroupedBlock {
             guard
@@ -119,19 +134,22 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             self.syncManagedObjectContext.enqueueDelayedSave()
         }
     }
+
+}
+
+extension CallStateObserver : VoiceChannelStateObserver {
     
-    private func notifyIfWebsocketShouldBeOpen(forCallState callState: CallState) {
-        
-        let notificationName = Notification.Name(rawValue: ZMTransportSessionShouldKeepWebsocketOpenNotificationName)
-        
-        switch callState {
-        case .terminating:
-            NotificationCenter.default.post(name: notificationName, object: nil, userInfo: [ZMTransportSessionShouldKeepWebsocketOpenKey : false])
-        case .outgoing, .incoming:
-            NotificationCenter.default.post(name: notificationName, object: nil, userInfo: [ZMTransportSessionShouldKeepWebsocketOpenKey : true])
-        default:
-            break
-        }
+    public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
+        guard let userSession = userSession else { return }
+        callInProgress = WireCallCenter.nonIdleCallConversations(inUserSession: userSession).count > 0
+    }
+    
+    public func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation) {
+        // no-op
+    }
+    
+    public func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol) {
+        // no-op
     }
     
     func updateLastModifiedDate(callState: CallState, in conversation: ZMConversation, timeStamp: Date?) {

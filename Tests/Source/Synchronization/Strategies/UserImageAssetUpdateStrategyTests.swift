@@ -51,16 +51,18 @@ class MockImageUpdateStatus: WireSyncEngine.UserProfileImageUploadStatusProtocol
 class UserImageAssetUpdateStrategyTests : MessagingTest {
     
     var sut: WireSyncEngine.UserImageAssetUpdateStrategy!
-    var authenticationStatus: MockAuthenticationStatus!
+    var mockApplicationStatus : MockApplicationStatus!
     var updateStatus: MockImageUpdateStatus!
     
     override func setUp() {
         super.setUp()
-        self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
+        self.mockApplicationStatus = MockApplicationStatus()
+        self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
         self.updateStatus = MockImageUpdateStatus()
-        self.sut = WireSyncEngine.UserImageAssetUpdateStrategy(managedObjectContext: syncMOC,
-                                                              imageUploadStatus: updateStatus,
-                                                           authenticationStatus: authenticationStatus)
+        
+        sut = UserImageAssetUpdateStrategy(managedObjectContext: syncMOC,
+                                           applicationStatus: mockApplicationStatus,
+                                           imageUploadStatus: updateStatus)
         
         self.syncMOC.zm_userImageCache = UserImageLocalCache()
         self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache
@@ -82,7 +84,7 @@ extension UserImageAssetUpdateStrategyTests {
         // WHEN
         updateStatus.dataToConsume[.preview] = Data()
         updateStatus.dataToConsume[.complete] = Data()
-        authenticationStatus.mockPhase = .unauthenticated
+        mockApplicationStatus.mockSynchronizationState = .unauthenticated
         
         // THEN
         XCTAssertNil(sut.nextRequest())

@@ -26,6 +26,7 @@
 #import "ZMOperationLoop.h"
 #import "ZMSimpleListRequestPaginator.h"
 #import "ZMNotifications+UserSessionInternal.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *const PathConnections = @"/connections";
 
@@ -36,8 +37,11 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 @property (nonatomic) ZMUpstreamModifiedObjectSync *modifiedObjectSync;
 @property (nonatomic) ZMUpstreamInsertedObjectSync *insertedObjectSync;
 @property (nonatomic) ZMDownstreamObjectSync *downstreamSync;
-
 @property (nonatomic) ZMSimpleListRequestPaginator *conversationsListSync;
+
+@property (nonatomic, weak) SyncStatus *syncStatus;
+@property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
+
 @end
 
 
@@ -49,10 +53,11 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 
 @implementation ZMConnectionTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatus:(id<ZMApplicationStatus>)applicationStatus syncStatus:(SyncStatus *)syncStatus;
 {
-    self = [super initWithManagedObjectContext:moc];
+    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatus];
     if(self) {
+        self.syncStatus = syncStatus;
         self.modifiedObjectSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self entityName:ZMConnection.entityName managedObjectContext:self.managedObjectContext];
         self.insertedObjectSync = [[ZMUpstreamInsertedObjectSync alloc] initWithTranscoder:self entityName:ZMConnection.entityName managedObjectContext:self.managedObjectContext];
         self.conversationsListSync = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:PathConnections startKey:@"start" pageSize:ZMConnectionTranscoderPageSize  managedObjectContext:moc includeClientID:NO transcoder:self];
@@ -61,14 +66,25 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     return self;
 }
 
-- (void)setNeedsSlowSync
+- (ZMStrategyConfigurationOption)configuration
 {
-    [self.conversationsListSync resetFetching];
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
-- (BOOL)isSlowSyncDone {
-    return ! self.conversationsListSync.hasMoreToFetch;
+- (BOOL)isSyncing
+{
+    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingConnections;
 }
+
+- (ZMTransportRequest *)nextRequestIfAllowed
+{
+    if (self.isSyncing && !self.conversationsListSync.hasMoreToFetch) {
+        [self.conversationsListSync resetFetching];
+    }
+    
+    return [self.requestGenerators nextRequest];
+}
+
 
 - (NSArray *)contextChangeTrackers
 {
@@ -77,10 +93,11 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 
 - (NSArray *)requestGenerators;
 {
-    if (! self.isSlowSyncDone) {
+    if (self.isSyncing) {
         return @[self.conversationsListSync, self.insertedObjectSync, self.modifiedObjectSync];
+    } else {
+        return @[self.conversationsListSync, self.downstreamSync, self.insertedObjectSync, self.modifiedObjectSync];
     }
-    return @[self.conversationsListSync, self.downstreamSync, self.insertedObjectSync, self.modifiedObjectSync];
 }
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> *)events
@@ -295,7 +312,24 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
             [allUIDs addObject:connection.to.remoteIdentifier];
         }
     }
+    
+    SyncStatus *syncStatus = self.syncStatus;
+    
+    if (!self.conversationsListSync.hasMoreToFetch && self.isSyncing) {
+        [syncStatus finishCurrentSyncPhase];
+    }
+    
     return allUIDs.lastObject;
+}
+
+- (BOOL)shouldParseErrorForResponse:(ZMTransportResponse*)response
+{
+    SyncStatus *syncStatus = self.syncStatus;
+    
+    if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
+        [syncStatus failCurrentSyncPhase];
+    }
+    return NO;
 }
 
 @end

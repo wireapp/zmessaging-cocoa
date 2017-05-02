@@ -93,8 +93,6 @@
     if (conv.callParticipants.count <= 2) {
         [self resetCallState];
     }
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportSessionShouldKeepWebsocketOpenNotificationName object:self userInfo:@{ZMTransportSessionShouldKeepWebsocketOpenKey: @NO}];
 }
 
 + (NSComparator)conferenceComparator
@@ -144,12 +142,6 @@
     
     NSMutableOrderedSet *participants = [conversation mutableOrderedSetValueForKey:ZMConversationCallParticipantsKey];
     [participants removeObject:participant];
-    
-    if (participant.isSelfUser) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportSessionShouldKeepWebsocketOpenNotificationName
-                                                            object:self
-                                                          userInfo:@{ZMTransportSessionShouldKeepWebsocketOpenKey: @NO}];
-    }
     
     if (participants.count > 0) {
         [self reSortCallParticipants:participants];
@@ -223,10 +215,6 @@
         }];
         return NO;
     }
-    
-    [conv.managedObjectContext.zm_userInterfaceContext performGroupedBlock: ^{
-        [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportSessionShouldKeepWebsocketOpenNotificationName object:self userInfo:@{ZMTransportSessionShouldKeepWebsocketOpenKey: @YES}];
-    }];
     
     if(!conv.callDeviceIsActive) {
         [ZMUserSession appendAVSLogMessageForConversation:conv withMessage:@"Self user wants to join voice channel"];

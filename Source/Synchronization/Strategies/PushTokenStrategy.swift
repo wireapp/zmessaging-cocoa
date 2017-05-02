@@ -26,7 +26,7 @@ private let zmLog = ZMSLog(tag: "Push")
 
 extension ZMSingleRequestSync : ZMRequestGenerator {}
 
-public class PushTokenStrategy : NSObject, ZMSingleRequestTranscoder, ZMRequestGenerator {
+public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTranscoder {
     
     fileprivate var applicationTokenSync : ZMSingleRequestSync!
     fileprivate var applicationTokenDeletionSync : ZMSingleRequestSync!
@@ -37,14 +37,9 @@ public class PushTokenStrategy : NSObject, ZMSingleRequestTranscoder, ZMRequestG
     var allRequestGenerators : [ZMRequestGenerator] {
         return [applicationTokenSync, pushKitTokenSync, applicationTokenDeletionSync, pushKitTokenDeletionSync]
     }
-    
-    fileprivate unowned var managedObjectContext : NSManagedObjectContext
-    fileprivate unowned var clientRegistrationDelegate : ClientRegistrationDelegate
-    
-    public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate) {
-        self.managedObjectContext = managedObjectContext
-        self.clientRegistrationDelegate = clientRegistrationDelegate
-        super.init()
+
+    public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+        super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         self.applicationTokenSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.applicationTokenDeletionSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.pushKitTokenSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
@@ -70,8 +65,7 @@ public class PushTokenStrategy : NSObject, ZMSingleRequestTranscoder, ZMRequestG
         }
     }
 
-    public func nextRequest() -> ZMTransportRequest? {
-        guard clientRegistrationDelegate.clientIsReadyForRequests else { return nil }
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         for generator in allRequestGenerators {
             if let request = generator.nextRequest() {
                 return request

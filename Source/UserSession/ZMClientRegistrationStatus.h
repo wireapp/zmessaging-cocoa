@@ -14,8 +14,10 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
-// 
+//
 
+@import WireMessageStrategy;
+#import "ZMSyncStateDelegate.h"
 
 @class ZMCredentials;
 @class UserClient;
@@ -24,8 +26,6 @@
 @class ZMCookie;
 
 @protocol ZMCredentialProvider;
-
-
 
 
 typedef NS_ENUM(NSUInteger, ZMClientRegistrationPhase) {
@@ -55,26 +55,7 @@ typedef NS_ENUM(NSUInteger, ZMClientRegistrationPhase) {
 extern NSString *const ZMPersistedClientIdKey;
 
 
-@protocol ZMClientRegistrationStatusDelegate <NSObject>
-
-- (void)didRegisterUserClient:(UserClient *)userClient;
-
-@end
-
-
-@protocol ZMClientClientRegistrationStatusProvider <NSObject>
-
-/// Whether the current client is ready to use
-@property (nonatomic, readonly) BOOL clientIsReadyForRequests;
-
-/// Notify that the current client was deleted remotely
-- (void)didDetectCurrentClientDeletion;
-
-@end
-
-
-
-@interface ZMClientRegistrationStatus : NSObject <ZMClientClientRegistrationStatusProvider>
+@interface ZMClientRegistrationStatus : NSObject <ClientRegistrationDelegate>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                      loginCredentialProvider:(id<ZMCredentialProvider>) loginCredentialProvider
@@ -91,6 +72,7 @@ extern NSString *const ZMPersistedClientIdKey;
 - (void)didFailToRegisterClient:(NSError *)error;
 
 - (void)didDetectCurrentClientDeletion;
+- (BOOL)clientIsReadyForRequests;
 
 - (void)tearDown;
 

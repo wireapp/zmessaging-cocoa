@@ -23,12 +23,16 @@
 #import "ObjectTranscoderTests.h"
 #import "ZMConnectionTranscoder+Internal.h"
 #import "ZMSimpleListRequestPaginator.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface ZMConnectionTranscoderTest : ObjectTranscoderTests
 
 @property (nonatomic) ZMConnectionTranscoder *sut;
 @property (nonatomic) ZMConnection *connection;
 @property (nonatomic) ZMUser *user;
+@property (nonatomic) MockSyncStatus *mockSyncStatus;
+@property (nonatomic) ZMMockClientRegistrationStatus *mockClientRegistrationDelegate;
+@property (nonatomic) id syncStateDelegate;
 
 - (NSMutableDictionary *)connectionPayloadForConversationID:(NSUUID *)conversationID fromID:(NSUUID *)fromID toID:(NSUUID *)toID status:(NSString *)status;
 
@@ -41,13 +45,20 @@
 - (void)setUp
 {
     [super setUp];
-    self.sut = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC];
+    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
+    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
+    self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
+    self.mockSyncStatus.mockPhase = SyncPhaseDone;
+    
+    
+    self.mockClientRegistrationDelegate = [[ZMMockClientRegistrationStatus alloc] init];
+    self.sut = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)tearDown
 {
-    [self.sut tearDown];
+    [self.mockClientRegistrationDelegate tearDown];
     self.sut = nil;
     [super tearDown];
 }
@@ -91,8 +102,7 @@
 - (void)testThatItDoesNotProcessDownstreamRequestsDuringSlowSync;
 {
     // given
-    [self.sut setNeedsSlowSync];
-    XCTAssertFalse(self.sut.isSlowSyncDone);
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
 
     // when
     NSArray *generators = self.sut.requestGenerators;
@@ -119,20 +129,14 @@
     XCTAssertEqualObjects(classes, expected);
 }
 
-- (void)testThatIsSlowSyncDoneIsTrueAtCreation
-{
-    XCTAssertTrue(self.sut.isSlowSyncDone);
-}
-
 - (void)testThatWhenSlowSyncIsNotDoneRequestIsGenerated
 {
     // given
-    [self.sut setNeedsSlowSync];
-    XCTAssertFalse([self.sut isSlowSyncDone]);
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
     
     // when
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-    
+    ZMTransportRequest *request = [self.sut nextRequest];
+
     // then
     XCTAssertNotNil(request);
     NSString *expectedPath = [NSString stringWithFormat:@"/connections?size=%u",(unsigned int)ZMConnectionTranscoderPageSize];
@@ -140,80 +144,80 @@
     XCTAssertEqual(request.method, ZMMethodGET);
 }
 
-- (void)testThatASuccessfulResponseWithHasMore_NO_SetsIsSlowSyncDone
+- (void)testThatASuccessfulResponseWithHasMore_NO_DoesFinishSyncPhase
 {
     // given
     NSDictionary *payload = [self validPayloadWithHasMore:NO];
-    [self.sut setNeedsSlowSync];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // when
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertTrue([self.sut isSlowSyncDone]);
+    XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
-- (void)testThatASuccessfulResponseWithHasMore_YES_DoesNotSetIsSlowSyncDone
+- (void)testThatASuccessfulResponseWithHasMore_YES_DoesNotFinishSyncPhase
 {
     // given
     NSDictionary *payload = [self validPayloadWithHasMore:YES];
-    [self.sut setNeedsSlowSync];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // when
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertFalse([self.sut isSlowSyncDone]);
+    XCTAssertFalse(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
 - (void)testThatAfterASuccessfulSlowSyncNoRequestIsGenerated
 {
     // given
     NSDictionary *payload = [self validPayloadWithHasMore:NO];
-    [self.sut setNeedsSlowSync];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // We need to complete the request to switch hard sync to done
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // when
-    request = [self.sut.requestGenerators nextRequest];
+    request = [self.sut nextRequest];
     
     // then
     XCTAssertNil(request);
-    XCTAssertTrue([self.sut isSlowSyncDone]);
+    XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
 - (void)testThatATemporaryFailedRequestDoesNotSetIsSlowSyncDone
 {
     // given
-    [self.sut setNeedsSlowSync];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // when
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPStatus:500 transportSessionError:nil]];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertFalse([self.sut isSlowSyncDone]);
+    XCTAssertFalse(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
 
 - (void)testThatWeCanSendAnotherRequestAfterARequestTemporarilyFailed
 {
     // given
-    [self.sut setNeedsSlowSync];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
+    ZMTransportRequest *request = [self.sut nextRequest];
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPStatus:500 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request2 = [self.sut nextRequest];
     
     // then
     XCTAssertNotNil(request2);
@@ -222,73 +226,73 @@
 - (void)testThatWhileSlowSyncIsInProgressNoRequestIsGenerated
 {
     // given
-    [self.sut setNeedsSlowSync];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest]; // this should mark hard sync as in progress
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
+    ZMTransportRequest *request = [self.sut nextRequest]; // this should mark hard sync as in progress
     
     // when
-    request = [self.sut.requestGenerators nextRequest];
+    request = [self.sut nextRequest];
     
     // then
     XCTAssertNil(request);
-    XCTAssertFalse([self.sut isSlowSyncDone]);
+    XCTAssertFalse(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
 
 - (void)testThatAfterASlowSyncIsDoneANewSlowSyncCanBeStarted
 {
     // given
-    [self.sut setNeedsSlowSync];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
+    ZMTransportRequest *request = [self.sut nextRequest];
     NSDictionary *payload = [self validPayloadWithHasMore:NO];
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
 
-    [self.sut setNeedsSlowSync];
-
     // when
-    ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request2 = [self.sut nextRequest];
+    XCTAssertNotEqual(self.mockSyncStatus.currentSyncPhase, SyncPhaseFetchingConnections);
+    XCTAssertNil(request2);
+    
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
+    ZMTransportRequest *request3 = [self.sut nextRequest];
 
     // then
-    XCTAssertNotNil(request2);
+    XCTAssertNotNil(request3);
 }
-
 
 - (void)testThatWeCanGetANewRequestAfterAFailedSlowSyncRequest
 {
     // given
-    [self.sut setNeedsSlowSync];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
-
-    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPStatus:403 transportSessionError:nil]];
-    WaitForAllGroupsToBeEmpty(0.5);
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
+    ZMTransportRequest *request = [self.sut nextRequest];
 
     // when
-    [self.sut setNeedsSlowSync];
-    ZMTransportRequest *request2 = [self.sut.requestGenerators nextRequest];
+    [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPStatus:403 transportSessionError:nil]];
+    WaitForAllGroupsToBeEmpty(0.5);
+    ZMTransportRequest *request2 = [self.sut nextRequest];
 
     // then
     XCTAssertNotNil(request2);
 }
 
 
-- (void)testThatTheHardSyncIsMarkedAsDoneAfterAFailedSlowSyncRequest
+- (void)testThatTheCurrentSyncPhaseFailsAfterAFailedSlowSyncRequest
 {
     // given
-    [self.sut setNeedsSlowSync];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // when
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:@[] HTTPStatus:403 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue(self.sut.isSlowSyncDone);
+    XCTAssertTrue(self.mockSyncStatus.didCallFailCurrentSyncPhase);
 }
 
 - (void)testThatConnectionsAreParsedFromASuccessfulResponse
 {
     // given
-    [self.sut setNeedsSlowSync];
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingConnections;
     NSDictionary *payload = [self validPayloadWithHasMore:NO];
 
 
@@ -298,14 +302,13 @@
         connectionByToField[ [to UUID] ] = connection;
     }
     
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // when
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertTrue([self.sut isSlowSyncDone]);
 
     [self.syncMOC performBlockAndWait:^{
         __block NSUInteger index = 0;
@@ -777,7 +780,7 @@
     
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         
         // then
         XCTAssertNotNil(request);
@@ -813,7 +816,7 @@
     NSString *newMessage = @"Ut enim ad minima veniam.";
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
@@ -839,7 +842,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.syncMOC performGroupedBlockAndWait:^{
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNil(request, @"Done updating");
     }];
 }
@@ -874,7 +877,7 @@
     
     // then
     [self.syncMOC performGroupedBlockAndWait:^{
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         NSString *expectedPath = [NSString pathWithComponents:@[@"/connections"]];
@@ -917,7 +920,7 @@
     
     // and when
     [self.syncMOC performGroupedBlockAndWait:^{
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         NSMutableDictionary *payload = [self connectionPayloadForConversationID:[NSUUID createUUID] fromID:selfUser.remoteIdentifier toID:user.remoteIdentifier status:@"accepted"];
@@ -1007,7 +1010,7 @@
     
     // and when
     [self.syncMOC performGroupedBlockAndWait:^{
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         
         NSMutableDictionary *payload = [self connectionPayloadForConversationID:connectionID fromID:selfUserID toID:user.remoteIdentifier status:@"accepted"];
@@ -1086,7 +1089,7 @@
     
     // when
     [self.syncMOC performGroupedBlockAndWait:^{
-        ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+        ZMTransportRequest *request = [self.sut nextRequest];
         XCTAssertNotNil(request);
         NSDictionary *payload = @{@"label": @"connection-limit"};
         
@@ -1280,7 +1283,7 @@
         // when
         ZMTransportRequest *request;
         do {
-            request = [self.sut.requestGenerators nextRequest];
+            request = [self.sut nextRequest];
             if (request == nil) {
                 break;
             }

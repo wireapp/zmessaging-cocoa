@@ -20,6 +20,7 @@
 #import "ZMUserSessionTestsBase.h"
 #import "ZMUserSession+Authentication.h"
 #import "ZMAuthenticationStatus+Testing.h"
+#import "ZMClientRegistrationStatus.h"
 
 @interface ZMUserSessionAuthenticationTests : ZMUserSessionTestsBase
 

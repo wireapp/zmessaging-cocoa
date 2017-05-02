@@ -32,6 +32,8 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 @interface ZMUserTranscoder ()
 
 @property (nonatomic) ZMRemoteIdentifierObjectSync *remoteIDObjectSync;
+@property (nonatomic, weak) SyncStatus *syncStatus;
+@property (nonatomic) BOOL didStartSyncing;
 
 @end
 
@@ -45,15 +47,23 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 @implementation ZMUserTranscoder
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
+                                  syncStatus:(SyncStatus *)syncStatus;
 {
-    self = [super initWithManagedObjectContext:moc];
+    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatus];
     if (self) {
+        self.syncStatus = syncStatus;
         self.remoteIDObjectSync = [[ZMRemoteIdentifierObjectSync alloc] initWithTranscoder:self managedObjectContext:self.managedObjectContext];
     }
     return self;
 }
 
-- (void)setNeedsSlowSync
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
+}
+
+- (void)downloadAllConnectedUsers
 {
     NSArray *users = [self fetchConnectedUsersInContext:self.managedObjectContext];
     NSMutableSet *userIds = [NSMutableSet set];
@@ -62,7 +72,6 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
             [userIds addObject:user.remoteIdentifier];
         }
     }
-    
     
     // also self
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
@@ -73,9 +82,19 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
     [self.remoteIDObjectSync addRemoteIdentifiersThatNeedDownload:userIds];
 }
 
-- (NSArray *)contextChangeTrackers
+- (BOOL)isSyncing
 {
-    return @[self];
+    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingUsers;
+}
+
+- (ZMTransportRequest *)nextRequestIfAllowed
+{
+    if (self.isSyncing && !self.didStartSyncing) {
+        self.didStartSyncing = YES; // TODO expose a `in progress` status on `ZMRemoteIdentifierObjectSync` to remove this boolean
+        [self downloadAllConnectedUsers];
+    }
+    
+    return [self.requestGenerators nextRequest];
 }
 
 - (NSArray *)requestGenerators;
@@ -83,9 +102,9 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
     return @[self.remoteIDObjectSync];
 }
 
-- (BOOL)isSlowSyncDone
+- (NSArray *)contextChangeTrackers
 {
-    return self.remoteIDObjectSync.isDone;
+    return @[self];
 }
 
 - (NSFetchRequest *)fetchRequestForTrackedObjects
@@ -235,7 +254,8 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 - (void)didReceiveResponse:(ZMTransportResponse *)response remoteIdentifierObjectSync:(ZMRemoteIdentifierObjectSync *)sync forRemoteIdentifiers:(NSSet *)remoteIdentifiers;
 {
     NOT_USED(sync);
-    NOT_USED(remoteIdentifiers);
+    
+    SyncStatus *syncStatus = self.syncStatus;
     
     switch(response.result) {
         case ZMTransportResponseStatusSuccess:
@@ -244,11 +264,20 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
             if (userPayload != nil) {
                 [self updateUsersFromPayload:userPayload expectedRemoteIdentifiers:remoteIdentifiers];
             }
+            
+            if (self.remoteIDObjectSync.isDone && self.isSyncing) {
+                self.didStartSyncing = NO;
+                [syncStatus finishCurrentSyncPhase];
+            }
             break;
         }
         case ZMTransportResponseStatusPermanentError:
         {
             [self updateUsersFromPayload:nil expectedRemoteIdentifiers:remoteIdentifiers];
+            if (self.isSyncing) {
+                self.didStartSyncing = NO;
+                [syncStatus failCurrentSyncPhase];
+            }
             break;
         }
         case ZMTransportResponseStatusTemporaryError:

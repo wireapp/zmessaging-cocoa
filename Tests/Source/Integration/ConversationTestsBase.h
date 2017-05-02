@@ -23,7 +23,6 @@
 
 #import "ZMUserSession.h"
 #import "IntegrationTestBase.h"
-#import "ZMTestNotifications.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMConversationTranscoder+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>

@@ -21,24 +21,19 @@ import Foundation
 import WireTransport
 
 /// Requests the account deletion
-@objc public final class DeleteAccountRequestStrategy: NSObject, RequestStrategy, ZMSingleRequestTranscoder {
+@objc public final class DeleteAccountRequestStrategy: AbstractRequestStrategy, ZMSingleRequestTranscoder {
 
     fileprivate static let path: String = "/self"
     public static let userDeletionInitiatedKey: String = "ZMUserDeletionInitiatedKey"
-    
     fileprivate(set) var deleteSync: ZMSingleRequestSync! = nil
-    /// The managed object context to operate on
-    fileprivate let managedObjectContext: NSManagedObjectContext
-    fileprivate let authStatus: ZMAuthenticationStatus
     
-    public init(authStatus: ZMAuthenticationStatus, managedObjectContext: NSManagedObjectContext) {
-        self.authStatus = authStatus
-        self.managedObjectContext = managedObjectContext
-        super.init()
+    public override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+        super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
+        self.configuration = [.allowsRequestsDuringSync, .allowsRequestsWhileUnauthenticated, .allowsRequestsDuringEventProcessing]
         self.deleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: self.managedObjectContext)
     }
     
-    public func nextRequest() -> ZMTransportRequest? {
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         guard let shouldBeDeleted : NSNumber = self.managedObjectContext.persistentStoreMetadata(forKey: DeleteAccountRequestStrategy.userDeletionInitiatedKey) as? NSNumber
             , shouldBeDeleted.boolValue
         else {

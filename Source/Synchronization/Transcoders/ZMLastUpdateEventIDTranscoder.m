@@ -29,25 +29,30 @@
 @property (nonatomic) ZMSingleRequestSync *lastUpdateEventIDSync;
 @property (nonatomic, weak) id<ZMObjectStrategyDirectory> directory;
 @property (nonatomic) NSUUID *lastUpdateEventID;
+@property (nonatomic, weak) SyncStatus *syncStatus;
+
 @end
 
 
 @implementation ZMLastUpdateEventIDTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc {
-    NOT_USED(moc);
-    RequireString(NO, "Use the other init");
-    return nil;
-}
-
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc objectDirectory:(id<ZMObjectStrategyDirectory>)directory;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
+                                  syncStatus:(SyncStatus *)syncStatus
+                             objectDirectory:(id<ZMObjectStrategyDirectory>)directory;
 {
-    self = [super initWithManagedObjectContext:moc];
+    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatus];
     if(self) {
+        self.syncStatus = syncStatus;
         self.directory = directory;
         self.lastUpdateEventIDSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self managedObjectContext:moc];
     }
     return self;
+}
+
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
 }
 
 - (void)startRequestingLastUpdateEventIDWithoutPersistingIt
@@ -70,12 +75,19 @@
     return self.lastUpdateEventIDSync.status == ZMSingleRequestInProgress;
 }
 
-- (void)setNeedsSlowSync {
-    // no-op
+- (SyncPhase)isSyncing
+{
+    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingLastUpdateEventID;
 }
 
-- (BOOL)isSlowSyncDone {
-    return YES;
+- (ZMTransportRequest *)nextRequestIfAllowed
+{
+    if (self.isSyncing && !self.isDownloadingLastUpdateEventID) {
+        [self startRequestingLastUpdateEventIDWithoutPersistingIt];
+        return [self.requestGenerators nextRequest];
+    }
+    
+    return nil;
 }
 
 - (NSArray *)requestGenerators;
@@ -90,7 +102,7 @@
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> __unused *)events
            liveEvents:(BOOL __unused)liveEvents
-prefetchResult:(ZMFetchRequestBatchResult __unused *)prefetchResult;
+       prefetchResult:(ZMFetchRequestBatchResult __unused *)prefetchResult;
 {
     // no op
 }
@@ -111,12 +123,21 @@ prefetchResult:(ZMFetchRequestBatchResult __unused *)prefetchResult;
 - (void)didReceiveResponse:(ZMTransportResponse *)response forSingleRequest:(ZMSingleRequestSync *)sync
 {
     NOT_USED(sync);
-    if(response.payload != nil) {
-        NSUUID *lastNotificationID = [[response.payload asDictionary] optionalUuidForKey:@"id"];
-        if(lastNotificationID != nil) {
-            self.lastUpdateEventID = lastNotificationID;
+    SyncStatus *status = self.syncStatus;
+    if(response.payload == nil) {
+        [status failCurrentSyncPhase];
+        return;
+    }
+    
+    NSUUID *lastNotificationID = [[response.payload asDictionary] optionalUuidForKey:@"id"];
+    if(lastNotificationID != nil) {
+        self.lastUpdateEventID = lastNotificationID;
+        if (status.currentSyncPhase == SyncPhaseFetchingLastUpdateEventID) {
+            [status updateLastUpdateEventIDWithEventID:lastNotificationID];
+            [status finishCurrentSyncPhase];
         }
     }
+    
 }
 
 @end

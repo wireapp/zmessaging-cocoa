@@ -47,64 +47,38 @@
     [super setUp];
     
     // Request to /register
-    id classMock = [OCMockObject mockForClass:ZMSingleRequestSync.class];
     self.mockLocale = [OCMockObject niceMockForClass:[NSLocale class]];
     [[[self.mockLocale stub] andReturn:@[@"en"]] preferredLanguages];
     
     [self verifyMockLater:self.mockLocale];
-    
+
     self.registrationDownstreamSync = [OCMockObject mockForClass:ZMSingleRequestSync.class];
-    (void) [[[self.registrationDownstreamSync expect] andReturn:self.registrationDownstreamSync] syncWithSingleRequestTranscoder:OCMOCK_ANY managedObjectContext:self.uiMOC];
     [self verifyMockLater:self.registrationDownstreamSync];
+    
+    id classMock = [OCMockObject mockForClass:ZMSingleRequestSync.class];
+    (void) [[[classMock stub] andReturn:self.registrationDownstreamSync] syncWithSingleRequestTranscoder:OCMOCK_ANY managedObjectContext:self.uiMOC];
     
     self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"com.wearezeta.test-WireSyncEngine"];
     ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.uiMOC cookieStorage:self.cookieStorage];
     self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:cookie];
     
-    self.sut = (id) [[ZMRegistrationTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus];
+    id mockApplicationStatusDirectory = [OCMockObject mockForClass:[ZMApplicationStatusDirectory class]];
+    [[[mockApplicationStatusDirectory stub] andReturn:self.authenticationStatus] authenticationStatus];
+    [[[mockApplicationStatusDirectory stub] andReturnValue:@(ZMSynchronizationStateUnauthenticated)] synchronizationState];
+    [(ZMApplicationStatusDirectory *)[[mockApplicationStatusDirectory stub] andReturnValue:@(ZMOperationStateForeground)] operationState];
+    
+    self.sut = (id) [[ZMRegistrationTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatusDirectory:mockApplicationStatusDirectory];
     [classMock stopMocking];
 }
 
 - (void)tearDown
 {
-    [self.sut tearDown];
     self.sut = nil;
     self.registrationDownstreamSync = nil;
     self.cookieStorage = nil;
     self.authenticationStatus = nil;
     self.mockLocale = nil;
     [super tearDown];
-}
-
-- (void)testThatItOnlyProcessesRegistrationRequests;
-{
-    // when
-    NSArray *generators = self.sut.requestGenerators;
-    
-    // then
-    XCTAssertEqual(generators.count, 1u);
-    XCTAssertTrue([generators.firstObject isKindOfClass:ZMSingleRequestSync.class]);
-}
-
-- (void)testThatItDoesNotReturnAContextChangeTracker;
-{
-    // when
-    NSArray *trackers = self.sut.contextChangeTrackers;
-    
-    // then
-    XCTAssertEqual(trackers.count, 0u);
-}
-
-- (void)testThatItCallsNextRequestOnRegistrationRequestSyncs
-{
-    // expect
-    [[[self.registrationDownstreamSync expect] andReturn:nil] nextRequest];
-    
-    // when
-    [self.sut.requestGenerators nextRequest];
-    
-    // then
-    [self.registrationDownstreamSync verify];
 }
 
 - (NSDictionary *)expectedPayloadWithLocale:(NSString *)locale email:(NSString *)email password:(NSString *)password
@@ -132,6 +106,8 @@
     ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:email password:password];
     regUser.name = expectedPayload[@"name"];
     regUser.accentColorValue = ZMAccentColorBrightYellow;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:regUser];
     ZMTransportRequest *request = [(id)self.sut requestForSingleRequestSync:self.registrationDownstreamSync];
     
@@ -157,6 +133,8 @@
     ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:email password:password];
     regUser.name = expectedPayload[@"name"];
     regUser.accentColorValue = ZMAccentColorBrightYellow;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:regUser];
     ZMTransportRequest *request = [(id)self.sut requestForSingleRequestSync:self.registrationDownstreamSync];
     
@@ -182,6 +160,8 @@
     ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:email password:password];
     regUser.name = expectedPayload[@"name"];
     regUser.accentColorValue = ZMAccentColorBrightYellow;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:regUser];
     ZMTransportRequest *request = [(id)self.sut requestForSingleRequestSync:self.registrationDownstreamSync];
     
@@ -207,6 +187,8 @@
     ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:email password:password];
     regUser.name = expectedPayload[@"name"];
     regUser.accentColorValue = ZMAccentColorBrightYellow;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:regUser];
     ZMTransportRequest *request = [(id)self.sut requestForSingleRequestSync:self.registrationDownstreamSync];
     
@@ -233,6 +215,8 @@
     ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:email password:password];
     regUser.name = expectedPayload[@"name"];
     regUser.accentColorValue = ZMAccentColorBrightYellow;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:regUser];
     ZMTransportRequest *request = [(id)self.sut requestForSingleRequestSync:self.registrationDownstreamSync];
     
@@ -259,6 +243,8 @@
     ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:email password:password];
     regUser.name = expectedPayload[@"name"];
     regUser.accentColorValue = ZMAccentColorBrightYellow;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:regUser];
     ZMTransportRequest *request = [(id)self.sut requestForSingleRequestSync:self.registrationDownstreamSync];
     
@@ -280,6 +266,8 @@
     ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:email password:password];
     regUser.name = expectedPayload[@"name"];
     regUser.accentColorValue = ZMAccentColorBrightYellow;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:regUser];
     ZMTransportRequest *request = [(id)self.sut requestForSingleRequestSync:self.registrationDownstreamSync];
     
@@ -308,7 +296,13 @@
     NSString *password = @"foo$$$$";
     NSString *email = @"email@example.com";
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": @"Clara", @"email":email} HTTPStatus:200 transportSessionError:nil];
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:email password:password]];
+    
+    // expect
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     
     // when
     [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
@@ -324,7 +318,13 @@
     NSString *password = @"foo$$$$";
     NSString *email = @"email@example.com";
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": @"Clara", @"email":email} HTTPStatus:200 transportSessionError:nil];
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:email password:password]];
+    
+    // expect
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     
     // when
     [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
@@ -339,9 +339,10 @@
     NSString *name = @"Name";
     NSString *emailAddress = @"user@example.com";
     NSUUID *remoteID = [NSUUID createUUID];
-    
     ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:emailAddress password:@"foobar$$"];
     user.name = name;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:user];
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": name,
@@ -349,6 +350,10 @@
                                                                                @"id": remoteID.transportString}
                                                                   HTTPStatus:200
                                                        transportSessionError:nil];
+    
+    // expect
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     
     // when
     [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
@@ -367,6 +372,8 @@
     NSUUID *remoteID = [NSUUID createUUID];
     ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:emailAddress password:@"foobar$$"];
     user.name = name;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:user];
     
 
@@ -377,6 +384,11 @@
                                                                   HTTPStatus:200
                                                        transportSessionError:nil];
     
+    // expect
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
+    
+    // when
     [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
     
     // then
@@ -391,6 +403,8 @@
     NSString *emailAddress = @"user@example.com";
     ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:emailAddress password:@"foobar$$"];
     user.name = name;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:user];
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
@@ -412,6 +426,8 @@
     NSString *emailAddress = @"user@example.com";
     ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:emailAddress password:@"foobar$$"];
     user.name = name;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:user];
     
     // expect
@@ -439,6 +455,8 @@
     NSString *emailAddress = @"user@example.com";
     ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:emailAddress password:@"foobar$$"];
     user.name = name;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:user];
     
     // expect
@@ -464,6 +482,8 @@
     // given
     ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithPhoneNumber:@"+4912345678" phoneVerificationCode:@"123456"];
     user.name = @"foo";
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:user];
     
     // expect
@@ -492,6 +512,8 @@
     NSUUID *remoteID = [NSUUID createUUID];
     ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:emailAddress password:@"foobar$$"];
     user.name = name;
+    [[self.registrationDownstreamSync expect] resetCompletionState];
+    [[self.registrationDownstreamSync expect] readyForNextRequest];
     [self.authenticationStatus prepareForRegistrationOfUser:user];
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": name,

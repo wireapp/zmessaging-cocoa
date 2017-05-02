@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -24,13 +24,12 @@ import WireTransport
 class DeleteAccountRequestStrategyTests: MessagingTest {
     
     fileprivate var sut : DeleteAccountRequestStrategy!
-    fileprivate var authStatus : ZMAuthenticationStatus!
+    fileprivate var mockApplicationStatus : MockApplicationStatus!
     
     override func setUp() {
         super.setUp()
-        let cookie = ZMCookie(managedObjectContext: self.uiMOC, cookieStorage: self.mockTransportSession.cookieStorage)
-        self.authStatus = ZMAuthenticationStatus(managedObjectContext: self.uiMOC, cookie: cookie)
-        self.sut = DeleteAccountRequestStrategy(authStatus:authStatus, managedObjectContext: self.uiMOC)
+        self.mockApplicationStatus = MockApplicationStatus()
+        self.sut = DeleteAccountRequestStrategy(withManagedObjectContext: self.uiMOC, applicationStatus:mockApplicationStatus)
     }
     
     override func tearDown() {

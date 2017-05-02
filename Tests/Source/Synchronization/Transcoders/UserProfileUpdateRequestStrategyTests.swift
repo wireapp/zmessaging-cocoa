@@ -22,26 +22,24 @@ import XCTest
 class UserProfileUpdateRequestStrategyTests : MessagingTest {
     
     var sut : UserProfileRequestStrategy!
-    
     var userProfileUpdateStatus : TestUserProfileUpdateStatus!
-    
-    var mockAuthenticationStatus : MockAuthenticationStatus!
+    var mockApplicationStatus : MockApplicationStatus!
     
     override func setUp() {
         super.setUp()
-        self.mockAuthenticationStatus = MockAuthenticationStatus()
+        
+        self.mockApplicationStatus = MockApplicationStatus()
+        self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
         self.userProfileUpdateStatus = TestUserProfileUpdateStatus(managedObjectContext: self.uiMOC, analytics: MockAnalytics())
         self.sut = UserProfileRequestStrategy(managedObjectContext: self.uiMOC,
-                                              userProfileUpdateStatus: self.userProfileUpdateStatus,
-                                              authenticationStatus: self.mockAuthenticationStatus)
-        self.mockAuthenticationStatus.mockPhase = .authenticated
-
+                                              applicationStatus: self.mockApplicationStatus,
+                                              userProfileUpdateStatus: self.userProfileUpdateStatus)
     }
     
     override func tearDown() {
         self.sut = nil
         self.userProfileUpdateStatus = nil
-        self.mockAuthenticationStatus = nil
+        self.mockApplicationStatus = nil
         super.tearDown()
     }
     
@@ -54,7 +52,7 @@ extension UserProfileUpdateRequestStrategyTests {
         
         // GIVEN
         self.userProfileUpdateStatus.requestPhoneVerificationCode(phoneNumber: "+15553453453")
-        self.mockAuthenticationStatus.mockPhase = .unauthenticated
+        self.mockApplicationStatus.mockSynchronizationState = .unauthenticated
         
         // THEN
         XCTAssertNil(self.sut.nextRequest())

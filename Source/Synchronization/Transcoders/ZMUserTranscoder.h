@@ -19,15 +19,24 @@
 
 @import Foundation;
 @import WireRequestStrategy;
+@import WireMessageStrategy;
 
 @class NSManagedObjectContext;
+@class SyncStatus;
 
 extern NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest;
 
 
 
-@interface ZMUserTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
+@interface ZMUserTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy>
 
-+ (ZMTransportRequest *)requestForRemoteIdentifiers:(NSArray *)remoteIdentifiers;
+- (instancetype _Nonnull)initWithManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
+                                     applicationStatus:(id<ZMApplicationStatus> _Nonnull)applicationStatus NS_UNAVAILABLE;
+
+- (instancetype _Nonnull)initWithManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
+                                    applicationStatus:(id<ZMApplicationStatus> _Nonnull)applicationStatus
+                                           syncStatus:(SyncStatus * _Nonnull)syncStatus;
+
++ (ZMTransportRequest * _Nullable)requestForRemoteIdentifiers:(NSArray * _Nonnull)remoteIdentifiers;
 
 @end
