@@ -18,17 +18,18 @@
 
 
 @import WireRequestStrategy;
+@import WireMessageStrategy;
 
 @class ZMSingleRequestSync;
 @class ZMTransportResponse;
-@class ZMAuthenticationStatus;
+@class ZMApplicationStatusDirectory;
 
-@interface ZMPhoneNumberVerificationTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator>
+@interface ZMPhoneNumberVerificationTranscoder : ZMAbstractRequestStrategy
 
 - (void)resetVerificationState;
 - (void)verifyPhoneNumber;
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory;
 
 
 @end

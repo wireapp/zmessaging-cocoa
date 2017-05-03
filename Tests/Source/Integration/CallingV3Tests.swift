@@ -537,15 +537,16 @@ class CallingV3Tests : IntegrationTestBase {
         otherStartCall(user: user)
 
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 1)
+        XCTAssertGreaterThan(convObserver!.notifications.count, 0)
         XCTAssertEqual(conversationUnderTest.conversationListIndicator, .none)
+        convObserver?.clearNotifications()
         
         // (2) Self ignores call
         // and when
         selfIgnoreCall()
         
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 2)
+        XCTAssertEqual(convObserver!.notifications.count, 1)
         if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
@@ -556,11 +557,11 @@ class CallingV3Tests : IntegrationTestBase {
         closeCall(user: user, reason: .canceled)
         
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 3)
+        XCTAssertEqual(convObserver!.notifications.count, 2)
         if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
-        XCTAssertEqual(conversationUnderTest.conversationListIndicator, .none)
+        XCTAssertEqual(conversationUnderTest.conversationListIndicator, .missedCall)
     }
 
     func testThatItFiresAConversationChangeNotificationWhenAGroupCallIsJoined() {
@@ -578,17 +579,19 @@ class CallingV3Tests : IntegrationTestBase {
         
         // then
         XCTAssertEqual(conversationUnderTest.conversationListIndicator, .none)
+        convObserver?.clearNotifications()
         
         // (2) Self joins the call
         // and when
         selfJoinCall(isStart: false)
-
+        establishedFlow(user: localSelfUser)
+        
         // second user joins        
         participantsChanged(members: [(user: localUser1, establishedFlow: false),
                                       (user: localUser2, establishedFlow: false)])
 
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 2)
+        XCTAssertEqual(convObserver!.notifications.count, 1)
         if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
@@ -599,7 +602,7 @@ class CallingV3Tests : IntegrationTestBase {
         selfDropCall()
         
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 3)
+        XCTAssertEqual(convObserver!.notifications.count, 2)
         if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
@@ -610,7 +613,7 @@ class CallingV3Tests : IntegrationTestBase {
         closeCall(user: localUser1, reason: .canceled)
         
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 4)
+        XCTAssertEqual(convObserver!.notifications.count, 3)
         if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }

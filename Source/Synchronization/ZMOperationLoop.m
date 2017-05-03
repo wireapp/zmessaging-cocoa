@@ -24,7 +24,9 @@
 @import WireDataModel;
 
 #import "ZMOperationLoop+Private.h"
-#import "ZMSyncStrategy.h"
+#import "ZMSyncStrategy+ManagedObjectChanges.h"
+#import "ZMSyncStrategy+EventProcessing.h"
+
 #import "ZMUserTranscoder.h"
 #import "ZMUserSession.h"
 #import <libkern/OSAtomic.h>
@@ -62,17 +64,14 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @end
 
 
+@interface ZMOperationLoop (OperationStatus) <ZMOperationStatusDelegate>
+@end
+
+
 @implementation ZMOperationLoop
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
-                    authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-                 userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileUpdateStatus
-            userProfileImageUpdateStatus:(UserProfileImageUpdateStatus *)profileImageStatus
-                clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
-                      clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
-                      proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
-                           accountStatus:(ZMAccountStatus *)accountStatus
-            backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
+                                  cookie:(ZMCookie *)cookie
              localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
                             mediaManager:(id<AVSMediaManager>)mediaManager
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
@@ -83,30 +82,21 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                              application:(id<ZMApplication>)application;
 {
 
-    ZMSyncStrategy *syncStrategy = [[ZMSyncStrategy alloc] initWithAuthenticationCenter:authenticationStatus
-                                                                userProfileUpdateStatus:userProfileUpdateStatus
-                                                           userProfileImageUpdateStatus:profileImageStatus
-                                                               clientRegistrationStatus:clientRegistrationStatus
-                                                                     clientUpdateStatus:clientUpdateStatus
-                                                                     proxiedRequestStatus:proxiedRequestStatus
-                                                                          accountStatus:accountStatus
-                                                           backgroundAPNSPingBackStatus:backgroundAPNSPingBackStatus
-                                                                           mediaManager:mediaManager
-                                                                    onDemandFlowManager:onDemandFlowManager
-                                                                                syncMOC:syncMOC
-                                                                                  uiMOC:uiMOC
-                                                                      syncStateDelegate:syncStateDelegate
-                                                                  backgroundableSession:transportSession
-                                                           localNotificationsDispatcher:dispatcher
-                                                               taskCancellationProvider:transportSession
-                                                                     appGroupIdentifier:(NSString *)appGroupIdentifier
-                                                                            application:application];
+    ZMSyncStrategy *syncStrategy = [[ZMSyncStrategy alloc] initWithSyncManagedObjectContextMOC:syncMOC
+                                                                        uiManagedObjectContext:uiMOC
+                                                                                        cookie:cookie
+                                                                                  mediaManager:mediaManager
+                                                                           onDemandFlowManager:onDemandFlowManager
+                                                                             syncStateDelegate:syncStateDelegate
+                                                                  localNotificationsDispatcher:dispatcher
+                                                                      taskCancellationProvider:transportSession
+                                                                            appGroupIdentifier:appGroupIdentifier
+                                                                                   application:application];
     
     self = [self initWithTransportSession:transportSession
                              syncStrategy:syncStrategy
                                     uiMOC:uiMOC
-                                  syncMOC:syncMOC
-             backgroundAPNSPingBackStatus:backgroundAPNSPingBackStatus];
+                                  syncMOC:syncMOC];
     self.application = application;
     self.ownsSyncStrategy = YES;
     return self;
@@ -117,7 +107,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                             syncStrategy:(ZMSyncStrategy *)syncStrategy
                                    uiMOC:(NSManagedObjectContext *)uiMOC
                                  syncMOC:(NSManagedObjectContext *)syncMOC
-            backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus;
 {
     Check(uiMOC != nil);
     Check(syncMOC != nil);
@@ -128,8 +117,8 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
         self.syncStrategy = syncStrategy;
         self.syncMOC = syncMOC;
         self.shouldStopEnqueueing = NO;
+        self.syncStrategy.applicationStatusDirectory.operationStatus.delegate = self;
 
-        self.backgroundAPNSPingBackStatus = backgroundAPNSPingBackStatus;
         if (uiMOC != nil) {
             [[NSNotificationCenter defaultCenter] addObserver:self
                                                      selector:@selector(userInterfaceContextDidSave:)
@@ -147,7 +136,8 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
         
         // this is needed to avoid loading from syncMOC on the main queue
         [self.syncMOC performGroupedBlock:^{
-            [self.transportSession openPushChannelWithConsumer:self groupQueue:self.syncMOC];
+            [self.transportSession configurePushChannelWithConsumer:self groupQueue:self.syncMOC];
+            [self.transportSession.pushChannel setKeepOpen:syncStrategy.applicationStatusDirectory.operationStatus.operationState == SyncEngineOperationStateForeground];
         }];
     }
 
@@ -159,7 +149,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     self.tornDown = YES;
     self.shouldStopEnqueueing = true;
     
-    [self.transportSession closePushChannelAndRemoveConsumer];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [ZMRequestAvailableNotification removeObserver:self];
     
@@ -287,11 +276,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 }
 
 - (void)executeNextOperation
-{
-    [self.syncMOC performGroupedBlock:^{
-        [self.syncStrategy dataDidChange];
-    }];
-    
+{    
     if (self.shouldStopEnqueueing) {
         return;
     }
@@ -315,6 +300,11 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 - (void)accessTokenDidChangeWithToken:(NSString *)token ofType:(NSString *)type;
 {
     [self.syncStrategy transportSessionAccessTokenDidSucceedWithToken:token ofType:type];
+}
+
+- (BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
+{
+    return self.syncStrategy.applicationStatusDirectory.pingBackStatus;
 }
 
 @end
@@ -366,3 +356,11 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 @end
 
+@implementation ZMOperationLoop (OperationStatus)
+
+- (void)operationStatusDidChangeState:(enum SyncEngineOperationState)state
+{
+    self.transportSession.pushChannel.keepOpen = state == SyncEngineOperationStateForeground || state == SyncEngineOperationStateBackgroundCall;
+}
+
+@end

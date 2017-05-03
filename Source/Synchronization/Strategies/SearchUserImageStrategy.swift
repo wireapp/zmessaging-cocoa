@@ -102,43 +102,45 @@ enum SearchUserAssetKeys {
 }
 
 
-public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
+public class SearchUserImageStrategy : AbstractRequestStrategy {
 
     typealias MediumAssetCache = NSCache<NSUUID, SearchUserAssetObjC>
 
     fileprivate unowned var uiContext: NSManagedObjectContext
     fileprivate unowned var syncContext: NSManagedObjectContext
-    fileprivate unowned var clientRegistrationDelegate: ClientRegistrationDelegate
     let imagesByUserIDCache: NSCache<NSUUID, NSData>
     let mediumAssetCache: MediumAssetCache
     let userIDsTable: SearchDirectoryUserIDTable
     fileprivate var userIDsBeingRequested = Set<UUID>()
     fileprivate var assetIDsBeingRequested = Set<SearchUserAndAsset>()
     
-    public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate){
-        self.syncContext = managedObjectContext
-        self.uiContext = managedObjectContext.zm_userInterface
-        self.clientRegistrationDelegate = clientRegistrationDelegate
-        self.imagesByUserIDCache = ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>
-        self.mediumAssetCache = ZMSearchUser.searchUserToMediumAssetIDCache() as! MediumAssetCache
-        self.userIDsTable = ZMSearchDirectory.userIDsMissingProfileImage()
+    @available (*, unavailable)
+    public override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+        fatalError()
     }
     
-    init(managedObjectContext: NSManagedObjectContext,
-         clientRegistrationDelegate: ClientRegistrationDelegate,
-         imagesByUserIDCache : NSCache<NSUUID, NSData>?,
-         mediumAssetCache: NSCache<NSUUID, SearchUserAssetObjC>?,
-         userIDsTable: SearchDirectoryUserIDTable?) {
+    public convenience init(applicationStatus: ApplicationStatus, managedObjectContext: NSManagedObjectContext){
+        self.init(applicationStatus: applicationStatus,
+                  managedObjectContext: managedObjectContext,
+                  imagesByUserIDCache: nil,
+                  mediumAssetCache: nil,
+                  userIDsTable: nil)
+    }
+    
+    internal init(applicationStatus: ApplicationStatus,
+                  managedObjectContext: NSManagedObjectContext,
+                  imagesByUserIDCache : NSCache<NSUUID, NSData>?,
+                  mediumAssetCache: NSCache<NSUUID, SearchUserAssetObjC>?,
+                  userIDsTable: SearchDirectoryUserIDTable?) {
         self.syncContext = managedObjectContext
         self.uiContext = managedObjectContext.zm_userInterface
-        self.clientRegistrationDelegate = clientRegistrationDelegate
         self.imagesByUserIDCache = imagesByUserIDCache ?? ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>
         self.mediumAssetCache = mediumAssetCache ?? ZMSearchUser.searchUserToMediumAssetIDCache() as! MediumAssetCache
         self.userIDsTable = userIDsTable ?? ZMSearchDirectory.userIDsMissingProfileImage()
+        super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
     }
     
-    public func nextRequest() -> ZMTransportRequest? {
-        guard clientRegistrationDelegate.clientIsReadyForRequests else { return nil }
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         let request = fetchUsersRequest() ?? fetchAssetRequest()
         request?.setDebugInformationTranscoder(self)
         return request
@@ -188,7 +190,7 @@ public class SearchUserImageStrategy : NSObject, ZMRequestGenerator {
         else { return nil}
         userIDsBeingRequested.formUnion(userIDsToDownload)
         
-        let completionHandler = ZMCompletionHandler(on :syncContext){ [weak self] (response) in
+        let completionHandler = ZMCompletionHandler(on :managedObjectContext){ [weak self] (response) in
             self?.processUserProfile(response:response, for:userIDsToDownload)
         }
         return SearchUserImageStrategy.requestForFetchingAssets(for:userIDsToDownload, completionHandler:completionHandler)

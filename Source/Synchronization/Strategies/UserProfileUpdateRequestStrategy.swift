@@ -18,14 +18,9 @@
 
 import Foundation
 
-@objc public class UserProfileRequestStrategy : NSObject {
-    
-    let managedObjectContext : NSManagedObjectContext
+@objc public class UserProfileRequestStrategy : AbstractRequestStrategy {
     
     let userProfileUpdateStatus : UserProfileUpdateStatus
-    
-    
-    let authenticationStatus : AuthenticationStatusProvider
     
     fileprivate var phoneCodeRequestSync : ZMSingleRequestSync! = nil
     
@@ -43,14 +38,18 @@ import Foundation
     
     fileprivate var handleSuggestionSearchSync : ZMSingleRequestSync! = nil
     
+    @available (*, unavailable, message: "use `init(managedObjectContext:appStateDelegate:userProfileUpdateStatus)`instead")
+    override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+        fatalError()
+    }
+    
     public init(managedObjectContext: NSManagedObjectContext,
-                userProfileUpdateStatus: UserProfileUpdateStatus,
-                authenticationStatus: AuthenticationStatusProvider) {
-        self.managedObjectContext = managedObjectContext
+                applicationStatus: ApplicationStatus,
+                userProfileUpdateStatus: UserProfileUpdateStatus) {
         self.userProfileUpdateStatus = userProfileUpdateStatus
-        self.authenticationStatus = authenticationStatus
-        super.init()
+        super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         
+        self.configuration = [.allowsRequestsWhileUnauthenticated, .allowsRequestsDuringSync, .allowsRequestsDuringEventProcessing]
         self.phoneCodeRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.phoneUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.phoneNumberDeleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
@@ -60,15 +59,8 @@ import Foundation
         self.handleSetSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.handleSuggestionSearchSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
     }
-}
-
-extension UserProfileRequestStrategy : RequestStrategy {
     
-    @objc public func nextRequest() -> ZMTransportRequest? {
-
-        guard self.authenticationStatus.currentPhase == .authenticated else {
-            return nil
-        }
+    @objc public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         
         if self.userProfileUpdateStatus.currentlyRequestingPhoneVerificationCode {
             self.phoneCodeRequestSync.readyForNextRequestIfNotBusy()

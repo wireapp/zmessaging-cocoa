@@ -31,8 +31,10 @@
 #import "ZMAuthenticationStatus_Internal.h"
 
 
+static NSString *const TimerInfoOriginalCredentialsKey = @"credentials";
 static NSString * const AuthenticationCenterDataChangeNotificationName = @"ZMAuthenticationStatusDataChangeNotificationName";
 NSString * const RegisteredOnThisDeviceKey = @"ZMRegisteredOnThisDevice";
+NSTimeInterval DebugLoginFailureTimerOverride = 0;
 
 static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
@@ -48,6 +50,11 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
         self.isWaitingForLogin = !self.isLoggedIn;
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [self stopLoginTimer];
 }
 
 - (ZMCredentials *)loginCredentials
@@ -67,6 +74,8 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)resetLoginAndRegistrationStatus
 {
+    [self stopLoginTimer];
+    
     self.registrationPhoneNumberThatNeedsAValidationCode = nil;
     self.loginPhoneNumberThatNeedsAValidationCode = nil;
 
@@ -177,6 +186,28 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     return cookie != nil;
 }
 
+- (void)startLoginTimer
+{
+    [self.loginTimer cancel];
+    self.loginTimer = nil;
+    self.loginTimer = [ZMTimer timerWithTarget:self];
+    self.loginTimer.userInfo = @{ TimerInfoOriginalCredentialsKey : self.loginCredentials };
+    [self.loginTimer fireAfterTimeInterval:(DebugLoginFailureTimerOverride > 0 ?: 60 )];
+}
+
+- (void)stopLoginTimer
+{
+    [self.loginTimer cancel];
+    self.loginTimer = nil;
+}
+
+- (void)timerDidFire:(ZMTimer *)timer
+{
+    [self.moc performGroupedBlock:^{
+        [self didTimeoutLoginForCredentials:timer.userInfo[TimerInfoOriginalCredentialsKey]];
+    }];
+}
+
 - (void)prepareForLoginWithCredentials:(ZMCredentials *)credentials
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
@@ -188,6 +219,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     }
     self.loginCredentials = credentials;
     self.isWaitingForLogin = YES;
+    [self startLoginTimer];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 

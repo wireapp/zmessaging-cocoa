@@ -525,7 +525,7 @@ extension UserProfileImageUpdateStatusTests {
     }
     
     func testThatItSignalsThereIsRequestAvailableAfterPreprocessingCompletes() {
-        expectation(forNotification: "RequestAvailableNotification", object: sut)
+        expectation(forNotification: "RequestAvailableNotification", object: nil)
 
         syncMOC.performGroupedBlock {
             // GIVEN

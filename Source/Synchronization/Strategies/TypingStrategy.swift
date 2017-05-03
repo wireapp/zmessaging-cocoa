@@ -47,25 +47,25 @@ public struct TypingEvent {
 }
 
 
-public class TypingStrategy : NSObject {
+public class TypingStrategy : AbstractRequestStrategy {
     
     fileprivate var typing : ZMTyping!
     fileprivate var conversations : [NSManagedObjectID : Bool] = [:]
     fileprivate var lastSentTypingEvent : TypingEvent?
-    fileprivate let syncContext: NSManagedObjectContext
-    fileprivate unowned var clientRegistrationDelegate: ClientRegistrationDelegate
-    
     fileprivate var tornDown : Bool = false
-    
-    public convenience init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate) {
-        self.init(syncContext: managedObjectContext, uiContext: managedObjectContext.zm_userInterface, clientRegistrationDelegate: clientRegistrationDelegate, typing: nil)
+
+    @available (*, unavailable)
+    override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+        fatalError()
     }
     
-    init(syncContext: NSManagedObjectContext, uiContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, typing: ZMTyping?) {
-        self.syncContext = syncContext
-        self.clientRegistrationDelegate = clientRegistrationDelegate
+    public convenience init(applicationStatus: ApplicationStatus, managedObjectContext: NSManagedObjectContext) {
+        self.init(applicationStatus: applicationStatus, syncContext: managedObjectContext, uiContext: managedObjectContext.zm_userInterface, typing: nil)
+    }
+    
+    init(applicationStatus: ApplicationStatus, syncContext: NSManagedObjectContext, uiContext: NSManagedObjectContext, typing: ZMTyping?) {
         self.typing = typing ?? ZMTyping(userInterfaceManagedObjectContext: uiContext, syncManagedObjectContext: syncContext)
-        super.init()
+        super.init(withManagedObjectContext: syncContext, applicationStatus: applicationStatus)
         NotificationCenter.default.addObserver(self, selector: #selector(addConversationForNextRequest), name: Notification.Name(rawValue: ZMTypingNotificationName), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(shouldClearTypingForConversation), name: Notification.Name(rawValue: ZMConversationClearTypingNotificationName), object: nil)
     }
@@ -102,7 +102,7 @@ public class TypingStrategy : NSObject {
         guard conversation.remoteIdentifier != nil
         else { return }
         
-        syncContext.performGroupedBlock {
+        managedObjectContext.performGroupedBlock {
             if (clearIsTyping) {
                 self.conversations.removeValue(forKey: conversation.objectID)
                 self.lastSentTypingEvent = nil
@@ -111,17 +111,12 @@ public class TypingStrategy : NSObject {
                 RequestAvailableNotification.notifyNewRequestsAvailable(self)
             }
         }
-        
     }
-}
-
-extension TypingStrategy : ZMRequestGenerator {
     
-    public func nextRequest() -> ZMTransportRequest? {
-        guard clientRegistrationDelegate.clientIsReadyForRequests,
-              let (convObjectID, isTyping) = conversations.popFirst(),
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
+        guard let (convObjectID, isTyping) = conversations.popFirst(),
               let newTypingEvent = TypingEvent.typingEvent(with: convObjectID, isTyping: isTyping, ifDifferentFrom: lastSentTypingEvent),
-              let conversation = syncContext.object(with: convObjectID) as? ZMConversation,
+              let conversation = managedObjectContext.object(with: convObjectID) as? ZMConversation,
               let remoteIdentifier = conversation.remoteIdentifier
         else { return nil }
         
@@ -147,8 +142,8 @@ extension TypingStrategy : ZMEventConsumer {
         guard event.type == .conversationTyping || event.type == .conversationOtrMessageAdd,
               let userID = event.senderUUID(),
               let conversationID = event.conversationUUID(),
-              let user = ZMUser(remoteID: userID, createIfNeeded: true, in: syncContext),
-              let conversation = conversationsByID?[conversationID] ?? ZMConversation(remoteID: conversationID, createIfNeeded: true, in: syncContext)
+              let user = ZMUser(remoteID: userID, createIfNeeded: true, in: managedObjectContext),
+              let conversation = conversationsByID?[conversationID] ?? ZMConversation(remoteID: conversationID, createIfNeeded: true, in: managedObjectContext)
         else { return }
         
         if event.type == .conversationTyping {

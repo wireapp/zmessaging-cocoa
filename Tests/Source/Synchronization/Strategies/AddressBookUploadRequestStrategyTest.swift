@@ -23,32 +23,27 @@ import WireLinkPreview
 class AddressBookUploadRequestStrategyTest : MessagingTest {
     
     var sut : WireSyncEngine.AddressBookUploadRequestStrategy!
-    var authenticationStatus : MockAuthenticationStatus!
-    var clientRegistrationStatus : ZMMockClientRegistrationStatus!
+    var mockApplicationStatus : MockApplicationStatus!
     var addressBook : AddressBookFake!
     var trackerFake : AddressBookTrackerFake!
     
     override func setUp() {
         super.setUp()
-        self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
-        self.clientRegistrationStatus = ZMMockClientRegistrationStatus()
-        self.clientRegistrationStatus.mockPhase = .registered
         self.addressBook = AddressBookFake()
         self.trackerFake = AddressBookTrackerFake()
         
         let ab = self.addressBook // I don't want to capture self in closure later
         ab?.fillWithContacts(5)
-        self.sut = WireSyncEngine.AddressBookUploadRequestStrategy(authenticationStatus: self.authenticationStatus,
-                                                               clientRegistrationStatus: self.clientRegistrationStatus,
-                                                               managedObjectContext: self.syncMOC,
+        mockApplicationStatus = MockApplicationStatus()
+        mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        self.sut = WireSyncEngine.AddressBookUploadRequestStrategy(managedObjectContext: self.syncMOC,
+                                                               applicationStatus: mockApplicationStatus,
                                                                addressBookGenerator: { return ab },
                                                                tracker: self.trackerFake)
     }
     
     override func tearDown() {
-        self.authenticationStatus = nil
-        self.clientRegistrationStatus.tearDown()
-        self.clientRegistrationStatus = nil
+        self.mockApplicationStatus = nil
         self.sut = nil
         self.addressBook = nil
         super.tearDown()

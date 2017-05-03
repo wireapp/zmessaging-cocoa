@@ -21,7 +21,7 @@
 @import WireDataModel;
 
 #import "ZMCallStateLogger.h"
-#import "ZMFlowSync.h"
+#import "ZMCallFlowRequestStrategy.h"
 #import "ZMOperationLoop.h"
 #import "ZMUserSession+Internal.h"
 
@@ -29,18 +29,18 @@
 
 @interface ZMCallStateLogger ()
 
-@property (nonatomic) ZMFlowSync *flowSync;
+@property (nonatomic) ZMCallFlowRequestStrategy *callFlowRequestStrategy;
 
 @end
 
 @implementation ZMCallStateLogger
 
 
-- (instancetype)initWithFlowSync:(ZMFlowSync *)flowSync
+- (instancetype)initWithFlowSync:(ZMCallFlowRequestStrategy *)callFlowRequestStrategy
 {
     self = [super init];
     if (self) {
-        self.flowSync= flowSync;
+        self.callFlowRequestStrategy = callFlowRequestStrategy;
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appendLogMessageWithNotification:) name:ZMAppendAVSLogNotificationName object:nil];
     }
     return self;
@@ -121,7 +121,7 @@
 {
     NSString *finalMessage = [self messageForConversation:conversation withMessage:message];
     if (finalMessage != nil) {
-        [self.flowSync appendLogForConversationID:conversation.remoteIdentifier message:finalMessage];
+        [self.callFlowRequestStrategy appendLogForConversationID:conversation.remoteIdentifier message:finalMessage];
     }
 }
 
@@ -180,7 +180,7 @@
     [VoiceChannelV2 setLastSessionIdentifier:sessionID];
     [VoiceChannelV2 setLastSessionStartDate:[NSDate date]];
     if (sessionID != nil) {
-        [self.flowSync setSessionIdentifier:sessionID forConversationIdentifier:conversation.remoteIdentifier];
+        [self.callFlowRequestStrategy setSessionIdentifier:sessionID forConversationIdentifier:conversation.remoteIdentifier];
     }
 }
 
@@ -197,13 +197,13 @@
                          conversation.remoteIdentifier.transportString,
                          @(oldCallDeviceIsActive)];
     
-    [self.flowSync appendLogForConversationID:conversation.remoteIdentifier message:message];
+    [self.callFlowRequestStrategy appendLogForConversationID:conversation.remoteIdentifier message:message];
     
     if (conversation.hasLocalModificationsForCallDeviceIsActive) {
-        [self.flowSync appendLogForConversationID:conversation.remoteIdentifier message:[NSString stringWithFormat:@"Rejecting state change - conversation has local modifications for call device is active (local: %@)",@(conversation.callDeviceIsActive)]];
+        [self.callFlowRequestStrategy appendLogForConversationID:conversation.remoteIdentifier message:[NSString stringWithFormat:@"Rejecting state change - conversation has local modifications for call device is active (local: %@)",@(conversation.callDeviceIsActive)]];
     }
     if (!conversation.callDeviceIsActive && oldCallDeviceIsActive) {
-        [self.flowSync appendLogForConversationID:conversation.remoteIdentifier message:@"Setting callDeviceIsActive to NO"];
+        [self.callFlowRequestStrategy appendLogForConversationID:conversation.remoteIdentifier message:@"Setting callDeviceIsActive to NO"];
     }
 }
 
@@ -236,7 +236,7 @@
                          @(oldIsJoined),
                          participant.remoteIdentifier.transportString, change];
     
-    [self.flowSync appendLogForConversationID:conversation.remoteIdentifier message:message];
+    [self.callFlowRequestStrategy appendLogForConversationID:conversation.remoteIdentifier message:message];
 }
 
 

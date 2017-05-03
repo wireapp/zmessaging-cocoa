@@ -24,11 +24,14 @@ class ProxiedRequestStrategyTests: MessagingTest {
 
     fileprivate var sut : ProxiedRequestStrategy!
     fileprivate var requestsStatus : ProxiedRequestsStatus!
-    
+    fileprivate var mockApplicationStatus : MockApplicationStatus!
+
     override func setUp() {
         super.setUp()
         self.requestsStatus = ProxiedRequestsStatus(requestCancellation: MockRequestCancellation())
-        self.sut = ProxiedRequestStrategy(requestsStatus: self.requestsStatus, managedObjectContext: self.uiMOC)
+        self.mockApplicationStatus = MockApplicationStatus()
+        self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        self.sut = ProxiedRequestStrategy(withManagedObjectContext: self.uiMOC, applicationStatus: self.mockApplicationStatus, requestsStatus: self.requestsStatus)
     }
     
     override func tearDown() {

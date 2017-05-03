@@ -22,6 +22,7 @@
 
 #import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
+#import "ZMSyncStrategy+EventProcessing.h"
 
 #import "ZMSyncStrategy+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
@@ -157,20 +158,5 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 
     return [[EventsWithIdentifier alloc] initWithEvents:events identifier:identifier isNotice:NO];
 }
-
-- (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-{
-    [self.syncMOC performGroupedBlock:^(){
-        [self.syncStrategy startBackgroundFetchWithCompletionHandler:handler];
-    }];
-}
-
-- (void)startBackgroundTaskWithCompletionHandler:(ZMBackgroundTaskHandler)handler;
-{
-    [self.syncMOC performGroupedBlock:^(){
-        [self.syncStrategy startBackgroundTaskWithCompletionHandler:handler];
-    }];
-}
-
 
 @end

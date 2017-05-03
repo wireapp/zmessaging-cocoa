@@ -21,6 +21,8 @@
 @import WireTransport;
 @import WireDataModel;
 
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
+
 #import "ZMRegistrationTranscoder.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMCredentials.h"
@@ -34,29 +36,38 @@
 
 @end
 
-
 @interface  ZMRegistrationTranscoder (SingleRequestTranscoder) <ZMSingleRequestTranscoder>
 @end
 
-
+@interface  ZMRegistrationTranscoder (AuthenticationStatusObserver) <ZMAuthenticationStatusObserver>
+@end
 
 @implementation ZMRegistrationTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
 {
-    NOT_USED(moc);
-    RequireString(NO, "Do not use this init");
-    return nil;
-}
-
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-{
-    self = [super initWithManagedObjectContext:moc];
+    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatusDirectory];
+    
     if (self != nil) {
         _registrationSync = [ZMSingleRequestSync syncWithSingleRequestTranscoder:self managedObjectContext:self.managedObjectContext];
-        self.authenticationStatus = authenticationStatus;
+        self.authenticationStatus = applicationStatusDirectory.authenticationStatus;
+        [applicationStatusDirectory.authenticationStatus addAuthenticationCenterObserver:self];
     }
     return self;
+}
+
+- (ZMStrategyConfigurationOption)configuration
+{
+    return ZMStrategyConfigurationOptionAllowsRequestsWhileUnauthenticated;
+}
+
+ - (ZMTransportRequest *)nextRequestIfAllowed
+{
+    if (self.isInRegistrationPhase) {
+        return self.registrationSync.nextRequest;
+    } else {
+        return nil;
+    }
 }
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> __unused *)events
@@ -66,24 +77,9 @@
     // no op
 }
 
-- (NSArray *)requestGenerators;
-{
-    return @[self.registrationSync];
-}
-
-- (BOOL)isSlowSyncDone
-{
-    return YES;
-}
-
 - (NSArray *)contextChangeTrackers
 {
     return [NSArray array];
-}
-
-- (void)setNeedsSlowSync
-{
-    // no op
 }
 
 - (void)resetRegistrationState;
@@ -92,8 +88,13 @@
     [self.registrationSync readyForNextRequest];
 }
 
-@end
+- (BOOL)isInRegistrationPhase
+{
+    ZMAuthenticationPhase authenticationPhase = self.authenticationStatus.currentPhase;
+    return authenticationPhase == ZMAuthenticationPhaseRegisterWithEmail || authenticationPhase == ZMAuthenticationPhaseRegisterWithPhone;
+}
 
+@end
 
 
 @implementation ZMRegistrationTranscoder (SingleRequestTranscoder)
@@ -166,6 +167,18 @@
             };
             [authenticationStatus didFailRegistrationForOtherReasons:error];
         }
+    }
+}
+
+@end
+
+
+@implementation ZMRegistrationTranscoder (AuthenticationStatusObserver)
+
+- (void)didChangeAuthenticationData
+{
+    if (self.isInRegistrationPhase) {
+        [self resetRegistrationState];
     }
 }
 

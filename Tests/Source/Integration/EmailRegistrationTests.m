@@ -259,7 +259,6 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self.userSession registerSelfUser:user];
-    WaitForAllGroupsToBeEmpty(1);
     
     // wait for more attempts
     [self spinMainQueueWithTimeout:1];
@@ -278,7 +277,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 
     [self.userSession removeAuthenticationObserverForToken:authenticationObserverToken];
     [self.userSession cancelWaitForEmailVerification]; // this cancels the requests
-    XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
+    XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.1]);
 }
 
 
@@ -299,7 +298,6 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self.userSession registerSelfUser:user];
-    WaitForAllGroupsToBeEmpty(1);
 
     // wait for more attempts
     [NSThread sleepForTimeInterval:0.5];
@@ -339,16 +337,18 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // then
     [self.userSession registerSelfUser:user];
-    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self spinMainQueueWithTimeout:0.5]; // Wait for registration request to complete
     
     [self.mockTransportSession resetReceivedRequests];
     
     // when
     [self.userSession resendRegistrationVerificationEmail];
-    [NSThread sleepForTimeInterval:0.5];
-    [self.userSession cancelWaitForEmailVerification];
-    WaitForAllGroupsToBeEmpty(0.1 + DefaultPendingValidationLoginAttemptInterval);
     
+    [self spinMainQueueWithTimeout:0.5]; // Let verification email resend request complete
+    
+    [self.userSession cancelWaitForEmailVerification];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     NSString *expectedPath = @"/activate/send";

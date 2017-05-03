@@ -21,19 +21,15 @@
 @import WireCryptobox;
 @import WireDataModel;
 @import avs;
-//@import WireMessageStrategy;
 
 #import "MessagingTest.h"
 #import "ZMSyncStrategy.h"
 #import <WireSyncEngine/ZMUserSession.h>
 #import "MockModelObjectContextFactory.h"
-#import "MockModelObjectContextFactory.h"
-#import "ZMAuthenticationStatus.h"
-#import <avs/AVSMediaManager.h>
-#import <avs/AVSFlowManager.h>
-#import "ZMAuthenticationStatus.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"
+#import "ZMSyncStrategy+ManagedObjectChanges.h"
+#import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMOperationLoop+Background.h"
 
 @interface ZMOperationLoopTests : MessagingTest
@@ -55,6 +51,7 @@
     self.pushChannelNotifications = [NSMutableArray array];
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
     self.syncStrategy = [OCMockObject niceMockForClass:[ZMSyncStrategy class]];
+    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
     
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.transportSession];
@@ -65,16 +62,21 @@
     // I expect this to be called, at least until we implement the soft sync
     [[[self.syncStrategy stub] andReturn:self.syncMOC] syncMOC];
     
+    
+    [(ZMApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturn:self.pingBackStatus] pingBackStatus];
+    [(ZMSyncStrategy *)[[self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];
+
     self.sut = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
                                                     syncStrategy:self.syncStrategy
                                                            uiMOC:self.uiMOC
-                                                         syncMOC:self.syncMOC
-                                    backgroundAPNSPingBackStatus:self.pingBackStatus];
+                                                         syncMOC:self.syncMOC];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
 }
 
 - (void)tearDown;
 {
+    WaitForAllGroupsToBeEmpty(0.5);
+    
     self.mockPushChannel = nil;
     self.transportSession = nil;
     self.syncStrategy = nil;
@@ -97,7 +99,6 @@
 {
     // expect
     [[(id) self.syncStrategy expect] didEstablishUpdateEventsStream];
-    [[self.syncStrategy stub] dataDidChange];
     
     // when
     [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:self.mockPushChannel withResponse:nil];
@@ -110,7 +111,6 @@
 {
     // expect
     [[(id) self.syncStrategy expect] didInterruptUpdateEventsStream];
-    [[self.syncStrategy stub] dataDidChange];
     
     // when
     [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:self.mockPushChannel withResponse:nil];
@@ -125,9 +125,8 @@
     
     // given
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
-    [[self.transportSession stub] closePushChannelAndRemoveConsumer];
     XCTestExpectation *expectation = [self expectationWithDescription:@"Open push channel opened"];
-    [[self.transportSession expect] openPushChannelWithConsumer:[OCMArg checkWithBlock:^BOOL(id obj) {
+    [[self.transportSession expect] configurePushChannelWithConsumer:[OCMArg checkWithBlock:^BOOL(id obj) {
         receivedConsumer = obj;
         [expectation fulfill];
         return YES;
@@ -137,8 +136,7 @@
     ZMOperationLoop *op = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
                                                                syncStrategy:self.syncStrategy
                                                                       uiMOC:self.uiMOC
-                                                                    syncMOC:self.syncMOC
-                                               backgroundAPNSPingBackStatus:nil];
+                                                                    syncMOC:self.syncMOC];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -157,13 +155,11 @@
 {
 
     // given
-    [[self.syncStrategy stub] dataDidChange];
     ZMTransportEnqueueResult *result = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
     ZMTransportRequest *request = [[ZMTransportRequest alloc] initWithPath:@"/test"
                                                                    method:ZMMethodPOST
                                                                   payload:@{@"foo": @"bar"}];
     [[[self.syncStrategy stub] andReturn:request] nextRequest];
-    [[[self.syncStrategy stub] andReturnValue:@NO] slowSyncInProgress];
     XCTestExpectation *attemptExpectation = [self expectationWithDescription:@"attemptToEnqueue"];
     [[[[self.transportSession expect] andDo:^(NSInvocation *invocation ZM_UNUSED) {
         [attemptExpectation fulfill];
@@ -187,8 +183,6 @@
     // given
     ZMTransportEnqueueResult *result = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
     [[[self.syncStrategy stub] andReturn:nil] nextRequest];
-    [[[self.syncStrategy stub] andReturnValue:@NO] slowSyncInProgress];
-    [[self.syncStrategy stub] dataDidChange];
 
     [[[self.transportSession expect] andReturn:result] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     
@@ -205,7 +199,6 @@
     // given
     ZMTransportEnqueueResult *resultOK = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:YES didGenerateNonNullRequest:YES];
     ZMTransportEnqueueResult *resultNO = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
-    [[self.syncStrategy stub] dataDidChange];
     
     ZMTransportRequest *request = [[ZMTransportRequest alloc] initWithPath:@"/test" method:ZMMethodPOST payload:@{}];
     int stopAt = 3;
@@ -225,7 +218,6 @@
     };
     
     [[[self.syncStrategy stub] andReturn:request] nextRequest];
-    [[[self.syncStrategy stub] andReturnValue:@NO] slowSyncInProgress];
 
 
     [[[self.transportSession expect] andReturn:resultOK] attemptToEnqueueSyncRequestWithGenerator:[OCMArg checkWithBlock:verifier]];
@@ -251,7 +243,6 @@
     // given
     NSManagedObjectContext *moc = [OCMockObject mockForClass:NSManagedObjectContext.class];
     [[[self.syncStrategy stub] andReturn:moc] syncMOC];
-    [[self.syncStrategy stub] dataDidChange];
     [[(id)moc stub] saveOrRollback];
 
     ZMTransportEnqueueResult *resultYES = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:YES didGenerateNonNullRequest:YES];
@@ -263,8 +254,6 @@
 
     // expect
     [[[self.syncStrategy expect] andReturn:request] nextRequest];
-
-    [[[self.syncStrategy stub] andReturnValue:@NO] slowSyncInProgress];
     
     BOOL(^checkGenerator)(ZMTransportRequestGenerator) = ^BOOL(ZMTransportRequestGenerator generator) {
         if(generator) {
@@ -295,7 +284,6 @@
     // given
     id mockObserver = [OCMockObject observerMock];
     [[NSNotificationCenter defaultCenter] addMockObserver:mockObserver name:NSManagedObjectContextDidSaveNotification object:self.syncMOC];
-    [[self.syncStrategy stub] dataDidChange];
 
     ZMTransportEnqueueResult *resultYES = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:YES didGenerateNonNullRequest:YES];
     ZMTransportEnqueueResult *resultNO = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
@@ -305,8 +293,6 @@
     // expect
     [[mockObserver expect] notificationWithName:NSManagedObjectContextDidSaveNotification object:OCMOCK_ANY userInfo:OCMOCK_ANY];
     [[[self.syncStrategy expect] andReturn:request] nextRequest];
-
-    [[[self.syncStrategy stub] andReturnValue:@NO] slowSyncInProgress];
 
     BOOL(^checkGenerator)(ZMTransportRequestGenerator) = ^BOOL(ZMTransportRequestGenerator generator) {
         if(generator) {
@@ -346,7 +332,6 @@
     // given
     id mockObserver = [OCMockObject observerMock];
     [[NSNotificationCenter defaultCenter] addMockObserver:mockObserver name:NSManagedObjectContextDidSaveNotification object:self.syncMOC];
-    [[self.syncStrategy stub] dataDidChange];
     
     ZMTransportEnqueueResult *resultYES = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:YES didGenerateNonNullRequest:YES];
     ZMTransportEnqueueResult *resultNO = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
@@ -356,8 +341,6 @@
     // expect
     [[mockObserver expect] notificationWithName:NSManagedObjectContextDidSaveNotification object:OCMOCK_ANY userInfo:OCMOCK_ANY];
     [[[self.syncStrategy expect] andReturn:request] nextRequest];
-    
-    [[[self.syncStrategy stub] andReturnValue:@NO] slowSyncInProgress];
     
     BOOL(^checkGenerator)(ZMTransportRequestGenerator) = ^BOOL(ZMTransportRequestGenerator generator) {
         if(generator) {
@@ -398,10 +381,6 @@
     [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
     ZMTransportEnqueueResult *resultNO = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
 
-    [[[self.syncStrategy stub] andReturnValue:@NO] slowSyncInProgress];
-    [[self.syncStrategy stub] dataDidChange];
-
-
     BOOL(^checkGenerator)(ZMTransportRequestGenerator) = ^BOOL(ZMTransportRequestGenerator generator) {
         if(generator) {
             generator();
@@ -431,10 +410,8 @@
 
     [[[self.syncStrategy expect] andReturnValue:@YES]
      processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
-    [[[self.syncStrategy stub] andReturnValue:@NO] slowSyncInProgress];
     ZMTransportEnqueueResult *resultNO = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
     [[[self.transportSession expect] andReturn:resultNO] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
-    [[self.syncStrategy stub] dataDidChange];
     
     NSError *error;
     XCTAssertTrue([self.uiMOC save:&error]);
@@ -466,10 +443,8 @@
 - (void)testThatItCallsProcessSaveOnSyncStrategyEvenIfThereAreNoChanges
 {
     // given
-    [[[self.syncStrategy stub] andReturnValue:@NO] slowSyncInProgress];
     ZMTransportEnqueueResult *resultNO = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
     [[[self.transportSession stub] andReturn:resultNO] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
-    [[self.syncStrategy stub] dataDidChange];
     
     // expect
     [[self.syncStrategy expect] processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
@@ -484,8 +459,6 @@
 - (void)testThatItCallsSyncStrategyDidRegisterWithInsertedObjects
 {
     // given
-    [[self.syncStrategy stub] dataDidChange];
-    
     ZMClientMessage *entity1 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
     ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
     
@@ -497,7 +470,6 @@
 
         return YES;
     }] updateObjects:OCMOCK_ANY];
-    [[[self.syncStrategy stub] andReturnValue:OCMOCK_VALUE(NO)] slowSyncInProgress];
     [[self.transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     
     // expect
@@ -512,8 +484,6 @@
 - (void)testThatItCallsSyncStrategyDidRegisterWithUpdatedObjects
 {
     // given
-    [[self.syncStrategy stub] dataDidChange];
-    
     [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
     ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
 
@@ -533,7 +503,6 @@
 
         return YES;
     }]];
-    [[[self.syncStrategy stub] andReturnValue:OCMOCK_VALUE(NO)] slowSyncInProgress];
     [[self.transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
 
     
@@ -548,8 +517,6 @@
 - (void)testThatSyncStrategyDidRegisterIsCalledWithInsertedObjectsFromTheSyncContext
 {
     // given
-    [[self.syncStrategy stub] dataDidChange];
-    
     ZMClientMessage *entity1 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
     ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
     
@@ -561,7 +528,6 @@
 
         return YES;
     }] updateObjects:OCMOCK_ANY];
-    [[[self.syncStrategy stub] andReturnValue:OCMOCK_VALUE(NO)] slowSyncInProgress];
     [[self.transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
 
     
@@ -591,8 +557,6 @@
 - (void)testThatSyncStrategyDidRegisterIsCalledWithUpdatedObjectsFromTheSyncContext
 {
     // given
-    [[self.syncStrategy stub] dataDidChange];
-    
     [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
     ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
 
@@ -614,7 +578,6 @@
 
         return YES;
     }]];
-    [[[self.syncStrategy stub] andReturnValue:OCMOCK_VALUE(NO)] slowSyncInProgress];
     [[self.transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
 
     
@@ -631,10 +594,6 @@
 - (void)testThatItAsksSyncStrategyForNextOperationOnZMOperationLoopNewRequestAvailableNotification
 {
     // given
-    [[[self.syncStrategy stub] andReturnValue:@NO] slowSyncInProgress];
-    [[self.syncStrategy stub] dataDidChange];
-    
-     
     ZMTransportEnqueueResult *resultNO = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
 
     BOOL(^checkGenerator)(ZMTransportRequestGenerator) = ^BOOL(ZMTransportRequestGenerator generator) {
@@ -731,54 +690,12 @@
     }];
 }
 
-
-- (void)testThatItClosesThePushChannelOnTearDown
-{
-    
-    // given
-    ZMTransportSession *transportSession = self.transportSession;
-    [[(id) transportSession stub] openPushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
-    
-    ZMOperationLoop *sut = [[ZMOperationLoop alloc] initWithTransportSession:transportSession
-                                                                syncStrategy:self.syncStrategy
-                                                                       uiMOC:self.uiMOC
-                                                                     syncMOC:self.syncMOC
-                                                backgroundAPNSPingBackStatus:nil];
-    
-    // expect
-    [[(id) transportSession expect] closePushChannelAndRemoveConsumer];
-    
-    // when
-    [sut tearDown];
-    
-    // then
-    [(id) transportSession verify];
-}
-
-
-- (void)testThatItCalls_DataDidChange_OnSyncStrategyWhenThereIsANewRequest
-{
-    // given
-    ZMTransportEnqueueResult *result = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
-    [[[self.syncStrategy stub] andReturn:nil] nextRequest];
-    [[[self.syncStrategy stub] andReturnValue:@NO] slowSyncInProgress];
-    [[[self.transportSession stub] andReturn:result] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
-    
-    // expect
-    [[self.syncStrategy expect] dataDidChange];
-    
-    // when
-    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
 - (void)testThatItSendsANotificationWhenClosingThePushChannelAndRemovingConsumers
 {
     // given
     id fakeResponse = [OCMockObject niceMockForClass:[NSHTTPURLResponse class]];
     [[[fakeResponse stub] andReturnValue:@(100l)] statusCode];
     [[self.syncStrategy stub] didInterruptUpdateEventsStream];
-    [[self.syncStrategy stub] dataDidChange];
     
     // when
     [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:self.mockPushChannel withResponse:fakeResponse];
@@ -796,7 +713,6 @@
     id fakeResponse = [OCMockObject niceMockForClass:[NSHTTPURLResponse class]];
     [[[fakeResponse stub] andReturnValue:@(100l)] statusCode];
     [[self.syncStrategy stub] didEstablishUpdateEventsStream];
-    [[self.syncStrategy stub] dataDidChange];
 
     // when
     [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:self.mockPushChannel withResponse:fakeResponse];
@@ -820,7 +736,6 @@
 - (APSSignalingKeysStore *)prepareSelfClientForAPSSignalingStore
 {
     [[self.syncStrategy stub] processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
-    [[self.syncStrategy stub] dataDidChange];
     
     NSString *macKey = @"OnuLUsjZT5ix8mebzewnNH7kVuLNYvDTxVFe8xiZ1u0=";
     NSString *encryptionKey = @"eiISyl78bYnFZaXsjvZh4v7d/mnNLDQNB+vRcsapovA=";
@@ -928,6 +843,7 @@
     // expect
     [(ZMSyncStrategy *)[self.syncStrategy expect] consumeUpdateEvents:events];
     [(ZMSyncStrategy *)[self.syncStrategy expect] updateBadgeCount];
+
     [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
         handler(ZMPushPayloadResultSuccess, events);
         return YES;
@@ -1065,30 +981,6 @@
     [self.syncStrategy verify];
 }
 
-- (void)testThatItForwardsTheBackgroundFetchRequestToTheSyncStrategy
-{
-    // given
-    XCTestExpectation *expectation = [self expectationWithDescription:@"Background fetch completed"];
-    ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult result) {
-        XCTAssertEqual(result, ZMBackgroundFetchResultNewData);
-        [expectation fulfill];
-    };
-    
-    // expect
-    [(ZMSyncStrategy *)[[(id) self.syncStrategy expect] andCall:@selector(forward_startBackgroundFetchWithCompletionHandler:) onObject:self] startBackgroundFetchWithCompletionHandler:OCMOCK_ANY];
-    
-    // when
-    [self.sut startBackgroundFetchWithCompletionHandler:handler];
-    // then
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    [(id) self.syncStrategy verify];
-}
-
-- (void)forward_startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-{
-    handler(ZMBackgroundFetchResultNewData);
-}
-
 - (void)testThatItForwardsNoticeNotificationsToTheSyncStrategyAndPingBackStatus
 {
     // given
@@ -1096,7 +988,6 @@
     
     // We need to stub these for the inserting
     [[self.syncStrategy stub] processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
-    [[self.syncStrategy stub] dataDidChange];
     
     XCTAssertTrue([self.syncMOC saveOrRollback]);
     WaitForAllGroupsToBeEmpty(0.5);

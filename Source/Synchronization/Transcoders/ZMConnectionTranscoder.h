@@ -19,9 +19,14 @@
 
 @import CoreData;
 @import Foundation;
-@import WireRequestStrategy;
+@import WireMessageStrategy;
 
+@class SyncStatus;
 
+@interface ZMConnectionTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy>
 
-@interface ZMConnectionTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy>
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatus:(id<ZMApplicationStatus>)applicationStatus NS_UNAVAILABLE;
+
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatus:(id<ZMApplicationStatus>)applicationStatus syncStatus:(SyncStatus *)syncStatus;
+
 @end

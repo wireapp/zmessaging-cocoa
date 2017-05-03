@@ -32,16 +32,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
 
 /// This request sync generates request to upload the address book
 /// It will upload only after `markAddressBookAsNeedingToBeUploaded` is called
-@objc public final class AddressBookUploadRequestStrategy: NSObject {
-    
-    /// Auth status to know whether we can make requests
-    fileprivate let authenticationStatus : AuthenticationStatusProvider
-    
-    /// Client status to know whether we can make requests
-    fileprivate let clientRegistrationStatus : ZMClientClientRegistrationStatusProvider
-    
-    /// Managed object context where to perform all operations
-    fileprivate let managedObjectContext: NSManagedObjectContext
+@objc public final class AddressBookUploadRequestStrategy: AbstractRequestStrategy {
     
     /// Request sync to upload the address book
     fileprivate var requestSync : ZMSingleRequestSync!
@@ -58,48 +49,23 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
     /// Address book
     fileprivate let addressBookGenerator : ()->(AddressBookAccessor?)
     
-    public convenience init(authenticationStatus: AuthenticationStatusProvider,
-        clientRegistrationStatus: ZMClientClientRegistrationStatusProvider,
-        moc: NSManagedObjectContext)
-    {
-        
-        self.init(authenticationStatus: authenticationStatus,
-            clientRegistrationStatus: clientRegistrationStatus,
-            managedObjectContext: moc
-        )
+    public override convenience init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+        self.init(managedObjectContext: moc, applicationStatus: applicationStatus, addressBookGenerator: { return AddressBook.factory() }, tracker: nil)
     }
     
-    init(authenticationStatus: AuthenticationStatusProvider,
-                clientRegistrationStatus: ZMClientClientRegistrationStatusProvider,
-                managedObjectContext: NSManagedObjectContext,
-                addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook.factory() },
-                tracker: AddressBookTracker? = nil
-                )
-    {
+    /// Use for testing only
+    internal init(managedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus, addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook.factory() }, tracker: AddressBookTracker? = nil) {
         // notify of denied access
         if addressBookGenerator() == nil {
             NotificationCenter.default.post(name: Notification.Name(rawValue: failedToAccessAddressBookNotificationName), object: nil)
         }
-        
-        self.authenticationStatus = authenticationStatus
-        self.clientRegistrationStatus = clientRegistrationStatus
-        self.managedObjectContext = managedObjectContext
         self.addressBookGenerator = addressBookGenerator
-        self.tracker = tracker ?? AddressBookAnalytics(analytics: managedObjectContext.analytics, managedObjectContext: managedObjectContext)
-        super.init()
-        self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
+        self.tracker = tracker ?? AddressBookAnalytics(analytics: moc.analytics, managedObjectContext: moc)
+        super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
+        self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)
     }
-}
-
-// MARK: - Request generation logic
-extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTranscoder {
     
-    public func nextRequest() -> ZMTransportRequest? {
-        guard self.authenticationStatus.currentPhase == .authenticated &&
-            self.clientRegistrationStatus.clientIsReadyForRequests else {
-                return nil
-        }
-        
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         // already encoded? just send it
         if self.encodedAddressBookChunkToUpload != nil {
             self.requestSync.readyForNextRequestIfNotBusy()
@@ -109,6 +75,10 @@ extension AddressBookUploadRequestStrategy : RequestStrategy, ZMSingleRequestTra
         self.generateAddressBookPayloadIfNeeded()
         return nil
     }
+}
+
+// MARK: - Request generation logic
+extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
     
     public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
         guard sync == self.requestSync, let encodedChunk = self.encodedAddressBookChunkToUpload else {

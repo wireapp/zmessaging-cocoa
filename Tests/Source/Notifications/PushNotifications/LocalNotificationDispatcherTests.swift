@@ -249,8 +249,7 @@ extension LocalNotificationDispatcherTests {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
-        XCTAssertEqual(Set(self.application.cancelledLocalNotifications), Set([note2.uiNotifications, note1.uiNotifications].flatMap { $0 }))
-        
+        XCTAssertEqual(Set(self.application.cancelledLocalNotifications), Set(note2.uiNotifications + note1.uiNotifications))
     }
     
     func testThatItSchedulesADefaultNotificationIfContentShouldNotBeVisible() {

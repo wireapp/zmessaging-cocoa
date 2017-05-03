@@ -77,7 +77,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     ++self.authenticationSuccessCount;
 }
 
-
 - (void)testThatItNotifiesIfTheClientNeedsToBeRegistered
 {
     // given
@@ -773,8 +772,12 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
             return nil;
         };
         
+        NSLog(@"%@", [ZMUser selfUserInContext:self.syncMOC]);
+        
         [self recreateUserSessionAndWipeCache:NO];
         WaitForEverythingToBeDone();
+        
+        NSLog(@"%@", [ZMUser selfUserInContext:self.syncMOC]);
     }
     
     // (2) login again after the client was deleted from the backend

@@ -129,7 +129,6 @@
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", self.selfConversation.identifier,self.selfToUser1Conversation.identifier,self.selfToUser2Conversation.identifier,self.groupConversation.identifier]],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@,%@", self.selfUser.identifier, self.user1.identifier, self.user2.identifier]],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", self.user3.identifier]],
-             [ZMTransportRequest requestGetFromPath:@"/self"],
              [ZMTransportRequest requestWithPath:@"/onboarding/v3" method:ZMMethodPOST payload:@{
                                                                                                                 @"cards" : @[],
                                                                                                                 @"self" : @[@"r6E0oILa7PsAlgL+tap6ZEYhOm2y3SVfKJe1eDTVKcw="]
@@ -172,14 +171,21 @@
     // then
     NSMutableArray *mutableRequests = [self.mockTransportSession.receivedRequests mutableCopy];
     __block NSUInteger clientRegistrationCallCount = 0;
+    __block NSUInteger notificationStreamCallCount = 0;
     [self.mockTransportSession.receivedRequests enumerateObjectsUsingBlock:^(ZMTransportRequest *request, NSUInteger idx, BOOL *stop) {
         NOT_USED(stop);
+        NOT_USED(idx);
         if ([request.path containsString:@"clients"] && request.method == ZMMethodPOST) {
-            [mutableRequests removeObjectAtIndex:idx];
+            [mutableRequests removeObject:request];
             clientRegistrationCallCount++;
+        }
+        if ([request.path hasPrefix:@"/notifications?size=500"]) {
+            [mutableRequests removeObject:request];
+            notificationStreamCallCount++;
         }
     }];
     XCTAssertEqual(clientRegistrationCallCount, 1u);
+    XCTAssertEqual(notificationStreamCallCount, 1u);
     
     AssertArraysContainsSameObjects(expectedRequests, mutableRequests);
 }
@@ -192,6 +198,7 @@
     
     // given
     NSArray *expectedRequests = [[self commonRequestsOnLogin] arrayByAddingObjectsFromArray: @[
+                                  [ZMTransportRequest requestGetFromPath:@"/self"],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.previewProfileAssetIdentifier]],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.completeProfileAssetIdentifier]]
                                   ]];
@@ -199,14 +206,22 @@
     // then
     NSMutableArray *mutableRequests = [self.mockTransportSession.receivedRequests mutableCopy];
     __block NSUInteger clientRegistrationCallCount = 0;
+    __block NSUInteger notificationStreamCallCount = 0;
     [self.mockTransportSession.receivedRequests enumerateObjectsUsingBlock:^(ZMTransportRequest *request, NSUInteger idx, BOOL *stop) {
         NOT_USED(stop);
+        NOT_USED(idx);
         if ([request.path containsString:@"clients"] && request.method == ZMMethodPOST) {
-            [mutableRequests removeObjectAtIndex:idx];
+            [mutableRequests removeObject:request];
             clientRegistrationCallCount++;
+        }
+        
+        if ([request.path hasPrefix:@"/notifications?size=500"]) {
+            [mutableRequests removeObject:request];
+            notificationStreamCallCount++;
         }
     }];
     XCTAssertEqual(clientRegistrationCallCount, 1u);
+    XCTAssertEqual(notificationStreamCallCount, 1u);
     
     AssertArraysContainsSameObjects(expectedRequests, mutableRequests);
 }
@@ -326,9 +341,26 @@
     [self.mockTransportSession resetReceivedRequests];
 
     // make /notifications fail
+    __block BOOL hasNotificationsRequest = NO;
+    __block BOOL hasConversationsRequest = NO;
+    __block BOOL hasConnectionsRequest = NO;
+    __block BOOL hasUserRequest = NO;
+
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if([request.path hasPrefix:@"/notifications"]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
+            if (!(hasConnectionsRequest && hasConversationsRequest && hasUserRequest)) {
+                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
+            }
+            hasNotificationsRequest = YES;
+        }
+        if ([request.path hasPrefix:@"/users"]) {
+            hasUserRequest = YES;
+        }
+        if ([request.path hasPrefix:@"/conversations?ids="]) {
+            hasConversationsRequest = YES;
+        }
+        if ([request.path hasPrefix:@"/connections?size="]) {
+            hasConnectionsRequest = YES;
         }
         return nil;
     };
@@ -342,24 +374,9 @@
     WaitForEverythingToBeDone();
     
     // then
-    BOOL hasNotificationsRequest = NO;
-    BOOL hasConversationsRequest = NO;
-    BOOL hasConnectionsRequest = NO;
-    
-    for (ZMTransportRequest *request in self.mockTransportSession.receivedRequests) {
-        
-        if ([request.path hasPrefix:@"/notifications"]) {
-            hasNotificationsRequest = YES;
-        }
-        if ([request.path hasPrefix:@"/conversations?ids="]) {
-            hasConversationsRequest = YES;
-        }
-        if ([request.path hasPrefix:@"/connections?size="]) {
-            hasConnectionsRequest = YES;
-        }
-    }
-    
+
     XCTAssertTrue(hasNotificationsRequest);
+    XCTAssertTrue(hasUserRequest);
     XCTAssertTrue(hasConversationsRequest);
     XCTAssertTrue(hasConnectionsRequest);
 }
@@ -384,15 +401,12 @@
     [observer verify];
     [ZMNetworkAvailabilityChangeNotification removeNetworkAvailabilityObserver:observer];
     
-    XCTAssertEqual(receivedNotes.count, 2u);
+    XCTAssertEqual(receivedNotes.count, 1u);
     ZMNetworkAvailabilityChangeNotification *note1 = receivedNotes[0];
-    ZMNetworkAvailabilityChangeNotification *note2 = receivedNotes[1];
 
     XCTAssertNotNil(note1);
-    XCTAssertNotNil(note2);
 
-    XCTAssertEqual(note1.networkState, ZMNetworkStateOnlineSynchronizing);
-    XCTAssertEqual(note2.networkState, ZMNetworkStateOnline);
+    XCTAssertEqual(note1.networkState, ZMNetworkStateOnline);
     
     XCTAssertEqual(self.userSession.networkState, ZMNetworkStateOnline);
 }
@@ -431,6 +445,37 @@
     ZMConversation *conversation = [ZMConversation conversationWithRemoteID:UUID createIfNeeded:NO inContext:moc];
     XCTAssertNotNil(conversation);
     return conversation;
+}
+
+@end
+
+
+@implementation SlowSyncTests (BackgroundFetch)
+
+- (void)testThatItFetchesTheNotificationStreamDuringBackgroundFetch
+{
+    // given
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self.application setBackground];
+    [self.application simulateApplicationDidEnterBackground];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self.mockTransportSession resetReceivedRequests];
+    
+    // when
+    XCTestExpectation *expectation = [self expectationWithDescription:@"fetchCompleted"];
+    [self.userSession application:self.application performFetchWithCompletionHandler:^(UIBackgroundFetchResult result) {
+        NOT_USED(result);
+        ZMTransportRequest *request = self.mockTransportSession.receivedRequests.lastObject;
+        XCTAssertNotNil(request);
+        XCTAssertTrue([request.path containsString:@"notifications"]);
+        [expectation fulfill];
+    }];
+    
+    // then
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 @end

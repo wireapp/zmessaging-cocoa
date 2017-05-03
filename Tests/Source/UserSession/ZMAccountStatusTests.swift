@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -24,7 +24,7 @@ class MockCookieStorage : NSObject, ZMCookieProvider {
     
     var shouldReturnCookie : Bool = false
     
-    var authenticationCookieData : Data! {
+    var data : Data! {
         if shouldReturnCookie {
             return Data()
         }

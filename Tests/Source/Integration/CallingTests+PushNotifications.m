@@ -39,10 +39,7 @@
     [(PKPushPayload *)[[(id)pkPayload stub] andReturn:PKPushTypeVoIP] type];
     PKPushRegistry *mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
     [self.userSession.pushRegistrant pushRegistry:mockPushRegistry didReceiveIncomingPushWithPayload:pkPayload forType:pkPayload.type];
-
-    [self.mockTransportSession closePushChannelAndRemoveConsumer];
     [self.mockTransportSession registerPushEvent:[MockPushEvent eventWithPayload:payload uuid:identifier fromUser:user isTransient:YES]];
-    [self.mockTransportSession restartPushChannel];
 
     WaitForEverythingToBeDone();
 }
@@ -209,10 +206,6 @@
                                                                     sequence:@1
                                                                      session:@"session2"];
 
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session simulatePushChannelClosed];
-    }];
-
     NSUUID *notificationId = NSUUID.timeBasedUUID;
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -220,9 +213,10 @@
     [self simulateRestartWithoutEnteringEventProcessingWithNotificationFetchResponse:streamPayload forIdentifier:notificationId];
     
     UILocalNotification *notification;    
+    
     [self.application setBackground];
-
-    [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification object:nil];
+    [self.application simulateApplicationDidEnterBackground];
+    
     WaitForAllGroupsToBeEmpty(0.5);
 
     XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 0u);
@@ -249,7 +243,6 @@
         // then
         XCTAssertFalse([self lastRequestContainsSelfStateJoined]);
         XCTAssertTrue(self.userSession.didStartInitialSync);
-        XCTAssertTrue(self.userSession.isPerformingSync);
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 1u);
     }
 

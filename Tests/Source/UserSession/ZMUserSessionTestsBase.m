@@ -36,6 +36,7 @@
 
 @property (nonatomic) id<ZMAuthenticationObserverToken> authenticationObserverToken;
 @property (nonatomic) id<ZMRegistrationObserverToken> registrationObserverToken;
+@property (nonatomic) ZMOperationStatus *operationStatus;
 
 @end
 
@@ -68,8 +69,27 @@
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
     self.mediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
+    
+    ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:self.cookieStorage];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext: self.syncMOC cookie:cookie];
+    self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC loginCredentialProvider:self.authenticationStatus updateCredentialProvider:nil cookie:cookie registrationStatusDelegate:nil];
+    self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
+    self.operationStatus = [[ZMOperationStatus alloc] init];
+    
+    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
+    [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.authenticationStatus] authenticationStatus];
+    [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.clientRegistrationStatus] clientRegistrationStatus];
+    [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.proxiedRequestStatus] proxiedRequestStatus];
+    [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.operationStatus] operationStatus];
+    
+    self.syncStrategy = [OCMockObject mockForClass:[ZMSyncStrategy class]];
+    [(ZMSyncStrategy *)[[(id)self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];
+    [self verifyMockLater:self.syncStrategy];
+
     self.operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
     [[self.operationLoop stub] tearDown];
+    [[[self.operationLoop stub] andReturn:self.syncStrategy] syncStrategy];
+    
     self.apnsEnvironment = [OCMockObject niceMockForClass:[ZMAPNSEnvironment class]];
     [[[self.apnsEnvironment stub] andReturn:@"com.wire.ent"] appIdentifier];
     [[[self.apnsEnvironment stub] andReturn:@"APNS"] transportTypeForTokenType:ZMAPNSTypeNormal];
@@ -94,7 +114,6 @@
     self.registrationObserver = [OCMockObject mockForProtocol:@protocol(ZMRegistrationObserver)];
     self.registrationObserverToken = [self.sut addRegistrationObserver:self.registrationObserver];
     
-    self.syncStrategy = [OCMockObject mockForClass:[ZMSyncStrategy class]];
     
     self.validCookie = [@"valid-cookie" dataUsingEncoding:NSUTF8StringEncoding];
     [self verifyMockLater:self.transportSession];
@@ -109,6 +128,13 @@
 
 - (void)tearDown
 {
+    [self.clientRegistrationStatus tearDown];
+    self.clientRegistrationStatus = nil;
+    [self.sut.authenticationStatus removeAuthenticationCenterObserver:self];
+    self.authenticationStatus = nil;
+    self.proxiedRequestStatus = nil;
+    self.operationStatus = nil;
+    
     ZMUserSession.callingProtocolStrategy = CallingProtocolStrategyNegotiate;
     [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
     [self.syncMOC.userInfo removeAllObjects];
@@ -117,7 +143,6 @@
     [self.uiMOC.userInfo removeAllObjects];
     
     [super cleanUpAndVerify];
-    [self.sut.authenticationStatus removeAuthenticationCenterObserver:self];
     self.authFailHandler = nil;
     self.tokenSuccessHandler = nil;
     self.baseURL = nil;

@@ -22,12 +22,12 @@
 
 @class ZMConnectionTranscoder;
 @class ZMUserTranscoder;
-@class ZMSelfTranscoder;
+@class ZMSelfStrategy;
 @class ZMConversationTranscoder;
 @class ZMMissingUpdateEventsTranscoder;
 @class ZMRegistrationTranscoder;
-@class ZMFlowSync;
-@class ZMCallStateTranscoder;
+@class ZMCallFlowRequestStrategy;
+@class ZMCallStateRequestStrategy;
 @class ZMLastUpdateEventIDTranscoder;
 @class ZMLoginTranscoder;
 @class ZMPhoneNumberVerificationTranscoder;
@@ -41,7 +41,7 @@
 
 @property (nonatomic, readonly) ZMConnectionTranscoder *connectionTranscoder;
 @property (nonatomic, readonly) ZMUserTranscoder *userTranscoder;
-@property (nonatomic, readonly) ZMSelfTranscoder *selfTranscoder;
+@property (nonatomic, readonly) ZMSelfStrategy *selfStrategy;
 @property (nonatomic, readonly) ZMConversationTranscoder *conversationTranscoder;
 @property (nonatomic, readonly) SystemMessageEventsConsumer *systemMessageEventConsumer;
 @property (nonatomic, readonly) ClientMessageTranscoder *clientMessageTranscoder;
@@ -51,14 +51,6 @@
 @property (nonatomic, readonly) ZMPhoneNumberVerificationTranscoder *phoneNumberVerificationTranscoder;
 @property (nonatomic, readonly) ZMLoginTranscoder *loginTranscoder;
 @property (nonatomic, readonly) ZMLoginCodeRequestTranscoder *loginCodeRequestTranscoder;
-@property (nonatomic, readonly) ZMFlowSync *flowTranscoder;
-@property (nonatomic, readonly) ZMCallStateTranscoder *callStateTranscoder;
-
-
 @property (nonatomic, readonly) NSManagedObjectContext *moc;
-
-- (NSArray *)allTranscoders;
-
-- (NSArray *)conversationIdsThatHaveBufferedUpdatesForCallState;
 
 @end

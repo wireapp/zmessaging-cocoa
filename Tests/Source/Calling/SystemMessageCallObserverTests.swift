@@ -21,7 +21,7 @@ import Foundation
 
 class SystemMessageCallObserverTests : MessagingTest {
     
-    var sut : SystemMessageCallObserver!
+    var sut : SystemMessageCallObserverV2!
     var mockWireCallCenterV3 : WireCallCenterV3Mock!
     var selfUserID : UUID!
     var clientID: String!
@@ -43,69 +43,23 @@ class SystemMessageCallObserverTests : MessagingTest {
         selfUserID = selfUser.remoteIdentifier
         clientID = "foo"
         
-        sut = WireSyncEngine.SystemMessageCallObserver(managedObjectContext:uiMOC)
+        sut = WireSyncEngine.SystemMessageCallObserverV2(managedObjectContext:uiMOC)
         mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUserID, clientId: clientID, uiMOC: uiMOC)
     }
     
     override func tearDown() {
         sut = nil
+        selfUserID = nil
+        clientID = nil
+        selfUser = nil
+        conversation = nil
+        user = nil
         super.tearDown()
+        
         mockWireCallCenterV3 = nil
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
-    func testThatItAppendsPerformedCallSystemMessage_OutgoingCall_V3(){
-        // given
-        ZMUserSession.callingProtocolStrategy = .version3
-        let messageCount = conversation.messages.count
-        mockWireCallCenterV3.mockInitiator = user // In case of outgoing calls, the user in the perfromedCall message should always be the selfUser
-        
-        // when
-        sut.callCenterDidChange(voiceChannelState: .outgoingCall, conversation: conversation, callingProtocol: .version2)
-        sut.callCenterDidChange(voiceChannelState: .selfConnectedToActiveChannel , conversation: conversation, callingProtocol: .version2)
-        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version3)
-        
-        // then
-        XCTAssertEqual(conversation.messages.count, messageCount+1)
-        if let message = conversation.messages.lastObject as? ZMSystemMessage {
-            XCTAssertEqual(message.systemMessageType, .performedCall)
-            XCTAssertTrue(message.users.contains(selfUser))
-        }
-    }
-    
-    func testThatItAppendsPerformedCallSystemMessage_IncomingCall_V3(){
-        // given
-        ZMUserSession.callingProtocolStrategy = .version3
-        let messageCount = conversation.messages.count
-        mockWireCallCenterV3.mockInitiator = user
-        
-        // when
-        sut.callCenterDidChange(voiceChannelState: .incomingCallInactive, conversation: conversation, callingProtocol: .version3)
-        sut.callCenterDidChange(voiceChannelState: .selfConnectedToActiveChannel , conversation: conversation, callingProtocol: .version3)
-        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version3)
-        
-        // then
-        XCTAssertEqual(conversation.messages.count, messageCount+1)
-        if let message = conversation.messages.lastObject as? ZMSystemMessage {
-            XCTAssertEqual(message.systemMessageType, .performedCall)
-            XCTAssertTrue(message.users.contains(user))
-        }
-    }
-    
-    func testThatItDoesNotAppendsPerformedCallSystemMessage_NotJoined_V3(){
-        // given
-        ZMUserSession.callingProtocolStrategy = .version3
-        let messageCount = conversation.messages.count
-        mockWireCallCenterV3.mockInitiator = user
-
-        // when
-        sut.callCenterDidChange(voiceChannelState: .incomingCallInactive, conversation: conversation, callingProtocol: .version3)
-        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version3)
-        
-        // then
-        XCTAssertEqual(conversation.messages.count, messageCount)
-    }
-
     func testThatItAppendsPerformedCallSystemMessage_OutgoingCall_V2(){
         // given
         ZMUserSession.callingProtocolStrategy = .version2
@@ -118,7 +72,7 @@ class SystemMessageCallObserverTests : MessagingTest {
         // when
         sut.callCenterDidChange(voiceChannelState: .outgoingCall, conversation: conversation, callingProtocol: .version2)
         sut.callCenterDidChange(voiceChannelState: .selfConnectedToActiveChannel , conversation: conversation, callingProtocol: .version2)
-        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version3)
+        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version2)
         
         // then
         XCTAssertEqual(conversation.messages.count, messageCount+1)
@@ -140,7 +94,7 @@ class SystemMessageCallObserverTests : MessagingTest {
         // when
         sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version2)
         sut.callCenterDidChange(voiceChannelState: .selfConnectedToActiveChannel , conversation: conversation, callingProtocol: .version2)
-        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version3)
+        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version2)
         
         // then
         XCTAssertEqual(conversation.messages.count, messageCount+1)

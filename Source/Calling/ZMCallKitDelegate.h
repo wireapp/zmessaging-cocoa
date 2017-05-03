@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class INPerson;
 @class ZMUserSession;
 @class ZMConversation;
-@class ZMFlowSync;
+@class ZMCallFlowRequestStrategy;
 @class ZMOnDemandFlowManager;
 @class AVSMediaManager;
 @class CXProviderConfiguration;

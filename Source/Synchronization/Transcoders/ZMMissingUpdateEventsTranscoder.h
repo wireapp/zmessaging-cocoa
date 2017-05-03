@@ -18,13 +18,14 @@
 
 
 @import Foundation;
-@import WireRequestStrategy;
+@import WireMessageStrategy;
 
 @class BackgroundAPNSPingBackStatus;
+@class SyncStatus;
 @protocol PreviouslyReceivedEventIDsCollection;
 @protocol ZMApplication;
 
-@interface ZMMissingUpdateEventsTranscoder : ZMObjectSyncStrategy <ZMObjectStrategy, ZMRequestGenerator>
+@interface ZMMissingUpdateEventsTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy>
 
 @property (nonatomic, readonly) BOOL hasLastUpdateEventID;
 @property (nonatomic, readonly) BOOL isDownloadingMissingNotifications;
@@ -33,7 +34,8 @@
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
 previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
                          application:(id <ZMApplication>)application
-        backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus;
+        backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus
+                          syncStatus:(SyncStatus *)syncStatus;
 
 - (void)startDownloadingMissingNotifications;
 

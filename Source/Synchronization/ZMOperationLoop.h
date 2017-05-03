@@ -31,17 +31,13 @@
 @protocol ZMTransportData;
 @protocol AVSMediaManager;
 @protocol ApplicationStateOwner;
+@protocol ZMApplication;
 
 @class ZMOnDemandFlowManager;
-@class ProxiedRequestsStatus;
-@class ClientUpdateStatus;
-@class UserProfileUpdateStatus;
-@class UserProfileImageUpdateStatus;
-
+@class ZMCookie;
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
 @class TopConversationsDirectory;
-@protocol ZMApplication;
 
 extern NSString * const ZMPushChannelStateChangeNotificationName;
 extern NSString * const ZMPushChannelIsOpenKey;
@@ -53,14 +49,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
-                    authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-                 userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileUpdateStatus
-            userProfileImageUpdateStatus:(UserProfileImageUpdateStatus *)profileImageStatus
-                clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
-                      clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
-                    proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
-                           accountStatus:(ZMAccountStatus *)accountStatus
-            backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
+                                  cookie:(ZMCookie *)cookie
              localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
                             mediaManager:(id<AVSMediaManager>)mediaManager
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager

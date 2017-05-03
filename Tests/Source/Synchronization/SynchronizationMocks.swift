@@ -22,6 +22,78 @@ import WireDataModel
 import WireCryptobox
 @testable import WireSyncEngine
 
+
+@objc(ZMMockApplicationStatus)
+public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfirmationDelegate, ClientRegistrationDelegate, ZMRequestCancellation {
+    
+    public var confirmationDelegate : DeliveryConfirmationDelegate { return self }
+    public var taskCancellationDelegate : ZMRequestCancellation { return self }
+    public var clientRegistrationDelegate : ClientRegistrationDelegate { return self }
+    
+    public var mockSynchronizationState = SynchronizationState.unauthenticated
+    public var synchronizationState: SynchronizationState {
+        return mockSynchronizationState
+    }
+    
+    public var mockOperationState = OperationState.foreground
+    public var operationState: OperationState {
+        return mockOperationState
+    }
+    
+    public var deliveryConfirmation: DeliveryConfirmationDelegate {
+        return self
+    }
+    
+    public var requestCancellation: ZMRequestCancellation {
+        return self
+    }
+    
+    //MARK ZMRequestCancellation
+    public var cancelledIdentifiers = [ZMTaskIdentifier]()
+    
+    public func cancelTask(with identifier: ZMTaskIdentifier) {
+        cancelledIdentifiers.append(identifier)
+    }
+    
+    
+    // MARK: ClientRegistrationDelegate
+    public var deletionCalls : Int = 0
+    
+    /// Notify that the current client was deleted remotely
+    public func didDetectCurrentClientDeletion() {
+        deletionCalls = deletionCalls+1
+    }
+    
+    /// Returns true if the client is registered
+    public var clientIsReadyForRequests: Bool {
+        return true
+    }
+    
+    
+    // MARK: DeliveryConfirmationDelegate
+    public private (set) var messagesToConfirm = Set<UUID>()
+    public private (set) var messagesConfirmed = Set<UUID>()
+    
+    public static var sendDeliveryReceipts: Bool {
+        return true
+    }
+    
+    public var needsToSyncMessages: Bool {
+        return true
+    }
+    
+    public func needsToConfirmMessage(_ messageNonce: UUID) {
+        messagesToConfirm.insert(messageNonce)
+    }
+    
+    public func didConfirmMessage(_ messageNonce: UUID) {
+        messagesConfirmed.insert(messageNonce)
+    }
+    
+}
+
+
+
 class MockAuthenticationStatus: ZMAuthenticationStatus {
     
     var mockPhase: ZMAuthenticationPhase
@@ -43,7 +115,7 @@ class MockAuthenticationStatus: ZMAuthenticationStatus {
     }
 }
 
-class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus, ClientRegistrationDelegate {
+class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus {
     var mockPhase : ZMClientRegistrationPhase?
     var mockCredentials : ZMEmailCredentials = ZMEmailCredentials(email: "bla@example.com", password: "secret")
     var mockReadiness :Bool = true
@@ -63,7 +135,7 @@ class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus, ClientRegistra
         return true
     }
     
-    override var clientIsReadyForRequests: Bool {
+    override func clientIsReadyForRequests() -> Bool {
         return mockReadiness
     }
 }
@@ -144,3 +216,47 @@ class SpyUserClientKeyStore : UserClientKeysStore {
         }
     }
 }
+
+public class MockSyncStatus : SyncStatus {
+    
+    var didCallFailCurrentSyncPhase = false
+    var didCallFinishCurrentSyncPhase = false
+
+    public var mockPhase : SyncPhase = .done {
+        didSet {
+            currentSyncPhase = mockPhase
+        }
+    }
+    
+    public override func failCurrentSyncPhase() {
+        didCallFailCurrentSyncPhase = true
+        
+        super.failCurrentSyncPhase()
+    }
+    
+    public override func finishCurrentSyncPhase() {
+        didCallFinishCurrentSyncPhase = true
+        
+        super.finishCurrentSyncPhase()
+    }
+}
+
+public class MockSyncStateDelegate : NSObject, ZMSyncStateDelegate {
+
+    var registeredUserClient : UserClient?
+    var didCallStartSync = false
+    var didCallFinishSync = false
+
+    public func didStartSync() {
+        didCallStartSync = true
+    }
+    
+    public func didFinishSync() {
+        didCallFinishSync = true
+    }
+    
+    public func didRegister(_ userClient: UserClient!) {
+        registeredUserClient = userClient
+    }
+}
+

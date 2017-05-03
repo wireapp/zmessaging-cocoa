@@ -29,16 +29,16 @@ import WireDataModel
 
 
 @objc public protocol ZMCookieProvider : NSObjectProtocol {
-    var authenticationCookieData : Data! { get }
+    var data : Data! { get }
 }
 
-extension ZMPersistentCookieStorage : ZMCookieProvider {
+extension ZMCookie : ZMCookieProvider {
 }
 
 public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, ZMAuthenticationObserver, ZMRegistrationObserver {
 
     let managedObjectContext: NSManagedObjectContext
-    let cookieStorage : ZMCookieProvider
+    let cookieProvider : ZMCookieProvider
     var authenticationToken : ZMAuthenticationObserverToken!
     var registrationToken : ZMRegistrationObserverToken!
     
@@ -53,7 +53,7 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, 
     }()
     
     var hasCookie : Bool {
-        return cookieStorage.authenticationCookieData != nil
+        return cookieProvider.data != nil
     }
     
     @objc public func initialSyncCompleted(_ note: Notification){
@@ -101,7 +101,7 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, 
     
     @objc public init(managedObjectContext: NSManagedObjectContext, cookieStorage: ZMCookieProvider) {
         self.managedObjectContext = managedObjectContext
-        self.cookieStorage = cookieStorage
+        self.cookieProvider = cookieStorage
         
         super.init()
         

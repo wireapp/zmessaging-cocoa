@@ -38,14 +38,19 @@
 
 - (void)setUp {
     [super setUp];
-
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc]initWithManagedObjectContext:self.uiMOC cookie:nil];
-    self.sut = [[ZMLoginCodeRequestTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus];
+    
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:nil];
+    
+    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
+    [[[applicationStatusDirectory stub] andReturn:self.authenticationStatus] authenticationStatus];
+    [[[applicationStatusDirectory stub] andReturnValue:@(ZMSynchronizationStateUnauthenticated)] synchronizationState];
+    [(ZMApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturnValue:@(ZMOperationStateForeground)] operationState];
+    
+    self.sut = [[ZMLoginCodeRequestTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatusDirectory:applicationStatusDirectory];
 }
 
 - (void)tearDown {
     self.authenticationStatus = nil;
-    [self.sut tearDown];
     self.sut = nil;
     [super tearDown];
 }
@@ -53,7 +58,7 @@
 - (void)testThatItReturnsNoRequestWhenThereAreNoCredentials
 {
     ZMTransportRequest *request;
-    request = [self.sut.requestGenerators nextRequest];
+    request = [self.sut nextRequest];
     XCTAssertNil(request);
 }
 
@@ -64,8 +69,7 @@
 
     ZMTransportRequest *expectedRequest = [[ZMTransportRequest alloc] initWithPath:@"/login/send" method:ZMMethodPOST payload:@{@"phone": phoneNumber} authentication:ZMTransportRequestAuthNone];
     
-    ZMTransportRequest *request;
-    ZM_ALLOW_MISSING_SELECTOR(request = [self.sut.requestGenerators firstNonNilReturnedFromSelector:@selector(nextRequest)]);
+    ZMTransportRequest *request = [self.sut nextRequest];
     XCTAssertEqualObjects(request, expectedRequest);
 }
 
@@ -74,7 +78,7 @@
     // given
     NSString *phoneNumber = @"+7123456789";
     [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForLogin:phoneNumber];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // when
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil]];
@@ -89,7 +93,7 @@
     // given
     NSString *phoneNumber = @"+7123456789";
     [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForLogin:phoneNumber];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
  
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];
@@ -116,7 +120,7 @@
     // given
     NSString *phoneNumber = @"+7123456789";
     [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForLogin:phoneNumber];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];
@@ -143,7 +147,7 @@
     // given
     NSString *phoneNumber = @"+7123456789";
     [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForLogin:phoneNumber];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];
@@ -170,7 +174,7 @@
     // given
     NSString *phoneNumber = @"+7123456789";
     [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForLogin:phoneNumber];
-    ZMTransportRequest *request = [self.sut.requestGenerators nextRequest];
+    ZMTransportRequest *request = [self.sut nextRequest];
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];

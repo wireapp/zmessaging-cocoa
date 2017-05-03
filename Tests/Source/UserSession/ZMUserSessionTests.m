@@ -60,20 +60,16 @@
 - (void)testThatItInitializesTheBackendEnvironments
 {
     // given
-    ZMBackendEnvironment *edge = [ZMBackendEnvironment environmentWithType:ZMBackendEnvironmentTypeEdge];
     ZMBackendEnvironment *prod = [ZMBackendEnvironment environmentWithType:ZMBackendEnvironmentTypeProduction];
     ZMBackendEnvironment *staging = [ZMBackendEnvironment environmentWithType:ZMBackendEnvironmentTypeStaging];
     
     // then
-    XCTAssertEqualObjects(edge.backendURL, [NSURL URLWithString:@"https://edge-nginz-https.zinfra.io"]);
     XCTAssertEqualObjects(prod.backendURL, [NSURL URLWithString:@"https://prod-nginz-https.wire.com"]);
     XCTAssertEqualObjects(staging.backendURL, [NSURL URLWithString:@"https://staging-nginz-https.zinfra.io"]);
     
-    XCTAssertEqualObjects(edge.backendWSURL, [NSURL URLWithString:@"https://edge-nginz-ssl.zinfra.io"]);
     XCTAssertEqualObjects(prod.backendWSURL, [NSURL URLWithString:@"https://prod-nginz-ssl.wire.com"]);
     XCTAssertEqualObjects(staging.backendWSURL, [NSURL URLWithString:@"https://staging-nginz-ssl.zinfra.io"]);
     
-    XCTAssertEqualObjects(edge.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/edge/ios"]);
     XCTAssertEqualObjects(prod.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/prod/ios"]);
     XCTAssertEqualObjects(staging.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/staging/ios"]);
 }
@@ -223,12 +219,13 @@
 {
     // given
     UserClient *userClient = [self createSelfClient];
+    id pushChannel = [OCMockObject niceMockForProtocol:@protocol(ZMPushChannel)];
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     id cookieStorage = [OCMockObject niceMockForClass:ZMPersistentCookieStorage.class];
     
     // expect
-    [[transportSession expect] setClientID:userClient.remoteIdentifier];
-    [[transportSession expect] restartPushChannel];
+    [[pushChannel expect] setClientID:userClient.remoteIdentifier];
+    [[[transportSession stub] andReturn:pushChannel] pushChannel];
     [[[transportSession stub] andReturn:cookieStorage] cookieStorage];
     
     // when
@@ -244,6 +241,7 @@
     [userSession didRegisterUserClient:userClient];
     
     // then
+    [pushChannel verify];
     [transportSession verify];
     [userSession tearDown];
 }
@@ -514,9 +512,11 @@
 {
     // given
     id transportSession = [OCMockObject mockForClass:ZMTransportSession.class];
+    id pushChannel = [OCMockObject mockForProtocol:@protocol(ZMPushChannel)];
+    
+    [[[transportSession stub] andReturn:pushChannel] pushChannel];
 
-    [[transportSession stub] openPushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
-    [[transportSession stub] closePushChannelAndRemoveConsumer];
+    [[transportSession stub] configurePushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
     self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com"];
     [[[transportSession stub] andReturn:self.cookieStorage] cookieStorage];
     self.authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
@@ -533,7 +533,9 @@
 
     // expect
     [[transportSession expect] setNetworkStateDelegate:OCMOCK_ANY];
-    [[transportSession expect] setClientID:OCMOCK_ANY];
+    [[pushChannel expect] setKeepOpen:YES];
+    [[pushChannel expect] setClientID:OCMOCK_ANY];
+    
 
     // when
     ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
@@ -548,6 +550,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    [pushChannel verify];
     [transportSession verify];
     [testSession tearDown];
 }
@@ -1125,7 +1128,7 @@
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"ZMApplicationDidEnterEventProcessingStateNotification" object:nil];
+    [self.sut didFinishSync];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [mockDelegate verify];
@@ -1146,7 +1149,7 @@
     [self.sut application:self.application didFinishLaunchingWithOptions:launchOptions];
     
     WaitForAllGroupsToBeEmpty(0.5);
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"ZMApplicationDidEnterEventProcessingStateNotification" object:nil];
+    [self.sut didFinishSync];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [mockDelegate verify];
@@ -1404,23 +1407,18 @@
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
     NSDictionary *responseInfo = @{UIUserNotificationActionResponseTypedTextKey: @"Hello hello"};
     XCTAssertEqual(conversation.messages.count, 0u);
-
-    // expect
-    [self checkThatItCallsTheDelegateForNotification:note responseInfo:responseInfo actionIdentifier:ZMConversationDirectReplyAction withBlock:^(id mockDelegate) {
-        [[self.operationLoop expect] startBackgroundTaskWithCompletionHandler:[OCMArg checkWithBlock:^BOOL((void(^completionHandler)())) {
-            if (completionHandler != nil) {
-                completionHandler();
-                return YES;
-            }
-            return NO;
-        }]];
-        [[mockDelegate reject] showConversation:conversation];
-        [[mockDelegate reject] showConversation:conversation];
-
+    __block BOOL didCallCompletionHandler = NO;
+    
+    [self.sut application:self.application handleActionWithIdentifier:ZMConversationDirectReplyAction forLocalNotification:note responseInfo:responseInfo completionHandler:^{
+        didCallCompletionHandler = YES;
     }];
+    
+    // Fake message was sent
+    [[[[self.operationLoop syncStrategy] applicationStatusDirectory] operationStatus] finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFinished];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssertTrue(didCallCompletionHandler);
     XCTAssertFalse(conversation.callDeviceIsActive);
     XCTAssertEqual(conversation.messages.count, 1u);
 }
@@ -1474,31 +1472,6 @@
     XCTAssertNotEqual(self.application.minimumBackgroundFetchInverval, UIApplicationBackgroundFetchIntervalNever);
     XCTAssertGreaterThanOrEqual(self.application.minimumBackgroundFetchInverval, UIApplicationBackgroundFetchIntervalMinimum);
     XCTAssertLessThanOrEqual(self.application.minimumBackgroundFetchInverval, (NSTimeInterval) (20 * 60));
-}
-
-- (void)testThatItForwardsTheBackgroundFetchRequestToTheOperationLoop
-{
-    // given
-    XCTestExpectation *expectation = [self expectationWithDescription:@"Background fetch completed"];
-    void (^handler)(UIBackgroundFetchResult) = ^(UIBackgroundFetchResult result) {
-        XCTAssertEqual(result, UIBackgroundFetchResultNewData);
-        [expectation fulfill];
-    };
-    
-    // expect
-    [(ZMOperationLoop *)[[(id) self.operationLoop expect] andCall:@selector(forward_startBackgroundFetchWithCompletionHandler:) onObject:self] startBackgroundFetchWithCompletionHandler:OCMOCK_ANY];
-    
-    // when
-    [self.sut application:self.application performFetchWithCompletionHandler:handler];
-    
-    // then
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    [(id) self.operationLoop verify];
-}
-
-- (void)forward_startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-{
-    handler(ZMBackgroundFetchResultNewData);
 }
 
 @end
@@ -1561,7 +1534,7 @@
 
 @end
 
-@interface ZMFlowSync (FlowManagerDelegate) <AVSFlowManagerDelegate>
+@interface ZMCallFlowRequestStrategy (FlowManagerDelegate) <AVSFlowManagerDelegate>
 @end
 
 @implementation ZMUserSessionTests (AVSLogObserver)
@@ -1597,7 +1570,7 @@
     [ZMUserSession removeAVSLogObserver:token];
     
     // when
-    [ZMFlowSync logMessage:testMessage];
+    [ZMCallFlowRequestStrategy logMessage:testMessage];
     
     // then
     [logObserver verify];

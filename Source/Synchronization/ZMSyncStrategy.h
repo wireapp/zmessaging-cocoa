@@ -23,7 +23,6 @@
 
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUpdateEventsBuffer.h"
-#import "ZMBackgroundFetch.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @class ZMTransportRequest;
@@ -38,6 +37,7 @@
 @class ClientUpdateStatus;
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
+@class ZMApplicationStatusDirectory;
 
 @protocol ZMTransportData;
 @protocol AVSMediaManager;
@@ -46,51 +46,34 @@
 @protocol ApplicationStateOwner;
 
 
-@interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory, ZMUpdateEventConsumer>
+@interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory>
 
-- (instancetype)initWithAuthenticationCenter:(ZMAuthenticationStatus *)authenticationStatus
-                     userProfileUpdateStatus:(UserProfileUpdateStatus *)userProfileStatus
-                userProfileImageUpdateStatus:(UserProfileImageUpdateStatus *)profileImageStatus
-                    clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
-                          clientUpdateStatus:(ClientUpdateStatus *)clientUpdateStatus
-                        proxiedRequestStatus:(ProxiedRequestsStatus *)proxiedRequestStatus
-                               accountStatus:(ZMAccountStatus *)accountStatus
-                backgroundAPNSPingBackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
-                                mediaManager:(id<AVSMediaManager>)mediaManager
-                         onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-                                     syncMOC:(NSManagedObjectContext *)syncMOC
-                                       uiMOC:(NSManagedObjectContext *)uiMOC
-                           syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
-                       backgroundableSession:(id<ZMBackgroundable>)backgroundableSession
-                localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-                    taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
-                          appGroupIdentifier:(NSString *)appGroupIdentifier
-                                 application:(id<ZMApplication>)application;
+- (instancetype)initWithSyncManagedObjectContextMOC:(NSManagedObjectContext *)syncMOC
+                             uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
+                                             cookie:(ZMCookie *)cookie
+                                       mediaManager:(id<AVSMediaManager>)mediaManager
+                                onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                                  syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
+                       localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
+                           taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
+                                 appGroupIdentifier:(NSString *)appGroupIdentifier
+                                        application:(id<ZMApplication>)application;
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;
 
 - (ZMTransportRequest *)nextRequest;
-- (void)dataDidChange;
 
-/// Process events that are recevied through the notification stream or the websocket
-- (void)processUpdateEvents:(NSArray <ZMUpdateEvent *>*)events ignoreBuffer:(BOOL)ignoreBuffer;
-
-/// Process events that were downloaded as part of the clinet history
-- (void)processDownloadedEvents:(NSArray <ZMUpdateEvent *>*)events;
-
-- (BOOL)processSaveWithInsertedObjects:(NSSet *)insertedObjects updateObjects:(NSSet *)updatedObjects;
 - (void)tearDown;
 
-@property (nonatomic, readonly) BOOL slowSyncInProgress;
 @property (nonatomic, readonly) NSManagedObjectContext *syncMOC;
+@property (nonatomic, readonly) ZMApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly) CallingRequestStrategy *callingRequestStrategy;
-
-- (void)startBackgroundFetchWithCompletionHandler:(ZMBackgroundFetchHandler)handler;
-
-/// Calls completionHandler when the change has gone through all transcoders
-- (void)startBackgroundTaskWithCompletionHandler:(ZMBackgroundTaskHandler)handler;
 
 - (void)transportSessionAccessTokenDidSucceedWithToken:(NSString *)token ofType:(NSString *)type;
 
+@end
+
+
+@interface ZMSyncStrategy (SyncStateDelegate) <ZMSyncStateDelegate>
 @end

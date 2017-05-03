@@ -30,7 +30,7 @@ private let onboardingEndpoint = "/onboarding/v3"
     fileprivate let authenticationStatus : AuthenticationStatusProvider
     
     /// Client status to know whether we can make requests
-    fileprivate let clientRegistrationStatus : ZMClientClientRegistrationStatusProvider
+    fileprivate let clientRegistrationStatus : ClientRegistrationDelegate
     
     /// Managed object context where to perform all operations
     fileprivate let managedObjectContext: NSManagedObjectContext
@@ -39,7 +39,7 @@ private let onboardingEndpoint = "/onboarding/v3"
     fileprivate var requestSync : ZMSingleRequestSync!
     
     public init(authenticationStatus: AuthenticationStatusProvider,
-         clientRegistrationStatus: ZMClientClientRegistrationStatusProvider,
+         clientRegistrationStatus: ClientRegistrationDelegate,
          managedObjectContext: NSManagedObjectContext)
     {
 

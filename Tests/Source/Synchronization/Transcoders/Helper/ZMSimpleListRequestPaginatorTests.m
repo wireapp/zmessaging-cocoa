@@ -402,7 +402,6 @@
 {
     // given
     id transcoder = [OCMockObject niceMockForProtocol:@protocol(ZMSimpleListRequestPaginatorSync)];
-    [[[transcoder expect] andReturnValue:OCMOCK_VALUE(YES)] shouldParseErrorResponseForStatusCode:404];
     [[transcoder expect] nextUUIDFromResponse:OCMOCK_ANY forListPaginator:OCMOCK_ANY];
     
     self.sut = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:self.basePath startKey:@"start" pageSize:self.pageSize  managedObjectContext:self.syncMOC includeClientID:NO transcoder:transcoder];
@@ -410,7 +409,8 @@
     [self.sut resetFetching];
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"has_more" : @1} HTTPStatus:404 transportSessionError:nil];
-    
+    [[[transcoder expect] andReturnValue:OCMOCK_VALUE(YES)] shouldParseErrorForResponse:response];
+
     // when
     [self.sut didReceiveResponse:response forSingleRequest:self.singleRequestSync];
     

@@ -26,11 +26,11 @@
 #import "ZMOperationLoop+Private.h"
 #import "ZMPushToken.h"
 #import "ZMCallKitDelegate.h"
-
+#import "ZMSyncStrategy.h"
 #import "ZMLocalNotification.h"
-#import "ZMBackgroundFetchState.h"
 #import "ZMUserSession+UserNotificationCategories.h"
 #import "ZMStoredLocalNotification.h"
+#import "ZMMissingUpdateEventsTranscoder.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *ZMLogTag = @"Push";
@@ -40,9 +40,9 @@ static NSString *ZMLogTag = @"Push";
 - (void)ignoreCallForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
 - (void)replyToNotification:(UILocalNotification *)notification withReply:(NSString*)reply completionHandler:(void (^)())completionHandler;
 - (void)muteConversationForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
+- (void)likeMessageForNotification:(UILocalNotification *)note withCompletionHandler:(void (^)(void))completionHandler;
 
 @end
-
 
 @implementation ZMUserSession (PushReceivers)
 
@@ -121,6 +121,7 @@ static NSString *ZMLogTag = @"Push";
             [self.managedObjectContext forceSaveOrRollback];
         }];
     };
+    
     self.pushRegistrant = [[ZMPushRegistrant alloc] initWithDidUpdateCredentials:updatePushKitCredentials didReceivePayload:didReceivePayload didInvalidateToken:didInvalidateToken];
     self.pushRegistrant.analytics = self.syncManagedObjectContext.analytics;
 }
@@ -199,7 +200,7 @@ static NSString *ZMLogTag = @"Push";
         return;
     }
     if ([identifier isEqualToString:ZMMessageLikeAction]) {
-        [self likeMessageForNotification:notification WithCompletionHandler:completionHandler];
+        [self likeMessageForNotification:notification withCompletionHandler:completionHandler];
         return;
     }
     
@@ -217,7 +218,7 @@ static NSString *ZMLogTag = @"Push";
                                                                                actionIdentifier:identifier
                                                                                       textInput:nil];
         if (self.didStartInitialSync && !self.isPerformingSync) {
-            [self didEnterEventProcessingState:nil];
+            [self processPendingNotificationActions];
         }
     }
     if (completionHandler != nil) {
@@ -228,28 +229,10 @@ static NSString *ZMLogTag = @"Push";
 - (void)application:(id<ZMApplication>)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 {
     NOT_USED(application);
-    ZM_WEAK(self);
-    // The OS is telling us to fetch new data from the backend.
-    // Wrap the handler:
-    ZMBackgroundFetchHandler handler = ^(ZMBackgroundFetchResult const result){
-        ZM_STRONG(self);
-        [self.managedObjectContext performGroupedBlock:^{
-            switch (result) {
-                case ZMBackgroundFetchResultNewData:
-                    completionHandler(UIBackgroundFetchResultNewData);
-                    break;
-                case ZMBackgroundFetchResultNoData:
-                    completionHandler(UIBackgroundFetchResultNoData);
-                    break;
-                case ZMBackgroundFetchResultFailed:
-                    completionHandler(UIBackgroundFetchResultFailed);
-                    break;
-            }
-        }];
-    };
-    
-    // Transition into the ZMBackgroundFetchState which will do the fetching:
-    [self.operationLoop startBackgroundFetchWithCompletionHandler:handler];
+    [self.syncManagedObjectContext performGroupedBlock:^{
+        [self.operationLoop.syncStrategy.missingUpdateEventsTranscoder startDownloadingMissingNotifications];
+        [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundFetchWithCompletionHandler:completionHandler];
+    }];
 }
 
 - (void)application:(id<ZMApplication>)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler;
@@ -308,10 +291,8 @@ static NSString *ZMLogTag = @"Push";
 
 @implementation ZMUserSession (NotificationProcessing)
 
-- (void)didEnterEventProcessingState:(NSNotification *)notification
+- (void)processPendingNotificationActions
 {
-    NOT_USED(notification);
-    
     if (self.pendingLocalNotification == nil) {
         return;
     }
@@ -424,8 +405,9 @@ static NSString *ZMLogTag = @"Push";
     ZMConversation *conversation = [notification conversationInManagedObjectContext:self.managedObjectContext];
     if (conversation != nil) {
         ZM_WEAK(self);
-        [self.operationLoop startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
+        [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
             ZM_STRONG(self);
+            self.messageReplyObserverToken = nil;
             [self.managedObjectContext performGroupedBlock: ^{
                 if (result == ZMBackgroundTaskResultFailed) {
                     [self.localNotificationDispatcher didFailToSendMessageIn:conversation];
@@ -437,7 +419,8 @@ static NSString *ZMLogTag = @"Push";
             }];
         }];
         [self.managedObjectContext performGroupedBlock:^{
-            [conversation appendMessageWithText:reply];
+            id<ZMConversationMessage> message = [conversation appendMessageWithText:reply];
+            self.messageReplyObserverToken = [MessageChangeInfo addObserver:self forMessage:message];
             [self.managedObjectContext saveOrRollback];
         }];
     }
@@ -449,6 +432,40 @@ static NSString *ZMLogTag = @"Push";
     }
 }
 
+- (void)likeMessageForNotification:(UILocalNotification *)note withCompletionHandler:(void (^)(void))completionHandler
+{
+    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"Like Message Activity"];
+    ZMConversation *conversation = [note conversationInManagedObjectContext:self.managedObjectContext];
+    ZMMessage *message = [note messageInConversation:conversation inManagedObjectContext:self.managedObjectContext];
+
+    if (message == nil) {
+        [activity endActivity];
+        if (completionHandler != nil) {
+            completionHandler();
+        }
+        return;
+    }
+    
+    ZM_WEAK(self);
+    [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
+        ZM_STRONG(self);
+        self.likeMesssageObserverToken = nil;
+        if (result == ZMBackgroundTaskResultFailed) {
+            ZMLogDebug(@"Failed to send reaction via notification");
+        }
+        
+        [activity endActivity];
+        if (completionHandler != nil) {
+            completionHandler();
+        }
+    }];
+    
+    [self.managedObjectContext performGroupedBlock:^{
+        id<ZMConversationMessage> reactionMesssage = [ZMMessage addReaction:MessageReactionLike toMessage:message];
+        self.likeMesssageObserverToken = [MessageChangeInfo addObserver:self forMessage:reactionMesssage];
+        [self.managedObjectContext saveOrRollback];
+    }];
+}
 
 @end
 
@@ -460,6 +477,26 @@ static NSString *ZMLogTag = @"Push";
 {
     // We enable background fetch by setting the minimum interval to something different from UIApplicationBackgroundFetchIntervalNever
     [self.application setMinimumBackgroundFetchInterval:10. * 60. + arc4random_uniform(5 * 60)];
+}
+
+@end
+
+@implementation  ZMUserSession (ReplyToMessage)
+
+- (void)messageDidChange:(MessageChangeInfo *)changeInfo
+{
+    if (changeInfo.deliveryStateChanged) {
+        switch (changeInfo.message.deliveryState) {
+            case ZMDeliveryStateSent:
+                [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFinished];
+                break;
+            case ZMDeliveryStateFailedToSend:
+                [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFailed];
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 @end

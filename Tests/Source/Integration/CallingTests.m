@@ -1516,8 +1516,10 @@
     
     // We simulate that we launched application after 3 days and backed returns 404 on notifications since lastUpdatedEventId
     // and we go to slow sync
+    __block NSUInteger requestCount = 0;
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        if ([request.path containsString:@"/notifications"]) {
+        if ([request.path containsString:@"/notifications"] && requestCount == 0) {
+            requestCount++;
             ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
             return response;
         }
@@ -1545,8 +1547,10 @@
     
     //We simulate that we launched application after 3 days and backed returns 404 on notifications since lastUpdatedEventId
     // and we go to slow sync
+    __block NSUInteger requestCount = 0;
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        if ([request.path containsString:@"/notifications"]) {
+        if ([request.path containsString:@"/notifications"] && requestCount == 0) {
+            requestCount++;
             ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
             return response;
         }
@@ -2592,15 +2596,16 @@
 
     // when we restart the app
     {
-        [self simulateAppStopped];
+        [self.uiMOC zm_tearDownCallState];
+        [self.syncMOC zm_tearDownCallState];
         [self simulateAppRestarted];
+        WaitForAllGroupsToBeEmpty(0.5);
         
         // then
         WaitForAllGroupsToBeEmpty(0.5);
         XCTAssertEqual(self.conversationUnderTest.callParticipants.count, 4u);
         XCTAssertTrue([self lastRequestContainsSelfStateJoinedWithCauseSuspended: NO]);
         XCTAssertFalse([self lastRequestContainsSelfStateIdle]);
-
     }
 }
 

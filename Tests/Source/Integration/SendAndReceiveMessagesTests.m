@@ -666,6 +666,32 @@
     XCTAssertTrue([groupConversation.activeParticipants containsObject:user4]);
 }
 
+- (void)enforceSlowSyncWithNotificationPayload:(NSDictionary *)notificationPayload
+{
+    __block BOOL didContainConversationRequest = NO;
+    __block BOOL didContainConnectionRequest = NO;
+    __block BOOL didContainUserRequest = NO;
+    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
+        if ([request.path containsString:@"/notifications"]) {
+            BOOL slowSyncComplete = didContainUserRequest && didContainConnectionRequest && didContainConversationRequest;
+            if (!slowSyncComplete) {
+                return [ZMTransportResponse responseWithPayload:notificationPayload HTTPStatus:404 transportSessionError:nil];
+            }
+            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
+        }
+        if ([request.path containsString:@"/connections"]) {
+            didContainConnectionRequest = YES;
+        }
+        if ([request.path containsString:@"/conversations"]) {
+            didContainConversationRequest = YES;
+        }
+        if ([request.path containsString:@"/users"]) {
+            didContainUserRequest = YES;
+        }
+        return nil;
+    };
+}
+
 - (void)testThatSystemMessageIsAddedIfClientWasInactiveAndCantFetchAnyNotifications
 {
     // given
@@ -688,12 +714,7 @@
     XCTAssertNotNil(groupConversation);
     
     // when
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        if ([request.path containsString:@"/notifications"]) {
-            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
-        }
-        return nil;
-    };
+    [self enforceSlowSyncWithNotificationPayload:nil];
     
     [self recreateUserSessionAndWipeCache:NO];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -764,16 +785,10 @@
                                                                ]
                                                        }]
                               };
-    
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        if ([request.path hasPrefix:@"/notifications?"]) {
-            return [ZMTransportResponse responseWithPayload:payload HTTPStatus:404 transportSessionError:nil];
-        }
-        return nil;
-    };
-    
+    [self enforceSlowSyncWithNotificationPayload:payload];
     [self recreateUserSessionAndWipeCache:NO];
     WaitForAllGroupsToBeEmpty(0.5);
+    
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -801,12 +816,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // to avoid the client fetching the changes before they are cleared, we "block" requests to /notifications
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        if ([request.path containsString:@"notifications"]) {
-            return [ZMTransportResponse responseWithPayload:@{@"notifications" : @[]} HTTPStatus:404 transportSessionError:nil];
-        }
-        return nil;
-    };
+    [self enforceSlowSyncWithNotificationPayload:@{@"notifications" : @[]}];
     
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
         [session simulatePushChannelClosed];
@@ -818,6 +828,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     self.mockTransportSession.responseGeneratorBlock = nil;
+
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
 }

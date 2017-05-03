@@ -48,7 +48,7 @@
  
  Flow for receieving the call (I.a):
  1. BE sends the new call state in conversation via push
- 2. @c ZMCallStateTranscoder decode the payload and update the conversation/VoiceChannelV2 fields
+ 2. @c ZMCallStateRequestStrategy decode the payload and update the conversation/VoiceChannelV2 fields
  3. @c VoiceChannelV2 observer sends the update to @c ZMCallKitDelegate -[ZMCallKitDelegate voiceChannelStateDidChange:]
  4. @c ZMCallKitDelegate indicates the call to CallKit's @c CXProvider in -[ZMCallKitDelegate indicateIncomingCallInConversation:]
  5. @c CXProvider approves the call and informs @c ZMCallKitDelegate that call is possible in -[ZMCallKitDelegate provider:performStartCallAction:]
@@ -489,11 +489,6 @@ NS_ASSUME_NONNULL_END
         ZMConversation *callConversation = [ZMConversation resolveConversationForPersons:contacts
                                                                                inContext:userSession.managedObjectContext];
         if (nil != callConversation) {
-            // Push channel must be open in order to process the call signaling
-            if (!userSession.pushChannelIsOpen) {
-                [userSession.transportSession restartPushChannel];
-            }
-
             [self configureAudioSession];
             [self requestStartCallInConversation:callConversation videoCall:isVideo];
             return YES;
