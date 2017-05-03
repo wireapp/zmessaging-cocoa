@@ -170,7 +170,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatTheClosedCallHandlerPostsTheRightNotification(){
         checkThatItPostsNotification(expectedCallState: .terminating(reason: .canceled)) { (conversationIdRef, userIdRef, context) in
-            WireSyncEngine.closedCallHandler(reason: WCALL_REASON_CANCELED, conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
+            WireSyncEngine.closedCallHandler(reason: WCALL_REASON_CANCELED, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: context)
         }
     }
     
@@ -196,7 +196,7 @@ class WireCallCenterV3Tests: MessagingTest {
         
         // when
         sut.rejectCall(conversationId: conversationId, isGroup: true)
-        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
+        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: context)
 
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
@@ -225,7 +225,7 @@ class WireCallCenterV3Tests: MessagingTest {
         
         // when
         sut.rejectCall(conversationId: conversationId, isGroup: false)
-        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: conversationIdRef, userId: userIdRef, contextRef: context)
+        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: context)
 
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))

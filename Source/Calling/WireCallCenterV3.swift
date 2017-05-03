@@ -254,21 +254,31 @@ internal func establishedCallHandler(conversationId: UnsafePointer<Int8>?, userI
 }
 
 /// Handles ended calls
-/// In order to be passed to C, this function needs to be global
-internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
+/// If the user answers on the different device, we receive a `WCALL_REASON_ANSWERED_ELSEWHERE` followed by a `WCALL_REASON_NORMAL` once the call ends
+/// If the user leaves an ongoing group conversation or an incoming group call times out, we receive a `WCALL_REASON_STILL_ONGOING` followed by a `WCALL_REASON_NORMAL` once the call ends
+/// If messageTime is set to 0, the event wasn't caused by a message therefore we don't have a serverTimestamp.
+internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8>?, messageTime: UInt32, userId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId) else { return }
     let userID = UUID(cString: userId)
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     callCenter.uiMOC.performGroupedBlock {
-        callCenter.handleCallState(callState: .terminating(reason: CallClosedReason(reason: reason)), conversationId: convID, userId: userID)
+        let time = (messageTime == 0) ? nil : Date(timeIntervalSince1970: TimeInterval(messageTime))
+        callCenter.handleCallState(callState: .terminating(reason: CallClosedReason(reason: reason)), conversationId: convID, userId: userID, messageTime: time)
     }
 }
 
 /// Handles call metrics
-internal func callMetricsHandler(conversationId: UnsafePointer<Int8>?, metrics: UnsafePointer<Int8>?, contextRef:UnsafeMutableRawPointer?){
-    // TODO Sabine: parse metrics (JSON) & forward metrics to analytics
+internal func callMetricsHandler(conversationId: UnsafePointer<Int8>?, metrics: UnsafePointer<Int8>?, contextRef:UnsafeMutableRawPointer?) {
+    do {
+        guard let jsonData = String(cString: metrics)?.data(using: .utf8), let contextRef = contextRef else { return }
+        guard let attributes = try JSONSerialization.jsonObject(with: jsonData, options: .mutableContainers) as? [String: NSObject] else { return }
+        let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+        callCenter.analytics?.tagEvent("calling.avs_metrics_ended_call", attributes: attributes)
+    } catch {
+        zmLog.error("Unable to parse call metrics JSON: \(error)")
+    }
 }
 
 /// Handles sending call messages
@@ -398,6 +408,7 @@ public struct CallEvent {
     
     var avsWrapper : AVSWrapperType!
     let uiMOC : NSManagedObjectContext
+    let analytics: AnalyticsType?
     
     public var useAudioConstantBitRate: Bool = false {
         didSet {
@@ -409,9 +420,10 @@ public struct CallEvent {
         avsWrapper.close()
     }
     
-    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext) {
+    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, analytics: AnalyticsType? = nil) {
         self.selfUserId = userId
         self.uiMOC = uiMOC
+        self.analytics = analytics
         super.init()
         
         if WireCallCenterV3.activeInstance != nil {

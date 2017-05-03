@@ -110,13 +110,13 @@ final class CallSystemMessageGenerator: NSObject {
             log.info("Setting call connect date for \(conversation.displayName)")
             connectDateByConversation[conversation] = Date()
         case .terminating(reason: let reason):
-            callCenterDidEndCall(reason: reason, conversation: conversation)
+            callCenterDidEndCall(reason: reason, conversation: conversation, timeStamp: timeStamp)
         case .none, .unknown, .answered:
             break
         }
     }
 
-    private func callCenterDidEndCall(reason: CallClosedReason, conversation: ZMConversation) {
+    private func callCenterDidEndCall(reason: CallClosedReason, conversation: ZMConversation, timeStamp: Date?) {
         if let caller = callerByConversation[conversation], let connectDate = connectDateByConversation[conversation] {
             let duration = -connectDate.timeIntervalSinceNow
             log.info("Appending performed call message: \(duration), \(caller.displayName), \"\(conversation.displayName)\"")
@@ -128,7 +128,7 @@ final class CallSystemMessageGenerator: NSObject {
                 conversation.appendPerformedCallMessage(with: 0, caller: caller)
             } else {
                 log.info("Appending missed call message: \(caller.displayName), \"\(conversation.displayName)\"")
-                conversation.appendMissedCallMessage(fromUser: caller, at: Date())
+                conversation.appendMissedCallMessage(fromUser: caller, at: timeStamp ?? Date())
             }
         } else {
             log.info("Call ended but no call info present in order to insert system message")
