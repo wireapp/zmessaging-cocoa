@@ -158,7 +158,7 @@ extension UserImageAssetUpdateStrategyTests {
         let failedResponse = ZMTransportResponse(payload: nil, httpStatus: 500, transportSessionError: nil)
         
         // WHEN
-        sut.didReceive(failedResponse, forSingleRequest: sync)
+        sut.didReceive(failedResponse, forSingleRequest: sync!)
         
         // THEN
         XCTAssertEqual(updateStatus.uploadFailedForSize, size)
@@ -173,7 +173,7 @@ extension UserImageAssetUpdateStrategyTests {
         let successResponse = ZMTransportResponse(payload: payload as NSDictionary, httpStatus: 200, transportSessionError: nil)
         
         // WHEN
-        sut.didReceive(successResponse, forSingleRequest: sync)
+        sut.didReceive(successResponse, forSingleRequest: sync!)
 
         // THEN
         XCTAssertEqual(updateStatus.uploadDoneForSize, size)

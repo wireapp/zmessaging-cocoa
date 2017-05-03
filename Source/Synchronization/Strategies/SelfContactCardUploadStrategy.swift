@@ -67,7 +67,7 @@ extension SelfContactCardUploadStrategy : RequestStrategy, ZMSingleRequestTransc
         return self.requestSync.nextRequest()
     }
     
-    public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
+    public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         guard sync == self.requestSync else {
             return nil
         }
@@ -76,7 +76,7 @@ extension SelfContactCardUploadStrategy : RequestStrategy, ZMSingleRequestTransc
         return ZMTransportRequest(path: onboardingEndpoint, method: .methodPOST, payload: payload as ZMTransportData?, shouldCompress: true)
     }
     
-    public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
+    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         if response.result == .success {
             self.managedObjectContext.selfContactCardNeedsToBeUploaded = false
             self.managedObjectContext.hasEverUploadedSelfCard = true

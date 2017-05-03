@@ -80,7 +80,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
 // MARK: - Request generation logic
 extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
     
-    public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
+    public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         guard sync == self.requestSync, let encodedChunk = self.encodedAddressBookChunkToUpload else {
             return nil
         }
@@ -112,7 +112,7 @@ extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
         return ZMUser.selfUser(in: self.managedObjectContext).contactHashes
     }
     
-    public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
+    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         // no op
     }
     

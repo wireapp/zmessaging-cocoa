@@ -109,7 +109,7 @@ import Foundation
 
 extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
     
-    public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
+    public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         switch sync {
             
         case self.phoneCodeRequestSync:
@@ -164,7 +164,7 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
         }
     }
     
-    public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
+    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         switch sync {
             
         case self.phoneCodeRequestSync:

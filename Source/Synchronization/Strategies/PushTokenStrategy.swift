@@ -74,7 +74,7 @@ public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTransco
         return nil
     }
     
-    public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
+    public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         guard let token = pushToken(forSingleRequestSync: sync) else { return nil }
         
         if (token.isRegistered && !token.isMarkedForDeletion) {
@@ -117,7 +117,7 @@ public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTransco
         return nil;
     }
         
-    public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
+    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         if (sync == pushKitTokenDeletionSync || sync == applicationTokenDeletionSync){
             finishDeletion(with: response, sync: sync)
         } else {

@@ -58,8 +58,8 @@ internal enum AssetTransportError: Error {
             sync.whiteListObject(ZMUser.selfUser(in: managedObjectContext))
         }
         
-        upstreamRequestSyncs[.preview] = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)!
-        upstreamRequestSyncs[.complete] = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)!
+        upstreamRequestSyncs[.preview] = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)
+        upstreamRequestSyncs[.complete] = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)
         
         NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.previewAssetFetchNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.completeAssetFetchNotification, object: nil)
@@ -167,7 +167,7 @@ extension UserImageAssetUpdateStrategy: ZMContextChangeTrackerSource {
 }
 
 extension UserImageAssetUpdateStrategy: ZMSingleRequestTranscoder {
-    public func request(for sync: ZMSingleRequestSync!) -> ZMTransportRequest! {
+    public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         if let size = size(for: sync), let image = imageUploadStatus?.consumeImage(for: size) {
             let request = requestFactory.upstreamRequestForAsset(withData: image, shareable: true, retention: .eternal)
             request?.addContentDebugInformation("Uploading to /assets/V3: [\(size)]  [\(image)] ")
@@ -176,7 +176,7 @@ extension UserImageAssetUpdateStrategy: ZMSingleRequestTranscoder {
         return nil
     }
     
-    public func didReceive(_ response: ZMTransportResponse!, forSingleRequest sync: ZMSingleRequestSync!) {
+    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         guard let size = size(for: sync) else { return }
         guard response.result == .success else {
             let error = AssetTransportError(response: response)

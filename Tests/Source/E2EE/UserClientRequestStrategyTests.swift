@@ -425,7 +425,7 @@ extension UserClientRequestStrategyTests {
         
         // when
         _ = sut.nextRequest()
-        sut.didReceive(nextResponse, forSingleRequest: nil)
+        sut.didReceive(nextResponse, forSingleRequest: sut.fetchAllClientsSync)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // then
@@ -450,7 +450,7 @@ extension UserClientRequestStrategyTests {
         
         // when
         _ = sut.nextRequest()
-        sut.didReceive(nextResponse, forSingleRequest: nil)
+        sut.didReceive(nextResponse, forSingleRequest: sut.fetchAllClientsSync)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // then
