@@ -106,6 +106,7 @@ class CallingV3Tests : IntegrationTestBase {
             self.conversationUnderTest.voiceChannelRouter?.v3.leave()
             WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
                                              conversationId: convIdRef,
+                                             messageTime: 0,
                                              userId: userIdRef,
                                              contextRef: self.wireCallCenterRef)
         }
@@ -119,6 +120,7 @@ class CallingV3Tests : IntegrationTestBase {
             self.conversationUnderTest.voiceChannelRouter?.v3.ignore()
             WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
                                              conversationId: convIdRef,
+                                             messageTime: 0,
                                              userId: userIdRef,
                                              contextRef: self.wireCallCenterRef)
         }
@@ -172,7 +174,7 @@ class CallingV3Tests : IntegrationTestBase {
         (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .none
 
         let userIdRef = user.remoteIdentifier!.transportString().cString(using: .utf8)
-        WireSyncEngine.closedCallHandler(reason: reason.rawValue, conversationId: conversationIdRef, userId: userIdRef, contextRef: wireCallCenterRef)
+        WireSyncEngine.closedCallHandler(reason: reason.rawValue, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
