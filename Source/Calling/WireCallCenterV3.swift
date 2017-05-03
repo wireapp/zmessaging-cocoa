@@ -255,7 +255,7 @@ internal func establishedCallHandler(conversationId: UnsafePointer<Int8>?, userI
 
 /// Handles ended calls
 /// If the user answers on the different device, we receive a `WCALL_REASON_ANSWERED_ELSEWHERE` followed by a `WCALL_REASON_NORMAL` once the call ends
-/// If the user leaves an ongoing group conversation or an incoming group call times out, we receive a `WCALL_REASON_STILL_ONGOING` ollowed by a `WCALL_REASON_NORMAL` once the call ends
+/// If the user leaves an ongoing group conversation or an incoming group call times out, we receive a `WCALL_REASON_STILL_ONGOING` followed by a `WCALL_REASON_NORMAL` once the call ends
 /// If messageTime is set to 0, the event wasn't caused by a message therefore we don't have a serverTimestamp.
 internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8>?, messageTime: UInt32, userId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
 {
