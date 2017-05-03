@@ -23,7 +23,7 @@ import XCTest
 
 class ClusterizerTests: XCTestCase {
     
-    var sut: IntegerClusterizer!
+    var sut: WireSyncEngine.IntegerClusterizer!
     
     override func setUp() {
         super.setUp()
@@ -34,9 +34,14 @@ class ClusterizerTests: XCTestCase {
             ClusterRange(50, 100)
             ])
     }
+    
+    override func tearDown() {
+        self.sut = nil
+        super.tearDown()
+    }
 
     func testThatAClusterRangeReturnsTheCorrectStringValue() {
-        let range = ClusterRange(50, 100)
+        let range = WireSyncEngine.ClusterRange(50, 100)
         XCTAssertEqual(range.stringValue, "50-100")
     }
     

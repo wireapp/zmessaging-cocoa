@@ -32,6 +32,7 @@
 @property (nonatomic) ZMSelfStrategy<ZMSingleRequestTranscoder> *sut;
 @property (nonatomic) ZMUpstreamModifiedObjectSync *upstreamObjectSync;
 @property (nonatomic) id mockClientRegistrationStatus;
+@property (nonatomic) id requestSync;
 
 @property (nonatomic) ZMClientRegistrationStatus *realClientRegistrationStatus;
 @property (nonatomic) NSTimeInterval originalRequestInterval;
@@ -46,6 +47,7 @@
     [super setUp];
     self.originalRequestInterval = ZMSelfStrategyPendingValidationRequestInterval;
     
+    self.requestSync = [OCMockObject mockForClass:ZMSingleRequestSync.class];
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
     self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
     self.upstreamObjectSync = [OCMockObject niceMockForClass:ZMUpstreamModifiedObjectSync.class];
@@ -63,10 +65,15 @@
 
 - (void)tearDown
 {
+    self.requestSync = nil;
+    [self.mockClientRegistrationStatus stopMocking];
+    self.mockClientRegistrationStatus = nil;
+    
     ZMSelfStrategyPendingValidationRequestInterval = self.originalRequestInterval;
     
     [self.realClientRegistrationStatus tearDown];
     self.realClientRegistrationStatus = nil;
+    [(id)self.upstreamObjectSync stopMocking];
     self.upstreamObjectSync = nil;
     [self.sut tearDown];
     self.sut = nil;
@@ -806,7 +813,7 @@
     NSDictionary *payload = @{@"id": [NSUUID UUID].transportString,
                               @"tracking_id": @"someID"};
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-    [self.sut didReceiveResponse:response forSingleRequest:nil];
+    [self.sut didReceiveResponse:response forSingleRequest:self.requestSync];
     
     // then
     [self.mockClientRegistrationStatus verify];
@@ -823,7 +830,7 @@
     NSDictionary *payload = @{@"email": @"my@example.com",
                               @"tracking_id": @"someID"};
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-    [self.sut didReceiveResponse:response forSingleRequest:nil];
+    [self.sut didReceiveResponse:response forSingleRequest:self.requestSync];
     
     // then
     [self.mockClientRegistrationStatus verify];

@@ -31,7 +31,9 @@
 
 - (void)tearDown
 {
+    [(id)self.syncStrategy stopMocking];
     self.syncStrategy = nil;
+    self.mockApplicationStatus = nil;
     [super tearDown];
 }
 

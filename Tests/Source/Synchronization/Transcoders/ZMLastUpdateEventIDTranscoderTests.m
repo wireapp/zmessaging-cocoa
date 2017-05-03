@@ -57,10 +57,13 @@
 }
 
 - (void)tearDown {
+    self.downstreamSync = nil;
     self.directory = nil;
+    [self.syncStateDelegate stopMocking];
+    self.syncStateDelegate = nil;
+    self.mockSyncStatus = nil;
     self.syncStrategy = nil;
     self.sut = nil;
-    self.downstreamSync = nil;
     [super tearDown];
 }
 
@@ -86,7 +89,7 @@
       @"time" : @"1437654971",
       };
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
-    [self.sut didReceiveResponse:response forSingleRequest:nil];
+    [self.sut didReceiveResponse:response forSingleRequest:self.downstreamSync];
 }
 
 - (void)testThatItOnlyProcessesLastUpdateEventsRequests;
@@ -257,7 +260,7 @@
 {
     // given
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
-    [self.sut didReceiveResponse:response forSingleRequest:nil];
+    [self.sut didReceiveResponse:response forSingleRequest:self.downstreamSync];
     
     // expect
     [[(id)self.directory.missingUpdateEventsTranscoder reject] setLastUpdateEventID:OCMOCK_ANY];
@@ -269,7 +272,7 @@
 - (void)testThatItEncodesTheRightRequestWithoutClient
 {
     // when
-    ZMTransportRequest *request = [self.sut requestForSingleRequestSync:nil];
+    ZMTransportRequest *request = [self.sut requestForSingleRequestSync:self.downstreamSync];
     
     // then
     XCTAssertNotNil(request);
@@ -284,7 +287,7 @@
     XCTAssertNotNil(selfClient);
     
     // when
-    ZMTransportRequest *request = [self.sut requestForSingleRequestSync:nil];
+    ZMTransportRequest *request = [self.sut requestForSingleRequestSync:self.downstreamSync];
     
     // then
     XCTAssertNotNil(request);
