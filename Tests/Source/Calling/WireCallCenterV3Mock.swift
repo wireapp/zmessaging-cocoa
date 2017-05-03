@@ -154,7 +154,7 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
         }
     }
     
-    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext) {
+    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, analytics: AnalyticsType? = nil) {
         super.init(userId: userId, clientId: clientId, avsWrapper: MockAVSWrapper(userId: userId, clientId: clientId, observer: nil), uiMOC: uiMOC)
     }
 
