@@ -84,7 +84,11 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             self.updateConversationListIndicator(convObjectID: conversation.objectID, callState: callState)
             
-            self.systemMessageGenerator.callCenterDidChange(callState: callState, conversation: conversation, user: user, timeStamp: timeStamp)
+            let systemMessage = self.systemMessageGenerator.appendSystemMessageIfNeeded(callState: callState, conversation: conversation, user: user, timeStamp: timeStamp)
+            if systemMessage?.systemMessageType == .missedCall && ZMUserSession.useCallKit{
+                self.localNotificationDispatcher.process(callState: callState, in: conversation, sender: user)
+            }
+            
             if let timeStamp = timeStamp {
                 conversation.updateLastModifiedDateIfNeeded(timeStamp)
             }

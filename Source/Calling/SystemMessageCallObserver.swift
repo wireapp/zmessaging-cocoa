@@ -96,7 +96,9 @@ final class CallSystemMessageGenerator: NSObject {
     var startDateByConversation = [ZMConversation: Date]()
     var connectDateByConversation = [ZMConversation: Date]()
 
-    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) {
+    public func appendSystemMessageIfNeeded(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) -> ZMSystemMessage?{
+        var systemMessage : ZMSystemMessage? = nil
+
         switch callState {
         case .outgoing:
             log.info("Setting call start date for \(conversation.displayName)")
@@ -110,25 +112,28 @@ final class CallSystemMessageGenerator: NSObject {
             log.info("Setting call connect date for \(conversation.displayName)")
             connectDateByConversation[conversation] = Date()
         case .terminating(reason: let reason):
-            callCenterDidEndCall(reason: reason, conversation: conversation, timeStamp: timeStamp)
+            systemMessage = appendCallEndedSystemMessage(reason: reason, conversation: conversation, timeStamp: timeStamp)
         case .none, .unknown, .answered:
             break
         }
+        return systemMessage
     }
 
-    private func callCenterDidEndCall(reason: CallClosedReason, conversation: ZMConversation, timeStamp: Date?) {
+    private func appendCallEndedSystemMessage(reason: CallClosedReason, conversation: ZMConversation, timeStamp: Date?) -> ZMSystemMessage? {
+        
+        var systemMessage : ZMSystemMessage? = nil
         if let caller = callerByConversation[conversation], let connectDate = connectDateByConversation[conversation] {
             let duration = -connectDate.timeIntervalSinceNow
             log.info("Appending performed call message: \(duration), \(caller.displayName), \"\(conversation.displayName)\"")
-            conversation.appendPerformedCallMessage(with: duration, caller: caller)
+            systemMessage =  conversation.appendPerformedCallMessage(with: duration, caller: caller)
         }
         else if let caller = callerByConversation[conversation] {
             if let startDate = startDateByConversation[conversation] {
                 log.info("Appending performed call message: \(startDate), \(caller.displayName), \"\(conversation.displayName)\"")
-                conversation.appendPerformedCallMessage(with: 0, caller: caller)
+                systemMessage =  conversation.appendPerformedCallMessage(with: 0, caller: caller)
             } else {
                 log.info("Appending missed call message: \(caller.displayName), \"\(conversation.displayName)\"")
-                conversation.appendMissedCallMessage(fromUser: caller, at: timeStamp ?? Date())
+                systemMessage = conversation.appendMissedCallMessage(fromUser: caller, at: timeStamp ?? Date())
             }
         } else {
             log.info("Call ended but no call info present in order to insert system message")
@@ -137,6 +142,7 @@ final class CallSystemMessageGenerator: NSObject {
         callerByConversation[conversation] = nil
         startDateByConversation[conversation] = nil
         connectDateByConversation[conversation] = nil
+        return systemMessage
     }
     
 }

@@ -66,13 +66,16 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         let messageCount = conversation.messages.count
         
         // when
-        sut.callCenterDidChange(callState: .outgoing, conversation: conversation, user: selfUser, timeStamp: nil)
-        sut.callCenterDidChange(callState: .established, conversation: conversation, user: selfUser, timeStamp: nil)
-        sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversation: conversation, user: user, timeStamp: nil)
+        let msg1 = sut.appendSystemMessageIfNeeded(callState: .outgoing, conversation: conversation, user: selfUser, timeStamp: nil)
+        let msg2 = sut.appendSystemMessageIfNeeded(callState: .established, conversation: conversation, user: selfUser, timeStamp: nil)
+        let msg3 = sut.appendSystemMessageIfNeeded(callState: .terminating(reason: .canceled), conversation: conversation, user: user, timeStamp: nil)
         
         // then
         XCTAssertEqual(conversation.messages.count, messageCount+1)
+        XCTAssertNil(msg1)
+        XCTAssertNil(msg2)
         if let message = conversation.messages.lastObject as? ZMSystemMessage {
+            XCTAssertEqual(message, msg3)
             XCTAssertEqual(message.systemMessageType, .performedCall)
             XCTAssertTrue(message.users.contains(selfUser))
         } else {
@@ -86,13 +89,16 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         let messageCount = conversation.messages.count
         
         // when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true), conversation: conversation, user: user, timeStamp: nil)
-        sut.callCenterDidChange(callState: .established , conversation: conversation, user: user, timeStamp: nil)
-        sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversation: conversation, user: user, timeStamp: nil)
+        let msg1 = sut.appendSystemMessageIfNeeded(callState: .incoming(video: false, shouldRing: true), conversation: conversation, user: user, timeStamp: nil)
+        let msg2 = sut.appendSystemMessageIfNeeded(callState: .established , conversation: conversation, user: user, timeStamp: nil)
+        let msg3 = sut.appendSystemMessageIfNeeded(callState: .terminating(reason: .canceled), conversation: conversation, user: user, timeStamp: nil)
         
         // then
         XCTAssertEqual(conversation.messages.count, messageCount+1)
+        XCTAssertNil(msg1)
+        XCTAssertNil(msg2)
         if let message = conversation.messages.lastObject as? ZMSystemMessage {
+            XCTAssertEqual(message, msg3)
             XCTAssertEqual(message.systemMessageType, .performedCall)
             XCTAssertTrue(message.users.contains(user))
         } else {
@@ -106,14 +112,17 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         let messageCount = conversation.messages.count
         
         // when
-        sut.callCenterDidChange(callState: .incoming(video:false, shouldRing: true), conversation: conversation, user: user, timeStamp: nil)
+        let msg1 =  sut.appendSystemMessageIfNeeded(callState: .incoming(video:false, shouldRing: true), conversation: conversation, user: user, timeStamp: nil)
+        var msg2 : ZMSystemMessage?
         self.performIgnoringZMLogError { 
-            self.sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversation: self.conversation, user: self.user, timeStamp: nil)
+            msg2 = self.sut.appendSystemMessageIfNeeded(callState: .terminating(reason: .canceled), conversation: self.conversation, user: self.user, timeStamp: nil)
         }
 
         // then
         XCTAssertEqual(conversation.messages.count, messageCount+1)
+        XCTAssertNil(msg1)
         if let message = conversation.messages.lastObject as? ZMSystemMessage {
+            XCTAssertEqual(message, msg2)
             XCTAssertEqual(message.systemMessageType, .missedCall)
             XCTAssertTrue(message.users.contains(user))
         } else {
