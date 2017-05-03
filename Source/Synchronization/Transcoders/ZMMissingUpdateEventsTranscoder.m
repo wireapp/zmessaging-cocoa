@@ -93,9 +93,8 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
 - (BOOL)isFetchingStreamForAPNS
 {
-    return self.application.applicationState == UIApplicationStateBackground &&
-           self.pingbackStatus.status == PingBackStatusInProgress &&
-           self.pingbackStatus.hasNotificationIDs;
+    return self.application.applicationState == UIApplicationStateBackground
+        && self.pingbackStatus.status == PingBackStatusInProgress;
 }
 
 - (BOOL)isFetchingStreamInBackground
@@ -184,7 +183,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         }
     }
 
-    if (self.isFetchingStreamForAPNS && self.notificationEventsToCancel != nil) {
+    if (nil != self.notificationEventsToCancel) {
         // In case we are fetching the stream because we have received a push notification we need to forward them to the pingback status
         // The status will forward them to the operationloop and check if the received notification was contained in this batch.
         NSArray <ZMUpdateEvent *> *events = [parsedEvents arrayByAddingObjectsFromArray:lastCallStateEvents.allValues];
@@ -255,28 +254,21 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 - (ZMTransportRequest *)nextRequestIfAllowed
 {
     BOOL fetchingStream = self.isFetchingStreamForAPNS || self.isFetchingStreamInBackground || self.isSyncing;
-    
-    // If we receive an APNS while fetching the notification stream we cancel the previous request
-    // and start another one.
-    if (self.pingbackStatus.hasNotificationIDs) {
-        EventsWithIdentifier *newEvents = self.pingbackStatus.nextNotificationEventsWithID;
-
-        if (nil != newEvents && ![newEvents isEqual:self.notificationEventsToCancel]) {
-            self.notificationEventsToCancel = newEvents;
-            [self.listPaginator resetFetching];
-        }
-    }
 
     // We want to create a new request if we are either currently fetching the paginated stream
     // or if we have a new notification ID that requires a pingback.
     if (fetchingStream) {
-        if (self.listPaginator.status != ZMSingleRequestInProgress) {
+        if (self.listPaginator.status != ZMSingleRequestInProgress && !self.listPaginator.hasMoreToFetch) {
             [self.listPaginator resetFetching];
         }
-        
+
+        if (nil == self.notificationEventsToCancel && self.isFetchingStreamForAPNS) {
+            self.notificationEventsToCancel = self.pingbackStatus.nextNotificationEventsWithID;
+        }
+
         ZMTransportRequest *request = [self.listPaginator nextRequest];
         
-        if (self.notificationEventsToCancel != nil) {
+        if (self.isFetchingStreamForAPNS && nil != request) {
             [request forceToVoipSession];
         }
                 

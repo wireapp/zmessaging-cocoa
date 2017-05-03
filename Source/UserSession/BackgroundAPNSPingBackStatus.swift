@@ -204,7 +204,7 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
         }
 
         // Call the handler with the events fetched from the notification stream
-        eventsWithHandlerByNotificationID[identifier]?.handler(.success, encryptedEvents)
+        eventsWithHandlerByNotificationID[identifier]?.handler(hasMore ? .needsMoreRequests : .success, encryptedEvents)
     }
 
     @objc(didFailDownloadingOriginalEvents:)

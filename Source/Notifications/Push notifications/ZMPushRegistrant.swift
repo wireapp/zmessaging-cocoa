@@ -148,7 +148,7 @@ extension ApplicationRemoteNotification {
     
     fileprivate func fetchResult(_ result: ZMPushPayloadResult) -> UIBackgroundFetchResult {
         switch (result) {
-        case .success:
+        case .success, .needsMoreRequests:
             return .newData
         case .failure:
             return .failed

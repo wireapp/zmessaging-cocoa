@@ -68,10 +68,10 @@ static NSString * const PushNotificationTypeNotice = @"notice";
     [self.backgroundAPNSPingBackStatus didReceiveVoIPNotification:eventsWithID handler:^(ZMPushPayloadResult result, NSArray<ZMUpdateEvent *> *receivedEvents) {
         ZM_STRONG(self);
         
-        if (result == ZMPushPayloadResultSuccess) {
+        if (result == ZMPushPayloadResultSuccess || result == ZMPushPayloadResultNeedsMoreRequests) {
             [self forwardEvents:receivedEvents];
         }
-        if (completionHandler != nil) {
+        if (completionHandler != nil && result != ZMPushPayloadResultNeedsMoreRequests) {
             [self.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_main_queue() block:^{
                 ZMLogPushKit(@"Calling CompletionHandler");
                 completionHandler(result);
