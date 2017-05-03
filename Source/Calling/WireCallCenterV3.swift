@@ -254,15 +254,18 @@ internal func establishedCallHandler(conversationId: UnsafePointer<Int8>?, userI
 }
 
 /// Handles ended calls
-/// In order to be passed to C, this function needs to be global
-internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
+/// If the user answers on the different device, we receive a `WCALL_REASON_ANSWERED_ELSEWHERE` followed by a `WCALL_REASON_NORMAL` once the call ends
+/// If the user leaves an ongoing group conversation or an incoming group call times out, we receive a `WCALL_REASON_STILL_ONGOING` ollowed by a `WCALL_REASON_NORMAL` once the call ends
+/// If messageTime is set to 0, the event wasn't caused by a message therefore we don't have a serverTimestamp.
+internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8>?, messageTime: UInt32, userId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
 {
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId) else { return }
     let userID = UUID(cString: userId)
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     callCenter.uiMOC.performGroupedBlock {
-        callCenter.handleCallState(callState: .terminating(reason: CallClosedReason(reason: reason)), conversationId: convID, userId: userID)
+        let time = (messageTime == 0) ? nil : Date(timeIntervalSince1970: TimeInterval(messageTime))
+        callCenter.handleCallState(callState: .terminating(reason: CallClosedReason(reason: reason)), conversationId: convID, userId: userID, messageTime: time)
     }
 }
 

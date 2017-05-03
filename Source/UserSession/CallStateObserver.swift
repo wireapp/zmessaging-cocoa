@@ -85,7 +85,9 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             self.updateConversationListIndicator(convObjectID: conversation.objectID, callState: callState)
             
             self.systemMessageGenerator.callCenterDidChange(callState: callState, conversation: conversation, user: user, timeStamp: timeStamp)
-            self.updateLastModifiedDate(callState: callState, in: conversation, timeStamp: timeStamp)
+            if let timeStamp = timeStamp {
+                conversation.updateLastModifiedDateIfNeeded(timeStamp)
+            }
             self.syncManagedObjectContext.enqueueDelayedSave()
         }
     }
@@ -150,12 +152,6 @@ extension CallStateObserver : VoiceChannelStateObserver {
     
     public func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol) {
         // no-op
-    }
-    
-    func updateLastModifiedDate(callState: CallState, in conversation: ZMConversation, timeStamp: Date?) {
-        if case .incoming = callState, let timeStamp = timeStamp {
-            conversation.updateLastModifiedDateIfNeeded(timeStamp)
-        }
     }
     
 }
