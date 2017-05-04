@@ -257,7 +257,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     ///
     /// 1.) We received a push notification and want to fetch the notification stream.
     ///     If this case we want to include the `cancel_fallback` query parameter to cancel fallback alert pushes.
-    //      This is the case if the `BackgroundAPNSPingBackStatus` has notification IDs.
+    ///     This is the case if the `BackgroundAPNSPingBackStatus` has notification IDs.
     /// 2.) The OS awoke the application to perform a background fetch (the operation state will indicate this).
     /// 3.) The application came to the foreground and is performing a quick-sync (c.f. `isSyncing`).
 
