@@ -253,22 +253,45 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
 - (ZMTransportRequest *)nextRequestIfAllowed
 {
-    BOOL fetchingStream = self.isFetchingStreamForAPNS || self.isFetchingStreamInBackground || self.isSyncing;
+    /// There are multiple scenarios in which this class will create a new request:
+    ///
+    /// 1.) We received a push notification and want to fetch the notification stream.
+    ///     If this case we want to include the `cancel_fallback` query parameter to cancel fallback alert pushes.
+    //      This is the case if the `BackgroundAPNSPingBackStatus` has notification IDs.
+    /// 2.) The OS awoke the application to perform a background fetch (the operation state will indicate this).
+    /// 3.) The application came to the foreground and is performing a quick-sync (c.f. `isSyncing`).
+
+    // The only reason we get the current value of this flag is ease testing this.
+    // Otherwise each call to `self.isFetchingStreamForAPNS` needs a corresponding call to mock this flag in tests.
+    BOOL fetchingForAPNS = self.isFetchingStreamForAPNS;
+    BOOL fetchingStream = fetchingForAPNS || self.isFetchingStreamInBackground || self.isSyncing;
 
     // We want to create a new request if we are either currently fetching the paginated stream
     // or if we have a new notification ID that requires a pingback.
     if (fetchingStream) {
+        // We only reset the paginator if it is neither in progress nor has more pages to fetch.
         if (self.listPaginator.status != ZMSingleRequestInProgress && !self.listPaginator.hasMoreToFetch) {
             [self.listPaginator resetFetching];
         }
 
-        if (nil == self.notificationEventsToCancel && self.isFetchingStreamForAPNS) {
+        // We need to add the id before asking the list paginator for a request,
+        // as it will ask us for additional query items.
+        BOOL didSetNotificationID = NO;
+        if (nil == self.notificationEventsToCancel && fetchingForAPNS) {
             self.notificationEventsToCancel = self.pingbackStatus.nextNotificationEventsWithID;
+            didSetNotificationID = YES;
         }
 
         ZMTransportRequest *request = [self.listPaginator nextRequest];
-        
-        if (self.isFetchingStreamForAPNS && nil != request) {
+
+        // We need to ensure we set the `notificationEventsToCancel` to nil in case
+        // the paginator did not create a request.
+        // We only want to set the events to nil if we just set them but didn't create a request.
+        if (nil == request && fetchingForAPNS && didSetNotificationID) {
+            self.notificationEventsToCancel = nil;
+        }
+
+        if (fetchingForAPNS && nil != request) {
             [request forceToVoipSession];
         }
                 
@@ -299,6 +322,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
 - (NSUUID *)nextUUIDFromResponse:(ZMTransportResponse *)response forListPaginator:(ZMSimpleListRequestPaginator *)paginator
 {
+
     NOT_USED(paginator);
     SyncStatus *syncStatus = self.syncStatus;
     ZMOperationStatus *operationStatus = self.operationStatus;

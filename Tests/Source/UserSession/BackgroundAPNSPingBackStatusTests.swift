@@ -296,7 +296,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertNotNil(sut.eventsWithHandlerByNotificationID[eventsWithID.identifier])
         XCTAssertNotNil(sut.backgroundActivity)
         guard let firstResult = receivedEvents.first else { return XCTFail("Did not receive first batch of events") }
-        XCTAssertEqual(firstResult.0, ZMPushPayloadResult.success)
+        XCTAssertEqual(firstResult.0, ZMPushPayloadResult.needsMoreRequests)
         XCTAssertEqual(firstResult.1, eventsWithID.events!)
         XCTAssertEqual(sut.status, PingBackStatus.inProgress)
 

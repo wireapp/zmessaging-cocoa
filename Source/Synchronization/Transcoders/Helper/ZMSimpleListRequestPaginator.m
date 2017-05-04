@@ -79,7 +79,6 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (ZMSingleRequestProgress)status
 {
-    // TODO: Return in progress when we still have more to fetch?
     return self.singleRequestSync.status;
 }
 
