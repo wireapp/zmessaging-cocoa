@@ -6,6 +6,7 @@ machine:
 
 dependencies:
   override:
+    - bundle install
     - carthage bootstrap
   cache_directories:
     - Carthage/Build
