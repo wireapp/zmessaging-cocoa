@@ -224,7 +224,7 @@ extension TypingStrategyTests {
         XCTAssertFalse(typing.didSetTypingUsers)
     }
     
-    func testThatItReturnsANextRequestWhenReceivingATypingNotification() {
+    func testThatItReturnsANextRequestWhenReceivingATypingNotification_Foreground() {
         // given
         let conversation = insertUIConversation()
 
@@ -237,6 +237,105 @@ extension TypingStrategyTests {
         // then
         XCTAssertNotNil(request)
         XCTAssertTrue(isExpected(request: request, for: conversation, isTyping: true))
+    }
+    
+    func testThatItReturnsANextRequestWhenReceivingATypingNotification_Background() {
+        // given
+        let conversation = insertUIConversation()
+        mockApplicationStatus.mockOperationState = .background
+        
+        // when
+        TypingStrategy.notifyTranscoderThatUser(isTyping: true, in: conversation)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        let request = sut.nextRequest()
+        
+        // then
+        XCTAssertNotNil(request)
+        XCTAssertTrue(isExpected(request: request, for: conversation, isTyping: true))
+    }
+    
+    func testThatItReturnsARequestForEndingPreviousTypingWhenNewTypingStartInOtherConversation(){
+        // given
+        let conversation1 = insertUIConversation()
+        let conversation2 = insertUIConversation()
+
+        TypingStrategy.notifyTranscoderThatUser(isTyping: true, in: conversation1)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        let request = sut.nextRequest()
+        XCTAssertTrue(isExpected(request: request, for: conversation1, isTyping: true))
+        
+        // when
+        TypingStrategy.notifyTranscoderThatUser(isTyping: true, in: conversation2)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        let request1 = sut.nextRequest()
+        let request2 = sut.nextRequest()
+        
+        // then
+        let request1IsforConv1 = isExpected(request: request1, for: conversation1, isTyping: false)
+        let request2IsforConv1 = isExpected(request: request2, for: conversation1, isTyping: false)
+        let request1IsforConv2 = isExpected(request: request1, for: conversation2, isTyping: true)
+        let request2IsforConv2 = isExpected(request: request2, for: conversation2, isTyping: true)
+        
+        XCTAssertTrue((request1IsforConv1 && request2IsforConv2) || (request2IsforConv1 && request1IsforConv2))
+    }
+    
+    func testThatItDoesNotReturnARequestForEndingPreviousTypingWhenNewTypingEndInOtherConversation(){
+        // given
+        let conversation1 = insertUIConversation()
+        let conversation2 = insertUIConversation()
+        
+        // when
+        TypingStrategy.notifyTranscoderThatUser(isTyping: true, in: conversation1)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        let request1 = sut.nextRequest()
+        
+        // then
+        XCTAssertNotNil(request1)
+        XCTAssertTrue(isExpected(request: request1, for: conversation1, isTyping: true))
+        
+        // and when
+        TypingStrategy.notifyTranscoderThatUser(isTyping: false, in: conversation2)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        let request2 = sut.nextRequest()
+        
+        // then
+        // and then returns the startTypingEvent of the new conversation
+        XCTAssertNotNil(request2)
+        XCTAssertTrue(isExpected(request: request2, for: conversation2, isTyping: false))
+        
+        // finally
+        XCTAssertNil(sut.nextRequest())
+    }
+    
+    func testThatItReturnsTheNextValidRequest(){
+        // given
+        let conversation = insertUIConversation()
+        
+        TypingStrategy.notifyTranscoderThatUser(isTyping: true, in: conversation)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        let request = sut.nextRequest()
+        XCTAssertTrue(isExpected(request: request, for: conversation, isTyping: true))
+
+        // when
+        TypingStrategy.notifyTranscoderThatUser(isTyping: true, in: conversation)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        TypingStrategy.notifyTranscoderThatUser(isTyping: false, in: conversation)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        let request1 = sut.nextRequest()
+        
+        // then
+        XCTAssertNotNil(request1)
+        XCTAssertTrue(isExpected(request: request1, for: conversation, isTyping: false))
+        
+        // finally
+        XCTAssertNil(sut.nextRequest())
     }
     
     func testThatItReturns_OnlyOne_RequestsWhenReceiving_One_TypingNotification() {
@@ -256,7 +355,7 @@ extension TypingStrategyTests {
         XCTAssertNil(request2)
     }
     
-    func testThatItReturns_Two_RequestsWhenReceiving_Two_TypingNotification_ForDifferentsConversation() {
+    func testThatItReturns_Two_RequestsWhenReceiving_Two_TypingNotification_ForDifferentsConversation_Start() {
         // given
         let conversation1 = insertUIConversation()
         let conversation2 = insertUIConversation()
@@ -272,13 +371,42 @@ extension TypingStrategyTests {
         let request2 = sut.nextRequest()
 
         // then
-        let request1IsforConv1 = isExpected(request: request1, for: conversation1, isTyping: true)
-        let request2IsforConv1 = isExpected(request: request2, for: conversation1, isTyping: true)
+        // Note: the first typing is ended because we assume that typing can only happen in one conversation at a time
+        let request1IsforConv1 = isExpected(request: request1, for: conversation1, isTyping: false)
+        let request2IsforConv1 = isExpected(request: request2, for: conversation1, isTyping: false)
         let request1IsforConv2 = isExpected(request: request1, for: conversation2, isTyping: true)
         let request2IsforConv2 = isExpected(request: request2, for: conversation2, isTyping: true)
         
         XCTAssertTrue((request1IsforConv1 && request2IsforConv2) ||
                       (request2IsforConv1 && request1IsforConv2))
+        
+    }
+    
+    
+    func testThatItReturns_Two_RequestsWhenReceiving_Two_TypingNotification_ForDifferentsConversation_End() {
+        // given
+        let conversation1 = insertUIConversation()
+        let conversation2 = insertUIConversation()
+        
+        TypingStrategy.notifyTranscoderThatUser(isTyping: true, in: conversation1)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        TypingStrategy.notifyTranscoderThatUser(isTyping: false, in: conversation2)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        let request1 = sut.nextRequest()
+        let request2 = sut.nextRequest()
+        
+        // then
+        // Note: the first typing is ended because we assume that typing can only happen in one conversation at a time
+        let request1IsforConv1 = isExpected(request: request1, for: conversation1, isTyping: true)
+        let request2IsforConv1 = isExpected(request: request2, for: conversation1, isTyping: true)
+        let request1IsforConv2 = isExpected(request: request1, for: conversation2, isTyping: false)
+        let request2IsforConv2 = isExpected(request: request2, for: conversation2, isTyping: false)
+        
+        XCTAssertTrue((request1IsforConv1 && request2IsforConv2) ||
+            (request2IsforConv1 && request1IsforConv2))
         
     }
     
