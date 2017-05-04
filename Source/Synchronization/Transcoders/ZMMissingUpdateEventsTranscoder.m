@@ -276,20 +276,13 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
         // We need to add the id before asking the list paginator for a request,
         // as it will ask us for additional query items.
-        BOOL didSetNotificationID = NO;
-        if (nil == self.notificationEventsToCancel && fetchingForAPNS) {
+        // Also we need to ensure that we will be able to generate a request (checking hasMoreToFetch),
+        // to avoid setting the notificationEventsToCancel when we're unable to create a request.
+        if (nil == self.notificationEventsToCancel && fetchingForAPNS && self.listPaginator.hasMoreToFetch) {
             self.notificationEventsToCancel = self.pingbackStatus.nextNotificationEventsWithID;
-            didSetNotificationID = YES;
         }
 
         ZMTransportRequest *request = [self.listPaginator nextRequest];
-
-        // We need to ensure we set the `notificationEventsToCancel` to nil in case
-        // the paginator did not create a request.
-        // We only want to set the events to nil if we just set them but didn't create a request.
-        if (nil == request && fetchingForAPNS && didSetNotificationID) {
-            self.notificationEventsToCancel = nil;
-        }
 
         if (fetchingForAPNS && nil != request) {
             [request forceToVoipSession];
