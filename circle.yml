@@ -17,7 +17,7 @@ test:
   override:
     - set -o pipefail && xcodebuild -scheme WireSyncEngine-ios build-for-testing -enableCodeCoverage YES -destination "${DESTINATION}" | tee $CIRCLE_ARTIFACTS/xcode_build.log | xcpretty
     - set -o pipefail && xcodebuild -scheme WireSyncEngine-ios test-without-building -enableCodeCoverage YES -destination "${DESTINATION}" | tee $CIRCLE_ARTIFACTS/xcode_test.log | xcpretty -r junit --output $CIRCLE_TEST_REPORTS/junit/tests.xml
-    - slather coverage --html --scheme WireSyncEngine-ios --output-directory $CIRCLE_TEST_REPORTS/code_coverage/ WireSyncEngine.xcodeproj
+    - bundle exec slather coverage --html --scheme WireSyncEngine-ios --output-directory $CIRCLE_TEST_REPORTS/code_coverage/ WireSyncEngine.xcodeproj
     - bundle exec danger
   pre:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
