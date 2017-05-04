@@ -6,11 +6,12 @@ machine:
 
 dependencies:
   override:
-    - bundle install
+    - bundle install --path ~/.gem
     - carthage bootstrap
     - curl -O https://raw.githubusercontent.com/wireapp/wire-ios-shared-resources/master/Dangerfile
   cache_directories:
     - Carthage/Build
+    - ~/.gem
 
 test:
   override:
