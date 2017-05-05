@@ -39,6 +39,7 @@ internal enum AssetTransportError: Error {
 @objc public final class UserImageAssetUpdateStrategy: AbstractRequestStrategy {
     internal let requestFactory = AssetRequestFactory()
     internal var upstreamRequestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
+    internal var deleteRequestSync: ZMSingleRequestSync?
     internal var downstreamRequestSyncs = [ProfileImageSize : ZMDownstreamObjectSyncWithWhitelist]()
     internal let moc: NSManagedObjectContext
     internal weak var imageUploadStatus: UserProfileImageUploadStatusProtocol?
@@ -60,6 +61,7 @@ internal enum AssetTransportError: Error {
         
         upstreamRequestSyncs[.preview] = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)
         upstreamRequestSyncs[.complete] = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)
+        deleteRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: moc)
         
         NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.previewAssetFetchNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.completeAssetFetchNotification, object: nil)
@@ -125,6 +127,12 @@ internal enum AssetTransportError: Error {
         
         guard let updateStatus = imageUploadStatus else { return nil }
         
+        // There are assets added for deletion
+        if updateStatus.hasAssetToDelete() {
+            deleteRequestSync?.readyForNextRequestIfNotBusy()
+            return deleteRequestSync?.nextRequest()
+        }
+        
         let sync = ProfileImageSize.allSizes.filter(updateStatus.hasImageToUpload).flatMap { upstreamRequestSyncs[$0] }.first
         sync?.readyForNextRequestIfNotBusy()
         return sync?.nextRequest()
@@ -172,6 +180,11 @@ extension UserImageAssetUpdateStrategy: ZMSingleRequestTranscoder {
             let request = requestFactory.upstreamRequestForAsset(withData: image, shareable: true, retention: .eternal)
             request?.addContentDebugInformation("Uploading to /assets/V3: [\(size)]  [\(image)] ")
             return request
+        } else if sync === deleteRequestSync {
+            if let assetId = imageUploadStatus?.consumeAssetToDelete() {
+                let path = "/assets/v3/\(assetId)"
+                return ZMTransportRequest(path: path, method: .methodDELETE, payload: nil)
+            }
         }
         return nil
     }

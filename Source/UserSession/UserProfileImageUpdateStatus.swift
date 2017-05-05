@@ -30,6 +30,8 @@ internal protocol UserProfileImageUpdateStateDelegate: class {
 }
 
 internal protocol UserProfileImageUploadStatusProtocol: class {
+    func hasAssetToDelete() -> Bool
+    func consumeAssetToDelete() -> String?
     func consumeImage(for size: ProfileImageSize) -> Data?
     func hasImageToUpload(for size: ProfileImageSize) -> Bool
     func uploadingDone(imageSize: ProfileImageSize, assetId: String)
@@ -116,6 +118,7 @@ public final class UserProfileImageUpdateStatus: NSObject {
     fileprivate var imageState = [ProfileImageSize : ImageState]()
     fileprivate var resizedImages = [ProfileImageSize : Data]()
     internal fileprivate(set) var state: ProfileUpdateState = .ready
+    internal fileprivate(set) var assetsToDelete = Set<String>()
     
     public convenience init(managedObjectContext: NSManagedObjectContext) {
         self.init(managedObjectContext: managedObjectContext, preprocessor: ZMAssetsPreprocessor(delegate: nil), queue: ZMImagePreprocessor.createSuitableImagePreprocessingQueue(), delegate: nil)
@@ -171,6 +174,7 @@ extension UserProfileImageUpdateStatus {
     
     private func updateUserProfile(with previewAssetId: String, completeAssetId: String) {
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
+        assetsToDelete.formUnion([selfUser.previewProfileAssetIdentifier, selfUser.completeProfileAssetIdentifier].flatMap {$0})
         selfUser.updateAndSyncProfileAssetIdentifiers(previewIdentifier: previewAssetId, completeIdentifier: completeAssetId)
         selfUser.imageSmallProfileData = self.resizedImages[.preview]
         selfUser.imageMediumData = self.resizedImages[.complete]
@@ -330,6 +334,20 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
 }
 
 extension UserProfileImageUpdateStatus: UserProfileImageUploadStatusProtocol {
+    
+    /// Checks if there are assets that needs to be deleted
+    ///
+    /// - Returns: true if there are assets that needs to be deleted
+    func hasAssetToDelete() -> Bool {
+        return !assetsToDelete.isEmpty
+    }
+    
+    /// Takes an asset ID that needs to be deleted and removes from the internal list
+    ///
+    /// - Returns: Asset ID or nil if nothing needs to be deleted
+    internal func consumeAssetToDelete() -> String? {
+        return assetsToDelete.removeFirst()
+    }
     
     /// Checks if there is an image to upload
     ///
