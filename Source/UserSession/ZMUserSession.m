@@ -240,7 +240,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
     session.requestLoopDetectionCallback = ^(NSString *path) {
-        // TAG analytics
+        // The tracker will return NO in case the path should be ignored.
         if (! [tracker tagWithPath:path]) {
             return;
         }

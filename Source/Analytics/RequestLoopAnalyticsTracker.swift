@@ -32,6 +32,10 @@ import Foundation
         analytic = with
     }
 
+    /// Track a loop at the given path.
+    /// The path will be sanitized (UUIDs will be removed).
+    /// - parameter path: The path to track a request loop for.
+    /// - returns: `true` in case the tracking has been performed, `false` otherwise (e.g. when the path was in the ignored paths list).
     @objc(tagWithPath:)
     public func tag(with path: String) -> Bool {
         guard nil == ignoredPrefixes.first(where: path.hasPrefix) else { return false }
