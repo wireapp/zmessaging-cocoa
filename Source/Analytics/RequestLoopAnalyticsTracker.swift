@@ -25,11 +25,11 @@ import Foundation
         "/typing"
     ]
     
-    weak var analytic : AnalyticsType?
+    weak var analytics: AnalyticsType?
     
     @objc(initWithAnalytics:)
-    public init(with : AnalyticsType) {
-        analytic = with
+    public init(with analytics : AnalyticsType?) {
+        self.analytics = analytics
     }
 
     /// Track a loop at the given path.
@@ -39,10 +39,12 @@ import Foundation
     @objc(tagWithPath:)
     public func tag(with path: String) -> Bool {
         guard nil == ignoredPrefixes.first(where: path.hasPrefix) else { return false }
-        if let analytic = analytic {
-            analytic.tagEvent("request.loop", attributes: ["path": path.sanitizePath() as NSObject])
+        if let analytics = analytics {
+            analytics.tagEvent("request.loop", attributes: ["path": path.sanitizePath() as NSObject])
+            return true
+        } else {
+            return false
         }
-        return true
     }
 }
 
