@@ -240,12 +240,10 @@ ZM_EMPTY_ASSERTING_INIT()
     
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
     session.requestLoopDetectionCallback = ^(NSString *path) {
-        if ([path hasSuffix:@"/typing"]) {
+        // TAG analytics
+        if (! [tracker tagWithPath:path]) {
             return;
         }
-
-        //TAG analytics
-        [tracker tagWithPath:path];
         ZMLogWarn(@"Request loop happening at path: %@", path);
         dispatch_async(dispatch_get_main_queue(), ^{
             [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportRequestLoopNotificationName object:nil userInfo:@{@"path" : path}];
