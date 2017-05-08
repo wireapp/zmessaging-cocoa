@@ -36,22 +36,70 @@ public struct TypingEvent {
                             isTyping:Bool,
                             ifDifferentFrom other: TypingEvent?) -> TypingEvent?
     {
-        let date = Date()
-        if let other = other, other.isTyping == isTyping && other.objectID.isEqual(objectID) &&
-           (fabs(date.timeIntervalSince(other.date)) < (ZMTypingDefaultTimeout / ZMTypingRelativeSendTimeout))
-        {
+        let newEvent = TypingEvent(date: Date(), objectID: objectID, isTyping: isTyping)
+        if let other = other, newEvent.isEqual(other: other) {
             return nil
         }
-        return TypingEvent(date: date, objectID: objectID, isTyping: isTyping)
+        return newEvent
     }
+    
+    func isEqual(other: TypingEvent) -> Bool {
+        return isTyping == other.isTyping && objectID.isEqual(other.objectID) && fabs(date.timeIntervalSince(other.date)) < (ZMTypingDefaultTimeout / ZMTypingRelativeSendTimeout)
+    }
+    
 }
 
+
+class TypingEventQueue {
+    
+    /// conversations with their current isTyping state
+    var conversations : [NSManagedObjectID : Bool] = [:]
+    
+    /// conversations that started typing, but never ended
+    var unbalancedConversations : Set<NSManagedObjectID> = Set()
+
+    /// last event that has been requested
+    var lastSentTypingEvent : TypingEvent?
+    
+    /// Adds the conversation to the "queue"
+    /// If `isTyping` is true, it turns all other conversation events to endTyping events
+    func addItem(conversationID: NSManagedObjectID, isTyping: Bool) {
+        if isTyping {
+            // end all previous typings
+            conversations.forEach {
+                conversations[$0.key] = false
+            }
+            unbalancedConversations.forEach {
+                conversations[$0] = false
+            }
+            unbalancedConversations.insert(conversationID)
+        } else {
+            unbalancedConversations.remove(conversationID)
+        }
+        conversations[conversationID] = isTyping
+    }
+    
+    /// Returns the next typing event that is different from the last sent typing event
+    func nextEvent() -> TypingEvent? {
+        var event : TypingEvent?
+        while event == nil, let (convObjectID, isTyping) = conversations.popFirst() {
+            event = TypingEvent.typingEvent(with: convObjectID, isTyping: isTyping, ifDifferentFrom: lastSentTypingEvent)
+        }
+        if let anEvent = event {
+            lastSentTypingEvent = anEvent
+        }
+        return event
+    }
+    
+    func clear(conversationID: NSManagedObjectID) {
+        conversations.removeValue(forKey: conversationID)
+    }
+}
 
 public class TypingStrategy : AbstractRequestStrategy {
     
     fileprivate var typing : ZMTyping!
-    fileprivate var conversations : [NSManagedObjectID : Bool] = [:]
-    fileprivate var lastSentTypingEvent : TypingEvent?
+    fileprivate let typingEventQueue = TypingEventQueue()
     fileprivate var tornDown : Bool = false
 
     @available (*, unavailable)
@@ -66,6 +114,8 @@ public class TypingStrategy : AbstractRequestStrategy {
     init(applicationStatus: ApplicationStatus, syncContext: NSManagedObjectContext, uiContext: NSManagedObjectContext, typing: ZMTyping?) {
         self.typing = typing ?? ZMTyping(userInterfaceManagedObjectContext: uiContext, syncManagedObjectContext: syncContext)
         super.init(withManagedObjectContext: syncContext, applicationStatus: applicationStatus)
+        self.configuration = [.allowsRequestsWhileInBackground, .allowsRequestsDuringEventProcessing]
+
         NotificationCenter.default.addObserver(self, selector: #selector(addConversationForNextRequest), name: Notification.Name(rawValue: ZMTypingNotificationName), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(shouldClearTypingForConversation), name: Notification.Name(rawValue: ZMConversationClearTypingNotificationName), object: nil)
     }
@@ -104,28 +154,26 @@ public class TypingStrategy : AbstractRequestStrategy {
         
         managedObjectContext.performGroupedBlock {
             if (clearIsTyping) {
-                self.conversations.removeValue(forKey: conversation.objectID)
-                self.lastSentTypingEvent = nil
+                self.typingEventQueue.clear(conversationID: conversation.objectID)
+                self.typingEventQueue.lastSentTypingEvent = nil
             } else {
-                self.conversations[conversation.objectID] = isTyping
+                self.typingEventQueue.addItem(conversationID: conversation.objectID, isTyping: isTyping)
                 RequestAvailableNotification.notifyNewRequestsAvailable(self)
             }
         }
     }
     
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        guard let (convObjectID, isTyping) = conversations.popFirst(),
-              let newTypingEvent = TypingEvent.typingEvent(with: convObjectID, isTyping: isTyping, ifDifferentFrom: lastSentTypingEvent),
-              let conversation = managedObjectContext.object(with: convObjectID) as? ZMConversation,
+        guard let typingEvent = typingEventQueue.nextEvent(),
+              let conversation = managedObjectContext.object(with: typingEvent.objectID) as? ZMConversation,
               let remoteIdentifier = conversation.remoteIdentifier
         else { return nil }
         
         let path = "/conversations/\(remoteIdentifier.transportString())/typing"
-        let payload = [StatusKey: isTyping ? StartedKey : StoppedKey]
+        let payload = [StatusKey: typingEvent.isTyping ? StartedKey : StoppedKey]
         let request = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
         request.setDebugInformationTranscoder(self)
         
-        lastSentTypingEvent = newTypingEvent;
         return request
     }
 }

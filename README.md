@@ -21,7 +21,7 @@ The Wire iOS sync engine is developed in a mix of Objective-C and Swift (and jus
 
 *iOS SyncEngine* is build with Xcode 8 using Swift 3.
 
-It is using [Carthage](https://github.com/Carthage/Carthage) to manage dependencies. To pull the dependencies binaries, run `carthage bootstrap —-platform ios` .
+It is using [Carthage](https://github.com/Carthage/Carthage) to manage dependencies. To pull the dependencies binaries run `carthage bootstrap —-platform ios`.
 
 You can now open the Xcode project and build.
 
