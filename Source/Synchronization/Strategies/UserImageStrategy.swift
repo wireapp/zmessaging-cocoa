@@ -194,7 +194,29 @@ public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder
         }
         assert(remoteID != nil, "Should not receive users with <nil> mediumRemoteIdentifier")
         let path = type(of:self).path(for:remoteID!, ofUserWith:userID)
-        return ZMTransportRequest.imageGet(fromPath: path)
+        let request = ZMTransportRequest.imageGet(fromPath: path)
+        
+        let values: [String]
+        if downstreamSync == self.mediumDownstreamSync {
+            values = [
+                user.isSelfUser ? "self: true" : "self: false",
+                "mediumRemoteIdentifier : \(String(describing: user.mediumRemoteIdentifier))",
+                "completeProfileAssetIdentifier : \(String(describing: user.completeProfileAssetIdentifier))",
+                "localMediumRemoteIdentifier : \(String(describing: user.localMediumRemoteIdentifier))",
+                "imageMediumData : \(String(describing: user.imageMediumData))"
+            ]
+        } else {
+            values = [
+                user.isSelfUser ? "self: true" : "self: false",
+                "smallProfileRemoteIdentifier : \(String(describing: user.smallProfileRemoteIdentifier))",
+                "previewProfileAssetIdentifier : \(String(describing: user.previewProfileAssetIdentifier))",
+                "localSmallProfileRemoteIdentifier : \(String(describing: user.localSmallProfileRemoteIdentifier))",
+                "imageSmallProfileData : \(String(describing: user.imageSmallProfileData))"
+            ]
+        }
+        
+        request.addContentDebugInformation("Predicate values: [\(values.joined(separator: ", "))]")
+        return request
     }
     
     static func path(for assetID: UUID, ofUserWith userID: UUID) -> String {
