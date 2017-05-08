@@ -25,6 +25,14 @@ typealias ProfileImageSize = WireSyncEngine.ProfileImageSize
 class MockImageUpdateStatus: WireSyncEngine.UserProfileImageUploadStatusProtocol {
     var allSizes: [ProfileImageSize] { return [.preview, .complete] }
     
+    var assetIdsToDelete = Set<String>()
+    func hasAssetToDelete() -> Bool {
+        return !assetIdsToDelete.isEmpty
+    }
+    func consumeAssetToDelete() -> String? {
+        return assetIdsToDelete.removeFirst()
+    }
+    
     var dataToConsume = [ProfileImageSize : Data]()
     func consumeImage(for size: ProfileImageSize) -> Data? {
         return dataToConsume[size]
@@ -66,6 +74,14 @@ class UserImageAssetUpdateStrategyTests : MessagingTest {
         
         self.syncMOC.zm_userImageCache = UserImageLocalCache()
         self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache
+    }
+    
+    override func tearDown() {
+        self.mockApplicationStatus = nil
+        self.updateStatus = nil
+        self.sut = nil
+        self.syncMOC.zm_userImageCache = nil
+        super.tearDown()
     }
 }
 
@@ -151,6 +167,19 @@ extension UserImageAssetUpdateStrategyTests {
         XCTAssertEqual(sut.nextRequest()?.binaryData, completeRequest?.binaryData)
     }
     
+    func testThatItCreatesDeleteRequestIfThereAreAssetsToDelete() {
+        // GIVEN
+        let assetId = "12344"
+        let deleteRequest = ZMTransportRequest(path: "/assets/v3/\(assetId)", method: .methodDELETE, payload: nil)
+        
+        // WHEN
+        updateStatus.assetIdsToDelete = [assetId]
+
+        // THEN
+        XCTAssertEqual(sut.nextRequest(), deleteRequest)
+        XCTAssert(updateStatus.assetIdsToDelete.isEmpty)
+    }
+
     func testThatUploadMarkedAsFailedOnUnsuccessfulResponse() {
         // GIVEN
         let size = ProfileImageSize.preview
