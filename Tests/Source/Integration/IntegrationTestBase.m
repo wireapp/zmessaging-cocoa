@@ -123,6 +123,8 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     [BackgroundActivityFactory tearDownInstance];
     [LinkPreviewDetectorHelper tearDown];
     
+    self.mockObjectIDToRemoteID = nil;
+    self.mockFlowManager = nil;
     self.conversationChangeObserver = nil;
     self.userChangeObserver = nil;
     self.messageChangeObserver = nil;

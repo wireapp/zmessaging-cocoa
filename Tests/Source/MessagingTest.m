@@ -170,6 +170,10 @@
     [self resetState];
     [MessagingTest deleteAllFilesInCache];
     [self removeCachesInSharedContainer];
+    _application = nil;
+    self.groupIdentifier = nil;
+    self.storeURL = nil;
+    self.keyStoreURL = nil;
     [super tearDown];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
 }
