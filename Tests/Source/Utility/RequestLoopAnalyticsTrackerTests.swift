@@ -73,7 +73,8 @@ class RequestLoopAnalyticsTrackerTests: XCTestCase {
     func testThatItExcludesIsTyping() {
         let analytics = MockAnalytics()
         let sut = RequestLoopAnalyticsTracker(with: analytics)
-        XCTAssertFalse(sut.tag(with: "/typing"))
+        let typingPath = "/conversations/58128c2d-8181-45d9-91d5-d4aa31a637f8/typing"
+        XCTAssertFalse(sut.tag(with: typingPath))
         XCTAssertTrue(sut.tag(with: "/assets/v3"))
     }
 

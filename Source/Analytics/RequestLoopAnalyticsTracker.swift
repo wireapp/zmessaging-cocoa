@@ -21,7 +21,7 @@ import Foundation
 
 @objc public class RequestLoopAnalyticsTracker : NSObject {
 
-    private let ignoredPrefixes = [
+    private let ignoredSuffixes = [
         "/typing"
     ]
     
@@ -38,7 +38,7 @@ import Foundation
     /// - returns: `true` in case the tracking has been performed, `false` otherwise (e.g. when the path was in the ignored paths list).
     @objc(tagWithPath:)
     public func tag(with path: String) -> Bool {
-        guard nil == ignoredPrefixes.first(where: path.hasPrefix) else { return false }
+        guard nil == ignoredSuffixes.first(where: path.hasSuffix) else { return false }
         if let analytics = analytics {
             analytics.tagEvent("request.loop", attributes: ["path": path.sanitizePath() as NSObject])
             return true
