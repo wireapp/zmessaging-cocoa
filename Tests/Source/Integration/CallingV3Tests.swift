@@ -793,12 +793,13 @@ extension CallingV3Tests {
         let user = conversationUnderTest.connectedUser!
         
         XCTAssertNotEqualWithAccuracy(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, Date().timeIntervalSince1970, 1.0)
+        let lastModified = conversationUnderTest.lastModifiedDate!
         
         // when
         otherStartCall(user: user)
         
         // then
-        XCTAssertEqualWithAccuracy(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, Date().timeIntervalSince1970, accuracy: 1.0)
+        XCTAssertGreaterThan(conversationUnderTest.lastModifiedDate!, lastModified)
     }
     
 }
