@@ -58,8 +58,8 @@ extern NSString *const ZMPersistedClientIdKey;
 @interface ZMClientRegistrationStatus : NSObject <ClientRegistrationDelegate>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                     loginCredentialProvider:(id<ZMCredentialProvider>) loginCredentialProvider
-                    updateCredentialProvider:(id<ZMCredentialProvider>) updateCredentialProvider
+                     loginCredentialProvider:(id<ZMCredentialProvider>)loginCredentialProvider
+                    updateCredentialProvider:(id<ZMCredentialProvider>)updateCredentialProvider
                                       cookie:(ZMCookie *)cookie
                   registrationStatusDelegate:(id<ZMClientRegistrationStatusDelegate>) registrationStatusDelegate;
 
@@ -78,6 +78,5 @@ extern NSString *const ZMPersistedClientIdKey;
 
 @property (nonatomic, readonly) ZMClientRegistrationPhase currentPhase;
 @property (nonatomic, readonly) ZMEmailCredentials *emailCredentials;
-@property (nonatomic, readonly) BOOL hasEmailCredentials;
 
 @end

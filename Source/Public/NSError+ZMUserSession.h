@@ -47,10 +47,11 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     /// There is already a recent request to get the activation code for registration/login
     ZMUserSessionCodeRequestIsAlreadyPending = 12,
     /// The user account does not have a password, and a password
-    /// is needed to register a new client
+    /// is needed to register a new client.
     ZMUserSessionNeedsPasswordToRegisterClient = 13,
     /// The user account does not have an email, and an email
     /// is needed to register a new client
+    /// Not supported by the backend any more. The error is generated locally.
     ZMUserSessionNeedsToRegisterEmailToRegisterClient = 14,
     /// Too many clients have been registered for this user,
     /// one needs to be deleted before registering a new one

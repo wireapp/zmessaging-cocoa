@@ -39,17 +39,15 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 @property (nonatomic) BOOL isWaitingForClientsToBeDeleted;
 @property (nonatomic) BOOL isWaitingForUserClients;
 @property (nonatomic) BOOL isWaitingForCredentials;
-@property (nonatomic) BOOL isWaitingForEmailVerification;
 @property (nonatomic) BOOL needsToCheckCredentials;
-
 @property (nonatomic) BOOL needsToVerifySelfClient;
 
-@property (nonatomic, weak) id<ZMCredentialProvider> loginCredentialProvider;
+@property (nonatomic, weak) id <ZMCredentialProvider> loginCredentialProvider;
 @property (nonatomic, weak) id <ZMCredentialProvider> updateCredentialProvider;
 @property (nonatomic, weak) id <ZMClientRegistrationStatusDelegate> registrationStatusDelegate;
 @property (nonatomic) ZMCookie *cookie;
 
-@property (nonatomic) id<ZMClientUpdateObserverToken> clientUpdateToken;
+@property (nonatomic) id <ZMClientUpdateObserverToken> clientUpdateToken;
 @property (nonatomic) BOOL tornDown;
 
 @end
@@ -113,7 +111,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (ZMClientRegistrationPhase)currentPhase
 {
-    
     /*
      The flow is as follows
      ZMClientRegistrationPhaseWaitingForLogin
@@ -122,6 +119,12 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
      ZMClientRegistrationPhaseWaitingForSelfUser
      [We fetch the selfUser]
                 |
+     [User has email address?]      --> NO  --> ZMClientRegistrationPhaseWaitingForEmailVerfication
+                                                [user adds email and password, we fetch user from BE]
+                                            --> ZMClientRegistrationPhaseUnregistered
+                                                [Client is registered]
+                                            --> ZMClientRegistrationPhaseRegistered
+                                    --> YES --> Proceed
      ZMClientRegistrationPhaseUnregistered
      [We try to register the client without the password]
                 |
@@ -134,11 +137,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
                                             --> ZMClientRegistrationPhaseUnregistered
                                                 [User entered correct password ?] -->  YES --> Continue at [User has too many devices]
                                                                                   -->  NO  --> ZMClientRegistrationPhaseWaitingForLogin
-                                    --> NO  --> ZMClientRegistrationPhaseWaitingForEmailVerfication 
-                                                [user adds email and password, we fetch user from BE]
-                                            --> ZMClientRegistrationPhaseUnregistered
-                                                [Client is registered]
-                                            --> ZMClientRegistrationPhaseRegistered
+
      [User has too many deviced?]    --> YES --> ZMClientRegistrationPhaseFetchingClients
                                                 [User selects device to delete]
                                             --> ZMClientRegistrationPhaseWaitingForDeletion
@@ -171,7 +170,8 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     }
     
     // when the user has previously only registered by phone and now wants to register a second device, he needs to register his email address and password first
-    if (self.isWaitingForEmailVerification) {
+    BOOL needsEmailToRegisterClient = ![self.managedObjectContext isRegisteredOnThisDevice] && self.isWaitingForSelfUserEmail;
+    if (needsEmailToRegisterClient) {
         return ZMClientRegistrationPhaseWaitingForEmailVerfication;
     }
     
@@ -199,11 +199,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (BOOL)isWaitingForLogin
 {
     return self.cookie.data == nil;
-}
-
-- (BOOL)hasEmailCredentials;
-{
-    return self.emailCredentials.email != nil && self.emailCredentials.password != nil;
 }
 
 - (BOOL)needsToRegisterClient
@@ -244,7 +239,8 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     if ([self needsToCreateNewClientForSelfUser:selfUser]) {
         ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
         [self insertNewClientForSelfUser:selfUser];
-    } else {
+    }
+    else {
         // there is already an unregistered client in the store
         // since there is no change in the managedObject, it will not trigger [ZMRequestAvailableNotification notifyNewRequestsAvailable:] automatically
         // therefore we need to call it here
@@ -277,10 +273,12 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)didFetchSelfUser;
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    if (self.isWaitingForEmailVerification && !self.isWaitingForSelfUserEmail) {
-        self.isWaitingForEmailVerification = NO;
-    }
     if (self.needsToRegisterClient) {
+        
+        if (self.isWaitingForSelfUserEmail && ![self.managedObjectContext isRegisteredOnThisDevice]) {
+            [self indicateEmailIsNecessary];
+        }
+        
         [self prepareForClientRegistration];
     }
     else {
@@ -337,9 +335,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         // set this label to block additional requests while we are waiting for the user to (re-)enter the password
         self.needsToCheckCredentials = YES;
     }
-    if (error.code == ZMUserSessionNeedsToRegisterEmailToRegisterClient) {
-        self.isWaitingForEmailVerification = YES;
-    }
     
     if (error.code == ZMUserSessionCanNotRegisterMoreClients) {
         // Wait and fetch the clients before sending the error
@@ -351,6 +346,13 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     }
 }
 
+- (void)indicateEmailIsNecessary
+{
+    NSError *emailMissingError = [[NSError alloc] initWithDomain:ZMUserSessionErrorDomain
+                                                            code:ZMUserSessionNeedsToRegisterEmailToRegisterClient
+                                                        userInfo:nil];
+    [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:emailMissingError];
+}
 
 - (void)didFetchClients:(NSArray<NSManagedObjectID *> *)clientIDs;
 {

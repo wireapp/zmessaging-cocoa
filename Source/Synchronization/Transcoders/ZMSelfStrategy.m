@@ -316,7 +316,7 @@ static NSString * const DeletionRequestKey = @"";
         // TODO: Write tests for all cases
         BOOL selfUserHasEmail = (selfUser.emailAddress != nil);
         BOOL needToNotifyAuthState = (clientPhase == ZMClientRegistrationPhaseWaitingForSelfUser) ||
-                                     (clientPhase == ZMClientRegistrationPhaseWaitingForEmailVerfication && selfUserHasEmail);
+                                     (clientPhase == ZMClientRegistrationPhaseWaitingForEmailVerfication);
 
         if (needToNotifyAuthState) {
             [clientStatus didFetchSelfUser];
