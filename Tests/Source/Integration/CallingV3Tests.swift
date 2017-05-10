@@ -792,13 +792,16 @@ extension CallingV3Tests {
         XCTAssertTrue(logInAndWaitForSyncToBeComplete())
         let user = conversationUnderTest.connectedUser!
         
-        XCTAssertNotEqualWithAccuracy(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, Date().timeIntervalSince1970, 1.0)
+        // Time gets truncated to integer values under the hood, doing the same to avoid false positives
+        let timeIntervalBeforeCall = TimeInterval(UInt32(Date().timeIntervalSince1970))
+        XCTAssertLessThan(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, timeIntervalBeforeCall)
         
         // when
         otherStartCall(user: user)
         
         // then
-        XCTAssertEqualWithAccuracy(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, Date().timeIntervalSince1970, accuracy: 1.0)
+        let modified = conversationUnderTest.lastModifiedDate!.timeIntervalSince1970
+        XCTAssertGreaterThanOrEqual(modified, timeIntervalBeforeCall)
     }
     
 }

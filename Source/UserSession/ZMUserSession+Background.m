@@ -187,6 +187,9 @@ static NSString *ZMLogTag = @"Push";
                                                                                actionIdentifier:nil
                                                                                       textInput:nil];
     }
+    if (self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen) {
+        [self processPendingNotificationActions];
+    }
 }
 
 - (void)application:(id<ZMApplication>)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)())completionHandler;
@@ -217,10 +220,12 @@ static NSString *ZMLogTag = @"Push";
                                                                            managedObjectContext:self.managedObjectContext
                                                                                actionIdentifier:identifier
                                                                                       textInput:nil];
-        if (self.didStartInitialSync && !self.isPerformingSync) {
-            [self processPendingNotificationActions];
-        }
     }
+    
+    if (self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen) {
+        [self processPendingNotificationActions];
+    }
+    
     if (completionHandler != nil) {
         completionHandler();
     }
