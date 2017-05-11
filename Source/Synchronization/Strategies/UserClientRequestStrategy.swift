@@ -272,8 +272,12 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
             if let errorLabel = response.payload?.asDictionary()?["label"] as? String {
                 switch errorLabel {
                 case "missing-auth":
-                    let selfUserHasEmail = (ZMUser.selfUser(in: self.managedObjectContext).emailAddress != nil )
-                    errorCode = selfUserHasEmail ? .needsPasswordToRegisterClient : .needsToRegisterEmailToRegisterClient
+                    if let emailAddress = ZMUser.selfUser(in: self.managedObjectContext).emailAddress, !emailAddress.isEmpty {
+                        errorCode = .needsPasswordToRegisterClient
+                    }
+                    else {
+                        errorCode = .invalidCredentials
+                    }
                     break
                 case "too-many-clients":
                     errorCode = .canNotRegisterMoreClients

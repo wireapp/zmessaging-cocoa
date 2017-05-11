@@ -209,6 +209,7 @@
     [self performPretendingUiMocIsSyncMoc:^{
         ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
         selfUser.remoteIdentifier = NSUUID.createUUID;
+        selfUser.emailAddress = @"email@domain.com";
         
         UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
         client.remoteIdentifier = @"identifier";
@@ -257,6 +258,7 @@
     // given
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
+    selfUser.emailAddress = @"email@domain.com";
     
     UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
     client.user = selfUser;
@@ -344,7 +346,6 @@
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
     
-    [self.sut didFailToRegisterClient:[self needToRegisterEmailError]];
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseWaitingForEmailVerfication);
     
     // when
@@ -363,7 +364,6 @@
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
     
-    [self.sut didFailToRegisterClient:[self needToRegisterEmailError]];
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseWaitingForEmailVerfication);
     
     // when
@@ -379,6 +379,7 @@
     // given
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
+    selfUser.emailAddress = @"email@domain.com";
     [[[self.mockCookieStorage stub] andReturn:[NSData data]] authenticationCookieData];
     self.loginProvider.shouldReturnNilCredentials = YES;
     self.updateProvider.shouldReturnNilCredentials = YES;
@@ -440,16 +441,18 @@
 - (void)testThatItNotifiesTheUIIfTheRegistrationFailsWithMissingEmailVerification
 {
     // given
-    NSError *error = [self needToRegisterEmailError];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    selfUser.remoteIdentifier = [NSUUID UUID];
+    selfUser.emailAddress = nil;
     
     // when
-    [self.sut didFailToRegisterClient:error];
+    [self.sut didFetchSelfUser];
     
     // then
     XCTAssertEqual(self.sessionNotifications.count, 1u);
     ZMUserSessionAuthenticationNotification *note = self.sessionNotifications.firstObject;
     XCTAssertEqual(note.type, ZMAuthenticationNotificationAuthenticationDidFail);
-    XCTAssertEqual(note.error, error);
+    XCTAssertEqual(note.error.code, [self needToRegisterEmailError].code);
 }
 
 - (void)testThatItNotifiesTheUIIfTheRegistrationFailsWithMissingPasswordError

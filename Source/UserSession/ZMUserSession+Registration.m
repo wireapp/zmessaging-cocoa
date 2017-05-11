@@ -32,6 +32,7 @@
 #import "ZMUserSessionRegistrationNotification.h"
 #import "ZMCredentials.h"
 #import "ZMUserSessionRegistrationNotification.h"
+#import "ZMAuthenticationStatus_Internal.h"
 
 @implementation ZMUser (ZMRegistrationUser)
 

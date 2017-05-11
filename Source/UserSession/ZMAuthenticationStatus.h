@@ -112,7 +112,3 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 @end
 
-@interface NSManagedObjectContext (Registrtaion)
-- (BOOL)isRegisteredOnThisDevice;
-@end
-

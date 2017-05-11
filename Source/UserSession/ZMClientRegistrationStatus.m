@@ -32,6 +32,12 @@ NSString *const ZMPersistedClientIdKey = @"PersistedClientId";
 
 static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
+static BOOL overrideNoAddingEmailNecessary = NO;
+
+void ZMClientRegistrationStatus_setOverrideNoAddingEmailNecessary(void)
+{
+    overrideNoAddingEmailNecessary = YES;
+}
 
 @interface ZMClientRegistrationStatus ()
 
@@ -169,15 +175,14 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         return ZMClientRegistrationPhaseFetchingClients;
     }
     
-    // when the user has previously only registered by phone and now wants to register a second device, he needs to register his email address and password first
-    BOOL needsEmailToRegisterClient = ![self.managedObjectContext isRegisteredOnThisDevice] && self.isWaitingForSelfUserEmail;
-    if (needsEmailToRegisterClient) {
-        return ZMClientRegistrationPhaseWaitingForEmailVerfication;
-    }
-    
     // when the user
     if (!self.needsToRegisterClient) {
         return ZMClientRegistrationPhaseRegistered;
+    }
+    
+    // when the user has previously only registered by phone and now wants to register a second device, he needs to register his email address and password first
+    if (self.isAddingEmailNecessary) {
+        return ZMClientRegistrationPhaseWaitingForEmailVerfication;
     }
     
     // when the user has too many clients registered already and selected one device to delete
@@ -223,6 +228,14 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
     return (selfUser.emailAddress == nil);
+}
+
+- (BOOL)isAddingEmailNecessary
+{
+    if (overrideNoAddingEmailNecessary) {
+        return NO;
+    }
+    return ![self.managedObjectContext isRegisteredOnThisDevice] && self.isWaitingForSelfUserEmail;
 }
 
 - (void)prepareForClientRegistration
@@ -275,8 +288,8 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     if (self.needsToRegisterClient) {
         
-        if (self.isWaitingForSelfUserEmail && ![self.managedObjectContext isRegisteredOnThisDevice]) {
-            [self indicateEmailIsNecessary];
+        if (self.isAddingEmailNecessary) {
+            [self notifyEmailIsNecessary];
         }
         
         [self prepareForClientRegistration];
@@ -346,7 +359,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     }
 }
 
-- (void)indicateEmailIsNecessary
+- (void)notifyEmailIsNecessary
 {
     NSError *emailMissingError = [[NSError alloc] initWithDomain:ZMUserSessionErrorDomain
                                                             code:ZMUserSessionNeedsToRegisterEmailToRegisterClient
@@ -403,7 +416,8 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     [self.managedObjectContext deleteAndCreateNewEncryptionContext];
 }
 
-- (BOOL)clientIsReadyForRequests {
+- (BOOL)clientIsReadyForRequests
+{
     return self.currentPhase == ZMClientRegistrationPhaseRegistered;
 }
 

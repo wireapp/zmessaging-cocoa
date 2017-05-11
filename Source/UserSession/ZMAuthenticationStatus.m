@@ -105,7 +105,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)setRegisteredOnThisDevice:(BOOL)registeredOnThisDevice
 {
-    [self.moc setPersistentStoreMetadata:@(registeredOnThisDevice) forKey:RegisteredOnThisDeviceKey];
+    [self.moc setRegisteredOnThisDevice:registeredOnThisDevice];
 }
 
 - (BOOL)registeredOnThisDevice
@@ -457,6 +457,11 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 
 @implementation NSManagedObjectContext (Registrtaion)
+
+- (void)setRegisteredOnThisDevice:(BOOL)registeredOnThisDevice
+{
+    [self setPersistentStoreMetadata:@(registeredOnThisDevice) forKey:RegisteredOnThisDeviceKey];
+}
 
 - (BOOL)isRegisteredOnThisDevice
 {
