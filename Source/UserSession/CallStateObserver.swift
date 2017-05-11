@@ -85,8 +85,13 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             self.updateConversationListIndicator(convObjectID: conversation.objectID, callState: callState)
             
             let systemMessage = self.systemMessageGenerator.appendSystemMessageIfNeeded(callState: callState, conversation: conversation, user: user, timeStamp: timeStamp)
-            if systemMessage?.systemMessageType == .missedCall && ZMUserSession.useCallKit{
-                self.localNotificationDispatcher.process(callState: callState, in: conversation, sender: user)
+            if systemMessage?.systemMessageType == .missedCall
+                && callState == .terminating(reason: .normal)
+                && conversation.conversationType == .group
+            {
+                // group calls we didn't join, end with reason .normal. We should still insert a missed call in this case.
+                // since the systemMessageGenerator keeps track whether we joined or not, we can use it to decide whether we should show a missed call APNS
+                self.localNotificationDispatcher.processMissedCall(in: conversation, sender: user)
             }
             
             if let timeStamp = timeStamp {
