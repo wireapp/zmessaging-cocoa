@@ -88,6 +88,14 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
         }
     }
     
+    public var callingProtocol : CallingProtocol {
+        if currentVoiceChannel === v2 {
+            return CallingProtocol.version2
+        } else {
+            return CallingProtocol.version3
+        }
+    }
+    
     public var conversation: ZMConversation? {
         return currentVoiceChannel.conversation
     }
