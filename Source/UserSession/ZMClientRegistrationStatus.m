@@ -34,9 +34,9 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
 static BOOL overrideNoAddingEmailNecessary = NO;
 
-void ZMClientRegistrationStatus_setOverrideNoAddingEmailNecessary(void)
+void ZMClientRegistrationStatus_setOverrideNoAddingEmailNecessary(BOOL override)
 {
-    overrideNoAddingEmailNecessary = YES;
+    overrideNoAddingEmailNecessary = override;
 }
 
 @interface ZMClientRegistrationStatus ()

@@ -34,6 +34,12 @@
 
 @implementation UserProfileTests
 
+- (void)tearDown
+{
+    [super tearDown];
+    ZMClientRegistrationStatus_setOverrideNoAddingEmailNecessary(NO);
+}
+
 - (void)testThatWeCanChangeUsernameAndAccentColorForSelfUser
 {
 
@@ -384,7 +390,7 @@
 - (BOOL)loginWithPhoneAndRemoveEmail
 {
     NSString *phone = @"+99123456789";
-    ZMClientRegistrationStatus_setOverrideNoAddingEmailNecessary();
+    ZMClientRegistrationStatus_setOverrideNoAddingEmailNecessary(YES);
     self.selfUser.email = nil;
     self.selfUser.phone = phone;
     self.selfUser.password = nil;

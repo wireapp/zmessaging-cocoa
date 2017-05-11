@@ -273,21 +273,6 @@
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseWaitingForDeletion);
 }
 
-- (void)testThatItReturns_WaitingForEmailVerfication_IFError_UserNeedsToRegisterEmail
-{
-    // given
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
-    selfUser.remoteIdentifier = [NSUUID UUID];
-    
-    // when
-    NSError *error = [NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionNeedsToRegisterEmailToRegisterClient userInfo:nil];
-    [self.sut didFailToRegisterClient:error];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseWaitingForEmailVerfication);
-}
-
-
 - (void)testThatItReturnsYESForNeedsToRegisterClientIfNoClientIdInMetadata
 {
     [self.uiMOC setPersistentStoreMetadata:nil forKey:ZMPersistedClientIdKey];
@@ -345,6 +330,8 @@
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
+    selfUser.emailAddress = nil;
+    selfUser.phoneNumber = nil;
     
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseWaitingForEmailVerfication);
     
@@ -363,6 +350,8 @@
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
+    selfUser.emailAddress = nil;
+    selfUser.phoneNumber = nil;
     
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseWaitingForEmailVerfication);
     
@@ -444,6 +433,7 @@
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
     selfUser.emailAddress = nil;
+    selfUser.phoneNumber = nil;
     
     // when
     [self.sut didFetchSelfUser];
