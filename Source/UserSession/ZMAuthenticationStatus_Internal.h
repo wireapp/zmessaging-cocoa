@@ -49,7 +49,7 @@
 @end
 
 
-@interface NSManagedObjectContext (Registrtaion)
+@interface NSManagedObjectContext (Registration)
 - (void)setRegisteredOnThisDevice:(BOOL)registeredOnThisDevice;
 - (BOOL)isRegisteredOnThisDevice;
 @end

@@ -456,7 +456,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 
 
-@implementation NSManagedObjectContext (Registrtaion)
+@implementation NSManagedObjectContext (Registration)
 
 - (void)setRegisteredOnThisDevice:(BOOL)registeredOnThisDevice
 {
