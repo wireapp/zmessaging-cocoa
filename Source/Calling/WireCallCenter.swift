@@ -240,7 +240,7 @@ public class WireCallCenter : NSObject {
     public class func activeCallConversations(inUserSession userSession: ZMUserSession) -> [ZMConversation] {
         var activeConversations : Set<ZMConversation> = Set()
         
-        let conversationsV3 = WireCallCenterV3.nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
+        let conversationsV3 = WireCallCenterV3.activeInstance?.nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
             if value == CallState.established {
                 return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
             } else {
@@ -250,7 +250,7 @@ public class WireCallCenter : NSObject {
         
         let conversationsV2 = userSession.managedObjectContext.wireCallCenterV2.conversations(withVoiceChannelStates: [.selfConnectedToActiveChannel])
         
-        activeConversations.formUnion(conversationsV3)
+        activeConversations.formUnion(conversationsV3 ?? [])
         activeConversations.formUnion(conversationsV2)
         
         return Array(activeConversations)
@@ -261,11 +261,11 @@ public class WireCallCenter : NSObject {
         var nonIdleConversations : Set<ZMConversation> = Set()
 
         if let callCenter = WireCallCenterV3.activeInstance {
-            let conversationsV3 = type(of: callCenter).nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
+            let conversationsV3 = type(of: callCenter).activeInstance?.nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
                 return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
             })
             
-            nonIdleConversations.formUnion(conversationsV3)
+            nonIdleConversations.formUnion(conversationsV3 ?? [])
         }
         
         let idleStates : [VoiceChannelV2State] = [.deviceTransferReady,

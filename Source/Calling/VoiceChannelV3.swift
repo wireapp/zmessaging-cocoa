@@ -81,7 +81,7 @@ public class VoiceChannelV3 : NSObject, CallProperties {
     public var isVideoCall: Bool {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
         
-        return WireCallCenterV3.isVideoCall(conversationId: remoteIdentifier)
+        return WireCallCenterV3.activeInstance?.isVideoCall(conversationId: remoteIdentifier) ?? false
     }
     
     public var initiator : ZMUser? {

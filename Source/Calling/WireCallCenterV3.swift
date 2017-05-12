@@ -177,6 +177,10 @@ public struct CallMember : Hashable {
     }
 }
 
+private struct CallSnapshot {
+    let callState : CallState
+    let isVideo : Bool
+}
 
 private extension String {
     
@@ -396,13 +400,12 @@ public struct CallEvent {
     /// We keep a snapshot of all participants so that we can notify the UI when a user is connected or when the stereo sorting changes
     fileprivate var participantSnapshots : [UUID : VoiceChannelParticipantV3Snapshot] = [:]
     
-    /// If a user ignores a call in a group conversation, it is added to this list
-    /// The list is reset when the call is closed or a new call is started by the selfUser
-    fileprivate var ignoredConversations = Set<UUID>()
+    /// We keep a snaphot of the call state for each none idle conversation
+    fileprivate var callSnapshots : [UUID : CallSnapshot] = [:]
     
     /// Removes the participantSnapshot and remove the conversation from the list of ignored conversations
     fileprivate func clearSnapshot(conversationId: UUID) {
-        ignoredConversations.remove(conversationId)
+        callSnapshots.removeValue(forKey: conversationId)
         participantSnapshots.removeValue(forKey: conversationId)
     }
     
@@ -449,40 +452,48 @@ public struct CallEvent {
         var finalCallState = callState
         var finalUserId = userId
         defer {
+            updateSnapshots(forCallSate: finalCallState, conversationId: conversationId, userId: finalUserId)
             WireCallCenterCallStateNotification(callState: finalCallState, conversationId: conversationId, userId: finalUserId, messageTime: messageTime).post()
         }
         
         switch callState {
         case .established:
             establishedDate = Date()
-            if avsWrapper.isVideoCall(conversationId: conversationId) {
+            
+            if isVideoCall(conversationId: conversationId) {
                 avsWrapper.setVideoSendActive(userId: conversationId, active: true)
             }
-        case .incoming(video: _, shouldRing: let shouldRing):
-            updatedSnapshotsForIncomingCall(conversationId: conversationId, userId: userId!, shouldRing: shouldRing)
         case .terminating(reason: let reason):
             if reason == .stillOngoing {
-                ignoredConversations.insert(conversationId)
                 finalCallState = .incoming(video: false, shouldRing: false)
                 finalUserId = initiatorForCall(conversationId: conversationId) ?? selfUserId
-            } else {
-                clearSnapshot(conversationId: conversationId)
             }
         default:
             break
         }
     }
     
-    fileprivate func updatedSnapshotsForIncomingCall(conversationId: UUID, userId: UUID, shouldRing: Bool) {
-        if !shouldRing {
-            ignoredConversations.insert(conversationId)
-        } else {
-            ignoredConversations.remove(conversationId)
+    fileprivate func updateSnapshots(forCallSate callState: CallState, conversationId: UUID, userId: UUID?) {
+        
+        switch callState {
+        case .incoming(video: let video, shouldRing: _):
+            callSnapshots[conversationId] = CallSnapshot(callState: callState, isVideo: video)
+            
+            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
+                                                                                     selfUserID: selfUserId,
+                                                                                     members: [CallMember(userId: userId!, audioEstablished: false)],
+                                                                                     initiator: userId)
+            break
+            
+        case .terminating(reason: let reason):
+            clearSnapshot(conversationId: conversationId)
+            
+        default:
+            if let previousSnapshot = callSnapshots[conversationId] {
+                callSnapshots[conversationId] = CallSnapshot(callState: callState, isVideo: previousSnapshot.isVideo)
+            }
         }
-        participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
-                                                                                 selfUserID: selfUserId,
-                                                                                 members: [CallMember(userId: userId, audioEstablished: false)],
-                                                                                 initiator: userId)
+        
     }
     
     fileprivate func missed(conversationId: UUID, userId: UUID, timestamp: Date, isVideoCall: Bool) {
@@ -506,10 +517,12 @@ public struct CallEvent {
 
     @objc(answerCallForConversationID:isGroup:)
     public func answerCall(conversationId: UUID, isGroup: Bool) -> Bool {
-        ignoredConversations.remove(conversationId)
-        
         let answered = avsWrapper.answerCall(conversationId: conversationId, isGroup: isGroup)
         if answered {
+            if let previousSnapshot = callSnapshots[conversationId] {
+                callSnapshots[conversationId] = CallSnapshot(callState: .answered, isVideo: previousSnapshot.isVideo)
+            }
+            
             WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.selfUserId, messageTime:nil).post()
         }
         return answered
@@ -522,6 +535,7 @@ public struct CallEvent {
         
         let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup)
         if started {
+            callSnapshots[conversationId] = CallSnapshot(callState: .outgoing, isVideo: video)
             WireCallCenterCallStateNotification(callState: .outgoing, conversationId: conversationId, userId: selfUserId, messageTime:nil).post()
         }
         return started
@@ -531,15 +545,18 @@ public struct CallEvent {
     @objc(closeCallForConversationID:isGroup:)
     public func closeCall(conversationId: UUID, isGroup: Bool) {
         avsWrapper.endCall(conversationId: conversationId, isGroup: isGroup)
-        if isGroup {
-            ignoredConversations.insert(conversationId)
+        if isGroup, let previousSnapshot = callSnapshots[conversationId] {
+            callSnapshots[conversationId] = CallSnapshot(callState: .incoming(video: previousSnapshot.isVideo, shouldRing: false), isVideo: previousSnapshot.isVideo)
         }
     }
     
     @objc(rejectCallForConversationID:isGroup:)
     public func rejectCall(conversationId: UUID, isGroup: Bool) {
         avsWrapper.rejectCall(conversationId: conversationId, isGroup: isGroup)
-        ignoredConversations.insert(conversationId)
+        
+        if isGroup, let previousSnapshot = callSnapshots[conversationId] {
+            callSnapshots[conversationId] = CallSnapshot(callState: .incoming(video: previousSnapshot.isVideo, shouldRing: false), isVideo: previousSnapshot.isVideo)
+        }
     }
     
     @objc(toogleVideoForConversationID:isActive:)
@@ -548,45 +565,28 @@ public struct CallEvent {
     }
     
     @objc(isVideoCallForConversationID:)
-    public class func isVideoCall(conversationId: UUID) -> Bool {
-        return wcall_is_video_call(conversationId.transportString()) == 1 ? true : false
+    public func isVideoCall(conversationId: UUID) -> Bool {
+        return callSnapshots[conversationId]?.isVideo ?? false
     }
     
     /// nonIdleCalls maps all non idle conversations to their corresponding call state
-    public class var nonIdleCalls : [UUID : CallState] {
+    public var nonIdleCalls : [UUID : CallState] {
         
-        typealias CallStateDictionary = [UUID : CallState]
+        var callStates : [UUID : CallState] = [:]
         
-        let box = Box<CallStateDictionary>(value: [:])
-        let pointer = Unmanaged<Box<CallStateDictionary>>.passUnretained(box).toOpaque()
+        for (conversationId, snapshot) in callSnapshots {
+            callStates[conversationId] = snapshot.callState
+        }
         
-        wcall_iterate_state({ (conversationId, state, pointer) in
-            guard let conversationId = conversationId, let pointer = pointer else { return }
-            guard let uuid = UUID(uuidString: String(cString: conversationId)) else { return }
-            
-            let box = Unmanaged<Box<CallStateDictionary>>.fromOpaque(pointer).takeUnretainedValue()
-            box.value[uuid] = CallState(wcallState: state)
-        }, pointer)
-        
-        return box.value
+        return callStates
     }
     
     /// Gets the current callState from AVS
     /// If the group call was ignored or left, it return .incoming where shouldRing is set to false
     public func callState(conversationId: UUID) -> CallState {
-        let callState = avsWrapper.callState(conversationId: conversationId)
-        let isIgnored = ignoredConversations.contains(conversationId)
-        switch callState {
-        case .incoming(video: let video, shouldRing: _) where isIgnored == true:
-            return .incoming(video: video, shouldRing: false)
-        case .established where isIgnored == true:
-            return .incoming(video: false, shouldRing: false)
-        default:
-            return callState
-        }
+        return callSnapshots[conversationId]?.callState ?? .none
     }
     
-
     // MARK - WireCallCenterV3 - Call Participants
 
     /// Returns the callParticipants currently in the conversation

@@ -346,7 +346,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let error = NSError(domain: "foo", code: CXErrorCodeRequestTransactionError.Code.unknownCallUUID.rawValue, userInfo: nil)
         self.callKitController.mockTransactionErrorCode = CXErrorCodeRequestTransactionError(_nsError: error)
         
-        mockWireCallCenterV3.mockAVSCallState = .incoming(video: true, shouldRing: true)
+        mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true)
         XCTAssertEqual(conversation.voiceChannel!.state, VoiceChannelV2State.incomingCall)
         
         // when

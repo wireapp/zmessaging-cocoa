@@ -127,7 +127,7 @@ class VoiceChannelRouterTests : MessagingTest {
         conversation?.conversationType = .oneOnOne
         
         // when
-        wireCallCenterMock?.mockAVSCallState = .incoming(video: false, shouldRing: false)
+        wireCallCenterMock?.mockCallState = .incoming(video: false, shouldRing: false)
         ZMUserSession.callingProtocolStrategy = .version2
         
         // then

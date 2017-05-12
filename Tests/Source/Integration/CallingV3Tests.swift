@@ -89,17 +89,11 @@ class CallingV3Tests : IntegrationTestBase {
     func selfJoinCall(isStart: Bool) {
         userSession.enqueueChanges {
             _ = self.conversationUnderTest.voiceChannelRouter?.v3.join(video: false)
-            if isStart {
-                (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .outgoing
-            } else {
-                (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .answered
-            }
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func selfDropCall(){
-        (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .terminating(reason: .canceled)
         let convIdRef = self.conversationIdRef
         let userIdRef = self.selfUser.identifier.cString(using: .utf8)
         userSession.enqueueChanges {
@@ -128,16 +122,12 @@ class CallingV3Tests : IntegrationTestBase {
     }
     
     func otherStartCall(user: ZMUser, isVideoCall: Bool = false, shouldRing: Bool = true) {
-        (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .incoming(video: isVideoCall, shouldRing: shouldRing)
-
         let userIdRef = user.remoteIdentifier!.transportString().cString(using: .utf8)
         WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, messageTime: UInt32(Date().timeIntervalSince1970), userId: userIdRef, isVideoCall: isVideoCall ? 1 : 0, shouldRing: shouldRing ? 1 : 0, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func otherJoinCall(user: ZMUser) {
-        (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .answered
-
         if useGroupConversation {
             participantsChanged(members: [(user: user, establishedFlow: false)])
         } else {
@@ -155,8 +145,6 @@ class CallingV3Tests : IntegrationTestBase {
     }
     
     func establishedFlow(user: ZMUser){
-        (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .established
-
         let userIdRef = user.remoteIdentifier!.transportString().cString(using: .utf8)
         WireSyncEngine.establishedCallHandler(conversationId: conversationIdRef, userId: userIdRef, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -164,15 +152,13 @@ class CallingV3Tests : IntegrationTestBase {
     
     func participantsChanged(members: [(user: ZMUser, establishedFlow: Bool)]) {
         let mappedMembers = members.map{CallMember(userId: $0.user.remoteIdentifier!, audioEstablished: $0.establishedFlow)}
-        (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockMembers = mappedMembers
+        (WireCallCenterV3.activeInstance as! WireCallCenterV3IntegrationMock).mockAVSWrapper.mockMembers = mappedMembers
 
         WireSyncEngine.groupMemberHandler(conversationIdRef: conversationIdRef, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
 
     func closeCall(user: ZMUser, reason: CallClosedReason) {
-        (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .none
-
         let userIdRef = user.remoteIdentifier!.transportString().cString(using: .utf8)
         WireSyncEngine.closedCallHandler(reason: reason.rawValue, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -234,7 +220,6 @@ class CallingV3Tests : IntegrationTestBase {
         stateObserver.checkLastNotificationHasCallState(.outgoingCall)
         
         // when
-        (WireCallCenterV3.activeInstance as! WireCallCenterV3Mock).mockAVSCallState = .answered
         participantsChanged(members: [(user: conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser, establishedFlow: false),
                                       (user: conversationUnderTest.otherActiveParticipants.lastObject as! ZMUser, establishedFlow: false)])
         stateObserver.changes = []

@@ -22,7 +22,6 @@ import avs
 
 public protocol AVSWrapperType {
     init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?)
-    func callState(conversationId: UUID) -> CallState
     func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool
     func answerCall(conversationId: UUID, isGroup: Bool) -> Bool
     func endCall(conversationId: UUID, isGroup: Bool)
@@ -30,8 +29,6 @@ public protocol AVSWrapperType {
     func close()
     func received(callEvent: CallEvent)
     func toggleVideo(conversationID: UUID, active: Bool)
-    
-    func isVideoCall(conversationId: UUID) -> Bool
     func setVideoSendActive(userId: UUID, active: Bool)
     func enableAudioCbr(shouldUseCbr: Bool)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
@@ -76,10 +73,6 @@ public class AVSWrapper : AVSWrapperType {
         })
     }
     
-    public func callState(conversationId: UUID) -> CallState {
-        return CallState(wcallState:wcall_get_state(conversationId.transportString()))
-    }
-    
     public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {
         let didStart = wcall_start(conversationId.transportString(), video ? 1 : 0, isGroup ? 1 : 0)
         return didStart == 0
@@ -100,10 +93,6 @@ public class AVSWrapper : AVSWrapperType {
     
     public func close(){
         wcall_close()
-    }
-    
-    public func isVideoCall(conversationId: UUID) -> Bool {
-        return (wcall_is_video_call(conversationId.transportString()) == 1)
     }
     
     public func setVideoSendActive(userId: UUID, active: Bool) {

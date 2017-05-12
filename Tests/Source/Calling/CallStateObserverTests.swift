@@ -179,7 +179,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatWeKeepTheWebsocketOpenOnOutgoingCalls() {
         // expect
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC)
-        WireCallCenterV3Mock.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false, shouldRing: true)]
+        mockCallCenter?.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false, shouldRing: true)]
         
         expectation(forNotification: CallStateObserver.CallInProgressNotification.rawValue, object: nil) { (note) -> Bool in
             if let open = note.userInfo?[CallStateObserver.CallInProgressKey] as? Bool, open == true {
@@ -200,7 +200,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatWeSendNotificationWhenCallTerminates() {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC)
-        WireCallCenterV3Mock.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false, shouldRing: true)]
+        mockCallCenter?.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false, shouldRing: true)]
         sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version3)
         
         // expect
@@ -213,7 +213,7 @@ class CallStateObserverTests : MessagingTest {
         }
         
         // when
-        WireCallCenterV3Mock.mockNonIdleCalls = [:]
+        mockCallCenter?.mockNonIdleCalls = [:]
         sut.callCenterDidChange(voiceChannelState: .noActiveUsers, conversation: conversation, callingProtocol: .version3)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         

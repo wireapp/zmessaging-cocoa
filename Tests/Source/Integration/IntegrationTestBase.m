@@ -96,7 +96,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.mockFlowManager = self.mockTransportSession.mockFlowManager;
 
     ZMCallFlowRequestStrategyInternalFlowManagerOverride = self.mockFlowManager;
-    WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3Mock.self;
+    WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self;
     
     [self createObjects];
     
