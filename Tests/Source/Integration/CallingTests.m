@@ -496,7 +496,7 @@
 }
 
 
-- (void)testThatItDoesNotCreateASystemMessageWhenTheCallIsEndedWithoutBeingMissed
+- (void)testThatItCreatesASystemMessageWhenACallEnds
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
@@ -513,10 +513,16 @@
         [self.mockConversationUnderTest callEndedEventFromUser:self.user2 selfUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-        
     
-    // we DO NOT receive a systemMessage
-    XCTAssertEqual(oneToOneConversation.messages.count, messageCount);
+    
+    // then
+    // we receive a systemMessage that we missed a call
+    {
+        XCTAssertEqual(oneToOneConversation.messages.count, messageCount+1u);
+        id<ZMConversationMessage> systemMessage = oneToOneConversation.messages.lastObject;
+        XCTAssertNotNil(systemMessage.systemMessageData);
+        XCTAssertEqual(systemMessage.systemMessageData.systemMessageType, ZMSystemMessageTypeMissedCall);
+    }
 }
 
 
