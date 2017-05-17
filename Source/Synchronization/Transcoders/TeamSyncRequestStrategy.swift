@@ -154,9 +154,9 @@ extension TeamSyncRequestStrategy: ZMRemoteIdentifierObjectTranscoder {
             let payload = response.payload?.asDictionary() as? [String: Any]
             let membersPayload = payload?["members"] as? [[String: Any]]
 
-            let members = membersPayload?.flatMap { (payload) -> Member? in
-                Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext).flatMap {
-                    Member.createOrUpdate(with: payload, in: $0, context: managedObjectContext)
+            membersPayload?.forEach { payload in
+                if let team = Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext) {
+                    Member.createOrUpdate(with: payload, in: team, context: managedObjectContext)
                 }
             }
         }
