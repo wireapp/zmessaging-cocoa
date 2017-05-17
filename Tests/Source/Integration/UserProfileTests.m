@@ -25,11 +25,14 @@
 #import "ZMUserSession.h"
 #import "ZMUserSession+Authentication.h"
 #import "ZMUserSession+Registration.h"
+#import "ZMUserSession+Internal.h"
+
+#import "ZMClientRegistrationStatus+Internal.h"
 
 #import "ZMCredentials.h"
   
 @interface UserProfileTests : IntegrationTestBase
-
+@property (nonatomic) id clientRegStatusMock;
 @end
 
 @implementation UserProfileTests
@@ -37,7 +40,7 @@
 - (void)tearDown
 {
     [super tearDown];
-    ZMClientRegistrationStatus_setOverrideNoAddingEmailNecessary(NO);
+    [self.clientRegStatusMock stopMocking];
 }
 
 - (void)testThatWeCanChangeUsernameAndAccentColorForSelfUser
@@ -390,7 +393,12 @@
 - (BOOL)loginWithPhoneAndRemoveEmail
 {
     NSString *phone = @"+99123456789";
-    ZMClientRegistrationStatus_setOverrideNoAddingEmailNecessary(YES);
+    
+    if (nil == self.clientRegStatusMock) {
+        self.clientRegStatusMock = [OCMockObject partialMockForObject:self.userSession.clientRegistrationStatus];
+        [[[self.clientRegStatusMock stub] andReturnValue:@(NO)] isAddingEmailNecessary];
+    }
+    
     self.selfUser.email = nil;
     self.selfUser.phone = phone;
     self.selfUser.password = nil;

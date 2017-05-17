@@ -26,4 +26,6 @@
 - (ZMEmailCredentials *)emailCredentials;
 @end
 
-void ZMClientRegistrationStatus_setOverrideNoAddingEmailNecessary(BOOL);
+@interface ZMClientRegistrationStatus ()
+- (BOOL)isAddingEmailNecessary;
+@end

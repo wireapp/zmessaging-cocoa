@@ -32,13 +32,6 @@ NSString *const ZMPersistedClientIdKey = @"PersistedClientId";
 
 static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
-static BOOL overrideNoAddingEmailNecessary = NO;
-
-void ZMClientRegistrationStatus_setOverrideNoAddingEmailNecessary(BOOL override)
-{
-    overrideNoAddingEmailNecessary = override;
-}
-
 @interface ZMClientRegistrationStatus ()
 
 @property (nonatomic) NSManagedObjectContext *managedObjectContext;
@@ -232,9 +225,6 @@ void ZMClientRegistrationStatus_setOverrideNoAddingEmailNecessary(BOOL override)
 
 - (BOOL)isAddingEmailNecessary
 {
-    if (overrideNoAddingEmailNecessary) {
-        return NO;
-    }
     return ![self.managedObjectContext isRegisteredOnThisDevice] && self.isWaitingForSelfUserEmail;
 }
 
