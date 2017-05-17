@@ -87,7 +87,6 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
     }
 
     fileprivate func finishSyncIfCompleted() {
-        // TODO: Check if all teams (and members?) have been fetched here
         guard isSyncing, memberSync.isDone, !teamListSync.hasMoreToFetch else { return }
         syncStatus?.finishCurrentSyncPhase()
     }
@@ -159,12 +158,6 @@ extension TeamSyncRequestStrategy: ZMRemoteIdentifierObjectTranscoder {
                 Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext).flatMap {
                     Member.createOrUpdate(with: payload, in: $0, context: managedObjectContext)
                 }
-            }
-
-            // We set the flag to update a user to false as we will
-            // fetch them later in the `.fetchingUsers` sync phase
-            members?.forEach {
-                $0.user?.needsToBeUpdatedFromBackend = false
             }
         }
 

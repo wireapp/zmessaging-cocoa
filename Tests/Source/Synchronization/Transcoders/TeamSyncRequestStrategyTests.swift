@@ -57,7 +57,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         }
     }
 
-    func testTahtItDoesntCreateRequestsInUnauthenticatedState() {
+    func testThatItDoesntCreateRequestsInUnauthenticatedState() {
         // given
         mockSyncStatus.mockPhase = .fetchingTeams
 
@@ -68,7 +68,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         XCTAssertNil(sut.nextRequest())
     }
 
-    func testTahtItDoesntCreateRequestsInEventProcessingState() {
+    func testThatItDoesntCreateRequestsInEventProcessingState() {
         // given
         mockSyncStatus.mockPhase = .fetchingTeams
 

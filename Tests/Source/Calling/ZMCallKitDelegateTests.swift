@@ -537,7 +537,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
-        XCTAssertEqual(action.callUUID, otherUser.oneToOneConversation.remoteIdentifier)
+        XCTAssertEqual(action.callUUID, otherUser.oneToOneConversation?.remoteIdentifier)
         XCTAssertFalse(action.isVideo)
     }
     
@@ -561,7 +561,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
-        XCTAssertEqual(action.callUUID, otherUser.oneToOneConversation.remoteIdentifier)
+        XCTAssertEqual(action.callUUID, otherUser.oneToOneConversation?.remoteIdentifier)
         XCTAssertFalse(action.isVideo)
     }
     
@@ -585,7 +585,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
-        XCTAssertEqual(action.callUUID, otherUser.oneToOneConversation.remoteIdentifier)
+        XCTAssertEqual(action.callUUID, otherUser.oneToOneConversation?.remoteIdentifier)
         XCTAssertTrue(action.isVideo)
     }
     
