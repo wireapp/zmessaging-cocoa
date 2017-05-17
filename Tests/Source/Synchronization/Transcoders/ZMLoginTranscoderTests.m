@@ -81,7 +81,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     self.originalLoginTimerInterval = DefaultPendingValidationLoginAttemptInterval;
     ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.uiMOC cookieStorage:[ZMPersistentCookieStorage storageForServerName:@"test"]];
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:cookie];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.syncMOC cookie:cookie];
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
     
     self.mockApplicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];

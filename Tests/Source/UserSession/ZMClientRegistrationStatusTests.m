@@ -82,7 +82,7 @@
     [[[self.mockCookieStorage stub] andReturn:[NSData data]] authenticationCookieData];
     
     ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:self.mockCookieStorage];
-    self.sut = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.uiMOC
+    self.sut = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC
                                                         loginCredentialProvider:self.loginProvider
                                                        updateCredentialProvider:self.updateProvider
                                                                          cookie:cookie
@@ -115,9 +115,9 @@
 - (void)testThatItInsertsANewClientIfThereIsNoneWaitingToBeSynced
 {
     // given
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
-    UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
+    UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
     client.user = selfUser;
     client.remoteIdentifier = @"identifier";
     
@@ -176,9 +176,9 @@
 - (void)testThatItReturns_Registered_IfSelfClientIsSet
 {
     // given
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
-    [self.uiMOC setPersistentStoreMetadata:@"lala" forKey:ZMPersistedClientIdKey];
+    [self.syncMOC setPersistentStoreMetadata:@"lala" forKey:ZMPersistedClientIdKey];
     
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseRegistered);
@@ -187,7 +187,7 @@
 - (void)testThatItReturns_FetchingClients_WhenReceivingAnErrorWithTooManyClients
 {
     // given
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
     
     // when
@@ -234,23 +234,21 @@
 - (void)testThatItResets_LocallyModifiedKeys_AfterUserSelectedClientToDelete
 {
     // given
-    [self performPretendingUiMocIsSyncMoc:^{
-        ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
-        selfUser.remoteIdentifier = NSUUID.createUUID;
-        
-        UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
-        client.remoteIdentifier = @"identifier";
-        client.user = selfUser;
-        [client setLocallyModifiedKeys:[NSSet setWithObject:@"numberOfKeysRemaining"]];
-        
-        [self.uiMOC setPersistentStoreMetadata:client.remoteIdentifier forKey:ZMPersistedClientIdKey];
-        
-        // when
-        [self.sut didDetectCurrentClientDeletion];
-        
-        // then
-        XCTAssertFalse([client hasLocalModificationsForKey:@"numberOfKeysRemaining"]);
-    }];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    selfUser.remoteIdentifier = NSUUID.createUUID;
+    
+    UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
+    client.remoteIdentifier = @"identifier";
+    client.user = selfUser;
+    [client setLocallyModifiedKeys:[NSSet setWithObject:@"numberOfKeysRemaining"]];
+    
+    [self.syncMOC setPersistentStoreMetadata:client.remoteIdentifier forKey:ZMPersistedClientIdKey];
+    
+    // when
+    [self.sut didDetectCurrentClientDeletion];
+    
+    // then
+    XCTAssertFalse([client hasLocalModificationsForKey:@"numberOfKeysRemaining"]);
 }
 
 - (void)testThatItInvalidatesSelfClientAndDeletesAndRecreatesCryptoBoxOnDidDetectCurrentClientDeletion
@@ -288,13 +286,13 @@
 - (void)testThatItNotfiesCredentialProviderWhenClientIsRegistered
 {
     //given
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
     selfUser.remoteIdentifier = [NSUUID new];
 
     //when
     [self.sut prepareForClientRegistration];
 
-    UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
+    UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
     client.remoteIdentifier = [NSUUID createUUID].transportString;
 
     [self.sut didRegisterClient:client];
@@ -328,7 +326,7 @@
 {
     // given
     
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
     selfUser.emailAddress = nil;
     selfUser.phoneNumber = nil;
@@ -348,7 +346,7 @@
 {
     // given
     
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
     selfUser.emailAddress = nil;
     selfUser.phoneNumber = nil;
@@ -366,7 +364,7 @@
 - (void)testThatItResetsThePhaseToWaitingForLoginIfItNeedsPasswordToRegisterClient
 {
     // given
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
     selfUser.emailAddress = @"email@domain.com";
     [[[self.mockCookieStorage stub] andReturn:[NSData data]] authenticationCookieData];
@@ -416,7 +414,7 @@
 - (void)testThatItNotifiesTheUIIfTheClientWasAlreadyRegisteredBeforeFetchingTheSelfUser
 {
     // given
-    [self.uiMOC setPersistentStoreMetadata:@"brrrrr" forKey:ZMPersistedClientIdKey];
+    [self.syncMOC setPersistentStoreMetadata:@"brrrrr" forKey:ZMPersistedClientIdKey];
     
     // when
     [self.sut didFetchSelfUser];
@@ -490,14 +488,14 @@
 - (void)testThatItDeletesTheCookieIfFetchingClientsFailedWithError_SelfClientIsInvalid
 {
     // given
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
     selfUser.remoteIdentifier = [NSUUID UUID];
     
-    UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
+    UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.syncMOC];
     client.user = selfUser;
     client.remoteIdentifier = @"identifer";
-    [self.uiMOC saveOrRollback];
-    [self.uiMOC setPersistentStoreMetadata:client.remoteIdentifier forKey:ZMPersistedClientIdKey];
+    [self.syncMOC saveOrRollback];
+    [self.syncMOC setPersistentStoreMetadata:client.remoteIdentifier forKey:ZMPersistedClientIdKey];
 
     XCTAssertNotNil(selfUser.selfClient);
     
@@ -511,7 +509,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertNil([self.uiMOC persistentStoreMetadataForKey:ZMPersistedClientIdKey]);
+    XCTAssertNil([self.syncMOC persistentStoreMetadataForKey:ZMPersistedClientIdKey]);
     [self.mockCookieStorage verify];
 }
 

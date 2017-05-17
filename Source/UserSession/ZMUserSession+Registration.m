@@ -51,8 +51,9 @@
 
 @implementation ZMUserSession (Registration)
 
-- (BOOL)registeredOnThisDevice {
-    return [self.managedObjectContext isRegisteredOnThisDevice];
+- (BOOL)registeredOnThisDevice
+{
+    return [self.syncManagedObjectContext isRegisteredOnThisDevice];
 }
 
 - (void)registerSelfUser:(ZMCompleteRegistrationUser * __unused)registrationUser
