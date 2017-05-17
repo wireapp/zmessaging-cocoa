@@ -20,6 +20,7 @@
     case fetchingLastUpdateEventID
     case fetchingConnections
     case fetchingConversations
+    case fetchingTeams
     case fetchingUsers
     case fetchingMissedEvents
     case done
@@ -30,7 +31,12 @@
     
     var isSyncing : Bool {
         switch self {
-        case .fetchingMissedEvents, .fetchingLastUpdateEventID, .fetchingConnections,.fetchingUsers, .fetchingConversations:
+        case .fetchingMissedEvents,
+             .fetchingLastUpdateEventID,
+             .fetchingConnections,
+             .fetchingTeams,
+             .fetchingUsers,
+             .fetchingConversations:
             return true
         case .done:
             return false
@@ -45,6 +51,8 @@
             return "fetchingConnections"
         case .fetchingConversations:
             return "fetchingConversations"
+        case .fetchingTeams:
+            return "fetchingTeams"
         case .fetchingUsers:
             return "fetchingUsers"
         case .fetchingMissedEvents:

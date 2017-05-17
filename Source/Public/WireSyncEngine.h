@@ -70,3 +70,4 @@
 #import <WireSyncEngine/ZMAVSBridge.h>
 #import <WireSyncEngine/ZMUserSession+OperationLoop.h>
 #import <WireSyncEngine/ZMOperationLoop+Background.h>
+#import <WireSyncEngine/ZMSimpleListRequestPaginator.h>
