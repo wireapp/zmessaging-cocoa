@@ -462,8 +462,9 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 {
     assert(self.zm_isSyncContext);
     [self setPersistentStoreMetadata:@(registeredOnThisDevice) forKey:RegisteredOnThisDeviceKey];
-    [self.zm_userInterfaceContext performGroupedBlock:^{
-        [self.zm_userInterfaceContext setPersistentStoreMetadata:@(registeredOnThisDevice) forKey:RegisteredOnThisDeviceKey];
+    NSManagedObjectContext *uiContext = self.zm_userInterfaceContext;
+    [uiContext performGroupedBlock:^{
+        [uiContext setPersistentStoreMetadata:@(registeredOnThisDevice) forKey:RegisteredOnThisDeviceKey];
     }];
 }
 

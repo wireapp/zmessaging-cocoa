@@ -53,7 +53,7 @@
 
 - (BOOL)registeredOnThisDevice
 {
-    return [self.syncManagedObjectContext isRegisteredOnThisDevice];
+    return [self.managedObjectContext isRegisteredOnThisDevice];
 }
 
 - (void)registerSelfUser:(ZMCompleteRegistrationUser * __unused)registrationUser
