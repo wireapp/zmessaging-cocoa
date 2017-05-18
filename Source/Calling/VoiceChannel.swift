@@ -23,6 +23,8 @@ public protocol VoiceChannel : CallProperties, CallActions, CallObservers {
     
     func setVideoCaptureDevice(device: CaptureDevice) throws
     
+    var callingProtocol : CallingProtocol { get }
+    
 }
 
 @objc

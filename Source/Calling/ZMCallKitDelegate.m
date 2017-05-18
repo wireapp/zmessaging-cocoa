@@ -141,11 +141,19 @@ NS_ASSUME_NONNULL_END
 
 - (NSString *)localizedCallerNameWithCallFromUser:(ZMUser *)user
 {
+    NSString * callerName;
+    
     if (self.conversationType == ZMConversationTypeGroup) {
-        return [ZMCallKitDelegateCallStartedInGroup localizedStringWithUser:user conversation:self count:0];
+        callerName = [ZMCallKitDelegateCallStartedInGroup localizedStringWithUser:user conversation:self count:0];
     } else {
-        return self.connectedUser.displayName;
+        callerName = self.connectedUser.displayName;
     }
+    
+    if (self.voiceChannel.callingProtocol == CallingProtocolVersion2) {
+        callerName = [NSString stringWithFormat:@"(V2) %@", callerName];
+    }
+    
+    return callerName;
 }
 
 + (nullable instancetype)resolveConversationForPersons:(NSArray<INPerson *> *)persons

@@ -406,7 +406,7 @@
         NSIndexSet *expectedSet1 = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 2)];
 
         NSArray *listNotes = conversationListObserver.notifications;
-        XCTAssertEqual(listNotes.count, 1u);
+        XCTAssertEqual(listNotes.count, 3u); // 1 insertion update and 2 list re-order updates
 
         ConversationListChangeInfo *listNote1 = listNotes.firstObject;
 
@@ -893,7 +893,7 @@
     
     // then
     XCTAssertTrue([conversations containsObject:conversation]);
-    XCTAssertEqual(observer.notifications.count, 2u);
+    XCTAssertEqual(observer.notifications.count, 3u);
 }
 
 
