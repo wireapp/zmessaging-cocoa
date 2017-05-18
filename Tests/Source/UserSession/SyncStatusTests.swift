@@ -92,6 +92,10 @@ class SyncStatusTests : MessagingTest {
         // when
         sut.finishCurrentSyncPhase()
         // then
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
+        // when
+        sut.finishCurrentSyncPhase()
+        // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingUsers)
         // when
         sut.finishCurrentSyncPhase()
@@ -124,7 +128,13 @@ class SyncStatusTests : MessagingTest {
         // when
         sut.finishCurrentSyncPhase()
         // then
+        XCTAssertNil(uiMOC.zm_lastNotificationID)
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingUsers)
+        // when
+        sut.finishCurrentSyncPhase()
+        // then
         XCTAssertNotNil(uiMOC.zm_lastNotificationID)
+
     }
     
     func testThatItDoesNotSetTheLastNotificationIDIfItHasNone(){
@@ -142,6 +152,10 @@ class SyncStatusTests : MessagingTest {
         sut.finishCurrentSyncPhase()
         // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingConversations)
+        // when
+        sut.finishCurrentSyncPhase()
+        // then
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         // when
         sut.finishCurrentSyncPhase()
         // then
@@ -175,7 +189,13 @@ class SyncStatusTests : MessagingTest {
         // then
         XCTAssertFalse(mockSyncDelegate.didCallFinishSync)
         // when
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingUsers)
         sut.finishCurrentSyncPhase()
+        // then
+        XCTAssertFalse(mockSyncDelegate.didCallFinishSync)
+        // when
+        sut.finishCurrentSyncPhase()
+        
         
         // then
         XCTAssertTrue(mockSyncDelegate.didCallFinishSync)
@@ -392,7 +412,14 @@ extension SyncStatusTests {
         // then
         XCTAssertNotEqual(uiMOC.zm_lastNotificationID, newID)
         // when
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         sut.finishCurrentSyncPhase()
+        // then
+        XCTAssertNotEqual(uiMOC.zm_lastNotificationID, newID)
+        // when
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingUsers)
+        sut.finishCurrentSyncPhase()
+
         // then
         XCTAssertEqual(uiMOC.zm_lastNotificationID, newID)
         XCTAssertNotEqual(uiMOC.zm_lastNotificationID, oldID)
