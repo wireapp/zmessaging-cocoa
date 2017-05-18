@@ -593,7 +593,7 @@
     
     // when
     [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
-    WaitForAllGroupsToBeEmpty(0.5);
+    WaitForAllGroupsToBeEmpty(2);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
