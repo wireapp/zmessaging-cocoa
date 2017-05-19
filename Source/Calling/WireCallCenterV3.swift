@@ -391,7 +391,7 @@ public struct CallEvent {
         }
     }
     
-    public fileprivate(set) var callingProtocol : CallingProtocol = .version2
+    public fileprivate(set) var callingProtocol : CallingProtocol = .version3
     
     /// We keep a snapshot of all participants so that we can notify the UI when a user is connected or when the stereo sorting changes
     fileprivate var participantSnapshots : [UUID : VoiceChannelParticipantV3Snapshot] = [:]
