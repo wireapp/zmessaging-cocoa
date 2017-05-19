@@ -90,6 +90,7 @@ extern NSString * const SelfUserPassword;
 - (ZMConversation *)conversationForMockConversation:(MockConversation *)conversation;
 - (void)setDate:(NSDate *)date forAllEventsInMockConversation:(MockConversation *)conversation;
 - (ZMUser *)userForMockUser:(MockUser *)user;
+- (BOOL)mockMember:(MockMember *)mockMember isEqualToMember:(Member *)member;
 
 - (void)storeRemoteIDForObject:(NSManagedObject *)mo;
 - (NSUUID *)remoteIdentifierForMockObject:(NSManagedObject *)mo;
