@@ -260,7 +260,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
                 "members": [
                     [
                         "user": userId.transportString(),
-                        "permissions": [Permissions.TransportString.addConversationMember.rawValue]
+                        "permissions": NSNumber(value: Permissions.addConversationMember.rawValue)
                     ]
                 ]
             ]
@@ -269,7 +269,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
 
             // then
-            let team = Team.fetchOrCreate(with: team1Id, create: false, in: syncMOC)
+            let team = Team.fetchOrCreate(with: team1Id, create: false, in: syncMOC, created: nil)
             XCTAssertNotNil(team)
             let member = team?.members.first
             XCTAssertNotNil(member)
@@ -320,7 +320,10 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
 
             let payload: [String: Any] = [
                 "members": [
-                    ["user": userId.transportString(), "permissions": [Permissions.TransportString.addConversationMember.rawValue]]
+                    [
+                        "user": userId.transportString(),
+                        "permissions": NSNumber(value: Permissions.addConversationMember.rawValue)
+                    ]
                 ]
             ]
 
@@ -328,7 +331,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
 
             // then
-            let team = Team.fetchOrCreate(with: team1Id, create: false, in: syncMOC)
+            let team = Team.fetchOrCreate(with: team1Id, create: false, in: syncMOC, created: nil)
             XCTAssertNotNil(team)
             let member = team?.members.first
             XCTAssertNotNil(member)
@@ -346,15 +349,15 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
 
             let payload: [String: Any] = [
                 "members": [
-                    ["user": user1Id.transportString(), "permissions": [Permissions.TransportString.addConversationMember.rawValue]],
-                    ["user": user2Id.transportString(), "permissions": [Permissions.TransportString.deleteConversation.rawValue]]
+                    ["user": user1Id.transportString(), "permissions": NSNumber(value: Permissions.addConversationMember.rawValue)],
+                    ["user": user2Id.transportString(), "permissions": NSNumber(value: Permissions.deleteConversation.rawValue)]
                 ]
             ]
 
             request.complete(with: .init(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
 
-            let team = Team.fetchOrCreate(with: team2Id, create: false, in: syncMOC)
+            let team = Team.fetchOrCreate(with: team2Id, create: false, in: syncMOC, created: nil)
             XCTAssertNotNil(team)
             XCTAssertEqual(team?.members.count, 2)
 
@@ -391,7 +394,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
             guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
             let payload: [String: Any] = [
                 "members": [
-                    ["user": UUID.create().transportString(), "permissions": [Permissions.TransportString.addConversationMember.rawValue]]
+                    ["user": UUID.create().transportString(), "permissions": NSNumber(value: Permissions.addConversationMember.rawValue)]
                 ]
             ]
 

@@ -109,7 +109,7 @@ extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
 
         let teams = teamsPayload?.flatMap { (payload) -> Team? in
             guard let id = (payload["id"] as? String).flatMap(UUID.init) else { return nil }
-            let team = Team.fetchOrCreate(with: id, create: true, in: managedObjectContext)
+            let team = Team.fetchOrCreate(with: id, create: true, in: managedObjectContext, created: nil)
             team?.update(with: payload)
             return team
         }
@@ -155,7 +155,7 @@ extension TeamSyncRequestStrategy: ZMRemoteIdentifierObjectTranscoder {
             let membersPayload = payload?["members"] as? [[String: Any]]
 
             membersPayload?.forEach { payload in
-                if let team = Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext) {
+                if let team = Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext, created: nil) {
                     Member.createOrUpdate(with: payload, in: team, context: managedObjectContext)
                 }
             }
