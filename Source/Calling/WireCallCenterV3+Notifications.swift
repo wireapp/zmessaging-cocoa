@@ -172,8 +172,32 @@ class VoiceChannelParticipantV3Snapshot {
             fatal("WireCallCenterV3 not accessible")
         }
 
-        self.members = (members ?? callCenter.avsWrapper.members(in: conversationId)).toOrderedSetState()
+        if let unfilteredMembers = members {
+            self.members = type(of: self).filteredMembers(unfilteredMembers)
+        } else {
+            let unfilteredMembers = callCenter.avsWrapper.members(in: conversationId)
+            self.members = type(of: self).filteredMembers(unfilteredMembers)
+        }
         state = SetSnapshot(set: self.members, moveType: .uiCollectionView)
+    }
+    
+    static func filteredMembers(_ members: [CallMember]) -> OrderedSetState<CallMember> {
+        // remove duplicates see: https://wearezeta.atlassian.net/browse/ZIOS-8610
+        // When a user joins with two devices, we would have a duplicate entry for this user in the member array returned from AVS
+        // For now, we will keep the one with "the highest state", meaning if one entry has `audioEstablished == false` and the other one `audioEstablished == true`, we keep the one with `audioEstablished == true`
+        let callMembers = members.reduce([CallMember]()){ (filtered, member) in
+            var newFiltered = filtered
+            if let idx = newFiltered.index(of: member) {
+                if !newFiltered[idx].audioEstablished && member.audioEstablished {
+                    newFiltered[idx] = member
+                }
+            } else {
+                newFiltered.append(member)
+            }
+            return newFiltered
+        }
+        
+        return callMembers.toOrderedSetState()
     }
     
     func callParticipantsChanged(newParticipants: [CallMember]) {
@@ -188,7 +212,7 @@ class VoiceChannelParticipantV3Snapshot {
         }
         guard newMembers != members.array || updated.count > 0 else { return }
         
-        members = newMembers.toOrderedSetState()
+        members = type(of:self).filteredMembers(newMembers)
         recalculateSet(updated: updated)
     }
     
