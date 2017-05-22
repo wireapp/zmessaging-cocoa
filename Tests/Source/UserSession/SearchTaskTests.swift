@@ -539,7 +539,7 @@ class SearchTaskTests : MessagingTest {
     
     func testThatItSendsASearchRequest() {
         // given
-        let request = SearchRequest(query: "Steve O'Hara & Söhne", searchOptions: [.directoryMatches])
+        let request = SearchRequest(query: "Steve O'Hara & Söhne", searchOptions: [.directory])
         let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
         
         // when
@@ -565,7 +565,7 @@ class SearchTaskTests : MessagingTest {
     
     func testThatItEncodesAPlusCharacterInTheSearchURL() {
         // given
-        let request = SearchRequest(query: "foo+bar@example.com", searchOptions: [.directoryMatches])
+        let request = SearchRequest(query: "foo+bar@example.com", searchOptions: [.directory])
         let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
         
         // when
@@ -583,7 +583,7 @@ class SearchTaskTests : MessagingTest {
         // "The characters slash ("/") and question mark ("?") may represent data within the query component."
         
         // given
-        let request = SearchRequest(query: "$&+,/:;=?@", searchOptions: [.directoryMatches])
+        let request = SearchRequest(query: "$&+,/:;=?@", searchOptions: [.directory])
         let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
         
         // when
@@ -597,7 +597,7 @@ class SearchTaskTests : MessagingTest {
     func testThatItCallsCompletionHandlerForDirectorySearch() {
         // given
         let resultArrived = expectation(description: "received result")
-        let request = SearchRequest(query: "User", searchOptions: [.directoryMatches])
+        let request = SearchRequest(query: "User", searchOptions: [.directory])
         let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in

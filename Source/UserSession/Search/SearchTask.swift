@@ -115,7 +115,7 @@ extension SearchTask {
 extension SearchTask {
     
     func performRemoteSearch() {
-        guard request.searchOptions.contains(.directoryMatches) else { return }
+        guard request.searchOptions.contains(.directory) else { return }
         
         context.performGroupedBlock {
             let request = self.searchRequestInDirectory(withQuery: self.request.query)

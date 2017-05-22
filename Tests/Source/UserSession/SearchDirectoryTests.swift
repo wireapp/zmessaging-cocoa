@@ -24,7 +24,7 @@ class SearchDirectoryTests : MessagingTest {
     
     func testThatWhenReceivingSearchUsersWeMarkTheProfileImageAsMissing() {
         // given
-        let request = SearchRequest(query: "User", searchOptions: [.directoryMatches])
+        let request = SearchRequest(query: "User", searchOptions: [.directory])
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
             remoteChanges.insertUser(withName: "User A")
@@ -54,7 +54,7 @@ class SearchDirectoryTests : MessagingTest {
         
         let uuid1 = UUID(uuidString: userIdentifier1)!
         let uuid2 = UUID(uuidString: userIdentifier2)!
-        let request = SearchRequest(query: "User", searchOptions: [.directoryMatches])
+        let request = SearchRequest(query: "User", searchOptions: [.directory])
         
         ZMSearchUser.searchUserToMediumImageCache().setObject(Data(count: 1) as NSData, forKey: uuid1 as NSUUID)
         ZMSearchUser.searchUserToSmallProfileImageCache().setObject(Data(count: 1) as NSData, forKey: uuid1 as NSUUID)
@@ -83,7 +83,7 @@ class SearchDirectoryTests : MessagingTest {
         
         let uuid1 = UUID(uuidString: userIdentifier1)!
         let uuid2 = UUID(uuidString: userIdentifier2)!
-        let request = SearchRequest(query: "User", searchOptions: [.directoryMatches])
+        let request = SearchRequest(query: "User", searchOptions: [.directory])
         
         let user1 = ZMUser.insertNewObject(in: uiMOC)
         user1.remoteIdentifier = uuid1
@@ -121,7 +121,7 @@ class SearchDirectoryTests : MessagingTest {
     func testThatItRemovesItselfFromTheTableOnTearDown() {
         // given
         let sut = SearchDirectory(userSession: mockUserSession)
-        let request = SearchRequest(query: "User", searchOptions: [.directoryMatches])
+        let request = SearchRequest(query: "User", searchOptions: [.directory])
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
             remoteChanges.insertUser(withName: "User A")
