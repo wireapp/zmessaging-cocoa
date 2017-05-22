@@ -231,6 +231,34 @@ class SearchTaskTests : MessagingTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
+    func testThatItCanSearchForTeamMembers() {
+        // given
+        let resultArrived = expectation(description: "received result")
+        let team = Team.insertNewObject(in: uiMOC)
+        let user = ZMUser.insertNewObject(in: uiMOC)
+        let member = Member.insertNewObject(in: uiMOC)
+        
+        user.name = "Member A"
+        
+        member.team = team
+        member.user = user
+        
+        uiMOC.saveOrRollback()
+        
+        let request = SearchRequest(query: "@member", searchOptions: [.teamMembers], team: team)
+        let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
+        
+        // expect
+        task.onResult { (result) in
+            resultArrived.fulfill()
+            XCTAssertEqual(result.teamMembers, [member])
+        }
+        
+        // when
+        task.performLocalSearch()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
     // MARK: Conversation Search
     
     func testThatItFindsASingleConversation() {
@@ -475,6 +503,31 @@ class SearchTaskTests : MessagingTest {
         task.onResult { (result) in
             resultArrived.fulfill()
             XCTAssertEqual(result.conversations, [])
+        }
+        
+        // when
+        task.performLocalSearch()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
+    func testThatItOnlyReturnsTeamConversationsWhenPassingTeamParameter() {
+        // given
+        let resultArrived = expectation(description: "received result")
+        let team = Team.insertNewObject(in: uiMOC)
+        let conversation = createGroupConversation(withName: "Beach Club")
+        _ = createGroupConversation(withName: "Beach Club")
+        
+        conversation.team = team
+        
+        uiMOC.saveOrRollback()
+        
+        let request = SearchRequest(query: "Beach", searchOptions: [.conversations], team: team)
+        let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
+        
+        // expect
+        task.onResult { (result) in
+            resultArrived.fulfill()
+            XCTAssertEqual(result.conversations, [conversation])
         }
         
         // when

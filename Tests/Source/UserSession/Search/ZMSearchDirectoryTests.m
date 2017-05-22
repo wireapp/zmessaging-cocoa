@@ -1116,8 +1116,7 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
     //then
     [self.transportSession verify];
 
-    NSLog(@"token %@", token);
-    ZMSearchResult *result =  [self.searchResults.firstObject searchResult]; //[self firstSearchResultForToken:token];
+    ZMSearchResult *result = [self firstSearchResultForToken:token];
     XCTAssertEqual(result.usersInContacts.count, 1u);
     XCTAssertEqual(result.usersInDirectory.count, 1u);
     XCTAssertEqual(result.groupConversations.count, 0u);

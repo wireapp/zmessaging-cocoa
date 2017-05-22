@@ -38,18 +38,19 @@ public struct SearchRequest {
     
     let maxQueryLength = 200
     
-    public init(query: String, searchOptions: SearchOptions) {
+    public init(query: String, searchOptions: SearchOptions, team: Team? = nil) {
         self.query = query.truncated(at: maxQueryLength)
         self.searchOptions = searchOptions
+        self.team = team
     }
     
-//    var team : Team? = nil
     var query : String = "" {
         didSet {
             query = query.truncated(at: maxQueryLength)
         }
     }
     
+    var team : Team? = nil
     var searchOptions: SearchOptions = []
     
 }

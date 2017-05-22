@@ -20,7 +20,7 @@ import Foundation
 
 public struct SearchResult {
     let contacts : [ZMUser]
-    let teamMembers : [ZMUser]
+    let teamMembers : [Member]
     let directory : [ZMSearchUser]
     let conversations : [ZMConversation]
 }

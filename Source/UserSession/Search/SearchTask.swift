@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import WireUtilities
 
 typealias ResultHandler = (_ result: SearchResult) -> Void
 
@@ -64,8 +65,9 @@ extension SearchTask {
         context.performGroupedBlock {
             
             let connectedUsers = self.request.searchOptions.contains(.contacts) ? self.connectedUsers(matchingQuery: self.request.query) : []
+            let teamMembers = self.request.searchOptions.contains(.teamMembers) ? self.teamMembers(matchingQuery: self.request.query) : []
             let conversations = self.request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: self.request.query) : []
-            let result = SearchResult(contacts: connectedUsers, teamMembers: [], directory: [], conversations: conversations)
+            let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, directory: [], conversations: conversations)
             
             self.session.managedObjectContext.performGroupedBlock {
                 self.result = result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
@@ -74,13 +76,17 @@ extension SearchTask {
         }
     }
     
+    func teamMembers(matchingQuery query : String) -> [Member] {
+        return request.team?.members(matchingQuery: query) ?? []
+    }
+    
     func connectedUsers(matchingQuery query: String) -> [ZMUser] {
         let fetchRequest = ZMUser.sortedFetchRequest(with: ZMUser.predicateForConnectedUsers(withSearch: query))
         return context.executeFetchRequestOrAssert(fetchRequest) as? [ZMUser] ?? []
     }
     
     func conversations(matchingQuery query: String) -> [ZMConversation] {
-        let fetchRequest = ZMConversation.sortedFetchRequest(with: ZMConversation.predicate(forSearch: query))
+        let fetchRequest = ZMConversation.sortedFetchRequest(with: ZMConversation.predicate(forSearchQuery: query, team: request.team))
         fetchRequest?.sortDescriptors = [NSSortDescriptor(key: ZMNormalizedUserDefinedNameKey, ascending: true)]
         var conversations = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation] ?? []
         
@@ -102,10 +108,6 @@ extension SearchTask {
         }
         
         return matching + nonMatching
-    }
-    
-    func teamMembers(matchingQuery: String) -> [ZMUser] {
-        return []
     }
     
 }
