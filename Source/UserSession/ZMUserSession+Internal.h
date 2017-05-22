@@ -78,11 +78,9 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 @property (nonatomic, readonly) BOOL isLoggedIn;
 @property (nonatomic, readonly) NSManagedObjectContext *managedObjectContext;
-@property (nonatomic, readonly) ZMTransportSession *transportSession;
 @property (nonatomic, readonly) NSManagedObjectContext *syncManagedObjectContext;
 @property (nonatomic, readonly) AVSFlowManager *flowManager;
 @property (nonatomic, readonly) LocalNotificationDispatcher *localNotificationDispatcher;
-@property (nonatomic, readonly) NSURL *storeURL;
 
 + (NSString *)databaseIdentifier;
 
