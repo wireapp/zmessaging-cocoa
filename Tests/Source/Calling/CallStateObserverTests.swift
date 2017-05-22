@@ -162,7 +162,7 @@ class CallStateObserverTests : MessagingTest {
     
     func testThatCallStatesAreForwardedToTheNotificationDispatcher() {
         // given when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
