@@ -615,4 +615,14 @@ class SearchTaskTests : MessagingTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
+    // MARK: Combined results
+    
+    func testThatRemoteResultsIncludePreviousLocalResults() {
+        // TODO jacob
+    }
+    
+    func testThatLocalResultsIncludePreviousRemoteResults() {
+        // TODO jacob
+    }
+    
 }

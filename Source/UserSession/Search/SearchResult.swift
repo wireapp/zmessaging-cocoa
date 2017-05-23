@@ -19,10 +19,10 @@
 import Foundation
 
 public struct SearchResult {
-    let contacts : [ZMUser]
-    let teamMembers : [Member]
-    let directory : [ZMSearchUser]
-    let conversations : [ZMConversation]
+    public let contacts : [ZMUser]
+    public let teamMembers : [Member]
+    public let directory : [ZMSearchUser]
+    public let conversations : [ZMConversation]
 }
 
 extension SearchResult {
@@ -51,7 +51,12 @@ extension SearchResult {
     }
     
     func copy(on context: NSManagedObjectContext) -> SearchResult {
-        return self
+        
+        let copiedContacts = contacts.flatMap({ context.object(with: $0.objectID) as? ZMUser })
+        let copiedTeamMembers = teamMembers.flatMap({ context.object(with: $0.objectID) as? Member })
+        let copiedConversations = conversations.flatMap({ context.object(with: $0.objectID) as? ZMConversation })
+        
+        return SearchResult(contacts: copiedContacts, teamMembers: copiedTeamMembers, directory: directory, conversations: copiedConversations)
     }
     
     func union(withLocalResult result: SearchResult) -> SearchResult {

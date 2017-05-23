@@ -38,7 +38,7 @@ public class SearchDirectory : NSObject {
         isTornDown = true
     }
     
-    func tearDown() {
+    public func tearDown() {
         userSession.syncManagedObjectContext.performGroupedBlock {
             SearchDirectory.userIDsMissingProfileImage.removeDirectory(self)
             ZMSearchUser.searchUserToMediumImageCache().removeAllObjects()
@@ -48,7 +48,7 @@ public class SearchDirectory : NSObject {
         userSession.managedObjectContext.searchUserObserverCenter.reset()
     }
     
-    func perform(_ request: SearchRequest) -> SearchTask {
+    public func perform(_ request: SearchRequest) -> SearchTask {
         let task = SearchTask(request: request, context: searchContext, session: userSession)
         
         task.onResult(self.requestSearchUserProfileImages(_:))

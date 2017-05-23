@@ -19,7 +19,7 @@
 import Foundation
 import WireUtilities
 
-typealias ResultHandler = (_ result: SearchResult) -> Void
+public typealias ResultHandler = (_ result: SearchResult) -> Void
 
 public class SearchTask {
  
@@ -36,16 +36,11 @@ public class SearchTask {
         self.context = context
     }
     
-    func onResult(_ resultHandler : @escaping ResultHandler) {
+    public func onResult(_ resultHandler : @escaping ResultHandler) {
         resultHandlers.append(resultHandler)
     }
     
-    func start() {
-        performLocalSearch()
-        performRemoteSearch()
-    }
-    
-    func cancel() {
+    public func cancel() {
         resultHandlers.removeAll()
         
         if let taskIdentifier = taskIdentifier {
@@ -53,7 +48,12 @@ public class SearchTask {
         }
     }
     
-    func update(_ result : SearchResult) {
+    public func start() {
+        performLocalSearch()
+        performRemoteSearch()
+    }
+    
+    func resportResult() {
         resultHandlers.forEach { $0(result) }
     }
     
@@ -70,8 +70,8 @@ extension SearchTask {
             let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, directory: [], conversations: conversations)
             
             self.session.managedObjectContext.performGroupedBlock {
-                self.result = result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
-                self.update(self.result)
+                self.result = self.result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
+                self.resportResult()
             }
         }
     }
@@ -128,8 +128,8 @@ extension SearchTask {
                     return
                 }
                 
-                self.result = result.union(withRemoteResult: result)
-                self.update(result)
+                self.result = self.result.union(withRemoteResult: result)
+                self.resportResult()
             }))
             
             request.add(ZMTaskCreatedHandler(on: self.context, block: { (taskIdentifier) in
