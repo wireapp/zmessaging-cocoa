@@ -24,6 +24,7 @@ class SearchDirectoryTests : MessagingTest {
     
     func testThatWhenReceivingSearchUsersWeMarkTheProfileImageAsMissing() {
         // given
+        let resultArrived = expectation(description: "received result")
         let request = SearchRequest(query: "User", searchOptions: [.directory])
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
@@ -33,8 +34,14 @@ class SearchDirectoryTests : MessagingTest {
         let sut = SearchDirectory(userSession: mockUserSession)
         
         // when
-        sut.perform(request).start()
-        spinMainQueue(withTimeout: 0.5)
+        let task = sut.perform(request)
+        task.onResult { (result) in
+            if !result.directory.isEmpty {
+                resultArrived.fulfill()
+            }
+        }
+        task.start()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(SearchDirectory.userIDsMissingProfileImage.allUserIds().count, 1)
@@ -44,6 +51,8 @@ class SearchDirectoryTests : MessagingTest {
     }
     
     func testThatWhenReceivingSearchUsersWeDontMarkTheProfileImageAsMissingIfItExistsInCache() {
+        // given
+        let resultArrived = expectation(description: "received result")
         var userIdentifier1 : String = ""
         var userIdentifier2 : String = ""
         
@@ -62,8 +71,14 @@ class SearchDirectoryTests : MessagingTest {
         let sut = SearchDirectory(userSession: mockUserSession)
         
         // when
-        sut.perform(request).start()
-        spinMainQueue(withTimeout: 0.5)
+        let task = sut.perform(request)
+        task.onResult { (result) in
+            if !result.directory.isEmpty {
+                resultArrived.fulfill()
+            }
+        }
+        task.start()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(SearchDirectory.userIDsMissingProfileImage.allUserIds(), Set([uuid2]))
@@ -73,6 +88,8 @@ class SearchDirectoryTests : MessagingTest {
     }
     
     func testThatWhenReceivingSearchUsersWeDontMarkTheProfileImageAsMissingIfThereIsACorrespondingZMUser() {
+        // given
+        let resultArrived = expectation(description: "received result")
         var userIdentifier1 : String = ""
         var userIdentifier2 : String = ""
         
@@ -92,8 +109,14 @@ class SearchDirectoryTests : MessagingTest {
         let sut = SearchDirectory(userSession: mockUserSession)
         
         // when
-        sut.perform(request).start()
-        spinMainQueue(withTimeout: 0.5)
+        let task = sut.perform(request)
+        task.onResult { (result) in
+            if !result.directory.isEmpty {
+                resultArrived.fulfill()
+            }
+        }
+        task.start()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(SearchDirectory.userIDsMissingProfileImage.allUserIds(), Set([uuid2]))
