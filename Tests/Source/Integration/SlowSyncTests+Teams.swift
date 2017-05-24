@@ -55,8 +55,8 @@ class SlowSyncTestsTeams: IntegrationTestBase {
         do {
             let selfUser = ZMUser.selfUser(in: syncMOC)
             let teams = selfUser.teams
-            XCTAssertEqual(teams?.count, 1)
-            guard let team = teams?.first else { return XCTFail("Team missing") }
+            XCTAssertEqual(teams.count, 1)
+            guard let team = teams.first else { return XCTFail("Team missing") }
 
             let selfMember = selfUser.membership(in: team)
             XCTAssertNotNil(selfMember)
@@ -110,8 +110,8 @@ class SlowSyncTestsTeams: IntegrationTestBase {
         do {
             let realSelfUser = user(for: selfUser)!
             let teams = realSelfUser.teams
-            XCTAssertEqual(teams?.count, 1)
-            guard let team = teams?.first else { return XCTFail("Team missing") }
+            XCTAssertEqual(teams.count, 1)
+            guard let team = teams.first else { return XCTFail("Team missing") }
 
             XCTAssertEqual(team.conversations.count, 1)
             guard let conversation = team.conversations.first else { return XCTFail("Conversation missing") }
