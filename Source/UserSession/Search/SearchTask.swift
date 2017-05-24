@@ -99,6 +99,7 @@ extension SearchTask {
         var matching : [ZMConversation] = []
         var nonMatching : [ZMConversation] = []
         
+        // re-sort conversations without a matching userDefinedName to the end of the result list
         conversations.forEach { (conversation) in
             if matchingPredicate.evaluate(with: conversation) {
                 matching.append(conversation)

@@ -30,7 +30,7 @@
 
 @implementation CallingTests (PushNotifications)
 
-- (void)simulateReceivePushNotificationWithPayload:(NSDictionary *)payload identifier:(NSUUID *)identifier fromUser:(MockUser *)user
+- (void)simulateReceivePushNotificationWithPayload:(NSDictionary *)payload identifier:(NSUUID *)identifier
 {
     NSDictionary *pushPayload = @{ @"data": @{ @"id": identifier.transportString, @"payload": @[payload] } };
 
@@ -39,7 +39,7 @@
     [(PKPushPayload *)[[(id)pkPayload stub] andReturn:PKPushTypeVoIP] type];
     PKPushRegistry *mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
     [self.userSession.pushRegistrant pushRegistry:mockPushRegistry didReceiveIncomingPushWithPayload:pkPayload forType:pkPayload.type];
-    [self.mockTransportSession registerPushEvent:[MockPushEvent eventWithPayload:payload uuid:identifier fromUser:user isTransient:YES]];
+    [self.mockTransportSession registerPushEvent:[MockPushEvent eventWithPayload:payload uuid:identifier isTransient:YES]];
 
     WaitForEverythingToBeDone();
 }
@@ -78,7 +78,7 @@
     UILocalNotification *notification;
     // (1) when we recieve a push notification
     {
-        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID fromUser:self.user2];
+        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
@@ -126,7 +126,7 @@
     // (1) when we recieve a push notification
     UILocalNotification *notification;
     {
-        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID fromUser:self.user2];
+        [self simulateReceivePushNotificationWithPayload:payload identifier:NSUUID.timeBasedUUID];
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then

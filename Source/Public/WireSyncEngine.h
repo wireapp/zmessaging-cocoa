@@ -37,6 +37,7 @@
 
 
 // PRIVATE
+#import <WireSyncEngine/ZMUserSession+Private.h>
 #import <WireSyncEngine/ZMPushRegistrant.h>
 #import <WireSyncEngine/ZMNotifications+UserSession.h>
 #import <WireSyncEngine/ZMNotifications+UserSessionInternal.h>

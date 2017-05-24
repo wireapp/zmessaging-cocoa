@@ -44,13 +44,8 @@ public struct SearchRequest {
         self.team = team
     }
     
-    var query : String = "" {
-        didSet {
-            query = query.truncated(at: maxQueryLength)
-        }
-    }
-    
     var team : Team? = nil
-    var searchOptions: SearchOptions = []
+    let query : String
+    let searchOptions: SearchOptions
     
 }

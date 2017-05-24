@@ -34,8 +34,6 @@ public class SearchDirectory : NSObject {
     public init(userSession: ZMUserSession) {
         self.userSession = userSession
         self.searchContext =  NSManagedObjectContext.createSearchWithStore(at: userSession.storeURL)
-        
-        isTornDown = true
     }
     
     public func tearDown() {
@@ -46,6 +44,8 @@ public class SearchDirectory : NSObject {
 
         // Reset search user observer center to remove unnecessarily observed search users
         userSession.managedObjectContext.searchUserObserverCenter.reset()
+        
+        isTornDown = true
     }
     
     public func perform(_ request: SearchRequest) -> SearchTask {
