@@ -618,11 +618,67 @@ class SearchTaskTests : MessagingTest {
     // MARK: Combined results
     
     func testThatRemoteResultsIncludePreviousLocalResults() {
-        // TODO jacob
+        // given
+        let localResultArrived = expectation(description: "received local result")
+        let remoteResultArrived = expectation(description: "received remote result")
+        let user = createConnectedUser(withName: "userA")
+        
+        mockTransportSession.performRemoteChanges { (remoteChanges) in
+            remoteChanges.insertUser(withName: "UserB")
+        }
+        
+        let request = SearchRequest(query: "user", searchOptions: [.contacts, .directory])
+        let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
+        
+        // expect
+        task.onResult { (result) in
+            
+            if result.directory.isEmpty {
+                localResultArrived.fulfill()
+            } else {
+                remoteResultArrived.fulfill()
+            }
+            
+            XCTAssertTrue(result.contacts.contains(user))
+        }
+        
+        // when
+        task.performLocalSearch()
+        spinMainQueue(withTimeout: 0.2)
+        task.performRemoteSearch()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
     func testThatLocalResultsIncludePreviousRemoteResults() {
-        // TODO jacob
+        // given
+        let localResultArrived = expectation(description: "received local result")
+        let remoteResultArrived = expectation(description: "received remote result")
+        _ = createConnectedUser(withName: "userA")
+        
+        mockTransportSession.performRemoteChanges { (remoteChanges) in
+            remoteChanges.insertUser(withName: "UserB")
+        }
+        
+        let request = SearchRequest(query: "user", searchOptions: [.contacts, .directory])
+        let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
+        
+        // expect
+        task.onResult { (result) in
+            
+            if result.contacts.isEmpty {
+                remoteResultArrived.fulfill()
+            } else {
+                localResultArrived.fulfill()
+            }
+            
+            XCTAssertEqual(result.directory.count, 1)
+        }
+        
+        // when
+        task.performRemoteSearch()
+        spinMainQueue(withTimeout: 0.2)
+        task.performLocalSearch()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
 }
