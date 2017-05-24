@@ -51,7 +51,9 @@ public class SearchDirectory : NSObject {
     public func perform(_ request: SearchRequest) -> SearchTask {
         let task = SearchTask(request: request, context: searchContext, session: userSession)
         
-        task.onResult(self.requestSearchUserProfileImages(_:))
+        task.onResult { [weak self] (result) in
+            self?.requestSearchUserProfileImages(result)
+        }
         
         return task
     }

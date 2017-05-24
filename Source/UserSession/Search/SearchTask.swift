@@ -120,20 +120,25 @@ extension SearchTask {
         context.performGroupedBlock {
             let request = self.searchRequestInDirectory(withQuery: self.request.query)
             
-            request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { (response) in
+            request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
                 guard
+                    let session = self?.session,
+                    let query = self?.request.query,
                     let payload = response.payload?.asDictionary(),
-                    let result = SearchResult(payload: payload, query: self.request.query, userSession: self.session)
+                    let result = SearchResult(payload: payload, query: query, userSession: session)
                 else {
                     return
                 }
                 
-                self.result = self.result.union(withRemoteResult: result)
-                self.resportResult()
+                if let updatedResult = self?.result.union(withRemoteResult: result) {
+                    self?.result = updatedResult
+                }
+                
+                self?.resportResult()
             }))
             
-            request.add(ZMTaskCreatedHandler(on: self.context, block: { (taskIdentifier) in
-                self.taskIdentifier = taskIdentifier
+            request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
+                self?.taskIdentifier = taskIdentifier
             }))
             
             self.session.transportSession.enqueueSearch(request)
