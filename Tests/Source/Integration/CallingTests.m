@@ -1603,7 +1603,7 @@
         return YES;
     }]];
     
-    ZMConversationList* list = [ZMConversationList conversationsInUserSession:self.userSession];
+    ZMConversationList* list = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
     id listToken = [ConversationListChangeInfo addObserver:listObserver forList:list];
     
     [self.mockTransportSession resetReceivedRequests];
@@ -1634,7 +1634,7 @@
 
     ZMConversation *conversation = self.conversationUnderTest;
 
-    ZMConversationList *list = [ZMConversationList conversationsInUserSession:self.userSession];
+    ZMConversationList *list = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
     id listObserver = [OCMockObject niceMockForProtocol:@protocol(ZMConversationListObserver)];
     id listToken = [ConversationListChangeInfo addObserver:listObserver forList:list];
 

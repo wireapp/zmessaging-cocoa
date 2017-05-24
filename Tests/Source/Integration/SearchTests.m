@@ -156,7 +156,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
 
-    NSArray *pendingConnections = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
+    NSArray *pendingConnections = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession team:nil];
     XCTAssertEqual(pendingConnections.count, 1u);
 
     // TODO: QUICK continue
