@@ -84,15 +84,15 @@ class SyncStatusTests : MessagingTest {
         // when
         sut.finishCurrentSyncPhase()
         // then
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
+        // when
+        sut.finishCurrentSyncPhase()
+        // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingConnections)
         // when
         sut.finishCurrentSyncPhase()
         // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingConversations)
-        // when
-        sut.finishCurrentSyncPhase()
-        // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         // when
         sut.finishCurrentSyncPhase()
         // then
@@ -147,15 +147,15 @@ class SyncStatusTests : MessagingTest {
         // when
         sut.finishCurrentSyncPhase()
         // then
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
+        // when
+        sut.finishCurrentSyncPhase()
+        // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingConnections)
         // when
         sut.finishCurrentSyncPhase()
         // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingConversations)
-        // when
-        sut.finishCurrentSyncPhase()
-        // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         // when
         sut.finishCurrentSyncPhase()
         // then
@@ -215,7 +215,7 @@ class SyncStatusTests : MessagingTest {
         // given
         mockSyncDelegate.didCallStartSync = false
         sut.finishCurrentSyncPhase()
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingConnections)
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         
         XCTAssertFalse(mockSyncDelegate.didCallStartSync)
         
@@ -368,7 +368,7 @@ extension SyncStatusTests {
         sut.failCurrentSyncPhase()
         
         // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingConnections)
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
     }
     
     func testThatItDoesNotSaveLastNotificationIDWhenSlowSyncFailed(){
@@ -402,6 +402,7 @@ extension SyncStatusTests {
         
         // then
         XCTAssertNotEqual(uiMOC.zm_lastNotificationID, newID)
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         
         // and when
         sut.finishCurrentSyncPhase()
@@ -412,7 +413,6 @@ extension SyncStatusTests {
         // then
         XCTAssertNotEqual(uiMOC.zm_lastNotificationID, newID)
         // when
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         sut.finishCurrentSyncPhase()
         // then
         XCTAssertNotEqual(uiMOC.zm_lastNotificationID, newID)

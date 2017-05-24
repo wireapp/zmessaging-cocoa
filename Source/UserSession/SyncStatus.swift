@@ -18,9 +18,9 @@
 
 @objc public enum SyncPhase : Int, CustomStringConvertible {
     case fetchingLastUpdateEventID
+    case fetchingTeams
     case fetchingConnections
     case fetchingConversations
-    case fetchingTeams
     case fetchingUsers
     case fetchingMissedEvents
     case done
@@ -134,7 +134,7 @@ extension SyncStatus {
     
     public func failCurrentSyncPhase() {
         if currentSyncPhase == .fetchingMissedEvents {
-            currentSyncPhase = hasPersistedLastEventID ? .fetchingConnections : .fetchingLastUpdateEventID
+            currentSyncPhase = hasPersistedLastEventID ? .fetchingTeams : .fetchingLastUpdateEventID
             needsToRestartQuickSync = false
         }
     }
