@@ -901,10 +901,11 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     [conversation updateWithTransportData:dictionaryPayload];
 }
 
-- (void)deleteObject:(ZMConversation *)conversation downstreamSync:(id<ZMObjectSync>)downstreamSync;
+- (void)deleteObject:(ZMConversation *)conversation withResponse:(ZMTransportResponse *)response downstreamSync:(id<ZMObjectSync>)downstreamSync;
 {
     NOT_USED(downstreamSync);
     NOT_USED(conversation);
+    NOT_USED(response);
 }
 
 @end

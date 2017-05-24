@@ -157,7 +157,7 @@ extension UserImageAssetUpdateStrategy: ZMDownstreamTranscoder {
         return ZMTransportRequest.imageGet(fromPath: path)
     }
     
-    public func delete(_ object: ZMManagedObject!, downstreamSync: ZMObjectSync!) {}
+    public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {}
     
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
         guard let whitelistSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist else { return }
