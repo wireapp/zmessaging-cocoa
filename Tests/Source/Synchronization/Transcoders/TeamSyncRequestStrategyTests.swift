@@ -88,7 +88,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
 
         // then
-        XCTAssertEqual(request.path, "/teams?size=250")
+        XCTAssertEqual(request.path, "/teams?size=50")
         XCTAssertEqual(request.method, .methodGET)
     }
 

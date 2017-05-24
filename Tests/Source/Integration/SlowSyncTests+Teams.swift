@@ -43,7 +43,7 @@ class SlowSyncTestsTeams: IntegrationTestBase {
 
         mockTransportSession.receivedRequests().forEach { request in
             switch request.path {
-            case "/teams?size=250": fetchedTeams = true
+            case "/teams?size=50": fetchedTeams = true
             case "/teams/\(team.identifier)/members": fetchedMembers = true
             default: break
             }
@@ -98,7 +98,7 @@ class SlowSyncTestsTeams: IntegrationTestBase {
 
         mockTransportSession.receivedRequests().forEach { request in
             switch request.path {
-            case "/teams?size=250": fetchedTeams = true
+            case "/teams?size=50": fetchedTeams = true
             case "/teams/\(team.identifier)/members": fetchedMembers = true
             default: break
             }

@@ -27,7 +27,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
 
         static let `default` = SyncConfiguration(
             basePath: TeamDownloadRequestFactory.teamPath,
-            pageSize: 250,
+            pageSize: 50,
             startKey: "start",
             remoteIdSyncSize: 1
         )
