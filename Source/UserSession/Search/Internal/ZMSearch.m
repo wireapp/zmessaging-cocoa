@@ -155,7 +155,7 @@
 
 - (NSArray *)conversationsMatchingSearchString:(NSString *)searchString
 {
-    NSFetchRequest *conversationFetchRequest = [ZMConversation sortedFetchRequestWithPredicate:[ZMConversation predicateForSearchString:searchString]];
+    NSFetchRequest *conversationFetchRequest = [ZMConversation sortedFetchRequestWithPredicate:[ZMConversation predicateForSearchQuery:searchString team:nil]];
     NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:ZMNormalizedUserDefinedNameKey ascending:YES];
     conversationFetchRequest.sortDescriptors = @[sortDescriptor];
     
