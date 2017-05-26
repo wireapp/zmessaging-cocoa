@@ -93,7 +93,14 @@ extension SearchTask {
     }
     
     func teamMembers(matchingQuery query : String) -> [Member] {
-        return request.team?.members(matchingQuery: query) ?? []
+        guard
+            let teamObjectID = request.team?.objectID,
+            let team = context.object(with: teamObjectID) as? Team
+        else {
+            return []
+        }
+        
+        return team.members(matchingQuery: query)
     }
     
     func connectedUsers(matchingQuery query: String) -> [ZMUser] {
