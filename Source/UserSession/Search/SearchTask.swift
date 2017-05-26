@@ -79,9 +79,14 @@ extension SearchTask {
         
         context.performGroupedBlock {
             
+            var team : Team? = nil
+            if let teamObjectID = self.request.team?.objectID {
+                team = (try? self.context.existingObject(with: teamObjectID)) as? Team
+            }
+            
             let connectedUsers = self.request.searchOptions.contains(.contacts) ? self.connectedUsers(matchingQuery: self.request.query) : []
-            let teamMembers = self.request.searchOptions.contains(.teamMembers) ? self.teamMembers(matchingQuery: self.request.query) : []
-            let conversations = self.request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: self.request.query) : []
+            let teamMembers = self.request.searchOptions.contains(.teamMembers) ? self.teamMembers(matchingQuery: self.request.query, team: team) : []
+            let conversations = self.request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: self.request.query, team: team) : []
             let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, directory: [], conversations: conversations)
             
             self.session.managedObjectContext.performGroupedBlock {
@@ -92,15 +97,8 @@ extension SearchTask {
         }
     }
     
-    func teamMembers(matchingQuery query : String) -> [Member] {
-        guard
-            let teamObjectID = request.team?.objectID,
-            let team = context.object(with: teamObjectID) as? Team
-        else {
-            return []
-        }
-        
-        return team.members(matchingQuery: query)
+    func teamMembers(matchingQuery query : String, team: Team?) -> [Member] {
+        return team?.members(matchingQuery: query) ?? []
     }
     
     func connectedUsers(matchingQuery query: String) -> [ZMUser] {
@@ -108,8 +106,8 @@ extension SearchTask {
         return context.executeFetchRequestOrAssert(fetchRequest) as? [ZMUser] ?? []
     }
     
-    func conversations(matchingQuery query: String) -> [ZMConversation] {
-        let fetchRequest = ZMConversation.sortedFetchRequest(with: ZMConversation.predicate(forSearchQuery: query, team: request.team))
+    func conversations(matchingQuery query: String, team: Team?) -> [ZMConversation] {
+        let fetchRequest = ZMConversation.sortedFetchRequest(with: ZMConversation.predicate(forSearchQuery: query, team: team))
         fetchRequest?.sortDescriptors = [NSSortDescriptor(key: ZMNormalizedUserDefinedNameKey, ascending: true)]
         var conversations = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation] ?? []
         
