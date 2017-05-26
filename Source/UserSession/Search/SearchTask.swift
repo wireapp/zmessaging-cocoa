@@ -19,15 +19,15 @@
 import Foundation
 import WireUtilities
 
-public typealias SearchResultHandler = (_ result: SearchResult, _ isCompleted: Bool) -> Void
-
 public class SearchTask {
+    
+    public typealias ResultHandler = (_ result: SearchResult, _ isCompleted: Bool) -> Void
  
     fileprivate let session : ZMUserSession
     fileprivate let context : NSManagedObjectContext
     fileprivate let request : SearchRequest
     fileprivate var taskIdentifier : ZMTaskIdentifier?
-    fileprivate var resultHandlers : [SearchResultHandler] = []
+    fileprivate var resultHandlers : [ResultHandler] = []
     fileprivate var result : SearchResult = SearchResult(contacts: [], teamMembers: [], directory: [], conversations: [])
     fileprivate var tasksRemaining = 0
     
@@ -38,7 +38,7 @@ public class SearchTask {
     }
     
     /// Add a result handler
-    public func onResult(_ resultHandler : @escaping SearchResultHandler) {
+    public func onResult(_ resultHandler : @escaping ResultHandler) {
         resultHandlers.append(resultHandler)
     }
     
