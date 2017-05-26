@@ -19,7 +19,7 @@
 import Foundation
 import WireUtilities
 
-public typealias ResultHandler = (_ result: SearchResult, _ isCompleted: Bool) -> Void
+public typealias SearchResultHandler = (_ result: SearchResult, _ isCompleted: Bool) -> Void
 
 public class SearchTask {
  
@@ -27,7 +27,7 @@ public class SearchTask {
     fileprivate let context : NSManagedObjectContext
     fileprivate let request : SearchRequest
     fileprivate var taskIdentifier : ZMTaskIdentifier?
-    fileprivate var resultHandlers : [ResultHandler] = []
+    fileprivate var resultHandlers : [SearchResultHandler] = []
     fileprivate var result : SearchResult = SearchResult(contacts: [], teamMembers: [], directory: [], conversations: [])
     fileprivate var tasksRemaining = 0
     
@@ -37,10 +37,12 @@ public class SearchTask {
         self.context = context
     }
     
-    public func onResult(_ resultHandler : @escaping ResultHandler) {
+    /// Add a result handler
+    public func onResult(_ resultHandler : @escaping SearchResultHandler) {
         resultHandlers.append(resultHandler)
     }
     
+    /// Cancel a previously started task
     public func cancel() {
         resultHandlers.removeAll()
         
@@ -49,6 +51,8 @@ public class SearchTask {
         }
     }
     
+    /// Start the search task. Results will be sent to the result handlers
+    /// added via the `onResult()` method.
     public func start() {
         performLocalSearch()
         performRemoteSearch()
