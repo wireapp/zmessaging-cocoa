@@ -19,7 +19,7 @@
 import Foundation
 import WireUtilities
 
-public typealias ResultHandler = (_ result: SearchResult) -> Void
+public typealias ResultHandler = (_ result: SearchResult, _ isCompleted: Bool) -> Void
 
 public class SearchTask {
  
@@ -29,6 +29,7 @@ public class SearchTask {
     fileprivate var taskIdentifier : ZMTaskIdentifier?
     fileprivate var resultHandlers : [ResultHandler] = []
     fileprivate var result : SearchResult = SearchResult(contacts: [], teamMembers: [], directory: [], conversations: [])
+    fileprivate var tasksRemaining = 0
     
     public init(request: SearchRequest, context: NSManagedObjectContext, session: ZMUserSession) {
         self.request = request
@@ -54,7 +55,13 @@ public class SearchTask {
     }
     
     func resportResult() {
-        resultHandlers.forEach { $0(result) }
+        let isCompleted = tasksRemaining == 0
+        
+        resultHandlers.forEach { $0(result, isCompleted) }
+        
+        if isCompleted {
+            resultHandlers.removeAll()
+        }
     }
     
 }
@@ -62,6 +69,8 @@ public class SearchTask {
 extension SearchTask {
     
     func performLocalSearch() {
+        tasksRemaining += 1
+        
         context.performGroupedBlock {
             
             let connectedUsers = self.request.searchOptions.contains(.contacts) ? self.connectedUsers(matchingQuery: self.request.query) : []
@@ -71,6 +80,7 @@ extension SearchTask {
             
             self.session.managedObjectContext.performGroupedBlock {
                 self.result = self.result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
+                self.tasksRemaining -= 1
                 self.resportResult()
             }
         }
@@ -118,6 +128,8 @@ extension SearchTask {
     func performRemoteSearch() {
         guard request.searchOptions.contains(.directory) else { return }
         
+        tasksRemaining += 1
+        
         context.performGroupedBlock {
             let request = self.searchRequestInDirectory(withQuery: self.request.query)
             
@@ -135,6 +147,7 @@ extension SearchTask {
                     self?.result = updatedResult
                 }
                 
+                self?.tasksRemaining -= 1
                 self?.resportResult()
             }))
             

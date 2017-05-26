@@ -35,7 +35,7 @@ class SearchDirectoryTests : MessagingTest {
         
         // when
         let task = sut.perform(request)
-        task.onResult { (result) in
+        task.onResult { (result, _) in
             if !result.directory.isEmpty {
                 resultArrived.fulfill()
             }
@@ -72,7 +72,7 @@ class SearchDirectoryTests : MessagingTest {
         
         // when
         let task = sut.perform(request)
-        task.onResult { (result) in
+        task.onResult { (result, _) in
             if !result.directory.isEmpty {
                 resultArrived.fulfill()
             }
@@ -110,7 +110,7 @@ class SearchDirectoryTests : MessagingTest {
         
         // when
         let task = sut.perform(request)
-        task.onResult { (result) in
+        task.onResult { (result, _) in
             if !result.directory.isEmpty {
                 resultArrived.fulfill()
             }
