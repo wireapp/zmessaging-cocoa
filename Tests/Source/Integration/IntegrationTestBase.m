@@ -515,6 +515,15 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     return (0 < result.count) ? result[0] : nil;
 }
 
+- (Team *)teamForMockTeam:(MockTeam *)team;
+{
+    NSUUID *remoteID = [self remoteIdentifierForMockObject:team];
+    XCTAssertNotNil(remoteID, @"Need to register mock objects with -storeRemoteIDForObject:");
+    NSFetchRequest *request = [Team sortedFetchRequestWithPredicateFormat:@"remoteIdentifier_data == %@", remoteID.data];
+    NSArray *result = [self.userSession.managedObjectContext executeFetchRequestOrAssert:request];
+    return (0 < result.count) ? result[0] : nil;
+}
+
 - (BOOL)mockMember:(MockMember *)mockMember isEqualToMember:(Member *)member
 {
     return [mockMember.user.identifier isEqualToString:member.user.remoteIdentifier.transportString]
