@@ -49,6 +49,8 @@ public class SearchTask {
         if let taskIdentifier = taskIdentifier {
             session.transportSession.cancelTask(with: taskIdentifier)
         }
+        
+        tasksRemaining = 0
     }
     
     /// Start the search task. Results will be sent to the result handlers
