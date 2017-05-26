@@ -1501,33 +1501,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
 }
 
-- (void)testThatItGeneratesARequestToGenerateAConversationWithAManagedTeam
-{
-    // given
-    ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    user1.remoteIdentifier = [NSUUID createUUID];
-    ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    user2.remoteIdentifier = [NSUUID createUUID];
-    NSArray <ZMUser *> *users = @[user1, user2];
-
-    // when
-    ZMTransportRequest *request = [self requestForConversationCreationWithTeamAndUsers:users modifier:^(ZMConversation *conversation) {
-        conversation.managed = YES;
-    }];
-
-    // then
-    XCTAssertEqualObjects(@"/conversations", request.path);
-    XCTAssertEqual(ZMMethodPOST, request.method);
-
-    NSSet *expected = [users mapWithBlock:^NSString *(ZMUser *user) { return user.remoteIdentifier.transportString; }].set;
-    XCTAssertEqualObjects([NSSet setWithArray:request.payload[@"users"]], expected);
-    NSDictionary *teamPayload = request.payload[@"team"];
-    Team *team = [ZMUser selfUserInContext:self.syncMOC].teams.anyObject;
-    XCTAssertNotNil(team);
-    XCTAssertEqualObjects(teamPayload[@"teamid"], team.remoteIdentifier.transportString);
-    XCTAssertEqualObjects(teamPayload[@"managed"], @YES);
-}
-
 - (void)testThatItGeneratesARequestToGenerateAConversationWithATeamAndName
 {
     // given
@@ -1540,7 +1513,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
     // when
     ZMTransportRequest *request =  [self requestForConversationCreationWithTeamAndUsers:users modifier:^(ZMConversation *conversation) {
-        conversation.managed = YES;
         conversation.userDefinedName = name;
     }];
 
@@ -1551,12 +1523,10 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     NSSet *expected = [users mapWithBlock:^NSString *(ZMUser *user) { return user.remoteIdentifier.transportString; }].set;
     XCTAssertEqualObjects([NSSet setWithArray:request.payload[@"users"]], expected);
     XCTAssertEqualObjects(request.payload[@"name"], name);
-    NSDictionary *teamPayload = request.payload[@"team"];
     Team *team = [ZMUser selfUserInContext:self.syncMOC].teams.anyObject;
     XCTAssertNotNil(team);
 
-    XCTAssertEqualObjects(teamPayload[@"teamid"], team.remoteIdentifier.transportString);
-    XCTAssertEqualObjects(teamPayload[@"managed"], @YES);
+    XCTAssertEqualObjects(request.payload[@"team"], team.remoteIdentifier.transportString);
 }
 
 - (ZMTransportRequest *)requestForConversationCreationWithTeamAndUsers:(NSArray <ZMUser *> *)users modifier:(void (^)(ZMConversation *conversation))modifier
