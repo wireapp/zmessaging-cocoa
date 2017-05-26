@@ -1493,9 +1493,11 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
         NSSet *expected = [users mapWithBlock:^NSString *(ZMUser *user) { return user.remoteIdentifier.transportString; }].set;
         XCTAssertEqualObjects([NSSet setWithArray:request.payload[@"users"]], expected);
+        NSDictionary *teamPayload = request.payload[@"team"];
         Team *team = [ZMUser selfUserInContext:self.syncMOC].teams.anyObject;
         XCTAssertNotNil(team);
-        XCTAssertEqualObjects(request.payload[@"team"], team.remoteIdentifier.transportString);
+        XCTAssertEqualObjects(teamPayload[@"teamid"], team.remoteIdentifier.transportString);
+        XCTAssertEqualObjects(teamPayload[@"managed"], @NO);
     }];
 }
 

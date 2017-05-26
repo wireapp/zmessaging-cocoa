@@ -43,6 +43,8 @@ static NSString *const UserInfoRemovedValueKey = @"removed";
 static NSString *const ConversationInfoArchivedValueKey = @"archived";
 
 static NSString *const ConversationTeamKey = @"team";
+static NSString *const ConversationTeamIdKey = @"teamid";
+static NSString *const ConversationTeamManagedKey = @"managed";
 
 @interface ZMConversationTranscoder () <ZMSimpleListRequestPaginatorSync>
 
@@ -688,7 +690,10 @@ static NSString *const ConversationTeamKey = @"team";
     }
 
     if (insertedConversation.team.remoteIdentifier != nil) {
-        payload[ConversationTeamKey] = insertedConversation.team.remoteIdentifier.transportString;
+        payload[ConversationTeamKey] = @{
+                             ConversationTeamIdKey: insertedConversation.team.remoteIdentifier.transportString,
+                             ConversationTeamManagedKey: @NO // FIXME:
+                             };
     }
     
     request = [ZMTransportRequest requestWithPath:ConversationsPath method:ZMMethodPOST payload:payload];
