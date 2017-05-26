@@ -68,12 +68,6 @@ public class VoiceChannelRouter : NSObject, VoiceChannel {
         
         switch ZMUserSession.callingProtocolStrategy {
         case .negotiate:
-            
-            if v2.conversation?.conversationType == .group {
-                // FIXME: remove this to enable group calling V3 for all
-                return v2
-            }
-            
             guard let callingProtocol = WireCallCenterV3.activeInstance?.callingProtocol else {
                 zmLog.warn("Attempt to use voice channel without an active call center")
                 return v2

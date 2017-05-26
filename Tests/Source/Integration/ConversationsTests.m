@@ -1162,7 +1162,7 @@
         XCTAssertEqual(note.deletedIndexes.count, 0u);
         XCTAssertEqual(note.insertedIndexes.count, 0u);
     }
-    XCTAssertEqual(updatesCount, 1);
+    XCTAssertGreaterThanOrEqual(updatesCount, 1);
     XCTAssertEqual(moves.count, 1u);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject from], from);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject to], 0u);

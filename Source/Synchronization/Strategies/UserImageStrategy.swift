@@ -224,7 +224,7 @@ public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder
         return "/assets/\(last)"
     }
     
-    public func delete(_ object: ZMManagedObject!, downstreamSync: ZMObjectSync!) {
+    public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
         // no-op
     }
     

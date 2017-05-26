@@ -43,15 +43,16 @@ class ZMLocalNotificationForCallStateTests : MessagingTest {
         }
     }
     
-    
     func testIncomingAudioCall() {
         
         // given
         let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
-        note.update(forCallState: .incoming(video: false, shouldRing: false))
+        note.update(forCallState: .incoming(video: false, shouldRing: true))
         
         // when
-        let uiNote = note.notifications.first!
+        guard let uiNote = note.notifications.first else {
+            return XCTFail("Did not create notification")
+        }
         
         // then
         XCTAssertEqual(uiNote.alertBody, "Callie is calling")
@@ -59,19 +60,41 @@ class ZMLocalNotificationForCallStateTests : MessagingTest {
         XCTAssertEqual(uiNote.soundName, ZMCustomSound.notificationRingingSoundName())
     }
     
+    func testIncomingAudioCall_ShouldRing_False() {
+        
+        // given
+        let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
+        note.update(forCallState: .incoming(video: false, shouldRing: false))
+        
+        // when
+        XCTAssertEqual(note.notifications.count, 0)
+    }
+    
     func testIncomingVideoCall() {
+        
+        // given
+        let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
+        note.update(forCallState: .incoming(video: true, shouldRing: true))
+        
+        // when
+        guard let uiNote = note.notifications.first else {
+            return XCTFail("Did not create notification")
+        }
+        
+        // then
+        XCTAssertEqual(uiNote.alertBody, "Callie is video calling")
+        XCTAssertEqual(uiNote.category, ZMIncomingCallCategory)
+        XCTAssertEqual(uiNote.soundName, ZMCustomSound.notificationRingingSoundName())
+    }
+    
+    func testIncomingVideoCall_ShouldRing_False() {
         
         // given
         let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
         note.update(forCallState: .incoming(video: true, shouldRing: false))
         
         // when
-        let uiNote = note.notifications.first!
-        
-        // then
-        XCTAssertEqual(uiNote.alertBody, "Callie is video calling")
-        XCTAssertEqual(uiNote.category, ZMIncomingCallCategory)
-        XCTAssertEqual(uiNote.soundName, ZMCustomSound.notificationRingingSoundName())
+        XCTAssertEqual(note.notifications.count, 0)
     }
     
     func testCanceledCall() {
