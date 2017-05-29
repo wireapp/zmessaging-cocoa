@@ -43,6 +43,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
 
     /// The sync used to fetch a teams members.
     fileprivate var memberSync: ZMRemoteIdentifierObjectSync!
+    fileprivate var remotelyDeletedIds: Set<UUID>?
 
     public init(
         withManagedObjectContext managedObjectContext: NSManagedObjectContext,
@@ -72,7 +73,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
 
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         if isSyncing && teamListSync.status != .inProgress && memberSync.isDone {
-            markExistingTeamsAsNeedingToBeDownloaded()
+            remotelyDeletedIds = fetchExistingTeamIds()
             teamListSync.resetFetching()
             memberSync.setRemoteIdentifiersAsNeedingDownload([])
         }
@@ -90,26 +91,29 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
     fileprivate func finishSyncIfCompleted() {
         guard isSyncing, memberSync.isDone, !teamListSync.hasMoreToFetch else { return }
         syncStatus?.finishCurrentSyncPhase()
+
+        // Delete local teams not on the remote anymore
+        guard let deletedTeamIds = remotelyDeletedIds else { return }
+        let orderedIds = NSOrderedSet(set: deletedTeamIds)
+        let removedTeams = Team.fetchObjects(withRemoteIdentifiers: orderedIds, in: managedObjectContext)
+        removedTeams?.forEach { managedObjectContext.delete($0 as! NSManagedObject) }
+        remotelyDeletedIds = nil
     }
 
     fileprivate var isSyncing: Bool {
         return syncStatus?.currentSyncPhase == .fetchingTeams
     }
 
-    private func markExistingTeamsAsNeedingToBeDownloaded() {
+    private func fetchExistingTeamIds() -> Set<UUID> {
         // It can happen that the user is offline for longer than 4 weeks,
         // in this case said user will miss events and we will perform a slow sync.
         // In the case the user got removed from a team that the user already has locally in that period,
         // we want to ensure that we delete that team from the client. The `/teams` request will only
-        // return the teams the user is still in of course, so we fetch all local teams and mark them
-        // as `needsToBeUpdatedFromBackend`, we reset this flag for all teams we fetch during the slow sync,
-        // (we just fetched them so there is no need to do it again after the slow sync completed).
-        // After the slow sync we will try to fetch the deleted teams and receive a 4xx response and delete the team locally.
+        // return the teams the user is still in of course, so we fetch all local teams and check which ones we
+        // receive during the slow sync. Afterwards we delete all teams that were no longer present on the backend.
         let request = Team.sortedFetchRequest()
-        guard let existingTeams = managedObjectContext.executeFetchRequestOrAssert(request) as? [Team] else { return }
-        existingTeams.forEach {
-            $0.needsToBeUpdatedFromBackend = true
-        }
+        guard let existingTeams = managedObjectContext.executeFetchRequestOrAssert(request) as? [Team] else { return Set() }
+        return Set(existingTeams.flatMap { $0.remoteIdentifier })
     }
     
 }
@@ -133,9 +137,9 @@ extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
             return team
         }
 
-        teams?.forEach {
-            memberSync.addRemoteIdentifiersThatNeedDownload([$0.remoteIdentifier!])
-        }
+        let remoteIds = Set(teams?.map { $0.remoteIdentifier! } ?? [])
+        remotelyDeletedIds?.subtract(Set(remoteIds))
+        memberSync.addRemoteIdentifiersThatNeedDownload(remoteIds)
 
         if response.result == .permanentError && isSyncing {
             syncStatus?.failCurrentSyncPhase()
