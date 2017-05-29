@@ -425,12 +425,12 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         XCTAssertTrue(mockSyncStatus.didCallFinishCurrentSyncPhase)
     }
 
-    func testThatItResets_NeedsToBeUpdatedFromBackend_ForDownloadedTeams() {
+    func testThatItDeletedLocalOnlyTeamsAfterPerformingASlowSync() {
         // given
         mockSyncStatus.mockPhase = .fetchingTeams
         mockApplicationStatus.mockSynchronizationState = .synchronizing
         let remotelyDeletedTeamId = UUID.create()
-        let addedTeam1Id = UUID.create(), addedTeam2Id = UUID.create()
+        let addedTeam1Id = UUID.create()
 
         syncMOC.performGroupedBlockAndWait {
             let remotelyDeletedTeam = Team.insertNewObject(in: self.syncMOC)
@@ -442,28 +442,31 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         let payload: [String: Any] = [
             "has_more": false,
             "teams": [
-                teamPayload(id: addedTeam1Id, name: "Wire GmbH"),
-                teamPayload(id: addedTeam2Id, name: "Secret Team")
+                teamPayload(id: addedTeam1Id, name: "Wire GmbH")
             ]
         ]
         request.complete(with: .init(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
 
+        // fetch /teams/{id}/members
+        do {
+            guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
+            let payload: [String: Any] = [
+                "members": [
+                    ["user": UUID.create().transportString(), "permissions": NSNumber(value: Permissions.addConversationMember.rawValue)]
+                ]
+            ]
+
+            request.complete(with: .init(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
+            XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
+        }
+
         // then
         syncMOC.performGroupedBlockAndWait {
             let request = Team.sortedFetchRequest()
             guard let allTeams = self.syncMOC.executeFetchRequestOrAssert(request) as? [Team] else { return XCTFail() }
-            XCTAssertEqual(allTeams.count, 3)
-            var deletedIdIncluded = false
-            allTeams.forEach {
-                if $0.remoteIdentifier == remotelyDeletedTeamId {
-                    XCTAssert($0.needsToBeUpdatedFromBackend)
-                    deletedIdIncluded = true
-                } else {
-                    XCTAssertFalse($0.needsToBeUpdatedFromBackend)
-                }
-            }
-            XCTAssert(deletedIdIncluded)
+            XCTAssertEqual(allTeams.count, 1)
+            XCTAssertEqual(allTeams.first?.remoteIdentifier, addedTeam1Id)
         }
     }
 
