@@ -357,9 +357,8 @@ extension TeamTests {
 
         // Then
         // Assert that the local team got deleted after trying to refetch it AFTER the slow sync was performed.
-        // FIXME: The team is not deleted on uiMOC at this point,
-        // check if we are missing a save or not propagating the changes correctly here?
-        XCTAssertNil(Team.fetch(withRemoteIdentifier: localOnlyTeamId, in: syncMOC))
+        let team = Team.fetch(withRemoteIdentifier: localOnlyTeamId, in: uiMOC)
+        XCTAssert(team == nil || team!.isDeleted)
     }
 
 }
