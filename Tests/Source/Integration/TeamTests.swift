@@ -319,8 +319,7 @@ extension TeamTests {
     func testThatYouCanRemoveAMemberFromATeamConversation_SelfIsMember(){
     
     }
-    
-    
+
     func testThatYouCanNotAddAMemberToATeamConversation_SelfIsGuest(){
         
     }
@@ -328,4 +327,39 @@ extension TeamTests {
     func testThatYouCanNOTRemoveAMemberFromATeamConversation_SelfIsGuest(){
     
     }
+
+}
+
+// MARK : Remotely Deleted Team
+
+extension TeamTests {
+
+    func testThatItDeltesARemotelyDeletedTeamAfterPerfomingSlowSyncCausedByMissedEvents() {
+        // Given
+        // 1. Insert local team, which will not be returned by mock transport when fetching /teams
+        let localOnlyTeamId = UUID.create()
+        let localOnlyTeam = Team.insertNewObject(in: uiMOC)
+        localOnlyTeam.remoteIdentifier = localOnlyTeamId
+        XCTAssert(uiMOC.saveOrRollback())
+
+        // 2. Force a slow sync by returning a 404 when hitting /notifications
+        mockTransportSession.responseGeneratorBlock = { request in
+            if request.path.hasPrefix("/notifications") && !request.path.contains("cancel_fallback") {
+                defer { self.mockTransportSession.responseGeneratorBlock = nil }
+                return ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
+            }
+            return nil
+        }
+
+        // When
+        XCTAssert(logInAndWaitForSyncToBeComplete())
+        XCTAssert(waitForEverythingToBeDone())
+
+        // Then
+        // Assert that the local team got deleted after trying to refetch it AFTER the slow sync was performed.
+        // FIXME: The team is not deleted on uiMOC at this point,
+        // check if we are missing a save or not propagating the changes correctly here?
+        XCTAssertNil(Team.fetch(withRemoteIdentifier: localOnlyTeamId, in: syncMOC))
+    }
+
 }

@@ -72,6 +72,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
 
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         if isSyncing && teamListSync.status != .inProgress && memberSync.isDone {
+            markExistingTeamsAsNeedingToBeDownloaded()
             teamListSync.resetFetching()
             memberSync.setRemoteIdentifiersAsNeedingDownload([])
         }
@@ -94,6 +95,22 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
     fileprivate var isSyncing: Bool {
         return syncStatus?.currentSyncPhase == .fetchingTeams
     }
+
+    private func markExistingTeamsAsNeedingToBeDownloaded() {
+        // It can happen that the user is offline for longer than 4 weeks,
+        // in this case said user will miss events and we will perform a slow sync.
+        // In the case the user got removed from a team that the user already has locally in that period,
+        // we want to ensure that we delete that team from the client. The `/teams` request will only
+        // return the teams the user is still in of course, so we fetch all local teams and mark them
+        // as `needsToBeUpdatedFromBackend`, we reset this flag for all teams we fetch during the slow sync,
+        // (we just fetched them so there is no need to do it again after the slow sync completed).
+        // After the slow sync we will try to fetch the deleted teams and receive a 4xx response and delete the team locally.
+        let request = Team.sortedFetchRequest()
+        guard let existingTeams = managedObjectContext.executeFetchRequestOrAssert(request) as? [Team] else { return }
+        existingTeams.forEach {
+            $0.needsToBeUpdatedFromBackend = true
+        }
+    }
     
 }
 
@@ -111,6 +128,8 @@ extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
             guard let id = (payload["id"] as? String).flatMap(UUID.init) else { return nil }
             let team = Team.fetchOrCreate(with: id, create: true, in: managedObjectContext, created: nil)
             team?.update(with: payload)
+            // See `markExistingTeamsAsNeedingToBeDownloaded`
+            team?.needsToBeUpdatedFromBackend = false
             return team
         }
 

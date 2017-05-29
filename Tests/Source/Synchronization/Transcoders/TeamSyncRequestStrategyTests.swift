@@ -425,6 +425,48 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         XCTAssertTrue(mockSyncStatus.didCallFinishCurrentSyncPhase)
     }
 
+    func testThatItResets_NeedsToBeUpdatedFromBackend_ForDownloadedTeams() {
+        // given
+        mockSyncStatus.mockPhase = .fetchingTeams
+        mockApplicationStatus.mockSynchronizationState = .synchronizing
+        let remotelyDeletedTeamId = UUID.create()
+        let addedTeam1Id = UUID.create(), addedTeam2Id = UUID.create()
+
+        syncMOC.performGroupedBlockAndWait {
+            let remotelyDeletedTeam = Team.insertNewObject(in: self.syncMOC)
+            remotelyDeletedTeam.remoteIdentifier = remotelyDeletedTeamId
+        }
+
+        // when
+        guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
+        let payload: [String: Any] = [
+            "has_more": false,
+            "teams": [
+                teamPayload(id: addedTeam1Id, name: "Wire GmbH"),
+                teamPayload(id: addedTeam2Id, name: "Secret Team")
+            ]
+        ]
+        request.complete(with: .init(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
+
+        // then
+        syncMOC.performGroupedBlockAndWait {
+            let request = Team.sortedFetchRequest()
+            guard let allTeams = self.syncMOC.executeFetchRequestOrAssert(request) as? [Team] else { return XCTFail() }
+            XCTAssertEqual(allTeams.count, 3)
+            var deletedIdIncluded = false
+            allTeams.forEach {
+                if $0.remoteIdentifier == remotelyDeletedTeamId {
+                    XCTAssert($0.needsToBeUpdatedFromBackend)
+                    deletedIdIncluded = true
+                } else {
+                    XCTAssertFalse($0.needsToBeUpdatedFromBackend)
+                }
+            }
+            XCTAssert(deletedIdIncluded)
+        }
+    }
+
     // MARK: - Helper
 
     private func teamPayload(id: UUID = .create(), creator creatorId: UUID = .create(), name: String) -> ZMTransportData {
