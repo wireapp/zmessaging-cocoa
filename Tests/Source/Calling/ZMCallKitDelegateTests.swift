@@ -267,8 +267,8 @@ class ZMCallKitDelegateTest: MessagingTest {
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
 
         XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
-        XCTAssertEqual(action.handle.type, .emailAddress)
-        XCTAssertEqual(action.handle.value, user.emailAddress)
+        XCTAssertEqual(action.handle.type, .generic)
+        XCTAssertEqual(action.handle.value, conversation.remoteIdentifier?.transportString())
     }
     
     func testThatItReportsTheStartCallRequest_groupConversation() {
@@ -306,8 +306,8 @@ class ZMCallKitDelegateTest: MessagingTest {
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
         
         XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
-        XCTAssertEqual(action.handle.type, .emailAddress)
-        XCTAssertEqual(action.handle.value, otherUser.emailAddress)
+        XCTAssertEqual(action.handle.type, .generic)
+        XCTAssertEqual(action.handle.value, conversation.remoteIdentifier?.transportString())
         XCTAssertTrue(action.isVideo)
     }
     
@@ -359,8 +359,8 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         let action = self.callKitController.requestedTransactions.last!.actions.last! as! CXStartCallAction
         XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
-        XCTAssertEqual(action.handle.type, .emailAddress)
-        XCTAssertEqual(action.handle.value, otherUser.emailAddress)
+        XCTAssertEqual(action.handle.type, .generic)
+        XCTAssertEqual(action.handle.value, conversation.remoteIdentifier?.transportString())
         XCTAssertTrue(action.isVideo)
     }
     
