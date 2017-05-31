@@ -347,7 +347,7 @@ extension SyncStatusTests {
         sut.forceSlowSync()
 
         // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         XCTAssertTrue(sut.isSyncing)
     }
 
@@ -362,7 +362,7 @@ extension SyncStatusTests {
         NotificationCenter.default.post(name: .ForceSlowSync, object: nil)
 
         // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         XCTAssertTrue(sut.isSyncing)
     }
 
