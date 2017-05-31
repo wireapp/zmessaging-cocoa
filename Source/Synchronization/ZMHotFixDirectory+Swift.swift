@@ -106,4 +106,8 @@ extension ZMHotFixDirectory {
         ZMUser.selfUser(in: context).needsToBeUpdatedFromBackend = true
         context.enqueueDelayedSave()
     }
+
+    public static func restartSlowSync() {
+        NotificationCenter.default.post(name: .ForceSlowSync, object: nil)
+    }
 }

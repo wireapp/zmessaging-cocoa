@@ -335,7 +335,37 @@ extension SyncStatusTests {
         // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingMissedEvents)
     }
-    
+
+    func testThatItRestartsSlowSyncWhenRestartSlowSyncIsCalled(){
+        // given
+        uiMOC.zm_lastNotificationID = UUID.timeBasedUUID() as UUID
+        sut = SyncStatus(managedObjectContext: uiMOC, syncStateDelegate: mockSyncDelegate)
+        sut.finishCurrentSyncPhase()
+        XCTAssertEqual(sut.currentSyncPhase, .done)
+
+        // when
+        sut.forceSlowSync()
+
+        // then
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
+        XCTAssertTrue(sut.isSyncing)
+    }
+
+    func testThatItRestartsSlowSyncWhenRestartSlowSyncNotificationIsFired(){
+        // given
+        uiMOC.zm_lastNotificationID = UUID.timeBasedUUID() as UUID
+        sut = SyncStatus(managedObjectContext: uiMOC, syncStateDelegate: mockSyncDelegate)
+        sut.finishCurrentSyncPhase()
+        XCTAssertEqual(sut.currentSyncPhase, .done)
+
+        // when
+        NotificationCenter.default.post(name: .ForceSlowSync, object: nil)
+
+        // then
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
+        XCTAssertTrue(sut.isSyncing)
+    }
+
     func testThatItDoesNotRestartsQuickSyncWhenPushChannelIsClosed(){
         // given
         uiMOC.zm_lastNotificationID = UUID.timeBasedUUID() as UUID

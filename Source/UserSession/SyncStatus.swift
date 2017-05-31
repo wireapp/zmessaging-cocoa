@@ -65,6 +65,16 @@
 
 private let zmLog = ZMSLog(tag: "SyncStatus")
 
+
+extension Notification.Name {
+
+    public static var ForceSlowSync = {
+        Notification.Name("restartSlowSyncNotificationName")
+    }()
+    
+}
+
+
 public class SyncStatus : NSObject {
 
     fileprivate var previousPhase : SyncPhase = .done
@@ -99,8 +109,13 @@ public class SyncStatus : NSObject {
         super.init()
         
         currentSyncPhase = hasPersistedLastEventID ? .fetchingMissedEvents : .fetchingLastUpdateEventID
-        
         self.syncStateDelegate.didStartSync()
+        NotificationCenter.default.addObserver(self, selector: #selector(forceSlowSync), name: .ForceSlowSync, object: nil)
+    }
+
+    public func forceSlowSync() {
+        currentSyncPhase = .fetchingLastUpdateEventID
+        syncStateDelegate.didStartSync()
     }
 }
 

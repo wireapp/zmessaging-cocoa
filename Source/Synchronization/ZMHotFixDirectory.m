@@ -107,6 +107,14 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchConnectedUsers:context];
                      }],
+
+                    /// We need to force a slow sync with the introduction of Teams, as users might have missed
+                    /// update events when being added to teams or team conversations.
+                    [ZMHotFixPatch
+                     patchWithVersion:@"88.0.0"
+                     patchCode:^(__unused NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory restartSlowSync];
+                     }],
                     ];
     });
     return patches;
