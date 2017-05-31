@@ -142,10 +142,10 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     return request;
 }
 
-- (BOOL)isConversation:(ZMConversation *)conversation matchingPayload:(NSDictionary *)payload
+- (BOOL)isConversation:(ZMConversation *)conversation matchingPayload:(NSDictionary *)payload serverTimeStamp:(NSDate *)serverTimeStamp
 {
     const BOOL sameRemoteIdentifier = [NSObject isEqualOrBothNil:conversation.remoteIdentifier toObject:[payload uuidForKey:@"id"]];
-    const BOOL sameModifiedDate = [NSObject isEqualOrBothNil:conversation.lastModifiedDate toObject:[payload dateForKey:@"last_event_time"]];
+    const BOOL sameModifiedDate = nil == serverTimeStamp || [conversation.lastModifiedDate.transportString isEqualToString:serverTimeStamp.transportString];
     const BOOL sameCreator = [NSObject isEqualOrBothNil:conversation.creator.remoteIdentifier toObject:[payload uuidForKey:@"creator"]];
     const BOOL sameName = [NSObject isEqualOrBothNil:conversation.userDefinedName toObject:[payload optionalStringForKey:@"name"]];
     const BOOL sameType = conversation.conversationType == [self.class typeFromNumber:payload[@"type"]];
@@ -919,10 +919,9 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (NSDictionary *)createConversationDataWithRemoteIDString:(NSString *)remoteIDString
 {
     return @{
-             @"last_event_time" : @"2014-04-30T16:30:16.625Z",
+             @"last_event_time" : [NSDate dateWithTimeIntervalSince1970:0].transportString,
              @"name" : [NSNull null],
              @"creator" : @"3bc5750a-b965-40f8-aff2-831e9b5ac2e9",
-             @"last_event" : @"5.800112314308490f",
              @"members" : @{
                      @"self" : @{
                              @"status" : @0,
@@ -989,7 +988,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         for (NSDictionary *payload in rawConversations) {
             FHAssertTrue(failureRecorder, [conversations indexOfObjectPassingTest:^BOOL(ZMConversation *obj, NSUInteger idx ZM_UNUSED, BOOL *stop ZM_UNUSED) {
-                return [self isConversation:obj matchingPayload:payload];
+                return [self isConversation:obj matchingPayload:payload serverTimeStamp:nil];
             }] != NSNotFound);
         }
     }];
@@ -3295,10 +3294,11 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                    @"id" : remoteID.transportString,
                                    };
     
-    
+    NSDate *serverTime = NSDate.date;
     NSDictionary *payload = @{
                               @"type" : @"conversation.create",
-                              @"data" : innerPayload
+                              @"data" : innerPayload,
+                              @"time" : serverTime.transportString
                               };
     
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
@@ -3314,7 +3314,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         // then
         ZMConversation *conversation = [ZMConversation conversationWithRemoteID:remoteID createIfNeeded:NO inContext:self.syncMOC];
         XCTAssertNotNil(conversation);
-        XCTAssertTrue([self isConversation:conversation matchingPayload:innerPayload]);
+        XCTAssertTrue([self isConversation:conversation matchingPayload:innerPayload serverTimeStamp:serverTime]);
     }];
 }
 
@@ -3409,7 +3409,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
     NSDictionary *payload = @{
                               @"type" : @"conversation.create",
-                              @"data" : innerPayload
+                              @"data" : innerPayload,
+                              @"time": @"2014-07-02T14:52:45.211Z"
                               };
     
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];

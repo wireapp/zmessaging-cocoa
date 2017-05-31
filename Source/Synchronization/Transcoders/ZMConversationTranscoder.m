@@ -200,6 +200,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 }
 
 - (ZMConversation *)createConversationFromTransportData:(NSDictionary *)transportData
+                                        serverTimeStamp:(NSDate *)serverTimeStamp
 {
     // If the conversation is not a group conversation, we need to make sure that we check if there's any existing conversation without a remote identifier for that user.
     // If it is a group conversation, we don't need to.
@@ -208,13 +209,14 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     VerifyReturnNil(typeNumber != nil);
     ZMConversationType const type = [ZMConversation conversationTypeFromTransportData:typeNumber];
     if (type == ZMConversationTypeGroup || type == ZMConversationTypeSelf) {
-        return [self createGroupOrSelfConversationFromTransportData:transportData];
+        return [self createGroupOrSelfConversationFromTransportData:transportData serverTimeStamp:serverTimeStamp];
     } else {
-        return [self createOneOnOneConversationFromTransportData:transportData type:type];
+        return [self createOneOnOneConversationFromTransportData:transportData type:type serverTimeStamp:serverTimeStamp];
     }
 }
 
 - (ZMConversation *)createGroupOrSelfConversationFromTransportData:(NSDictionary *)transportData
+                                                   serverTimeStamp:(NSDate *)serverTimeStamp
 {
     NSUUID * const convRemoteID = [transportData uuidForKey:@"id"];
     if(convRemoteID == nil) {
@@ -223,7 +225,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     }
     BOOL conversationCreated = NO;
     ZMConversation *conversation = [ZMConversation conversationWithRemoteID:convRemoteID createIfNeeded:YES inContext:self.managedObjectContext created:&conversationCreated];
-    [conversation updateWithTransportData:transportData];
+    [conversation updateWithTransportData:transportData serverTimeStamp:serverTimeStamp];
     
     if (conversation.conversationType != ZMConversationTypeSelf && conversationCreated) {
         // we just got a new conversation, we display new conversation header
@@ -233,7 +235,9 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     return conversation;
 }
 
-- (ZMConversation *)createOneOnOneConversationFromTransportData:(NSDictionary *)transportData type:(ZMConversationType const)type;
+- (ZMConversation *)createOneOnOneConversationFromTransportData:(NSDictionary *)transportData
+                                                           type:(ZMConversationType const)type
+                                                serverTimeStamp:(NSDate *)serverTimeStamp;
 {
     NSUUID * const convRemoteID = [transportData uuidForKey:@"id"];
     if(convRemoteID == nil) {
@@ -283,7 +287,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     }
     
     conversation.remoteIdentifier = convRemoteID;
-    [conversation updateWithTransportData:transportData];
+    [conversation updateWithTransportData:transportData serverTimeStamp:serverTimeStamp];
     return conversation;
 }
 
@@ -404,7 +408,8 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         ZMLogError(@"Missing conversation payload in ZMUpdateEventConversationCreate");
         return;
     }
-    [self createConversationFromTransportData:payloadData];
+    NSDate *serverTimestamp = [event.payload dateForKey:@"time"];
+    [self createConversationFromTransportData:payloadData serverTimeStamp:serverTimestamp];
 }
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> *)events
@@ -722,7 +727,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         }
     }
     insertedConversation.remoteIdentifier = remoteID;
-    [insertedConversation updateWithTransportData:response.payload.asDictionary];
+    [insertedConversation updateWithTransportData:response.payload.asDictionary serverTimeStamp:nil];
 }
 
 - (ZMUpdateEvent *)conversationEventWithKeys:(NSSet *)keys responsePayload:(id<ZMTransportData>)payload;
@@ -898,7 +903,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     
     NSDictionary *dictionaryPayload = [response.payload asDictionary];
     VerifyReturn(dictionaryPayload != nil);
-    [conversation updateWithTransportData:dictionaryPayload];
+    [conversation updateWithTransportData:dictionaryPayload serverTimeStamp:nil];
 }
 
 - (void)deleteObject:(ZMConversation *)conversation withResponse:(ZMTransportResponse *)response downstreamSync:(id<ZMObjectSync>)downstreamSync;
@@ -941,7 +946,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     NSArray *conversations = [payload arrayForKey:@"conversations"];
     
     for (NSDictionary *rawConversation in [conversations asDictionaries]) {
-        ZMConversation *conv = [self createConversationFromTransportData:rawConversation];
+        ZMConversation *conv = [self createConversationFromTransportData:rawConversation serverTimeStamp:nil];
         conv.needsToBeUpdatedFromBackend = NO;
     }
     
