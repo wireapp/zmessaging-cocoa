@@ -413,7 +413,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     
     synchronized = synchronized && [self waitForCustomExpectationsWithTimeout:0.5];
     
-    WaitForEverythingToBeDoneWithTimeout(0.5);
+    WaitForEverythingToBeDoneWithTimeout(2);
     
     XCTestExpectation *e = [self expectationWithDescription:@"sync with main queue."];
     dispatch_async(dispatch_get_main_queue(), ^{
