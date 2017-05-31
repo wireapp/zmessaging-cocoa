@@ -44,15 +44,7 @@
     }
 
     var nextPhase: SyncPhase? {
-        switch self {
-        case .fetchingLastUpdateEventID: return .fetchingTeams
-        case .fetchingTeams: return .fetchingConnections
-        case .fetchingConnections: return .fetchingConversations
-        case .fetchingConversations: return .fetchingUsers
-        case .fetchingUsers: return .fetchingMissedEvents
-        case .fetchingMissedEvents: return .done
-        case .done: return nil
-        }
+        return SyncPhase(rawValue: rawValue + 1)
     }
     
     public var description: String {
