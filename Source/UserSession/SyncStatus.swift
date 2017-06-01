@@ -130,7 +130,7 @@ public class SyncStatus : NSObject {
 extension SyncStatus {
     
     public func finishCurrentSyncPhase(phase : SyncPhase) {
-        guard phase == currentSyncPhase else { return }
+        assert(phase == currentSyncPhase, "Finished syncPhase does not match currentPhase")
         guard let nextPhase = currentSyncPhase.nextPhase else { return }
         
         if currentSyncPhase.isLastSlowSyncPhase {
@@ -156,7 +156,7 @@ extension SyncStatus {
     }
     
     public func failCurrentSyncPhase(phase : SyncPhase) {
-        guard phase == currentSyncPhase else { return }
+        assert(phase == currentSyncPhase, "Finished syncPhase does not match currentPhase")
         
         if currentSyncPhase == .fetchingMissedEvents {
             currentSyncPhase = hasPersistedLastEventID ? SyncPhase.fetchingLastUpdateEventID.nextPhase! : .fetchingLastUpdateEventID
