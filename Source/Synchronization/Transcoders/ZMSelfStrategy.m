@@ -351,7 +351,7 @@ static NSString * const DeletionRequestKey = @"";
         if (self.isSyncing) {
             [syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
         }
-    } else if (self.isSyncing) {
+    } else if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
         [syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
 }

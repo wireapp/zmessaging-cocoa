@@ -73,12 +73,6 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
         }
     }
     
-    // also self
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    if (selfUser.remoteIdentifier != nil) {
-        [userIds addObject:selfUser.remoteIdentifier];
-    }
-    
     [self.remoteIDObjectSync addRemoteIdentifiersThatNeedDownload:userIds];
 }
 
