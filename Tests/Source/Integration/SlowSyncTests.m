@@ -412,6 +412,17 @@
     XCTAssertEqual(self.userSession.networkState, ZMNetworkStateOnline);
 }
 
+
+- (void)testThatItHasTheSelfUserEmailAfterTheSlowSync
+{
+    // given
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    
+    // then
+    XCTAssertNotNil([[ZMUser selfUserInUserSession:self.userSession] emailAddress]);
+}
+
+
 - (ZMUser *)findUserWithUUID:(NSString *)UUIDString inMoc:(NSManagedObjectContext *)moc {
     ZMUser *user = [ZMUser userWithRemoteID:[UUIDString UUID] createIfNeeded:NO inContext:moc];
     XCTAssertNotNil(user);
