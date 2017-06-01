@@ -140,19 +140,8 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
         [self.timedDownstreamSync readyForNextRequestIfNotBusy];
         return [self.timedDownstreamSync nextRequest];
     }
-    
-    if (clientStatus.currentPhase == ZMClientRegistrationPhaseWaitingForSelfUser) {
-        
+    if (clientStatus.currentPhase == ZMClientRegistrationPhaseWaitingForSelfUser || self.isSyncing) {
         if (! selfUser.needsToBeUpdatedFromBackend) {
-            selfUser.needsToBeUpdatedFromBackend = YES;
-            [self.downstreamSelfUserSync readyForNextRequestIfNotBusy];
-        }
-        if (selfUser.needsToBeUpdatedFromBackend) {
-            return [self.downstreamSelfUserSync nextRequest];
-        }
-    }
-    else if (self.isSyncing) {
-        if (self.downstreamSelfUserSync.status != ZMSingleRequestInProgress) {
             selfUser.needsToBeUpdatedFromBackend = YES;
             [self.downstreamSelfUserSync readyForNextRequestIfNotBusy];
         }

@@ -56,6 +56,15 @@ class SyncStatusTests : MessagingTest {
         super.tearDown()
     }
     
+    func testThatItDoesNotChangePhaseIfCallingPhaseIsNotCurrentPhase(){
+        // given
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
+        // when
+        sut.finishCurrentSyncPhase(phase: .fetchingTeams)
+        // then
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
+    }
+    
     func testThatWhenIntializingWithoutLastEventIDItStartsInStateFetchingLastUpdateEventID(){
         // given
         uiMOC.zm_lastNotificationID = nil

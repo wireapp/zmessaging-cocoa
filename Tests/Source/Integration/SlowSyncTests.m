@@ -122,6 +122,7 @@
     return @[
              [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:ZMMethodPOST payload:@{@"email":[self.selfUser.email copy], @"password":[self.selfUser.password copy], @"label": self.userSession.authenticationStatus.cookieLabel} authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken],
              [ZMTransportRequest requestGetFromPath:@"/self"],
+             [ZMTransportRequest requestGetFromPath:@"/self"], // second request during slow sync
              [ZMTransportRequest requestGetFromPath:@"/clients"],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/notifications/last?client=%@",  [ZMUser selfUserInContext:self.syncMOC].selfClient.remoteIdentifier]],
              [ZMTransportRequest requestGetFromPath:@"/connections?size=90"],
