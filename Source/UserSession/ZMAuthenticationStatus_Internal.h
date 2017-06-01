@@ -47,10 +47,3 @@
 - (void)setLoginCredentials:(ZMCredentials *)credentials;
 
 @end
-
-
-@interface NSManagedObjectContext (Registration)
-- (void)setRegisteredOnThisDevice:(BOOL)registeredOnThisDevice;
-- (BOOL)isRegisteredOnThisDevice;
-@end
-

@@ -305,9 +305,7 @@
     [[self.registrationDownstreamSync expect] readyForNextRequest];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
-    }];
+    [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
     
     // then
     XCTAssertEqualObjects(self.authenticationStatus.loginCredentials.password, password);
@@ -329,11 +327,10 @@
     [[self.registrationDownstreamSync expect] readyForNextRequest];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
-        // then
-        XCTAssertTrue(self.authenticationStatus.registeredOnThisDevice);
-    }];
+    [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
+    
+    // then
+    XCTAssertTrue(self.authenticationStatus.registeredOnThisDevice);
 }
 
 - (void)testThatItUpdatesTheSelfUserAfterSuccessfullRegistration
@@ -359,9 +356,7 @@
     [[self.registrationDownstreamSync expect] readyForNextRequest];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
-    }];
+    [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
 
     // then
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
@@ -394,9 +389,7 @@
     [[self.registrationDownstreamSync expect] readyForNextRequest];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
-    }];
+    [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
     
     // then
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
@@ -417,9 +410,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
-    }];
+    [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
     
     // then
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
@@ -450,9 +441,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
-    }];
+    [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
     
     // then
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
@@ -481,9 +470,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"label":@"invalid-email"} HTTPStatus:400 transportSessionError:nil];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
-    }];
+    [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
     
     // then
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
@@ -510,9 +497,7 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"label":@"invalid-phone"} HTTPStatus:400 transportSessionError:nil];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
-    }];
+    [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
     
     // then
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
@@ -538,12 +523,11 @@
                                                        transportSessionError:nil];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
+    [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
     
-        // then
-        XCTAssertFalse(self.authenticationStatus.registeredOnThisDevice);
-    }];
+    // then
+    XCTAssertFalse(self.authenticationStatus.registeredOnThisDevice);
+
 }
 
 @end
