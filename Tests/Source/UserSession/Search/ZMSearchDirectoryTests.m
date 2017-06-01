@@ -439,78 +439,7 @@
 
 }
 
-- (void)testThatItReturnsALocalUserWhenSearchingForTheFullEmailAddress
-{
-    // given
-    ZMUser *user1 = [self createConnectedUserWithName:@"User1"];
-    user1.emailAddress = @"user1@example.com";
-    
-    ZMConversation *conversation = [self createGroupConversationWithName:@"Conversation"];
-    
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    ZMSearchToken token = [self.sut searchForUsersThatCanBeAddedToConversation:conversation queryString:user1.emailAddress];
-    [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
-    
-    // then
-    [self verifyThatResultWithToken:token containsUsers:@[user1] failureRecorder:NewFailureRecorder()];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
-- (void)testThatItDoesNotReturnALocalUserWhenSearchingForPartsOfTheEmailAddress
-{
-    // given
-    ZMUser *user1 = [self createConnectedUserWithName:@"User1"];
-    user1.emailAddress = @"user1@example.com";
-    ZMUser *user2 = [self createConnectedUserWithName:@"User2"];
-    user2.remoteIdentifier = [NSUUID createUUID];
-    
-    ZMConversation *conversation = [self createGroupConversationWithName:@"Conversation"];
-    [conversation addParticipant:user2];
-    
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    ZMSearchToken token = [self.sut searchForUsersThatCanBeAddedToConversation:conversation queryString:@"user1@example"];
-    [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
-    
-    // then
-    [self verifyThatResultWithToken:token doesNotContainUsers:@[user1] failureRecorder:NewFailureRecorder()];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
-- (void)testThatItDoesNotReturnALocalUserWhenTheUserIsNotConnected
-{
-    // given
-    ZMUser *user1 = [self createConnectedUserWithName:@"User1"];
-    user1.emailAddress = @"user1@example.com";
-    user1.connection.status = ZMConnectionStatusPending;
-    
-    ZMUser *user2 = [self createConnectedUserWithName:@"User2"];
-    user2.remoteIdentifier = [NSUUID createUUID];
-    
-    ZMConversation *conversation = [self createGroupConversationWithName:@"Conversation"];
-    [conversation addParticipant:user2];
-    
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    ZMSearchToken token = [self.sut searchForUsersThatCanBeAddedToConversation:conversation queryString:user1.emailAddress];
-    [self waitForSearchResultsWithFailureRecorder:NewFailureRecorder() shouldFail:NO];
-    
-    // then
-    [self verifyThatResultWithToken:token doesNotContainUsers:@[user1] failureRecorder:NewFailureRecorder()];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
 @end
-
-
-
 
 @implementation ZMSearchDirectoryTests (ConversationSearch)
 
@@ -1006,7 +935,6 @@ typedef void (^URLSessionCompletionBlock)(NSData *data, NSURLResponse *response,
 {
     // given
     ZMUser *user1 = [self createConnectedUserWithName:@"User1"];
-    user1.emailAddress = @"user1@example.com";
     
     [self.uiMOC saveOrRollback];
     
