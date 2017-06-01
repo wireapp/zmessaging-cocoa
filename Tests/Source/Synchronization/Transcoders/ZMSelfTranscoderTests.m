@@ -33,6 +33,7 @@
 @property (nonatomic) ZMUpstreamModifiedObjectSync *upstreamObjectSync;
 @property (nonatomic) id mockClientRegistrationStatus;
 @property (nonatomic) id requestSync;
+@property (nonatomic) id syncStatus;
 
 @property (nonatomic) ZMClientRegistrationStatus *realClientRegistrationStatus;
 @property (nonatomic) NSTimeInterval originalRequestInterval;
@@ -49,6 +50,8 @@
     
     self.requestSync = [OCMockObject mockForClass:ZMSingleRequestSync.class];
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
+    self.syncStatus = [OCMockObject niceMockForClass:[SyncStatus class]];
+    
     self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
     self.upstreamObjectSync = [OCMockObject niceMockForClass:ZMUpstreamModifiedObjectSync.class];
     [self.syncMOC performBlockAndWait:^{
@@ -58,6 +61,7 @@
     self.sut = (id) [[ZMSelfStrategy alloc] initWithManagedObjectContext:self.syncMOC
                                                        applicationStatus:self.mockApplicationStatus
                                                 clientRegistrationStatus:self.mockClientRegistrationStatus
+                                                              syncStatus:self.syncStatus
                                                             upstreamObjectSync:self.upstreamObjectSync];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -65,6 +69,7 @@
 
 - (void)tearDown
 {
+    self.syncStatus = nil;
     self.requestSync = nil;
     [self.mockClientRegistrationStatus stopMocking];
     self.mockClientRegistrationStatus = nil;
@@ -582,7 +587,8 @@
     //let it create an actual ZMUpstreamSync, not a mocked one
     self.sut = (id) [[ZMSelfStrategy alloc] initWithManagedObjectContext:self.syncMOC
                                                        applicationStatus:self.mockApplicationStatus
-                                                clientRegistrationStatus:self.mockClientRegistrationStatus];
+                                                clientRegistrationStatus:self.mockClientRegistrationStatus
+                                                              syncStatus:self.syncStatus];
 }
 
 - (void)testThatItResetsTheProfileImageWithBlock:(void(^)(ZMUser *user))block;

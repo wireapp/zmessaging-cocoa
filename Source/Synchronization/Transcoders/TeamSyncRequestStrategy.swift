@@ -90,7 +90,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
 
     fileprivate func finishSyncIfCompleted() {
         guard isSyncing, memberSync.isDone, !teamListSync.hasMoreToFetch else { return }
-        syncStatus?.finishCurrentSyncPhase()
+        syncStatus?.finishCurrentSyncPhase(phase: expectedSyncPhase)
 
         // Delete local teams not on the remote anymore
         guard let deletedTeamIds = remotelyDeletedIds else { return }
@@ -100,8 +100,12 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
         remotelyDeletedIds = nil
     }
 
+    fileprivate var expectedSyncPhase : SyncPhase {
+        return .fetchingTeams;
+    }
+    
     fileprivate var isSyncing: Bool {
-        return syncStatus?.currentSyncPhase == .fetchingTeams
+        return syncStatus?.currentSyncPhase == expectedSyncPhase
     }
 
     private func fetchExistingTeamIds() -> Set<UUID> {
@@ -142,7 +146,7 @@ extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
         memberSync.addRemoteIdentifiersThatNeedDownload(remoteIds)
 
         if response.result == .permanentError && isSyncing {
-            syncStatus?.failCurrentSyncPhase()
+            syncStatus?.failCurrentSyncPhase(phase: expectedSyncPhase)
         }
 
         finishSyncIfCompleted()
@@ -185,7 +189,7 @@ extension TeamSyncRequestStrategy: ZMRemoteIdentifierObjectTranscoder {
         }
 
         if response.result == .permanentError && isSyncing {
-            syncStatus?.failCurrentSyncPhase()
+            syncStatus?.failCurrentSyncPhase(phase: expectedSyncPhase)
         }
 
         finishSyncIfCompleted()

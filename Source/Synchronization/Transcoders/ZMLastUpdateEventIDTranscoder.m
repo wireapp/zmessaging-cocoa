@@ -75,9 +75,14 @@
     return self.lastUpdateEventIDSync.status == ZMSingleRequestInProgress;
 }
 
+- (SyncPhase)expectedSyncPhase
+{
+    return SyncPhaseFetchingLastUpdateEventID;
+}
+
 - (SyncPhase)isSyncing
 {
-    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingLastUpdateEventID;
+    return self.syncStatus.currentSyncPhase == self.expectedSyncPhase;
 }
 
 - (ZMTransportRequest *)nextRequestIfAllowed
@@ -125,16 +130,16 @@
     NOT_USED(sync);
     SyncStatus *status = self.syncStatus;
     if(response.payload == nil) {
-        [status failCurrentSyncPhase];
+        [status failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
         return;
     }
     
     NSUUID *lastNotificationID = [[response.payload asDictionary] optionalUuidForKey:@"id"];
     if(lastNotificationID != nil) {
         self.lastUpdateEventID = lastNotificationID;
-        if (status.currentSyncPhase == SyncPhaseFetchingLastUpdateEventID) {
+        if (status.currentSyncPhase == self.expectedSyncPhase) {
             [status updateLastUpdateEventIDWithEventID:lastNotificationID];
-            [status finishCurrentSyncPhase];
+            [status finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
         }
     }
     

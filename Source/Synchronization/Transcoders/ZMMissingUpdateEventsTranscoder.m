@@ -294,9 +294,14 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     }
 }
 
+- (SyncPhase)expectedSyncPhase
+{
+    return SyncPhaseFetchingMissedEvents;
+}
+
 - (BOOL)isSyncing
 {
-    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingMissedEvents;
+    return self.syncStatus.currentSyncPhase == self.expectedSyncPhase;
 }
 
 - (NSArray <NSURLQueryItem *> *)additionalQueryItems
@@ -349,7 +354,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     [self appendPotentialGapSystemMessageIfNeededWithResponse:response];
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing){
-        [syncStatus failCurrentSyncPhase];
+        [syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
     
     if (!self.listPaginator.hasMoreToFetch && self.lastUpdateEventID != nil && self.isSyncing) {
@@ -357,7 +362,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         // The fetch of the notification stream was initiated after the push channel was established
         // so we must restart the fetching to be sure that we haven't missed any notifications.
         if (syncStatus.pushChannelEstablishedDate.timeIntervalSinceReferenceDate < self.listPaginator.lastResetFetchDate.timeIntervalSinceReferenceDate) {
-            [syncStatus finishCurrentSyncPhase];
+            [syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
         }
     }
     

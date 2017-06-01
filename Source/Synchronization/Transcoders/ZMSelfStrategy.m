@@ -51,6 +51,7 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 @property (nonatomic) ZMSingleRequestSync *downstreamSelfUserSync;
 @property (nonatomic) NSPredicate *needsToBeUdpatedFromBackend;
 @property (nonatomic, weak) ZMClientRegistrationStatus *clientStatus;
+@property (nonatomic, weak) SyncStatus *syncStatus;
 
 @end
 
@@ -67,6 +68,7 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                            applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
+                                  syncStatus:(SyncStatus *)syncStatus
 {
     NSArray<NSString *> *keysToSync = @[NameKey, AccentColorValueKey, SmallProfileRemoteIdentifierDataKey, MediumRemoteIdentifierDataKey, PreviewProfileAssetIdentifierKey, CompleteProfileAssetIdentifierKey];
     
@@ -76,17 +78,19 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
                                                         keysToSync:keysToSync
                                                         managedObjectContext:moc];
     
-    return [self initWithManagedObjectContext:moc applicationStatus:applicationStatus clientRegistrationStatus:clientRegistrationStatus upstreamObjectSync:upstreamObjectSync];
+    return [self initWithManagedObjectContext:moc applicationStatus:applicationStatus clientRegistrationStatus:clientRegistrationStatus syncStatus: syncStatus upstreamObjectSync:upstreamObjectSync];
 }
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                            applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
+                                  syncStatus:(SyncStatus *)syncStatus
                           upstreamObjectSync:(ZMUpstreamModifiedObjectSync *)upstreamObjectSync
 {
     self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatus];
     if(self) {
         self.clientStatus = clientRegistrationStatus;
+        self.syncStatus = syncStatus;
         self.upstreamObjectSync = upstreamObjectSync;
         if (self.upstreamObjectSync == nil) {
             NSArray<NSString *> *keysToSync = @[NameKey, AccentColorValueKey, SmallProfileRemoteIdentifierDataKey, MediumRemoteIdentifierDataKey];
@@ -117,16 +121,28 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
     [self.timedDownstreamSync invalidate];
 }
 
+- (SyncPhase)expectedSyncPhase
+{
+    return SyncPhaseFetchingSelfUser;
+}
+
+- (BOOL)isSyncing
+{
+    return self.syncStatus.currentSyncPhase == self.expectedSyncPhase;
+}
+
 - (ZMTransportRequest *)nextRequestIfAllowed;
 {
     ZMClientRegistrationStatus *clientStatus = self.clientStatus;
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+    
     if (clientStatus.currentPhase == ZMClientRegistrationPhaseWaitingForEmailVerfication) {
         [self.timedDownstreamSync readyForNextRequestIfNotBusy];
         return [self.timedDownstreamSync nextRequest];
     }
     
     if (clientStatus.currentPhase == ZMClientRegistrationPhaseWaitingForSelfUser) {
-        ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+        
         if (! selfUser.needsToBeUpdatedFromBackend) {
             selfUser.needsToBeUpdatedFromBackend = YES;
             [self.downstreamSelfUserSync readyForNextRequestIfNotBusy];
@@ -137,6 +153,15 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
     }
     else if (clientStatus.currentPhase == ZMClientRegistrationPhaseRegistered) {
         return [@[self.downstreamSelfUserSync, self.upstreamObjectSync] nextRequest];
+    }
+    else if (self.isSyncing) {
+        if (self.downstreamSelfUserSync.status != ZMSingleRequestInProgress) {
+            selfUser.needsToBeUpdatedFromBackend = YES;
+            [self.downstreamSelfUserSync readyForNextRequestIfNotBusy];
+        }
+        if (selfUser.needsToBeUpdatedFromBackend) {
+            return [self.downstreamSelfUserSync nextRequest];
+        }
     }
     return nil;
 }
@@ -304,7 +329,8 @@ static NSString * const DeletionRequestKey = @"";
 {
     NOT_USED(sync);
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-
+    SyncStatus *syncStatus = self.syncStatus;
+    
     if (response.result == ZMTransportResponseStatusSuccess) {
         
         ZMClientRegistrationStatus *clientStatus = self.clientStatus;
@@ -332,6 +358,12 @@ static NSString * const DeletionRequestKey = @"";
                 self.timedDownstreamSync.timeInterval = 0;
             }
         }
+        
+        if (self.isSyncing) {
+            [syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
+        }
+    } else if (self.isSyncing) {
+        [syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
 }
 

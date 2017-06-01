@@ -155,7 +155,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
-        [self.syncStatus failCurrentSyncPhase];
+        [self.syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
     
     [self finishSyncIfCompleted];
@@ -166,13 +166,18 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (void)finishSyncIfCompleted
 {
     if (!self.listPaginator.hasMoreToFetch && self.remoteIDSync.isDone && self.isSyncing) {
-        [self.syncStatus finishCurrentSyncPhase];
+        [self.syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
+}
+
+- (SyncPhase)expectedSyncPhase
+{
+    return SyncPhaseFetchingConversations;
 }
 
 - (BOOL)isSyncing
 {
-    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingConversations;
+    return self.syncStatus.currentSyncPhase == self.expectedSyncPhase;
 }
 
 - (ZMTransportRequest *)nextRequestIfAllowed
@@ -951,7 +956,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     }
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
-        [self.syncStatus failCurrentSyncPhase];
+        [self.syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
     
     [self finishSyncIfCompleted];

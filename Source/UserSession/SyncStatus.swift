@@ -22,11 +22,12 @@
     case fetchingConnections
     case fetchingConversations
     case fetchingUsers
+    case fetchingSelfUser
     case fetchingMissedEvents
     case done
     
     var isLastSlowSyncPhase : Bool {
-        return self == .fetchingUsers
+        return self == .fetchingSelfUser
     }
     
     var isSyncing : Bool {
@@ -36,7 +37,8 @@
              .fetchingConnections,
              .fetchingTeams,
              .fetchingUsers,
-             .fetchingConversations:
+             .fetchingConversations,
+             .fetchingSelfUser:
             return true
         case .done:
             return false
@@ -59,6 +61,8 @@
             return "fetchingTeams"
         case .fetchingUsers:
             return "fetchingUsers"
+        case .fetchingSelfUser:
+            return "fetchingSelfUser"
         case .fetchingMissedEvents:
             return "fetchingMissedEvents"
         case .done:
@@ -125,7 +129,8 @@ public class SyncStatus : NSObject {
 // MARK: Slow Sync
 extension SyncStatus {
     
-    public func finishCurrentSyncPhase() {
+    public func finishCurrentSyncPhase(phase : SyncPhase) {
+        guard phase == currentSyncPhase else { return }
         guard let nextPhase = currentSyncPhase.nextPhase else { return }
         
         if currentSyncPhase.isLastSlowSyncPhase {
@@ -150,7 +155,9 @@ extension SyncStatus {
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
     
-    public func failCurrentSyncPhase() {
+    public func failCurrentSyncPhase(phase : SyncPhase) {
+        guard phase == currentSyncPhase else { return }
+        
         if currentSyncPhase == .fetchingMissedEvents {
             currentSyncPhase = hasPersistedLastEventID ? SyncPhase.fetchingLastUpdateEventID.nextPhase! : .fetchingLastUpdateEventID
             needsToRestartQuickSync = false

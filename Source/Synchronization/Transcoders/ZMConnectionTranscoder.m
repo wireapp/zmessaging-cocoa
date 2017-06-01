@@ -71,9 +71,15 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
+
+- (SyncPhase)expectedSyncPhase
+{
+    return SyncPhaseFetchingConnections;
+}
+
 - (BOOL)isSyncing
 {
-    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingConnections;
+    return self.syncStatus.currentSyncPhase == self.expectedSyncPhase;
 }
 
 - (ZMTransportRequest *)nextRequestIfAllowed
@@ -317,7 +323,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     SyncStatus *syncStatus = self.syncStatus;
     
     if (!self.conversationsListSync.hasMoreToFetch && self.isSyncing) {
-        [syncStatus finishCurrentSyncPhase];
+        [syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
     
     return allUIDs.lastObject;
@@ -328,7 +334,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     SyncStatus *syncStatus = self.syncStatus;
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
-        [syncStatus failCurrentSyncPhase];
+        [syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
     return NO;
 }
