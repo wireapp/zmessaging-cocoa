@@ -125,15 +125,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @end
 
 
-
-@interface ZMUserSession (CommonContacts)
-
-- (id<ZMCommonContactsSearchToken>)searchCommonContactsWithUserID:(NSUUID *)userID searchDelegate:(id<ZMCommonContactsSearchDelegate>)searchDelegate;
-
-@end
-
-
-
 @interface NSManagedObjectContext (NetworkState)
 
 @property BOOL isOffline;

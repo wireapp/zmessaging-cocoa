@@ -22,7 +22,6 @@
 @import WireDataModel;
 
 #import "IntegrationTestBase.h"
-#import "ZMSearchDirectory.h"
 #import "ZMUserSession.h"
 
 

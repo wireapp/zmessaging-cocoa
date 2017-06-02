@@ -20,7 +20,6 @@
 #import "IntegrationTestBase.h"
 #import "NSError+ZMUserSession.h"
 #import "NSError+ZMUserSessionInternal.h"
-#import "ZMSearchDirectory.h"
 
 #import "ZMUserSession.h"
 #import "ZMUserSession+Authentication.h"

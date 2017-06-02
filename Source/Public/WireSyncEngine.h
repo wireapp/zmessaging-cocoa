@@ -27,14 +27,10 @@
 #import <WireSyncEngine/ZMNetworkState.h>
 #import <WireSyncEngine/ZMCredentials.h>
 #import <WireSyncEngine/ZMUserSession+OTR.h>
-#import <WireSyncEngine/ZMSearchRequest.h>
 #import <WireSyncEngine/ZMBareUser+UserSession.h>
-#import <WireSyncEngine/ZMSearchDirectory.h>
 #import <WireSyncEngine/ZMTypingUsers.h>
 #import <WireSyncEngine/ZMOnDemandFlowManager.h>
 #import <WireSyncEngine/CallingProtocolStrategy.h>
-#import <WireSyncEngine/ZMCommonContactsSearchDelegate.h>
-
 
 // PRIVATE
 #import <WireSyncEngine/ZMUserSession+Private.h>
@@ -63,7 +59,6 @@
 #import <WireSyncEngine/ZMCallKitDelegate+Internal.h>
 #import <WireSyncEngine/ZMPushToken.h>
 #import <WireSyncEngine/ZMTyping.h>
-#import <WireSyncEngine/ZMSearchDirectory+Internal.h>
 #import <WireSyncEngine/ZMSyncStateDelegate.h>
 #import <WireSyncEngine/VoiceChannelV2+Internal.h>
 #import <WireSyncEngine/VoiceChannelV2+VideoCalling.h>

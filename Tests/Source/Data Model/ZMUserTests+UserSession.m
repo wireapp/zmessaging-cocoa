@@ -57,27 +57,4 @@ static NSString * const InvitationToConnectBaseURL = @"https://www.wire.com/c/";
     [mockRequestAvailableNotification verify];
 }
 
-- (void)testThatTheCommonContactsSearchIsForwardedToTheUserSession
-{
-    // given
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = [NSUUID createUUID];
-
-    id token = [OCMockObject mockForProtocol:@protocol(ZMCommonContactsSearchToken)];
-    id session = [OCMockObject mockForClass:ZMUserSession.class];
-    id delegate = [OCMockObject mockForProtocol:@protocol(ZMCommonContactsSearchDelegate)];
-
-    // expect
-    [[[session expect] andReturn:token] searchCommonContactsWithUserID:user.remoteIdentifier searchDelegate:delegate];
-
-    // when
-    [user searchCommonContactsInUserSession:session withDelegate:delegate];
-
-    // then
-    [session verify];
-    [delegate verify];
-    [token verify];
-
-}
-
 @end

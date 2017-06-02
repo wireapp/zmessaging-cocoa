@@ -35,11 +35,6 @@
 
 @implementation ZMSearchUser (UserSession)
 
-- (id<ZMCommonContactsSearchToken>)searchCommonContactsInUserSession:(id)session withDelegate:(id<ZMCommonContactsSearchDelegate>)delegate
-{
-    return [session searchCommonContactsWithUserID:self.remoteIdentifier searchDelegate:delegate];
-}
-
 - (void)requestMediumProfileImageInUserSession:(ZMUserSession *)userSession
 {
     if (self.user) {

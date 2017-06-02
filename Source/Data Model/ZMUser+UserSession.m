@@ -72,9 +72,4 @@
     }
 }
 
-- (id<ZMCommonContactsSearchToken>)searchCommonContactsInUserSession:(ZMUserSession *)session withDelegate:(id<ZMCommonContactsSearchDelegate>)delegate
-{
-    return [session searchCommonContactsWithUserID:self.remoteIdentifier searchDelegate:delegate];
-}
-
 @end

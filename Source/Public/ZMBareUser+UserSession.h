@@ -28,9 +28,6 @@
 
 @protocol ZMSearchableUser <ZMBareUser>
 
-/// Search for common contacts with this user
-- (id<ZMCommonContactsSearchToken>)searchCommonContactsInUserSession:(ZMUserSession *)session withDelegate:(id<ZMCommonContactsSearchDelegate>)delegate;
-
 /// Download the imageMediumData if it doesn't already exist locally.
 ///
 /// For ZMUser:

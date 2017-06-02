@@ -20,12 +20,11 @@ import Foundation
 import XCTest
 @testable import WireSyncEngine
 
-class ZMSearchDirectoryAddressBookTests : MessagingTest {
+class SearchDirectoryAddressBookTests : MessagingTest {
     
-    var sut : ZMSearchDirectory!
+    var sut : SearchDirectory!
     
     override func setUp() {
-        self.sut = ZMSearchDirectory(userSession: nil, search: nil)
         super.setUp()
     }
     
