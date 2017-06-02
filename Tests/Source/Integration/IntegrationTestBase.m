@@ -553,47 +553,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
             [self waitForAllGroupsToBeEmptyWithTimeout:timeout]);
 }
 
-- (void)searchAndConnectToUserWithName:(NSString *)searchUserName searchQuery:(NSString *)query
-{
-    NOT_USED(searchUserName);
-    NOT_USED(query);
-    // TODO jacob
-    
-//    id searchResultObserver = [OCMockObject mockForProtocol:@protocol(ZMSearchResultObserver)];
-//    [self verifyMockLater:searchResultObserver];
-//    
-//    __block ZMSearchResult *result;
-//    XCTestExpectation *searchCompleted = [self expectationWithDescription:@"second search result"];
-//    
-//    // this might be called once or twice, if the "network" thread is faster than the "sync" thread (that reads from the cache)
-//    [[searchResultObserver stub] didReceiveSearchResult:[OCMArg checkWithBlock:^BOOL(ZMSearchResult *searchResult) {
-//        if(searchResult.usersInDirectory.count > 0u) {
-//            result = searchResult;
-//            [searchCompleted fulfill];
-//        }
-//        return YES;
-//    }] forToken:OCMOCK_ANY];
-//    
-//    ZMSearchDirectory *searchDirectory = [[ZMSearchDirectory alloc] initWithUserSession:self.userSession];
-//    [searchDirectory addSearchResultObserver:searchResultObserver];
-//    [searchDirectory searchForUsersAndConversationsMatchingQueryString:query];
-//    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-//    XCTAssertNotNil(result);
-//    
-//    ZMSearchUser *searchUser = result.usersInDirectory.firstObject;
-//    XCTAssertNotNil(searchUser);
-//    XCTAssertEqualObjects(searchUser.displayName, searchUserName);
-//    XCTestExpectation *connectionCreatedExpectation = [self expectationWithDescription:@"Connection created locally"];
-//    
-//    // when
-//    [searchUser connectWithMessageText:@"Hola" completionHandler:^{
-//        [connectionCreatedExpectation fulfill];
-//    }];
-//
-//    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-//    [searchDirectory tearDown];
-}
-
 - (MockUser *)createPendingConnectionFromUserWithName:(NSString *)name uuid:(NSUUID *)uuid
 {
     MockUser *mockUser = [self createUserWithName:name uuid:uuid];

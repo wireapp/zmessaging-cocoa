@@ -100,7 +100,6 @@ extern NSString * const SelfUserPassword;
 - (BOOL)waitForEverythingToBeDone ZM_MUST_USE_RETURN;
 - (BOOL)waitForEverythingToBeDoneWithTimeout:(NSTimeInterval)timeout ZM_MUST_USE_RETURN;
 
-- (void)searchAndConnectToUserWithName:(NSString *)searchUserName searchQuery:(NSString *)query;
 - (MockUser *)createPendingConnectionFromUserWithName:(NSString *)name uuid:(NSUUID *)uuid;
 - (MockUser *)createSentConnectionToUserWithName:(NSString *)name uuid:(NSUUID *)uuid;
 - (MockUser *)createUserWithName:(NSString *)name uuid:(NSUUID *)uuid;
