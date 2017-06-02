@@ -141,10 +141,7 @@
         self.lastUpdateEventID = lastNotificationID;
         if (status.currentSyncPhase == self.expectedSyncPhase) {
             [status updateLastUpdateEventIDWithEventID:lastNotificationID];
-            
-            if (status.isSyncing) {
-                [status finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
-            }
+            [status finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
         }
     }
     
