@@ -130,7 +130,9 @@
     NOT_USED(sync);
     SyncStatus *status = self.syncStatus;
     if(response.payload == nil) {
-        [status failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
+        if (status.isSyncing) {
+            [status failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
+        }
         return;
     }
     
@@ -139,7 +141,10 @@
         self.lastUpdateEventID = lastNotificationID;
         if (status.currentSyncPhase == self.expectedSyncPhase) {
             [status updateLastUpdateEventIDWithEventID:lastNotificationID];
-            [status finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
+            
+            if (status.isSyncing) {
+                [status finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
+            }
         }
     }
     

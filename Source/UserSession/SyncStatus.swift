@@ -130,10 +130,8 @@ public class SyncStatus : NSObject {
 extension SyncStatus {
     
     public func finishCurrentSyncPhase(phase : SyncPhase) {
-        guard phase == currentSyncPhase else {
-            zmLog.error("Finished syncPhase does not match currentPhase")
-            return
-        }
+        precondition(phase == currentSyncPhase, "Finished syncPhase does not match currentPhase")
+        
         guard let nextPhase = currentSyncPhase.nextPhase else { return }
         
         if currentSyncPhase.isLastSlowSyncPhase {
@@ -159,10 +157,7 @@ extension SyncStatus {
     }
     
     public func failCurrentSyncPhase(phase : SyncPhase) {
-        guard phase == currentSyncPhase else {
-            zmLog.error("Finished syncPhase does not match currentPhase")
-            return
-        }
+        precondition(phase == currentSyncPhase, "Failed syncPhase does not match currentPhase")
         
         if currentSyncPhase == .fetchingMissedEvents {
             currentSyncPhase = hasPersistedLastEventID ? SyncPhase.fetchingLastUpdateEventID.nextPhase! : .fetchingLastUpdateEventID
