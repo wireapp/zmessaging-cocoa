@@ -258,15 +258,17 @@
 
 - (void)testThatTheLastUpdateEventIDIsNotPersistedIfTheResponseIsAPermanentError
 {
-    // given
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
-    [self.sut didReceiveResponse:response forSingleRequest:self.downstreamSync];
-    
-    // expect
-    [[(id)self.directory.missingUpdateEventsTranscoder reject] setLastUpdateEventID:OCMOCK_ANY];
-    
-    // when
-    [self.sut persistLastUpdateEventID];
+    [self performIgnoringZMLogError:^{
+        // given
+        ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
+        [self.sut didReceiveResponse:response forSingleRequest:self.downstreamSync];
+        
+        // expect
+        [[(id)self.directory.missingUpdateEventsTranscoder reject] setLastUpdateEventID:OCMOCK_ANY];
+        
+        // when
+        [self.sut persistLastUpdateEventID];        
+    }];
 }
 
 - (void)testThatItEncodesTheRightRequestWithoutClient
