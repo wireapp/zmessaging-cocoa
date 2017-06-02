@@ -136,7 +136,7 @@ public class SearchUserImageStrategy : AbstractRequestStrategy {
         self.uiContext = managedObjectContext.zm_userInterface
         self.imagesByUserIDCache = imagesByUserIDCache ?? ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>
         self.mediumAssetCache = mediumAssetCache ?? ZMSearchUser.searchUserToMediumAssetIDCache() as! MediumAssetCache
-        self.userIDsTable = userIDsTable ?? ZMSearchDirectory.userIDsMissingProfileImage()
+        self.userIDsTable = userIDsTable ?? SearchDirectory.userIDsMissingProfileImage
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
     }
     

@@ -27,7 +27,6 @@
 #import <WireSyncEngine/CallingProtocolStrategy.h>
 
 @class ZMTransportSession;
-@class ZMSearchDirectory;
 @class ZMMessage;
 @class ZMConversation;
 @class UserClient;

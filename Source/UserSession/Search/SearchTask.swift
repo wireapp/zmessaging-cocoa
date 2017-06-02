@@ -28,7 +28,7 @@ public class SearchTask {
     fileprivate let request : SearchRequest
     fileprivate var taskIdentifier : ZMTaskIdentifier?
     fileprivate var resultHandlers : [ResultHandler] = []
-    fileprivate var result : SearchResult = SearchResult(contacts: [], teamMembers: [], directory: [], conversations: [])
+    fileprivate var result : SearchResult = SearchResult(contacts: [], teamMembers: [], addressBook: [],  directory: [], conversations: [])
     fileprivate var tasksRemaining = 0
     
     public init(request: SearchRequest, context: NSManagedObjectContext, session: ZMUserSession) {
@@ -87,10 +87,15 @@ extension SearchTask {
             let connectedUsers = self.request.searchOptions.contains(.contacts) ? self.connectedUsers(matchingQuery: self.request.query) : []
             let teamMembers = self.request.searchOptions.contains(.teamMembers) ? self.teamMembers(matchingQuery: self.request.query, team: team) : []
             let conversations = self.request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: self.request.query, team: team) : []
-            let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, directory: [], conversations: conversations)
+            let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, addressBook: [], directory: [], conversations: conversations)
             
             self.session.managedObjectContext.performGroupedBlock {
                 self.result = self.result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
+                
+                if self.request.searchOptions.contains(.addressBook) {
+                    self.result = self.result.extendWithContactsFromAddressBook(self.request.query, userSession: self.session)
+                }
+                
                 self.tasksRemaining -= 1
                 self.resportResult()
             }

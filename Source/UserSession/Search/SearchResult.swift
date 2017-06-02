@@ -21,6 +21,7 @@ import Foundation
 public struct SearchResult {
     public let contacts : [ZMUser]
     public let teamMembers : [Member]
+    public let addressBook   : [ZMSearchUser]
     public let directory : [ZMSearchUser]
     public let conversations : [ZMConversation]
 }
@@ -46,6 +47,7 @@ extension SearchResult {
         
         contacts = []
         teamMembers = []
+        addressBook = []
         directory = searchUsers.filter({ !$0.isConnected })
         conversations = []
     }
@@ -56,15 +58,15 @@ extension SearchResult {
         let copiedTeamMembers = teamMembers.flatMap({ context.object(with: $0.objectID) as? Member })
         let copiedConversations = conversations.flatMap({ context.object(with: $0.objectID) as? ZMConversation })
         
-        return SearchResult(contacts: copiedContacts, teamMembers: copiedTeamMembers, directory: directory, conversations: copiedConversations)
+        return SearchResult(contacts: copiedContacts, teamMembers: copiedTeamMembers, addressBook: addressBook, directory: directory, conversations: copiedConversations)
     }
     
     func union(withLocalResult result: SearchResult) -> SearchResult {
-        return SearchResult(contacts: result.contacts,teamMembers: result.teamMembers, directory: directory, conversations: result.conversations)
+        return SearchResult(contacts: result.contacts,teamMembers: result.teamMembers, addressBook: result.addressBook, directory: directory, conversations: result.conversations)
     }
     
     func union(withRemoteResult result: SearchResult) -> SearchResult {
-        return SearchResult(contacts: contacts, teamMembers: teamMembers, directory: result.directory, conversations: conversations)
+        return SearchResult(contacts: contacts, teamMembers: teamMembers, addressBook: addressBook, directory: result.directory, conversations: conversations)
     }
     
 }

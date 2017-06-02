@@ -23,7 +23,7 @@ public struct SearchOptions : OptionSet {
     public let rawValue: Int
 
     public static let contacts = SearchOptions(rawValue: 1 << 0)
-    public static let addressBookContacts = SearchOptions(rawValue: 1 << 1)
+    public static let addressBook = SearchOptions(rawValue: 1 << 1)
     public static let teamMembers = SearchOptions(rawValue: 1 << 2)
     public static let directory = SearchOptions(rawValue: 1 << 3)
     public static let conversations = SearchOptions(rawValue: 1 << 4)

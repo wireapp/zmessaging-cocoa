@@ -31,7 +31,6 @@
 #import "ZMSyncStrategy.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
-#import "ZMSearchDirectory+Internal.h"
 #import <libkern/OSAtomic.h>
 #import "ZMAuthenticationStatus.h"
 #import "ZMPushToken.h"

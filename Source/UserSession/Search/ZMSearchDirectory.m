@@ -166,7 +166,7 @@ static SearchDirectoryUserIDTable *userIDMissingProfileImageBySearch;
     }
     
     
-    NSString *query = searchRequest.query;
+//    NSString *query = searchRequest.query;
     ZM_WEAK(self);
     search.resultHandler = ^(ZMSearchResult *searchResult) {
         ZM_STRONG(self);
@@ -175,10 +175,10 @@ static SearchDirectoryUserIDTable *userIDMissingProfileImageBySearch;
         }
         [self storeSearchResultUserIDsInCache:searchResult];
         
-        if (searchRequest.includeAddressBookContacts) {
-            searchResult = [searchResult extendWithContactsFromAddressBook:query
-                                                               userSession:self.userSession];
-        }
+//        if (searchRequest.includeAddressBookContacts) {
+//            searchResult = [searchResult extendWithContactsFromAddressBook:query
+//                                                               userSession:self.userSession];
+//        }
         
         [self sendSearchResult:searchResult forToken:token];
     };
