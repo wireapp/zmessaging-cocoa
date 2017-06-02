@@ -105,12 +105,12 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)setRegisteredOnThisDevice:(BOOL)registeredOnThisDevice
 {
-    [self.moc setRegisteredOnThisDevice:registeredOnThisDevice];
+    [self.moc setPersistentStoreMetadata:@(registeredOnThisDevice) forKey:RegisteredOnThisDeviceKey];
 }
 
 - (BOOL)registeredOnThisDevice
 {
-    return [self.moc isRegisteredOnThisDevice];
+    return [self registeredOnThisDeviceOnContext:self.moc];
 }
 
 - (ZMCompleteRegistrationUser *)registrationUser
@@ -452,25 +452,9 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     return nil;
 }
 
-@end
-
-
-
-@implementation NSManagedObjectContext (Registration)
-
-- (void)setRegisteredOnThisDevice:(BOOL)registeredOnThisDevice
+- (BOOL)registeredOnThisDeviceOnContext:(NSManagedObjectContext *)moc;
 {
-    assert(self.zm_isSyncContext);
-    [self setPersistentStoreMetadata:@(registeredOnThisDevice) forKey:RegisteredOnThisDeviceKey];
-    NSManagedObjectContext *uiContext = self.zm_userInterfaceContext;
-    [uiContext performGroupedBlock:^{
-        [uiContext setPersistentStoreMetadata:@(registeredOnThisDevice) forKey:RegisteredOnThisDeviceKey];
-    }];
-}
-
-- (BOOL)isRegisteredOnThisDevice
-{
-    return ((NSNumber *)[self persistentStoreMetadataForKey:RegisteredOnThisDeviceKey]).boolValue;
+    return ((NSNumber *)[moc persistentStoreMetadataForKey:RegisteredOnThisDeviceKey]).boolValue;
 }
 
 @end

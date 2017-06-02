@@ -32,7 +32,6 @@
 #import "ZMUserSessionRegistrationNotification.h"
 #import "ZMCredentials.h"
 #import "ZMUserSessionRegistrationNotification.h"
-#import "ZMAuthenticationStatus_Internal.h"
 
 @implementation ZMUser (ZMRegistrationUser)
 
@@ -51,9 +50,8 @@
 
 @implementation ZMUserSession (Registration)
 
-- (BOOL)registeredOnThisDevice
-{
-    return [self.managedObjectContext isRegisteredOnThisDevice];
+- (BOOL)registeredOnThisDevice {
+    return [self.authenticationStatus registeredOnThisDeviceOnContext:self.managedObjectContext];
 }
 
 - (void)registerSelfUser:(ZMCompleteRegistrationUser * __unused)registrationUser

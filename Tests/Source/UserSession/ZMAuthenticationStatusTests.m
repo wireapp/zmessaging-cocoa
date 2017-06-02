@@ -143,9 +143,7 @@
     
     // when
     [self.sut prepareForRegistrationOfUser:regUser];
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didCompleteRegistrationSuccessfully];
-    }];
+    [self.sut didCompleteRegistrationSuccessfully];
     
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
@@ -233,9 +231,7 @@
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:pass];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForLoginWithCredentials:credentials];
-    }];
+    [self.sut prepareForLoginWithCredentials:credentials];
     
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseLoginWithEmail);
@@ -251,9 +247,8 @@
     ZMCredentials *credentials = [ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForLoginWithCredentials:credentials];
-    }];
+    [self.sut prepareForLoginWithCredentials:credentials];
+    
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseLoginWithPhone);
     XCTAssertEqual(self.sut.loginCredentials, credentials);
@@ -329,10 +324,8 @@
     };
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:email password:password]];
-        [self.sut didCompleteRegistrationSuccessfully];
-    }];
+    [self.sut prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:email password:password]];
+    [self.sut didCompleteRegistrationSuccessfully];
     
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseLoginWithEmail);
@@ -550,9 +543,7 @@
     NSString *password = @"#$4tewt343$";
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:email password:password]];
-    }];
+    [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:email password:password]];
     [self.sut didFailLoginWithEmail:YES];
     
     // then
@@ -580,9 +571,7 @@
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForLoginWithCredentials:credentials];
-    }];
+    [self.sut prepareForLoginWithCredentials:credentials];
     [self.sut didFailLoginWithEmailBecausePendingValidation];
     
     // then
@@ -609,9 +598,7 @@
     NSString *code = @"324543";
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForLoginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code]];
-    }];
+    [self.sut prepareForLoginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code]];
     [self.sut didFailLoginWithPhone:YES];
     
     // then
@@ -639,9 +626,7 @@
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForLoginWithCredentials:credentials];
-    }];
+    [self.sut prepareForLoginWithCredentials:credentials];
     [self.sut didTimeoutLoginForCredentials:credentials];
     
     // then
@@ -660,9 +645,7 @@
     ZMCredentials *credentials2 = [ZMPhoneCredentials credentialsWithPhoneNumber:@"+4912345678900" verificationCode:@"123456"];
     
     // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForLoginWithCredentials:credentials1];
-    }];
+    [self.sut prepareForLoginWithCredentials:credentials1];
     [self.sut didTimeoutLoginForCredentials:credentials2];
     
     // then
@@ -690,9 +673,7 @@
 {
     // given
     [self.sut setAuthenticationCookieData:[NSData data]];
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:@"foo@example.com" password:@"boo"]];
-    }];
+    [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:@"foo@example.com" password:@"boo"]];
 
     // then
     XCTAssertNotNil(self.sut.emailCredentials);
@@ -701,9 +682,7 @@
 - (void)testThatItClearsCredentialsIfInPhaseAuthenticated
 {
     // given
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:@"foo@example.com" password:@"boo"]];
-    }];
+    [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:@"foo@example.com" password:@"boo"]];
     [self.sut setAuthenticationCookieData:[NSData data]];
     
     XCTAssertNotNil(self.sut.loginCredentials);
@@ -718,9 +697,7 @@
 - (void)testThatItDoesNotClearCredentialsIfNotAuthenticated
 {
     // given
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:@"foo@example.com" password:@"boo"]];
-    }];
+    [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:@"foo@example.com" password:@"boo"]];
     
     XCTAssertNotNil(self.sut.loginCredentials);
     
