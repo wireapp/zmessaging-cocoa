@@ -189,7 +189,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 }
 
 - (void) createSharedSearchDirectory {
-    if (self.sharedSearchDirectory != nil) {
+    if (self.sharedSearchDirectory == nil) {
         self.sharedSearchDirectory = [[SearchDirectory alloc] initWithUserSession:self.userSession];
     }
 }
