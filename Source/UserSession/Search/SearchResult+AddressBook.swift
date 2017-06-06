@@ -20,7 +20,7 @@ import Foundation
 import Contacts
 
 /// This is used for testing only
-var _debug_searchResultAddressBookOverride : AddressBookAccessor? = nil
+var debug_searchResultAddressBookOverride : AddressBookAccessor? = nil
 
 extension SearchResult {
     
