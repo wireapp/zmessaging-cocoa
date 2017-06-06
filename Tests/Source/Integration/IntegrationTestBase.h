@@ -63,6 +63,7 @@ extern NSString * const SelfUserPassword;
 @property (nonatomic, readonly) NSArray *allUsers;
 @property (nonatomic, readonly) MockFlowManager *mockFlowManager;
 @property (nonatomic, readonly) MockLinkPreviewDetector *mockLinkPreviewDetector;
+@property (nonatomic, readonly) SearchDirectory *sharedSearchDirectory;
 
 @property (nonatomic, readonly) ZMGSMCallHandler *gsmCallHandler;
 

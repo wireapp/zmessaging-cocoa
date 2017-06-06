@@ -25,9 +25,8 @@ extension IntegrationTestBase {
     public func searchAndConnectToUser(withName name: String, searchQuery: String) {
     
         let searchCompleted = expectation(description: "Search result arrived")
-        let searchDirectory = SearchDirectory(userSession: userSession)
         let request = SearchRequest(query: searchQuery, searchOptions: [.directory])
-        let task = searchDirectory.perform(request)
+        let task = sharedSearchDirectory.perform(request)
         var searchResult : SearchResult? = nil
         
         task.onResult { (result, completed) in
@@ -52,7 +51,61 @@ extension IntegrationTestBase {
             connectionCreated.fulfill()
         })
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-        searchDirectory.tearDown()
+    }
+    
+    @objc
+    public func searchForDirectoryUser(withName name: String, searchQuery: String) -> ZMSearchUser? {
+        let searchCompleted = expectation(description: "Search result arrived")
+        let request = SearchRequest(query: searchQuery, searchOptions: [.directory])
+        let task = sharedSearchDirectory.perform(request)
+        var searchResult : SearchResult? = nil
+        
+        task.onResult { (result, completed) in
+            if completed {
+                searchResult = result
+                searchCompleted.fulfill()
+            }
+        }
+        
+        task.start()
+        
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        XCTAssertNotNil(searchResult)
+        
+        return searchResult?.directory.first
+    }
+    
+    @objc
+    public func searchForConnectedUser(withName name: String, searchQuery: String) -> ZMUser? {
+        let searchCompleted = expectation(description: "Search result arrived")
+        let request = SearchRequest(query: searchQuery, searchOptions: [.contacts])
+        let task = sharedSearchDirectory.perform(request)
+        var searchResult : SearchResult? = nil
+        
+        task.onResult { (result, completed) in
+            if completed {
+                searchResult = result
+                searchCompleted.fulfill()
+            }
+        }
+        
+        task.start()
+        
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        XCTAssertNotNil(searchResult)
+        
+        return searchResult?.contacts.first
+    }
+    
+    @objc
+    public func connect(withUser user: ZMBareUser) {
+        let connectionCreated = expectation(description: "Connection created")
+        
+        user.connect(withMessageText: "Hola", completionHandler: {
+            connectionCreated.fulfill()
+        })
+        
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
 }

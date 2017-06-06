@@ -63,6 +63,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 @property (nonatomic) NSArray *nonConnectedUsers;
 @property (nonatomic) MockFlowManager *mockFlowManager;
 @property (nonatomic) MockLinkPreviewDetector *mockLinkPreviewDetector;
+@property (nonatomic) SearchDirectory *sharedSearchDirectory;
 
 
 @end
@@ -101,6 +102,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     
     [self recreateUserSessionAndWipeCache:YES];
     
+    self.sharedSearchDirectory = [[SearchDirectory alloc] initWithUserSession:self.userSession];
     self.conversationChangeObserver = [[ConversationChangeObserver alloc] init];
     self.userChangeObserver = [[UserChangeObserver alloc] init];
     self.messageChangeObserver = [[MessageChangeObserver alloc] init];
@@ -121,12 +123,14 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.mockLinkPreviewDetector = nil;
     [BackgroundActivityFactory tearDownInstance];
     [LinkPreviewDetectorHelper tearDown];
+    [self.sharedSearchDirectory tearDown];
     
     self.mockObjectIDToRemoteID = nil;
     self.mockFlowManager = nil;
     self.conversationChangeObserver = nil;
     self.userChangeObserver = nil;
     self.messageChangeObserver = nil;
+    self.sharedSearchDirectory = nil;
 
     WaitForAllGroupsToBeEmpty(0.5);
     

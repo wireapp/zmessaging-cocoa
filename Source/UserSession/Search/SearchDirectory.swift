@@ -58,10 +58,16 @@ public class SearchDirectory : NSObject {
         let task = SearchTask(request: request, context: searchContext, session: userSession)
         
         task.onResult { [weak self] (result, _) in
+            self?.observeSearchUsers(result)
             self?.requestSearchUserProfileImages(result)
         }
         
         return task
+    }
+    
+    func observeSearchUsers(_ result : SearchResult) {
+        let searchUserObserverCenter = userSession.managedObjectContext.searchUserObserverCenter
+        result.directory.forEach(searchUserObserverCenter.addSearchUser)
     }
     
     func requestSearchUserProfileImages(_ result : SearchResult) {
