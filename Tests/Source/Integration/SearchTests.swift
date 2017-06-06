@@ -564,7 +564,6 @@ class SearchTests : IntegrationTestBase {
         
         guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
-        mockTransportSession.resetReceivedRequests()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         let mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
@@ -574,6 +573,8 @@ class SearchTests : IntegrationTestBase {
         guard let searchUserAsset = mediumAssetIDCache?.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
         XCTAssertEqual(searchUserAsset.assetKey, user4.completeProfileAssetIdentifier)
         XCTAssertNil(mediumImageCache?.object(forKey: remoteIdentifer as AnyObject))
+        
+        mockTransportSession.resetReceivedRequests()
         
         // when requesting medium image
         userSession.performChanges {
@@ -585,13 +586,9 @@ class SearchTests : IntegrationTestBase {
         XCTAssertEqual(searchUser.imageMediumData, completeProfileImageData)
         
         let requests = mockTransportSession.receivedRequests()
-        XCTAssertEqual(requests.count, 3)
-        XCTAssertEqual(requests[0].path, "/users?ids=\(user4.identifier)")
+        XCTAssertEqual(requests.count, 1)
+        XCTAssertEqual(requests[0].path, "/assets/v3/\(user4.completeProfileAssetIdentifier!)")
         XCTAssertEqual(requests[0].method, .methodGET)
-        XCTAssertEqual(requests[1].path, "/assets/v3/\(user4.previewProfileAssetIdentifier!)")
-        XCTAssertEqual(requests[1].method, .methodGET)
-        XCTAssertEqual(requests[2].path, "/assets/v3/\(user4.completeProfileAssetIdentifier!)")
-        XCTAssertEqual(requests[2].method, .methodGET)
     }
     
     func testThatItRefetchesTheSearchUserIfTheMediumAssetIDIsNotSet_V3Asset() {
