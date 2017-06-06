@@ -21,9 +21,10 @@ import XCTest
 import WireTesting
 
 extension IntegrationTestBase {
-    
+        
     @objc
     public func searchAndConnectToUser(withName name: String, searchQuery: String) {
+        createSharedSearchDirectory()
     
         let searchCompleted = expectation(description: "Search result arrived")
         let request = SearchRequest(query: searchQuery, searchOptions: [.directory])
@@ -56,6 +57,8 @@ extension IntegrationTestBase {
     
     @objc
     public func searchForDirectoryUser(withName name: String, searchQuery: String) -> ZMSearchUser? {
+        createSharedSearchDirectory()
+        
         let searchCompleted = expectation(description: "Search result arrived")
         let request = SearchRequest(query: searchQuery, searchOptions: [.directory])
         let task = sharedSearchDirectory.perform(request)
@@ -78,6 +81,8 @@ extension IntegrationTestBase {
     
     @objc
     public func searchForConnectedUser(withName name: String, searchQuery: String) -> ZMUser? {
+        createSharedSearchDirectory()
+        
         let searchCompleted = expectation(description: "Search result arrived")
         let request = SearchRequest(query: searchQuery, searchOptions: [.contacts])
         let task = sharedSearchDirectory.perform(request)

@@ -86,6 +86,7 @@ extern NSString * const SelfUserPassword;
 - (BOOL)loginAndWaitForSyncToBeCompleteWithPhone:(NSString *)phone ZM_MUST_USE_RETURN;
 - (BOOL)loginAndWaitForSyncToBeCompleteWithPhone:(NSString *)phone ignoringAuthenticationFailure:(BOOL)ignoringAuthenticationFailures ZM_MUST_USE_RETURN;
 
+- (void)createSharedSearchDirectory;
 - (void)recreateUserSessionAndWipeCache:(BOOL)wipeCache;
 
 - (ZMConversation *)conversationForMockConversation:(MockConversation *)conversation;

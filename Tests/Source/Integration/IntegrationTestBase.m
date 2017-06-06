@@ -102,7 +102,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     
     [self recreateUserSessionAndWipeCache:YES];
     
-    self.sharedSearchDirectory = [[SearchDirectory alloc] initWithUserSession:self.userSession];
     self.conversationChangeObserver = [[ConversationChangeObserver alloc] init];
     self.userChangeObserver = [[UserChangeObserver alloc] init];
     self.messageChangeObserver = [[MessageChangeObserver alloc] init];
@@ -187,6 +186,12 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         event.time = date;
     }
     conversation.lastEventTime = date;
+}
+
+- (void) createSharedSearchDirectory {
+    if (self.sharedSearchDirectory != nil) {
+        self.sharedSearchDirectory = [[SearchDirectory alloc] initWithUserSession:self.userSession];
+    }
 }
 
 - (void)createObjects
@@ -323,7 +328,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 - (void)recreateUserSessionAndWipeCache:(BOOL)wipeCache
 {
-    
     [self.userSession tearDown];
     self.userSession = nil;
     
