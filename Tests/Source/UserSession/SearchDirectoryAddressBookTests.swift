@@ -29,7 +29,6 @@ class SearchDirectoryAddressBookTests : MessagingTest {
     }
     
     override func tearDown() {
-        sut.tearDown()
         assert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         super.tearDown()
     }
