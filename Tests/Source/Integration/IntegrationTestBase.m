@@ -328,8 +328,10 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 - (void)recreateUserSessionAndWipeCache:(BOOL)wipeCache
 {
+    [self.sharedSearchDirectory tearDown];
     [self.userSession tearDown];
     self.userSession = nil;
+    self.sharedSearchDirectory = nil;
     
     WaitForEverythingToBeDone();
     
