@@ -400,8 +400,8 @@
     
     VoiceChannelParticipantNotification *partInfo4 = participantObserver.changes.lastObject;
     XCTAssertEqualObjects(partInfo4.insertedIndexes, [NSIndexSet indexSet]);
-    XCTAssertEqualObjects(partInfo4.updatedIndexes, [NSIndexSet indexSet]);
-    XCTAssertEqualObjects(partInfo4.deletedIndexes, [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 1)]);
+    XCTAssertEqualObjects(partInfo4.updatedIndexes, [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 1)]);
+    XCTAssertEqualObjects(partInfo4.deletedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(partInfo4.zm_movedIndexPairs, @[]);
     
     [WireCallCenterV2 removeObserverWithToken:stateToken];
