@@ -554,7 +554,7 @@ public struct CallEvent {
     public func rejectCall(conversationId: UUID, isGroup: Bool) {
         avsWrapper.rejectCall(conversationId: conversationId, isGroup: isGroup)
         
-        if isGroup, let previousSnapshot = callSnapshots[conversationId] {
+        if let previousSnapshot = callSnapshots[conversationId] {
             callSnapshots[conversationId] = CallSnapshot(callState: .incoming(video: previousSnapshot.isVideo, shouldRing: false), isVideo: previousSnapshot.isVideo)
         }
     }

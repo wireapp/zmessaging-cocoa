@@ -330,7 +330,7 @@ extension WireCallCenterV3Tests {
         XCTAssertEqual(sut.callState(conversationId: conversationId), .incoming(video: false, shouldRing: false))
     }
     
-    func testThatItWhenRejectingAOneOnOneCallItDoesNotSetTheCallStateToIncomingInactive(){
+    func testThatItWhenRejectingAOneOnOneCallItWilltSetTheCallStateToIncomingInactive(){
         // given
         let conversationId = UUID()
         let userId = UUID()
@@ -344,7 +344,7 @@ extension WireCallCenterV3Tests {
         sut.rejectCall(conversationId: conversationId, isGroup: false)
         
         // then
-        XCTAssertNotEqual(sut.callState(conversationId: conversationId), .incoming(video: false, shouldRing: false))
+        XCTAssertEqual(sut.callState(conversationId: conversationId), .incoming(video: false, shouldRing: false))
     }
     
     func testThatItWhenClosingAGroupCallItWillSetsTheCallStateToIncomingInactive(){
