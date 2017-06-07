@@ -485,7 +485,7 @@ public struct CallEvent {
                                                                                      initiator: userId)
             break
             
-        case .terminating(reason: let reason):
+        case .terminating:
             clearSnapshot(conversationId: conversationId)
             
         default:
