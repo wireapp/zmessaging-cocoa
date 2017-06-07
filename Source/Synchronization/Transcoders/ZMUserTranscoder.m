@@ -73,18 +73,18 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
         }
     }
     
-    // also self
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    if (selfUser.remoteIdentifier != nil) {
-        [userIds addObject:selfUser.remoteIdentifier];
-    }
-    
     [self.remoteIDObjectSync addRemoteIdentifiersThatNeedDownload:userIds];
+}
+
+
+- (SyncPhase)expectedSyncPhase
+{
+    return SyncPhaseFetchingUsers;
 }
 
 - (BOOL)isSyncing
 {
-    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingUsers;
+    return self.syncStatus.currentSyncPhase == self.expectedSyncPhase;
 }
 
 - (ZMTransportRequest *)nextRequestIfAllowed
@@ -267,7 +267,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
             
             if (self.remoteIDObjectSync.isDone && self.isSyncing) {
                 self.didStartSyncing = NO;
-                [syncStatus finishCurrentSyncPhase];
+                [syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
             }
             break;
         }
@@ -276,7 +276,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
             [self updateUsersFromPayload:nil expectedRemoteIdentifiers:remoteIdentifiers];
             if (self.isSyncing) {
                 self.didStartSyncing = NO;
-                [syncStatus failCurrentSyncPhase];
+                [syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
             }
             break;
         }

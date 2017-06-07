@@ -228,16 +228,16 @@ public class MockSyncStatus : SyncStatus {
         }
     }
     
-    public override func failCurrentSyncPhase() {
+    public override func failCurrentSyncPhase(phase: SyncPhase) {
         didCallFailCurrentSyncPhase = true
         
-        super.failCurrentSyncPhase()
+        super.failCurrentSyncPhase(phase: phase)
     }
     
-    public override func finishCurrentSyncPhase() {
+    public override func finishCurrentSyncPhase(phase: SyncPhase) {
         didCallFinishCurrentSyncPhase = true
         
-        super.finishCurrentSyncPhase()
+        super.finishCurrentSyncPhase(phase: phase)
     }
 }
 

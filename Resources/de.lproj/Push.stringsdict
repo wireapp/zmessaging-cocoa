@@ -133,7 +133,7 @@
         <key>push.notification.call.missed.group.nousername.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>Jemand hat%1$#@new_calls@in einer Unterhaltung angerufen</string>
+            <string>Jemand hat %1$#@new_calls@in einer Unterhaltung angerufen</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -149,7 +149,7 @@
         <key>push.notification.call.missed.group.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ hat%2$#@new_calls@in einer Unterhaltung</string>
+            <string>%1$@ hat%2$#@new_calls@ in einer Unterhaltung angerufen</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -159,7 +159,7 @@
                 <key>one</key>
                 <string></string>
                 <key>other</key>
-                <string> %2$@ mal </string>
+                <string>  %2$@ mal </string>
             </dict>
         </dict>
         <key>push.notification.call.missed.many</key>

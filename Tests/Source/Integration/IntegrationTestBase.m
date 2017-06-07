@@ -24,7 +24,6 @@
 #import "IntegrationTestBase.h"
 #import "ZMHotfix.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMSearchDirectory.h"
 #import "ZMUserSession+Authentication.h"
 #import "ZMUserSession+Registration.h"
 #import "ZMCredentials.h"
@@ -64,6 +63,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 @property (nonatomic) NSArray *nonConnectedUsers;
 @property (nonatomic) MockFlowManager *mockFlowManager;
 @property (nonatomic) MockLinkPreviewDetector *mockLinkPreviewDetector;
+@property (nonatomic) SearchDirectory *sharedSearchDirectory;
 
 
 @end
@@ -122,12 +122,14 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     self.mockLinkPreviewDetector = nil;
     [BackgroundActivityFactory tearDownInstance];
     [LinkPreviewDetectorHelper tearDown];
+    [self.sharedSearchDirectory tearDown];
     
     self.mockObjectIDToRemoteID = nil;
     self.mockFlowManager = nil;
     self.conversationChangeObserver = nil;
     self.userChangeObserver = nil;
     self.messageChangeObserver = nil;
+    self.sharedSearchDirectory = nil;
 
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -184,6 +186,12 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         event.time = date;
     }
     conversation.lastEventTime = date;
+}
+
+- (void) createSharedSearchDirectory {
+    if (self.sharedSearchDirectory == nil) {
+        self.sharedSearchDirectory = [[SearchDirectory alloc] initWithUserSession:self.userSession];
+    }
 }
 
 - (void)createObjects
@@ -320,9 +328,10 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 - (void)recreateUserSessionAndWipeCache:(BOOL)wipeCache
 {
-    
+    [self.sharedSearchDirectory tearDown];
     [self.userSession tearDown];
     self.userSession = nil;
+    self.sharedSearchDirectory = nil;
     
     WaitForEverythingToBeDone();
     
@@ -413,7 +422,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     
     synchronized = synchronized && [self waitForCustomExpectationsWithTimeout:0.5];
     
-    WaitForEverythingToBeDoneWithTimeout(0.5);
+    WaitForEverythingToBeDoneWithTimeout(2);
     
     XCTestExpectation *e = [self expectationWithDescription:@"sync with main queue."];
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -515,6 +524,21 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     return (0 < result.count) ? result[0] : nil;
 }
 
+- (Team *)teamForMockTeam:(MockTeam *)team;
+{
+    NSUUID *remoteID = [self remoteIdentifierForMockObject:team];
+    XCTAssertNotNil(remoteID, @"Need to register mock objects with -storeRemoteIDForObject:");
+    NSFetchRequest *request = [Team sortedFetchRequestWithPredicateFormat:@"remoteIdentifier_data == %@", remoteID.data];
+    NSArray *result = [self.userSession.managedObjectContext executeFetchRequestOrAssert:request];
+    return (0 < result.count) ? result[0] : nil;
+}
+
+- (BOOL)mockMember:(MockMember *)mockMember isEqualToMember:(Member *)member
+{
+    return [mockMember.user.identifier isEqualToString:member.user.remoteIdentifier.transportString]
+        && [mockMember.team.identifier isEqualToString:member.team.remoteIdentifier.transportString];
+}
+
 
 - (ZMConversation *)conversationForMockConversation:(MockConversation *)conversation;
 {
@@ -537,43 +561,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     return ([self waitForAllGroupsToBeEmptyWithTimeout:timeout] &&
             [self.mockTransportSession waitForAllRequestsToCompleteWithTimeout:timeout] &&
             [self waitForAllGroupsToBeEmptyWithTimeout:timeout]);
-}
-
-- (void)searchAndConnectToUserWithName:(NSString *)searchUserName searchQuery:(NSString *)query
-{
-    id searchResultObserver = [OCMockObject mockForProtocol:@protocol(ZMSearchResultObserver)];
-    [self verifyMockLater:searchResultObserver];
-    
-    __block ZMSearchResult *result;
-    XCTestExpectation *searchCompleted = [self expectationWithDescription:@"second search result"];
-    
-    // this might be called once or twice, if the "network" thread is faster than the "sync" thread (that reads from the cache)
-    [[searchResultObserver stub] didReceiveSearchResult:[OCMArg checkWithBlock:^BOOL(ZMSearchResult *searchResult) {
-        if(searchResult.usersInDirectory.count > 0u) {
-            result = searchResult;
-            [searchCompleted fulfill];
-        }
-        return YES;
-    }] forToken:OCMOCK_ANY];
-    
-    ZMSearchDirectory *searchDirectory = [[ZMSearchDirectory alloc] initWithUserSession:self.userSession];
-    [searchDirectory addSearchResultObserver:searchResultObserver];
-    [searchDirectory searchForUsersAndConversationsMatchingQueryString:query];
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    XCTAssertNotNil(result);
-    
-    ZMSearchUser *searchUser = result.usersInDirectory.firstObject;
-    XCTAssertNotNil(searchUser);
-    XCTAssertEqualObjects(searchUser.displayName, searchUserName);
-    XCTestExpectation *connectionCreatedExpectation = [self expectationWithDescription:@"Connection created locally"];
-    
-    // when
-    [searchUser connectWithMessageText:@"Hola" completionHandler:^{
-        [connectionCreatedExpectation fulfill];
-    }];
-
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    [searchDirectory tearDown];
 }
 
 - (MockUser *)createPendingConnectionFromUserWithName:(NSString *)name uuid:(NSUUID *)uuid

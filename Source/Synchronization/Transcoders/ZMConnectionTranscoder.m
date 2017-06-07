@@ -71,9 +71,15 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
+
+- (SyncPhase)expectedSyncPhase
+{
+    return SyncPhaseFetchingConnections;
+}
+
 - (BOOL)isSyncing
 {
-    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingConnections;
+    return self.syncStatus.currentSyncPhase == self.expectedSyncPhase;
 }
 
 - (ZMTransportRequest *)nextRequestIfAllowed
@@ -242,7 +248,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 
 @implementation ZMConnectionTranscoder (DownstreamTranscoder)
 
-- (ZMTransportRequest *)requestForFetchingObject:(ZMConnection *)connection downstreamSync:(id<ZMObjectSync>)downstreamSync;
+- (ZMTransportRequest *)requestForFetchingObject:(ZMConnection *)connection downstreamSync:(id<ZMObjectSync>)downstreamSync
 {
     NOT_USED(downstreamSync);
     if (connection.to.remoteIdentifier == nil || connection.needsToBeUpdatedFromBackend == NO) {
@@ -254,7 +260,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     return request;
     
 }
-- (void)updateObject:(ZMConnection *)connection withResponse:(ZMTransportResponse *)response downstreamSync:(id<ZMObjectSync>)downstreamSync;
+- (void)updateObject:(ZMConnection *)connection withResponse:(ZMTransportResponse *)response downstreamSync:(id<ZMObjectSync>)downstreamSync
 {
     NOT_USED(downstreamSync);
     connection.needsToBeUpdatedFromBackend = NO;
@@ -265,8 +271,9 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     [connection updateConversationType];
 }
 
-- (void)deleteObject:(ZMConnection *)connection downstreamSync:(id<ZMObjectSync>)downstreamSync;
+- (void)deleteObject:(ZMConnection *)connection withResponse:(ZMTransportResponse *)response downstreamSync:(id<ZMObjectSync>)downstreamSync
 {
+    NOT_USED(response);
     NOT_USED(connection);
     NOT_USED(downstreamSync);
 }
@@ -316,7 +323,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     SyncStatus *syncStatus = self.syncStatus;
     
     if (!self.conversationsListSync.hasMoreToFetch && self.isSyncing) {
-        [syncStatus finishCurrentSyncPhase];
+        [syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
     
     return allUIDs.lastObject;
@@ -327,7 +334,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
     SyncStatus *syncStatus = self.syncStatus;
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
-        [syncStatus failCurrentSyncPhase];
+        [syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
     return NO;
 }

@@ -18,23 +18,35 @@
 
 @objc public enum SyncPhase : Int, CustomStringConvertible {
     case fetchingLastUpdateEventID
+    case fetchingTeams
     case fetchingConnections
     case fetchingConversations
     case fetchingUsers
+    case fetchingSelfUser
     case fetchingMissedEvents
     case done
     
     var isLastSlowSyncPhase : Bool {
-        return self == .fetchingUsers
+        return self == .fetchingSelfUser
     }
     
     var isSyncing : Bool {
         switch self {
-        case .fetchingMissedEvents, .fetchingLastUpdateEventID, .fetchingConnections,.fetchingUsers, .fetchingConversations:
+        case .fetchingMissedEvents,
+             .fetchingLastUpdateEventID,
+             .fetchingConnections,
+             .fetchingTeams,
+             .fetchingUsers,
+             .fetchingConversations,
+             .fetchingSelfUser:
             return true
         case .done:
             return false
         }
+    }
+
+    var nextPhase: SyncPhase? {
+        return SyncPhase(rawValue: rawValue + 1)
     }
     
     public var description: String {
@@ -45,8 +57,12 @@
             return "fetchingConnections"
         case .fetchingConversations:
             return "fetchingConversations"
+        case .fetchingTeams:
+            return "fetchingTeams"
         case .fetchingUsers:
             return "fetchingUsers"
+        case .fetchingSelfUser:
+            return "fetchingSelfUser"
         case .fetchingMissedEvents:
             return "fetchingMissedEvents"
         case .done:
@@ -56,6 +72,14 @@
 }
 
 private let zmLog = ZMSLog(tag: "SyncStatus")
+
+
+extension Notification.Name {
+
+    public static let ForceSlowSync = Notification.Name("restartSlowSyncNotificationName")
+    
+}
+
 
 public class SyncStatus : NSObject {
 
@@ -91,16 +115,24 @@ public class SyncStatus : NSObject {
         super.init()
         
         currentSyncPhase = hasPersistedLastEventID ? .fetchingMissedEvents : .fetchingLastUpdateEventID
-        
         self.syncStateDelegate.didStartSync()
+        NotificationCenter.default.addObserver(self, selector: #selector(forceSlowSync), name: .ForceSlowSync, object: nil)
     }
+
+    public func forceSlowSync() {
+        currentSyncPhase = SyncPhase.fetchingLastUpdateEventID.nextPhase!
+        syncStateDelegate.didStartSync()
+    }
+
 }
 
 // MARK: Slow Sync
 extension SyncStatus {
     
-    public func finishCurrentSyncPhase() {
-        guard let nextPhase = SyncPhase(rawValue:currentSyncPhase.rawValue+1) else { return }
+    public func finishCurrentSyncPhase(phase : SyncPhase) {
+        precondition(phase == currentSyncPhase, "Finished syncPhase does not match currentPhase")
+        
+        guard let nextPhase = currentSyncPhase.nextPhase else { return }
         
         if currentSyncPhase.isLastSlowSyncPhase {
             persistLastUpdateEventID()
@@ -124,9 +156,11 @@ extension SyncStatus {
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
     
-    public func failCurrentSyncPhase() {
+    public func failCurrentSyncPhase(phase : SyncPhase) {
+        precondition(phase == currentSyncPhase, "Failed syncPhase does not match currentPhase")
+        
         if currentSyncPhase == .fetchingMissedEvents {
-            currentSyncPhase = hasPersistedLastEventID ? .fetchingConnections : .fetchingLastUpdateEventID
+            currentSyncPhase = hasPersistedLastEventID ? SyncPhase.fetchingLastUpdateEventID.nextPhase! : .fetchingLastUpdateEventID
             needsToRestartQuickSync = false
         }
     }

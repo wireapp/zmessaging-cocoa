@@ -26,8 +26,7 @@
 @protocol ZMSimpleListRequestPaginatorSync;
 
 
-
-@interface ZMSimpleListRequestPaginator : NSObject
+@interface ZMSimpleListRequestPaginator : NSObject <ZMRequestGenerator>
 
 /// YES if more requests should be made before to fetch the full list
 @property (nonatomic, readonly) BOOL hasMoreToFetch;

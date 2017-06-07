@@ -38,7 +38,6 @@
 #import "ZMOperationLoop.h"
 #import "ZMCallFlowRequestStrategy.h"
 #import "ZMPushToken.h"
-#import "ZMCommonContactsSearch.h"
 
 #import "ZMCredentials.h"
 #import "NSURL+LaunchOptions.h"

@@ -97,46 +97,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_ASSUME_NONNULL_END
 
-@implementation ZMUser (Handle)
-
-- (CXHandle *)callKitHandle
-{
-    if (0 != self.phoneNumber.length) {
-        return [[CXHandle alloc] initWithType:CXHandleTypePhoneNumber value:self.phoneNumber];
-    }
-    else if (0 != self.emailAddress.length) {
-        return [[CXHandle alloc] initWithType:CXHandleTypeEmailAddress value:self.emailAddress];
-    }
-    else if (nil != self.oneToOneConversation.remoteIdentifier) {
-        return [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:self.oneToOneConversation.remoteIdentifier.transportString];
-    }
-    else {
-        RequireString(1, "Cannot create CXHandle: user has neither email nor phone number");
-    }
-    return nil;
-}
-
-@end
-
 @implementation ZMConversation (Handle)
 
 - (CXHandle *)callKitHandle
 {
-    switch (self.conversationType) {
-        case ZMConversationTypeOneOnOne:
-        case ZMConversationTypeConnection:
-            return self.connectedUser.callKitHandle;
-            break;
-        case ZMConversationTypeGroup:
-            return [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:self.remoteIdentifier.transportString];
-            break;
-        default:
-            RequireString(1, "Cannot create CXHandle: conversation type is invalid");
-            return nil;
-            break;
-    }
-    
-    return nil;
+    return [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:self.remoteIdentifier.transportString];
 }
 
 - (NSString *)localizedCallerNameWithCallFromUser:(ZMUser *)user

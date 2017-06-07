@@ -592,8 +592,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         // when trying to register without email credentials, the BE tells us we need credentials
         if(!didRun && [request.path isEqualToString:@"/clients"] && request.method == ZMMethodPOST) {
             didRun = YES;
-            NSDictionary *payload = @{@"label" : @"missing-auth"};
-            return [ZMTransportResponse responseWithPayload:payload HTTPStatus:400 transportSessionError:nil];
         }
         // the user updates the email address (currently does not work in MockTransportsession for some reason)
         if ([request.path isEqualToString:@"/self/email"]) {

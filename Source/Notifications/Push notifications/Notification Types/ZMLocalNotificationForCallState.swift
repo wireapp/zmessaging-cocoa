@@ -97,8 +97,9 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
         switch callState {
         case .terminating(reason: .anweredElsewhere), .terminating(reason: .normal):
             return false
-        case .incoming,
-             .terminating,
+        case .incoming(video: _, shouldRing: let shouldRing):
+            return shouldRing
+        case .terminating,
              .none where numberOfMissedCalls > 0:
             return true
         default:

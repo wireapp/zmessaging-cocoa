@@ -27,7 +27,6 @@
 #import <WireSyncEngine/CallingProtocolStrategy.h>
 
 @class ZMTransportSession;
-@class ZMSearchDirectory;
 @class ZMMessage;
 @class ZMConversation;
 @class UserClient;
@@ -131,6 +130,8 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 
 /// The URL of the shared container that has been determinned using the passed in application group identifier
 @property (nonatomic, readonly) NSURL *sharedContainerURL;
+
+@property (nonatomic, readonly) NSURL *storeURL;
 
 @end
 

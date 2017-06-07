@@ -163,15 +163,13 @@
     // expectations
     ZMTransportEnqueueResult *r = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:YES];
     [[[self.transportSession stub] andReturn:r] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
-//    [[(id) self.authenticationObserver expect] authenticationDidSucceed];
-//    [self verifyMockLater:self.authenticationObserver];
     
     // when
     ZMCredentials *cred = [ZMEmailCredentials credentialsWithEmail:@"someone@example.com" password:@"valid-password"];
     [self.sut loginWithCredentials:cred];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-//    XCTAssertTrue(self.sut.isLoggedIn);
     XCTAssertTrue(self.sut.authenticationStatus.currentPhase == ZMAuthenticationPhaseAuthenticated);
 }
 

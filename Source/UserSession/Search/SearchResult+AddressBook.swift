@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2016 Wire Swiss GmbH
+// Copyright (C) 2017 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,26 +22,24 @@ import Contacts
 /// This is used for testing only
 var debug_searchResultAddressBookOverride : AddressBookAccessor? = nil
 
-extension ZMSearchResult {
+extension SearchResult {
     
     /// Creates a new search result with the same results and additional
     /// results obtained by searching through the address book with the same query
-    public func extendWithContactsFromAddressBook(_ query: String,
-                                                  userSession: ZMUserSession) -> ZMSearchResult {
+    public func extendWithContactsFromAddressBook(_ query: String, userSession: ZMUserSession) -> SearchResult {
         /*
          When I have a search result obtained (either with a local search or from the BE) by matching on Wire
          users display names or handle, I also want to check if I have any address book contact in my local
-         address book that match the query. However, matching local contacts might overlap in a number of ways 
+         address book that match the query. However, matching local contacts might overlap in a number of ways
          with the users that I already found from the Wire search. The following code makes sure that such overlaps
          are not displayed twice (once for the Wire user, once for the address book contact).
          */
         let addressBook = AddressBookSearch(addressBook: debug_searchResultAddressBookOverride)
         
         // I don't need to find the address book contacts of users that I already found
-        let identifiersOfAlreadyFoundUsers = self.usersInContacts.flatMap { $0.user?.addressBookEntry?.localIdentifier } +
-            self.usersInDirectory.flatMap { $0.user?.addressBookEntry?.localIdentifier }
+        let identifiersOfAlreadyFoundUsers = contacts.flatMap { $0.addressBookEntry?.localIdentifier } + self.directory.flatMap { $0.user?.addressBookEntry?.localIdentifier }
         let allMatchingAddressBookContacts = addressBook.contactsMatchingQuery(query, identifiersToExclude: identifiersOfAlreadyFoundUsers)
-
+        
         // There might also be contacts for which the local address book name match and which are also Wire users, but on Wire their name doesn't match,
         // so the Wire search did not return them. If I figure out which Wire users they match, I want to include those users into
         // the result as Wire user results, not an non-Wire address book results
@@ -57,10 +55,13 @@ extension ZMSearchResult {
         let additionalNonConnectedUsers = additionalUsersFromAddressBook
             .filter { $0.connection == nil }
             .flatMap { ZMSearchUser(contact: nil, user: $0, userSession: userSession) }
+        let connectedUsers = contacts.flatMap { ZMSearchUser(contact: nil, user: $0, userSession: userSession )}
         
-        return ZMSearchResult(usersInContacts: self.usersInContacts + additionalConnectedUsers,
-                              usersInDirectory: self.usersInDirectory + additionalNonConnectedUsers + searchUsersFromAddressBook,
-                              groupConversations: self.groupConversations)
+        return SearchResult(contacts: contacts,
+                            teamMembers: teamMembers,
+                            addressBook: connectedUsers + additionalConnectedUsers + additionalNonConnectedUsers + searchUsersFromAddressBook,
+                            directory: directory,
+                            conversations: conversations)
     }
     
     /// Returns users that are linked to the given address book contacts

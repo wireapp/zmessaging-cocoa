@@ -16,6 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
+#import "ZMClientRegistrationStatus.h"
 
 @class ZMEmailCredentials;
 
@@ -23,5 +24,8 @@
 
 - (void)credentialsMayBeCleared;
 - (ZMEmailCredentials *)emailCredentials;
+@end
 
+@interface ZMClientRegistrationStatus ()
+- (BOOL)isAddingEmailNecessary;
 @end

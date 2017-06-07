@@ -122,12 +122,14 @@
     return @[
              [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:ZMMethodPOST payload:@{@"email":[self.selfUser.email copy], @"password":[self.selfUser.password copy], @"label": self.userSession.authenticationStatus.cookieLabel} authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken],
              [ZMTransportRequest requestGetFromPath:@"/self"],
+             [ZMTransportRequest requestGetFromPath:@"/self"], // second request during slow sync
              [ZMTransportRequest requestGetFromPath:@"/clients"],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/notifications/last?client=%@",  [ZMUser selfUserInContext:self.syncMOC].selfClient.remoteIdentifier]],
              [ZMTransportRequest requestGetFromPath:@"/connections?size=90"],
              [ZMTransportRequest requestGetFromPath:@"/conversations/ids?size=100"],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", self.selfConversation.identifier,self.selfToUser1Conversation.identifier,self.selfToUser2Conversation.identifier,self.groupConversation.identifier]],
-             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@,%@", self.selfUser.identifier, self.user1.identifier, self.user2.identifier]],
+             [ZMTransportRequest requestGetFromPath:@"/teams?size=50"],
+             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@", self.user1.identifier, self.user2.identifier]],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", self.user3.identifier]],
              [ZMTransportRequest requestWithPath:@"/onboarding/v3" method:ZMMethodPOST payload:@{
                                                                                                                 @"cards" : @[],
@@ -253,7 +255,6 @@
     
     XCTAssertTrue(hasNotificationsRequest);
 }
-
 
 
 - (void)testThatItDoesAQuickSyncOnStartupIfItHasReceivedNotificationsEarlier
@@ -410,6 +411,17 @@
     
     XCTAssertEqual(self.userSession.networkState, ZMNetworkStateOnline);
 }
+
+
+- (void)testThatItHasTheSelfUserEmailAfterTheSlowSync
+{
+    // given
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    
+    // then
+    XCTAssertNotNil([[ZMUser selfUserInUserSession:self.userSession] emailAddress]);
+}
+
 
 - (ZMUser *)findUserWithUUID:(NSString *)UUIDString inMoc:(NSManagedObjectContext *)moc {
     ZMUser *user = [ZMUser userWithRemoteID:[UUIDString UUID] createIfNeeded:NO inContext:moc];

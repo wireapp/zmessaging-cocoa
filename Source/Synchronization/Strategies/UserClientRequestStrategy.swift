@@ -46,9 +46,9 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     public var minNumberOfRemainingKeys: UInt = 20
     
     fileprivate var insertSyncFilter: NSPredicate {
-        return NSPredicate { [unowned self] object, _ -> Bool in
-            guard let client = object as? UserClient else { return false }
-            return client.user == ZMUser.selfUser(in: self.managedObjectContext)
+        return NSPredicate { object, _ -> Bool in
+            guard let client = object as? UserClient, let user = client.user else { return false }
+            return user.isSelfUser
         }
     }
     
@@ -190,7 +190,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
             return false
         }
         if keysToParse.contains(ZMUserClientNeedsToUpdateSignalingKeysKey) {
-            if response.httpStatus == 400, let label = response.payloadLabel() , label == "bad-request" {
+            if response.httpStatus == 400, let label = response.payloadLabel(), label == "bad-request" {
                 // Malformed prekeys uploaded - recreate and retry once per launch
 
                 if didRetryRegisteringSignalingKeys {
@@ -267,13 +267,17 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     
     public func errorFromFailedInsertResponse(_ response: ZMTransportResponse!) -> NSError {
         var errorCode: ZMUserSessionErrorCode = .unkownError
-        if let response = response , response.result == .permanentError {
+        if let response = response, response.result == .permanentError {
 
             if let errorLabel = response.payload?.asDictionary()?["label"] as? String {
                 switch errorLabel {
                 case "missing-auth":
-                    let selfUserHasEmail = (ZMUser.selfUser(in: self.managedObjectContext).emailAddress != nil )
-                    errorCode = selfUserHasEmail ? .needsPasswordToRegisterClient : .needsToRegisterEmailToRegisterClient
+                    if let emailAddress = ZMUser.selfUser(in: self.managedObjectContext).emailAddress, !emailAddress.isEmpty {
+                        errorCode = .needsPasswordToRegisterClient
+                    }
+                    else {
+                        errorCode = .invalidCredentials
+                    }
                     break
                 case "too-many-clients":
                     errorCode = .canNotRegisterMoreClients

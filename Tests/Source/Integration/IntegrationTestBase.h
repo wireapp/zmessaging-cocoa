@@ -63,6 +63,7 @@ extern NSString * const SelfUserPassword;
 @property (nonatomic, readonly) NSArray *allUsers;
 @property (nonatomic, readonly) MockFlowManager *mockFlowManager;
 @property (nonatomic, readonly) MockLinkPreviewDetector *mockLinkPreviewDetector;
+@property (nonatomic, readonly) SearchDirectory *sharedSearchDirectory;
 
 @property (nonatomic, readonly) ZMGSMCallHandler *gsmCallHandler;
 
@@ -85,11 +86,15 @@ extern NSString * const SelfUserPassword;
 - (BOOL)loginAndWaitForSyncToBeCompleteWithPhone:(NSString *)phone ZM_MUST_USE_RETURN;
 - (BOOL)loginAndWaitForSyncToBeCompleteWithPhone:(NSString *)phone ignoringAuthenticationFailure:(BOOL)ignoringAuthenticationFailures ZM_MUST_USE_RETURN;
 
+- (void)createSharedSearchDirectory;
 - (void)recreateUserSessionAndWipeCache:(BOOL)wipeCache;
 
 - (ZMConversation *)conversationForMockConversation:(MockConversation *)conversation;
 - (void)setDate:(NSDate *)date forAllEventsInMockConversation:(MockConversation *)conversation;
 - (ZMUser *)userForMockUser:(MockUser *)user;
+- (BOOL)mockMember:(MockMember *)mockMember isEqualToMember:(Member *)member;
+
+- (Team *)teamForMockTeam:(MockTeam *)team;
 
 - (void)storeRemoteIDForObject:(NSManagedObject *)mo;
 - (NSUUID *)remoteIdentifierForMockObject:(NSManagedObject *)mo;
@@ -97,7 +102,6 @@ extern NSString * const SelfUserPassword;
 - (BOOL)waitForEverythingToBeDone ZM_MUST_USE_RETURN;
 - (BOOL)waitForEverythingToBeDoneWithTimeout:(NSTimeInterval)timeout ZM_MUST_USE_RETURN;
 
-- (void)searchAndConnectToUserWithName:(NSString *)searchUserName searchQuery:(NSString *)query;
 - (MockUser *)createPendingConnectionFromUserWithName:(NSString *)name uuid:(NSUUID *)uuid;
 - (MockUser *)createSentConnectionToUserWithName:(NSString *)name uuid:(NSUUID *)uuid;
 - (MockUser *)createUserWithName:(NSString *)name uuid:(NSUUID *)uuid;

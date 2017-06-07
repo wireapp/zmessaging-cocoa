@@ -115,7 +115,7 @@
 
     id selfStrategy = [OCMockObject niceMockForClass:ZMSelfStrategy.class];
     [[[[selfStrategy expect] andReturn:selfStrategy] classMethod] alloc];
-    (void) [(ZMSelfStrategy *)[[selfStrategy expect] andReturn:selfStrategy] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY clientRegistrationStatus:OCMOCK_ANY];
+    (void) [(ZMSelfStrategy *)[[selfStrategy expect] andReturn:selfStrategy] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY clientRegistrationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
     [[selfStrategy stub] contextChangeTrackers];
     [[selfStrategy expect] tearDown];
 

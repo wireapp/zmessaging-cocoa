@@ -145,7 +145,7 @@
 "push.notification.conversation.rename.nousername" = "Une conversation a été renommée en %1$@";
 
 "push.notification.connection.request" = "%@ souhaite se connecter";
-"push.notification.connection.request.nousername" = "Quelqu'un souhaite se connecter";
+"push.notification.connection.request.nousername" = "Quelqu'un souhaite vous ajouter";
 
 "push.notification.connection.accepted" = "Vous et %@ êtes maintenant connectés";
 "push.notification.connection.accepted.nousername" = "Vous avez une nouvelle connexion";

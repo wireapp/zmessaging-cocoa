@@ -31,11 +31,9 @@
 #import "ZMSyncStrategy.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
-#import "ZMSearchDirectory+Internal.h"
 #import <libkern/OSAtomic.h>
 #import "ZMAuthenticationStatus.h"
 #import "ZMPushToken.h"
-#import "ZMCommonContactsSearch.h"
 #import "ZMBlacklistVerificator.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "NSURL+LaunchOptions.h"
@@ -859,35 +857,6 @@ ZM_EMPTY_ASSERTING_INIT()
 @end
 
 
-
-static unsigned long CommonContactsSearchUniqueCounter = 0;
-
-@implementation ZMUserSession (CommonContacts)
-
-- (void)syncSearchCommonContactsWithUserID:(NSUUID *)userID forToken:(id<ZMCommonContactsSearchToken>)token searchDelegate:(id<ZMCommonContactsSearchDelegate>)searchDelegate
-{
-    [ZMCommonContactsSearch startSearchWithTransportSession:self.transportSession
-                                                     userID:userID
-                                                      token:token
-                                                    syncMOC:self.syncManagedObjectContext
-                                                      uiMOC:self.managedObjectContext
-                                             searchDelegate:searchDelegate
-                                               resultsCache:self.commonContactsCache];
-}
-
-- (id<ZMCommonContactsSearchToken>)searchCommonContactsWithUserID:(NSUUID *)userID searchDelegate:(id<ZMCommonContactsSearchDelegate>)searchDelegate
-{
-    id token = @(++CommonContactsSearchUniqueCounter);
-    __weak id<ZMCommonContactsSearchDelegate> weakDelegate = searchDelegate;
-    ZM_WEAK(self);
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        ZM_STRONG(self);
-        [self syncSearchCommonContactsWithUserID:userID forToken:token searchDelegate:weakDelegate];
-    }];
-    return token;
-}
-
-@end
 
 @implementation NSManagedObjectContext (NetworkState)
 

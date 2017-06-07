@@ -109,7 +109,6 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 @interface ZMAuthenticationStatus (CredentialProvider) <ZMCredentialProvider>
 
 - (void)credentialsMayBeCleared;
-- (BOOL)registeredOnThisDeviceOnContext:(NSManagedObjectContext *)moc;
 
 @end
 

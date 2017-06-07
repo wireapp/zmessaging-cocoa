@@ -20,7 +20,7 @@
 
 let UserRequestURL = "/users?ids="
 
-class FakeSearchDirectory : NSObject, ZMSearchResultStore {}
+class FakeSearchDirectory : NSObject {}
 
 class SearchUserImageStrategyTests : MessagingTest {
     
@@ -125,14 +125,14 @@ extension SearchUserImageStrategyTests {
         let strategy = SearchUserImageStrategy(applicationStatus:mockApplicationStatus, managedObjectContext:self.syncMOC)
         
         // then
-        XCTAssertEqual(strategy.userIDsTable, ZMSearchDirectory.userIDsMissingProfileImage())
+        XCTAssertEqual(strategy.userIDsTable, SearchDirectory.userIDsMissingProfileImage)
         XCTAssertEqual(strategy.imagesByUserIDCache, ZMSearchUser.searchUserToSmallProfileImageCache())
     }
     
     
     func testThatItReturnsNoRequestIfThereIsNoUserIDMissingProfileImage() {
         // given
-        XCTAssertEqual(ZMSearchDirectory.userIDsMissingProfileImage().allUserIds().count, 0)
+        XCTAssertEqual(SearchDirectory.userIDsMissingProfileImage.allUserIds().count, 0)
         
         // when
         let request = sut.nextRequest()

@@ -42,6 +42,10 @@ static NSString *const UserInfoRemovedValueKey = @"removed";
 
 static NSString *const ConversationInfoArchivedValueKey = @"archived";
 
+static NSString *const ConversationTeamKey = @"team";
+static NSString *const ConversationTeamIdKey = @"teamid";
+static NSString *const ConversationTeamManagedKey = @"managed";
+
 @interface ZMConversationTranscoder () <ZMSimpleListRequestPaginatorSync>
 
 @property (nonatomic) ZMUpstreamModifiedObjectSync *modifiedSync;
@@ -151,7 +155,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
-        [self.syncStatus failCurrentSyncPhase];
+        [self.syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
     
     [self finishSyncIfCompleted];
@@ -162,13 +166,18 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 - (void)finishSyncIfCompleted
 {
     if (!self.listPaginator.hasMoreToFetch && self.remoteIDSync.isDone && self.isSyncing) {
-        [self.syncStatus finishCurrentSyncPhase];
+        [self.syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
+}
+
+- (SyncPhase)expectedSyncPhase
+{
+    return SyncPhaseFetchingConversations;
 }
 
 - (BOOL)isSyncing
 {
-    return self.syncStatus.currentSyncPhase == SyncPhaseFetchingConversations;
+    return self.syncStatus.currentSyncPhase == self.expectedSyncPhase;
 }
 
 - (ZMTransportRequest *)nextRequestIfAllowed
@@ -196,6 +205,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
 }
 
 - (ZMConversation *)createConversationFromTransportData:(NSDictionary *)transportData
+                                        serverTimeStamp:(NSDate *)serverTimeStamp
 {
     // If the conversation is not a group conversation, we need to make sure that we check if there's any existing conversation without a remote identifier for that user.
     // If it is a group conversation, we don't need to.
@@ -204,13 +214,14 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     VerifyReturnNil(typeNumber != nil);
     ZMConversationType const type = [ZMConversation conversationTypeFromTransportData:typeNumber];
     if (type == ZMConversationTypeGroup || type == ZMConversationTypeSelf) {
-        return [self createGroupOrSelfConversationFromTransportData:transportData];
+        return [self createGroupOrSelfConversationFromTransportData:transportData serverTimeStamp:serverTimeStamp];
     } else {
-        return [self createOneOnOneConversationFromTransportData:transportData type:type];
+        return [self createOneOnOneConversationFromTransportData:transportData type:type serverTimeStamp:serverTimeStamp];
     }
 }
 
 - (ZMConversation *)createGroupOrSelfConversationFromTransportData:(NSDictionary *)transportData
+                                                   serverTimeStamp:(NSDate *)serverTimeStamp
 {
     NSUUID * const convRemoteID = [transportData uuidForKey:@"id"];
     if(convRemoteID == nil) {
@@ -219,7 +230,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     }
     BOOL conversationCreated = NO;
     ZMConversation *conversation = [ZMConversation conversationWithRemoteID:convRemoteID createIfNeeded:YES inContext:self.managedObjectContext created:&conversationCreated];
-    [conversation updateWithTransportData:transportData];
+    [conversation updateWithTransportData:transportData serverTimeStamp:serverTimeStamp];
     
     if (conversation.conversationType != ZMConversationTypeSelf && conversationCreated) {
         // we just got a new conversation, we display new conversation header
@@ -229,7 +240,9 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     return conversation;
 }
 
-- (ZMConversation *)createOneOnOneConversationFromTransportData:(NSDictionary *)transportData type:(ZMConversationType const)type;
+- (ZMConversation *)createOneOnOneConversationFromTransportData:(NSDictionary *)transportData
+                                                           type:(ZMConversationType const)type
+                                                serverTimeStamp:(NSDate *)serverTimeStamp;
 {
     NSUUID * const convRemoteID = [transportData uuidForKey:@"id"];
     if(convRemoteID == nil) {
@@ -279,7 +292,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     }
     
     conversation.remoteIdentifier = convRemoteID;
-    [conversation updateWithTransportData:transportData];
+    [conversation updateWithTransportData:transportData serverTimeStamp:serverTimeStamp];
     return conversation;
 }
 
@@ -400,7 +413,8 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
         ZMLogError(@"Missing conversation payload in ZMUpdateEventConversationCreate");
         return;
     }
-    [self createConversationFromTransportData:payloadData];
+    NSDate *serverTimestamp = [event.payload dateForKey:@"time"];
+    [self createConversationFromTransportData:payloadData serverTimeStamp:serverTimestamp];
 }
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> *)events
@@ -684,6 +698,13 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     if(insertedConversation.userDefinedName != nil) {
         payload[@"name"] = insertedConversation.userDefinedName;
     }
+
+    if (insertedConversation.team.remoteIdentifier != nil) {
+        payload[ConversationTeamKey] = @{
+                             ConversationTeamIdKey: insertedConversation.team.remoteIdentifier.transportString,
+                             ConversationTeamManagedKey: @NO // FIXME:
+                             };
+    }
     
     request = [ZMTransportRequest requestWithPath:ConversationsPath method:ZMMethodPOST payload:payload];
     return [[ZMUpstreamRequest alloc] initWithTransportRequest:request];
@@ -711,7 +732,7 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
         }
     }
     insertedConversation.remoteIdentifier = remoteID;
-    [insertedConversation updateWithTransportData:response.payload.asDictionary];
+    [insertedConversation updateWithTransportData:response.payload.asDictionary serverTimeStamp:nil];
 }
 
 - (ZMUpdateEvent *)conversationEventWithKeys:(NSSet *)keys responsePayload:(id<ZMTransportData>)payload;
@@ -887,13 +908,14 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     
     NSDictionary *dictionaryPayload = [response.payload asDictionary];
     VerifyReturn(dictionaryPayload != nil);
-    [conversation updateWithTransportData:dictionaryPayload];
+    [conversation updateWithTransportData:dictionaryPayload serverTimeStamp:nil];
 }
 
-- (void)deleteObject:(ZMConversation *)conversation downstreamSync:(id<ZMObjectSync>)downstreamSync;
+- (void)deleteObject:(ZMConversation *)conversation withResponse:(ZMTransportResponse *)response downstreamSync:(id<ZMObjectSync>)downstreamSync;
 {
     NOT_USED(downstreamSync);
     NOT_USED(conversation);
+    NOT_USED(response);
 }
 
 @end
@@ -929,12 +951,12 @@ static NSString *const ConversationInfoArchivedValueKey = @"archived";
     NSArray *conversations = [payload arrayForKey:@"conversations"];
     
     for (NSDictionary *rawConversation in [conversations asDictionaries]) {
-        ZMConversation *conv = [self createConversationFromTransportData:rawConversation];
+        ZMConversation *conv = [self createConversationFromTransportData:rawConversation serverTimeStamp:nil];
         conv.needsToBeUpdatedFromBackend = NO;
     }
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
-        [self.syncStatus failCurrentSyncPhase];
+        [self.syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
     
     [self finishSyncIfCompleted];
