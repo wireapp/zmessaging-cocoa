@@ -526,7 +526,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     
     ZMTransportRequest *request = [self.sut nextRequest];
     XCTAssertNotNil(request);
-    ZMTransportResponse *response =[self successResponseForUsersRequest:request];
+    ZMTransportResponse *response = [self successResponseForUsersRequest:request];
     
     // when
     [request completeWithResponse:response];
@@ -534,6 +534,21 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     
     // then
     XCTAssertFalse(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
+}
+
+- (void)testThatTheCurrentSyncPhaseIsFinishedWhenThereAreNoLocalUsersToBeFetched
+{
+    // given
+    self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
+
+    // when
+    ZMTransportRequest *request = [self.sut nextRequest];
+    XCTAssertNil(request);
+
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
 
 - (void)testThatItDoesNotClearNeedsToBeUpdatedFromBackendWhenItIsUpdatedFromPushChannelData

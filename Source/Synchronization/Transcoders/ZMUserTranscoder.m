@@ -72,10 +72,16 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
             [userIds addObject:user.remoteIdentifier];
         }
     }
-    
-    [self.remoteIDObjectSync addRemoteIdentifiersThatNeedDownload:userIds];
-}
 
+    // If there are no users (in case we just created an account),
+    // we move on to the next sync phase manually.
+    if (userIds.count == 0) {
+        self.didStartSyncing = NO;
+        [self.syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
+    } else {
+        [self.remoteIDObjectSync addRemoteIdentifiersThatNeedDownload:userIds];
+    }
+}
 
 - (SyncPhase)expectedSyncPhase
 {
