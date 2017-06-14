@@ -136,8 +136,6 @@ extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
             guard let id = (payload["id"] as? String).flatMap(UUID.init) else { return nil }
             let team = Team.fetchOrCreate(with: id, create: true, in: managedObjectContext, created: nil)
             team?.update(with: payload)
-            // See `markExistingTeamsAsNeedingToBeDownloaded`
-            team?.needsToBeUpdatedFromBackend = false
             return team
         }
 
