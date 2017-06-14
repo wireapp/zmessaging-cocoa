@@ -77,24 +77,31 @@ public class CallObserver : NSObject, VoiceChannelStateObserver {
 extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
+        guard #available(iOS 10.0, *) else {
+            return
+        }
         guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext) else {
             return
         }
         
         switch callState {
         case .incoming(video: let video, shouldRing: let shouldRing):
-            guard
-                let userId = userId,
-                let user = ZMUser(remoteID: userId, createIfNeeded: false, in: userSession.managedObjectContext) else {
+            guard let userId = userId, let user = ZMUser(remoteID: userId, createIfNeeded: false, in: userSession.managedObjectContext) else {
                     break
             }
-            if shouldRing && !conversation.isSilenced {
-                indicateIncomingCall(from: user, in: conversation, video: video)
+            if shouldRing {
+                if conversation.isSilenced {
+                    indicateIncomingCall(from: user, in: conversation, video: video)
+                }
+            } else {
+                provider.reportCall(with: conversationId,
+                                    endedAt: timeStamp,
+                                    reason: UInt(CXCallEndedReason.unanswered.rawValue))
             }
         case let .terminating(reason: reason) where !(reason == .normal && userId == ZMUser.selfUser(inUserSession: userSession).remoteIdentifier):
-            if #available(iOS 10.0, *) {
-                provider.reportCall(with: conversationId, endedAt: nil, reason: UInt(reason.CXCallEndedReason.rawValue))
-            }
+            provider.reportCall(with: conversationId,
+                                endedAt: timeStamp,
+                                reason: UInt(reason.CXCallEndedReason.rawValue))
         default:
             break
         }
