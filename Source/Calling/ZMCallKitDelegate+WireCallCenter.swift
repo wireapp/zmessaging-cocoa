@@ -90,7 +90,7 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
                     break
             }
             if shouldRing {
-                if conversation.isSilenced {
+                if !conversation.isSilenced {
                     indicateIncomingCall(from: user, in: conversation, video: video)
                 }
             } else {
