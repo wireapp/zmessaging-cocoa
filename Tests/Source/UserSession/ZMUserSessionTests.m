@@ -1280,7 +1280,7 @@
 }
 
 
-- (void)testThatItCalls_DelegateShowConversationAndCallsBack_ZMMissedCallCategory_CallBackAction
+- (void)testThatItCalls_DelegateShowConversationButDoesNotCallBack_ZMMissedCallCategory_CallBackAction
 {
     // given
     [self simulateLoggedInUser];
@@ -1298,7 +1298,7 @@
     }];
     
     // then
-    XCTAssertTrue(conversation.callDeviceIsActive);
+    XCTAssertFalse(conversation.callDeviceIsActive);
 
 }
 
