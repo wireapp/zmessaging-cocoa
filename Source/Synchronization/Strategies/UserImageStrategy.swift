@@ -26,57 +26,13 @@ let SmallProfileRemoteIdentifierDataKey = "smallProfileRemoteIdentifier_data"
 let RequestUserProfileAssetNotificationName = "ZMRequestUserProfileAssetNotification"
 let RequestUserProfileSmallAssetNotificationName = "ZMRequestUserProfileSmallAssetNotificationName"
 
-
-class ImageRequestFactory : ImageRequestSource {
-    static public func request(for imageOwner: ZMImageOwner, format: ZMImageFormat, conversationID: UUID, correlationID: UUID, resultHandler: ZMCompletionHandler?) -> ZMTransportRequest? {
-        guard let imageData = imageOwner.imageData(for:format)
-        else {
-            fatal("Imageowner does not have image data for ZMImageFormat rawValue \(format.rawValue)")
-        }
-        
-        let disposition = contentDisposition(for: imageOwner, format: format, conversationID: conversationID, correlationID: correlationID)
-        let request = ZMTransportRequest.post(withPath: "/assets", imageData: imageData, contentDisposition: disposition)
-        if let completionHandler = resultHandler {
-            request?.add(completionHandler)
-        }
-        return request
-    }
+public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder {
     
-    static func contentDisposition(for imageOwner: ZMImageOwner, format: ZMImageFormat, conversationID: UUID, correlationID: UUID) -> [AnyHashable : Any] {
-        return ZMAssetMetaDataEncoder.contentDisposition(for: imageOwner,
-                                                         format: format,
-                                                         conversationID: conversationID,
-                                                         correlationID: correlationID)
-    }
-}
-
-@objc public protocol ImageRequestSource {
-    static func request(for imageOwner: ZMImageOwner, format: ZMImageFormat, conversationID: UUID, correlationID: UUID, resultHandler: ZMCompletionHandler?) -> ZMTransportRequest?
-}
-
-
-public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder, ZMUpstreamTranscoder {
-    
-    var requestFactory : ImageRequestSource
     var smallProfileDownstreamSync: ZMDownstreamObjectSyncWithWhitelist!
     var mediumDownstreamSync: ZMDownstreamObjectSyncWithWhitelist!
-    var upstreamSync: ZMUpstreamModifiedObjectSync!
-    var assetPreprocessingTracker: ZMImagePreprocessingTracker!
-    let imageProcessingQueue: OperationQueue
-    var tornDown :Bool = false
+    var tornDown: Bool = false
     
-    @available (*, unavailable)
-    override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
-        fatalError()
-    }
-    
-    @objc public convenience init(managedObjectContext:NSManagedObjectContext, applicationStatus: ApplicationStatus, imageProcessingQueue: OperationQueue) {
-        self.init(managedObjectContext: managedObjectContext, applicationStatus: applicationStatus, imageProcessingQueue: imageProcessingQueue, requestFactory: nil)
-    }
-    
-    init(managedObjectContext:NSManagedObjectContext, applicationStatus: ApplicationStatus, imageProcessingQueue: OperationQueue, requestFactory : ImageRequestSource?) {
-        self.imageProcessingQueue = imageProcessingQueue;
-        self.requestFactory = requestFactory ?? ImageRequestFactory()
+    override public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         
         // Small profiles
@@ -95,31 +51,15 @@ public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder
                                                                         predicateForObjectsToDownload:filterForMediumImage,
                                                                         managedObjectContext:managedObjectContext)
         
-        // Self user upstream
-        let filter = NSPredicate(format: "imageCorrelationIdentifier != nil")
-        self.upstreamSync = ZMUpstreamModifiedObjectSync(transcoder:self,
-                                                entityName:ZMUser.entityName(),
-                                                update:nil,
-                                                filter:filter,
-                                                keysToSync:[ImageSmallProfileDataKey, ImageMediumDataKey],
-                                                managedObjectContext:managedObjectContext)
+        self.mediumDownstreamSync.whiteListObject(ZMUser.selfUser(in: managedObjectContext))
+        self.smallProfileDownstreamSync.whiteListObject(ZMUser.selfUser(in: managedObjectContext))
         
-        // asset PreprocessingTracker
-        let attributePredicate = NSPredicate(format:"%K != NIL", ImageOrigionalProfileDataKey)
-        self.assetPreprocessingTracker = ZMImagePreprocessingTracker(managedObjectContext:self.managedObjectContext,
-                                                                     imageProcessingQueue:self.imageProcessingQueue,
-                                                                     fetch:attributePredicate,
-                                                                     needsProcessingPredicate:attributePredicate,
-                                                                     entityClass:ZMUser.self)
         NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: Notification.Name(rawValue:RequestUserProfileAssetNotificationName), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: Notification.Name(rawValue:RequestUserProfileSmallAssetNotificationName), object: nil)
-        
-        self.recoverFromInconsistentUserImageStatus()
     }
     
     public func tearDown() {
         tornDown = true
-        assetPreprocessingTracker.tearDown()
         NotificationCenter.default.removeObserver(self)
     }
     
@@ -127,24 +67,8 @@ public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder
         assert(tornDown)
     }
     
-    func recoverFromInconsistentUserImageStatus() {
-        managedObjectContext.performGroupedBlock{
-            let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
-            let imageMediumKeys = Set(arrayLiteral: ImageMediumDataKey,ImageSmallProfileDataKey)
-            let hasLocalModificationsForImageKeys = selfUser.hasLocalModifications(forKeys: imageMediumKeys)
-            let hasMissingImageData = selfUser.imageMediumData == nil || selfUser.imageSmallProfileData == nil;
-            
-            if (hasLocalModificationsForImageKeys && hasMissingImageData) {
-                selfUser.resetLocallyModifiedKeys(imageMediumKeys)
-            }
-            
-            self.smallProfileDownstreamSync.whiteListObject(selfUser)
-            self.mediumDownstreamSync.whiteListObject(selfUser)
-        }
-    }
-    
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        for sync in [self.smallProfileDownstreamSync, self.mediumDownstreamSync, self.upstreamSync] as [ZMRequestGenerator] {
+        for sync in [self.smallProfileDownstreamSync, self.mediumDownstreamSync] as [ZMRequestGenerator] {
             if let request = sync.nextRequest() {
                 return request
             }
@@ -228,54 +152,6 @@ public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder
         // no-op
     }
     
-    
-    // MARK - Updating
-    public func request(forUpdating managedObject: ZMManagedObject, forKeys keys: Set<String>) -> ZMUpstreamRequest? {
-        guard let user = managedObject as? ZMUser, user.isSelfUser
-        else {
-            assertionFailure()
-            return nil
-        }
-        
-        if keys.contains(ImageSmallProfileDataKey) || keys.contains(ImageMediumDataKey) {
-            return requestForUploadingImageToSelfConversation(selfUser:user, keys:keys)
-        }
-        
-        ZMTrapUnableToGenerateRequest(keys, self);
-        return nil;
-    }
-    
-    func requestForUploadingImageToSelfConversation(selfUser: ZMUser, keys: Set<String>) -> ZMUpstreamRequest? {
-        guard let correlationID = selfUser.imageCorrelationIdentifier
-        else {
-            fatal("Image correlation identifier is missing")
-        }
-        
-        let imageFormat : ZMImageFormat
-        let updatedKey : String
-        if keys.contains(ImageSmallProfileDataKey) {
-            updatedKey = ImageSmallProfileDataKey;
-            imageFormat = .profile;
-        }
-        else if keys.contains(ImageMediumDataKey) {
-            updatedKey = ImageMediumDataKey;
-            imageFormat = .medium;
-        } else {
-            fatal("Modified keys do not contain medium nor smallProfile data key")
-        }
-    
-        let selfConversationID = ZMConversation.selfConversationIdentifier(in: managedObjectContext)
-        guard let request = type(of: requestFactory).request(for: selfUser,
-                                                             format: imageFormat,
-                                                             conversationID: selfConversationID,
-                                                             correlationID: correlationID,
-                                                             resultHandler: nil)
-        else {
-            fatal("Request factory returned nil request.")
-        }
-        return ZMUpstreamRequest(keys: Set(arrayLiteral:updatedKey), transportRequest:request)
-    }
-    
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
         guard let downstreamSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist,
               let user = object as? ZMUser
@@ -293,65 +169,12 @@ public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder
             preconditionFailure("Invalid downstream sync")
         }
     }
-    
-    public func updateUpdatedObject(_ managedObject: ZMManagedObject, requestUserInfo: [AnyHashable : Any]? = nil, response: ZMTransportResponse, keysToParse: Set<String>) -> Bool {
-        guard let payloadData = (response.payload as? [String: Any])?["data"] as? [String : Any],
-              let payloadInfo = payloadData["info"] as? [String: Any],
-              let receivedImageCorrelationID = (payloadInfo["correlation_id"] as? String)?.uuid(),
-              let user = managedObject as? ZMUser, user.imageCorrelationIdentifier == receivedImageCorrelationID,
-              let imageID = (payloadData["id"] as? String)?.uuid()
-        else { return false }
-        
-        if keysToParse.contains(ImageSmallProfileDataKey) {
-            user.smallProfileRemoteIdentifier = imageID
-            user.localSmallProfileRemoteIdentifier = user.smallProfileRemoteIdentifier;
-            user.resetLocallyModifiedKeys(Set(arrayLiteral:ImageSmallProfileDataKey))
-            
-            checkIfBothMediumAndSmallProfileHaveBeenUploaded(for: user)
-            return true
-        }
-        else if keysToParse.contains(ImageMediumDataKey) {
-            user.mediumRemoteIdentifier = imageID
-            user.localMediumRemoteIdentifier = user.mediumRemoteIdentifier;
-            user.resetLocallyModifiedKeys(Set(arrayLiteral:ImageMediumDataKey))
-            
-            checkIfBothMediumAndSmallProfileHaveBeenUploaded(for: user)
-            return true;
-        }
-        return false;
-    }
-    
-    func checkIfBothMediumAndSmallProfileHaveBeenUploaded(for user: ZMUser) {
-        let doneProcessingImage = (user.originalProfileImageData == nil)
-        let doneUploading = Set(arrayLiteral: ImageSmallProfileDataKey, ImageMediumDataKey).isDisjoint(with: user.keysThatHaveLocalModifications)
-        if (doneProcessingImage && doneUploading) {
-            user.setLocallyModifiedKeys(Set(arrayLiteral:SmallProfileRemoteIdentifierDataKey, MediumRemoteIdentifierDataKey))
-        }
-    }
-    
-    // MARK - Inserting
-    public func request(forInserting managedObject: ZMManagedObject, forKeys keys: Set<String>?) -> ZMUpstreamRequest? {
-        assertionFailure("requestForInsertingObject should never be called")
-        return nil
-    }
-
-    public func updateInsertedObject(_ managedObject: ZMManagedObject, request upstreamRequest: ZMUpstreamRequest, response: ZMTransportResponse) {
-        assertionFailure("updateInsertedObject should never be called")
-    }
-
-    public func objectToRefetchForFailedUpdate(of managedObject: ZMManagedObject) -> ZMManagedObject? {
-        return nil
-    }
-    
-    public func shouldProcessUpdatesBeforeInserts() -> Bool {
-        return true
-    }
 }
 
 extension UserImageStrategy : ZMContextChangeTrackerSource {
 
     public var contextChangeTrackers: [ZMContextChangeTracker] {
-        return [self.assetPreprocessingTracker, self.smallProfileDownstreamSync, self.mediumDownstreamSync, self.upstreamSync]
+        return [self.smallProfileDownstreamSync, self.mediumDownstreamSync]
     }
     
 }

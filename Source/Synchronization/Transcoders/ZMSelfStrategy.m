@@ -28,14 +28,8 @@
 
 static NSString *SelfPath = @"/self";
 
-static NSString * const MediumRemoteIdentifierDataKey = @"mediumRemoteIdentifier_data";
-static NSString * const SmallProfileRemoteIdentifierDataKey = @"smallProfileRemoteIdentifier_data";
-
 static NSString * const AccentColorValueKey = @"accentColorValue";
 static NSString * const NameKey = @"name";
-
-static NSString * const ImageMediumDataKey = @"imageMediumData";
-static NSString * const ImageSmallProfileDataKey = @"imageSmallProfileData";
 
 static NSString * const PreviewProfileAssetIdentifierKey = @"previewProfileAssetIdentifier";
 static NSString * const CompleteProfileAssetIdentifierKey = @"completeProfileAssetIdentifier";
@@ -70,7 +64,7 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
                     clientRegistrationStatus:(ZMClientRegistrationStatus *)clientRegistrationStatus
                                   syncStatus:(SyncStatus *)syncStatus
 {
-    NSArray<NSString *> *keysToSync = @[NameKey, AccentColorValueKey, SmallProfileRemoteIdentifierDataKey, MediumRemoteIdentifierDataKey, PreviewProfileAssetIdentifierKey, CompleteProfileAssetIdentifierKey];
+    NSArray<NSString *> *keysToSync = @[NameKey, AccentColorValueKey, PreviewProfileAssetIdentifierKey, CompleteProfileAssetIdentifierKey];
     
     ZMUpstreamModifiedObjectSync *upstreamObjectSync = [[ZMUpstreamModifiedObjectSync alloc]
                                                         initWithTranscoder:self
@@ -93,7 +87,7 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
         self.syncStatus = syncStatus;
         self.upstreamObjectSync = upstreamObjectSync;
         if (self.upstreamObjectSync == nil) {
-            NSArray<NSString *> *keysToSync = @[NameKey, AccentColorValueKey, SmallProfileRemoteIdentifierDataKey, MediumRemoteIdentifierDataKey];
+            NSArray<NSString *> *keysToSync = @[NameKey, AccentColorValueKey];
             self.upstreamObjectSync = [[ZMUpstreamModifiedObjectSync alloc]
                                        initWithTranscoder:self entityName:ZMUser.entityName
                                        keysToSync:keysToSync
@@ -193,15 +187,6 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
         ([keys containsObject:PreviewProfileAssetIdentifierKey] && [keys containsObject:CompleteProfileAssetIdentifierKey])) {
         return [self requestForSettingBasicProfileDataOfUser:user changedKeys:keys];
     }
-    else if([keys containsObject:SmallProfileRemoteIdentifierDataKey] && [keys containsObject:MediumRemoteIdentifierDataKey]) {
-        
-        if(user.smallProfileRemoteIdentifier == nil && user.mediumRemoteIdentifier == nil) {
-            return [self requestForDeletingImageData];
-        }
-        else {
-            return [self requestForSettingImageDataForSelfUser:user];
-        }
-    }
     ZMTrapUnableToGenerateRequest(keys, self);
     return nil;
 }
@@ -239,31 +224,6 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
       ];
 }
 
-- (ZMUpstreamRequest *)requestForSettingImageDataForSelfUser:(ZMUser *)user
-{
-    NSUUID *correlationID = user.imageCorrelationIdentifier;
-    return [self requestWithPicturePayload:@[
-                                      [ZMAssetMetaDataEncoder createAssetDataWithID:user.smallProfileRemoteIdentifier imageOwner:user format:ZMImageFormatProfile correlationID:correlationID],
-                                      [ZMAssetMetaDataEncoder createAssetDataWithID:user.mediumRemoteIdentifier imageOwner:user format:ZMImageFormatMedium correlationID:correlationID]
-                                      ]];
-}
-
-
-- (ZMUpstreamRequest *)requestForDeletingImageData
-{
-    return [self requestWithPicturePayload:@[]];
-}
-
-static NSString * const DeletionRequestKey = @"";
-
-- (ZMUpstreamRequest *)requestWithPicturePayload:(NSArray *)picturePayload
-{
-    NSDictionary *payload = @{@"picture": picturePayload};
-    ZMTransportRequest *request = [ZMTransportRequest requestWithPath:@"/self" method:ZMMethodPUT payload:payload];
-    BOOL isDeletionRequest = (picturePayload.count < 1);
-    return [[ZMUpstreamRequest alloc] initWithKeys:[NSSet setWithObjects:SmallProfileRemoteIdentifierDataKey, MediumRemoteIdentifierDataKey, nil] transportRequest:request userInfo:@{DeletionRequestKey: @(isDeletionRequest)}];
-}
-
 - (ZMUpstreamRequest *)requestForInsertingObject:(ZMManagedObject *)managedObject forKeys:(NSSet *)keys;
 {
     NOT_USED(managedObject);
@@ -271,33 +231,20 @@ static NSString * const DeletionRequestKey = @"";
     return nil;
 }
 
+- (BOOL)updateUpdatedObject:(ZMUser *__unused )selfUser
+            requestUserInfo:(NSDictionary *__unused )requestUserInfo
+                   response:(ZMTransportResponse *__unused)response
+                keysToParse:(NSSet *__unused )keysToParse
+{
+    return NO;
+}
 - (void)updateInsertedObject:(ZMManagedObject * __unused)managedObject request:(ZMUpstreamRequest *__unused)upstreamRequest response:(ZMTransportResponse *__unused)response;
 {
     // we will never create a user on the backend with this sync
 }
 
-
-- (BOOL)updateUpdatedObject:(ZMUser *)selfUser
-            requestUserInfo:(NSDictionary *)requestUserInfo
-                   response:(ZMTransportResponse *__unused)response
-                keysToParse:(NSSet *)keysToParse
+- (ZMManagedObject *)objectToRefetchForFailedUpdateOfObject:(ZMManagedObject *__unused)managedObject;
 {
-    if ([keysToParse isEqual:[NSSet setWithObjects:MediumRemoteIdentifierDataKey, SmallProfileRemoteIdentifierDataKey, nil]])
-    {
-        BOOL wasDeletionRequest = [requestUserInfo[DeletionRequestKey] boolValue];
-        if (wasDeletionRequest) {
-            selfUser.imageMediumData = nil;
-            selfUser.imageSmallProfileData = nil;
-            [self.managedObjectContext enqueueDelayedSave];
-        }
-        
-    }
-    return NO;
-}
-
-- (ZMManagedObject *)objectToRefetchForFailedUpdateOfObject:(ZMManagedObject *)managedObject;
-{
-    NOT_USED(managedObject);
     return nil;
 }
 

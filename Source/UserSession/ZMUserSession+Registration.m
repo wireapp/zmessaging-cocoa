@@ -36,10 +36,10 @@
 
 @implementation ZMUser (ZMRegistrationUser)
 
-- (void)updateFromRegistrationUser:(ZMCompleteRegistrationUser *)registrationUser {
+- (void)updateFromRegistrationUser:(ZMCompleteRegistrationUser *)registrationUser inSession:(ZMUserSession *)session {
     self.name = registrationUser.name;
-    if(registrationUser.originalProfileImageData != nil) {
-        self.originalProfileImageData = registrationUser.originalProfileImageData;
+    if(registrationUser.profileImageData != nil) {
+        [session.profileUpdate updateImageWithImageData:registrationUser.profileImageData];
     }
     self.phoneNumber = registrationUser.phoneNumber;
     self.emailAddress = registrationUser.emailAddress;
@@ -56,7 +56,7 @@
     return [self.managedObjectContext isRegisteredOnThisDevice];
 }
 
-- (void)registerSelfUser:(ZMCompleteRegistrationUser * __unused)registrationUser
+- (void)registerSelfUser:(ZMCompleteRegistrationUser *)registrationUser
 {
     NSString *password = registrationUser.password;
     NSString *phoneNumber = registrationUser.phoneNumber;
@@ -76,7 +76,7 @@
     }
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    [selfUser updateFromRegistrationUser:registrationUser];
+    [selfUser updateFromRegistrationUser:registrationUser inSession:self];
     [self.managedObjectContext saveOrRollback];
     
     [self.syncManagedObjectContext performGroupedBlock:^{
