@@ -19,18 +19,9 @@
 @testable import WireSyncEngine
 import WireDataModel
 
-class MockRequestStrategy : ImageRequestSource {
-    static var mockRequest : ZMTransportRequest?
-    public static func request(for imageOwner: ZMImageOwner, format: ZMImageFormat, conversationID: UUID, correlationID: UUID, resultHandler completionHandler: ZMCompletionHandler?) -> ZMTransportRequest? {
-        return mockRequest
-    }
-}
-
 class UserImageStrategyTests : MessagingTest {
 
     var sut : UserImageStrategy!
-    var queue : OperationQueue!
-    var requestStrategy : MockRequestStrategy!
     var mockApplicationStatus : MockApplicationStatus!
     var user1 : ZMUser!
     var user1ID: UUID!
@@ -40,14 +31,10 @@ class UserImageStrategyTests : MessagingTest {
         syncMOC.zm_userImageCache = UserImageLocalCache()
         uiMOC.zm_userImageCache = syncMOC.zm_userImageCache
         
-        queue = OperationQueue()
-        queue.name = name
-        queue.maxConcurrentOperationCount = 1
         mockApplicationStatus = MockApplicationStatus()
         mockApplicationStatus.mockSynchronizationState = .eventProcessing
 
-        requestStrategy = MockRequestStrategy()
-        sut = UserImageStrategy(managedObjectContext: syncMOC, applicationStatus:mockApplicationStatus, imageProcessingQueue: queue, requestFactory: requestStrategy)
+        sut = UserImageStrategy(withManagedObjectContext: syncMOC, applicationStatus:mockApplicationStatus)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         self.user1ID = UUID()
@@ -72,7 +59,7 @@ class UserImageStrategyTests : MessagingTest {
 
 }
 
-// MARK: DownloadPredicate
+// MARK:- DownloadPredicate
 extension UserImageStrategyTests {
     
     func matches(mediumRemoteIdentifier: UUID?, localMediumRemoteIdentifier: UUID?) -> Bool {
@@ -355,7 +342,7 @@ extension UserImageStrategyTests {
         }
     }
     
-    func testThatItUdpatesTheSmallProfileImageFromAResponse() {
+    func testThatItUpdatesTheSmallProfileImageFromAResponse() {
         // TODO: There's a race condition here.
         // If the mediumRemoteIdentifier changes while we're retrieving image data
         // we'll still assume that the data is the newest. In order to fix that,
@@ -380,271 +367,6 @@ extension UserImageStrategyTests {
             XCTAssertEqual(self.user1.imageSmallProfileData, imageData);
             XCTAssertEqual(self.user1.smallProfileRemoteIdentifier, imageID);
             XCTAssertEqual(self.user1.localSmallProfileRemoteIdentifier, imageID);
-        }
-    }
-}
-
-// MARK: ImagePreprocessing
-
-extension UserImageStrategyTests {
-
-    func testThatSmallProfileImageAndMediumImageDataGetsGeneratedForNewlyUpdatedSelfUser() {
-        
-        // given
-        var selfUser: ZMUser!
-        syncMOC.performGroupedBlockAndWait{
-            selfUser = ZMUser.selfUser(in:self.syncMOC)
-            selfUser.setValue(self.data(forResource:"1900x1500", extension:"jpg"), forKey:"originalProfileImageData")
-            self.forwardChanges(for:selfUser)
-            
-            XCTAssertNil(selfUser.imageSmallProfileData)
-            XCTAssertNil(selfUser.imageMediumData)
-        }
-
-        // when
-        syncMOC.performAndWait {
-            _ = self.sut.nextRequest()
-        }
-        
-        // then
-        XCTAssert(self.wait(withTimeout: 0.5, forSaveOf: self.syncMOC, until: { () -> Bool in
-            return selfUser.originalProfileImageData == nil;
-        }))
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        syncMOC.performGroupedBlockAndWait{
-            XCTAssertTrue(selfUser.imageSmallProfileData?.count > 0)
-            XCTAssertTrue(selfUser.imageMediumData?.count > 0)
-            XCTAssertNil(selfUser.originalProfileImageData)
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-    }
-
-    func setUp(selfUser:ZMUser, with remoteID:UUID, formats:[ZMImageFormat], locallyModifiedKeys:[String]) {
-        // given
-        syncMOC.performGroupedBlockAndWait{
-            selfUser.remoteIdentifier = remoteID
-            selfUser.imageCorrelationIdentifier = UUID()
-            
-            formats.forEach{
-                let profileImageData : Data
-                switch $0 {
-                case .profile: profileImageData = self.data(forResource:"tiny", extension:"jpg")
-                case .medium: profileImageData = self.data(forResource:"medium", extension:"jpg")
-                default: return XCTFail("Unrecognized image format in test");
-                }
-                selfUser.setImageData(profileImageData, for:$0, properties:nil)
-            }
-            
-            let selfConv = ZMConversation.insertNewObject(in: self.syncMOC)
-            selfConv.conversationType = .self;
-            selfConv.remoteIdentifier = remoteID;
-            
-            selfUser.needsToBeUpdatedFromBackend = false;
-            selfUser.setLocallyModifiedKeys(Set(locallyModifiedKeys))
-        }
-        
-        XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
-        forwardChanges(for: selfUser)
-        selfUser.setValue(self.data(forResource:"medium", extension:"jpg"), forKey:"originalProfileImageData")
-    }
-    
-    func expect(request: ZMTransportRequest, for selfUser: ZMUser, format: ZMImageFormat, convID: UUID, handler:@escaping ((ZMTransportRequest?) -> Void)) {
-        var receivedRequest : ZMTransportRequest!
-        syncMOC.performGroupedBlockAndWait{
-            MockRequestStrategy.mockRequest = request
-            
-            // when
-            receivedRequest = self.sut.nextRequest()
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        syncMOC.performGroupedBlockAndWait{
-            // then
-            handler(receivedRequest)
-        }
-    }
-    
-    func checkImageUpload(with format:ZMImageFormat, modifiedKeys: [String]) -> Bool {
-        // given
-        let selfUserAndSelfConversationID = UUID()
-        let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        setUp(selfUser: selfUser, with: selfUserAndSelfConversationID, formats: [format], locallyModifiedKeys: modifiedKeys)
-        
-        // expect
-        let expectedRequest = ZMTransportRequest(getFromPath: "/TEST-SUCCESSFUL")
-        
-        // then
-        var success = false
-        self.expect(request: expectedRequest, for: selfUser, format: format, convID: selfUserAndSelfConversationID) { (request) in
-            success = (request != nil) && (request == expectedRequest)
-        }
-        return success
-    }
-    
-    func testThatItUploadsProfileImageDataToSelfConversation() {
-        XCTAssertTrue(checkImageUpload(with:.profile, modifiedKeys:["imageSmallProfileData"]))
-    }
-    
-    func testThatItUploadsMediumImageDataToSelfConversation() {
-        XCTAssertTrue(checkImageUpload(with:.medium, modifiedKeys:["imageMediumData"]))
-    }
-    
-    func testThatItDoesNotUploadMediumImageDataIfThereIsNoCorrelationIdentifier() {
-        // given
-        let selfUserAndSelfConversationID = UUID()
-        let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        setUp(selfUser: selfUser, with: selfUserAndSelfConversationID, formats: [ZMImageFormat.medium], locallyModifiedKeys: ["imageMediumData"])
-        selfUser.imageCorrelationIdentifier = nil
-        MockRequestStrategy.mockRequest = ZMTransportRequest(getFromPath: "/TEST-SUCCESSFUL")
-        
-        // expect
-        var receivedRequest : ZMTransportRequest!
-        syncMOC.performGroupedBlockAndWait{
-            
-            // when
-            receivedRequest = self.sut.nextRequest()
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertNil(receivedRequest)
-    }
-    
-    
-    func testThatItSetsTheRemoteIdentifierForSmallProfile() {
-        // given
-        let selfUserAndSelfConversationID = UUID()
-        let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        setUp(selfUser: selfUser, with: selfUserAndSelfConversationID, formats: [.profile], locallyModifiedKeys: ["imageSmallProfileData"])
-        
-        let imageID = UUID()
-        let smallProfileAsset = ZMAssetMetaDataEncoder.createAssetData(with: imageID, imageOwner: selfUser, format: .profile, correlationID: selfUser.imageCorrelationIdentifier!)
-        
-        // expect
-        let expectedSmallProfileRequest = ZMTransportRequest(getFromPath:"/small-profile-upload-request")
-        let smallProfileResponse = ZMTransportResponse(payload:["data": smallProfileAsset] as ZMTransportData, httpStatus:200, transportSessionError:nil)
-        self.expect(request: expectedSmallProfileRequest, for: selfUser, format: .profile, convID: selfUserAndSelfConversationID) { (request) in
-            XCTAssertEqual(request, expectedSmallProfileRequest)
-            request?.complete(with: smallProfileResponse)
-        }
-        
-        // then
-        syncMOC.performGroupedBlockAndWait{
-            XCTAssertEqual(selfUser.smallProfileRemoteIdentifier, imageID);
-            XCTAssertEqual(selfUser.localSmallProfileRemoteIdentifier, imageID);
-            XCTAssertFalse(selfUser.keysThatHaveLocalModifications.contains("smallProfileRemoteIdentifier_data"))
-            XCTAssertFalse(selfUser.keysThatHaveLocalModifications.contains("imageSmallProfileData"))
-        }
-    }
-    
-    func testThatItSetsTheRemoteIdentifierForMedium() {
-        // given
-        let selfUserAndSelfConversationID = UUID()
-        let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        setUp(selfUser: selfUser, with: selfUserAndSelfConversationID, formats: [.medium], locallyModifiedKeys: ["imageMediumData"])
-        
-        let imageID = UUID()
-        let mediumAsset = ZMAssetMetaDataEncoder.createAssetData(with: imageID, imageOwner: selfUser, format: .medium, correlationID: selfUser.imageCorrelationIdentifier!)
-        
-        // expect
-        let expectedMediumRequest = ZMTransportRequest(getFromPath:"/medium-upload-request")
-        let mediumResponse = ZMTransportResponse(payload:["data": mediumAsset] as ZMTransportData, httpStatus:200, transportSessionError:nil)
-        self.expect(request: expectedMediumRequest, for: selfUser, format: .medium, convID: selfUserAndSelfConversationID) { (request) in
-            XCTAssertEqual(request, expectedMediumRequest);
-            request?.complete(with: mediumResponse)
-        }
-        
-        // then
-        syncMOC.performGroupedBlockAndWait{
-            XCTAssertEqual(selfUser.mediumRemoteIdentifier, imageID)
-            XCTAssertEqual(selfUser.localMediumRemoteIdentifier, imageID)
-            XCTAssertFalse(selfUser.keysThatHaveLocalModifications.contains("mediumRemoteIdentifier_data"))
-            XCTAssertFalse(selfUser.keysThatHaveLocalModifications.contains("imageMediumData"))
-        }
-    }
-
-    func testThatItRecoverFromInconsistenUserImageState() {
-        // given
-        let modifiedKeys = ["imageMediumData", "imageSmallProfileData"]
-        let selfUserAndSelfConversationID = UUID()
-        let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        setUp(selfUser: selfUser, with: selfUserAndSelfConversationID, formats: [.medium, .profile], locallyModifiedKeys: modifiedKeys)
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        selfUser.imageMediumData = nil;
-        selfUser.imageSmallProfileData = nil;
-        
-        XCTAssertTrue(selfUser.hasLocalModifications(forKeys: Set(modifiedKeys)))
-        XCTAssertNil(selfUser.imageSmallProfileData)
-        XCTAssertNil(selfUser.imageMediumData)
-        
-        // when
-        let localSUT = UserImageStrategy(managedObjectContext:self.syncMOC, applicationStatus:mockApplicationStatus, imageProcessingQueue:self.queue)
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        syncMOC.performGroupedBlockAndWait{
-            XCTAssertFalse(selfUser.hasLocalModifications(forKeys:Set(modifiedKeys)))
-            localSUT.tearDown()
-        }
-    }
-    
-    func testThatItDoesNotUpdateTheImageIfTheCorrelationIDFromTheBackendResponseDiffersFromTheUserImageCorrelationID(){
-        // given
-        let modifiedKeys = ["imageMediumData", "imageSmallProfileData"]
-        let selfUserAndSelfConversationID = UUID()
-        let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        setUp(selfUser: selfUser, with: selfUserAndSelfConversationID, formats: [.medium, .profile], locallyModifiedKeys: modifiedKeys)
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        let originalImageCorrelationIdentifier = selfUser.imageCorrelationIdentifier;
-        
-        let imageID = UUID()
-        let invalidCorrelationID = UUID()
-        let smallProfileAsset = ZMAssetMetaDataEncoder.createAssetData(with: imageID, imageOwner: selfUser, format: .profile, correlationID: invalidCorrelationID)
-        
-        // expect
-        let expectedSmallProfileRequest = ZMTransportRequest(getFromPath:"/upload-request")
-        let response = ZMTransportResponse(payload:["data": smallProfileAsset, "id": UUID().transportString()] as ZMTransportData, httpStatus:200, transportSessionError:nil)
-        self.expect(request: expectedSmallProfileRequest, for: selfUser, format: .profile, convID: selfUserAndSelfConversationID) { (request) in
-            XCTAssertEqual(request, expectedSmallProfileRequest);
-            request?.complete(with: response)
-        }
-
-        // then
-        syncMOC.performGroupedBlockAndWait{
-            XCTAssertEqual(selfUser.imageCorrelationIdentifier, originalImageCorrelationIdentifier);
-            XCTAssertNil(selfUser.smallProfileRemoteIdentifier);
-            XCTAssertFalse(selfUser.keysThatHaveLocalModifications.contains("mediumRemoteIdentifier_data"))
-        }
-    }
-    
-    func testThatItMarksImageIdentifiersAsToBeUploadedAfterUploadingSmallProfileWhenBothImagesAreUploaded() {
-        // given
-        let modifiedKeys = ["imageSmallProfileData"]
-        let selfUserAndSelfConversationID = UUID()
-        let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        setUp(selfUser: selfUser, with: selfUserAndSelfConversationID, formats: [.profile], locallyModifiedKeys: modifiedKeys)
-        
-        let imageID = UUID()
-        let smallProfileAsset = ZMAssetMetaDataEncoder.createAssetData(with: imageID, imageOwner: selfUser, format: .profile, correlationID: selfUser.imageCorrelationIdentifier!)
-        selfUser.processingDidFinish()
-        
-        // expect
-        let expectedSmallProfileRequest = ZMTransportRequest(getFromPath:"/small-profile-upload-request")
-        let response = ZMTransportResponse(payload:["data": smallProfileAsset] as ZMTransportData, httpStatus:200, transportSessionError:nil)
-        self.expect(request: expectedSmallProfileRequest, for: selfUser, format: .profile, convID: selfUserAndSelfConversationID) { (request) in
-            XCTAssertEqual(request, expectedSmallProfileRequest);
-            request?.complete(with: response)
-        }
-        
-        // then
-        syncMOC.performGroupedBlockAndWait{
-            XCTAssertEqual(selfUser.smallProfileRemoteIdentifier, imageID);
-            XCTAssertEqual(selfUser.localSmallProfileRemoteIdentifier, imageID);
-            XCTAssertTrue(selfUser.keysThatHaveLocalModifications.contains("smallProfileRemoteIdentifier_data"))
-            XCTAssertTrue(selfUser.keysThatHaveLocalModifications.contains("mediumRemoteIdentifier_data"))
-            XCTAssertFalse(selfUser.keysThatHaveLocalModifications.contains("imageSmallProfileData"))
         }
     }
 }
