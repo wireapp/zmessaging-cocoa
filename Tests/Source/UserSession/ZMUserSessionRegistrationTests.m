@@ -87,7 +87,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithPhoneNumber:ValidPhoneNumber phoneVerificationCode:ValidPhoneCode];
     regUser.name = @"The name";
     regUser.accentColorValue = ZMAccentColorBrightOrange;
-    regUser.originalProfileImageData = [@"foo" dataUsingEncoding:NSUTF8StringEncoding];
+    regUser.profileImageData = [@"foo" dataUsingEncoding:NSUTF8StringEncoding];
     [self.sut registerSelfUser:regUser];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -96,7 +96,6 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     XCTAssertEqualObjects(selfUser.phoneNumber, regUser.phoneNumber);
     XCTAssertEqualObjects(selfUser.name, regUser.name);
     XCTAssertEqual(selfUser.accentColorValue, regUser.accentColorValue);
-    XCTAssertEqualObjects(selfUser.originalProfileImageData, regUser.originalProfileImageData);
 }
 
 - (void)testThatItFiresRegistrationFailForShortCode
@@ -246,7 +245,7 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:ValidEmail password:ValidPassword];
     regUser.name = @"The name";
     regUser.accentColorValue = ZMAccentColorBrightOrange;
-    regUser.originalProfileImageData = [@"foo" dataUsingEncoding:NSUTF8StringEncoding];
+    regUser.profileImageData = [@"foo" dataUsingEncoding:NSUTF8StringEncoding];
     [self.sut registerSelfUser:regUser];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -255,7 +254,6 @@ static NSString *const InvitationCode = @"90askdpaosdkaso";
     XCTAssertEqualObjects(selfUser.emailAddress, regUser.emailAddress);
     XCTAssertEqualObjects(selfUser.name, regUser.name);
     XCTAssertEqual(selfUser.accentColorValue, regUser.accentColorValue);
-    XCTAssertEqualObjects(selfUser.originalProfileImageData, regUser.originalProfileImageData);
 }
 
 - (void)testThatWhenCancellingTheWaitForAutomaticLoginWeInvalidateCredentials
