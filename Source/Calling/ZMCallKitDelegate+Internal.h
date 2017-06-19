@@ -28,7 +28,6 @@
 
 @property (nonatomic, readonly, nonnull) id<CallKitProviderType> provider;
 @property (nonatomic, readonly, nonnull) ZMUserSession *userSession;
-@property (nonatomic, nullable) ZMConversation *connectedCallConversation;
 
 - (void)indicateIncomingCallFromUser:(nonnull ZMUser *)user inConversation:(nonnull ZMConversation *)conversation video:(BOOL)video;
 

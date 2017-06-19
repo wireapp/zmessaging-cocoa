@@ -89,7 +89,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) ZMConversation *connectedCallConversation;
 @property (nonatomic) id<NSObject> callStateObserverToken;
 @property (nonatomic) id<NSObject> missedCallsObserverToken;
-@property (nonatomic) id<NSObject> v2CallStateObserverToken;
 @property (nonatomic) NSMutableDictionary<NSUUID *, ZMCallObserver *> *calls;
 
 @end
@@ -200,7 +199,6 @@ NS_ASSUME_NONNULL_END
 {
     [WireCallCenterV3 removeObserverWithToken:self.callStateObserverToken];
     [WireCallCenterV3 removeObserverWithToken:self.missedCallsObserverToken];
-    [WireCallCenterV2 removeObserverWithToken:self.v2CallStateObserverToken];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -225,7 +223,6 @@ NS_ASSUME_NONNULL_END
         self.onDemandFlowManager = onDemandFlowManager;
         self.calls = [[NSMutableDictionary alloc] init];
         
-        self.v2CallStateObserverToken = [WireCallCenter addVoiceChannelStateObserverWithObserver:self context:userSession.managedObjectContext];
         self.callStateObserverToken = [self observeCallState];
         self.missedCallsObserverToken = [self observeMissedCalls];
         
