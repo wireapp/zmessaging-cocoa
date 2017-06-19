@@ -46,7 +46,6 @@
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
 #import "ZMCallFlowRequestStrategy.h"
-#import "ZMCallStateRequestStrategy.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
@@ -134,10 +133,6 @@
     id callFlowRequestStrategy = [OCMockObject niceMockForClass:ZMCallFlowRequestStrategy.class];
     [[[[callFlowRequestStrategy expect] andReturn:callFlowRequestStrategy] classMethod] alloc];
     (void)[[[callFlowRequestStrategy expect] andReturn:callFlowRequestStrategy] initWithMediaManager:nil onDemandFlowManager:nil managedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY application:self.application];
-
-    id callStateRequestStrategy = [OCMockObject niceMockForClass:ZMCallStateRequestStrategy.class];
-    [[[[callStateRequestStrategy expect] andReturn:callStateRequestStrategy] classMethod] alloc];
-    (void) [[[callStateRequestStrategy expect] andReturn:callStateRequestStrategy] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY callFlowRequestStrategy:OCMOCK_ANY];
         
     id loginCodeRequestTranscoder = [OCMockObject niceMockForClass:ZMLoginCodeRequestTranscoder.class];
     [[[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] classMethod] alloc];
