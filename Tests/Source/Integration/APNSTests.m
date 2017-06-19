@@ -308,7 +308,7 @@
     ZMTransportRequest *firstRequest = requests.firstObject;
     XCTAssertNotNil(firstRequest);
     XCTAssertEqual(firstRequest.method, ZMMethodGET);
-    XCTAssertEqual(requests.count, 3lu); // Notification stream fetch (with fallback cancelation), GET call state, GET conversation metadata
+    XCTAssertEqual(requests.count, 2lu); // Notification stream fetch (with fallback cancelation), GET conversation metadata
 
     ZMUser *selfUser = [self userForMockUser:self.selfUser];
     NSString *expectedPath = [NSString stringWithFormat:@"/notifications?size=500&since=%@&client=%@&cancel_fallback=%@", lastNotificationId.transportString, selfUser.selfClient.remoteIdentifier, identifier.transportString];
