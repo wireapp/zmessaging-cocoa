@@ -94,7 +94,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 - (BOOL)isFetchingStreamForAPNS
 {
     return self.application.applicationState == UIApplicationStateBackground
-        && self.pingbackStatus.status == PingBackStatusInProgress;
+        && self.pingbackStatus.status == BackgroundNotificationFetchStatusInProgress;
 }
 
 - (BOOL)isFetchingStreamInBackground

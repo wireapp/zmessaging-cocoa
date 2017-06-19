@@ -200,7 +200,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         
         // then
         XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, PingBackStatus.inProgress)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
         
         // when
         let notificationIDToPing = sut.nextNotificationEventsWithID()?.identifier
@@ -227,7 +227,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
 
         // then
         XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, PingBackStatus.inProgress)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
 
         // when
         sut.didReceive(encryptedEvents: [], originalEvents: eventsWithId, hasMore: hasMore)
@@ -254,7 +254,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         
         // then
         XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, PingBackStatus.inProgress)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
         
         // when
         guard let notificationEventsWithIDToPing = sut.nextNotificationEventsWithID() else { return XCTFail("No events with identifier") }
@@ -269,7 +269,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         
         // then
         XCTAssertFalse(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, PingBackStatus.done)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
         XCTAssertEqual(callcount, 1)
         XCTAssertNil(sut.nextNotificationEventsWithID())
     }
@@ -298,7 +298,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         guard let firstResult = receivedEvents.first else { return XCTFail("Did not receive first batch of events") }
         XCTAssertEqual(firstResult.0, ZMPushPayloadResult.needsMoreRequests)
         XCTAssertEqual(firstResult.1, eventsWithID.events!)
-        XCTAssertEqual(sut.status, PingBackStatus.inProgress)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
 
         // when
         let otherEvents = [ZMUpdateEvent(), ZMUpdateEvent()]
@@ -310,7 +310,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertEqual(secondResult.1, otherEvents)
         XCTAssertNil(sut.eventsWithHandlerByNotificationID[eventsWithID.identifier])
         XCTAssertNil(sut.backgroundActivity)
-        XCTAssertEqual(sut.status, PingBackStatus.done)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
     }
 
     func testThatItRemovesTheIDWhenTheFetchFailed() {
@@ -324,7 +324,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         
         // then
         XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, PingBackStatus.inProgress)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
         
         // when
         guard let notificationEventsWithIDToPing = sut.nextNotificationEventsWithID() else { return XCTFail("No events with identifier") }
@@ -338,7 +338,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
 
         // then
         XCTAssertFalse(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, PingBackStatus.done)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
     }
     
     func testThatItPostsNewRequestsAvailableNotificationWhenAddingANotificationID() {
@@ -385,9 +385,9 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     func testThatItDoesSetTheStatusToDoneIfThereAreNoMoreNotificationIDsAndItReceivedEvents() {
         // given
         let eventsWithID = createEventsWithID()
-        XCTAssertEqual(sut.status, PingBackStatus.done)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
         sut.didReceiveVoIPNotification(eventsWithID)
-        XCTAssertEqual(sut.status, PingBackStatus.inProgress)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
         
         // when
         _ = sut.nextNotificationEventsWithID()
@@ -397,7 +397,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         
         // then
         XCTAssertFalse(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, PingBackStatus.done)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
     }
     
     func testThatItRemovesEventsFromIdentifierEventsMappingAfterSuccesfullyPerformingPingBack() {
@@ -530,7 +530,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         sut.didReceiveVoIPNotification(eventsWithID2)
         sut.didReceiveVoIPNotification(eventsWithID3)
 
-        XCTAssertEqual(sut.status, PingBackStatus.inProgress)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
 
         // when & then
         XCTAssertNotNil(sut.notificationIDs.index(of: eventsWithID1))
@@ -538,15 +538,15 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
         XCTAssertNotNil(sut.notificationIDs.index(of: eventsWithID3))
 
         sut.didReceive(encryptedEvents: [], originalEvents: eventsWithID1, hasMore: false)
-        XCTAssertEqual(sut.status, PingBackStatus.inProgress)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
         XCTAssertNil(sut.notificationIDs.index(of: eventsWithID1))
 
         sut.didReceive(encryptedEvents: [], originalEvents: eventsWithID2, hasMore: false)
-        XCTAssertEqual(sut.status, PingBackStatus.inProgress)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
         XCTAssertNil(sut.notificationIDs.index(of: eventsWithID2))
 
         sut.didReceive(encryptedEvents: [], originalEvents: eventsWithID3, hasMore: false)
-        XCTAssertEqual(sut.status, PingBackStatus.done)
+        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
         XCTAssertNil(sut.notificationIDs.index(of: eventsWithID3))
     }
 

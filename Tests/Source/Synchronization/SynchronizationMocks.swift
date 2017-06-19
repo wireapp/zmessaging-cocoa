@@ -25,7 +25,11 @@ import WireCryptobox
 
 @objc(ZMMockApplicationStatus)
 public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfirmationDelegate, ClientRegistrationDelegate, ZMRequestCancellation {
-    
+
+
+    public var notificationFetchStatus: BackgroundNotificationFetchStatusProvider { return mockNotificationFetchStatus }
+    public var mockNotificationFetchStatus = MockNotificationFetchStatus()
+
     public var confirmationDelegate : DeliveryConfirmationDelegate { return self }
     public var taskCancellationDelegate : ZMRequestCancellation { return self }
     public var clientRegistrationDelegate : ClientRegistrationDelegate { return self }
@@ -34,7 +38,8 @@ public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfir
     public var synchronizationState: SynchronizationState {
         return mockSynchronizationState
     }
-    
+
+
     public var mockOperationState = OperationState.foreground
     public var operationState: OperationState {
         return mockOperationState
@@ -90,6 +95,11 @@ public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfir
         messagesConfirmed.insert(messageNonce)
     }
     
+}
+
+
+public class MockNotificationFetchStatus: BackgroundNotificationFetchStatusProvider {
+    public var status: BackgroundNotificationFetchStatus = .done
 }
 
 

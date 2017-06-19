@@ -115,8 +115,8 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
 
 // MARK: - BackgroundAPNSPingBackStatus
 
-@objc public enum PingBackStatus: UInt8, CustomStringConvertible {
-    case done, inProgress
+
+extension BackgroundNotificationFetchStatus: CustomStringConvertible {
 
     public var description: String {
         switch self {
@@ -124,9 +124,11 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
         case .inProgress: return "inProgress"
         }
     }
+
 }
 
-@objc open class BackgroundAPNSPingBackStatus: NSObject {
+
+@objc open class BackgroundAPNSPingBackStatus: NSObject, BackgroundNotificationFetchStatusProvider {
 
     public typealias PingBackResultHandler = (ZMPushPayloadResult, [ZMUpdateEvent]) -> Void
     public typealias EventsWithHandler = (events: [ZMUpdateEvent]?, handler: PingBackResultHandler)
@@ -134,9 +136,9 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
     public private(set) var eventsWithHandlerByNotificationID: [UUID: EventsWithHandler] = [:]
     public private(set) var backgroundActivity: ZMBackgroundActivity?
 
-    public var status: PingBackStatus = .done {
+    public var status: BackgroundNotificationFetchStatus = .done {
         didSet {
-            zmLog.debug("Updating pingback status from \(oldValue.description) to \(status.description)")
+            zmLog.debug("Updating pingback fetch status from \(oldValue.description) to \(status.description)")
         }
     }
 
