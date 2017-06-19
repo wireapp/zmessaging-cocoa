@@ -257,8 +257,6 @@ extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
     ///
     /// - Parameter imageData: image data of the new profile picture
     public func updateImage(imageData: Data) {
-        let editableUser = ZMUser.selfUser(in: uiMOC) as ZMEditableUser
-        editableUser.originalProfileImageData = imageData
         syncMOC.performGroupedBlock {
             self.setState(state: .preprocess(image: imageData))
         }

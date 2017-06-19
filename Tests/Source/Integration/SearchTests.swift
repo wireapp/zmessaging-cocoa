@@ -523,6 +523,7 @@ class SearchTests : IntegrationTestBase {
         guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
         mockTransportSession.resetReceivedRequests()
+        searchUser.requestSmallProfileImage(in: userSession)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then

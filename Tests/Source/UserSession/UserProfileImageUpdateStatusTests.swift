@@ -375,21 +375,6 @@ extension UserProfileImageUpdateStatusTests {
         // THEN 
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
-
-    func testThatItSetsTheOriginalProfileImageDataOnTheSelfUser() {
-        // GIVEN
-        let selfUser = ZMUser.selfUser(in: uiMOC)
-        let oldData = selfUser.originalProfileImageData
-        let newData = mediumJPEGData()
-        XCTAssertNotEqual(oldData, newData)
-
-        // WHEN
-        self.sut.updateImage(imageData: newData)
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // THEN
-        XCTAssertEqual(selfUser.originalProfileImageData, newData)
-    }
     
     func testThatAfterDownsamplingImageItSetsCorrectState() {
         // GIVEN
