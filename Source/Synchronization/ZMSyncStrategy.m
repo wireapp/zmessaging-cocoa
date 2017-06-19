@@ -39,7 +39,6 @@
 #import "ZMRegistrationTranscoder.h"
 #import "ZMCallFlowRequestStrategy.h"
 #import "ZMLoginTranscoder.h"
-#import "ZMCallStateRequestStrategy.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "WireSyncEngineLogs.h"
