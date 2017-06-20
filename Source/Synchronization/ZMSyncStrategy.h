@@ -70,8 +70,6 @@
 @property (nonatomic, readonly) ZMApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly) CallingRequestStrategy *callingRequestStrategy;
 
-- (void)transportSessionAccessTokenDidSucceedWithToken:(NSString *)token ofType:(NSString *)type;
-
 @end
 
 

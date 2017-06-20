@@ -655,8 +655,6 @@ ZM_EMPTY_ASSERTING_INIT()
     
     [self.syncManagedObjectContext performGroupedBlock:^{
         self.syncManagedObjectContext.accessToken = [[ZMAccessToken alloc] initWithToken:token type:type expiresInSeconds:0];
-        
-        [self.operationLoop accessTokenDidChangeWithToken:token ofType:type];
     }];
 }
 

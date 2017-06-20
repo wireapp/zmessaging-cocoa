@@ -192,13 +192,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     [self.flowManager setSelfUser:selfUserID];
 }
 
-- (void)accessTokenDidChangeWithToken:(NSString *)token ofType:(NSString *)type;
-{
-    if (token != nil && type != nil) {
-        [self.flowManager refreshAccessToken:token type:type];
-    }
-}
-
 - (BOOL)isFlowManagerReady
 {
     if (!self.flowManager.isReady) {

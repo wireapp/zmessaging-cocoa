@@ -366,24 +366,6 @@
     XCTAssertNil(request);
 }
 
-- (void)testThatItForwardsAccessToken
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // given
-        NSString *token = @"fake-token";
-        NSString *type = @"fake-type";
-        
-        // expect
-        [[self.internalFlowManager expect] refreshAccessToken:token type:type];
-        
-        // when
-        [self.sut accessTokenDidChangeWithToken:token ofType:type];
-        
-        // then
-        [self.internalFlowManager verify];
-    }];
-}
-
 - (void)testThatItRegisteresSelfUser
 {
     [self.syncMOC performGroupedBlockAndWait:^{

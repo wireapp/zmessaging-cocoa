@@ -46,7 +46,6 @@ extern id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
 
 - (void)setSessionIdentifier:(NSString *)sessionID forConversationIdentifier:(NSUUID *)conversationID;
 - (void)appendLogForConversationID:(NSUUID *)conversationID message:(NSString *)message;
-- (void)accessTokenDidChangeWithToken:(NSString *)token ofType:(NSString *)type;
 - (void)tearDown;
 
 @end

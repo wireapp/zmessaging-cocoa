@@ -403,11 +403,6 @@ ZM_EMPTY_ASSERTING_INIT()
     return fetchRequestBatch;
 }
 
-- (void)transportSessionAccessTokenDidSucceedWithToken:(NSString *)token ofType:(NSString *)type;
-{
-    [self.callFlowRequestStrategy accessTokenDidChangeWithToken:token ofType:type];
-}
-
 - (void)updateBadgeCount;
 {
     self.application.applicationIconBadgeNumber = (NSInteger)[ZMConversation unreadConversationCountInContext:self.syncMOC];
