@@ -4504,6 +4504,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.remoteIdentifier = [NSUUID createUUID];
         conversation.isSelfAnActiveMember = NO;
         [conversation setLocallyModifiedKeys:changedKeys];
+        [self.syncMOC saveOrRollback];
         
         for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
             [tracker objectsDidChange:[NSSet setWithObject:conversation]];
@@ -4568,6 +4569,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         [conversation addParticipant:otherUser];
         conversation.isSelfAnActiveMember = NO;
         [conversation setLocallyModifiedKeys:changedKeys];
+        [self.syncMOC saveOrRollback];
         
         for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
             [tracker objectsDidChange:[NSSet setWithObject:conversation]];

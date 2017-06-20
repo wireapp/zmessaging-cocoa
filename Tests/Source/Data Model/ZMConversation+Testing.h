@@ -31,9 +31,6 @@
 /// Adds a system message for a missed call and make it unread by setting the timestamp past the last read
 - (void)addUnreadMissedCall;
 
-/// Sets the conversation as having an active call
-- (void)setHasActiveCall:(BOOL)active;
-
 /// Adds an unread unsent message in the conversation
 - (void)setHasExpiredMessage:(BOOL)hasUnreadUnsentMessage;
 
