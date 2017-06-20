@@ -303,7 +303,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     }];
     WaitForEverythingToBeDone();
     
-    [self.syncMOC zm_tearDownCallTimer];
     [self.uiMOC zm_tearDownCallState];
     [self.syncMOC zm_tearDownCallState];
 }
@@ -368,7 +367,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
                         appGroupIdentifier:self.groupIdentifier];
     WaitForEverythingToBeDone();
     
-    [self.syncMOC zm_tearDownCallTimer];
     [self.uiMOC zm_tearDownCallState];
     [self.syncMOC zm_tearDownCallState];
 }

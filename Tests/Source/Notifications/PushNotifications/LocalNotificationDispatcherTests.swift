@@ -159,32 +159,7 @@ extension LocalNotificationDispatcherTests {
         }
         XCTAssertEqual(self.application.scheduledLocalNotifications[0].conversation(in: self.syncMOC), self.conversation2)
     }
-    
-    func testThatItCancelsNotificationsWhenReceivingANotificationThatTheCallWasIgnored() {
         
-        // GIVEN
-        let callEvent = self.callStateEvent(in: self.conversation2,
-                                            joinedUsers: [self.user1],
-                                            videoSendingUsers: [],
-                                            sequence: 1,
-                                            session:"session1")!
-        self.conversation2.isIgnoringCall = true
-        self.sut.didReceive(events: [callEvent],
-                            conversationMap: [:],
-                            id: UUID.create())
-        
-        // WHEN
-        NotificationCenter.default.post(
-            name: Notification.Name(rawValue:LocalNotificationDispatcher.ZMConversationCancelNotificationForIncomingCallNotificationName),
-            object: self.conversation2)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // THEN
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
-        XCTAssertEqual(self.application.cancelledLocalNotifications.count, self.application.scheduledLocalNotifications.count)
-        
-    }
-    
     func testThatWhenFailingAMessageItSchedulesANotification() {
         self.syncMOC.performGroupedBlockAndWait {
             // GIVEN

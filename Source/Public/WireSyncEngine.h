@@ -61,8 +61,6 @@
 #import <WireSyncEngine/ZMTyping.h>
 #import <WireSyncEngine/ZMSyncStateDelegate.h>
 #import <WireSyncEngine/VoiceChannelV2+Internal.h>
-#import <WireSyncEngine/VoiceChannelV2+VideoCalling.h>
-#import <WireSyncEngine/VoiceChannelV2+CallFlow.h>
 #import <WireSyncEngine/ZMAVSBridge.h>
 #import <WireSyncEngine/ZMUserSession+OperationLoop.h>
 #import <WireSyncEngine/ZMOperationLoop+Background.h>

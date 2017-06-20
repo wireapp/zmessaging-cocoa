@@ -64,17 +64,11 @@
     
     NSManagedObjectContext *mocThatSaved = note.object;
     NSManagedObjectContext *strongUiMoc = self.uiMOC;
-    ZMCallState *callStateChanges = mocThatSaved.zm_callState.createCopyAndResetHasChanges;
     NSDictionary *userInfo = [mocThatSaved.userInfo copy];
     
     if (mocThatSaved.zm_isUserInterfaceContext && strongUiMoc != nil) {
         if(mocThatSaved != strongUiMoc) {
             RequireString(mocThatSaved == strongUiMoc, "Not the right MOC!");
-        }
-        
-        NSSet *conversationsWithCallChanges = [callStateChanges allContainedConversationsInContext:strongUiMoc];
-        if (conversationsWithCallChanges != nil) {
-            [strongUiMoc.wireCallCenterV2 callStateDidChangeWithConversations:conversationsWithCallChanges];
         }
         
         ZM_WEAK(self);
@@ -84,9 +78,7 @@
                 return;
             }
             [self.syncMOC mergeUserInfoFromUserInfo:userInfo];
-            NSSet *changedConversations = [self.syncMOC mergeCallStateChanges:callStateChanges];
             [self.syncMOC mergeChangesFromContextDidSaveNotification:note];
-            [self processSaveWithInsertedObjects:[NSSet set] updateObjects:changedConversations];
             [self.syncMOC processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
         }];
     } else if (mocThatSaved.zm_isSyncContext) {
@@ -102,13 +94,7 @@
             }
             
             [strongUiMoc mergeUserInfoFromUserInfo:userInfo];
-            NSSet *changedConversations = [strongUiMoc mergeCallStateChanges:callStateChanges];
-            if (changedConversations != nil) {
-                [strongUiMoc.wireCallCenterV2 callStateDidChangeWithConversations: changedConversations];
-            }
-            
             [strongUiMoc mergeChangesFromContextDidSaveNotification:note];
-            
             [strongUiMoc processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
             [self.notificationDispatcher didMergeChanges:changedObjectsIDs];
         }];

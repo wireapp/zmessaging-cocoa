@@ -37,6 +37,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 @property (nonatomic, readonly) NSMutableArray *requestStack; ///< inverted FIFO
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
 @property (nonatomic, readonly) id mediaManager;
+@property (nonatomic) NSNotificationQueue *voiceGainNotificationQueue;
 @property (nonatomic) BOOL pushChannelIsOpen;
 @property (nonatomic, readonly) NSManagedObjectContext *uiManagedObjectContext;
 @property (nonatomic) id authenticationObserverToken;
@@ -67,6 +68,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         _requestStack = [NSMutableArray array];
         _application = application;
 
+        self.voiceGainNotificationQueue = [[NSNotificationQueue alloc] initWithNotificationCenter:[NSNotificationCenter defaultCenter]];
         self.onDemandFlowManager = onDemandFlowManager;
         
         [self setUpFlowManagerIfNeeded];
@@ -276,9 +278,41 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 - (void)didUpdateVolume:(double)volume conversationId:(NSString *)convid participantId:(NSString *)participantId
 {
-    NOT_USED(volume);
-    NOT_USED(convid);
-    NOT_USED(participantId);
+    [self.managedObjectContext performGroupedBlock:^{
+        NSUUID *conversationUUID = convid.UUID;
+        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:conversationUUID createIfNeeded:NO inContext:self.managedObjectContext];
+        if (conversation == nil) {
+            return;
+        }
+        ZMUser *user;
+        if ([participantId isEqualToString:FlowManagerSelfUserParticipantIdentifier]) {
+            user = [ZMUser selfUserInContext:self.managedObjectContext];
+        }
+        else if ([participantId isEqualToString:FlowManagerOtherUserParticipantIdentifier]) {
+            user = conversation.connectedUser;
+        }
+        
+        else {
+            NSUUID *participantUUID = [participantId UUID];
+            user = [ZMUser userWithRemoteID:participantUUID createIfNeeded:NO inContext:self.managedObjectContext];
+        }
+        if (user == nil) {
+            return;
+        }
+        
+        NSUUID *conversationID = conversation.remoteIdentifier;
+        NSUUID *userID = user.remoteIdentifier;
+        
+        VoiceGainNotification *voiceGainNotification = [[VoiceGainNotification alloc] initWithVolume:(float)volume conversationId:conversationID userId:userID];
+        
+        [self.uiManagedObjectContext performGroupedBlock:^{
+            [self.voiceGainNotificationQueue enqueueNotification:voiceGainNotification.notification
+                                                    postingStyle:NSPostWhenIdle
+                                                    coalesceMask:NSNotificationCoalescingOnSender | NSNotificationCoalescingOnName
+                                                        forModes:nil];
+        }];
+    }];
+
 }
 
 - (void)conferenceParticipantsDidChange:(NSArray *)participantIDStrings

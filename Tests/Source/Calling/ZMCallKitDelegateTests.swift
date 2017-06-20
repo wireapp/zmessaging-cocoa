@@ -423,21 +423,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         // then
         XCTAssertTrue(action.hasFailed)
     }
-    
-    func testThatStartCallActionFailWhenCallCantBeJoined() {
-        // given
-        let provider = MockProvider(foo: true)
-        let conversation = self.conversation(type: .oneOnOne)
-        let action = MockStartCallAction(call: conversation.remoteIdentifier!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
         
-        // when
-        self.sut.provider(provider, perform: action)
-        NotificationCenter.default.post(name: NSNotification.Name.ZMConversationVoiceChannelJoinFailed, object: conversation.remoteIdentifier!)
-        
-        // then
-        XCTAssertTrue(action.hasFailed)
-    }
-    
     func testThatStartCallActionUpdatesWhenTheCallHasStartedConnecting() {
         // given
         let provider = MockProvider(foo: true)

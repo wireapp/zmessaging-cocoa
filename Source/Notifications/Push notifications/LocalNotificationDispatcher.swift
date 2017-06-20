@@ -21,7 +21,6 @@ import Foundation
 /// Creates and cancels local notifications
 public class LocalNotificationDispatcher: NSObject {
     
-    public static let ZMConversationCancelNotificationForIncomingCallNotificationName = "ZMConversationCancelNotificationForIncomingCallNotification"
     public static let ZMShouldHideNotificationContentKey = "ZMShouldHideNotificationContentKey"
     
     let eventNotifications: ZMLocalNotificationSet
@@ -46,10 +45,6 @@ public class LocalNotificationDispatcher: NSObject {
         self.sessionTracker = SessionTracker(managedObjectContext: managedObjectContext)
         self.isTornDown = false
         super.init()
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(self.cancelNotificationForIncomingCall(notification:)),
-                                               name: NSNotification.Name(rawValue: LocalNotificationDispatcher.ZMConversationCancelNotificationForIncomingCallNotificationName),
-                                               object: nil)
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(self.cancelNotificationForLastReadChanged(notification:)),
                                                name: NSNotification.Name(rawValue: ZMConversationLastReadDidChangeNotificationName),
@@ -185,14 +180,6 @@ extension LocalNotificationDispatcher {
         self.allNotificationSets.forEach { $0.cancelNotifications(conversation) }
     }
     
-    /// Cancels a notification for an incoming call in the conversation that is speficied as object of the notification
-    func cancelNotificationForIncomingCall(notification: NSNotification) {
-        guard let conversation = notification.object as? ZMConversation else { return }
-        if conversation.isIgnoringCall {
-            self.eventNotifications.cancelNotificationForIncomingCall(conversation)
-        }
-    }
- 
     /// Cancels all notification in the conversation that is speficied as object of the notification
     func cancelNotificationForLastReadChanged(notification: NSNotification) {
         guard let conversation = notification.object as? ZMConversation else { return }

@@ -32,14 +32,6 @@ public enum VoiceChannelV2ErrorCode : UInt {
     case videoNotActive
 }
 
-
-private class CallingInitialisationObserverTokenImpl : CallingInitialisationObserverToken {
-    var observerToken : AnyObject
-    init(observerToken: AnyObject) {
-        self.observerToken = observerToken
-    }
-}
-
 open class VoiceChannelV2Error: NSError {
     
     init(errorCode: VoiceChannelV2ErrorCode) {
@@ -96,42 +88,4 @@ open class VoiceChannelV2Error: NSError {
     open static func videoNotActiveError() -> VoiceChannelV2Error {
         return VoiceChannelV2Error(errorCode: VoiceChannelV2ErrorCode.videoNotActive)
     }
-}
-
-
-
-
-public class CallingInitialisationNotification : NSObject  {
-    
-    public let error : NSError
-    internal let errorCode : VoiceChannelV2ErrorCode
-    
-    public static let Name = "CallingInitialisationNotification"
-    
-    init(error: NSError, errorCode: VoiceChannelV2ErrorCode) {
-        self.error = error
-        self.errorCode = errorCode
-    }
-    
-    public static func notifyCallingFailedWithErrorCode(_ errorCode: VoiceChannelV2ErrorCode) {
-        let note = CallingInitialisationNotification(error: VoiceChannelV2Error(errorCode: errorCode), errorCode:errorCode)
-        NotificationCenter.default.post(name: Notification.Name(rawValue: self.Name), object:note)
-    }
-    
-    @objc public static func addObserverWithBlock(_ block: @escaping (CallingInitialisationNotification) -> Void) -> CallingInitialisationObserverToken {
-        let internalToken = NotificationCenter.default.addObserver(forName: Notification.Name(rawValue: self.Name), object: nil, queue: OperationQueue.current) { (note: Notification) in
-            if let object = note.object as? CallingInitialisationNotification {
-                block(object)
-            }
-        }
-        
-        return (CallingInitialisationObserverTokenImpl(observerToken: internalToken)) as CallingInitialisationObserverToken
-    }
-    
-    public static func removeObserver(_ observer: CallingInitialisationObserverToken) {
-        let internalObserver = observer as! CallingInitialisationObserverTokenImpl
-        NotificationCenter.default.removeObserver(internalObserver.observerToken, name: NSNotification.Name(rawValue: self.Name), object: nil)
-    }
-    
-
 }

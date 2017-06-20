@@ -18,7 +18,11 @@
 
 import Foundation
 
-public class VoiceChannelV3 : NSObject, CallProperties {
+public class VoiceChannelV3 : NSObject, CallProperties, VoiceChannel {
+    
+    public var callingProtocol: CallingProtocol {
+        return .version3
+    }
     
     public var selfUserConnectionState: VoiceChannelV2ConnectionState {
         if let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = WireCallCenterV3.activeInstance {
@@ -100,6 +104,58 @@ public class VoiceChannelV3 : NSObject, CallProperties {
         WireCallCenterV3.activeInstance?.toogleVideo(conversationID: remoteIdentifier, active: active)
     }
     
+    public func setVideoCaptureDevice(device: CaptureDevice) throws {
+        guard let flowManager = ZMAVSBridge.flowManagerInstance(), flowManager.isReady() else { throw VoiceChannelV2Error.noFlowManagerError() }
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.switchToVideoNotAllowedError() }
+        
+        flowManager.setVideoCaptureDevice(device.deviceIdentifier, forConversation: remoteIdentifier.transportString())
+    }
+    
+}
+
+extension VoiceChannelV3 : CallActions {
+    
+    public func continueByDecreasingConversationSecurity(userSession: ZMUserSession) {
+        guard let conversation = conversation else { return }
+        conversation.makeNotSecure()
+    }
+    
+    public func leaveAndKeepDegradedConversationSecurity(userSession: ZMUserSession) {
+        guard let conversation = conversation else { return }
+        userSession.syncManagedObjectContext.performGroupedBlock {
+            let conversationId = conversation.objectID
+            if let syncConversation = (try? userSession.syncManagedObjectContext.existingObject(with: conversationId)) as? ZMConversation {
+                userSession.callingStrategy.dropPendingCallMessages(for: syncConversation)
+            }
+        }
+        leave(userSession: userSession)
+    }
+    
+    public func join(video: Bool, userSession: ZMUserSession) -> Bool {
+        if ZMUserSession.useCallKit {
+            userSession.callKitDelegate.requestStartCall(in: conversation!, videoCall: video)
+            return true
+        } else {
+            return join(video: video)
+        }
+    }
+    
+    public func leave(userSession: ZMUserSession) {
+        if ZMUserSession.useCallKit {
+            userSession.callKitDelegate.requestEndCall(in: conversation!)
+        } else {
+            return leave()
+        }
+    }
+    
+    public func ignore(userSession: ZMUserSession) {
+        if ZMUserSession.useCallKit {
+            userSession.callKitDelegate.requestEndCall(in: conversation!)
+        } else {
+            return ignore()
+        }
+    }
+    
 }
 
 extension VoiceChannelV3 : CallActionsInternal {
@@ -140,6 +196,35 @@ extension VoiceChannelV3 : CallActionsInternal {
         
         let isGroup = (conv.conversationType == .group)
         WireCallCenterV3.activeInstance?.rejectCall(conversationId: remoteID, isGroup: isGroup)
+    }
+    
+}
+
+extension VoiceChannelV3 : CallObservers {
+    
+    /// Add observer of voice channel state. Returns a token which needs to be retained as long as the observer should be active.
+    public func addStateObserver(_ observer: VoiceChannelStateObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceChannelStateObserver(conversation: conversation!, observer: observer, context: conversation!.managedObjectContext!)
+    }
+    
+    /// Add observer of voice channel participants. Returns a token which needs to be retained as long as the observer should be active.
+    public func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
+    /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
+    public func addVoiceGainObserver(_ observer: VoiceGainObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceGainObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
+    /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
+    public func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> WireCallCenterObserverToken {
+        return WireCallCenter.addReceivedVideoObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+    }
+    
+    /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
+    public class func addStateObserver(_ observer: VoiceChannelStateObserver, userSession: ZMUserSession) -> WireCallCenterObserverToken {
+        return WireCallCenter.addVoiceChannelStateObserver(observer: observer, context: userSession.managedObjectContext!)
     }
     
 }
