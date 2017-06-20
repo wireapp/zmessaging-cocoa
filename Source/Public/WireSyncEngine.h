@@ -30,7 +30,6 @@
 #import <WireSyncEngine/ZMBareUser+UserSession.h>
 #import <WireSyncEngine/ZMTypingUsers.h>
 #import <WireSyncEngine/ZMOnDemandFlowManager.h>
-#import <WireSyncEngine/CallingProtocolStrategy.h>
 
 // PRIVATE
 #import <WireSyncEngine/ZMUserSession+Private.h>

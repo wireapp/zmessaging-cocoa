@@ -1588,35 +1588,6 @@
     }];
 }
 
-// TODO jacob port this to calling V3
-//- (void)testThatCallingAnArchived_AndSilenced_Conversation_Unarchives_ThisConversation
-//{
-//    // expect
-//    BOOL shouldUnarchive = YES;
-//    
-//    // when
-//    [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.selfToUser1Conversation withBlock:^(MockTransportSession *session ZM_UNUSED) {
-//        [self.selfToUser1Conversation addUserToCall:self.user1];
-//    }];
-//    
-//    ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-//    [syncConv.voiceChannelRouter.v2 tearDown];
-//}
-
-// TODO jacob port this to calling V3
-//- (void)testThatCallingAnArchivedConversation_Unarchives_ThisConversation
-//{
-//    // expect
-//    BOOL shouldUnarchive = YES;
-//    
-//    // when
-//    [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.selfToUser1Conversation withBlock:^(MockTransportSession *session ZM_UNUSED) {
-//        [self.selfToUser1Conversation addUserToCall:self.user1];
-//    }];
-//    ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-//    [syncConv.voiceChannelRouter.v2 tearDown];
-//}
-
 - (void)testThatAcceptingArchivedOutgoingRequest_Unarchives_ThisConversation
 {
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
@@ -1697,55 +1668,6 @@
     // then
     XCTAssertEqual(conversation.estimatedUnreadCount, 1u);
 }
-
-// TODO jacob port this to calling V3
-//- (void)testThatLastReadIsAutomaticallyIncreasedInCaseOfCallEvents
-//{
-//    // login
-//    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-//    WaitForAllGroupsToBeEmpty(0.5);
-//    
-//    // given
-//    [self.mockTransportSession performRemoteChanges:^(__unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
-//        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Will insert this to have a message to read" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
-//        [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
-//        
-//        MockEvent *lastEvent = self.selfToUser1Conversation.events.lastObject;
-//        self.selfToUser1Conversation.lastRead = lastEvent.identifier;
-//    }];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//    
-//    // login
-//    [self recreateUserSessionAndWipeCache:YES];
-//    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-//    WaitForAllGroupsToBeEmpty(0.5);
-//    
-//    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-//    XCTAssertEqual(conversation.estimatedUnreadCount, 0u);
-//    
-//    // when
-//    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-//        NOT_USED(session);
-//        [self.selfToUser1Conversation addUserToCall:self.user1];
-//    }];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//    
-//    // then
-//    XCTAssertEqual(conversation.estimatedUnreadCount, 0u);
-//
-//    // when
-//    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-//        NOT_USED(session);
-//        [self.selfToUser1Conversation callEndedEventFromUser:self.user1 selfUser:self.selfUser];
-//    }];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//
-//    // then
-//    XCTAssertEqual(conversation.estimatedUnreadCount, 1u);
-//
-//    ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-//    [syncConv.voiceChannelRouter.v2 tearDown];
-//}
 
 - (void)testThatItDoesNotSendALastReadEventWhenInsertingAMessage
 {
