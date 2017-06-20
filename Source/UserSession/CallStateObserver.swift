@@ -109,13 +109,13 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             switch callState {
             case .incoming(video: _, shouldRing: let shouldRing):
-                uiConv.isIgnoringCallV3 = uiConv.isSilenced || !shouldRing
-                uiConv.isCallDeviceActiveV3 = false
+                uiConv.isIgnoringCall = uiConv.isSilenced || !shouldRing
+                uiConv.isCallDeviceActive = false
             case .terminating, .none:
-                uiConv.isCallDeviceActiveV3 = false
-                uiConv.isIgnoringCallV3 = false
+                uiConv.isCallDeviceActive = false
+                uiConv.isIgnoringCall = false
             case .outgoing, .answered, .established:
-                uiConv.isCallDeviceActiveV3 = true
+                uiConv.isCallDeviceActive = true
             case .unknown:
                 break
             }
