@@ -70,7 +70,7 @@
     WaitForAllGroupsToBeEmpty(0.2);
     __block NSDictionary *conversationTransportData;
     
-    ZMConversationList *conversationsList = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *conversationsList = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger oldCount = conversationsList.count;
     
     if(useAPNS) {
@@ -102,7 +102,7 @@
     WaitForEverythingToBeDone();
     
     // then
-    ZMConversationList *convs = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *convs = [ZMConversationList conversationsInUserSession:self.userSession];
     XCTAssertEqual(convs.count, oldCount+1);
     NSUInteger index = [conversationsList indexOfObjectPassingTest:^BOOL(ZMConversation *conversation, NSUInteger idx, BOOL *stop) {
         NOT_USED(idx);

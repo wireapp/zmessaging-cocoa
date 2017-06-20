@@ -616,7 +616,7 @@
 - (void)testThatInsertedConversationsArePropagatedToTheUIContext;
 {
     // given
-    ZMConversationList *list = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *list = [ZMConversationList conversationsInUserSession:self.userSession];
     XCTAssertEqual(list.count, 0u);
     
     ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:list];

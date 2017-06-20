@@ -54,11 +54,10 @@ class SlowSyncTestsTeams: IntegrationTestBase {
 
         do {
             let selfUser = ZMUser.selfUser(in: syncMOC)
-            let teams = selfUser.teams
-            XCTAssertEqual(teams.count, 1)
-            guard let team = teams.first else { return XCTFail("Team missing") }
+            XCTAssert(selfUser.hasTeam)
+            guard let team = selfUser.team else { return XCTFail("Team missing") }
 
-            let selfMember = selfUser.membership(in: team)
+            let selfMember = selfUser.membership
             XCTAssertNotNil(selfMember)
             XCTAssertEqual(selfMember?.permissions, .member)
             XCTAssertEqual(team.name, "Wire GmbH")
@@ -109,9 +108,8 @@ class SlowSyncTestsTeams: IntegrationTestBase {
 
         do {
             let realSelfUser = user(for: selfUser)!
-            let teams = realSelfUser.teams
-            XCTAssertEqual(teams.count, 1)
-            guard let team = teams.first else { return XCTFail("Team missing") }
+            XCTAssert(realSelfUser.hasTeam)
+            guard let team = realSelfUser.team else { return XCTFail("Team missing") }
 
             XCTAssertEqual(team.conversations.count, 1)
             guard let conversation = team.conversations.first else { return XCTFail("Conversation missing") }
@@ -119,13 +117,13 @@ class SlowSyncTestsTeams: IntegrationTestBase {
 
             XCTAssertTrue(conversation.otherActiveParticipants.contains(user(for: user3)!))
             XCTAssertTrue(user(for: user3).isGuest(in: conversation))
-            XCTAssertTrue(user(for: user5).isMember(of: team))
-            XCTAssertTrue(realSelfUser.isMember(of: team))
+            XCTAssertTrue(user(for: user5).isTeamMember)
+            XCTAssertTrue(realSelfUser.isTeamMember)
 
-            let selfMember = realSelfUser.membership(in: team)
+            let selfMember = realSelfUser.membership
             XCTAssertNotNil(selfMember)
             XCTAssertEqual(selfMember?.permissions, .member)
-            let user5Member = user(for: user5).membership(in: team)
+            let user5Member = user(for: user5).membership
             XCTAssertEqual(user5Member?.permissions, .admin)
             XCTAssertEqual(team.name, "Wire GmbH")
             XCTAssertEqual(team.members.count, 2)

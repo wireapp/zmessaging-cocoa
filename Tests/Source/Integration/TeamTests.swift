@@ -57,8 +57,7 @@ class TeamTests : IntegrationTestBase {
 }
 
 
-
-    // MARK : Notifications
+// MARK : Notifications
 
 extension TeamTests {
     
@@ -72,7 +71,7 @@ extension TeamTests {
         _ = remotelyInsertTeam(members: [self.selfUser, self.user1])
         
         // then
-        XCTAssertEqual(ZMUser.selfUser(in: uiMOC).teams.count, 1)
+        XCTAssert(ZMUser.selfUser(in: uiMOC).hasTeam)
 
         XCTAssertEqual(selfUserObserver.notifications.count, 1)
         guard let note = selfUserObserver.notifications.lastObject as? UserChangeInfo else {
@@ -113,7 +112,7 @@ extension TeamTests {
         let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
         let user = self.user(for: user1)!
-        XCTAssertEqual(user.teams.count, 1)
+        XCTAssert(user.hasTeam)
         
         // when
         mockTransportSession.performRemoteChanges { (session) in
@@ -122,15 +121,15 @@ extension TeamTests {
         XCTAssert(waitForEverythingToBeDone())
         
         // then
-        XCTAssertEqual(user.teams.count, 0)
+        XCTAssertFalse(user.hasTeam)
     }
     
     func testThatSelfUserCanBeRemovedRemotely(){
         // given
         XCTAssert(logInAndWaitForSyncToBeComplete())
         let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
-        
-        XCTAssertEqual(ZMUser.selfUser(in: uiMOC).teams.count, 1)
+
+        XCTAssert(ZMUser.selfUser(in: uiMOC).hasTeam)
         
         // when
         mockTransportSession.performRemoteChanges { (session) in
@@ -139,7 +138,7 @@ extension TeamTests {
         XCTAssert(waitForEverythingToBeDone())
         
         // then
-        XCTAssertEqual(ZMUser.selfUser(in: uiMOC).teams.count, 0)
+        XCTAssertFalse(ZMUser.selfUser(in: uiMOC).hasTeam)
     }
     
     func testThatItNotifiesAboutSelfUserRemovedRemotely(){
@@ -192,8 +191,7 @@ extension TeamTests {
         }
         XCTAssert(waitForEverythingToBeDone())
         
-        let team = self.team(for: mockTeam)
-        let list = ZMConversationList.conversations(inUserSession: self.userSession, team: team)
+        let list = ZMConversationList.conversations(inUserSession: self.userSession)
         let listObserver = ConversationListChangeObserver(conversationList: list)!
         
         XCTAssertEqual(list.count, 1)
@@ -225,7 +223,7 @@ extension TeamTests {
         // given
         XCTAssert(logInAndWaitForSyncToBeComplete())
         let mockTeam = remotelyInsertTeam(members: [self.user1])
-        XCTAssertEqual(ZMUser.selfUser(in: uiMOC).teams.count, 0)
+        XCTAssertFalse(ZMUser.selfUser(in: uiMOC).hasTeam)
 
         // when
         mockTransportSession.performRemoteChanges { (session) in
@@ -234,7 +232,7 @@ extension TeamTests {
         XCTAssert(waitForEverythingToBeDone())
         
         // then
-        XCTAssertEqual(ZMUser.selfUser(in: uiMOC).teams.count, 1)
+        XCTAssert(ZMUser.selfUser(in: uiMOC).hasTeam)
     }
     
     func testThatOtherUserCanBeAddedRemotely(){
@@ -243,7 +241,7 @@ extension TeamTests {
         let mockTeam = remotelyInsertTeam(members: [self.selfUser])
         
         let user = self.user(for: user1)!
-        XCTAssertEqual(user.teams.count, 0)
+        XCTAssertFalse(user.hasTeam)
 
         
         // when
@@ -253,7 +251,7 @@ extension TeamTests {
         XCTAssert(waitForEverythingToBeDone())
         
         // then
-        XCTAssertEqual(user.teams.count, 1)
+        XCTAssert(user.hasTeam)
 
     }
     
