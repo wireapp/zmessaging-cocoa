@@ -83,7 +83,10 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsWhileInBackground;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync
+         | ZMStrategyConfigurationOptionAllowsRequestsWhileInBackground
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringNotificationStreamFetch;
 }
 
 - (BOOL)isDownloadingMissingNotifications

@@ -29,7 +29,12 @@ import WireTransport
     
     public override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
-        self.configuration = [.allowsRequestsDuringSync, .allowsRequestsWhileUnauthenticated, .allowsRequestsDuringEventProcessing]
+        self.configuration = [
+            .allowsRequestsDuringSync,
+            .allowsRequestsWhileUnauthenticated,
+            .allowsRequestsDuringEventProcessing,
+            .allowsRequestsDuringNotificationStreamFetch
+        ]
         self.deleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: self.managedObjectContext)
     }
     

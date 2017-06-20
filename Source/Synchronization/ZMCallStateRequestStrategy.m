@@ -133,7 +133,8 @@ static NSTimeInterval const UpstreamRequestTimeout = 30;
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringNotificationStreamFetch;
 }
 
 - (NSNumber *)lastSequenceForConversation:(ZMConversation *)conversation;

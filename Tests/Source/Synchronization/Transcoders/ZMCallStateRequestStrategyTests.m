@@ -143,7 +143,7 @@
 
 - (void)testThatUsesCorrectRequestStrategyConfiguration
 {
-    XCTAssertEqual(self.sut.configuration, ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing);
+    XCTAssertEqual(self.sut.configuration, ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringNotificationStreamFetch);
 }
 
 - (void)testThatItReturnsTheContextChangeTrackers;

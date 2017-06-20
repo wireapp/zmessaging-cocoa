@@ -36,8 +36,8 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let operationStatus : OperationStatus
     public let requestCancellation: ZMRequestCancellation
 
-    public var notificationFetchStatus: BackgroundNotificationFetchStatusProvider {
-        return pingBackStatus
+    public var notificationFetchStatus: BackgroundNotificationFetchStatus {
+        return pingBackStatus.status
     }
     
     fileprivate var callInProgressObserverToken : NSObjectProtocol? = nil

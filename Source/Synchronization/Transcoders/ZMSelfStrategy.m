@@ -102,7 +102,10 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsWhileUnauthenticated | ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing
+         | ZMStrategyConfigurationOptionAllowsRequestsWhileUnauthenticated
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringSync
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
 - (NSArray *)contextChangeTrackers
