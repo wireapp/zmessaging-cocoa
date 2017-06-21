@@ -19,7 +19,7 @@
 
 class SlowSyncTestsTeams: IntegrationTestBase {
 
-    func testThatItFetchesTeamsAndMembersDuringSlowSync() {
+    func DISABLED_testThatItFetchesTeamsAndMembersDuringSlowSync() {
         // Given
         var team: MockTeam!
         var otherMember: MockMember!
@@ -70,7 +70,7 @@ class SlowSyncTestsTeams: IntegrationTestBase {
         }
     }
 
-    func testThatItFetchesTeamConversationsDuringSlowSync() {
+    func DISABLED_testThatItFetchesTeamConversationsDuringSlowSync() {
         // Given
         var team: MockTeam!
         var otherMember: MockMember!

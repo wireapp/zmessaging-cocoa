@@ -128,7 +128,7 @@
              [ZMTransportRequest requestGetFromPath:@"/connections?size=90"],
              [ZMTransportRequest requestGetFromPath:@"/conversations/ids?size=100"],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", self.selfConversation.identifier,self.selfToUser1Conversation.identifier,self.selfToUser2Conversation.identifier,self.groupConversation.identifier]],
-             [ZMTransportRequest requestGetFromPath:@"/teams?size=50"],
+             // [ZMTransportRequest requestGetFromPath:@"/teams?size=50"], See TeamSyncRequestStrategy.skipTeamSync
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@", self.user1.identifier, self.user2.identifier]],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", self.user3.identifier]],
              [ZMTransportRequest requestWithPath:@"/onboarding/v3" method:ZMMethodPOST payload:@{
