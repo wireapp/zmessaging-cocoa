@@ -913,9 +913,10 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
 - (void)deleteObject:(ZMConversation *)conversation withResponse:(ZMTransportResponse *)response downstreamSync:(id<ZMObjectSync>)downstreamSync;
 {
+    if (response.isPermanentylUnavailableError) {
+        conversation.needsToBeUpdatedFromBackend = NO;
+    }
     NOT_USED(downstreamSync);
-    NOT_USED(conversation);
-    NOT_USED(response);
 }
 
 @end

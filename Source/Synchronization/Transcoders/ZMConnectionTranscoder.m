@@ -273,8 +273,10 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 
 - (void)deleteObject:(ZMConnection *)connection withResponse:(ZMTransportResponse *)response downstreamSync:(id<ZMObjectSync>)downstreamSync
 {
-    NOT_USED(response);
-    NOT_USED(connection);
+    if (response.isPermanentylUnavailableError) {
+        connection.needsToBeUpdatedFromBackend = NO;
+    }
+    
     NOT_USED(downstreamSync);
 }
 
