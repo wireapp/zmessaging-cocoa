@@ -332,7 +332,8 @@ extension TeamTests {
 
 extension TeamTests {
 
-    func testThatItDeltesARemotelyDeletedTeamAfterPerfomingSlowSyncCausedByMissedEvents() {
+    // See TeamSyncRequestStrategy.skipTeamSync
+    func DISABLED_testThatItDeltesARemotelyDeletedTeamAfterPerfomingSlowSyncCausedByMissedEvents() {
         // Given
         // 1. Insert local team, which will not be returned by mock transport when fetching /teams
         let localOnlyTeamId = UUID.create()

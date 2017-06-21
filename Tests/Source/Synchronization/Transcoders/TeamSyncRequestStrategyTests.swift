@@ -31,6 +31,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         mockSyncStatus = MockSyncStatus(managedObjectContext: syncMOC, syncStateDelegate: MockSyncStateDelegate())
         mockApplicationStatus = MockApplicationStatus()
         sut = TeamSyncRequestStrategy(withManagedObjectContext: syncMOC, applicationStatus: mockApplicationStatus, syncStatus: mockSyncStatus)
+        sut.skipTeamSync = false
     }
 
     override func tearDown() {
@@ -107,6 +108,19 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         XCTAssertTrue(mockSyncStatus.didCallFailCurrentSyncPhase)
     }
 
+    func testThatItAdvancesTheSyncPhase_SkipTeamSync() {
+        // given
+        sut.skipTeamSync = true
+        mockSyncStatus.mockPhase = .fetchingTeams
+        mockApplicationStatus.mockSynchronizationState = .synchronizing
+
+        // when
+        XCTAssertNil(sut.nextRequest())
+
+        // then
+        XCTAssert(mockSyncStatus.didCallFinishCurrentSyncPhase)
+    }
+
     func testThatItCreatesLocalTeamsFromTheResponsePayload() {
         // given
         mockSyncStatus.mockPhase = .fetchingTeams
@@ -162,6 +176,8 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
             syncStatus: mockSyncStatus,
             syncConfiguration: configuration
         )
+
+        sut.skipTeamSync = false
 
         let team1Id = UUID.create(), team2Id = UUID.create(), team3Id = UUID.create()
 
