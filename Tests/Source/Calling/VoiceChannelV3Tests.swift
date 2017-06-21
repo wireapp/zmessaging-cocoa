@@ -46,7 +46,6 @@ class VoiceChannelV3Tests : MessagingTest {
     override func tearDown() {
         super.tearDown()
         
-        ZMUserSession.callingProtocolStrategy = .version3
         wireCallCenterMock = nil
     }
     

@@ -297,11 +297,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     }];
 }
 
-- (void)accessTokenDidChangeWithToken:(NSString *)token ofType:(NSString *)type;
-{
-    [self.syncStrategy transportSessionAccessTokenDidSucceedWithToken:token ofType:type];
-}
-
 - (BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
 {
     return self.syncStrategy.applicationStatusDirectory.pingBackStatus;

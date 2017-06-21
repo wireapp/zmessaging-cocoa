@@ -101,6 +101,80 @@ struct WireCallCenterConferenceParticipantsChangedNotification : SelfPostingNoti
 }
 
 
+/// MARK - VoiceChannelParticipantObserver
+
+@objc
+public protocol VoiceChannelParticipantObserver : class {
+    func voiceChannelParticipantsDidChange(_ changeInfo : VoiceChannelParticipantNotification)
+}
+
+
+@objc public class VoiceChannelParticipantNotification : NSObject, SetChangeInfoOwner {
+    public typealias ChangeInfoContent = CallMember
+    
+    static let notificationName = Notification.Name("VoiceChannelParticipantNotification")
+    static let userInfoKey = notificationName.rawValue
+    public let setChangeInfo : SetChangeInfo<CallMember>
+    let conversationId : UUID
+    
+    init(setChangeInfo: SetChangeInfo<CallMember>, conversationId: UUID) {
+        self.setChangeInfo = setChangeInfo
+        self.conversationId = conversationId
+    }
+    
+    func post() {
+        NotificationCenter.default.post(name: VoiceChannelParticipantNotification.notificationName,
+                                        object: nil,
+                                        userInfo: [VoiceChannelParticipantNotification.userInfoKey : self])
+    }
+    
+    public var orderedSetState : OrderedSetState<ChangeInfoContent> { return setChangeInfo.orderedSetState }
+    public var insertedIndexes : IndexSet { return setChangeInfo.insertedIndexes }
+    public var deletedIndexes : IndexSet { return setChangeInfo.deletedIndexes }
+    public var deletedObjects: Set<AnyHashable> { return setChangeInfo.deletedObjects }
+    public var updatedIndexes : IndexSet { return setChangeInfo.updatedIndexes }
+    public var movedIndexPairs : [MovedIndex] { return setChangeInfo.movedIndexPairs }
+    public var zm_movedIndexPairs : [ZMMovedIndex] { return setChangeInfo.zm_movedIndexPairs }
+    public func enumerateMovedIndexes(_ block:@escaping (_ from: Int, _ to : Int) -> Void) {
+        setChangeInfo.enumerateMovedIndexes(block)
+    }
+}
+
+/// MARK - VoiceGainObserver
+
+@objc
+public protocol VoiceGainObserver : class {
+    func voiceGainDidChange(forParticipant participant: ZMUser, volume: Float)
+}
+
+@objc
+public class VoiceGainNotification : NSObject  {
+    
+    public static let notificationName = Notification.Name("VoiceGainNotification")
+    public static let userInfoKey = notificationName.rawValue
+    
+    public let volume : Float
+    public let userId : UUID
+    public let conversationId : UUID
+    
+    public init(volume: Float, conversationId: UUID, userId: UUID) {
+        self.volume = volume
+        self.conversationId = conversationId
+        self.userId = userId
+        
+        super.init()
+    }
+    
+    public var notification : Notification {
+        return Notification(name: VoiceGainNotification.notificationName,
+                            object: conversationId as NSUUID,
+                            userInfo: [VoiceGainNotification.userInfoKey : self])
+    }
+    
+    public func post() {
+        NotificationCenter.default.post(notification)
+    }
+}
 
 /// MARK - CBR observer
 

@@ -18,6 +18,8 @@
 
 import Foundation
 
+private let log = ZMSLog(tag: "AddressBook")
+
 // MARK: - Upload observer
 let failedToAccessAddressBookNotificationName = "ZMUserSessionFailedToAccessAddressBook"
 
@@ -48,10 +50,20 @@ extension ZMUserSession {
 
 // MARK: - Address book upload
 extension ZMUserSession {
-    
+
+    /// Asynchronously uploads the next chunk of the address book unless the user is in a team
+    public func uploadAddressBookIfAllowed() {
+        if ZMUser.selfUser(inUserSession: self).hasTeam {
+            log.error("Uploading contacts for an account with team is a forbidden operation")
+        } else {
+            uploadAddressBook()
+        }
+    }
+
     /// Asynchronously uploads the next chunk of the address book
-    public func uploadAddressBook() {
+    private func uploadAddressBook() {
         AddressBook.markAddressBookAsNeedingToBeUploaded(self.managedObjectContext)
         self.managedObjectContext.forceSaveOrRollback()
     }
+
 }

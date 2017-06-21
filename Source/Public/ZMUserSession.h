@@ -24,7 +24,6 @@
 
 #import <WireSyncEngine/ZMNetworkState.h>
 #import <WireTransport/ZMTransportRequest.h>
-#import <WireSyncEngine/CallingProtocolStrategy.h>
 
 @class ZMTransportSession;
 @class ZMMessage;
@@ -170,7 +169,6 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 @interface ZMUserSession (Calling)
 
 @property (class) BOOL useCallKit;
-@property (class) CallingProtocolStrategy callingProtocolStrategy;
 @property (nonatomic, readonly) CallingRequestStrategy *callingStrategy;
 
 @end

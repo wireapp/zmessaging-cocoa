@@ -844,6 +844,15 @@
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeOneOnOne;
         conversation.remoteIdentifier = [NSUUID UUID];
+        
+        ZMUser *sender = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        sender.remoteIdentifier = [NSUUID UUID];
+        
+        ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+        connection.conversation = conversation;
+        connection.to = sender;
+        connection.status = ZMConnectionStatusAccepted;
+        
         [self.syncMOC saveOrRollback];
     }];
     
@@ -1184,7 +1193,6 @@
     XCTAssertFalse(sender.isConnected);
 }
 
-
 - (void)testThatItCalls_DelegateShowConversation_AndConnectsTheUser_ZMConnectCategory_AcceptAction
 {
     // given
@@ -1210,20 +1218,24 @@
     XCTAssertTrue(sender.isConnected);
 }
 
-
 - (void)testThatItCalls_DelegateShowConversationAndAcceptsCall_ZMConnectCategory
 {
     // given
     [self simulateLoggedInUser];
+    [self createSelfClient];
+    
+    WireCallCenterV3Mock *callCenter = [self createCallCenter];
     
     [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
 
     UILocalNotification *note = [self notificationWithConversationForCategory:ZMIncomingCallCategory];
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
-
-    [[conversation mutableOrderedSetValueForKey:@"callParticipants"] addObject:[ZMUser insertNewObjectInManagedObjectContext:self.uiMOC]];
+    
     [self.uiMOC saveOrRollback];
     
+    [self simulateIncomingCallFromUser: conversation.connectedUser conversation:conversation];
+    
+    
     // expect
     [self.application setInactive];
 
@@ -1232,39 +1244,23 @@
     }];
     
     // then
-    XCTAssertTrue(conversation.callDeviceIsActive);
-}
-
-- (void)testThatIt_DoesNotAcceptsCall_ButCallsDelegateShowConversation_ZMIncomingCallCategory_NoCallParticipants
-{
-    // given
-    [self simulateLoggedInUser];
-    
-    [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
-    
-    UILocalNotification *note = [self notificationWithConversationForCategory:ZMIncomingCallCategory];
-    ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
-    
-    // expect
-    [self.application setInactive];
-    
-    [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:conversation];
-    }];
-    
-    // then
-    XCTAssertFalse(conversation.callDeviceIsActive);
+    XCTAssertTrue(callCenter.didCallAnswerCall);
 }
 
 - (void)testThatIt_DoesNotCall_DelegateShowConversationAndIgnoresCall_ZMIncomingCallCategory_IgnoreAction
 {
     // given
     [self simulateLoggedInUser];
+    [self createSelfClient];
+    
+    WireCallCenterV3Mock *callCenter = [self createCallCenter];
     
     [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
 
     UILocalNotification *note = [self notificationWithConversationForCategory:ZMIncomingCallCategory];
     ZMConversation *conversation = [note conversationInManagedObjectContext:self.uiMOC];
+    
+    [self simulateIncomingCallFromUser: conversation.connectedUser conversation:conversation];
     
     // expect
     [self.application setInactive];
@@ -1275,15 +1271,16 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertFalse(conversation.callDeviceIsActive);
-    XCTAssertTrue(conversation.isIgnoringCall);
+    XCTAssertTrue(callCenter.didCallRejectCall);
 }
-
 
 - (void)testThatItCalls_DelegateShowConversationButDoesNotCallBack_ZMMissedCallCategory_CallBackAction
 {
     // given
     [self simulateLoggedInUser];
+    [self createSelfClient];
+    
+    WireCallCenterV3Mock *callCenter = [self createCallCenter];
     
     [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     
@@ -1298,7 +1295,7 @@
     }];
     
     // then
-    XCTAssertFalse(conversation.callDeviceIsActive);
+    XCTAssertFalse(callCenter.didCallStartCall);
 
 }
 
@@ -1325,7 +1322,6 @@
     
     // then
     XCTAssertTrue(didCallCompletionHandler);
-    XCTAssertFalse(conversation.callDeviceIsActive);
     XCTAssertEqual(conversation.messages.count, 1u);
 }
 

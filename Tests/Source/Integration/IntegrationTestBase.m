@@ -30,11 +30,9 @@
 #import <WireSyncEngine/ZMAuthenticationStatus+Testing.h>
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMCallFlowRequestStrategy.h"
-#import "ZMGSMCallHandler.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "ZMSyncStrategy+Internal.h"
-#import "ZMCallStateRequestStrategy.h"
 #import "MockLinkPreviewDetector.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
@@ -108,11 +106,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     [self.application simulateApplicationWillEnterForeground];
     [self.application simulateApplicationDidBecomeActive];
     WaitForEverythingToBeDoneWithTimeout(0.5);
-}
-
-- (ZMGSMCallHandler *)gsmCallHandler
-{
-    return self.userSession.operationLoop.syncStrategy.gsmCallHandler;
 }
 
 - (void)tearDown
@@ -310,7 +303,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     }];
     WaitForEverythingToBeDone();
     
-    [self.syncMOC zm_tearDownCallTimer];
     [self.uiMOC zm_tearDownCallState];
     [self.syncMOC zm_tearDownCallState];
 }
@@ -375,7 +367,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
                         appGroupIdentifier:self.groupIdentifier];
     WaitForEverythingToBeDone();
     
-    [self.syncMOC zm_tearDownCallTimer];
     [self.uiMOC zm_tearDownCallState];
     [self.syncMOC zm_tearDownCallState];
 }

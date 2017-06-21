@@ -25,7 +25,6 @@
 #import "ZMCallKitDelegate.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
-#import "VoiceChannelV2+CallFlow.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
@@ -89,7 +88,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) ZMConversation *connectedCallConversation;
 @property (nonatomic) id<NSObject> callStateObserverToken;
 @property (nonatomic) id<NSObject> missedCallsObserverToken;
-@property (nonatomic) id<NSObject> v2CallStateObserverToken;
 @property (nonatomic) NSMutableDictionary<NSUUID *, ZMCallObserver *> *calls;
 
 @end
@@ -200,7 +198,6 @@ NS_ASSUME_NONNULL_END
 {
     [WireCallCenterV3 removeObserverWithToken:self.callStateObserverToken];
     [WireCallCenterV3 removeObserverWithToken:self.missedCallsObserverToken];
-    [WireCallCenterV2 removeObserverWithToken:self.v2CallStateObserverToken];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -225,7 +222,6 @@ NS_ASSUME_NONNULL_END
         self.onDemandFlowManager = onDemandFlowManager;
         self.calls = [[NSMutableDictionary alloc] init];
         
-        self.v2CallStateObserverToken = [WireCallCenter addVoiceChannelStateObserverWithObserver:self context:userSession.managedObjectContext];
         self.callStateObserverToken = [self observeCallState];
         self.missedCallsObserverToken = [self observeMissedCalls];
         
@@ -313,11 +309,11 @@ NS_ASSUME_NONNULL_END
     [self.userSession performChanges:^{
         if (conversation.voiceChannel.selfUserConnectionState == VoiceChannelV2ConnectionStateNotConnected) {
             [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: ignore incoming call"];
-            [conversation.voiceChannelRouter.currentVoiceChannel ignore];
+            [conversation.voiceChannelInternal ignore];
         }
         else {
             [self logInfoForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"CXProvider performEndCallAction: leave"];
-            [conversation.voiceChannelRouter.currentVoiceChannel leave];
+            [conversation.voiceChannelInternal leave];
         }
     }];
 }
@@ -410,7 +406,7 @@ NS_ASSUME_NONNULL_END
                                           update:update
                                       completion:^(NSError * _Nullable error) {
                                           if (nil != error) {
-                                              [conversation.voiceChannelRouter.currentVoiceChannel leave];
+                                              [conversation.voiceChannelInternal leave];
                                               [self logErrorForConversation:conversation.remoteIdentifier.transportString line:__LINE__ format:@"Cannot report incoming call: %@", error];
                                           } else {
                                               [self configureAudioSession];
@@ -425,7 +421,7 @@ NS_ASSUME_NONNULL_END
     
     [userSession enqueueChanges:^{
         for (ZMConversation *conversation in nonIdleCallConversations) {
-            [conversation.voiceChannelRouter.currentVoiceChannel leave];
+            [conversation.voiceChannelInternal leave];
         }
     }];
 }
@@ -515,7 +511,7 @@ NS_ASSUME_NONNULL_END
     
     [userSession performChanges:^{
         [self configureAudioSession];
-        if ([callConversation.voiceChannelRouter.currentVoiceChannel joinWithVideo:action.video]) {
+        if ([callConversation.voiceChannelInternal joinWithVideo:action.video]) {
             [action fulfill];
         } else {
             [action fail];
@@ -547,7 +543,7 @@ NS_ASSUME_NONNULL_END
     };
     
     [userSession performChanges:^{
-        if (![callConversation.voiceChannelRouter.currentVoiceChannel joinWithVideo:NO]) {
+        if (![callConversation.voiceChannelInternal joinWithVideo:NO]) {
             [action fail];
         }
     }];

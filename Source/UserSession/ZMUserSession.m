@@ -49,7 +49,6 @@
 #import "ZMEnvironmentsSetup.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
-#import "CallingProtocolStrategy.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
@@ -84,7 +83,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) NSURL *keyStoreURL;
 @property (nonatomic, readwrite) NSURL *sharedContainerURL;
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
-@property (nonatomic) SystemMessageCallObserverV2 *systemMessageCallObserver;
 
 
 /// Build number of the Wire app
@@ -384,8 +382,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                           userSession:self
                                                                          mediaManager:(AVSMediaManager *)mediaManager];
         }
-
-        self.systemMessageCallObserver = [[SystemMessageCallObserverV2 alloc] initWithUserSession:self];
     }
     return self;
 }
@@ -659,8 +655,6 @@ ZM_EMPTY_ASSERTING_INIT()
     
     [self.syncManagedObjectContext performGroupedBlock:^{
         self.syncManagedObjectContext.accessToken = [[ZMAccessToken alloc] initWithToken:token type:type expiresInSeconds:0];
-        
-        [self.operationLoop accessTokenDidChangeWithToken:token ofType:type];
     }];
 }
 
@@ -958,18 +952,6 @@ static BOOL ZMUserSessionUseCallKit = NO;
 + (void)setUseCallKit:(BOOL)useCallKit
 {
     ZMUserSessionUseCallKit = useCallKit;
-}
-
-static CallingProtocolStrategy ZMUserSessionCallingProtocolStrategy = CallingProtocolStrategyNegotiate;
-
-+ (CallingProtocolStrategy)callingProtocolStrategy
-{
-    return ZMUserSessionCallingProtocolStrategy;
-}
-
-+ (void)setCallingProtocolStrategy:(CallingProtocolStrategy)callingProtocolStrategy
-{
-    ZMUserSessionCallingProtocolStrategy = callingProtocolStrategy;
 }
 
 @end

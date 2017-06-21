@@ -44,7 +44,6 @@
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMCallFlowRequestStrategy.h"
-#import "ZMCallStateRequestStrategy.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMUserSession+Internal.h"
@@ -345,8 +344,6 @@
     [self verifyMockLater:missingUpdateEventsTranscoder];
     id callFlowRequestStrategy = [OCMockObject mockForClass:ZMCallFlowRequestStrategy.class];
     [self verifyMockLater:callFlowRequestStrategy];
-    id callStateRequestStrategy = [OCMockObject mockForClass:ZMCallStateRequestStrategy.class];
-    [self verifyMockLater:callStateRequestStrategy];
     id loginTranscoder = [OCMockObject mockForClass:ZMLoginTranscoder.class];
     [self verifyMockLater:loginTranscoder];
     id loginCodeRequestTranscoder = [OCMockObject mockForClass:ZMLoginCodeRequestTranscoder.class];

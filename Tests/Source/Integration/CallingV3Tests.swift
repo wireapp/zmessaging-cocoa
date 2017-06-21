@@ -88,7 +88,7 @@ class CallingV3Tests : IntegrationTestBase {
     
     func selfJoinCall(isStart: Bool) {
         userSession.enqueueChanges {
-            _ = self.conversationUnderTest.voiceChannelRouter?.v3.join(video: false)
+            _ = self.conversationUnderTest.voiceChannelInternal?.join(video: false)
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
@@ -97,7 +97,7 @@ class CallingV3Tests : IntegrationTestBase {
         let convIdRef = self.conversationIdRef
         let userIdRef = self.selfUser.identifier.cString(using: .utf8)
         userSession.enqueueChanges {
-            self.conversationUnderTest.voiceChannelRouter?.v3.leave()
+            self.conversationUnderTest.voiceChannelInternal?.leave()
             WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
                                              conversationId: convIdRef,
                                              messageTime: 0,
@@ -111,7 +111,7 @@ class CallingV3Tests : IntegrationTestBase {
         let convIdRef = self.conversationIdRef
         let userIdRef = self.selfUser.identifier.cString(using: .utf8)
         userSession.performChanges{
-            self.conversationUnderTest.voiceChannelRouter?.v3.ignore()
+            self.conversationUnderTest.voiceChannelInternal?.ignore()
             WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
                                              conversationId: convIdRef,
                                              messageTime: 0,

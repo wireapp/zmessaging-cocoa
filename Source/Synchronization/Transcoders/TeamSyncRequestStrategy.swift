@@ -45,6 +45,8 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
     fileprivate var memberSync: ZMRemoteIdentifierObjectSync!
     fileprivate var remotelyDeletedIds: Set<UUID>?
 
+    var skipTeamSync = true
+
     public init(
         withManagedObjectContext managedObjectContext: NSManagedObjectContext,
         applicationStatus: ApplicationStatus,
@@ -72,6 +74,12 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
     }
 
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
+        // Temporaily disable the team slow-sync until th enew endpoint is defined
+        if skipTeamSync && isSyncing {
+            syncStatus?.finishCurrentSyncPhase(phase: expectedSyncPhase)
+            return nil
+        }
+
         if isSyncing && teamListSync.status != .inProgress && memberSync.isDone {
             remotelyDeletedIds = fetchExistingTeamIds()
             teamListSync.resetFetching()

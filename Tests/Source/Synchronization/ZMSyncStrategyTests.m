@@ -46,7 +46,6 @@
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMRegistrationTranscoder.h"
 #import "ZMCallFlowRequestStrategy.h"
-#import "ZMCallStateRequestStrategy.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMPhoneNumberVerificationTranscoder.h"
@@ -134,10 +133,6 @@
     id callFlowRequestStrategy = [OCMockObject niceMockForClass:ZMCallFlowRequestStrategy.class];
     [[[[callFlowRequestStrategy expect] andReturn:callFlowRequestStrategy] classMethod] alloc];
     (void)[[[callFlowRequestStrategy expect] andReturn:callFlowRequestStrategy] initWithMediaManager:nil onDemandFlowManager:nil managedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY application:self.application];
-
-    id callStateRequestStrategy = [OCMockObject niceMockForClass:ZMCallStateRequestStrategy.class];
-    [[[[callStateRequestStrategy expect] andReturn:callStateRequestStrategy] classMethod] alloc];
-    (void) [[[callStateRequestStrategy expect] andReturn:callStateRequestStrategy] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY callFlowRequestStrategy:OCMOCK_ANY];
         
     id loginCodeRequestTranscoder = [OCMockObject niceMockForClass:ZMLoginCodeRequestTranscoder.class];
     [[[[loginCodeRequestTranscoder expect] andReturn:loginCodeRequestTranscoder] classMethod] alloc];
@@ -704,42 +699,6 @@
         XCTAssertNotNil(syncUser);
         XCTAssertEqualObjects(syncUser.name, name);
     }];
-}
-
-- (void)testThatItSynchronizesCallStateChangesInUIContextToSyncContext
-{
-    // expect
-    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync1 stub] objectsDidChange:OCMOCK_ANY];
-    [(id<ZMContextChangeTracker>)[self.mockUpstreamSync2 stub] objectsDidChange:OCMOCK_ANY];
-    
-    
-    // given
-    ZMConversation *uiConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    XCTAssertTrue([self.uiMOC saveOrRollback]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    [self.sut.syncMOC performGroupedBlockAndWaitWithReasonableTimeout:^{
-        ZMConversation *syncConversation =  (ZMConversation *)[self.sut.syncMOC objectWithID:uiConversation.objectID];
-        XCTAssertNotNil(syncConversation);
-        XCTAssertFalse(syncConversation.callDeviceIsActive);
-    }];
-
-    // when
-    uiConversation.callDeviceIsActive = YES;
-    XCTAssertTrue([self.uiMOC saveOrRollback]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    // sut automagically synchronizes objects
-    
-    // then
-    XCTAssertTrue(uiConversation.callDeviceIsActive);
-
-    [self.sut.syncMOC performGroupedBlockAndWaitWithReasonableTimeout:^{
-        ZMConversation *syncConversation =  (ZMConversation *)[self.sut.syncMOC objectWithID:uiConversation.objectID];
-        XCTAssertNotNil(syncConversation);
-        XCTAssertTrue(syncConversation.callDeviceIsActive);
-    }];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItSynchronizesChangesInSyncContextToUIContext

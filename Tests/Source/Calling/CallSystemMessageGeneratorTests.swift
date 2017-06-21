@@ -62,7 +62,6 @@ class CallSystemMessageGeneratorTests : MessagingTest {
     
     func testThatItAppendsPerformedCallSystemMessage_OutgoingCall_V3(){
         // given
-        ZMUserSession.callingProtocolStrategy = .version3
         let messageCount = conversation.messages.count
         
         // when
@@ -85,7 +84,6 @@ class CallSystemMessageGeneratorTests : MessagingTest {
     
     func testThatItAppendsPerformedCallSystemMessage_IncomingCall_V3(){
         // given
-        ZMUserSession.callingProtocolStrategy = .version3
         let messageCount = conversation.messages.count
         
         // when
@@ -108,7 +106,6 @@ class CallSystemMessageGeneratorTests : MessagingTest {
     
     func testThatItAppendsMissedCallSystemMessage_UnansweredIncomingCall_V3(){
         // given
-        ZMUserSession.callingProtocolStrategy = .version3
         let messageCount = conversation.messages.count
         
         // when

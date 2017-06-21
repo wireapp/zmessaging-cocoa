@@ -126,65 +126,6 @@ extension LocalNotificationDispatcherTests {
         XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0)
     }
     
-    func testThatItDoesNotCancelNotificationsForCallStateSelfUserIdleEvents() {
-        // GIVEN
-        let callEvent = self.callStateEvent(in: self.conversation2,
-                                            joinedUsers:[self.user1],
-                                            videoSendingUsers: [],
-                                            sequence: 1,
-                                            session: "session1"
-                                            )!
-        let selfUserDoesNotJoinCallEvent = self.callStateEvent(in: self.conversation2,
-                                                               joinedUsers: [self.user1, self.user2],
-                                                               videoSendingUsers: [],
-                                                               sequence: 2,
-                                                               session: "session1"
-                                                               )!
-        self.sut.didReceive(events: [callEvent],
-                            conversationMap: [:],
-                            id: UUID.create())
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        self.conversation2.mutableOrderedSetValue(forKey: "callParticipants").add(self.user1)
-        
-        // WHEN
-        self.sut.didReceive(events: [selfUserDoesNotJoinCallEvent],
-                            conversationMap: [:],
-                            id: UUID.create())
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // THEN
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
-        guard self.application.scheduledLocalNotifications.count > 0 else {
-            return XCTFail("Wrong number of notifications")
-        }
-        XCTAssertEqual(self.application.scheduledLocalNotifications[0].conversation(in: self.syncMOC), self.conversation2)
-    }
-    
-    func testThatItCancelsNotificationsWhenReceivingANotificationThatTheCallWasIgnored() {
-        
-        // GIVEN
-        let callEvent = self.callStateEvent(in: self.conversation2,
-                                            joinedUsers: [self.user1],
-                                            videoSendingUsers: [],
-                                            sequence: 1,
-                                            session:"session1")!
-        self.conversation2.isIgnoringCall = true
-        self.sut.didReceive(events: [callEvent],
-                            conversationMap: [:],
-                            id: UUID.create())
-        
-        // WHEN
-        NotificationCenter.default.post(
-            name: Notification.Name(rawValue:LocalNotificationDispatcher.ZMConversationCancelNotificationForIncomingCallNotificationName),
-            object: self.conversation2)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // THEN
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
-        XCTAssertEqual(self.application.cancelledLocalNotifications.count, self.application.scheduledLocalNotifications.count)
-        
-    }
-    
     func testThatWhenFailingAMessageItSchedulesANotification() {
         self.syncMOC.performGroupedBlockAndWait {
             // GIVEN
@@ -327,20 +268,7 @@ extension LocalNotificationDispatcherTests {
 
 // MARK: - Helpers
 extension LocalNotificationDispatcherTests {
-    
-    func payloadForSelfUserJoiningCall(in conversation: ZMConversation, state: String) -> [String: Any] {
-        return [
-            "type": "call.state",
-            "conversation": conversation.remoteIdentifier!.transportString(),
-            "self": [String:Any](),
-            "participants": [
-                 self.selfUser.remoteIdentifier!.transportString() : [
-                    "state": state
-                ]
-            ]
-        ]
-    }
-    
+        
     func payloadForEncryptedOTRMessage(text: String, nonce: UUID) -> [String: Any] {
         let message = ZMGenericMessage.message(text: text, nonce: nonce.transportString())
         return self.payloadForOTRAsset(with: message)

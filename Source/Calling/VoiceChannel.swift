@@ -18,8 +18,23 @@
 
 import Foundation
 
+@objc(ZMCaptureDevice)
+public enum CaptureDevice : Int {
+    case front
+    case back
+    
+    var deviceIdentifier : String {
+        switch  self {
+        case .front:
+            return "com.apple.avfoundation.avcapturedevice.built-in_video:1"
+        case .back:
+            return "com.apple.avfoundation.avcapturedevice.built-in_video:0"
+        }
+    }
+}
+
 @objc
-public protocol VoiceChannel : CallProperties, CallActions, CallObservers {
+public protocol VoiceChannel : CallProperties, CallActions, CallActionsInternal, CallObservers {
     
     func setVideoCaptureDevice(device: CaptureDevice) throws
     

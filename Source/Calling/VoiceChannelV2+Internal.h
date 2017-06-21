@@ -18,26 +18,6 @@
 
 
 #import "VoiceChannelV2.h"
-@class ZMCallTimer;
-@class AVSFlowManager;
-@class CTCallCenter;
-
-
-@interface VoiceChannelV2 ()
-
-- (instancetype)initWithConversation:(ZMConversation *)conversation NS_DESIGNATED_INITIALIZER;
-- (instancetype)initWithConversation:(ZMConversation *)conversation callCenter:(CTCallCenter *)callCenter;
-- (VoiceChannelV2State)stateForIsSelfJoined:(BOOL)selfJoined otherJoined:(BOOL)otherJoined isDeviceActive:(BOOL)isDeviceActive flowActive:(BOOL)flowActive isIgnoringCall:(BOOL)isIgnoringCall;
-+ (VoiceChannelV2ParticipantState *)participantStateForCallUserWithIsJoined:(BOOL)joined flowActive:(BOOL)flowActive;
-
-+ (void)setLastSessionIdentifier:(NSString *)sessionID; ///< Thread safe setter
-+ (NSString *)lastSessionIdentifier; ///< Thread safe getter
-
-+ (void)setLastSessionStartDate:(NSDate *)date; ///< Thread safe setter
-+ (NSDate *)lastSessionStartDate; ///< Thread safe getter
-- (BOOL)hasOngoingGSMCall;
-
-@end
 
 
 @interface VoiceChannelV2ParticipantState ()

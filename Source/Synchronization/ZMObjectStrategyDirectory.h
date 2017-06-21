@@ -27,7 +27,6 @@
 @class ZMMissingUpdateEventsTranscoder;
 @class ZMRegistrationTranscoder;
 @class ZMCallFlowRequestStrategy;
-@class ZMCallStateRequestStrategy;
 @class ZMLastUpdateEventIDTranscoder;
 @class ZMLoginTranscoder;
 @class ZMPhoneNumberVerificationTranscoder;
