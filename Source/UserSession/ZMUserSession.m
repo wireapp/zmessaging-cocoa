@@ -275,7 +275,7 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     self = [super init];
     if(self) {
-        zmSetupEnvironments();
+        
         [ZMUserSession enableLogsByEnvironmentVariable];
         self.appVersion = appVersion;
         [ZMUserAgent setWireAppVersion:appVersion];
