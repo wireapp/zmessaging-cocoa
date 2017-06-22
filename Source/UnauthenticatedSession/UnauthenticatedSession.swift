@@ -25,6 +25,15 @@ class UnauthenticatedSession: NSObject {
     let loginRequestStrategy: ZMLoginTranscoder
     let loginCodeRequestStrategy: ZMLoginCodeRequestTranscoder
     
+    convenience init(authenticationStatus: ZMAuthenticationStatus) throws {
+        let model = NSManagedObjectModel()
+        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
+        try coordinator.addPersistentStore(ofType: NSInMemoryStoreType, configurationName: nil, at: nil, options: nil)
+        let moc = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        moc.persistentStoreCoordinator = coordinator
+        self.init(moc: moc, authenticationStatus: authenticationStatus)
+    }
+    
     init(moc: NSManagedObjectContext, authenticationStatus: ZMAuthenticationStatus) {
         self.moc = moc
         self.authenticationStatus = authenticationStatus
