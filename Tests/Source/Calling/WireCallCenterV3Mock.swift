@@ -97,15 +97,17 @@ public class WireCallCenterV3IntegrationMock : WireCallCenterV3 {
     
 }
 
+@objc
 public class WireCallCenterV3Mock : WireCallCenterV3 {
     
+    public let mockAVSWrapper : MockAVSWrapper
     public var mockNonIdleCalls : [UUID : CallState] = [:]
     
     var mockMembers : [CallMember] {
         set {
-            (avsWrapper as! MockAVSWrapper).mockMembers = newValue
+            mockAVSWrapper.mockMembers = newValue
         } get {
-            return (avsWrapper as! MockAVSWrapper).mockMembers
+            return mockAVSWrapper.mockMembers
         }
     }
     
@@ -125,10 +127,12 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
         }
     }
     
+    @objc
     public var didCallStartCall : Bool {
         return (avsWrapper as! MockAVSWrapper).didCallStartCall
     }
     
+    @objc
     public var didCallAnswerCall : Bool {
         return (avsWrapper as! MockAVSWrapper).didCallAnswerCall
     }
@@ -145,7 +149,8 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     }
     
     public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, analytics: AnalyticsType? = nil) {
-        super.init(userId: userId, clientId: clientId, avsWrapper: MockAVSWrapper(userId: userId, clientId: clientId, observer: nil), uiMOC: uiMOC)
+        mockAVSWrapper = MockAVSWrapper(userId: userId, clientId: clientId, observer: nil)
+        super.init(userId: userId, clientId: clientId, avsWrapper: mockAVSWrapper, uiMOC: uiMOC)
     }
 
     public func update(callState : CallState, conversationId: UUID, userId: UUID? = nil) {

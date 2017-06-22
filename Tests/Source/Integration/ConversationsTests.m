@@ -97,7 +97,7 @@
         WaitForEverythingToBeDone();
         
         // Check that conversation is there
-        ZMConversation *conversation = [[ZMConversationList conversationsInUserSession:self.userSession team:nil] firstObjectMatchingWithBlock:^BOOL(ZMConversation *c) {
+        ZMConversation *conversation = [[ZMConversationList conversationsInUserSession:self.userSession] firstObjectMatchingWithBlock:^BOOL(ZMConversation *c) {
             return [c.userDefinedName isEqual:conversationName];
         }];
         XCTAssertNotNil(conversation);
@@ -649,7 +649,7 @@
     ZMConversation *conversation4 = [self conversationForMockConversation:self.groupConversationWithOnlyConnected];
     
     // I am faulting conversation, will maintain the "message" relations as faulted
-    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     
     NSArray *expectedList1 = @[conversation4, conversation3, conversation2, conversation1];
     XCTAssertEqualObjects(conversationList, expectedList1);
@@ -694,7 +694,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
         [groupConversation addUsersByUser:self.user1 addedUsers:@[self.selfUser]];
@@ -922,7 +922,7 @@
     ZMConversation *groupConversation = [self conversationForMockConversation:self.groupConversation];
 
     // then
-    ZMConversationList *conversations = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *conversations = [ZMConversationList conversationsInUserSession:self.userSession];
     XCTAssertEqual(conversations.firstObject, extraConversation);
     
     ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:conversations];
@@ -960,8 +960,8 @@
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    ZMConversationList *convList1 = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
-    ZMConversationList *convList2 = [ZMConversationList archivedConversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *convList1 = [ZMConversationList conversationsInUserSession:self.userSession];
+    ZMConversationList *convList2 = [ZMConversationList archivedConversationsInUserSession:self.userSession];
     
     ConversationListChangeObserver *convListener1 = [[ConversationListChangeObserver alloc] initWithConversationList:convList1];
     ConversationListChangeObserver *convListener2 = [[ConversationListChangeObserver alloc] initWithConversationList:convList2];
@@ -986,7 +986,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForEverythingToBeDone();
     
-    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     ZMConversation *conversation1 = [self conversationForMockConversation:self.selfToUser1Conversation];
     (void) conversation1.messages; // Make sure we've faulted in the messages
     ZMConversation *conversation2 = [self conversationForMockConversation:self.selfToUser2Conversation];
@@ -1088,7 +1088,7 @@
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
-    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     ConversationListChangeObserver *conversationListChangeObserver = [[ConversationListChangeObserver alloc] initWithConversationList:conversationList];
     
     ZMConversation *oneToOneConversation = [self conversationForMockConversation:self.selfToUser1Conversation];
@@ -1126,7 +1126,7 @@
     ZMConversation *oneToOneConversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     MockUser *mockUser = [self createSentConnectionToUserWithName:@"Hans" uuid:NSUUID.createUUID];
 
-    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     ZMConversation *sentConversation = conversationList.firstObject;
 
     [self.mockTransportSession performRemoteChanges:^(__unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -1180,11 +1180,11 @@
     MockUser *mockUser = [self createPendingConnectionFromUserWithName:@"Hans" uuid:NSUUID.createUUID];
     ZMUser *realUser = [self userForMockUser:mockUser];
     
-    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
     XCTAssertEqual(pending.count, 1u);
     ZMConversation *pendingConnversation = pending.lastObject;
 
-    ZMConversationList *activeConversations = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *activeConversations = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger activeCount = activeConversations.count;
     ConversationListChangeObserver *activeObserver = [[ConversationListChangeObserver alloc] initWithConversationList:activeConversations];
     ConversationListChangeObserver *pendingObserver = [[ConversationListChangeObserver alloc] initWithConversationList:pending];
@@ -1396,7 +1396,7 @@
     XCTAssertEqualObjects(conversation.connectedUser, user1);
     XCTAssertEqual(conversation.conversationType, ZMConversationTypeOneOnOne);
 
-    ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession];
     XCTAssertEqual(active.count, 4u);
     XCTAssertTrue([active containsObject:conversation]);
 
@@ -1588,39 +1588,12 @@
     }];
 }
 
-- (void)testThatCallingAnArchived_AndSilenced_Conversation_Unarchives_ThisConversation
-{
-    // expect
-    BOOL shouldUnarchive = YES;
-    
-    // when
-    [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.selfToUser1Conversation withBlock:^(MockTransportSession *session ZM_UNUSED) {
-        [self.selfToUser1Conversation addUserToCall:self.user1];
-    }];
-    
-    ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-    [syncConv.voiceChannelRouter.v2 tearDown];
-}
-
-- (void)testThatCallingAnArchivedConversation_Unarchives_ThisConversation
-{
-    // expect
-    BOOL shouldUnarchive = YES;
-    
-    // when
-    [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.selfToUser1Conversation withBlock:^(MockTransportSession *session ZM_UNUSED) {
-        [self.selfToUser1Conversation addUserToCall:self.user1];
-    }];
-    ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-    [syncConv.voiceChannelRouter.v2 tearDown];
-}
-
 - (void)testThatAcceptingArchivedOutgoingRequest_Unarchives_ThisConversation
 {
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
 
     MockUser *mockUser = [self createSentConnectionToUserWithName:@"Hans" uuid:NSUUID.createUUID];
-    ZMConversationList *conversations = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *conversations = [ZMConversationList conversationsInUserSession:self.userSession];
     ZMConversation *conversation = conversations.firstObject;
     // expect
     
@@ -1696,55 +1669,6 @@
     XCTAssertEqual(conversation.estimatedUnreadCount, 1u);
 }
 
-
-- (void)testThatLastReadIsAutomaticallyIncreasedInCaseOfCallEvents
-{
-    // login
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // given
-    [self.mockTransportSession performRemoteChanges:^(__unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Will insert this to have a message to read" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
-        [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
-        
-        MockEvent *lastEvent = self.selfToUser1Conversation.events.lastObject;
-        self.selfToUser1Conversation.lastRead = lastEvent.identifier;
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // login
-    [self recreateUserSessionAndWipeCache:YES];
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    XCTAssertEqual(conversation.estimatedUnreadCount, 0u);
-    
-    // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        NOT_USED(session);
-        [self.selfToUser1Conversation addUserToCall:self.user1];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(conversation.estimatedUnreadCount, 0u);
-
-    // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        NOT_USED(session);
-        [self.selfToUser1Conversation callEndedEventFromUser:self.user1 selfUser:self.selfUser];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    // then
-    XCTAssertEqual(conversation.estimatedUnreadCount, 1u);
-
-    ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.selfToUser1Conversation].objectID];
-    [syncConv.voiceChannelRouter.v2 tearDown];
-}
-
 - (void)testThatItDoesNotSendALastReadEventWhenInsertingAMessage
 {
     // given
@@ -1805,8 +1729,8 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForEverythingToBeDone();
 
-    NSArray *activeConversations = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
-    NSArray *pendingConversations = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession team:nil];
+    NSArray *activeConversations = [ZMConversationList conversationsInUserSession:self.userSession];
+    NSArray *pendingConversations = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
 
     // then
     NSUInteger expectedRequests = (NSUInteger)(numberOfConversations * 1.f / ZMConversationTranscoderListPageSize + 0.5f);
@@ -1864,7 +1788,7 @@
     [self loginAndFillConversationWithMessages:self.groupConversation messagesCount:messagesCount];
     WaitForEverythingToBeDone();
 
-    ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectoryForTeam:nil];
+    ZMConversationListDirectory *conversationDirectory = self.uiMOC.conversationListDirectory;
     WaitForEverythingToBeDone();
 
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
@@ -1947,7 +1871,7 @@
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
     id token = [MessageWindowChangeInfo addObserver: self forWindow:window];
     
-    ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectoryForTeam:nil];
+    ZMConversationListDirectory *conversationDirectory = self.uiMOC.conversationListDirectory;
     NSManagedObjectID *conversationID = conversation.objectID;
     
    
@@ -2010,7 +1934,7 @@
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
     id token = [MessageWindowChangeInfo addObserver: self forWindow:window];
     
-    ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectoryForTeam:nil];
+    ZMConversationListDirectory *conversationDirectory = self.uiMOC.conversationListDirectory;
     NSManagedObjectID *conversationID = conversation.objectID;
     
     // when deleting the conversation remotely
@@ -2068,7 +1992,7 @@
     [self loginAndFillConversationWithMessages:self.groupConversation messagesCount:messagesCount];
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     
-    ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectoryForTeam:nil];
+    ZMConversationListDirectory *conversationDirectory = self.uiMOC.conversationListDirectory;
     NSManagedObjectID *conversationID = conversation.objectID;
     
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
@@ -2090,7 +2014,7 @@
     [self loginAndFillConversationWithMessages:self.groupConversation messagesCount:messagesCount];
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     
-    ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectoryForTeam:nil];
+    ZMConversationListDirectory *conversationDirectory = self.uiMOC.conversationListDirectory;
     NSManagedObjectID *conversationID = conversation.objectID;
     
     [self remotelyAppendSelfConversationWithZMClearedForMockConversation:self.groupConversation atTime:conversation.lastServerTimeStamp];
@@ -2112,7 +2036,7 @@
     [self loginAndFillConversationWithMessages:self.groupConversation messagesCount:messagesCount];
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     
-    ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectoryForTeam:nil];
+    ZMConversationListDirectory *conversationDirectory = self.uiMOC.conversationListDirectory;
     
     // when archiving the conversation remotely
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
@@ -2132,7 +2056,7 @@
     const NSUInteger messagesCount = 5;
     [self loginAndFillConversationWithMessages:self.groupConversation messagesCount:messagesCount];
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    ZMConversationListDirectory *conversationDirectory = [self.uiMOC conversationListDirectoryForTeam:nil];
+    ZMConversationListDirectory *conversationDirectory = self.uiMOC.conversationListDirectory;
     NSManagedObjectID *conversationID = conversation.objectID;
     
     // when deleting the conversation remotely, whiping the cache and resyncing

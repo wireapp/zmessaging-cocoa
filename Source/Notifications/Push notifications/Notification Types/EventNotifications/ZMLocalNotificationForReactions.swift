@@ -18,6 +18,22 @@
 
 import Foundation
 
+public protocol CopyableEventNotification : EventNotification {
+    func copyByAddingEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) -> Self?
+    func canAddEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) -> Bool
+}
+
+extension CopyableEventNotification {
+    
+    public func canAddEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) -> Bool {
+        guard eventType == event.type &&
+            conversationID == conversation.remoteIdentifier && (!conversation.isSilenced || ignoresSilencedState)
+            else {
+                return false
+        }
+        return true
+    }
+}
 
 final public class ZMLocalNotificationForReaction : ZMLocalNotificationForEvent, CopyableEventNotification {
     

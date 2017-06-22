@@ -96,7 +96,7 @@ class SearchTests : IntegrationTestBase {
         
         XCTAssertTrue(logInAndWaitForSyncToBeComplete())
         
-        let pendingConnections = ZMConversationList.pendingConnectionConversations(inUserSession: userSession, team: nil)
+        let pendingConnections = ZMConversationList.pendingConnectionConversations(inUserSession: userSession)
         XCTAssertEqual(pendingConnections.count, 1)
     }
     

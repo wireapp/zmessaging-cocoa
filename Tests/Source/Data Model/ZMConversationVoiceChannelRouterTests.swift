@@ -18,15 +18,13 @@
 
 import Foundation
 
-class ZMConversationVoiceChannelRouterTests : MessagingTest {
+class ZMConversationVoiceChannelTests : MessagingTest {
     
     private var oneToOneconversation : ZMConversation!
     private var groupConversation : ZMConversation!
 
     override func setUp() {
         super.setUp()
-        
-        ZMUserSession.callingProtocolStrategy = .version2
         
         oneToOneconversation = ZMConversation.insertNewObject(in: self.syncMOC)
         oneToOneconversation?.remoteIdentifier = UUID.create()
@@ -38,36 +36,34 @@ class ZMConversationVoiceChannelRouterTests : MessagingTest {
     }
     
     override func tearDown() {
-        ZMUserSession.callingProtocolStrategy = .negotiate
-        
         super.tearDown()
     }
     
     
-    func testThatItReturnsAVoiceChannelRouterForAOneOnOneConversations() {
+    func testThatItReturnsAVoiceChannelForAOneOnOneConversations() {
         // when
-        let router = oneToOneconversation.voiceChannelRouter
+        let voiceChannel = oneToOneconversation.voiceChannel
         
         // then
-        XCTAssertNotNil(router)
-        XCTAssertEqual(router?.conversation, oneToOneconversation)
+        XCTAssertNotNil(voiceChannel)
+        XCTAssertEqual(voiceChannel?.conversation, oneToOneconversation)
     }
     
-    func testThatItReturnsAVoiceChannelRouterForAGroupConversation() {
+    func testThatItReturnsAVoiceChannelForAGroupConversation() {
         // when
-        let router = groupConversation.voiceChannelRouter
+        let voiceChannel = groupConversation.voiceChannel
         
         // then
-        XCTAssertNotNil(router)
-        XCTAssertEqual(router?.conversation, groupConversation)
+        XCTAssertNotNil(voiceChannel)
+        XCTAssertEqual(voiceChannel?.conversation, groupConversation)
     }
     
-    func testThatItAlwaysReturnsTheSameVoiceChannelRouterForAOneOnOneConversations() {
+    func testThatItAlwaysReturnsTheSameVoiceChannelForAOneOnOneConversations() {
         // when
-        let router = oneToOneconversation.voiceChannelRouter
+        let voiceChannel = oneToOneconversation.voiceChannelInternal
         
         // then
-        XCTAssertEqual(oneToOneconversation.voiceChannelRouter, router)
+        XCTAssertEqual(oneToOneconversation.voiceChannelInternal, voiceChannel)
     }
     
 }

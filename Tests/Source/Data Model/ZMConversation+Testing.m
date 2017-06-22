@@ -88,11 +88,6 @@
     [self updateUnreadMessagesWithMessage:systemMessage];
 }
 
-- (void)setHasActiveCall:(BOOL)hasActiveCall
-{
-    self.callDeviceIsActive = hasActiveCall;
-}
-
 - (void)setHasExpiredMessage:(BOOL)hasUnreadUnsentMessage
 {
     self.hasUnreadUnsentMessage = hasUnreadUnsentMessage;

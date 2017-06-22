@@ -83,7 +83,7 @@
     WaitForEverythingToBeDone();
     
     // then
-    NSArray *allConversations = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    NSArray *allConversations = [ZMConversationList conversationsInUserSession:self.userSession];
     ZMConversation *foundConversation = [allConversations firstObjectMatchingWithBlock:^BOOL(ZMConversation *conv) {
         if([conv.connectedUser.displayName isEqualToString:@"Karl"]) {
             return YES;
@@ -138,8 +138,8 @@
 {
     // given
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession team:nil];
-    ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
+    ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession];
 
     // when
     NSString *userName = @"Hans Von Üser";
@@ -164,8 +164,8 @@
     // given
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession team:nil];
-    ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
+    ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession];
     
     // when
     NSString *userName = @"Hans Von Üser";
@@ -197,7 +197,7 @@
     ZMUser *user = [self userForMockUser:mockUser];
     XCTAssertEqual(user, conversation.connectedUser);
     
-    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
     XCTAssertTrue([pending containsObject:conversation]);
     
     ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:pending];
@@ -224,7 +224,7 @@
     ZMUser *user = [self userForMockUser:mockUser];
     XCTAssertEqual(user, conversation.connectedUser);
     
-    ZMConversationList *conversations = [ZMConversationList conversationsIncludingArchivedInUserSession:self.userSession team:nil];
+    ZMConversationList *conversations = [ZMConversationList conversationsIncludingArchivedInUserSession:self.userSession];
     XCTAssertTrue([conversations containsObject:conversation]);
     
     ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:conversations];
@@ -259,8 +259,8 @@
     ZMUser *realUser2 = [self userForMockUser:mockUser2];
     XCTAssertEqualObjects(realUser2, conversation2.connectedUser);
     
-    ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
-    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession];
+    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
     
     XCTAssertFalse([active containsObject:conversation1]);
     XCTAssertFalse([active containsObject:conversation2]);
@@ -328,11 +328,11 @@
     self.registeredOnThisDevice = YES;
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
-    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     XCTAssertEqual(conversationList.count, 3u);
     ConversationListChangeObserver *conversationListObserver = [[ConversationListChangeObserver alloc] initWithConversationList:conversationList];
     
-    ZMConversationList *pendingConversationsList = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *pendingConversationsList = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
     ConversationListChangeObserver *pendingConversationListObserver = [[ConversationListChangeObserver alloc] initWithConversationList:pendingConversationsList];
     
     ConversationChangeObserver *convObserver = self.conversationChangeObserver;
@@ -474,7 +474,7 @@
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
 
-    ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger count = active.count;
     
     ConversationListChangeObserver *listObserver = [[ConversationListChangeObserver alloc] initWithConversationList:active];
@@ -598,7 +598,7 @@
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
-    NSArray *active = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    NSArray *active = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger count = active.count;
     
     ZMConversation *conv1;
@@ -797,7 +797,7 @@
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
-    ZMConversationList *activeConversations = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *activeConversations = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger activeCount = activeConversations.count;
     
     ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:activeConversations];
@@ -844,7 +844,7 @@
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     
-    NSArray *active = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    NSArray *active = [ZMConversationList conversationsInUserSession:self.userSession];
     
     // when we search and send connection requests to users
     [self.userSession performChanges:^{
@@ -870,7 +870,7 @@
     ZMUser *user = [self userForMockUser:mockUser];
     XCTAssertEqual(user, conversation.connectedUser);
     
-    ZMConversationList *conversations = [ZMConversationList conversationsIncludingArchivedInUserSession:self.userSession team:nil];
+    ZMConversationList *conversations = [ZMConversationList conversationsIncludingArchivedInUserSession:self.userSession];
     XCTAssertTrue([conversations containsObject:conversation]);
     
     ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:conversations];
@@ -1012,7 +1012,7 @@
     self.mockTransportSession.responseGeneratorBlock = self.responseBlockForConnectionLimit;
     
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    ZMConversationList *conversations = [ZMConversationList conversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *conversations = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger beforeInsertingCount = conversations.count;
     
     // when
@@ -1048,7 +1048,7 @@
 - (void)testThatItResetsTheConversationWhenAConnectionStatusChangeFromPendingToAcceptedIsRejectedByTheBackend
 {
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession team:nil];
+    ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
     NSUInteger pendingCount = pending.count;
 
     // given

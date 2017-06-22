@@ -93,7 +93,7 @@
         XCTAssertEqualObjects(messageEvent.payload[@"type"], @"conversation.otr-message-add");
         
         // will create a transient notification
-        [self.groupConversation addUserToCall:self.user2];
+        [self.groupConversation addUserToCall:self.user2]; // TODO jacob - don't use deprecicated call events here
         
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -109,8 +109,8 @@
     // then
     NSString *expectedLastRequest = [NSString stringWithFormat:@"/notifications?size=%lu&since=%@&client=%@", ZMMissingUpdateEventsTranscoderListPageSize, messageAddLastNotificationID.transportString, self.userSession.selfUserClient.remoteIdentifier];
     XCTAssertEqualObjects([(ZMTransportRequest *)self.mockTransportSession.receivedRequests.lastObject path], expectedLastRequest);
-    ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.groupConversation].objectID];
-    [syncConv.voiceChannelRouter.v2 tearDown];
+//    ZMConversation *syncConv = (id)[self.userSession.syncManagedObjectContext objectWithID:[self conversationForMockConversation:self.groupConversation].objectID];
+//    [syncConv.voiceChannelRouter.v2 tearDown];
 }
 
 

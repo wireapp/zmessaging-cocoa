@@ -74,29 +74,17 @@ extension CallClosedReason {
 }
 
 
-class VoiceChannelStateObserverToken : NSObject, WireCallCenterV2CallStateObserver, WireCallCenterCallStateObserver {
+class VoiceChannelStateObserverToken : NSObject, WireCallCenterCallStateObserver {
     
     let context : NSManagedObjectContext
     weak var observer : VoiceChannelStateObserver?
     
-    var tokenV2 : WireCallCenterObserverToken?
     var tokenV3 : WireCallCenterObserverToken?
-    var tokenJoinFailedV2 : NSObjectProtocol?
-    var tokenCallEndedV2 : NSObjectProtocol?
     
     deinit {
         if let token = tokenV3 {
             WireCallCenterV3.removeObserver(token: token)
         }
-        
-        if let token = tokenJoinFailedV2 {
-            NotificationCenter.default.removeObserver(token)
-        }
-        
-        if let token = tokenCallEndedV2 {
-            NotificationCenter.default.removeObserver(token)
-        }
-        
     }
     
     init(context: NSManagedObjectContext, observer: VoiceChannelStateObserver) {
@@ -106,21 +94,6 @@ class VoiceChannelStateObserverToken : NSObject, WireCallCenterV2CallStateObserv
         super.init()
         
         tokenV3 = WireCallCenterV3.addCallStateObserver(observer: self)
-        tokenV2 = WireCallCenterV2.addVoiceChannelStateObserver(observer: self, context: context)
-        
-        tokenJoinFailedV2 = NotificationCenter.default.addObserver(forName: NSNotification.Name.ZMConversationVoiceChannelJoinFailed, object: nil, queue: .main) { [weak observer] (note) in
-            if let conversationId = note.object as? UUID, let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: context) {
-                observer?.callCenterDidFailToJoinVoiceChannel(error: note.userInfo?["error"] as? Error, conversation: conversation)
-            }
-        }
-        
-        tokenCallEndedV2 = NotificationCenter.default.addObserver(forName: CallEndedNotification.notificationName, object: nil, queue: .main, using: { [weak observer] (note) in
-            guard let note = note.userInfo?[CallEndedNotification.userInfoKey] as? CallEndedNotification else { return }
-            
-            if let conversation = ZMConversation(remoteID: note.conversationId, createIfNeeded: false, in: context) {
-                observer?.callCenterDidEndCall(reason: note.reason, conversation: conversation, callingProtocol: .version2)
-            }
-        })
     }
     
     func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
@@ -136,10 +109,6 @@ class VoiceChannelStateObserverToken : NSObject, WireCallCenterV2CallStateObserv
                 callingProtocol: .version3
             )
         }
-    }
-    
-    func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation) {
-        observer?.callCenterDidChange(voiceChannelState: voiceChannelState, conversation: conversation, callingProtocol: .version2)
     }
     
 }
@@ -191,7 +160,6 @@ extension VoiceChannelStateObserverFilter: ZMConversationObserver {
 
 class ReceivedVideoObserverToken : NSObject {
     
-    var tokenV2 : WireCallCenterObserverToken?
     var tokenV3 : WireCallCenterObserverToken?
     
     deinit {
@@ -201,7 +169,6 @@ class ReceivedVideoObserverToken : NSObject {
     }
     
     init(context: NSManagedObjectContext, observer: ReceivedVideoObserver, conversation: ZMConversation) {
-        tokenV2 = WireCallCenterV2.addReceivedVideoObserver(observer: observer, forConversation: conversation, context: context)
         tokenV3 = WireCallCenterV3.addReceivedVideoObserver(observer: observer)
     }
     
@@ -223,12 +190,29 @@ public class WireCallCenter : NSObject {
     
     /// Add observer of particpants in a voice channel. Returns a token which needs to be retained as long as the observer should be active.
     public class func addVoiceChannelParticipantObserver(observer: VoiceChannelParticipantObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
-        return WireCallCenterV2.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation, context: context)
+        let remoteID = conversation.remoteIdentifier!
+        return NotificationCenterObserverToken(name: VoiceChannelParticipantNotification.notificationName, object: nil, queue: .main) {
+            [weak observer] (note) in
+            guard let note = note.userInfo?[VoiceChannelParticipantNotification.userInfoKey] as? VoiceChannelParticipantNotification,
+                let strongObserver = observer
+                else { return }
+            
+            if note.conversationId == remoteID {
+                strongObserver.voiceChannelParticipantsDidChange(note)
+            }
+        }
     }
     
     /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
     public class func addVoiceGainObserver(observer: VoiceGainObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
-        return WireCallCenterV2.addVoiceGainObserver(observer: observer, forConversation: conversation, context: context)
+        return NotificationCenterObserverToken(name: VoiceGainNotification.notificationName, object: conversation.remoteIdentifier! as NSUUID, queue: .main) { [weak observer] (note) in
+            guard let note = note.userInfo?[VoiceGainNotification.userInfoKey] as? VoiceGainNotification,
+                let observer = observer,
+                let user = ZMUser(remoteID: note.userId, createIfNeeded: false, in: context)
+                else { return }
+            
+            observer.voiceGainDidChange(forParticipant: user, volume: note.volume)
+        }
     }
     
     /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
@@ -238,8 +222,6 @@ public class WireCallCenter : NSObject {
     
     /// Returns conversations with active calls
     public class func activeCallConversations(inUserSession userSession: ZMUserSession) -> [ZMConversation] {
-        var activeConversations : Set<ZMConversation> = Set()
-        
         let conversationsV3 = WireCallCenterV3.activeInstance?.nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
             if value == CallState.established {
                 return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
@@ -248,12 +230,7 @@ public class WireCallCenter : NSObject {
             }
         })
         
-        let conversationsV2 = userSession.managedObjectContext.wireCallCenterV2.conversations(withVoiceChannelStates: [.selfConnectedToActiveChannel])
-        
-        activeConversations.formUnion(conversationsV3 ?? [])
-        activeConversations.formUnion(conversationsV2)
-        
-        return Array(activeConversations)
+        return conversationsV3 ?? []
     }
     
     // Returns conversations with a non idle call state
@@ -267,18 +244,6 @@ public class WireCallCenter : NSObject {
             
             nonIdleConversations.formUnion(conversationsV3 ?? [])
         }
-        
-        let idleStates : [VoiceChannelV2State] = [.deviceTransferReady,
-                                                  .incomingCall,
-                                                  .incomingCallInactive,
-                                                  .outgoingCall,
-                                                  .outgoingCallInactive,
-                                                  .selfIsJoiningActiveChannel,
-                                                  .selfConnectedToActiveChannel]
-        
-        let conversationsV2 = userSession.managedObjectContext.wireCallCenterV2.conversations(withVoiceChannelStates: idleStates)
-        
-        nonIdleConversations.formUnion(conversationsV2)
         
         return Array(nonIdleConversations)
     }

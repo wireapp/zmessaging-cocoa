@@ -54,7 +54,6 @@ class CallStateObserverTests : MessagingTest {
             
             self.syncMOC.saveOrRollback()
         }
-        ZMUserSession.callingProtocolStrategy = .version3
 
         localNotificationDispatcher = LocalNotificationDispatcher(in: syncMOC, application: application)
         sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)

@@ -340,7 +340,7 @@ static NSString *ZMLogTag = @"Push";
 - (void)handleCallCategoryNotification:(ZMStoredLocalNotification *)note
 {
     if (note.actionIdentifier == nil || [note.actionIdentifier isEqualToString:ZMCallAcceptAction]) {
-        BOOL callIsStillOngoing = (note.conversation.callParticipants.count > 0) || note.conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall;
+        BOOL callIsStillOngoing = note.conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall;
         
         if ([WireCallCenter activeCallConversationsInUserSession:self].count == 0 && callIsStillOngoing) {
             NOT_USED([note.conversation.voiceChannel joinWithVideo:NO userSession:self]);
@@ -372,7 +372,7 @@ static NSString *ZMLogTag = @"Push";
     ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"IgnoreCall Action Handler"];
     ZMConversation *conversation = [notification conversationInManagedObjectContext:self.managedObjectContext];
     [self.managedObjectContext performBlock:^{
-        conversation.isIgnoringCall = YES;
+        [conversation.voiceChannel ignoreWithUserSession:self];
         [self.managedObjectContext saveOrRollback];
         
         [activity endActivity];

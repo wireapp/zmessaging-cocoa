@@ -35,7 +35,7 @@ typedef NS_ENUM(int16_t, ZMFlowManagerCategory) {
 extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
 extern id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
 
-@interface ZMCallFlowRequestStrategy : ZMAbstractRequestStrategy <ZMEventConsumer>
+@interface ZMCallFlowRequestStrategy : ZMAbstractRequestStrategy
 
 - (instancetype)initWithMediaManager:(id)mediaManager
                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
@@ -44,13 +44,8 @@ extern id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
                          application:(id<ZMApplication>)application;
 
 
-- (void)acquireFlowsForConversation:(ZMConversation *)conversation;
-- (void)releaseFlowsForConversation:(ZMConversation *)conversation;
 - (void)setSessionIdentifier:(NSString *)sessionID forConversationIdentifier:(NSUUID *)conversationID;
 - (void)appendLogForConversationID:(NSUUID *)conversationID message:(NSString *)message;
-- (void)addJoinedCallParticipant:(ZMUser *)user inConversation:(ZMConversation *)conversation;
-- (void)accessTokenDidChangeWithToken:(NSString *)token ofType:(NSString *)type;
-- (void)updateFlowsForConversation:(ZMConversation *)conversation;
 - (void)tearDown;
 
 @end

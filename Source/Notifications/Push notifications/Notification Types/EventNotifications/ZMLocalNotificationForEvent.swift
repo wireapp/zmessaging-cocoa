@@ -56,13 +56,6 @@ public extension ZMLocalNotificationForEvent {
             return ZMLocalNotificationForUserConnectionEvent(events: [event], conversation: conversation,  managedObjectContext: managedObjectContext, application: application)
         case .userContactJoin:
             return ZMLocalNotificationForNewUserEvent(events: [event], conversation: conversation,  managedObjectContext: managedObjectContext, application: application)
-        case .callState:
-            if !ZMUserSession.useCallKit {
-                return ZMLocalNotificationForCallEvent(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application: application, sessionTracker: sessionTracker)
-            }
-            else {
-                return nil
-            }
         default:
             return nil
         }

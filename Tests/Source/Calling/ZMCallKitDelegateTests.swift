@@ -423,21 +423,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         // then
         XCTAssertTrue(action.hasFailed)
     }
-    
-    func testThatStartCallActionFailWhenCallCantBeJoined() {
-        // given
-        let provider = MockProvider(foo: true)
-        let conversation = self.conversation(type: .oneOnOne)
-        let action = MockStartCallAction(call: conversation.remoteIdentifier!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
         
-        // when
-        self.sut.provider(provider, perform: action)
-        NotificationCenter.default.post(name: NSNotification.Name.ZMConversationVoiceChannelJoinFailed, object: conversation.remoteIdentifier!)
-        
-        // then
-        XCTAssertTrue(action.hasFailed)
-    }
-    
     func testThatStartCallActionUpdatesWhenTheCallHasStartedConnecting() {
         // given
         let provider = MockProvider(foo: true)
@@ -669,101 +655,6 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 0)
-    }
-    
-    // Observer API V2 - report incoming call
-    
-    func testThatItReportNewIncomingCall_v2_Incoming() {
-        // given
-        let conversation = self.conversation()
-        let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
-        mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
-        
-        // when
-        self.sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version2)
-        
-        // then
-        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 1)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
-    }
-    
-    
-    func testThatItDoesNotReportNewIncomingCall_v2_Incoming_Silenced() {
-        // given
-        let conversation = self.conversation()
-        conversation.isSilenced = true
-        
-        let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
-        mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
-        
-        // when
-        self.sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version2)
-        
-        // then
-        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
-    }
-    
-    func testThatItStoresConnectedConversation_v2_Answered() {
-        // given
-        let conversation = self.conversation()
-        
-        // when
-        self.sut.callCenterDidChange(voiceChannelState: .selfIsJoiningActiveChannel, conversation: conversation, callingProtocol: .version2)
-        
-        // then
-        XCTAssertEqual(self.sut.connectedCallConversation, conversation)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
-    }
-    
-    func testThatItReportNewIncomingCall_v2_IncomingInGroupConversation() {
-        // given
-        let conversation = self.conversation(type: .group)
-        let mutableCallParticipants = conversation.mutableOrderedSetValue(forKey: ZMConversationCallParticipantsKey)
-        mutableCallParticipants.add(self.otherUser(moc: self.uiMOC))
-        
-        // when
-        self.sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version2)
-        
-        // then
-        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 1)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
-        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
-    }
-    
-    // Observer API V2 - report end of call
-    
-    func testThatItReportCallEndedAt_v2_answered() {
-        // given
-        let conversation = self.conversation(type: .group)
-        sut.connectedCallConversation = conversation
-        
-        // when
-        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version2)
-        
-        // then
-        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 1)
-        XCTAssertEqual(self.callKitProvider.lastEndedReason, UInt(CXCallEndedReason.remoteEnded.rawValue))
-    }
-    
-    func testThatItReportCallEndedAt_v2_unanswered() {
-        // given
-        let conversation = self.conversation(type: .group)
-        
-        // when
-        sut.callCenterDidEndCall(reason: .requested, conversation: conversation, callingProtocol: .version2)
-        
-        // then
-        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 1)
-        XCTAssertEqual(self.callKitProvider.lastEndedReason, UInt(CXCallEndedReason.unanswered.rawValue))
     }
     
     // Observer API V3

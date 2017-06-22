@@ -26,7 +26,6 @@
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMOnDemandFlowManager.h"
-#import "VoiceChannelV2+VideoCalling.h"
 
 static NSString * const DefaultMediaType = @"application/json";
 id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
@@ -39,14 +38,10 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
 @property (nonatomic, readonly) id mediaManager;
 @property (nonatomic) NSNotificationQueue *voiceGainNotificationQueue;
-@property (nonatomic, copy) NSArray *eventTypesToForward;
 @property (nonatomic) BOOL pushChannelIsOpen;
 @property (nonatomic, readonly) NSManagedObjectContext *uiManagedObjectContext;
 @property (nonatomic) id authenticationObserverToken;
 @property (nonatomic, strong) dispatch_queue_t avsLogQueue;
-@property (nonatomic) NSMutableSet <ZMConversation*> *conversationsNeedingUpdate;
-@property (nonatomic) NSMutableDictionary <NSString *, NSMutableSet<ZMUser*>*> *usersNeedingToBeAdded;
-@property (nonatomic) NSMutableSet <ZMUpdateEvent *> *eventsNeedingToBeForwarded;
 @property (nonatomic, readonly, weak) id<ZMApplication> application;
 
 @end
@@ -72,11 +67,8 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         _mediaManager = mediaManager;
         _requestStack = [NSMutableArray array];
         _application = application;
-        self.conversationsNeedingUpdate = [NSMutableSet set];
-        self.eventsNeedingToBeForwarded = [NSMutableSet set];
-        self.usersNeedingToBeAdded = [NSMutableDictionary dictionary];
-        self.voiceGainNotificationQueue = [[NSNotificationQueue alloc] initWithNotificationCenter:[NSNotificationCenter defaultCenter]];
 
+        self.voiceGainNotificationQueue = [[NSNotificationQueue alloc] initWithNotificationCenter:[NSNotificationCenter defaultCenter]];
         self.onDemandFlowManager = onDemandFlowManager;
         
         [self setUpFlowManagerIfNeeded];
@@ -106,9 +98,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 - (void)setUpFlowManagerIfNeeded
 {
     [self.onDemandFlowManager initializeFlowManagerWithDelegate:self];
-    if (self.eventTypesToForward == nil) {
-        [self createEventTypesToForward];
-    }
 }
 
 - (void)appDidBecomeActive:(NSNotification *)note
@@ -116,7 +105,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     NOT_USED(note);
     [self.managedObjectContext performGroupedBlock:^{
         [self setUpFlowManagerIfNeeded];
-        [self processBufferedEventsIfNeeded];
     }];
 }
 
@@ -132,18 +120,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     return self.onDemandFlowManager.flowManager;
 }
 
-- (void)createEventTypesToForward;
-{
-    NSMutableArray *types = [NSMutableArray array];
-    for (NSString *name in self.flowManager.events) {
-        ZMUpdateEventType type = [ZMUpdateEvent updateEventTypeForEventTypeString:name];
-        if (type != ZMUpdateEventUnknown) {
-            [types addObject:@(type)];
-        }
-    }
-    self.eventTypesToForward = [types copy];
-}
-
 - (ZMTransportRequest *)nextRequestIfAllowed
 {
     if (!self.pushChannelIsOpen && ![ZMUserSession useCallKit] && ![self nextRequestIsCallsConfig]) {
@@ -151,11 +127,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     }
     if ((self.application.applicationState != UIApplicationStateBackground && self.flowManager == nil) || [ZMUserSession useCallKit]) {
         [self setUpFlowManagerIfNeeded];  // this should not happen, but we should recover after all
-    }
-    
-    // we clean up buffered events that might not have been processed yet
-    if (self.flowManager.isReady) {
-        [self processBufferedEventsIfNeeded];
     }
     
     id firstRequest = [self.requestStack lastObject];
@@ -172,87 +143,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     return [request.path isEqualToString:@"/calls/config"];
 }
 
-- (void)processBufferedEventsIfNeeded
-{
-    if (self.conversationsNeedingUpdate.count > 0) {
-        // update flows for conversations that couldn't be updated while the flow manager was not fully initialized
-        
-        NSSet *conversationsToUpdate = [self.conversationsNeedingUpdate copy];
-        for (ZMConversation *conv in conversationsToUpdate) {
-            [self updateFlowsForConversation:conv];
-        }
-        if (self.conversationsNeedingUpdate.count > 0) {
-            // by now AVS should be ready. If that's not the case, we still want to clear whatever is stored
-            ZMLogDebug(@"Could not update flows for all conversations: %@", self.conversationsNeedingUpdate);
-            [self.conversationsNeedingUpdate removeAllObjects];
-        }
-    }
-    if (self.usersNeedingToBeAdded.count > 0) {
-        // update users to conversations that couldn't be updated while the flow manager was not fully initialized
-        
-        NSDictionary *usersToAdd = [self.usersNeedingToBeAdded copy];
-        [usersToAdd enumerateKeysAndObjectsUsingBlock:^(NSString *conversationID, NSSet *users, __unused  BOOL * _Nonnull stop) {
-            for (ZMUser *user in users) {
-                [self addJoinedCallParticipant:user inConversationWithIdentifer:conversationID];
-            }
-        }];
-        if (self.usersNeedingToBeAdded.count > 0) {
-            // by now AVS should be ready. If that's not the case, we still want to clear whatever is stored
-            ZMLogDebug(@"Could not add allUsers for conversations %@", self.usersNeedingToBeAdded);
-            [self.usersNeedingToBeAdded removeAllObjects];
-        }
-        
-    }
-    if (self.eventsNeedingToBeForwarded.count > 0) {
-        // process buffered events
-        
-        NSSet *eventsToForward = [self.eventsNeedingToBeForwarded copy];
-        for (ZMUpdateEvent *event in eventsToForward) {
-            [self processFlowEvent:event];
-        }
-        if (self.eventsNeedingToBeForwarded.count > 0) {
-            // by now AVS should be ready. If that's not the case, we still want to clear whatever is stored
-            ZMLogDebug(@"Could not forward all events %@", self.eventsNeedingToBeForwarded);
-            [self.eventsNeedingToBeForwarded removeAllObjects];
-        }
-    }
-}
-
-- (void)processEvents:(NSArray<ZMUpdateEvent *> *)events
-           liveEvents:(BOOL)liveEvents
-       prefetchResult:(__unused ZMFetchRequestBatchResult *)prefetchResult;
-{
-    if(!liveEvents) {
-        return;
-    }
-    if (self.application.applicationState != UIApplicationStateBackground || [ZMUserSession useCallKit]) {
-        [self setUpFlowManagerIfNeeded];
-    }
-    if (!self.isFlowManagerReady) {
-        NSArray *eventsToForward = [events filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(ZMUpdateEvent *event, __unused id bindings) {
-            return [self.eventTypesToForward containsObject:@(event.type)];
-        }]];
-        [self.eventsNeedingToBeForwarded addObjectsFromArray:eventsToForward];
-        return;
-    }
-    for(ZMUpdateEvent *event in events) {
-        if (! [self.eventTypesToForward containsObject:@(event.type)]) {
-            return;
-        }
-        [self processFlowEvent:event];
-    }
-}
-
-- (void)processFlowEvent:(ZMUpdateEvent *)event
-{
-    if (!self.isFlowManagerReady) {
-        return;
-    }
-    [self.eventsNeedingToBeForwarded removeObject:event];
-    NSData *content = [NSJSONSerialization dataWithJSONObject:event.payload options:0 error:nil];
-    [self.flowManager processEventWithMediaType:DefaultMediaType content:content];
-}
-
 - (void)requestCompletedWithResponse:(ZMTransportResponse *)response forContext:(void const*)context
 {
     NSData *contentData;
@@ -260,45 +150,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         contentData = [NSJSONSerialization dataWithJSONObject:response.payload options:0 error:nil];
     }
     [self.flowManager processResponseWithStatus:(int) response.HTTPStatus reason:[NSString stringWithFormat:@"%ld", (long)response.HTTPStatus] mediaType:DefaultMediaType content:contentData context:context];
-}
-
-- (void)acquireFlowsForConversation:(ZMConversation *)conversation;
-{
-    if (self.application.applicationState != UIApplicationStateBackground || [ZMUserSession useCallKit]) {
-        [self setUpFlowManagerIfNeeded];
-    }
-    if (!self.isFlowManagerReady) {
-        [self.conversationsNeedingUpdate addObject:conversation];
-        return;
-    }
-    [self.conversationsNeedingUpdate removeObject:conversation];
-
-    NSString *identifier = conversation.remoteIdentifier.transportString;
-    if (identifier == nil) {
-        ZMLogError(@"Trying to acquire flow for a conversation without a remote ID.");
-    } else {
-        [self.flowManager acquireFlows:identifier];
-    }
-}
-
-- (void)releaseFlowsForConversation:(ZMConversation *)conversation;
-{
-    if (self.application.applicationState != UIApplicationStateBackground || [ZMUserSession useCallKit]) {
-        [self setUpFlowManagerIfNeeded];
-    }
-    if (!self.isFlowManagerReady) {
-        [self.conversationsNeedingUpdate addObject:conversation];
-        return;
-    }
-    [self.conversationsNeedingUpdate removeObject:conversation];
-
-    NSString *identifier = conversation.remoteIdentifier.transportString;
-    if (identifier == nil) {
-        ZMLogError(@"Trying to release flow for a conversation without a remote ID.");
-    } else {
-        [self.flowManager releaseFlows:identifier];
-        conversation.isFlowActive = NO;
-    }
 }
 
 - (void)setSessionIdentifier:(NSString *)sessionID forConversationIdentifier:(NSUUID *)conversationID;
@@ -332,33 +183,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     }
 }
 
-- (void)addJoinedCallParticipant:(ZMUser *)user inConversation:(ZMConversation *)conversation;
-{
-    [self addJoinedCallParticipant:user inConversationWithIdentifer:conversation.remoteIdentifier.transportString];
-}
-
-- (void)addJoinedCallParticipant:(ZMUser *)user inConversationWithIdentifer:(NSString *)remoteIDString;
-{
-    if (!self.isFlowManagerReady) {
-        NSMutableSet *users = self.usersNeedingToBeAdded[remoteIDString] ?: [NSMutableSet set];
-        [users addObject:user];
-        self.usersNeedingToBeAdded[remoteIDString] = users;
-        return;
-    }
-    
-    NSMutableSet *users = self.usersNeedingToBeAdded[remoteIDString];
-    if (users != nil) {
-        [users removeObject:user];
-        if (users.count > 0) {
-            self.usersNeedingToBeAdded[remoteIDString] = users;
-        } else {
-            [self.usersNeedingToBeAdded removeObjectForKey:remoteIDString];
-        }
-    }
-    
-    [self.flowManager addUser:remoteIDString userId:user.remoteIdentifier.transportString name:user.name];
-}
-
 - (void)registerSelfUser
 {
     NSString *selfUserID = [ZMUser selfUserInContext:self.managedObjectContext].remoteIdentifier.transportString;
@@ -368,13 +192,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     [self.flowManager setSelfUser:selfUserID];
 }
 
-- (void)accessTokenDidChangeWithToken:(NSString *)token ofType:(NSString *)type;
-{
-    if (token != nil && type != nil) {
-        [self.flowManager refreshAccessToken:token type:type];
-    }
-}
-
 - (BOOL)isFlowManagerReady
 {
     if (!self.flowManager.isReady) {
@@ -382,21 +199,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         return NO;
     }
     return YES;
-}
-
-- (void)updateFlowsForConversation:(ZMConversation *)conversation;
-{
-    if (conversation.callDeviceIsActive) {
-        if(!conversation.isFlowActive) {
-            [self appendLogForConversationID:conversation.remoteIdentifier message:@"Acquiring Flows"];
-        }
-        [self acquireFlowsForConversation:conversation];
-    } else {
-        if(conversation.isFlowActive) {
-            [self appendLogForConversationID:conversation.remoteIdentifier message:@"Releasing Flows"];
-        }
-        [self releaseFlowsForConversation:conversation];
-    }
 }
 
 @end
@@ -432,35 +234,8 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 }
 
 - (void)didEstablishMediaInConversation:(NSString *)conversationIdentifier;
-{    
-    NSUUID *conversationUUID = conversationIdentifier.UUID;
-    
-    [self.managedObjectContext performGroupedBlock:^{
-        
-        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:conversationUUID createIfNeeded:NO inContext:self.managedObjectContext];
-        
-        BOOL canSendVideo = NO;
-        if (conversation.isVideoCall) {
-            BOOL useCallKit = [ZMUserSession useCallKit];
-            if ([self.flowManager canSendVideoForConversation:conversationIdentifier] && (!useCallKit || self.application.applicationState == UIApplicationStateActive)) {
-                [self.flowManager setVideoSendState:FLOWMANAGER_VIDEO_SEND forConversation:conversationIdentifier];
-                canSendVideo = YES;
-            } else {
-                // notify UI that a video call can not be established
-                [CallingInitialisationNotification notifyCallingFailedWithErrorCode:VoiceChannelV2ErrorCodeVideoCallingNotSupported];
-            }
-        }
-        
-        if (conversation.isVideoCall) {
-            conversation.isSendingVideo = canSendVideo;
-            if (canSendVideo) {
-                // only sync the updated state when we can send video, otherwise it breaks compatibility with older clients
-                [conversation syncLocalModificationsOfIsSendingVideo];
-            }
-        }
-        conversation.isFlowActive = YES;
-        [self.managedObjectContext saveOrRollback];
-    }];
+{
+    NOT_USED(conversationIdentifier);
 }
 
 - (void)setFlowManagerActivityState:(AVSFlowActivityState)activityState;
@@ -476,7 +251,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 - (void)mediaWarningOnConversation:(NSString *)conversationIdentifier;
 {
-    [self leaveCallInConversationWithRemoteID:conversationIdentifier reason:@"AVS Media warning"];
+    NOT_USED(conversationIdentifier);
 }
 
 - (void)errorHandler:(int)err
@@ -484,37 +259,14 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
              context:(void const*)ctx;
 {
     NOT_USED(err);
+    NOT_USED(conversationIdentifier);
     NOT_USED(ctx);
-    [self leaveCallInConversationWithRemoteID:conversationIdentifier reason:[NSString stringWithFormat:@"AVS error handler with error %i", err]];
 }
 
 - (void)leaveCallInConversationWithRemoteID:(NSString *)remoteIDString reason:(NSString *)reason
 {
-    NSUUID *conversationID = [remoteIDString UUID];
-    [self.managedObjectContext performGroupedBlock:^{
-        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:self.managedObjectContext];
-        conversation.isFlowActive = NO;
-        
-        if (conversation.isVideoCall) {
-            [self.flowManager setVideoSendState:FLOWMANAGER_VIDEO_SEND_NONE forConversation:conversation.remoteIdentifier.transportString];
-        }
-        
-        [self.managedObjectContext saveOrRollback];
-        
-        // We need to leave the voiceChannel on the uiContext, otherwise hasLocalModificationsForCallDeviceIsActive won't be set
-        // and we won't sync the leave with the backend
-        [self.uiManagedObjectContext performGroupedBlock:^{
-            ZMConversation *uiConv = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:self.uiManagedObjectContext];
-            [ZMUserSession appendAVSLogMessageForConversation:uiConv withMessage:[NSString stringWithFormat:@"Self user wants to leave voice channel. Reason: %@", reason]];
-            if (uiConv.callDeviceIsActive) {
-                [uiConv.voiceChannelRouter.v2 leaveOnAVSError];
-                [self.uiManagedObjectContext saveOrRollback];
-            }
-            else {
-                [ZMUserSession appendAVSLogMessageForConversation:uiConv withMessage:@"Self user can't leave voice channel (callDeviceIsActive = NO)"];
-            }
-        }];
-    }];
+    NOT_USED(remoteIDString);
+    NOT_USED(reason);
 }
 
 - (void)didUpdateVolume:(double)volume conversationId:(NSString *)convid participantId:(NSString *)participantId
@@ -545,7 +297,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         NSUUID *userID = user.remoteIdentifier;
         
         VoiceGainNotification *voiceGainNotification = [[VoiceGainNotification alloc] initWithVolume:(float)volume conversationId:conversationID userId:userID];
-                
+        
         [self.uiManagedObjectContext performGroupedBlock:^{
             [self.voiceGainNotificationQueue enqueueNotification:voiceGainNotification.notification
                                                     postingStyle:NSPostWhenIdle
@@ -553,21 +305,14 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
                                                         forModes:nil];
         }];
     }];
+
 }
 
 - (void)conferenceParticipantsDidChange:(NSArray *)participantIDStrings
                          inConversation:(NSString *)convId;
 {
-    [self.managedObjectContext performGroupedBlock:^{
-        NSUUID *conversationUUID = convId.UUID;
-        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:conversationUUID createIfNeeded:NO inContext:self.managedObjectContext];
-        NSArray *participants = [participantIDStrings mapWithBlock:^id(NSString *userID) {
-            return  [ZMUser userWithRemoteID:userID.UUID createIfNeeded:NO inContext:self.managedObjectContext];
-        }];
-
-        [conversation.voiceChannelRouter.v2 updateActiveFlowParticipants:participants];
-        [self.managedObjectContext enqueueDelayedSave];
-    }];
+    NOT_USED(participantIDStrings);
+    NOT_USED(convId);
 }
 
 

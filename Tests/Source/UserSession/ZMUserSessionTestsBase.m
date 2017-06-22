@@ -48,7 +48,8 @@
 {
     [super setUp];
     
-    ZMUserSession.callingProtocolStrategy = CallingProtocolStrategyVersion2;
+    WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3Mock.self;
+    
     self.thirdPartyServices = [[ThirdPartyServices alloc] init];
     self.dataChangeNotificationsCount = 0;
     self.baseURL = [NSURL URLWithString:@"http://bar.example.com"];
@@ -122,6 +123,8 @@
     [self verifyMockLater:self.registrationObserver];
     [self verifyMockLater:self.operationLoop];
     
+    
+    
     [self.sut.authenticationStatus addAuthenticationCenterObserver:self];
     
 }
@@ -135,7 +138,6 @@
     self.proxiedRequestStatus = nil;
     self.operationStatus = nil;
     
-    ZMUserSession.callingProtocolStrategy = CallingProtocolStrategyNegotiate;
     [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
     [self.syncMOC.userInfo removeAllObjects];
     

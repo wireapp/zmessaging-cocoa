@@ -16,22 +16,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-
-@import WireSystem;
-@import WireDataModel;
-
-NS_ASSUME_NONNULL_BEGIN
-
-@class ZMUserSession;
-@class ZMUser;
-@class VoiceChannelV2ParticipantState;
-@protocol CallingInitialisationObserverToken
-@end
-@protocol CallingInitialisationObserver <NSObject>
-- (void)couldNotInitialiseCallWithError:(NSError *)error;
-@end
-
-
 typedef NS_ENUM(uint8_t, VoiceChannelV2ConnectionState) {
     VoiceChannelV2ConnectionStateInvalid,
     VoiceChannelV2ConnectionStateNotConnected,
@@ -65,46 +49,6 @@ typedef NS_ENUM(uint8_t, VoiceChannelV2CallEndReason) {
     VoiceChannelV2CallEndReasonInputOutputError /// When the client disconnects from the service due to input output error (microphone not working)
 };
 
-// The voice channel of a conversation.
-//
-// N.B.: The conversation owns the voice channel, but the voice channel only has a weak reference back to the conversations. Users of the voice channel @b must hold onto a strong reference to the owning conversations. Failure to do so can lead to undefined behaviour.
-// !!!: tl;dr Don't hold on to any @c VoiceChannelV2 references. Store the @c ZMConversation reference instead and ask it for the voice channel
-//
-@interface VoiceChannelV2 : NSObject
-
-- (instancetype)init NS_UNAVAILABLE;
-
-@property (nonatomic, readonly) VoiceChannelV2State state;
-@property (nonatomic, readonly, weak, nullable) ZMConversation *conversation; ///< The owning conversation
-
-/// The date and time of current call start
-@property (nonatomic, copy, nullable) NSDate *callStartDate;
-
-/// Voice channel participants. May be a subset of conversation participants.
-@property (nonatomic, readonly) NSOrderedSet *participants;
-
-/// Returns @c nil if there's no active voice channel
-//+ (instancetype)activeVoiceChannelInSession:(id<ZMManagedObjectContextProvider>)session;
-
-
-/// For each participant call the block with that user and the user's connection state and muted state.
-- (void)enumerateParticipantStatesWithBlock:(void(^)(ZMUser *user, VoiceChannelV2ConnectionState connectionState, BOOL muted))block ZM_NON_NULL(1);
-
-- (VoiceChannelV2ParticipantState *)stateForParticipant:(ZMUser *)participant;
-
-@property (nonatomic, readonly) VoiceChannelV2ConnectionState selfUserConnectionState;
-
-
-
-/// Adds an observer that notifies if there are errors establishing a video or audio call
-/// The returned token needs to be retained and used to remove the observer in removeCallingInitialisationObserver:
-- (id<CallingInitialisationObserverToken>)addCallingInitializationObserver:(id<CallingInitialisationObserver>)observer;
-
-/// Unregister from notifications about call establishment
-- (void)removeCallingInitialisationObserver:(id<CallingInitialisationObserverToken>)token;
-
-@end
-
 @interface VoiceChannelV2ParticipantState : NSObject
 
 @property (nonatomic, readonly) VoiceChannelV2ConnectionState connectionState;
@@ -112,13 +56,3 @@ typedef NS_ENUM(uint8_t, VoiceChannelV2CallEndReason) {
 @property (nonatomic, readonly) BOOL isSendingVideo;
 
 @end
-
-
-@interface VoiceChannelV2 (ZMDebug)
-
-/// Attributed string to be displayed to the user to help tracking down calling related bugs.
-+ (NSAttributedString *)voiceChannelDebugInformation;
-
-@end
-
-NS_ASSUME_NONNULL_END

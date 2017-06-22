@@ -60,7 +60,6 @@ extern NSString * const ZMPushChannelResponseStatusKey;
                              application:(id<ZMApplication>)application;
 
 - (void)tearDown;
-- (void)accessTokenDidChangeWithToken:(NSString *)token ofType:(NSString *)type;
 
 @end
 
