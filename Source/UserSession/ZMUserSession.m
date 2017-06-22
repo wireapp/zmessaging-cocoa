@@ -46,7 +46,6 @@
 #import "ZMOperationLoop+Private.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
-#import "ZMEnvironmentsSetup.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMCallKitDelegate+TypeConformance.h"
 
@@ -205,13 +204,10 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager
                            analytics:(id<AnalyticsType>)analytics
+                    transportSession:(ZMTransportSession *)transportSession
                           appVersion:(NSString *)appVersion
                   appGroupIdentifier:(NSString *)appGroupIdentifier;
 {
-    zmSetupEnvironments();
-    ZMBackendEnvironment *environment = [[ZMBackendEnvironment alloc] initWithUserDefaults:NSUserDefaults.standardUserDefaults];
-    NSURL *backendURL = environment.backendURL;
-    NSURL *websocketURL = environment.backendWSURL;
     self.applicationGroupIdentifier = appGroupIdentifier;
 
     ZMAPNSEnvironment *apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
@@ -227,15 +223,11 @@ ZM_EMPTY_ASSERTING_INIT()
 
     UIApplication *application = [UIApplication sharedApplication];
     
-    ZMTransportSession *session = [[ZMTransportSession alloc] initWithBaseURL:backendURL
-                                                                 websocketURL:websocketURL
-                                                               mainGroupQueue:userInterfaceContext
-                                                           initialAccessToken:[userInterfaceContext accessToken]
-                                                                  application:application
-                                                    sharedContainerIdentifier:nil];
+    [[BackgroundActivityFactory sharedInstance] setApplication:application];
+    [[BackgroundActivityFactory sharedInstance] setMainGroupQueue:userInterfaceContext];
     
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
-    session.requestLoopDetectionCallback = ^(NSString *path) {
+    transportSession.requestLoopDetectionCallback = ^(NSString *path) {
         // The tracker will return NO in case the path should be ignored.
         if (! [tracker tagWithPath:path]) {
             return;
@@ -247,7 +239,7 @@ ZM_EMPTY_ASSERTING_INIT()
     };
     
     
-    self = [self initWithTransportSession:session
+    self = [self initWithTransportSession:transportSession
                      userInterfaceContext:userInterfaceContext
                  syncManagedObjectContext:syncMOC
                              mediaManager:mediaManager

@@ -86,6 +86,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 */
 - (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager
                            analytics:(id<AnalyticsType>)analytics
+                    transportSession:(ZMTransportSession *)transportSession
                           appVersion:(NSString *)appVersion
                   appGroupIdentifier:(NSString *)appGroupIdentifier;
 
