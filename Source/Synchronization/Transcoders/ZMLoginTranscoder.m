@@ -41,6 +41,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
 @property (nonatomic, weak) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic, readonly) ZMSingleRequestSync *verificationResendRequest;
 @property (nonatomic) id<ZMRequestVerificationEmailObserverToken> emailResendObserverToken;
+@property (nonatomic) NSManagedObjectContext *managedObjectContext;
 
 @end
 
@@ -48,24 +49,25 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
 @implementation ZMLoginTranscoder
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                  applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
+                  authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
 {
     return [self initWithManagedObjectContext:moc
-                   applicationStatusDirectory:applicationStatusDirectory
+                   authenticationStatus:authenticationStatus
                           timedDownstreamSync:nil
                     verificationResendRequest:nil];
 }
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                  applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
+                  authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
                          timedDownstreamSync:(ZMTimedSingleRequestSync *)timedDownstreamSync
                    verificationResendRequest:(ZMSingleRequestSync *)verificationResendRequest
 {
-    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatusDirectory];
+    self = [super init];
     
     if (self != nil) {
-        self.authenticationStatus = applicationStatusDirectory.authenticationStatus;
-        self.clientRegistrationStatus = applicationStatusDirectory.clientRegistrationStatus;
+        self.managedObjectContext = moc;
+        self.authenticationStatus = authenticationStatus;
+//        self.clientRegistrationStatus = applicationStatusDirectory.clientRegistrationStatus;
         _timedDownstreamSync = timedDownstreamSync ?: [[ZMTimedSingleRequestSync alloc] initWithSingleRequestTranscoder:self everyTimeInterval:0 managedObjectContext:moc];
         _verificationResendRequest = verificationResendRequest ?: [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self managedObjectContext:self.managedObjectContext];
         
@@ -93,7 +95,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     [self.timedDownstreamSync invalidate];
 }
 
-- (ZMTransportRequest *)nextRequestIfAllowed
+- (ZMTransportRequest *)nextRequest
 {
     ZMAuthenticationStatus *authenticationStatus = self.authenticationStatus;
     ZMTransportRequest *request;

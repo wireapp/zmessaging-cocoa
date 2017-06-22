@@ -20,4 +20,14 @@ import Foundation
 
 class UnauthenticatedSession: NSObject {
     
+    let moc: NSManagedObjectContext
+    let authenticationStatus: ZMAuthenticationStatus
+    let loginRequestStrategy: ZMLoginTranscoder
+    
+    init(moc: NSManagedObjectContext, authenticationStatus: ZMAuthenticationStatus) {
+        self.moc = moc
+        self.authenticationStatus = authenticationStatus
+        self.loginRequestStrategy = ZMLoginTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)
+    }
+    
 }

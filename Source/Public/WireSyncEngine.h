@@ -64,3 +64,4 @@
 #import <WireSyncEngine/ZMUserSession+OperationLoop.h>
 #import <WireSyncEngine/ZMOperationLoop+Background.h>
 #import <WireSyncEngine/ZMSimpleListRequestPaginator.h>
+#import <WireSyncEngine/ZMLoginTranscoder.h>

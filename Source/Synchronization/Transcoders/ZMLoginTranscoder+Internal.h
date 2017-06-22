@@ -25,12 +25,12 @@ extern NSString * const ZMResendVerificationURL;
 extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 
 @class ZMTimedSingleRequestSync;
-@class ZMApplicationStatusDirectory;
+@class ZMAuthenticationStatus;
 
 @interface ZMLoginTranscoder () <ZMSingleRequestTranscoder, ZMAuthenticationStatusObserver>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                  applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
+                  authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
                          timedDownstreamSync:(ZMTimedSingleRequestSync *)timedDownstreamSync
                    verificationResendRequest:(ZMSingleRequestSync *)verificationResendRequest NS_DESIGNATED_INITIALIZER;
 
