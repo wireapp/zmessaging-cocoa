@@ -33,28 +33,25 @@
 
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic) ZMSingleRequestSync *codeRequestSync;
+@property (nonatomic) NSManagedObjectContext *managedObjectContext;
 
 @end
 
 @implementation ZMLoginCodeRequestTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
 {
-    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatusDirectory];
+    self = [super init];
     if (self != nil) {
-        self.authenticationStatus = applicationStatusDirectory.authenticationStatus;
+        self.managedObjectContext = moc;
+        self.authenticationStatus = authenticationStatus;
         self.codeRequestSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self managedObjectContext:moc];
         [self.codeRequestSync readyForNextRequest];
     }
     return self;
 }
 
-- (ZMStrategyConfigurationOption)configuration
-{
-    return ZMStrategyConfigurationOptionAllowsRequestsWhileUnauthenticated;
-}
-
-- (ZMTransportRequest *)nextRequestIfAllowed
+- (ZMTransportRequest *)nextRequest
 {
     if (self.authenticationStatus.currentPhase == ZMAuthenticationPhaseRequestPhoneVerificationCodeForLogin) {
         [self.codeRequestSync readyForNextRequestIfNotBusy];

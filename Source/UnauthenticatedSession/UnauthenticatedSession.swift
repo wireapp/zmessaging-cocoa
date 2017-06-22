@@ -23,11 +23,13 @@ class UnauthenticatedSession: NSObject {
     let moc: NSManagedObjectContext
     let authenticationStatus: ZMAuthenticationStatus
     let loginRequestStrategy: ZMLoginTranscoder
+    let loginCodeRequestStrategy: ZMLoginCodeRequestTranscoder
     
     init(moc: NSManagedObjectContext, authenticationStatus: ZMAuthenticationStatus) {
         self.moc = moc
         self.authenticationStatus = authenticationStatus
         self.loginRequestStrategy = ZMLoginTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)
+        self.loginCodeRequestStrategy = ZMLoginCodeRequestTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)
     }
     
 }

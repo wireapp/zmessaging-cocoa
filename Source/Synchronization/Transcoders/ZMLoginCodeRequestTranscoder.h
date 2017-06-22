@@ -22,9 +22,10 @@
 @class NSManagedObjectContext;
 @class ZMApplicationStatusDirectory;
 
-@interface ZMLoginCodeRequestTranscoder : ZMAbstractRequestStrategy
+@interface ZMLoginCodeRequestTranscoder : NSObject <RequestStrategy>
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext applicationStatus:(id<ZMApplicationStatus>)applicationStatus NS_UNAVAILABLE;
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory NS_DESIGNATED_INITIALIZER;
+- (instancetype)init NS_UNAVAILABLE;
+
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus;
 
 @end
