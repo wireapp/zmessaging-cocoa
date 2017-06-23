@@ -49,7 +49,13 @@ import Foundation
         self.userProfileUpdateStatus = userProfileUpdateStatus
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         
-        self.configuration = [.allowsRequestsWhileUnauthenticated, .allowsRequestsDuringSync, .allowsRequestsDuringEventProcessing]
+        self.configuration = [
+            .allowsRequestsWhileUnauthenticated,
+            .allowsRequestsDuringSync,
+            .allowsRequestsDuringEventProcessing,
+            .allowsRequestsDuringNotificationStreamFetch
+        ]
+
         self.phoneCodeRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.phoneUpdateSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)
         self.phoneNumberDeleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: managedObjectContext)

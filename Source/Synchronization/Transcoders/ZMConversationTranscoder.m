@@ -115,7 +115,9 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringNotificationStreamFetch;
 }
 
 - (NSArray<NSString *> *)keysToSync

@@ -101,7 +101,12 @@
 
 - (void)testThatUsesCorrectRequestStrategyConfiguration
 {
-    XCTAssertEqual(self.sut.configuration, ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsWhileInBackground);
+    ZMStrategyConfigurationOption options = ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing
+                                          | ZMStrategyConfigurationOptionAllowsRequestsDuringSync
+                                          | ZMStrategyConfigurationOptionAllowsRequestsWhileInBackground
+                                          | ZMStrategyConfigurationOptionAllowsRequestsDuringNotificationStreamFetch;
+
+    XCTAssertEqual(self.sut.configuration, options);
 }
 
 - (void)testThatItReturnsARequestWhenRequested

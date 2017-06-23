@@ -56,7 +56,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
         self.syncConfiguration = syncConfiguration
         self.syncStatus = syncStatus
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
-        configuration = .allowsRequestsDuringSync
+        configuration = [.allowsRequestsDuringSync, .allowsRequestsDuringNotificationStreamFetch]
         memberSync = ZMRemoteIdentifierObjectSync(transcoder: self, managedObjectContext: managedObjectContext)
 
         teamListSync = ZMSimpleListRequestPaginator(

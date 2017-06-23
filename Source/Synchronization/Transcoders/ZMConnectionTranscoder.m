@@ -68,7 +68,9 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringNotificationStreamFetch;
 }
 
 
