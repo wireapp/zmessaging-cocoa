@@ -19,7 +19,7 @@
 import Foundation
 import XCTest
 import WireTesting
-@testable import WireDataModel
+import WireDataModel
 @testable import WireSyncEngine
 
 public final class HotFixDuplicatesTests: MessagingTest {
@@ -51,15 +51,43 @@ public final class HotFixDuplicatesTests: MessagingTest {
     var conversation: ZMConversation!
     var user: ZMUser!
     
+    func appendSystemMessage(type: ZMSystemMessageType,
+                                      sender: ZMUser,
+                                      users: Set<ZMUser>?,
+                                      addedUsers: Set<ZMUser> = Set(),
+                                      clients: Set<UserClient>?,
+                                      timestamp: Date?,
+                                      duration: TimeInterval? = nil
+        ) -> ZMSystemMessage {
+        
+        let systemMessage = ZMSystemMessage.insertNewObject(in: self.uiMOC)
+        systemMessage.systemMessageType = type
+        systemMessage.sender = sender
+        systemMessage.isEncrypted = false
+        systemMessage.isPlainText = true
+        systemMessage.users = users ?? Set()
+        systemMessage.addedUsers = addedUsers
+        systemMessage.clients = clients ?? Set()
+        systemMessage.nonce = UUID()
+        systemMessage.serverTimestamp = timestamp
+        if let duration = duration {
+            systemMessage.duration = duration
+        }
+        
+        conversation.sortedAppendMessage(systemMessage)
+        systemMessage.visibleInConversation = conversation
+        return systemMessage
+    }
+    
     func addedOrRemovedSystemMessages(client: UserClient) -> [ZMSystemMessage] {
-        let (addedMessage, _) = conversation.appendSystemMessage(type: .newClient,
+        let addedMessage = self.appendSystemMessage(type: .newClient,
                                                                  sender: ZMUser.selfUser(in: self.uiMOC),
                                                                  users: Set(arrayLiteral: user),
                                                                  addedUsers: Set(arrayLiteral: user),
                                                                  clients: Set(arrayLiteral: client),
                                                                  timestamp: Date())
 
-        let (ignoredMessage, _) = conversation.appendSystemMessage(type: .ignoredClient,
+        let ignoredMessage = self.appendSystemMessage(type: .ignoredClient,
                                                                    sender: ZMUser.selfUser(in: self.uiMOC),
                                                                    users: Set(arrayLiteral: user),
                                                                    clients: Set(arrayLiteral: client),
