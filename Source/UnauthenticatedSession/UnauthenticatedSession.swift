@@ -18,7 +18,8 @@
 
 import Foundation
 
-class UnauthenticatedSession {
+@objc
+public class UnauthenticatedSession : NSObject {
     
     let moc: NSManagedObjectContext
     let authenticationStatus: ZMAuthenticationStatus

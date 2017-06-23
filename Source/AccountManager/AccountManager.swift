@@ -21,12 +21,23 @@ import avs
 import WireTransport
 import WireUtilities
 
-class AccountManager {
-    let appGroupIdentifier: String
-    let appVersion: String
-    let transportSession: ZMTransportSession
+@objc
+public protocol AccountStateDelegate : class {
     
-    init(appGroupIdentifier: String, appVersion: String) {
+    func unauthenticatedSessionCreated(session : UnauthenticatedSession)
+    func appVersionIsBlacklisted()
+    func didStartMigration()
+    func userSessionCreated(session : ZMUserSession)
+}
+
+@objc
+public class AccountManager : NSObject {
+    public let appGroupIdentifier: String
+    public let appVersion: String
+    let transportSession: ZMTransportSession
+    public weak var delegate : AccountStateDelegate? = nil
+    
+    public init(appGroupIdentifier: String, appVersion: String) {
         self.appGroupIdentifier = appGroupIdentifier
         self.appVersion = appVersion
         
@@ -40,7 +51,7 @@ class AccountManager {
                                               sharedContainerIdentifier: nil)
     }
     
-    var isLoggedIn: Bool {
+    public var isLoggedIn: Bool {
         return transportSession.cookieStorage.authenticationCookieData != nil
     }
 }
