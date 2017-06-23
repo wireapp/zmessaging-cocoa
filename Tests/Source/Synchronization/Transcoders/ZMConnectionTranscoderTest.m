@@ -1029,6 +1029,53 @@
     }];
 }
 
+- (void)testThatItMarksTheConnectionSynchrnoizedAfterPermanentlyFailedToFetch
+{
+    // given
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    selfUser.remoteIdentifier = [NSUUID createUUID];
+    selfUser.name = @"Neal Stephenson";
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    user.name = @"John";
+    user.remoteIdentifier = [NSUUID createUUID];
+    XCTAssert([self.uiMOC saveOrRollback]);
+    NSString *messageText = @"Aenean non sapien massa.";
+    
+    // when
+    ZMConnection *connection = [ZMConnection insertNewSentConnectionToUser:user];
+    connection.message = messageText;
+    [self markUserAndConversationAsUpdatedForConnection:connection];
+    XCTAssert([self.uiMOC saveOrRollback]);
+    connection.needsToBeUpdatedFromBackend = YES;
+    
+    NSManagedObjectID *moid = connection.objectID;
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // and when
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMConnection *syncConnection = (id) [self.syncMOC objectWithID:moid];
+        for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
+            [tracker objectsDidChange:[NSSet setWithObject:syncConnection]];
+        }
+        
+        ZMTransportRequest *request = [self.sut nextRequest];
+        XCTAssertNotNil(request);
+        
+        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:@{} HTTPStatus:404 transportSessionError:nil headers:nil];
+        [request completeWithResponse:response];
+    }];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMConnection *syncConnection = (id) [self.syncMOC objectWithID:moid];
+        XCTAssertFalse(syncConnection.needsToBeUpdatedFromBackend);
+        ZMTransportRequest *request = [self.sut nextRequest];
+        XCTAssertNil(request);
+    }];
+}
+
 - (void)testThatItMarksTheConversationAsNeedToBeUpdatedAfterItUpdatesAConnection
 {
     [self.syncMOC performGroupedBlockAndWait:^{
