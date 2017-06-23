@@ -133,6 +133,8 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 
 @property (nonatomic, readonly) NSURL *storeURL;
 
++ (NSURL *)sharedContainerDirectoryForApplicationGroup:(NSString *)appGroupIdentifier;
+
 @end
 
 
