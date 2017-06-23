@@ -25,21 +25,25 @@ import WireUtilities
 public protocol AccountStateDelegate : class {
     
     func unauthenticatedSessionCreated(session : UnauthenticatedSession)
-    func appVersionIsBlacklisted()
-    func didStartMigration()
     func userSessionCreated(session : ZMUserSession)
+    
 }
 
 @objc
 public class AccountManager : NSObject {
     public let appGroupIdentifier: String
     public let appVersion: String
+    public let mediaManager: AVSMediaManager
+    public var analytics: AnalyticsType?
     let transportSession: ZMTransportSession
     public weak var delegate : AccountStateDelegate? = nil
     
-    public init(appGroupIdentifier: String, appVersion: String) {
+    public init(appGroupIdentifier: String, appVersion: String, mediaManager: AVSMediaManager, analytics: AnalyticsType?, delegate: AccountStateDelegate?) {
         self.appGroupIdentifier = appGroupIdentifier
         self.appVersion = appVersion
+        self.mediaManager = mediaManager
+        self.analytics = analytics
+        self.delegate = delegate
         
         ZMBackendEnvironment.setupEnvironments()
         let environment = ZMBackendEnvironment(userDefaults: .standard)
@@ -49,9 +53,32 @@ public class AccountManager : NSObject {
                                               websocketURL: websocketURL,
                                               initialAccessToken: nil,
                                               sharedContainerIdentifier: nil)
+        
+        super.init()
+
+        if storeExists {
+        
+            // TODO migrate if necessary
+            
+            let userSession = ZMUserSession(mediaManager: mediaManager,
+                                            analytics: analytics,
+                                            transportSession: transportSession,
+                                            userId:nil,
+                                            appVersion: appVersion,
+                                            appGroupIdentifier: appGroupIdentifier)!
+            
+            delegate?.userSessionCreated(session: userSession)
+        } else {
+        }
     }
     
     public var isLoggedIn: Bool {
         return transportSession.cookieStorage.authenticationCookieData != nil
     }
+    
+    var storeExists : Bool {
+        guard let storeURL = ZMUserSession.storeURL(forAppGroupIdentifier: appGroupIdentifier) else { return false }
+        return FileManager.default.fileExists(atPath: storeURL.path)
+    }
+    
 }

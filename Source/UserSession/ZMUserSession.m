@@ -205,6 +205,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
+                              userId:(NSUUID * __unused)uuid
                           appVersion:(NSString *)appVersion
                   appGroupIdentifier:(NSString *)appGroupIdentifier;
 {
