@@ -452,7 +452,8 @@
 {
     // given
     [self.syncMOC setPersistentStoreMetadata:@YES forKey:@"HasHistory"];
-    
+    [self.syncMOC setPersistentStoreMetadata:@"1.0.0" forKey:@"lastSavedVersion"];
+
     ZMConversation *oneOnOneConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
     oneOnOneConversation.conversationType = ZMConversationTypeOneOnOne;
     

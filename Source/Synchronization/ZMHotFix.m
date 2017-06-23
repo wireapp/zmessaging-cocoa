@@ -104,10 +104,9 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
 {
     for(ZMHotFixPatch *patch in self.hotFixDirectory.patches) {
         ZMVersion *version = [[ZMVersion alloc] initWithVersionString:patch.version];
-        if (
-            (lastSavedVersion == nil || [version compareWithVersion:lastSavedVersion] == NSOrderedDescending)
-            && patch.code
-            ) {
+        if ((lastSavedVersion == nil || [version compareWithVersion:lastSavedVersion] == NSOrderedDescending)
+            && patch.code)
+        {
             patch.code(self.syncMOC);
         }
     }
