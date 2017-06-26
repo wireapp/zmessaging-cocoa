@@ -407,14 +407,16 @@ static NSString *ZMLogTag = @"Push";
     }
     ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"DirectReply Action Handler"];
     ZMConversation *conversation = [notification conversationInManagedObjectContext:self.managedObjectContext];
+
     if (conversation != nil) {
         ZM_WEAK(self);
         [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
             ZM_STRONG(self);
             self.messageReplyObserverToken = nil;
-            [self.managedObjectContext performGroupedBlock: ^{
+            [self.syncManagedObjectContext performGroupedBlock: ^{
                 if (result == ZMBackgroundTaskResultFailed) {
-                    [self.localNotificationDispatcher didFailToSendMessageIn:conversation];
+                    ZMConversation *syncConversation = [notification conversationInManagedObjectContext:self.syncManagedObjectContext];
+                    [self.localNotificationDispatcher didFailToSendMessageIn:syncConversation];
                 }
                 [activity endActivity];
                 if (completionHandler != nil) {
