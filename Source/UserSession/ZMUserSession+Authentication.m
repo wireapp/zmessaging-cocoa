@@ -26,6 +26,7 @@
 #import "ZMCredentials.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMPushToken.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 static NSString *const HasHistoryKey = @"hasHistory";
@@ -47,37 +48,6 @@ static NSString *const HasHistoryKey = @"hasHistory";
 - (BOOL)needsToRegisterClient
 {
     return self.clientRegistrationStatus.currentPhase != ZMClientRegistrationPhaseRegistered;
-}
-
-- (void)loginWithCredentials:(ZMCredentials *)loginCredentials
-{    
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        if (self.isLoggedIn) {
-            ZMLogDebug(@"User session has a cookie in loginWithEmail, no need to log in");
-            [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
-            [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-            return;
-        }
-        else if (   (loginCredentials.email.length == 0 || loginCredentials.password.length == 0)
-                 && (loginCredentials.phoneNumber.length == 0 || loginCredentials.phoneNumberVerificationCode.length == 0))
-        {
-            ZMLogDebug(@"Email or password is empty.");
-            [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials userInfo:nil]];
-            return;
-        }
-        else {
-            ZMLogDebug(@"Setting credentials for %@", loginCredentials.email);
-            [self.authenticationStatus prepareForLoginWithCredentials:loginCredentials]; 
-            if (self.needsToRegisterClient) {
-                [self.clientRegistrationStatus prepareForClientRegistration];
-            }
-            else {
-                [self start];
-            }
-        }
-    }];
-    
-    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (BOOL)hadHistoryAtLastLogin
@@ -144,6 +114,7 @@ static NSString *const HasHistoryKey = @"hasHistory";
             case ZMAuthenticationNotificationLoginCodeRequestDidFail:
                 if ([observer respondsToSelector:@selector(loginCodeRequestDidFail:)]) {
                     [observer loginCodeRequestDidFail:note.error];
+
                 }
                 break;
             case ZMAuthenticationNotificationAuthenticationDidSuceeded:

@@ -37,9 +37,6 @@
 /// Check whether the user is logged in
 - (void)checkIfLoggedInWithCallback:(void(^)(BOOL loggedIn))callback;
 
-///// Attempt to log in with the given credentials
-- (void)loginWithCredentials:(ZMCredentials *)loginCredentials;
-
 /// Requires a phone verification code for login. Returns NO if the phone number was invalid
 - (BOOL)requestPhoneVerificationCodeForLogin:(NSString *)phoneNumber;
 
@@ -57,22 +54,4 @@
 
 @end
 
-
-
-@protocol ZMAuthenticationObserver <NSObject>
-@optional
-
-/// Invoked when requesting a login code for the phone failed
-- (void)loginCodeRequestDidFail:(NSError *)error;
-
-/// Invoked when requesting a login code succeded
-- (void)loginCodeRequestDidSucceed;
-
-/// Invoked when the authentication failed, or when the cookie was revoked
-- (void)authenticationDidFail:(NSError *)error;
-
-/// Invoked when the authentication succeeded and the user now has a valid cookie
-- (void)authenticationDidSucceed;
-
-@end
 

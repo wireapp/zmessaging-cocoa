@@ -52,7 +52,7 @@ public enum ClientUpdateError : NSInteger {
 
     fileprivate var tornDown = false
     
-    fileprivate var authenticationToken : ZMAuthenticationObserverToken?
+    fileprivate var authenticationToken : ZMAuthenticationObserverToken!
     fileprivate var internalCredentials : ZMEmailCredentials?
 
     open var credentials : ZMEmailCredentials? {
@@ -63,7 +63,7 @@ public enum ClientUpdateError : NSInteger {
         self.syncManagedObjectContext = syncManagedObjectContext
         super.init()
         self.authenticationToken = ZMUserSessionAuthenticationNotification.addObserver { [weak self] note in
-            if note?.type == .authenticationNotificationAuthenticationDidSuceeded {
+            if note.type == .authenticationNotificationAuthenticationDidSuceeded {
                 self?.syncManagedObjectContext.performGroupedBlock {
                     self?.authenticationDidSucceed()
                 }

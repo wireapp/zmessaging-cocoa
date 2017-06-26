@@ -19,7 +19,10 @@
 
 @import Foundation;
 
+
 #import <WireDataModel/ZMNotifications.h>
+
+NS_ASSUME_NONNULL_BEGIN
 
 @protocol ZMAuthenticationObserverToken;
 
@@ -51,3 +54,5 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionAuthenticationNotificationType) {
 + (void)removeObserver:(id<ZMAuthenticationObserverToken>)token;
 
 @end
+
+NS_ASSUME_NONNULL_END
