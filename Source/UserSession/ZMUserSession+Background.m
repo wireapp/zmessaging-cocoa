@@ -412,7 +412,7 @@ static NSString *ZMLogTag = @"Push";
         ZM_WEAK(self);
         [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
             ZM_STRONG(self);
-            self.messageReplyObserverToken = nil;
+            self.messageReplyObserver = nil;
             [self.syncManagedObjectContext performGroupedBlock: ^{
                 if (result == ZMBackgroundTaskResultFailed) {
                     ZMConversation *syncConversation = [notification conversationInManagedObjectContext:self.syncManagedObjectContext];
@@ -424,10 +424,14 @@ static NSString *ZMLogTag = @"Push";
                 }
             }];
         }];
-        [self.managedObjectContext performGroupedBlock:^{
-            id<ZMConversationMessage> message = [conversation appendMessageWithText:reply];
-            self.messageReplyObserverToken = [MessageChangeInfo addObserver:self forMessage:message];
-            [self.managedObjectContext saveOrRollback];
+
+        [self enqueueChanges:^{
+            ZM_STRONG(self);
+            id <ZMConversationMessage> message = [conversation appendMessageWithText:reply];
+            self.messageReplyObserver = [[ManagedObjectContextChangeObserver alloc] initWithContext:self.managedObjectContext
+                                                                                     callback:^{
+                                                                                         [self updateBackgroundTaskWithMessage:message];
+                                                                                     }];
         }];
     }
     else {
@@ -455,7 +459,7 @@ static NSString *ZMLogTag = @"Push";
     ZM_WEAK(self);
     [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
         ZM_STRONG(self);
-        self.likeMesssageObserverToken = nil;
+        self.likeMesssageObserver = nil;
         if (result == ZMBackgroundTaskResultFailed) {
             ZMLogDebug(@"Failed to send reaction via notification");
         }
@@ -465,12 +469,30 @@ static NSString *ZMLogTag = @"Push";
             completionHandler();
         }
     }];
-    
-    [self.managedObjectContext performGroupedBlock:^{
-        id<ZMConversationMessage> reactionMesssage = [ZMMessage addReaction:MessageReactionLike toMessage:message];
-        self.likeMesssageObserverToken = [MessageChangeInfo addObserver:self forMessage:reactionMesssage];
-        [self.managedObjectContext saveOrRollback];
+
+    [self enqueueChanges:^{
+        ZM_STRONG(self);
+        id <ZMConversationMessage> reactionMessage = [ZMMessage addReaction:MessageReactionLike toMessage:message];
+        self.likeMesssageObserver = [[ManagedObjectContextChangeObserver alloc] initWithContext:self.managedObjectContext
+                                                                                       callback:^{
+                                                                                           [self updateBackgroundTaskWithMessage:reactionMessage];
+                                                                                       }];
     }];
+}
+
+- (void)updateBackgroundTaskWithMessage:(id<ZMConversationMessage>)message
+{
+    switch (message.deliveryState) {
+        case ZMDeliveryStateSent:
+        case ZMDeliveryStateDelivered:
+            [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFinished];
+            break;
+        case ZMDeliveryStateFailedToSend:
+            [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFailed];
+            break;
+        default:
+            break;
+    }
 }
 
 @end
@@ -483,26 +505,6 @@ static NSString *ZMLogTag = @"Push";
 {
     // We enable background fetch by setting the minimum interval to something different from UIApplicationBackgroundFetchIntervalNever
     [self.application setMinimumBackgroundFetchInterval:10. * 60. + arc4random_uniform(5 * 60)];
-}
-
-@end
-
-@implementation  ZMUserSession (ReplyToMessage)
-
-- (void)messageDidChange:(MessageChangeInfo *)changeInfo
-{
-    if (changeInfo.deliveryStateChanged) {
-        switch (changeInfo.message.deliveryState) {
-            case ZMDeliveryStateSent:
-                [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFinished];
-                break;
-            case ZMDeliveryStateFailedToSend:
-                [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFailed];
-                break;
-            default:
-                break;
-        }
-    }
 }
 
 @end
