@@ -40,6 +40,7 @@
 		160C314A1E82AC170012E4BC /* OperationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C31491E82AC170012E4BC /* OperationStatusTests.swift */; };
 		1618B4101DE5FAD4003F015C /* ZMUserSession+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3EC2357F192B617700B72C21 /* ZMUserSession+Internal.h */; };
 		1621D2711D770FB1007108C2 /* ZMSyncStateDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		163495851F010AF0004E80DB /* UnauthenticatedSession+Registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163495841F010AF0004E80DB /* UnauthenticatedSession+Registration.swift */; };
 		163BB8131EE1A6EE00DF9384 /* IntegrationTestBase+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163BB8111EE1A65A00DF9384 /* IntegrationTestBase+Search.swift */; };
 		163BB8161EE1B1AC00DF9384 /* SearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163BB8151EE1B1AC00DF9384 /* SearchTests.swift */; };
 		164B8C211E254AD00060AB26 /* WireCallCenterV3Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D3A1A1E1D43870052E654 /* WireCallCenterV3Mock.swift */; };
@@ -525,6 +526,7 @@
 		160C31491E82AC170012E4BC /* OperationStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OperationStatusTests.swift; sourceTree = "<group>"; };
 		1621D26E1D77098B007108C2 /* WireRequestStrategy.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireRequestStrategy.framework; path = Carthage/Build/iOS/WireRequestStrategy.framework; sourceTree = "<group>"; };
 		1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMSyncStateDelegate.h; sourceTree = "<group>"; };
+		163495841F010AF0004E80DB /* UnauthenticatedSession+Registration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UnauthenticatedSession+Registration.swift"; sourceTree = "<group>"; };
 		163BB8111EE1A65A00DF9384 /* IntegrationTestBase+Search.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "IntegrationTestBase+Search.swift"; sourceTree = "<group>"; };
 		163BB8151EE1B1AC00DF9384 /* SearchTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchTests.swift; sourceTree = "<group>"; };
 		164C29A21ECF437E0026562A /* SearchRequestTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchRequestTests.swift; sourceTree = "<group>"; };
@@ -1879,6 +1881,7 @@
 				F19F1D1B1EFBC2F000275E27 /* ZMAuthenticationStatus.m */,
 				F19F1D1C1EFBC2F000275E27 /* ZMAuthenticationStatus+Testing.h */,
 				F19F1D131EFBC18E00275E27 /* UnauthenticatedSession.swift */,
+				163495841F010AF0004E80DB /* UnauthenticatedSession+Registration.swift */,
 				F19F1D321EFBE3FE00275E27 /* UnauthenticatedOperationLoop.swift */,
 			);
 			path = UnauthenticatedSession;
@@ -2489,6 +2492,7 @@
 				16D3FCE51E37A8050052A535 /* NSManagedObjectContext+ServerTimeDelta.swift in Sources */,
 				54D175211ADE8B18001AA338 /* ZMUserSession+Registration.m in Sources */,
 				549816291A432BC800A7CE2E /* ZMConnectionTranscoder.m in Sources */,
+				163495851F010AF0004E80DB /* UnauthenticatedSession+Registration.swift in Sources */,
 				160C31271E6434500012E4BC /* OperationStatus.swift in Sources */,
 				165911531DEF38EC007FA847 /* CallStateObserver.swift in Sources */,
 				F9B71F401CB28449001DB03F /* ZMNotifications+UserSession.m in Sources */,
