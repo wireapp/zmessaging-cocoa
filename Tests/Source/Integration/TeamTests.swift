@@ -306,28 +306,6 @@ extension TeamTests {
     
 }
 
-// MARK : Conversation Member Handling
-
-extension TeamTests {
-
-    func testThatYouCanAddAMemberToATeamConversation_SelfIsMember(){
-    
-    }
-    
-    func testThatYouCanRemoveAMemberFromATeamConversation_SelfIsMember(){
-    
-    }
-
-    func testThatYouCanNotAddAMemberToATeamConversation_SelfIsGuest(){
-        
-    }
-    
-    func testThatYouCanNOTRemoveAMemberFromATeamConversation_SelfIsGuest(){
-    
-    }
-
-}
-
 // MARK : Remotely Deleted Team
 
 extension TeamTests {
