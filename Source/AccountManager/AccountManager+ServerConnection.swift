@@ -59,7 +59,8 @@ extension AccountManager : ServerConnection {
         
         return NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: ZMTransportSessionReachabilityChangedNotificationName),
                                                       object: nil,
-                                                      queue: OperationQueue.main) { [weak observer] (note) in
+                                                      queue: OperationQueue.main) { [weak self, weak observer] (note) in
+                                                        guard let `self` = self else { return }
                                                         observer?.serverConnection(didChange: self)
         }
     }
