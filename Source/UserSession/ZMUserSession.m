@@ -373,6 +373,10 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                           userSession:self
                                                                          mediaManager:(AVSMediaManager *)mediaManager];
         }
+        
+        if (self.clientRegistrationStatus.currentPhase != ZMClientRegistrationPhaseRegistered) {
+            [self.clientRegistrationStatus prepareForClientRegistration];
+        }
     }
     return self;
 }
