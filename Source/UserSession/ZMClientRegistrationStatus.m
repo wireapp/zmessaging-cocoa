@@ -24,7 +24,6 @@
 #import "ZMNotifications+UserSession.h"
 #import "ZMClientRegistrationStatus+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
-#import "ZMCookie.h"
 
 @import UIKit;
 
@@ -44,7 +43,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 @property (nonatomic, weak) id <ZMCredentialProvider> loginCredentialProvider;
 @property (nonatomic, weak) id <ZMCredentialProvider> updateCredentialProvider;
 @property (nonatomic, weak) id <ZMClientRegistrationStatusDelegate> registrationStatusDelegate;
-@property (nonatomic) ZMCookie *cookie;
+@property (nonatomic) ZMPersistentCookieStorage *cookieStorage;
 
 @property (nonatomic) id <ZMClientUpdateObserverToken> clientUpdateToken;
 @property (nonatomic) BOOL tornDown;
@@ -58,7 +57,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                      loginCredentialProvider:(id<ZMCredentialProvider>) loginCredentialProvider
                     updateCredentialProvider:(id<ZMCredentialProvider>) updateCredentialProvider
-                                      cookie:(ZMCookie *)cookie
+                                      cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
                   registrationStatusDelegate:(id<ZMClientRegistrationStatusDelegate>) registrationStatusDelegate;
 {
     self = [super init];
@@ -68,7 +67,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         self.updateCredentialProvider = updateCredentialProvider;
         self.registrationStatusDelegate = registrationStatusDelegate;
         self.needsToVerifySelfClient = !self.needsToRegisterClient;
-        self.cookie = cookie;
+        self.cookieStorage = cookieStorage;
         [self observeClientUpdates];
     }
     return self;
@@ -196,7 +195,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (BOOL)isWaitingForLogin
 {
-    return self.cookie.data == nil;
+    return self.cookieStorage.authenticationCookieData == nil;
 }
 
 - (BOOL)needsToRegisterClient
@@ -425,7 +424,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)invalidateCookieAndNotify
 {
     [self.loginCredentialProvider credentialsMayBeCleared];
-    [self.cookie deleteAllKeyChainItemsAndCookieLabels];
+    [self.cookieStorage deleteUserKeychainItems];
     
     NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:nil];
     [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:outError];

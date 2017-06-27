@@ -177,7 +177,8 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     public func request(forInserting managedObject: ZMManagedObject, forKeys keys: Set<String>?) -> ZMUpstreamRequest? {
         if let managedObject = managedObject as? UserClient {
             guard let authenticationStatus = self.authenticationStatus else { fatal("authenticationStatus is not set") }
-            let request = try? requestsFactory.registerClientRequest(managedObject, credentials: clientRegistrationStatus?.emailCredentials, authenticationStatus: authenticationStatus)
+            guard let cookieLabel = authenticationStatus.cookieLabel else { fatal("cookie label not available") }
+            let request = try? requestsFactory.registerClientRequest(managedObject, credentials: clientRegistrationStatus?.emailCredentials, cookieLabel: cookieLabel)
             return request
         }
         else {

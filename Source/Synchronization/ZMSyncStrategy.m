@@ -121,7 +121,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (instancetype)initWithSyncManagedObjectContextMOC:(NSManagedObjectContext *)syncMOC
                              uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
-                                             cookie:(ZMCookie *)cookie
+                                      cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
                                        mediaManager:(id<AVSMediaManager>)mediaManager
                                 onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                   syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
@@ -144,7 +144,7 @@ ZM_EMPTY_ASSERTING_INIT()
         [self.eventMOC addGroup:self.syncMOC.dispatchGroup];
         
         self.applicationStatusDirectory = [[ZMApplicationStatusDirectory alloc] initWithManagedObjectContext:syncMOC
-                                                                                                      cookie:cookie
+                                                                                               cookieStorage:cookieStorage
                                                                                          requestCancellation:taskCancellationProvider
                                                                                                  application:application
                                                                                            syncStateDelegate:self];
@@ -168,7 +168,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.missingUpdateEventsTranscoder,
                                    self.fetchingClientRequestStrategy,
                                    [[ProxiedRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory requestsStatus:self.applicationStatusDirectory.proxiedRequestStatus],
-                                   [[DeleteAccountRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory],
+                                   [[DeleteAccountRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory cookieStorage: cookieStorage],
                                    [[AssetDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory],
                                    [[AssetV3DownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory],
                                    [[AssetClientMessageRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory],

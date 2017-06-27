@@ -26,8 +26,10 @@ import WireTransport
     fileprivate static let path: String = "/self"
     public static let userDeletionInitiatedKey: String = "ZMUserDeletionInitiatedKey"
     fileprivate(set) var deleteSync: ZMSingleRequestSync! = nil
+    let cookieStorage: ZMPersistentCookieStorage
     
-    public override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+    public init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus, cookieStorage: ZMPersistentCookieStorage) {
+        self.cookieStorage = cookieStorage
         super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
         self.configuration = [.allowsRequestsDuringSync, .allowsRequestsWhileUnauthenticated, .allowsRequestsDuringEventProcessing]
         self.deleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: self.managedObjectContext)
@@ -54,7 +56,7 @@ import WireTransport
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         if response.result == .success || response.result == .permanentError {
             self.managedObjectContext.setPersistentStoreMetadata(NSNumber(value: false), key: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
-            ZMPersistentCookieStorage.deleteAllKeychainItems()
+            self.cookieStorage.deleteUserKeychainItems()
             OperationQueue.main.addOperation({ () -> Void in
                 ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.accountDeleted, userInfo: .none))
             })

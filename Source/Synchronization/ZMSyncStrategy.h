@@ -50,7 +50,7 @@
 
 - (instancetype)initWithSyncManagedObjectContextMOC:(NSManagedObjectContext *)syncMOC
                              uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
-                                             cookie:(ZMCookie *)cookie
+                                      cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
                                        mediaManager:(id<AVSMediaManager>)mediaManager
                                 onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                   syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate

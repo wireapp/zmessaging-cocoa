@@ -46,7 +46,6 @@
 #import <WireSyncEngine/NSError+ZMUserSessionInternal.h>
 #import <WireSyncEngine/ZMOperationLoop.h>
 #import <WireSyncEngine/ZMClientUpdateNotification+Internal.h>
-#import <WireSyncEngine/ZMCookie.h>
 #import <WireSyncEngine/ZMLocalNotification.h>
 #import <WireSyncEngine/ZMLocalNotificationLocalization.h>
 #import <WireSyncEngine/UILocalNotification+StringProcessing.h>

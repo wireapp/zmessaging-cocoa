@@ -34,7 +34,7 @@
 @protocol ZMApplication;
 
 @class ZMOnDemandFlowManager;
-@class ZMCookie;
+@class ZMPersistentCookieStorage;
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
 @class TopConversationsDirectory;
@@ -49,7 +49,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
-                                  cookie:(ZMCookie *)cookie
+                           cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
              localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
                             mediaManager:(id<AVSMediaManager>)mediaManager
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager

@@ -32,7 +32,7 @@
 @interface  ZMRegistrationTranscoder ()
 
 @property (nonatomic, readonly) ZMSingleRequestSync *registrationSync;
-@property (nonatomic, weak) ZMAuthenticationStatus * authenticationStatus;
+@property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
 
 @end
 

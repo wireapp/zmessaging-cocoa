@@ -49,8 +49,10 @@ public class AccountManager : NSObject {
         let environment = ZMBackendEnvironment(userDefaults: .standard)
         let backendURL = environment.backendURL
         let websocketURL = environment.backendWSURL
+        let cookieStorage = ZMPersistentCookieStorage(forServerName: backendURL.host!)
         transportSession = ZMTransportSession(baseURL: backendURL,
                                               websocketURL: websocketURL,
+                                              cookieStorage: cookieStorage,
                                               initialAccessToken: nil,
                                               sharedContainerIdentifier: nil)
         

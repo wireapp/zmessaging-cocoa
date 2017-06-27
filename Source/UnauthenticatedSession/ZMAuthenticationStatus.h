@@ -28,7 +28,7 @@
 @class ZMCredentials;
 @class ZMEmailCredentials;
 @class ZMPhoneCredentials;
-@class ZMCookie;
+@class ZMPersistentCookieStorage;
 @class ZMClientRegistrationStatus;
 
 FOUNDATION_EXPORT NSString * const RegisteredOnThisDeviceKey;
@@ -69,7 +69,7 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 @property (nonatomic, readonly) NSString *cookieLabel;
 
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc cookie:(ZMCookie *)cookie;
+- (instancetype)initWithCookieStorage:(ZMPersistentCookieStorage *)cookieStorage;
 
 - (void)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
 - (void)removeAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
@@ -109,6 +109,16 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 @interface ZMAuthenticationStatus (CredentialProvider) <ZMCredentialProvider>
 
 - (void)credentialsMayBeCleared;
+
+@end
+
+
+@interface NSManagedObjectContext (Registration)
+
+- (NSString *)legacyCookieLabel;
+
+- (void)setRegisteredOnThisDevice:(BOOL)registeredOnThisDevice;
+- (BOOL)isRegisteredOnThisDevice;
 
 @end
 

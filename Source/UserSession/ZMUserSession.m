@@ -40,7 +40,6 @@
 #import "WireSyncEngineLogs.h"
 #import "ZMAVSBridge.h"
 #import "ZMOnDemandFlowManager.h"
-#import "ZMCookie.h"
 #import "ZMCallFlowRequestStrategy.h"
 #import "ZMCallKitDelegate.h"
 #import "ZMOperationLoop+Private.h"
@@ -328,9 +327,8 @@ ZM_EMPTY_ASSERTING_INIT()
         
         [self.syncManagedObjectContext performBlockAndWait:^{
     
-            ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.syncManagedObjectContext cookieStorage:session.cookieStorage];
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
-                                                                                             cookie:cookie
+                                                                                             cookieStorage:session.cookieStorage
                                                                         localNotificationdispatcher:self.localNotificationDispatcher
                                                                                        mediaManager:mediaManager
                                                                                 onDemandFlowManager:self.onDemandFlowManager

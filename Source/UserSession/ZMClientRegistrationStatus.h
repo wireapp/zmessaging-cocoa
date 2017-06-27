@@ -60,7 +60,7 @@ extern NSString *const ZMPersistedClientIdKey;
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                      loginCredentialProvider:(id<ZMCredentialProvider>)loginCredentialProvider
                     updateCredentialProvider:(id<ZMCredentialProvider>)updateCredentialProvider
-                                      cookie:(ZMCookie *)cookie
+                                      cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
                   registrationStatusDelegate:(id<ZMClientRegistrationStatusDelegate>) registrationStatusDelegate;
 
 - (void)prepareForClientRegistration;

@@ -38,21 +38,21 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     
     fileprivate var callInProgressObserverToken : NSObjectProtocol? = nil
     
-    public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookie : ZMCookie, requestCancellation: ZMRequestCancellation, application : Application, syncStateDelegate: ZMSyncStateDelegate) {
+    public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookieStorage : ZMPersistentCookieStorage, requestCancellation: ZMRequestCancellation, application : Application, syncStateDelegate: ZMSyncStateDelegate) {
         self.requestCancellation = requestCancellation
         self.apnsConfirmationStatus = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: managedObjectContext, backgroundActivityFactory: BackgroundActivityFactory.sharedInstance())
         self.operationStatus = OperationStatus()
         self.operationStatus.isInBackground = application.applicationState == .background;
         self.syncStatus = SyncStatus(managedObjectContext: managedObjectContext, syncStateDelegate: syncStateDelegate)
-        self.authenticationStatus = ZMAuthenticationStatus(managedObjectContext: managedObjectContext, cookie: cookie)
+        self.authenticationStatus = ZMAuthenticationStatus(cookieStorage: cookieStorage)
         self.userProfileUpdateStatus = UserProfileUpdateStatus(managedObjectContext: managedObjectContext)
         self.clientUpdateStatus = ClientUpdateStatus(syncManagedObjectContext: managedObjectContext)
         self.clientRegistrationStatus = ZMClientRegistrationStatus(managedObjectContext: managedObjectContext,
                                                                    loginCredentialProvider: authenticationStatus,
                                                                    update: userProfileUpdateStatus,
-                                                                   cookie: cookie,
+                                                                   cookieStorage: cookieStorage,
                                                                    registrationStatusDelegate: syncStateDelegate)
-        self.accountStatus = ZMAccountStatus(managedObjectContext: managedObjectContext, cookieStorage: cookie)
+        self.accountStatus = ZMAccountStatus(managedObjectContext: managedObjectContext, cookieStorage: cookieStorage)
         self.pingBackStatus = BackgroundAPNSPingBackStatus(syncManagedObjectContext: managedObjectContext, authenticationProvider: authenticationStatus)
         self.proxiedRequestStatus = ProxiedRequestsStatus(requestCancellation: requestCancellation)
         self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)

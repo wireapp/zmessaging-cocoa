@@ -38,7 +38,7 @@ public final class UserClientRequestFactory {
         self.keyStore = keysStore
     }
     
-    public func registerClientRequest(_ client: UserClient, credentials: ZMEmailCredentials?, authenticationStatus: ZMAuthenticationStatus) throws -> ZMUpstreamRequest {
+    public func registerClientRequest(_ client: UserClient, credentials: ZMEmailCredentials?, cookieLabel: String) throws -> ZMUpstreamRequest {
         
         let (preKeysPayloadData, preKeysRangeMax) = try payloadForPreKeys(client)
         let (signalingKeysPayloadData, signalingKeys) = payloadForSignalingKeys()
@@ -52,7 +52,7 @@ public final class UserClientRequestFactory {
             "lastkey": lastPreKeyPayloadData,
             "prekeys": preKeysPayloadData,
             "sigkeys": signalingKeysPayloadData,
-            "cookie" : ((authenticationStatus.cookieLabel.characters.count != 0) ? authenticationStatus.cookieLabel! : "")
+            "cookie" : cookieLabel
         ]
          
         if let password = credentials?.password {

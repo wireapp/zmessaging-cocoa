@@ -47,7 +47,7 @@ static NSString *const HasHistoryKey = @"hasHistory";
 
 - (BOOL)needsToRegisterClient
 {
-    return self.clientRegistrationStatus.currentPhase != ZMClientRegistrationPhaseRegistered;
+    return true;
 }
 
 - (BOOL)hadHistoryAtLastLogin
@@ -67,12 +67,12 @@ static NSString *const HasHistoryKey = @"hasHistory";
     return YES;
 }
 
-+ (void)deleteAllKeychainItems;
+- (void)deleteUserKeychainItems;
 {
-    [ZMPersistentCookieStorage deleteAllKeychainItems];
+    [self.transportSession.cookieStorage deleteUserKeychainItems];
 }
 
-+ (void)resetStateAndExit;
+- (void)resetStateAndExit;
 {
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
         dispatch_semaphore_t sem = dispatch_semaphore_create(0);
@@ -89,7 +89,6 @@ static NSString *const HasHistoryKey = @"hasHistory";
             ;
         }
         
-        [self deleteAllKeychainItems];
         [NSManagedObjectContext setClearPersistentStoreOnStart:YES];
         
         [[NSUserDefaults standardUserDefaults] synchronize];

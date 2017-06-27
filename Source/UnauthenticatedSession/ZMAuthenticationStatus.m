@@ -41,12 +41,11 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 @implementation ZMAuthenticationStatus
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc cookie:(ZMCookie *)cookie;
+- (instancetype)initWithCookieStorage:(ZMPersistentCookieStorage *)cookieStorage;
 {
     self = [super init];
     if(self) {
-        self.moc = moc;
-        self.cookie = cookie;
+        self.cookieStorage = cookieStorage;
         self.isWaitingForLogin = !self.isLoggedIn;
     }
     return self;
@@ -64,12 +63,12 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (NSString *)cookieLabel
 {
-    return self.cookie.label;
+    return self.cookieStorage.cookieLabel;
 }
 
 - (void)setCookieLabel:(NSString *)label
 {
-    self.cookie.label = label;
+    self.cookieStorage.cookieLabel = label;
 }
 
 - (void)resetLoginAndRegistrationStatus
@@ -182,7 +181,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (BOOL)hasCookie;
 {
-    NSData *cookie = [self.cookie data];
+    NSData *cookie = [self.cookieStorage authenticationCookieData];
     return cookie != nil;
 }
 
@@ -226,7 +225,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)prepareForRegistrationOfUser:(ZMCompleteRegistrationUser *)user
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    self.cookie.data = nil;
+    self.cookieStorage.authenticationCookieData = nil;
     self.isWaitingForLogin = YES;
     [self resetLoginAndRegistrationStatus];
     self.registrationUser = user;
@@ -411,7 +410,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)setAuthenticationCookieData:(NSData *)data;
 {
     ZMLogDebug(@"Setting cookie data: %@", data != nil ? @"Nil" : @"Not nil");
-    self.cookie.data = data;
+    self.cookieStorage.authenticationCookieData = data;
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
@@ -454,7 +453,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 @end
 
-
+static NSString * const CookieLabelKey = @"ZMCookieLabel";
 
 @implementation NSManagedObjectContext (Registration)
 
@@ -471,6 +470,12 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (BOOL)isRegisteredOnThisDevice
 {
     return ((NSNumber *)[self persistentStoreMetadataForKey:RegisteredOnThisDeviceKey]).boolValue;
+}
+
+- (NSString *)legacyCookieLabel
+{
+    NSString *label = [self persistentStoreMetadataForKey:CookieLabelKey];
+    return label;
 }
 
 @end

@@ -40,12 +40,12 @@
 /// Requires a phone verification code for login. Returns NO if the phone number was invalid
 - (BOOL)requestPhoneVerificationCodeForLogin:(NSString *)phoneNumber;
 
-/// This will delete any data stored by WireSyncEngine in the keychain.
-+ (void)deleteAllKeychainItems;
+/// This will delete user data stored by WireSyncEngine in the keychain.
+- (void)deleteUserKeychainItems;
 
 /// Delete cookies etc. and exit the app.
 /// This is a temporary workaround for QA.
-+ (void)resetStateAndExit;
+- (void)resetStateAndExit;
 
 /// This will delete any data stored by WireSyncEngine, but retain the cookies (i.e. keychain)
 + (void)deleteCacheOnRelaunch;
