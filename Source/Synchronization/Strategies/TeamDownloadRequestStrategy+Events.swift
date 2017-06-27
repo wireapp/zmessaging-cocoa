@@ -62,11 +62,10 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
     }
 
     private func createTeam(with event: ZMUpdateEvent) {
-        guard let identifier = event.teamId else { return }
-        guard let team = Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext, created: nil) else { return }
-        team.needsToBeUpdatedFromBackend = true
-        // FIXME: The backend started returning the team data in the response payload which we could parse
-        // to avoid having to refetch the team here (see https://github.com/wireapp/architecture/pull/26/files#diff-64b45f100a728fb2e5e24168a3c50de4R294).
+        // With the new multi-account model this event should not be sent anymore,
+        // and if it is we should not act on it.
+        // An account will either have a team since registration or not, 
+        // currently there is no way to get added to a team after registering.
     }
 
     private func deleteTeam(with event: ZMUpdateEvent) {
@@ -83,23 +82,15 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
 
     private func processAddedMember(with event: ZMUpdateEvent) {
         guard let identifier = event.teamId, let data = event.dataPayload else { return }
-        var created = false
-        let fetchedTeam = withUnsafeMutablePointer(to: &created) {
-             Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext, created: $0)
-        }
-        guard let team = fetchedTeam else { return }
+        guard let team = Team.fetchOrCreate(with: identifier, create: false, in: managedObjectContext, created: nil) else { return }
         guard let addedUserId = (data[TeamEventPayloadKey.user.rawValue] as? String).flatMap(UUID.init) else { return }
         guard let user = ZMUser(remoteID: addedUserId, createIfNeeded: true, in: managedObjectContext) else { return }
         user.needsToBeUpdatedFromBackend = true
         _ = Member.getOrCreateMember(for: user, in: team, context: managedObjectContext)
 
-        // In case we just created this team locally or the self user got added,
-        // we want to ensure that we refetch all of its metadata, as well as all member permissions.
-        team.needsToBeUpdatedFromBackend = created || user.isSelfUser
-
         // cf. https://github.com/wireapp/architecture/issues/13
         // We want to refetch the members in case we didn't just create the team as the payload does not include permissions.
-        team.needsToRedownloadMembers = !team.needsToBeUpdatedFromBackend
+        team.needsToRedownloadMembers = true
     }
 
     private func processRemovedMember(with event: ZMUpdateEvent) {
