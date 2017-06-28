@@ -33,6 +33,7 @@
 
 @property (nonatomic, readonly) ZMSingleRequestSync *registrationSync;
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
+@property (nonatomic) NSManagedObjectContext *managedObjectContext;
 
 @end
 
@@ -44,24 +45,20 @@
 
 @implementation ZMRegistrationTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
 {
-    self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatusDirectory];
+    self = [super init];
     
     if (self != nil) {
+        self.managedObjectContext = moc;
         _registrationSync = [ZMSingleRequestSync syncWithSingleRequestTranscoder:self managedObjectContext:self.managedObjectContext];
-        self.authenticationStatus = applicationStatusDirectory.authenticationStatus;
-        [applicationStatusDirectory.authenticationStatus addAuthenticationCenterObserver:self];
+        self.authenticationStatus = authenticationStatus;
+        [authenticationStatus addAuthenticationCenterObserver:self];
     }
     return self;
 }
 
-- (ZMStrategyConfigurationOption)configuration
-{
-    return ZMStrategyConfigurationOptionAllowsRequestsWhileUnauthenticated;
-}
-
- - (ZMTransportRequest *)nextRequestIfAllowed
+ - (ZMTransportRequest *)nextRequest
 {
     if (self.isInRegistrationPhase) {
         return self.registrationSync.nextRequest;

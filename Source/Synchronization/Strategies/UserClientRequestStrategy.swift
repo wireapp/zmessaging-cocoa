@@ -32,7 +32,6 @@ private let zmLog = ZMSLog(tag: "userClientRS")
 public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, ZMUpstreamTranscoder, ZMSingleRequestTranscoder {
     
     weak var clientRegistrationStatus: ZMClientRegistrationStatus?
-    weak var authenticationStatus: ZMAuthenticationStatus?
     weak var clientUpdateStatus: ClientUpdateStatus?
 
     fileprivate(set) var modifiedSync: ZMUpstreamModifiedObjectSync! = nil
@@ -52,13 +51,11 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
         }
     }
     
-    public init(authenticationStatus:ZMAuthenticationStatus,
-                clientRegistrationStatus:ZMClientRegistrationStatus,
+    public init(clientRegistrationStatus:ZMClientRegistrationStatus,
                 clientUpdateStatus:ClientUpdateStatus,
                 context: NSManagedObjectContext,
                 userKeysStore: UserClientKeysStore)
     {
-        self.authenticationStatus = authenticationStatus
         self.clientRegistrationStatus = clientRegistrationStatus
         self.clientUpdateStatus = clientUpdateStatus
         self.userKeysStore = userKeysStore
@@ -176,8 +173,8 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     
     public func request(forInserting managedObject: ZMManagedObject, forKeys keys: Set<String>?) -> ZMUpstreamRequest? {
         if let managedObject = managedObject as? UserClient {
-            guard let authenticationStatus = self.authenticationStatus else { fatal("authenticationStatus is not set") }
-            guard let cookieLabel = authenticationStatus.cookieLabel else { fatal("cookie label not available") }
+            guard let clientStatus = clientRegistrationStatus else { fatal("clientRegistrationStatus is not available") }
+            let cookieLabel = clientStatus.cookieStorage.cookieLabel
             let request = try? requestsFactory.registerClientRequest(managedObject, credentials: clientRegistrationStatus?.emailCredentials, cookieLabel: cookieLabel)
             return request
         }

@@ -24,10 +24,9 @@
 @class ZMApplicationStatusDirectory;
 
 
-@interface ZMRegistrationTranscoder : ZMAbstractRequestStrategy
+@interface ZMRegistrationTranscoder : NSObject <RequestStrategy>
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext applicationStatus:(id<ZMApplicationStatus>)applicationStatus NS_UNAVAILABLE;
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus;
 - (void)resetRegistrationState;
 
 

@@ -27,10 +27,14 @@ private let zmLog = ZMSLog(tag: "Pingback")
 // MARK: - AuthenticationStatusProvider
 
 @objc public protocol AuthenticationStatusProvider {
-    var currentPhase: ZMAuthenticationPhase { get }
+    var isAuthenticated: Bool { get }
 }
 
-extension ZMAuthenticationStatus: AuthenticationStatusProvider {}
+extension ZMPersistentCookieStorage: AuthenticationStatusProvider {
+    public var isAuthenticated: Bool {
+        return authenticationCookieData != nil
+    }
+}
 
 
 // MARK: - EventsWithIdentifier
@@ -169,7 +173,7 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
         notificationIDs.append(eventsWithID)
 
         eventsWithHandlerByNotificationID[eventsWithID.identifier] = (eventsWithID.events, handler)
-        guard authenticationStatusProvider?.currentPhase == .authenticated else { return }
+        guard let authenticationStatus = authenticationStatusProvider, authenticationStatus.isAuthenticated else { return }
 
         backgroundActivity = backgroundActivity ?? BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Ping back to BE")
 

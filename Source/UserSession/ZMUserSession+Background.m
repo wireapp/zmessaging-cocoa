@@ -49,7 +49,7 @@ static NSString *ZMLogTag = @"Push";
 - (void)receivedPushNotificationWithPayload:(NSDictionary *)payload completionHandler:(ZMPushNotificationCompletionHandler)handler source:(ZMPushNotficationType)source
 {
     BOOL isNotInBackground = self.application.applicationState != UIApplicationStateBackground;
-    BOOL notAuthenticated = self.authenticationStatus.currentPhase != ZMAuthenticationPhaseAuthenticated;
+    BOOL notAuthenticated = self.authenticationStatus.isAuthenticated;
     
     if (notAuthenticated || isNotInBackground) {
         if (handler != nil) {

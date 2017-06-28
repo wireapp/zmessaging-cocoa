@@ -150,11 +150,10 @@ ZM_EMPTY_ASSERTING_INIT()
         [self createTranscodersWithLocalNotificationsDispatcher:localNotificationsDispatcher mediaManager:mediaManager onDemandFlowManager:onDemandFlowManager];
         
         self.eventsBuffer = [[ZMUpdateEventsBuffer alloc] initWithUpdateEventConsumer:self];
-        self.userClientRequestStrategy = [[UserClientRequestStrategy alloc] initWithAuthenticationStatus:self.applicationStatusDirectory.authenticationStatus
-                                                                                clientRegistrationStatus:self.applicationStatusDirectory.clientRegistrationStatus
-                                                                                      clientUpdateStatus:self.applicationStatusDirectory.clientUpdateStatus
-                                                                                                 context:self.syncMOC
-                                                                                           userKeysStore:self.syncMOC.zm_cryptKeyStore];
+        self.userClientRequestStrategy = [[UserClientRequestStrategy alloc] initWithClientRegistrationStatus:self.applicationStatusDirectory.clientRegistrationStatus
+                                                                                          clientUpdateStatus:self.applicationStatusDirectory.clientUpdateStatus
+                                                                                                     context:self.syncMOC
+                                                                                               userKeysStore:self.syncMOC.zm_cryptKeyStore];
         self.missingClientsRequestStrategy = [[MissingClientsRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory];
         self.fetchingClientRequestStrategy = [[FetchingClientRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory];
         
@@ -176,7 +175,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[UserProfileRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC
                                                                                   applicationStatus:self.applicationStatusDirectory
                                                                             userProfileUpdateStatus:self.applicationStatusDirectory.userProfileUpdateStatus],
-                                   [[SelfContactCardUploadStrategy alloc] initWithAuthenticationStatus:self.applicationStatusDirectory.authenticationStatus
+                                   [[SelfContactCardUploadStrategy alloc] initWithAuthenticationStatus:cookieStorage
                                                                               clientRegistrationStatus:self.applicationStatusDirectory.clientRegistrationStatus
                                                                                   managedObjectContext:self.syncMOC],
                                    self.linkPreviewAssetDownloadRequestStrategy,

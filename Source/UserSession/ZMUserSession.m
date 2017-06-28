@@ -374,9 +374,11 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                          mediaManager:(AVSMediaManager *)mediaManager];
         }
         
-        if (self.clientRegistrationStatus.currentPhase != ZMClientRegistrationPhaseRegistered) {
-            [self.clientRegistrationStatus prepareForClientRegistration];
-        }
+        [self.syncManagedObjectContext performBlockAndWait:^{
+            if (self.clientRegistrationStatus.currentPhase != ZMClientRegistrationPhaseRegistered) {
+                [self.clientRegistrationStatus prepareForClientRegistration];
+            }
+        }];
     }
     return self;
 }
@@ -445,7 +447,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (BOOL)isLoggedIn
 {
-    return self.authenticationStatus.currentPhase == ZMAuthenticationPhaseAuthenticated &&
+    return self.authenticationStatus.isAuthenticated &&
     self.clientRegistrationStatus.currentPhase == ZMClientRegistrationPhaseRegistered;
 }
 
@@ -547,14 +549,11 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.syncManagedObjectContext performGroupedBlock:^{
         if (self.isLoggedIn) {
             [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
-            return;
-        }
-
-        if (self.authenticationStatus.needsCredentialsToLogin) {
+        } else if (self.authenticationStatus.isAuthenticated) {
+            [self.clientRegistrationStatus prepareForClientRegistration];
+        } else {
             [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials
                                                                                                                userInfo:nil]];
-        } else {
-            [self.clientRegistrationStatus prepareForClientRegistration];
         }
     }];
 }
@@ -971,9 +970,9 @@ static BOOL ZMUserSessionUseCallKit = NO;
 
 @implementation ZMUserSession (AuthenticationStatus)
 
-- (ZMAuthenticationStatus *)authenticationStatus;
+- (id<AuthenticationStatusProvider>)authenticationStatus
 {
-    return self.operationLoop.syncStrategy.applicationStatusDirectory.authenticationStatus;
+    return self.transportSession.cookieStorage;
 }
 
 - (UserProfileUpdateStatus *)userProfileUpdateStatus;

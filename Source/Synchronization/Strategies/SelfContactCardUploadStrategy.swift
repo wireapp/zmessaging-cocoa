@@ -55,7 +55,7 @@ private let onboardingEndpoint = "/onboarding/v3"
 extension SelfContactCardUploadStrategy : RequestStrategy, ZMSingleRequestTranscoder {
     
     public func nextRequest() -> ZMTransportRequest? {
-        guard self.authenticationStatus.currentPhase == .authenticated &&
+        guard self.authenticationStatus.isAuthenticated &&
             self.clientRegistrationStatus.clientIsReadyForRequests else {
                 return nil
         }

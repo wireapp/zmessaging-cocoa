@@ -24,7 +24,7 @@
 @class ZMTransportResponse;
 @class ZMApplicationStatusDirectory;
 
-@interface ZMPhoneNumberVerificationTranscoder : ZMAbstractRequestStrategy
+@interface ZMPhoneNumberVerificationTranscoder : NSObject <RequestStrategy>
 
 - (void)resetVerificationState;
 - (void)verifyPhoneNumber;

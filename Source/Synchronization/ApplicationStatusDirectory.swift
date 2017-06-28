@@ -25,7 +25,6 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     
     public let userProfileImageUpdateStatus : UserProfileImageUpdateStatus
     public let apnsConfirmationStatus : BackgroundAPNSConfirmationStatus
-    public let authenticationStatus : ZMAuthenticationStatus
     public let userProfileUpdateStatus : UserProfileUpdateStatus
     public let clientRegistrationStatus : ZMClientRegistrationStatus
     public let clientUpdateStatus : ClientUpdateStatus
@@ -44,16 +43,13 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.operationStatus = OperationStatus()
         self.operationStatus.isInBackground = application.applicationState == .background;
         self.syncStatus = SyncStatus(managedObjectContext: managedObjectContext, syncStateDelegate: syncStateDelegate)
-        self.authenticationStatus = ZMAuthenticationStatus(cookieStorage: cookieStorage)
         self.userProfileUpdateStatus = UserProfileUpdateStatus(managedObjectContext: managedObjectContext)
         self.clientUpdateStatus = ClientUpdateStatus(syncManagedObjectContext: managedObjectContext)
         self.clientRegistrationStatus = ZMClientRegistrationStatus(managedObjectContext: managedObjectContext,
-                                                                   loginCredentialProvider: authenticationStatus,
-                                                                   update: userProfileUpdateStatus,
                                                                    cookieStorage: cookieStorage,
                                                                    registrationStatusDelegate: syncStateDelegate)
         self.accountStatus = ZMAccountStatus(managedObjectContext: managedObjectContext, cookieStorage: cookieStorage)
-        self.pingBackStatus = BackgroundAPNSPingBackStatus(syncManagedObjectContext: managedObjectContext, authenticationProvider: authenticationStatus)
+        self.pingBackStatus = BackgroundAPNSPingBackStatus(syncManagedObjectContext: managedObjectContext, authenticationProvider: cookieStorage)
         self.proxiedRequestStatus = ProxiedRequestsStatus(requestCancellation: requestCancellation)
         self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)
         
