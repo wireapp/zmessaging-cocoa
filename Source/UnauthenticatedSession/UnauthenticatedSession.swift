@@ -32,6 +32,7 @@ public class UnauthenticatedSession : NSObject {
         let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
         try coordinator.addPersistentStore(ofType: NSInMemoryStoreType, configurationName: nil, at: nil, options: nil)
         let moc = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        moc.createDispatchGroups()
         moc.persistentStoreCoordinator = coordinator
         
         self.init(moc: moc, authenticationStatus: authenticationStatus, transportSession: transportSession)

@@ -37,6 +37,9 @@ public class AccountManager : NSObject {
     public var analytics: AnalyticsType?
     let transportSession: ZMTransportSession
     public weak var delegate : AccountStateDelegate? = nil
+    var authenticationToken: Any?
+    let authenticationStatus: ZMAuthenticationStatus
+    var userSession: ZMUserSession?
     
     public init(appGroupIdentifier: String, appVersion: String, mediaManager: AVSMediaManager, analytics: AnalyticsType?, delegate: AccountStateDelegate?) {
         self.appGroupIdentifier = appGroupIdentifier
@@ -50,6 +53,7 @@ public class AccountManager : NSObject {
         let backendURL = environment.backendURL
         let websocketURL = environment.backendWSURL
         let cookieStorage = ZMPersistentCookieStorage(forServerName: backendURL.host!)
+        authenticationStatus = ZMAuthenticationStatus(cookieStorage: cookieStorage)
         transportSession = ZMTransportSession(baseURL: backendURL,
                                               websocketURL: websocketURL,
                                               cookieStorage: cookieStorage,
@@ -57,6 +61,8 @@ public class AccountManager : NSObject {
                                               sharedContainerIdentifier: nil)
         
         super.init()
+        
+        authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(observer: self)
 
         if storeExists {
         
@@ -71,6 +77,12 @@ public class AccountManager : NSObject {
             
             delegate?.userSessionCreated(session: userSession)
         } else {
+            do {
+                let unauthenticatedSession = try UnauthenticatedSession(authenticationStatus: authenticationStatus, transportSession: transportSession)
+                delegate?.unauthenticatedSessionCreated(session: unauthenticatedSession)
+            } catch let error {
+                fatal("Can't create unauthenticated session: \(error)")
+            }
         }
     }
     
@@ -82,5 +94,26 @@ public class AccountManager : NSObject {
         guard let storeURL = ZMUserSession.storeURL(forAppGroupIdentifier: appGroupIdentifier) else { return false }
         return FileManager.default.fileExists(atPath: storeURL.path)
     }
+    
+}
+
+extension AccountManager: ZMAuthenticationObserver {
+    
+    @objc public func authenticationDidSucceed() {
+        guard self.userSession == nil else {
+            return
+        }
+        let userSession = ZMUserSession(mediaManager: mediaManager,
+                                        analytics: analytics,
+                                        transportSession: transportSession,
+                                        userId:nil,
+                                        appVersion: appVersion,
+                                        appGroupIdentifier: appGroupIdentifier)!
+        self.userSession = userSession
+        userSession.setEmailCredentials(authenticationStatus.emailCredentials())
+        
+        delegate?.userSessionCreated(session: userSession)
+    }
+
     
 }

@@ -347,6 +347,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     if (self.isWaitingForLogin) {
         self.isWaitingForLogin = NO;
     }
+    [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 

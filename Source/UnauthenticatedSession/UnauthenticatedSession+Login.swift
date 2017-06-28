@@ -40,14 +40,12 @@ extension UnauthenticatedSession {
         moc.performGroupedBlock {
             if self.isLoggedIn {
                 ZMUserSessionAuthenticationNotification.notifyAuthenticationDidSucceed()
-                RequestAvailableNotification.notifyNewRequestsAvailable(nil)
-                return
             } else if credentials.isInvalid {
                 ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
-                return
             } else {
                 self.authenticationStatus.prepareForLogin(with: credentials)
             }
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
     }
     
