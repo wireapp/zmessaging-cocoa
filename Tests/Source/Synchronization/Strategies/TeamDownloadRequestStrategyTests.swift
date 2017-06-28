@@ -50,13 +50,14 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
         super.tearDown()
     }
     
-    func sampleResponse(team: Team, creatorId: UUID) -> [String: Any] {
+    func sampleResponse(team: Team, creatorId: UUID, isBound: Bool = true) -> [String: Any] {
         return [
             "id": team.remoteIdentifier!.transportString(),
             "creator": creatorId.transportString(),
             "name": "Wire GmbH",
             "icon": "",
-            "icon_key": ""
+            "icon_key": "",
+            "binding" : (isBound ? 1: 0)
         ]
     }
     
@@ -155,6 +156,38 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
             guard let creator = team.creator else { return XCTFail("No creator") }
             XCTAssertEqual(creator.remoteIdentifier, creatorId)
             XCTAssertTrue(creator.needsToBeUpdatedFromBackend)
+        }
+    }
+    
+    func testThatItDeletesTheTeamIfNotBoundToAccount() {
+        var team: Team!
+        let creatorId = UUID.create()
+        
+        syncMOC.performGroupedBlock {
+            // given
+            team = Team.insertNewObject(in: self.syncMOC)
+            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            team.remoteIdentifier = .create()
+            
+            
+            team.needsToBeUpdatedFromBackend = true
+            self.boostrapChangeTrackers(with: team)
+            guard let request = self.sut.nextRequest() else { return XCTFail("No request generated") }
+            
+            // when
+            let payload = self.sampleResponse(team: team, creatorId: creatorId, isBound: false)
+            let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
+            
+            // when
+            request.complete(with: response)
+            self.syncMOC.saveOrRollback()
+        }
+        
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        syncMOC.performGroupedBlockAndWait {
+            // then
+            XCTAssertTrue(team == nil || team.isZombieObject)
         }
     }
 
@@ -267,124 +300,4 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
     }
 
 
-}
-
-
-// MARK: - SlowSync
-extension TeamDownloadRequestStrategyTests {
-    
-    func testThatItCreatesARequestDuringSync() {
-        syncMOC.performGroupedBlockAndWait {
-            // given
-            let team = Team.insertNewObject(in: self.syncMOC)
-            team.remoteIdentifier = .create()
-            self.mockApplicationStatus.mockSynchronizationState = .synchronizing
-            
-            // when
-            team.needsToBeUpdatedFromBackend = true
-            self.boostrapChangeTrackers(with: team)
-            
-            // then
-            XCTAssertNotNil(self.sut.nextRequest())
-        }
-    }
-    
-    func testThatItSetsNeedsToBeUpdatedFromBackendOnTeamWhenSyncStarts(){
-        syncMOC.performGroupedBlockAndWait {
-            // given
-            let team = Team.insertNewObject(in: self.syncMOC)
-            team.remoteIdentifier = .create()
-            let selfUser = ZMUser.selfUser(in: self.syncMOC)
-            _ = Member.getOrCreateMember(for: selfUser, in: team, context: self.syncMOC)
-            
-            self.mockApplicationStatus.mockSynchronizationState = .synchronizing
-            self.mockSyncStatus.mockPhase = .fetchingTeams
-            
-            // when
-            let request = self.sut.nextRequestIfAllowed()
-            XCTAssertNil(request);
-            
-            // then
-            XCTAssertTrue(team.needsToBeUpdatedFromBackend)
-        }
-    }
-    
-    func testThatItCallsSyncStatusWhenNoSelfTeamSet() {
-        syncMOC.performGroupedBlockAndWait {
-            // given
-            let team = Team.insertNewObject(in: self.syncMOC)
-            team.remoteIdentifier = .create()
-            
-            // simulate first nextRequestIfAllowed that sets needsToBeUpdatedFromBackend
-            self.mockApplicationStatus.mockSynchronizationState = .synchronizing
-            self.mockSyncStatus.mockPhase = .fetchingTeams
-            
-            // when
-            let request = self.sut.nextRequestIfAllowed()
-            XCTAssertNil(request);
-            
-            // then
-            XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase)
-        }
-    }
-    
-    func testThatItCallsSyncStatusWhenSyncFinishes() {
-        syncMOC.performGroupedBlockAndWait {
-            // given
-            let team = Team.insertNewObject(in: self.syncMOC)
-            team.remoteIdentifier = .create()
-            let selfUser = ZMUser.selfUser(in: self.syncMOC)
-            _ = Member.getOrCreateMember(for: selfUser, in: team, context: self.syncMOC)
-            
-            // simulate first nextRequestIfAllowed that sets needsToBeUpdatedFromBackend
-            team.needsToBeUpdatedFromBackend = true
-            self.boostrapChangeTrackers(with: team)
-            
-            self.mockApplicationStatus.mockSynchronizationState = .synchronizing
-            self.mockSyncStatus.mockPhase = .fetchingTeams
-            
-            // when
-            let request = self.sut.nextRequestIfAllowed()
-            XCTAssertNotNil(request);
-            
-            let response = ZMTransportResponse(payload: [String : Any]() as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-            request?.complete(with: response)
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        
-        syncMOC.performGroupedBlockAndWait {
-            // then
-            XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase)
-        }
-    }
-    
-    func testThatItCallsSyncStatusWhenSyncFails() {
-        syncMOC.performGroupedBlockAndWait {
-            // given
-            let team = Team.insertNewObject(in: self.syncMOC)
-            team.remoteIdentifier = .create()
-            let selfUser = ZMUser.selfUser(in: self.syncMOC)
-            _ = Member.getOrCreateMember(for: selfUser, in: team, context: self.syncMOC)
-            
-            // simulate first nextRequestIfAllowed that sets needsToBeUpdatedFromBackend
-            team.needsToBeUpdatedFromBackend = true
-            self.boostrapChangeTrackers(with: team)
-            
-            self.mockApplicationStatus.mockSynchronizationState = .synchronizing
-            self.mockSyncStatus.mockPhase = .fetchingTeams
-            
-            // when
-            let request = self.sut.nextRequestIfAllowed()
-            XCTAssertNotNil(request)
-            
-            let response = ZMTransportResponse(payload: [String : Any]() as ZMTransportData, httpStatus: 403, transportSessionError: nil)
-            request?.complete(with: response)
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-        
-        syncMOC.performGroupedBlockAndWait {
-            // then
-            XCTAssertTrue(self.mockSyncStatus.didCallFailCurrentSyncPhase)
-        }
-    }
 }

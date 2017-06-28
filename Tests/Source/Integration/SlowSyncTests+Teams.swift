@@ -26,7 +26,7 @@ class SlowSyncTestsTeams: IntegrationTestBase {
 
         // We remotely create a team on the server before logging in
         mockTransportSession.performRemoteChanges { session in
-            team = session.insertTeam(withName: "Wire GmbH")
+            team = session.insertTeam(withName: "Wire GmbH", isBound: true)
             let member = session.insertMember(with: self.selfUser, in: team)
             member.permissions = .member
             otherMember = session.insertMember(with: self.user5, in: team) // User 5 is unconnected
@@ -77,7 +77,7 @@ class SlowSyncTestsTeams: IntegrationTestBase {
 
         // We remotely create a team on the server before logging in
         mockTransportSession.performRemoteChanges { session in
-            team = session.insertTeam(withName: "Wire GmbH")
+            team = session.insertTeam(withName: "Wire GmbH", isBound: true)
             let member = session.insertMember(with: self.selfUser, in: team)
             member.permissions = .member
             otherMember = session.insertMember(with: self.user5, in: team) // User 5 is unconnected
