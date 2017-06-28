@@ -36,5 +36,10 @@ final public class TeamDownloadRequestFactory {
         let path = teamPath + "/" + teamIdentifier.transportString() + "/members"
         return ZMTransportRequest(getFromPath: path)
     }
+
+    public static func getSingleMemberRequest(for identifier: UUID, in teamIdentifier: UUID) -> ZMTransportRequest {
+        let path = teamPath + "/" + teamIdentifier.transportString() + "/members/" + identifier.transportString()
+        return ZMTransportRequest(getFromPath: path)
+    }
     
 }

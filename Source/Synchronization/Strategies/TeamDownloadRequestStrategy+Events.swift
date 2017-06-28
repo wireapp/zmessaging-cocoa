@@ -86,11 +86,11 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
         guard let addedUserId = (data[TeamEventPayloadKey.user.rawValue] as? String).flatMap(UUID.init) else { return }
         guard let user = ZMUser(remoteID: addedUserId, createIfNeeded: true, in: managedObjectContext) else { return }
         user.needsToBeUpdatedFromBackend = true
-        _ = Member.getOrCreateMember(for: user, in: team, context: managedObjectContext)
+        let member = Member.getOrCreateMember(for: user, in: team, context: managedObjectContext)
 
         // cf. https://github.com/wireapp/architecture/issues/13
         // We want to refetch the members in case we didn't just create the team as the payload does not include permissions.
-        team.needsToRedownloadMembers = true
+        member.needsToBeUpdatedFromBackend = true
     }
 
     private func processRemovedMember(with event: ZMUpdateEvent) {

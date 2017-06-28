@@ -24,7 +24,7 @@ import WireTesting
 class MemberDownloadRequestStrategyTests: MessagingTest {
 
     var sut: MemberDownloadRequestStrategy!
-    var mockApplicationStatus : MockApplicationStatus!
+    var mockApplicationStatus: MockApplicationStatus!
 
     override func setUp() {
         super.setUp()
