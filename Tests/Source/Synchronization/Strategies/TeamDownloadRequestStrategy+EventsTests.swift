@@ -261,9 +261,10 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         guard let team = Team.fetch(withRemoteIdentifier: teamId, in: uiMOC) else { return XCTFail("No team") }
         guard let member = user.membership else { return XCTFail("No member") }
 
-        XCTAssertTrue(user.needsToBeUpdatedFromBackend)
+        XCTAssert(user.needsToBeUpdatedFromBackend)
+        XCTAssert(member.needsToBeUpdatedFromBackend)
         XCTAssertFalse(team.needsToBeUpdatedFromBackend)
-        XCTAssertTrue(team.needsToRedownloadMembers)
+        XCTAssertFalse(team.needsToRedownloadMembers)
         XCTAssertEqual(member.team, team)
     }
 
@@ -296,9 +297,10 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             guard let team = Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC) else { return XCTFail("No team") }
             guard let member = user.membership else { return XCTFail("No member") }
 
-            XCTAssertTrue(user.needsToBeUpdatedFromBackend)
+            XCTAssert(user.needsToBeUpdatedFromBackend)
+            XCTAssert(member.needsToBeUpdatedFromBackend)
             XCTAssertFalse(team.needsToBeUpdatedFromBackend)
-            XCTAssertTrue(team.needsToRedownloadMembers)
+            XCTAssertFalse(team.needsToRedownloadMembers)
             XCTAssertEqual(member.team, team)
         }
     }
@@ -330,9 +332,10 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             guard let team = Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC) else { return XCTFail("No team") }
             guard let member = user.membership else { return XCTFail("No member") }
 
-            XCTAssertTrue(user.needsToBeUpdatedFromBackend)
+            XCTAssert(user.needsToBeUpdatedFromBackend)
+            XCTAssert(member.needsToBeUpdatedFromBackend)
             XCTAssertFalse(team.needsToBeUpdatedFromBackend)
-            XCTAssertTrue(team.needsToRedownloadMembers)
+            XCTAssertFalse(team.needsToRedownloadMembers)
             XCTAssertEqual(member.team, team)
         }
     }
