@@ -404,6 +404,8 @@
 		F9ABE8551EFD56BF00D83214 /* MemberDownloadRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9ABE8521EFD56BF00D83214 /* MemberDownloadRequestStrategyTests.swift */; };
 		F9ABE8561EFD56BF00D83214 /* TeamDownloadRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9ABE8531EFD56BF00D83214 /* TeamDownloadRequestStrategyTests.swift */; };
 		F9ABE8571EFD56BF00D83214 /* TeamDownloadRequestStrategy+EventsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9ABE8541EFD56BF00D83214 /* TeamDownloadRequestStrategy+EventsTests.swift */; };
+		F9ABE8AA1F02A45700D83214 /* TeamSyncRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9ABE8A91F02A45700D83214 /* TeamSyncRequestStrategy.swift */; };
+		F9ABE8AE1F02A88200D83214 /* TeamSyncRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9ABE8AB1F02A86400D83214 /* TeamSyncRequestStrategyTests.swift */; };
 		F9B171F61C0EF21100E6EEC6 /* ClientUpdateStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B171F51C0EF21100E6EEC6 /* ClientUpdateStatus.swift */; };
 		F9B171F81C0F00E700E6EEC6 /* ClientUpdateStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B171F71C0F00E700E6EEC6 /* ClientUpdateStatusTests.swift */; };
 		F9B171FA1C0F320200E6EEC6 /* ClientManagementTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F9B171F91C0F320200E6EEC6 /* ClientManagementTests.m */; };
@@ -972,6 +974,8 @@
 		F9ABE8521EFD56BF00D83214 /* MemberDownloadRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MemberDownloadRequestStrategyTests.swift; sourceTree = "<group>"; };
 		F9ABE8531EFD56BF00D83214 /* TeamDownloadRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TeamDownloadRequestStrategyTests.swift; sourceTree = "<group>"; };
 		F9ABE8541EFD56BF00D83214 /* TeamDownloadRequestStrategy+EventsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "TeamDownloadRequestStrategy+EventsTests.swift"; sourceTree = "<group>"; };
+		F9ABE8A91F02A45700D83214 /* TeamSyncRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TeamSyncRequestStrategy.swift; sourceTree = "<group>"; };
+		F9ABE8AB1F02A86400D83214 /* TeamSyncRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TeamSyncRequestStrategyTests.swift; sourceTree = "<group>"; };
 		F9B171F51C0EF21100E6EEC6 /* ClientUpdateStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientUpdateStatus.swift; sourceTree = "<group>"; };
 		F9B171F71C0F00E700E6EEC6 /* ClientUpdateStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientUpdateStatusTests.swift; sourceTree = "<group>"; };
 		F9B171F91C0F320200E6EEC6 /* ClientManagementTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ClientManagementTests.m; sourceTree = "<group>"; };
@@ -1445,6 +1449,7 @@
 			children = (
 				F9ABE84A1EFD568B00D83214 /* MemberDownloadRequestStrategy.swift */,
 				BF491CD01F03D7CF0055EE44 /* PermissionsDownloadRequestStrategy.swift */,
+				F9ABE8A91F02A45700D83214 /* TeamSyncRequestStrategy.swift */,
 				F9ABE84B1EFD568B00D83214 /* TeamDownloadRequestStrategy.swift */,
 				F9ABE84C1EFD568B00D83214 /* TeamDownloadRequestStrategy+Events.swift */,
 				F9ABE84D1EFD568B00D83214 /* TeamRequestFactory.swift */,
@@ -1470,6 +1475,7 @@
 			children = (
 				F9ABE8521EFD56BF00D83214 /* MemberDownloadRequestStrategyTests.swift */,
 				BF491CD41F03E0FC0055EE44 /* PermissionsDownloadRequestStrategyTests.swift */,
+				F9ABE8AB1F02A86400D83214 /* TeamSyncRequestStrategyTests.swift */,
 				F9ABE8531EFD56BF00D83214 /* TeamDownloadRequestStrategyTests.swift */,
 				F9ABE8541EFD56BF00D83214 /* TeamDownloadRequestStrategy+EventsTests.swift */,
 				F9B8305E1DEC86E700FF6FE7 /* UserImageStrategyTests.swift */,
@@ -2381,6 +2387,7 @@
 				3E3C00DB1A235F6000D02D21 /* ZMTypingUsersTimeoutTests.m in Sources */,
 				164C29A51ECF47D80026562A /* SearchDirectoryTests.swift in Sources */,
 				163BB8161EE1B1AC00DF9384 /* SearchTests.swift in Sources */,
+				F9ABE8AE1F02A88200D83214 /* TeamSyncRequestStrategyTests.swift in Sources */,
 				54C2F69F1A6FA988003D09D9 /* ZMSpellOutSmallNumbersFormatterTests.m in Sources */,
 				87D4625D1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift in Sources */,
 				3E3C00D21A2358CF00D02D21 /* ZMTypingTests.m in Sources */,
@@ -2592,6 +2599,7 @@
 				5498165A1A432BC800A7CE2E /* ZMUpdateEventsBuffer.m in Sources */,
 				F9B8308C1DEEDC2900FF6FE7 /* SyncStatus.swift in Sources */,
 				16F6BB381EDEA659009EA803 /* SearchResult+AddressBook.swift in Sources */,
+				F9ABE8AA1F02A45700D83214 /* TeamSyncRequestStrategy.swift in Sources */,
 				8795A3D71B2EDE030047A067 /* ZMAVSBridge.m in Sources */,
 				F9ABE84F1EFD568B00D83214 /* TeamDownloadRequestStrategy.swift in Sources */,
 				871667FA1BB2AE9C009C6EEA /* APSSignalingKeysStore.swift in Sources */,

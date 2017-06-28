@@ -133,7 +133,8 @@
              [ZMTransportRequest requestWithPath:@"/onboarding/v3" method:ZMMethodPOST payload:@{
                                                                                                                 @"cards" : @[],
                                                                                                                 @"self" : @[@"r6E0oILa7PsAlgL+tap6ZEYhOm2y3SVfKJe1eDTVKcw="]
-                                                                                                                      }]
+                                                                                                                      }],
+             [ZMTransportRequest requestGetFromPath:@"/teams?size=50"],
              ];
 
 }
@@ -201,7 +202,7 @@
     NSArray *expectedRequests = [[self commonRequestsOnLogin] arrayByAddingObjectsFromArray: @[
                                   [ZMTransportRequest requestGetFromPath:@"/self"],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.previewProfileAssetIdentifier]],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.completeProfileAssetIdentifier]]
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.completeProfileAssetIdentifier]],
                                   ]];
     
     // then
@@ -424,17 +425,16 @@
 - (void)testThatItUpdatesExistingTeamDuringSlowSync
 {
     // given
+    __block MockTeam *mockTeam;
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        mockTeam = [session insertTeamWithName:@"Foo" isBound:YES users:[NSSet setWithArray:@[self.selfUser, self.user1]]];
+    }];
+    WaitForEverythingToBeDone();
+    
     XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     ZMUser *localUser1 = [self userForMockUser:self.user1];
     ZMUser *localUser2 = [self userForMockUser:self.user2];
-
     ZMUser *localSelfUser = [self userForMockUser:self.selfUser];
-    
-    __block MockTeam *mockTeam;
-    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
-        mockTeam = [session insertTeamWithName:@"Foo" users:[NSSet setWithArray:@[self.selfUser, self.user1]]];
-    }];
-    WaitForEverythingToBeDone();
     
     XCTAssertNotNil(localUser1.team);
     XCTAssertNil(localUser2.team);
@@ -485,14 +485,13 @@
 - (void)testThatTeamIsRemovedDuringSlowSync
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-
     __block MockTeam *mockTeam;
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
-        mockTeam = [session insertTeamWithName:@"Foo" users:[NSSet setWithObject:self.selfUser]];
+        mockTeam = [session insertTeamWithName:@"Foo" isBound: YES users:[NSSet setWithObject:self.selfUser]];
     }];
     WaitForEverythingToBeDone();
     
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     XCTAssertNotNil([ZMUser selfUserInUserSession:self.userSession].team);
     
     // when

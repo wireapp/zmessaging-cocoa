@@ -34,7 +34,7 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
     public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus, syncStatus: SyncStatus) {
         self.syncStatus = syncStatus
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
-        configuration = [.allowsRequestsDuringEventProcessing, .allowsRequestsDuringSync]
+        configuration = [.allowsRequestsDuringEventProcessing]
         downstreamSync = ZMDownstreamObjectSync(
             transcoder: self,
             entityName: Team.entityName(),
@@ -44,26 +44,7 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
         )
     }
 
-    var expectedSyncPhase : SyncPhase {
-        return .fetchingTeams
-    }
-    
-    var isSyncing : Bool {
-        return syncStatus.currentSyncPhase == expectedSyncPhase
-    }
-    
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        if (isSyncing) {
-            guard let selfTeam = ZMUser.selfUser(in: managedObjectContext).team
-            else {
-                syncStatus.finishCurrentSyncPhase(phase: expectedSyncPhase)
-                return nil
-            }
-            if !selfTeam.needsToBeUpdatedFromBackend {
-                selfTeam.needsToBeUpdatedFromBackend = true
-                managedObjectContext.enqueueDelayedSave()
-            }
-        }
         return downstreamSync.nextRequest()
     }
 
@@ -89,26 +70,20 @@ extension TeamDownloadRequestStrategy: ZMDownstreamTranscoder {
         guard downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync,
             let team = object as? Team,
             let payload = response.payload?.asDictionary() as? [String: Any] else { return }
-
+        
+        guard payload["binding"] as? Int == 1 else {
+            managedObjectContext.delete(team)
+            return
+        }
+        
         team.needsToBeUpdatedFromBackend = false
         team.needsToRedownloadMembers = true
         team.update(with: payload)
-        
-        if isSyncing && ZMUser.selfUser(in: managedObjectContext).team == team {
-            if response.result == .success {
-                syncStatus.finishCurrentSyncPhase(phase: expectedSyncPhase)
-            } else if response.result == .permanentError {
-                syncStatus.failCurrentSyncPhase(phase: expectedSyncPhase)
-            }
-        }
     }
 
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
         guard downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync, let team = object as? Team else { return }
         
-        if isSyncing && response.result == .permanentError && ZMUser.selfUser(in: managedObjectContext).team == team {
-            syncStatus.failCurrentSyncPhase(phase: expectedSyncPhase)
-        }
         managedObjectContext.delete(team)
     }
 }
