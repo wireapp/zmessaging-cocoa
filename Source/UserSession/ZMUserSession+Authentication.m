@@ -55,18 +55,6 @@ static NSString *const HasHistoryKey = @"hasHistory";
     return self.accountStatus.hadHistoryBeforeLogin;
 }
 
-- (BOOL)requestPhoneVerificationCodeForLogin:(NSString *)phoneNumber
-{
-    if(![ZMPhoneNumberValidator validateValue:&phoneNumber error:nil]) {
-        return NO;
-    }
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForLogin:phoneNumber];
-        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-    }];
-    return YES;
-}
-
 - (void)deleteUserKeychainItems;
 {
     [self.transportSession.cookieStorage deleteUserKeychainItems];

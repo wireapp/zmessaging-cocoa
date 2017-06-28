@@ -44,8 +44,6 @@
 @property (nonatomic, readonly) ClientMessageTranscoder *clientMessageTranscoder;
 @property (nonatomic, readonly) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
 @property (nonatomic, readonly) ZMLastUpdateEventIDTranscoder *lastUpdateEventIDTranscoder;
-@property (nonatomic, readonly) ZMRegistrationTranscoder *registrationTranscoder;
-@property (nonatomic, readonly) ZMPhoneNumberVerificationTranscoder *phoneNumberVerificationTranscoder;
 @property (nonatomic, readonly) NSManagedObjectContext *moc;
 
 @end
