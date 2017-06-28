@@ -51,7 +51,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
     // MARK: - Team Create
     // The team.create update event is only sent to the creator of the team
 
-    func testThatItCreatesALocalTeamWhenReceivingTeamCreateUpdateEvent() {
+    func testThatItDoesNotCreateALocalTeamWhenReceivingTeamCreateUpdateEvent() {
         // given
         let teamId = UUID.create()
         let payload: [String: Any] = [
@@ -65,11 +65,10 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         processEvent(fromPayload: payload)
 
         // then
-        guard let team = Team.fetchOrCreate(with: teamId, create: false, in: uiMOC, created: nil) else { return XCTFail("No team created") }
-        XCTAssertTrue(team.needsToBeUpdatedFromBackend)
+        XCTAssertNil(Team.fetchOrCreate(with: teamId, create: false, in: uiMOC, created: nil))
     }
 
-    func testThatItSetsNeedsToBeUpdatedFromBackendForExistingTeamWhenReceivingTeamCreateUpdateEvent() {
+    func testThatItDoesNotSetNeedsToBeUpdatedFromBackendForExistingTeamWhenReceivingTeamCreateUpdateEvent() {
         // given
         let teamId = UUID.create()
 
@@ -90,7 +89,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
 
         // then
         guard let team = Team.fetchOrCreate(with: teamId, create: false, in: uiMOC, created: nil) else { return XCTFail("No team created") }
-        XCTAssertTrue(team.needsToBeUpdatedFromBackend)
+        XCTAssertFalse(team.needsToBeUpdatedFromBackend)
     }
 
     // MARK: - Team Delete 
@@ -306,10 +305,16 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         }
     }
 
-    func testThatItCreatesATeamWhenReceivingAMemberJoinEventForTheSelfUserWithoutExistingTeam() {
+    func testThatItAddsANewTeamMemberAndUserToAnExistingUserWhenReceivingATeamMemberJoinUpdateEventExistingTeam() {
         // given
         let teamId = UUID.create()
         let userId = UUID.create()
+
+        syncMOC.performGroupedBlockAndWait {
+            let team = Team.insertNewObject(in: self.syncMOC)
+            team.remoteIdentifier = teamId
+            XCTAssert(self.syncMOC.saveOrRollback())
+        }
 
         let payload: [String: Any] = [
             "type": "team.member-join",
@@ -328,13 +333,35 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             guard let member = user.membership else { return XCTFail("No member") }
 
             XCTAssertTrue(user.needsToBeUpdatedFromBackend)
-            XCTAssertTrue(team.needsToBeUpdatedFromBackend)
-            XCTAssertFalse(team.needsToRedownloadMembers)
+            XCTAssertFalse(team.needsToBeUpdatedFromBackend)
+            XCTAssertTrue(team.needsToRedownloadMembers)
             XCTAssertEqual(member.team, team)
         }
     }
 
-    func testThatItFlagsATeamToBeRefetchedWhenItReceivesAMemberJoinForTheSelfUserEvenIfThereWasALocalTeam() {
+    func testThatItDoesNotCreateALocalTeamWhenReceivingAMemberJoinEventForTheSelfUserWithoutExistingTeam() {
+        // given
+        let teamId = UUID.create()
+        let userId = UUID.create()
+
+        let payload: [String: Any] = [
+            "type": "team.member-join",
+            "team": teamId.transportString(),
+            "time": Date().transportString(),
+            "data": ["user" : userId.transportString()]
+        ]
+
+        // when
+        processEvent(fromPayload: payload)
+
+        // then
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertNil(ZMUser.fetch(withRemoteIdentifier: userId, in: self.syncMOC))
+            XCTAssertNil(Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC))
+        }
+    }
+
+    func testThatItFlagsTeamMembersToBeRefetchedWhenItReceivesAMemberJoinForTheSelfUserEvenIfThereWasALocalTeam() {
         // given
         let teamId = UUID.create()
         var userId: UUID!
@@ -360,8 +387,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         // then
         syncMOC.performGroupedBlockAndWait {
             guard let team = Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC) else { return XCTFail("No team") }
-            XCTAssertTrue(team.needsToBeUpdatedFromBackend)
-            XCTAssertFalse(team.needsToRedownloadMembers)
+            XCTAssert(team.needsToRedownloadMembers)
         }
     }
 
