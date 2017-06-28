@@ -30,27 +30,6 @@
 /// Whether the user completed the registration on this device
 @property (nonatomic, readonly) BOOL registeredOnThisDevice;
 
-/// Register a user
-- (void)registerSelfUser:(ZMCompleteRegistrationUser *)registrationUser;
-
-/// Request a phone verification code for registration or self profile update
-- (void)requestPhoneVerificationCodeForRegistration:(NSString *)phoneNumber;
-
-/// Verify phone number with code for registration
-- (void)verifyPhoneNumberForRegistration:(NSString *)phoneNumber verificationCode:(NSString *)verificationCode;
-
-/// Resend verification email for currently registered user. To be used only during email-based registration
-- (void)resendRegistrationVerificationEmail;
-
-/// Stop attempting to log in automatically with a timer while waiting for the email validation
-- (void)cancelWaitForEmailVerification;
-
-/// Stop attempting to validate the phone number. Does nothing
-- (void)cancelWaitForPhoneVerification;
-
-- (id<ZMRegistrationObserverToken>)addRegistrationObserver:(id<ZMRegistrationObserver>)observer ZM_MUST_USE_RETURN;
-- (void)removeRegistrationObserverForToken:(id<ZMRegistrationObserverToken>)token;
-
 @end
 
 
