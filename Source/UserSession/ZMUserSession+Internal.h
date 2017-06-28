@@ -63,8 +63,8 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic) ZMCallKitDelegate *callKitDelegate;
 @property (nonatomic) ZMCallStateObserver *callStateObserver;
 @property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
-@property (nonatomic) id<NSObject> messageReplyObserverToken;
-@property (nonatomic) id<NSObject> likeMesssageObserverToken;
+@property (nonatomic) ManagedObjectContextChangeObserver *messageReplyObserver;
+@property (nonatomic) ManagedObjectContextChangeObserver *likeMesssageObserver;
 
 - (void)notifyThirdPartyServices;
 - (void)start;
@@ -155,9 +155,5 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @interface ZMUserSession (ZMBackgroundFetch)
 
 - (void)enableBackgroundFetch;
-
-@end
-
-@interface ZMUserSession (ReplyToMessage) <ZMMessageObserver>
 
 @end
