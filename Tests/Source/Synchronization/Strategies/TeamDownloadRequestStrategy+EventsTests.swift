@@ -225,8 +225,6 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         return Team.fetchOrCreate(with: teamId, create: false, in: uiMOC, created: nil)
     }
 
-    // FIXME: Is this the desired behaviour or should we just create the team?
-    // In theory, this should never happen as we should receive a team.create or team.member-join event first.
     func testThatItDoesNotCreateATeamIfItDoesNotAlreadyExistWhenReceivingATeamUpdateUpdateEvent() {
         // given
         let dataPayload = ["name": "Wire GmbH"]
@@ -361,7 +359,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         }
     }
 
-    func testThatItFlagsTeamMembersToBeRefetchedWhenItReceivesAMemberJoinForTheSelfUserEvenIfThereWasALocalTeam() {
+    func testThatItFlagsAddedTeamMembersToBeRefetchedWhenItReceivesAMemberJoinForTheSelfUserEvenIfThereWasALocalTeam() {
         // given
         let teamId = UUID.create()
         var userId: UUID!
@@ -387,7 +385,9 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         // then
         syncMOC.performGroupedBlockAndWait {
             guard let team = Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC) else { return XCTFail("No team") }
-            XCTAssert(team.needsToRedownloadMembers)
+            XCTAssertFalse(team.needsToRedownloadMembers)
+            guard let member = Member.fetch(withRemoteIdentifier: userId, in: self.syncMOC) else { return XCTFail("No member") }
+            XCTAssert(member.needsToBeUpdatedFromBackend)
         }
     }
 
@@ -609,8 +609,6 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         }
     }
 
-    // FIXME: Is this the desired behaviour or should we just create the team?
-    // In theory, this should never happen as we should receive a team.create or team.member-join event first.
     func testThatItDoesNotCreateANewTeamConversationWhenReceivingATeamConversationCreateEventWithoutLocalTeam() {
         // given
         let conversationId = UUID.create()
