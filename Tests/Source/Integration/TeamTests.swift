@@ -210,30 +210,13 @@ extension TeamTests {
 
 extension TeamTests {
     
-    func testThatSelfUserCanBeAddedRemotely(){
-        // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
-        let mockTeam = remotelyInsertTeam(members: [self.user1])
-        XCTAssertFalse(ZMUser.selfUser(in: uiMOC).hasTeam)
-
-        // when
-        mockTransportSession.performRemoteChanges { (session) in
-            session.insertMember(with: self.selfUser, in: mockTeam)
-        }
-        XCTAssert(waitForEverythingToBeDone())
-        
-        // then
-        XCTAssert(ZMUser.selfUser(in: uiMOC).hasTeam)
-    }
-    
     func testThatOtherUserCanBeAddedRemotely(){
         // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
         let mockTeam = remotelyInsertTeam(members: [self.selfUser])
+        XCTAssert(logInAndWaitForSyncToBeComplete())
         
         let user = self.user(for: user1)!
         XCTAssertFalse(user.hasTeam)
-
         
         // when
         mockTransportSession.performRemoteChanges { (session) in
@@ -243,36 +226,6 @@ extension TeamTests {
         
         // then
         XCTAssert(user.hasTeam)
-
-    }
-    
-    func testThatItNotifiesAboutSelfUserAddedRemotely(){
-        // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
-        let mockTeam = remotelyInsertTeam(members: [self.user1])
-        
-        let selfUserObserver = UserChangeObserver(user: ZMUser.selfUser(in: uiMOC))!
-        let teamObserver = TestTeamObserver()
-        
-        // when
-        mockTransportSession.performRemoteChanges { (session) in
-            session.insertMember(with: self.selfUser, in: mockTeam)
-        }
-        XCTAssert(waitForEverythingToBeDone())
-        
-        // then
-        XCTAssertEqual(selfUserObserver.notifications.count, 1)
-        guard let userChange = selfUserObserver.notifications.lastObject as? UserChangeInfo else {
-            return XCTFail("no notification received")
-        }
-        XCTAssertTrue(userChange.teamsChanged)
-        
-        XCTAssertEqual(teamObserver.notifications.count, 2)
-        guard let nameChange = teamObserver.notifications.first, let memberChange = teamObserver.notifications.last else {
-            return XCTFail("no notification received")
-        }
-        XCTAssertTrue(nameChange.nameChanged)
-        XCTAssertTrue(memberChange.membersChanged)
     }
     
     func testThatItNotifiesAboutOtherUserAddedRemotely(){
