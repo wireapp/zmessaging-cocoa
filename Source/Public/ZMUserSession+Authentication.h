@@ -31,14 +31,13 @@
 
 @interface ZMUserSession (Authentication)
 
+- (void)setEmailCredentials:(ZMEmailCredentials *)emailCredentials;
+
 - (id<ZMAuthenticationObserverToken>)addAuthenticationObserver:(id<ZMAuthenticationObserver>)observer ZM_MUST_USE_RETURN;
 - (void)removeAuthenticationObserverForToken:(id<ZMAuthenticationObserverToken>)observerToken;
 
 /// Check whether the user is logged in
 - (void)checkIfLoggedInWithCallback:(void(^)(BOOL loggedIn))callback;
-
-/// Requires a phone verification code for login. Returns NO if the phone number was invalid
-- (BOOL)requestPhoneVerificationCodeForLogin:(NSString *)phoneNumber;
 
 /// This will delete user data stored by WireSyncEngine in the keychain.
 - (void)deleteUserKeychainItems;

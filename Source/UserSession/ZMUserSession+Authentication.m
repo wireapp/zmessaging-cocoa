@@ -33,6 +33,11 @@ static NSString *const HasHistoryKey = @"hasHistory";
 
 @implementation ZMUserSession (Authentication)
 
+- (void)setEmailCredentials:(ZMEmailCredentials *)emailCredentials
+{
+    self.clientRegistrationStatus.emailCredentials = emailCredentials;
+}
+
 - (void)checkIfLoggedInWithCallback:(void (^)(BOOL))callback
 {
     if (callback) {

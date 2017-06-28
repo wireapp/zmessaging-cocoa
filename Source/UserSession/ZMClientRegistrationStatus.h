@@ -25,9 +25,6 @@
 @class ZMPersistentCookieStorage;
 @class ZMCookie;
 
-@protocol ZMCredentialProvider;
-
-
 typedef NS_ENUM(NSUInteger, ZMClientRegistrationPhase) {
     /// The client is not registered - we send out a request to register the client
     ZMClientRegistrationPhaseUnregistered = 0,
@@ -58,8 +55,6 @@ extern NSString *const ZMPersistedClientIdKey;
 @interface ZMClientRegistrationStatus : NSObject <ClientRegistrationDelegate>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
-                     loginCredentialProvider:(id<ZMCredentialProvider>)loginCredentialProvider
-                    updateCredentialProvider:(id<ZMCredentialProvider>)updateCredentialProvider
                                       cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
                   registrationStatusDelegate:(id<ZMClientRegistrationStatusDelegate>) registrationStatusDelegate;
 
@@ -76,7 +71,8 @@ extern NSString *const ZMPersistedClientIdKey;
 
 - (void)tearDown;
 
+@property (nonatomic, readonly) ZMPersistentCookieStorage *cookieStorage;
 @property (nonatomic, readonly) ZMClientRegistrationPhase currentPhase;
-@property (nonatomic, readonly) ZMEmailCredentials *emailCredentials;
+@property (nonatomic) ZMEmailCredentials *emailCredentials;
 
 @end
