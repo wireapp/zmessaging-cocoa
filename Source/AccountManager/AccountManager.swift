@@ -95,6 +95,15 @@ public class AccountManager : NSObject {
         return FileManager.default.fileExists(atPath: storeURL.path)
     }
     
+    @objc public var currentUser: ZMUser? {
+        guard let userSession = userSession else { return nil }
+        return ZMUser.selfUser(in: userSession.managedObjectContext)
+    }
+    
+    @objc public var isUserSessionActive: Bool {
+        return userSession != nil
+    }
+    
 }
 
 extension AccountManager: ZMAuthenticationObserver {
