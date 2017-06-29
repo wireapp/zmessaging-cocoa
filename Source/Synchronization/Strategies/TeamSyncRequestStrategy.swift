@@ -133,7 +133,8 @@ extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
         let teamsPayload = payload?["teams"] as? [[String: Any]]
         
         let teams = teamsPayload?.flatMap { (payload) -> Team? in
-            guard payload["binding"] as? Int == 1, let id = (payload["id"] as? String).flatMap(UUID.init)
+            guard let isBound = payload["binding"] as? Bool, isBound == true,
+                  let id = (payload["id"] as? String).flatMap(UUID.init)
             else { return nil }
             
             let team = Team.fetchOrCreate(with: id, create: true, in: managedObjectContext, created: nil)

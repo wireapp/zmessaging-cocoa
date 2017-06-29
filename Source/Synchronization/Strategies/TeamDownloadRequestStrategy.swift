@@ -71,7 +71,7 @@ extension TeamDownloadRequestStrategy: ZMDownstreamTranscoder {
             let team = object as? Team,
             let payload = response.payload?.asDictionary() as? [String: Any] else { return }
         
-        guard payload["binding"] as? Int == 1 else {
+        guard let isBound = payload["binding"] as? Bool, isBound == true else {
             managedObjectContext.delete(team)
             return
         }
