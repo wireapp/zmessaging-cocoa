@@ -78,7 +78,7 @@ public class AccountManager : NSObject {
             delegate?.userSessionCreated(session: userSession)
         } else {
             do {
-                let unauthenticatedSession = try UnauthenticatedSession(authenticationStatus: authenticationStatus, transportSession: transportSession)
+                let unauthenticatedSession = try UnauthenticatedSession(authenticationStatus: authenticationStatus, transportSession: transportSession, delegate: self)
                 delegate?.unauthenticatedSessionCreated(session: unauthenticatedSession)
             } catch let error {
                 fatal("Can't create unauthenticated session: \(error)")
@@ -106,12 +106,18 @@ public class AccountManager : NSObject {
     
 }
 
+extension AccountManager: UnauthenticatedSessionDelegate {
+    func session(session: UnauthenticatedSession, updatedCredentials: ZMCredentials) {
+        if let userSession = userSession, let emailCredentials = updatedCredentials as? ZMEmailCredentials {
+            userSession.setEmailCredentials(emailCredentials)
+        }
+    }
+}
+
 extension AccountManager: ZMAuthenticationObserver {
     
     @objc public func authenticationDidSucceed() {
-        guard self.userSession == nil else {
-            return
-        }
+        guard self.userSession == nil else { return }
         let userSession = ZMUserSession(mediaManager: mediaManager,
                                         analytics: analytics,
                                         transportSession: transportSession,
@@ -123,6 +129,4 @@ extension AccountManager: ZMAuthenticationObserver {
         
         delegate?.userSessionCreated(session: userSession)
     }
-
-    
 }

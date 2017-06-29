@@ -18,6 +18,10 @@
 
 import Foundation
 
+protocol UnauthenticatedSessionDelegate: class {
+    func session(session: UnauthenticatedSession, updatedCredentials: ZMCredentials)
+}
+
 @objc
 public class UnauthenticatedSession : NSObject {
     
@@ -26,8 +30,9 @@ public class UnauthenticatedSession : NSObject {
     let loginRequestStrategy: ZMLoginTranscoder
     let loginCodeRequestStrategy: ZMLoginCodeRequestTranscoder
     let operationLoop: UnauthenticatedOperationLoop
+    weak var delegate: UnauthenticatedSessionDelegate?
     
-    convenience init(authenticationStatus: ZMAuthenticationStatus, transportSession: ZMTransportSession) throws {
+    convenience init(authenticationStatus: ZMAuthenticationStatus, transportSession: ZMTransportSession, delegate: UnauthenticatedSessionDelegate? = nil) throws {
         let model = NSManagedObjectModel()
         let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
         try coordinator.addPersistentStore(ofType: NSInMemoryStoreType, configurationName: nil, at: nil, options: nil)
@@ -35,10 +40,11 @@ public class UnauthenticatedSession : NSObject {
         moc.createDispatchGroups()
         moc.persistentStoreCoordinator = coordinator
         
-        self.init(moc: moc, authenticationStatus: authenticationStatus, transportSession: transportSession)
+        self.init(moc: moc, authenticationStatus: authenticationStatus, transportSession: transportSession, delegate: delegate)
     }
     
-    init(moc: NSManagedObjectContext, authenticationStatus: ZMAuthenticationStatus, transportSession: ZMTransportSession) {
+    init(moc: NSManagedObjectContext, authenticationStatus: ZMAuthenticationStatus, transportSession: ZMTransportSession, delegate: UnauthenticatedSessionDelegate?) {
+        self.delegate = delegate
         self.moc = moc
         self.authenticationStatus = authenticationStatus
         self.loginRequestStrategy = ZMLoginTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)

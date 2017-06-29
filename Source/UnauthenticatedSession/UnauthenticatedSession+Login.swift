@@ -37,16 +37,16 @@ extension UnauthenticatedSession {
     /// Attempt to log in with the given credentials
     @objc(loginWithCredentials:)
     public func login(with credentials: ZMCredentials) {
-        moc.performGroupedBlock {
-            if self.isLoggedIn {
-                ZMUserSessionAuthenticationNotification.notifyAuthenticationDidSucceed()
-            } else if credentials.isInvalid {
-                ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
-            } else {
-                self.authenticationStatus.prepareForLogin(with: credentials)
-            }
-            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        if self.isLoggedIn {
+            delegate?.session(session: self, updatedCredentials: credentials)
+        } else if credentials.isInvalid {
+            ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
+        } else {
+            self.authenticationStatus.prepareForLogin(with: credentials)
         }
+        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+    }
+    
     }
     
 }
