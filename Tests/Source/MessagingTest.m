@@ -471,33 +471,6 @@
 @end
 
 
-@implementation MessagingTest (AVS)
-
-- (void)simulateMediaFlowEstablishedOnConversation:(ZMConversation *)uiConversation;
-{
-    [self.mockTransportSession.mockFlowManager.delegate didEstablishMediaInConversation:uiConversation.remoteIdentifier.transportString];
-}
-
-- (void)simulateParticipantsChanged:(NSArray *)users onConversation:(ZMConversation *)uiConversation;
-{
-    NSArray *userIDString = [users mapWithBlock:^id(MockUser *user) {
-        return user.identifier;
-    }];
-    [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.mockTransportSession.mockFlowManager.delegate conferenceParticipantsDidChange:userIDString inConversation:uiConversation.remoteIdentifier.transportString];
-    }];
-}
-
-
-- (void)simulateMediaFlowReleasedOnConversation:(ZMConversation *)uiConversation;
-{
-    [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.mockTransportSession.mockFlowManager.delegate errorHandler:0 conversationId:uiConversation.remoteIdentifier.transportString context:nil];
-    }];
-}
-
-@end
-
 
 @implementation MessagingTest (UserTesting)
 
