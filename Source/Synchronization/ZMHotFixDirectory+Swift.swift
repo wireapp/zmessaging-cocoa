@@ -144,10 +144,10 @@ extension ZMHotFixDirectory {
                 
                 let tail = clients.dropFirst()
                 // Merge clients having the same remote identifier and same user
-                let _ = tail.reduce(firstClient) {
-                    $0.merge(with: $1)
-                    context.delete($1)
-                    return $0
+                
+                tail.forEach {
+                    firstClient.merge(with: $0)
+                    context.delete($0)
                 }
             }
         }
