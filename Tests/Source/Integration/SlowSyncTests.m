@@ -128,13 +128,13 @@
              [ZMTransportRequest requestGetFromPath:@"/connections?size=90"],
              [ZMTransportRequest requestGetFromPath:@"/conversations/ids?size=100"],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", self.selfConversation.identifier,self.selfToUser1Conversation.identifier,self.selfToUser2Conversation.identifier,self.groupConversation.identifier]],
-             // [ZMTransportRequest requestGetFromPath:@"/teams?size=50"], See TeamSyncRequestStrategy.skipTeamSync
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@", self.user1.identifier, self.user2.identifier]],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", self.user3.identifier]],
              [ZMTransportRequest requestWithPath:@"/onboarding/v3" method:ZMMethodPOST payload:@{
                                                                                                                 @"cards" : @[],
                                                                                                                 @"self" : @[@"r6E0oILa7PsAlgL+tap6ZEYhOm2y3SVfKJe1eDTVKcw="]
-                                                                                                                      }]
+                                                                                                                      }],
+             [ZMTransportRequest requestGetFromPath:@"/teams?size=50"],
              ];
 
 }
@@ -202,7 +202,7 @@
     NSArray *expectedRequests = [[self commonRequestsOnLogin] arrayByAddingObjectsFromArray: @[
                                   [ZMTransportRequest requestGetFromPath:@"/self"],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.previewProfileAssetIdentifier]],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.completeProfileAssetIdentifier]]
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.completeProfileAssetIdentifier]],
                                   ]];
     
     // then
@@ -327,6 +327,7 @@
     XCTAssertTrue(hasNotificationsRequest);
 }
 
+
 - (void)testThatItDoesASlowSyncAfterTheWebSocketWentDownAndNotificationsReturnsAnError
 {
     // given
@@ -346,7 +347,7 @@
     __block BOOL hasConversationsRequest = NO;
     __block BOOL hasConnectionsRequest = NO;
     __block BOOL hasUserRequest = NO;
-
+    
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         if([request.path hasPrefix:@"/notifications"]) {
             if (!(hasConnectionsRequest && hasConversationsRequest && hasUserRequest)) {
@@ -365,7 +366,6 @@
         }
         return nil;
     };
-
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -420,6 +420,110 @@
     
     // then
     XCTAssertNotNil([[ZMUser selfUserInUserSession:self.userSession] emailAddress]);
+}
+
+- (void)testThatItUpdatesExistingTeamDuringSlowSync
+{
+    // given
+    __block MockTeam *mockTeam;
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        mockTeam = [session insertTeamWithName:@"Foo" isBound:YES users:[NSSet setWithArray:@[self.selfUser, self.user1]]];
+    }];
+    WaitForEverythingToBeDone();
+    
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    ZMUser *localUser1 = [self userForMockUser:self.user1];
+    ZMUser *localUser2 = [self userForMockUser:self.user2];
+    ZMUser *localSelfUser = [self userForMockUser:self.selfUser];
+    
+    XCTAssertNotNil(localUser1.team);
+    XCTAssertNil(localUser2.team);
+    XCTAssertNotNil(localSelfUser.team);
+
+    // when
+    // block requests to /notifications to enforce slowSync
+    __block BOOL hasNotificationsRequest = NO;
+    __block BOOL hasTeamRequest = NO;
+    __block BOOL hasMemberRequest = NO;
+
+    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
+        if([request.path hasPrefix:@"/notifications"]) {
+            if (!(hasTeamRequest && hasMemberRequest)){
+                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
+            }
+            hasNotificationsRequest = YES;
+        }
+        if ([request.path hasPrefix:@"/teams"]) {
+            hasTeamRequest = YES;
+        }
+        if ([request.path hasPrefix:@"/teams"] && [request.path containsString:@"members"]) {
+            hasMemberRequest = YES;
+        }
+        return nil;
+    };
+    
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session simulatePushChannelClosed];
+        [session removeMemberWithUser:self.user1 fromTeam:mockTeam];
+        [session insertMemberWithUser:self.user2 inTeam:mockTeam];
+
+        [session saveAndCreatePushChannelEvents]; // clears the team.member-leave event from the push channel events
+        [session simulatePushChannelOpened];
+    }];
+    WaitForEverythingToBeDone();
+    
+    // then
+    XCTAssertNil(localUser1.team);
+    XCTAssertNotNil(localUser2.team);
+    XCTAssertNotNil(localSelfUser.team);
+    XCTAssertTrue(hasNotificationsRequest);
+    XCTAssertTrue(hasTeamRequest);
+    XCTAssertTrue(hasMemberRequest);
+
+}
+
+- (void)testThatTeamIsRemovedDuringSlowSync
+{
+    // given
+    __block MockTeam *mockTeam;
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
+        mockTeam = [session insertTeamWithName:@"Foo" isBound: YES users:[NSSet setWithObject:self.selfUser]];
+    }];
+    WaitForEverythingToBeDone();
+    
+    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertNotNil([ZMUser selfUserInUserSession:self.userSession].team);
+    
+    // when
+    // block requests to /notifications to enforce slowSync
+    __block BOOL hasNotificationsRequest = NO;
+    __block BOOL hasTeamRequest = NO;
+
+    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
+        if([request.path hasPrefix:@"/notifications"]) {
+            if (!hasTeamRequest){
+                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
+            }
+            hasNotificationsRequest = YES;
+        }
+        if ([request.path hasPrefix:@"/teams"]) {
+            hasTeamRequest = YES;
+        }
+        return nil;
+    };
+    
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session simulatePushChannelClosed];
+        [session removeMemberWithUser:self.selfUser fromTeam:mockTeam];
+        [session saveAndCreatePushChannelEvents]; // clears the team.member-leave event from the push channel events
+        [session simulatePushChannelOpened];
+    }];
+    WaitForEverythingToBeDone();
+    
+    // then
+    XCTAssertNil([ZMUser selfUserInUserSession:self.userSession].team);
+    XCTAssertTrue(hasNotificationsRequest);
+    XCTAssertTrue(hasTeamRequest);
 }
 
 

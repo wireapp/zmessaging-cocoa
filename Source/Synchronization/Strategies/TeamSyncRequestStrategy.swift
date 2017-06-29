@@ -18,13 +18,13 @@
 
 
 public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource, ZMRequestGeneratorSource {
-
+    
     public struct SyncConfiguration {
         let basePath: String
         let pageSize: UInt
         let startKey: String
         let remoteIdSyncSize: UInt
-
+        
         static let `default` = SyncConfiguration(
             basePath: TeamDownloadRequestFactory.teamPath,
             pageSize: 50,
@@ -32,33 +32,31 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
             remoteIdSyncSize: 1
         )
     }
-
+    
     fileprivate let syncConfiguration: SyncConfiguration
-
+    
     fileprivate weak var syncStatus: SyncStatus?
-
+    
     /// The sync used to fetch the teams and their metadata.
     /// The team ids will be stored in the memberSync to download.
     fileprivate var teamListSync: ZMSimpleListRequestPaginator!
-
+    
     /// The sync used to fetch a teams members.
     fileprivate var memberSync: ZMRemoteIdentifierObjectSync!
-    fileprivate var remotelyDeletedIds: Set<UUID>?
-
-    var skipTeamSync = true
+    fileprivate var remotelyDeletedIds = Set<UUID>()
 
     public init(
         withManagedObjectContext managedObjectContext: NSManagedObjectContext,
         applicationStatus: ApplicationStatus,
         syncStatus: SyncStatus,
         syncConfiguration: SyncConfiguration) {
-
+        
         self.syncConfiguration = syncConfiguration
         self.syncStatus = syncStatus
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         configuration = [.allowsRequestsDuringSync, .allowsRequestsDuringNotificationStreamFetch]
         memberSync = ZMRemoteIdentifierObjectSync(transcoder: self, managedObjectContext: managedObjectContext)
-
+        
         teamListSync = ZMSimpleListRequestPaginator(
             basePath: syncConfiguration.basePath,
             startKey: syncConfiguration.startKey,
@@ -68,18 +66,12 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
             transcoder: self
         )
     }
-
+    
     public convenience init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus, syncStatus: SyncStatus) {
         self.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus, syncStatus: syncStatus, syncConfiguration: .default)
     }
-
+    
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        // Temporaily disable the team slow-sync until th enew endpoint is defined
-        if skipTeamSync && isSyncing {
-            syncStatus?.finishCurrentSyncPhase(phase: expectedSyncPhase)
-            return nil
-        }
-
         if isSyncing && teamListSync.status != .inProgress && memberSync.isDone {
             remotelyDeletedIds = fetchExistingTeamIds()
             teamListSync.resetFetching()
@@ -87,27 +79,27 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
         }
         return requestGenerators.nextRequest()
     }
-
+    
     public var contextChangeTrackers: [ZMContextChangeTracker] {
         return []
     }
-
+    
     public var requestGenerators: [ZMRequestGenerator] {
         return [teamListSync, memberSync]
     }
-
+    
     fileprivate func finishSyncIfCompleted() {
         guard isSyncing, memberSync.isDone, !teamListSync.hasMoreToFetch else { return }
         syncStatus?.finishCurrentSyncPhase(phase: expectedSyncPhase)
-
+        
         // Delete local teams not on the remote anymore
-        guard let deletedTeamIds = remotelyDeletedIds else { return }
-        let orderedIds = NSOrderedSet(set: deletedTeamIds)
+        guard remotelyDeletedIds.count > 0 else { return }
+        let orderedIds = NSOrderedSet(set: remotelyDeletedIds)
         let removedTeams = Team.fetchObjects(withRemoteIdentifiers: orderedIds, in: managedObjectContext)
         removedTeams?.forEach { managedObjectContext.delete($0 as! NSManagedObject) }
-        remotelyDeletedIds = nil
+        remotelyDeletedIds = Set()
     }
-
+    
     fileprivate var expectedSyncPhase : SyncPhase {
         return .fetchingTeams;
     }
@@ -115,7 +107,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
     fileprivate var isSyncing: Bool {
         return syncStatus?.currentSyncPhase == expectedSyncPhase
     }
-
+    
     private func fetchExistingTeamIds() -> Set<UUID> {
         // It can happen that the user is offline for longer than 4 weeks,
         // in this case said user will miss events and we will perform a slow sync.
@@ -135,70 +127,75 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
 
 
 extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
-
+    
     public func nextUUID(from response: ZMTransportResponse!, forListPaginator paginator: ZMSimpleListRequestPaginator!) -> UUID! {
         let payload = response.payload?.asDictionary() as? [String: Any]
         let teamsPayload = payload?["teams"] as? [[String: Any]]
-
+        
         let teams = teamsPayload?.flatMap { (payload) -> Team? in
-            guard let id = (payload["id"] as? String).flatMap(UUID.init) else { return nil }
+            guard payload["binding"] as? Int == 1, let id = (payload["id"] as? String).flatMap(UUID.init)
+            else { return nil }
+            
             let team = Team.fetchOrCreate(with: id, create: true, in: managedObjectContext, created: nil)
             team?.update(with: payload)
             return team
         }
-
+        
         let remoteIds = Set(teams?.map { $0.remoteIdentifier! } ?? [])
-        remotelyDeletedIds?.subtract(Set(remoteIds))
+        remotelyDeletedIds.subtract(Set(remoteIds))
         memberSync.addRemoteIdentifiersThatNeedDownload(remoteIds)
-
+        
         if response.result == .permanentError && isSyncing {
             syncStatus?.failCurrentSyncPhase(phase: expectedSyncPhase)
         }
-
+        
         finishSyncIfCompleted()
         return teams?.last?.remoteIdentifier
     }
-
+    
     public func shouldParseError(for response: ZMTransportResponse!) -> Bool {
         // Otherwise `nextUUID(from:forListPaginator:)` won't be called
         // and we won't fail the current sync phase.
         return true
     }
-
+    
 }
 
 
 // MARK: - ZMRemoteIdentifierObjectTranscoder
-
-
 extension TeamSyncRequestStrategy: ZMRemoteIdentifierObjectTranscoder {
-
+    
     public func maximumRemoteIdentifiersPerRequest(for sync: ZMRemoteIdentifierObjectSync!) -> UInt {
         return syncConfiguration.remoteIdSyncSize
     }
-
+    
     public func request(for sync: ZMRemoteIdentifierObjectSync!, remoteIdentifiers identifiers: Set<UUID>!) -> ZMTransportRequest! {
         return identifiers.first.map(TeamDownloadRequestFactory.getMembersRequest)
     }
-
+    
     public func didReceive(_ response: ZMTransportResponse!, remoteIdentifierObjectSync sync: ZMRemoteIdentifierObjectSync!, forRemoteIdentifiers remoteIdentifiers: Set<UUID>!) {
-
+        
         if let identifier = remoteIdentifiers.first {
             let payload = response.payload?.asDictionary() as? [String: Any]
             let membersPayload = payload?["members"] as? [[String: Any]]
-
-            membersPayload?.forEach { payload in
-                if let team = Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext, created: nil) {
+            
+            if let team = Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext, created: nil) {
+                membersPayload?.forEach { payload in
                     Member.createOrUpdate(with: payload, in: team, context: managedObjectContext)
+                }
+                
+                if response.result == .permanentError {
+                    team.needsToBeUpdatedFromBackend = true
                 }
             }
         }
-
+        
         if response.result == .permanentError && isSyncing {
             syncStatus?.failCurrentSyncPhase(phase: expectedSyncPhase)
         }
-
+        
         finishSyncIfCompleted()
     }
-
+    
 }
+

@@ -46,10 +46,10 @@ class TestTeamObserver : NSObject, TeamObserver {
 
 class TeamTests : IntegrationTestBase {
 
-    func remotelyInsertTeam(members: [MockUser]) -> MockTeam {
+    func remotelyInsertTeam(members: [MockUser], isBound: Bool = true) -> MockTeam {
         var mockTeam : MockTeam!
         mockTransportSession.performRemoteChanges { (session) in
-            mockTeam = session.insertTeam(withName: "Super-Team", users: Set(members))
+            mockTeam = session.insertTeam(withName: "Super-Team", isBound: isBound, users: Set(members))
         }
         XCTAssert(waitForEverythingToBeDone())
         return mockTeam
@@ -61,29 +61,13 @@ class TeamTests : IntegrationTestBase {
 
 extension TeamTests {
     
-
-    func testThatItNotifiesAboutNewTeamInsertedRemotely(){
-        // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
-        let selfUserObserver = UserChangeObserver(user: ZMUser.selfUser(in: uiMOC))!
-
-        // when
-        _ = remotelyInsertTeam(members: [self.selfUser, self.user1])
-        
-        // then
-        XCTAssert(ZMUser.selfUser(in: uiMOC).hasTeam)
-
-        XCTAssertEqual(selfUserObserver.notifications.count, 1)
-        guard let note = selfUserObserver.notifications.lastObject as? UserChangeInfo else {
-            return XCTFail("no notification received")
-        }
-        XCTAssertTrue(note.teamsChanged)
-    }
-    
     func testThatItNotifiesAboutChangedTeamName(){
         // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
         let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
+
+        XCTAssert(logInAndWaitForSyncToBeComplete())
+        guard let localSelfUser = user(for: selfUser) else { return XCTFail() }
+        XCTAssertTrue(localSelfUser.hasTeam)
         
         let teamObserver = TestTeamObserver()
         
@@ -108,12 +92,15 @@ extension TeamTests {
     
     func testThatOtherUserCanBeRemovedRemotely(){
         // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
         let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
+        XCTAssert(logInAndWaitForSyncToBeComplete())
+
         let user = self.user(for: user1)!
+        let localSelfUser = self.user(for: selfUser)!
         XCTAssert(user.hasTeam)
-        
+        XCTAssert(localSelfUser.hasTeam)
+
         // when
         mockTransportSession.performRemoteChanges { (session) in
             session.removeMember(with: self.user1, from: mockTeam)
@@ -126,8 +113,9 @@ extension TeamTests {
     
     func testThatSelfUserCanBeRemovedRemotely(){
         // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
         let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
+
+        XCTAssert(logInAndWaitForSyncToBeComplete())
 
         XCTAssert(ZMUser.selfUser(in: uiMOC).hasTeam)
         
@@ -143,8 +131,9 @@ extension TeamTests {
     
     func testThatItNotifiesAboutSelfUserRemovedRemotely(){
         // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
         let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
+
+        XCTAssert(logInAndWaitForSyncToBeComplete())
         let selfUserObserver = UserChangeObserver(user: ZMUser.selfUser(in: uiMOC))!
 
         // when
@@ -163,8 +152,9 @@ extension TeamTests {
     
     func testThatItNotifiesAboutOtherUserRemovedRemotely(){
         // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
         let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
+
+        XCTAssert(logInAndWaitForSyncToBeComplete())
         let teamObserver = TestTeamObserver()
         
         // when
@@ -181,29 +171,30 @@ extension TeamTests {
         XCTAssertTrue(change.membersChanged)
     }
     
-    func disabled_testThatItDeletesAllConversationsWhenTheSelfMemberIsRemoved() {
+    func testThatItDeletesAllTeamConversationsWhenTheSelfMemberIsRemoved() {
         // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
         let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
+        XCTAssert(logInAndWaitForSyncToBeComplete())
+        let list = ZMConversationList.conversations(inUserSession: self.userSession)
+        XCTAssertEqual(list.count, 3)
+
         mockTransportSession.performRemoteChanges { (session) in
-            session.insertTeamConversation(to: mockTeam, with: [self.selfUser, self.user1])
+            session.insertTeamConversation(to: mockTeam, with: [self.selfUser, self.user1], creator: self.user1)
         }
         XCTAssert(waitForEverythingToBeDone())
         
-        let list = ZMConversationList.conversations(inUserSession: self.userSession)
         let listObserver = ConversationListChangeObserver(conversationList: list)!
-        
-        XCTAssertEqual(list.count, 1)
+        XCTAssertEqual(list.count, 4)
         
         // when
         mockTransportSession.performRemoteChanges { (session) in
-            //session.removeMember(self.selfUser, fromTeam: mockTeam)
+            session.removeMember(with: self.selfUser, from: mockTeam)
         }
         XCTAssert(waitForEverythingToBeDone())
         
         // then
-        XCTAssertEqual(list.count, 0)
+        XCTAssertEqual(list.count, 3)
         
         XCTAssertEqual(listObserver.notifications.count, 1)
         guard let note = listObserver.notifications.lastObject as? ConversationListChangeInfo else {
@@ -219,30 +210,13 @@ extension TeamTests {
 
 extension TeamTests {
     
-    func testThatSelfUserCanBeAddedRemotely(){
-        // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
-        let mockTeam = remotelyInsertTeam(members: [self.user1])
-        XCTAssertFalse(ZMUser.selfUser(in: uiMOC).hasTeam)
-
-        // when
-        mockTransportSession.performRemoteChanges { (session) in
-            session.insertMember(with: self.selfUser, in: mockTeam)
-        }
-        XCTAssert(waitForEverythingToBeDone())
-        
-        // then
-        XCTAssert(ZMUser.selfUser(in: uiMOC).hasTeam)
-    }
-    
     func testThatOtherUserCanBeAddedRemotely(){
         // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
         let mockTeam = remotelyInsertTeam(members: [self.selfUser])
+        XCTAssert(logInAndWaitForSyncToBeComplete())
         
         let user = self.user(for: user1)!
         XCTAssertFalse(user.hasTeam)
-
         
         // when
         mockTransportSession.performRemoteChanges { (session) in
@@ -252,42 +226,13 @@ extension TeamTests {
         
         // then
         XCTAssert(user.hasTeam)
-
-    }
-    
-    func testThatItNotifiesAboutSelfUserAddedRemotely(){
-        // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
-        let mockTeam = remotelyInsertTeam(members: [self.user1])
-        
-        let selfUserObserver = UserChangeObserver(user: ZMUser.selfUser(in: uiMOC))!
-        let teamObserver = TestTeamObserver()
-        
-        // when
-        mockTransportSession.performRemoteChanges { (session) in
-            session.insertMember(with: self.selfUser, in: mockTeam)
-        }
-        XCTAssert(waitForEverythingToBeDone())
-        
-        // then
-        XCTAssertEqual(selfUserObserver.notifications.count, 1)
-        guard let userChange = selfUserObserver.notifications.lastObject as? UserChangeInfo else {
-            return XCTFail("no notification received")
-        }
-        XCTAssertTrue(userChange.teamsChanged)
-        
-        XCTAssertEqual(teamObserver.notifications.count, 2)
-        guard let nameChange = teamObserver.notifications.first, let memberChange = teamObserver.notifications.last else {
-            return XCTFail("no notification received")
-        }
-        XCTAssertTrue(nameChange.nameChanged)
-        XCTAssertTrue(memberChange.membersChanged)
     }
     
     func testThatItNotifiesAboutOtherUserAddedRemotely(){
         // given
-        XCTAssert(logInAndWaitForSyncToBeComplete())
         let mockTeam = remotelyInsertTeam(members: [self.selfUser])
+
+        XCTAssert(logInAndWaitForSyncToBeComplete())
         let teamObserver = TestTeamObserver()
         
         // when
@@ -306,34 +251,12 @@ extension TeamTests {
     
 }
 
-// MARK : Conversation Member Handling
-
-extension TeamTests {
-
-    func testThatYouCanAddAMemberToATeamConversation_SelfIsMember(){
-    
-    }
-    
-    func testThatYouCanRemoveAMemberFromATeamConversation_SelfIsMember(){
-    
-    }
-
-    func testThatYouCanNotAddAMemberToATeamConversation_SelfIsGuest(){
-        
-    }
-    
-    func testThatYouCanNOTRemoveAMemberFromATeamConversation_SelfIsGuest(){
-    
-    }
-
-}
-
 // MARK : Remotely Deleted Team
 
 extension TeamTests {
 
     // See TeamSyncRequestStrategy.skipTeamSync
-    func DISABLED_testThatItDeltesARemotelyDeletedTeamAfterPerfomingSlowSyncCausedByMissedEvents() {
+    func testThatItDeltesARemotelyDeletedTeamAfterPerfomingSlowSyncCausedByMissedEvents() {
         // Given
         // 1. Insert local team, which will not be returned by mock transport when fetching /teams
         let localOnlyTeamId = UUID.create()
