@@ -47,6 +47,19 @@ extension UnauthenticatedSession {
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     
+    /// Requires a phone verification code for login. Returns NO if the phone number was invalid
+    @objc(requestPhoneVerificationCodeForLogin:)
+    @discardableResult public func requestPhoneVerificationCodeForLogin(phoneNumber: String) -> Bool {
+        do {
+            var phoneNumber = phoneNumber as NSString?
+            try ZMUser.validatePhoneNumber(&phoneNumber)
+        } catch {
+            return false
+        }
+        
+        authenticationStatus.prepareForRequestingPhoneVerificationCode(forLogin: phoneNumber)
+        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        return true
     }
     
 }
