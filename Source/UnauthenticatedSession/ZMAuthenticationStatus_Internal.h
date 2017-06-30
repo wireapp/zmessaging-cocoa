@@ -30,7 +30,7 @@
 @property (nonatomic) ZMCompleteRegistrationUser *internalRegistrationUser;
 
 @property (nonatomic) BOOL isWaitingForEmailVerification;
-@property (nonatomic) BOOL registeredOnThisDevice;
+@property (nonatomic) BOOL completedRegistration;
 
 @property (nonatomic) BOOL duplicateRegistrationEmail;
 @property (nonatomic) BOOL duplicateRegistrationPhoneNumber;

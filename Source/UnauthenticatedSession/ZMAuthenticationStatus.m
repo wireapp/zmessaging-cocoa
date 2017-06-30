@@ -102,16 +102,6 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     }
 }
 
-- (void)setRegisteredOnThisDevice:(BOOL)registeredOnThisDevice
-{
-    [self.moc setRegisteredOnThisDevice:registeredOnThisDevice];
-}
-
-- (BOOL)registeredOnThisDevice
-{
-    return [self.moc isRegisteredOnThisDevice];
-}
-
 - (ZMCompleteRegistrationUser *)registrationUser
 {
     return self.internalRegistrationUser;
@@ -285,7 +275,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)didCompleteRegistrationSuccessfully
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    [self setRegisteredOnThisDevice:YES];
+    self.completedRegistration = YES;
     
     if (self.currentPhase == ZMAuthenticationPhaseRegisterWithEmail) {
         ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:self.registrationUser.emailAddress password:self.registrationUser.password];

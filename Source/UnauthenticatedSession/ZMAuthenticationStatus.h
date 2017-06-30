@@ -62,7 +62,7 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 @property (nonatomic, readonly) ZMPhoneCredentials *registrationPhoneValidationCredentials;
 @property (nonatomic, readonly) ZMCompleteRegistrationUser *registrationUser;
 
-@property (nonatomic, readonly) BOOL registeredOnThisDevice;
+@property (nonatomic, readonly) BOOL completedRegistration;
 @property (nonatomic, readonly) BOOL needsCredentialsToLogin;
 
 @property (nonatomic, readonly) ZMAuthenticationPhase currentPhase;

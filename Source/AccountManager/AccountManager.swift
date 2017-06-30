@@ -138,7 +138,7 @@ extension AccountManager: ZMAuthenticationObserver {
         userSession.setEmailCredentials(authenticationStatus.emailCredentials())
         
         userSession.syncManagedObjectContext.performGroupedBlock {
-            userSession.syncManagedObjectContext.setRegisteredOnThisDevice(true) // TODO only set this if coming from registration
+            userSession.syncManagedObjectContext.setRegisteredOnThisDevice(self.authenticationStatus.completedRegistration)
         }
         
         if let profileImageData =  authenticationStatus.profileImageData {
