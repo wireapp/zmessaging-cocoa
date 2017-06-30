@@ -114,6 +114,12 @@ extension UnauthenticatedSession {
         // no-op
     }
     
+    @objc(setProfileImage:)
+    public func setProfileImage(imageData: Data) {
+        authenticationStatus.profileImageData = imageData
+        delegate?.session(session: self, updatedProfileImage: imageData)
+    }
+    
 }
 
 extension UnauthenticatedSession {

@@ -287,12 +287,14 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     [self setRegisteredOnThisDevice:YES];
     
-    if(self.currentPhase == ZMAuthenticationPhaseRegisterWithEmail) {
+    if (self.currentPhase == ZMAuthenticationPhaseRegisterWithEmail) {
         ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:self.registrationUser.emailAddress password:self.registrationUser.password];
         //we need to set credentials first cause that will trigger notification and check for current state but we need to know that we are going from email registration to login attempts
         self.loginCredentials = credentials;
         self.registrationUser = nil;
         [ZMUserSessionRegistrationNotification notifyEmailVerificationDidSucceed];
+    } else if (self.currentPhase == ZMAuthenticationPhaseAuthenticated) {
+        [self loginSucceed];
     }
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }

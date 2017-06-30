@@ -142,10 +142,6 @@
 {
     NOT_USED(sync);
     if (response.result == ZMTransportResponseStatusSuccess) {
-        ZMUser *user = [ZMUser selfUserInContext:self.managedObjectContext];
-        [user updateWithTransportData:[response.payload asDictionary] authoritative:YES];
-        // I want to unset the user ID until we log in
-        user.remoteIdentifier = nil;
         [self.authenticationStatus didCompleteRegistrationSuccessfully];
     }
     else if (response.result == ZMTransportResponseStatusPermanentError) {

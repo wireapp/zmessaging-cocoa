@@ -23,10 +23,12 @@ class UnauthenticatedOperationLoop: NSObject {
     
     let transportSession: ZMTransportSession
     let requestStrategies: [RequestStrategy]
+    let operationQueue : ZMSGroupQueue
     
-    init(transportSession: ZMTransportSession, requestStrategies: [RequestStrategy]) {
+    init(transportSession: ZMTransportSession, operationQueue: ZMSGroupQueue, requestStrategies: [RequestStrategy]) {
         self.transportSession = transportSession
         self.requestStrategies = requestStrategies
+        self.operationQueue = operationQueue
         super.init()
         RequestAvailableNotification.addObserver(self)
     }
@@ -35,7 +37,13 @@ class UnauthenticatedOperationLoop: NSObject {
 extension UnauthenticatedOperationLoop: RequestAvailableObserver {
     func newRequestsAvailable() {
         self.transportSession.attemptToEnqueueSyncRequest { () -> ZMTransportRequest? in
-            return (self.requestStrategies as NSArray).nextRequest()
+            let request = (self.requestStrategies as NSArray).nextRequest()
+            
+            request?.add(ZMCompletionHandler(on: self.operationQueue, block: {_ in 
+                RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+            }))
+            
+            return request
         }
     }
 }

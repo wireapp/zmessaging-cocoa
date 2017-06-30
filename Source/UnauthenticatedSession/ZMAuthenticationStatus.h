@@ -67,6 +67,7 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 @property (nonatomic, readonly) ZMAuthenticationPhase currentPhase;
 @property (nonatomic, readonly) NSString *cookieLabel;
+@property (nonatomic) NSData *profileImageData;
 
 
 - (instancetype)initWithCookieStorage:(ZMPersistentCookieStorage *)cookieStorage;

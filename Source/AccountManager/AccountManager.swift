@@ -104,13 +104,23 @@ public class AccountManager : NSObject {
         return userSession != nil
     }
     
+    func updateProfileImage(imageData: Data) {
+        userSession?.enqueueChanges {
+            self.userSession?.profileUpdate.updateImage(imageData: imageData)
+        }
+    }
+    
 }
 
 extension AccountManager: UnauthenticatedSessionDelegate {
-    func session(session: UnauthenticatedSession, updatedCredentials: ZMCredentials) {
-        if let userSession = userSession, let emailCredentials = updatedCredentials as? ZMEmailCredentials {
+    func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) {
+        if let userSession = userSession, let emailCredentials = credentials as? ZMEmailCredentials {
             userSession.setEmailCredentials(emailCredentials)
         }
+    }
+    
+    func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data) {
+        updateProfileImage(imageData: imageData)
     }
 }
 
@@ -126,6 +136,14 @@ extension AccountManager: ZMAuthenticationObserver {
                                         appGroupIdentifier: appGroupIdentifier)!
         self.userSession = userSession
         userSession.setEmailCredentials(authenticationStatus.emailCredentials())
+        
+        userSession.syncManagedObjectContext.performGroupedBlock {
+            userSession.syncManagedObjectContext.setRegisteredOnThisDevice(true) // TODO only set this if coming from registration
+        }
+        
+        if let profileImageData =  authenticationStatus.profileImageData {
+            updateProfileImage(imageData: profileImageData)
+        }
         
         delegate?.userSessionCreated(session: userSession)
     }

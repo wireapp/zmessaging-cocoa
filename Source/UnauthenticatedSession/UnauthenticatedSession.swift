@@ -19,7 +19,8 @@
 import Foundation
 
 protocol UnauthenticatedSessionDelegate: class {
-    func session(session: UnauthenticatedSession, updatedCredentials: ZMCredentials)
+    func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials)
+    func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data)
 }
 
 @objc
@@ -51,7 +52,7 @@ public class UnauthenticatedSession : NSObject {
         let registrationRequestStrategy = ZMRegistrationTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)!
         let phoneNumberVerificationRequestStrategy = ZMPhoneNumberVerificationTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)!
         
-        self.operationLoop = UnauthenticatedOperationLoop(transportSession: transportSession, requestStrategies: [
+        self.operationLoop = UnauthenticatedOperationLoop(transportSession: transportSession, operationQueue: moc, requestStrategies: [
                 loginRequestStrategy,
                 loginCodeRequestStrategy,
                 registrationRequestStrategy,
