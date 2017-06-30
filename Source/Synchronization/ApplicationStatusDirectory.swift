@@ -22,7 +22,7 @@ import WireMessageStrategy
 
 @objc(ZMApplicationStatusDirectory)
 public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
-    
+
     public let userProfileImageUpdateStatus : UserProfileImageUpdateStatus
     public let apnsConfirmationStatus : BackgroundAPNSConfirmationStatus
     public let userProfileUpdateStatus : UserProfileUpdateStatus
@@ -34,6 +34,10 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let syncStatus : SyncStatus
     public let operationStatus : OperationStatus
     public let requestCancellation: ZMRequestCancellation
+
+    public var notificationFetchStatus: BackgroundNotificationFetchStatus {
+        return pingBackStatus.status
+    }
     
     fileprivate var callInProgressObserverToken : NSObjectProtocol? = nil
     
@@ -52,7 +56,6 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.pingBackStatus = BackgroundAPNSPingBackStatus(syncManagedObjectContext: managedObjectContext, authenticationProvider: cookieStorage)
         self.proxiedRequestStatus = ProxiedRequestsStatus(requestCancellation: requestCancellation)
         self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)
-        
         super.init()
         
         callInProgressObserverToken = NotificationCenter.default.addObserver(forName: CallStateObserver.CallInProgressNotification, object: nil, queue: .main) { [weak self] (notification) in

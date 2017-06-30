@@ -31,7 +31,12 @@ import WireTransport
     public init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus, cookieStorage: ZMPersistentCookieStorage) {
         self.cookieStorage = cookieStorage
         super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
-        self.configuration = [.allowsRequestsDuringSync, .allowsRequestsWhileUnauthenticated, .allowsRequestsDuringEventProcessing]
+        self.configuration = [
+            .allowsRequestsDuringSync,
+            .allowsRequestsWhileUnauthenticated,
+            .allowsRequestsDuringEventProcessing,
+            .allowsRequestsDuringNotificationStreamFetch
+        ]
         self.deleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, managedObjectContext: self.managedObjectContext)
     }
     

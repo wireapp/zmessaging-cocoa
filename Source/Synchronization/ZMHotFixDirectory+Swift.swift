@@ -19,6 +19,28 @@
 
 import Foundation
 
+extension UserClient {
+    // Migration method for merging two duplicated @c UserClient entities
+    public func merge(with client: UserClient) {
+        precondition(!(self.user?.isSelfUser ?? false), "Cannot merge self user's clients")
+        precondition(client.remoteIdentifier == self.remoteIdentifier, "UserClient's remoteIdentifier should be equal to merge")
+        precondition(client.user == self.user, "UserClient's Users should be equal to merge")
+        
+        let addedOrRemovedInSystemMessages = client.addedOrRemovedInSystemMessages
+        let ignoredByClients = client.ignoredByClients
+        let messagesMissingRecipient = client.messagesMissingRecipient
+        let trustedByClients = client.trustedByClients
+        
+        self.addedOrRemovedInSystemMessages.formUnion(addedOrRemovedInSystemMessages)
+        self.ignoredByClients.formUnion(ignoredByClients)
+        self.messagesMissingRecipient.formUnion(messagesMissingRecipient)
+        self.trustedByClients.formUnion(trustedByClients)
+        
+        if let missedByClient = client.missedByClient {
+            self.missedByClient = missedByClient
+        }
+    }
+}
 
 extension ZMHotFixDirectory {
 
@@ -109,5 +131,25 @@ extension ZMHotFixDirectory {
 
     public static func restartSlowSync() {
         NotificationCenter.default.post(name: .ForceSlowSync, object: nil)
+    }
+    
+    public static func deleteDuplicatedClients(in context: NSManagedObjectContext) {
+        // Fetch clients having the same remote identifiers
+        context.findDuplicated(by: #keyPath(UserClient.remoteIdentifier)).forEach { (remoteId: String?, clients: [UserClient]) in
+            // Group clients having the same remote identifiers by user
+            clients.filter { !($0.user?.isSelfUser ?? true) }.group(by: ZMUserClientUserKey).forEach { (user: ZMUser, clients: [UserClient]) in
+                guard let firstClient = clients.first, clients.count > 1 else {
+                    return
+                }
+                
+                let tail = clients.dropFirst()
+                // Merge clients having the same remote identifier and same user
+                
+                tail.forEach {
+                    firstClient.merge(with: $0)
+                    context.delete($0)
+                }
+            }
+        }
     }
 }

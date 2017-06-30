@@ -102,7 +102,10 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing | ZMStrategyConfigurationOptionAllowsRequestsWhileUnauthenticated | ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing
+         | ZMStrategyConfigurationOptionAllowsRequestsWhileUnauthenticated
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringSync
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
 - (NSArray *)contextChangeTrackers
@@ -137,6 +140,7 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
     if (clientStatus.currentPhase == ZMClientRegistrationPhaseWaitingForSelfUser || self.isSyncing) {
         if (! selfUser.needsToBeUpdatedFromBackend) {
             selfUser.needsToBeUpdatedFromBackend = YES;
+            [self.managedObjectContext enqueueDelayedSave];
             [self.downstreamSelfUserSync readyForNextRequestIfNotBusy];
         }
         if (selfUser.needsToBeUpdatedFromBackend) {

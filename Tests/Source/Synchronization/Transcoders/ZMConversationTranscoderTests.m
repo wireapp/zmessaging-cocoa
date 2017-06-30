@@ -1819,8 +1819,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertEqualWithAccuracy([lastModifiedDate timeIntervalSince1970], [insertedConversation.lastModifiedDate timeIntervalSince1970], 0.1);
         
         //[NSDate transportString] truncates date
-        XCTAssertEqual(round([lastModifiedDate timeIntervalSince1970] * 1000),
-                       round([insertedConversation.lastModifiedDate timeIntervalSince1970] * 1000));
+        XCTAssertTrue(fabs(round([lastModifiedDate timeIntervalSince1970] * 1000) - round([insertedConversation.lastModifiedDate timeIntervalSince1970] * 1000)) < FLT_EPSILON);
     }];
 }
 
@@ -4488,6 +4487,43 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
 }
 
+- (void)testThatItMarkAsSyncedAfterAMissingResourceError
+{
+    __block ZMConversation *conversation;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.remoteIdentifier = [NSUUID createUUID];
+        
+        conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMConversationTypeGroup;
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        conversation.needsToBeUpdatedFromBackend = YES;
+        [self.syncMOC saveOrRollback];
+        
+        for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
+            [tracker objectsDidChange:[NSSet setWithObject:conversation]];
+        }
+        
+        // when
+        ZM_ALLOW_MISSING_SELECTOR(ZMTransportRequest *request = [self.sut.requestGenerators firstNonNilReturnedFromSelector:@selector(nextRequest)];)
+        XCTAssertNotNil(request);
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:404 transportSessionError:nil]];
+        
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        XCTAssertFalse(conversation.needsToBeUpdatedFromBackend);
+        XCTAssertFalse([conversation hasLocalModificationsForKey:ZMConversationIsSelfAnActiveMemberKey]);
+        
+        // and when
+        // it resyncs the conversation
+        ZM_ALLOW_MISSING_SELECTOR(ZMTransportRequest *request = [self.sut.requestGenerators firstNonNilReturnedFromSelector:@selector(nextRequest)];)
+        XCTAssertNil(request);
+    }];
+}
 
 - (void)testThatItDoesNotTryToSyncAgainAfterAPermanentError
 {
@@ -4515,7 +4551,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         // when
         ZM_ALLOW_MISSING_SELECTOR(ZMTransportRequest *request = [self.sut.requestGenerators firstNonNilReturnedFromSelector:@selector(nextRequest)];)
         XCTAssertNotNil(request);
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:404 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:401 transportSessionError:nil]];
         
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -4580,7 +4616,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         // when
         ZM_ALLOW_MISSING_SELECTOR(ZMTransportRequest *request = [self.sut.requestGenerators firstNonNilReturnedFromSelector:@selector(nextRequest)];)
         XCTAssertNotNil(request);
-        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:404 transportSessionError:nil]];
+        [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:401 transportSessionError:nil]];
         
     }];
     WaitForAllGroupsToBeEmpty(0.5);

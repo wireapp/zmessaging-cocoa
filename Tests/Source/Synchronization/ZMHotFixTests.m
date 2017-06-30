@@ -260,21 +260,26 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"40.4"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"40.4"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
 
     NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
     XCTAssertEqualObjects(newVersion, @"40.4");
-    
-    [self.sut applyPatchesForCurrentVersion:@"40.4"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"40.4"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
     
     // then
     XCTAssertEqual(observer.notificationCount, 1lu);
     
     // when
-    [self.sut applyPatchesForCurrentVersion:@"40.5"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"40.5"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
     
     // then
     XCTAssertEqual(observer.notificationCount, 1lu);
@@ -295,8 +300,10 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"40.23"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"40.23"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
 
     // then
     XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:[imageURL relativePath]]);
@@ -315,8 +322,10 @@
 
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"41.42"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"41.42"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
     
     NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
     XCTAssertEqualObjects(newVersion, @"41.42");
@@ -331,9 +340,10 @@
     // the keys change and afterwards we are updating again
     userClient.apsDecryptionKey = [NSData randomEncryptionKey];
     userClient.apsVerificationKey = [NSData randomEncryptionKey];
-    
-    [self.sut applyPatchesForCurrentVersion:@"41.43"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"41.43"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
     
     NSString *newVersion2 = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
     XCTAssertEqualObjects(newVersion2, @"41.43");
@@ -356,8 +366,10 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"41.42"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"41.42"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
     
     NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
     XCTAssertEqualObjects(newVersion, @"41.42");
@@ -371,9 +383,10 @@
     userClient.apsVerificationKey = [NSData randomEncryptionKey];
     userClient.needsToUploadSignalingKeys = NO;
     [userClient resetLocallyModifiedKeys:[NSSet setWithObject:@"needsToUploadSignalingKeys"]];
-    
-    [self.sut applyPatchesForCurrentVersion:@"41.43"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"41.43"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
     
     NSString *newVersion2 = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
     XCTAssertEqualObjects(newVersion2, @"41.43");
@@ -424,8 +437,10 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"42.11"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"42.11"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
     
     NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
     XCTAssertEqualObjects(newVersion, @"42.11");
@@ -452,7 +467,8 @@
 {
     // given
     [self.syncMOC setPersistentStoreMetadata:@YES forKey:@"HasHistory"];
-    
+    [self.syncMOC setPersistentStoreMetadata:@"1.0.0" forKey:@"lastSavedVersion"];
+
     ZMConversation *oneOnOneConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
     oneOnOneConversation.conversationType = ZMConversationTypeOneOnOne;
     
@@ -474,8 +490,10 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"44.4"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"44.4"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
     
     NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
     XCTAssertEqualObjects(newVersion, @"44.4");
@@ -517,8 +535,10 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"54.0.1"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"54.0.1"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
     
     [self.syncMOC saveOrRollback];
     
@@ -546,8 +566,10 @@
     
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"61.0.0"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"61.0.0"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
     
     [self.syncMOC saveOrRollback];
     
@@ -596,8 +618,10 @@
 
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"62.3.1"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"62.3.1"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
 
     [self.syncMOC saveOrRollback];
 
@@ -636,8 +660,10 @@
 
     // when
     self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self.sut applyPatchesForCurrentVersion:@"76.0.0"];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"76.0.0"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
 
     [self.syncMOC saveOrRollback];
 

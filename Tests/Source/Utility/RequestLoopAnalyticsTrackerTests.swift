@@ -42,7 +42,8 @@ class RequestLoopAnalyticsTrackerTests: XCTestCase {
             "/assets/19ad9766-91e8-4d5a-8f7a-9e9da0a57b19?conv_id=b98cc1a7-ff98-4376-bdbe-0f806e5c4522",
             "/conversations/58128c2d-8181-45d9-91d5-d4aa31a637f8/otr/messages?report_missing=e3cfe44e-f4a9-4c9a-a759-8b718f3dfaf6",
             "/assets/v3/3-2-8db1e0ad-77a0-47c8-ad5d-fa479f40872f",
-            "/assets/v3"
+            "/assets/v3",
+            "/users?ids=58128c2d-8181-45d9-91d5-d4aa31a637f8,58128c2d-8181-45d9-91d5-d4aa31a637f8,58128c2d-8181-45d9-91d5-d4aa31a637f8&foo=true"
         ]
 
         let expected = [
@@ -61,7 +62,8 @@ class RequestLoopAnalyticsTrackerTests: XCTestCase {
             "/assets/{id}?conv_id={id}",
             "/conversations/{id}/otr/messages?report_missing={id}",
             "/assets/v3/3-2-{id}",
-            "/assets/v3"
+            "/assets/v3",
+            "/users?ids={id}&foo=true"
         ]
 
         zip(expected, paths.map { $0.sanitizePath() }).forEach { (expected, actual) in

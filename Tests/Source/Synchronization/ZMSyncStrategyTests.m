@@ -1092,16 +1092,20 @@
 
     // expect
     [[mockObserver expect] initialSyncCompleted:OCMOCK_ANY];
-    
+
     // when
     [self.sut didFinishSync];
-    
+
     // then
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    
+
+
     // tearDown
     [ZMUserSession removeInitalSyncCompletionObserver:mockObserver];
 
+    [self performIgnoringZMLogError:^{
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
 }
 
 - (void)testThatItProcessesAllEventsInBufferWhenSyncFinishes
@@ -1111,9 +1115,13 @@
 
     // when
     [self.sut didFinishSync];
-    
+
     // then
     [self.updateEventsBuffer verify];
+
+    [self performIgnoringZMLogError:^{
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
 }
 
 @end

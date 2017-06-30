@@ -65,13 +65,13 @@ extension String {
         )
     }()
 
-
     func sanitizePath()-> String {
         guard let uuidRegexp = String.uuidRegexp, let clientIdRegexp = String.clientIdRegexp else { return self }
         let mutableString = NSMutableString(string: self)
         let template = "{id}"
         uuidRegexp.replaceMatches(in: mutableString, options: [], range: NSMakeRange(0, mutableString.length), withTemplate: template)
         clientIdRegexp.replaceMatches(in: mutableString, options: [], range: NSMakeRange(0, mutableString.length), withTemplate: template)
-        return mutableString as String
+        let swiftString = (mutableString as String).replacingOccurrences(of: ",\(template)", with: "")
+        return swiftString
     }
 }
