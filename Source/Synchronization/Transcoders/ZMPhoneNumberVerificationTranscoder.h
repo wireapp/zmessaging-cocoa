@@ -20,16 +20,14 @@
 @import WireRequestStrategy;
 @import WireMessageStrategy;
 
-@class ZMSingleRequestSync;
-@class ZMTransportResponse;
-@class ZMApplicationStatusDirectory;
+@class ZMAuthenticationStatus;
 
 @interface ZMPhoneNumberVerificationTranscoder : NSObject <RequestStrategy>
 
 - (void)resetVerificationState;
 - (void)verifyPhoneNumber;
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus;
 
 
 @end

@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		092083401BA95EE100F82B29 /* UserClientRequestFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0920833F1BA95EE100F82B29 /* UserClientRequestFactory.swift */; };
 		0920C4DA1B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0920C4D81B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift */; };
-		0932EA461AE5514100D1BFD1 /* ZMPhoneNumberVerificationTranscoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 0932EA431AE5514100D1BFD1 /* ZMPhoneNumberVerificationTranscoder.h */; };
+		0932EA461AE5514100D1BFD1 /* ZMPhoneNumberVerificationTranscoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 0932EA431AE5514100D1BFD1 /* ZMPhoneNumberVerificationTranscoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0932EA481AE5514100D1BFD1 /* ZMPhoneNumberVerificationTranscoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 0932EA441AE5514100D1BFD1 /* ZMPhoneNumberVerificationTranscoder.m */; };
 		093694451BA9633300F36B3A /* UserClientRequestFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 093694441BA9633300F36B3A /* UserClientRequestFactoryTests.swift */; };
 		09531F161AE960E300B8556A /* ZMLoginCodeRequestTranscoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 09531F131AE960E300B8556A /* ZMLoginCodeRequestTranscoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -40,6 +40,7 @@
 		160C314A1E82AC170012E4BC /* OperationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C31491E82AC170012E4BC /* OperationStatusTests.swift */; };
 		1618B4101DE5FAD4003F015C /* ZMUserSession+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3EC2357F192B617700B72C21 /* ZMUserSession+Internal.h */; };
 		1621D2711D770FB1007108C2 /* ZMSyncStateDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1633875C1F066B610015034C /* ZMRegistrationTranscoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 54F8D71919AB541400146664 /* ZMRegistrationTranscoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		163495851F010AF0004E80DB /* UnauthenticatedSession+Registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163495841F010AF0004E80DB /* UnauthenticatedSession+Registration.swift */; };
 		1634958B1F0254CB004E80DB /* AccountManager+ServerConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1634958A1F0254CB004E80DB /* AccountManager+ServerConnection.swift */; };
 		163BB8131EE1A6EE00DF9384 /* IntegrationTestBase+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163BB8111EE1A65A00DF9384 /* IntegrationTestBase+Search.swift */; };
@@ -2061,6 +2062,7 @@
 				540818A61BCA647D00257CA7 /* ZMBlacklistVerificator+Testing.h in Headers */,
 				54A3F24F1C08523500FE3A6B /* ZMOperationLoop.h in Headers */,
 				54FEAAA91BC7BB9C002DE521 /* ZMBlacklistDownloader+Testing.h in Headers */,
+				1633875C1F066B610015034C /* ZMRegistrationTranscoder.h in Headers */,
 				F19F1D1D1EFBC2F000275E27 /* ZMAuthenticationStatus_Internal.h in Headers */,
 				F96DBEEA1DF9A570008FE832 /* ZMSyncStrategy+ManagedObjectChanges.h in Headers */,
 				F19F1D271EFBC34E00275E27 /* ZMUserSessionRegistrationNotification.h in Headers */,

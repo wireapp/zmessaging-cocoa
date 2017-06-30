@@ -27,8 +27,6 @@ public class UnauthenticatedSession : NSObject {
     
     let moc: NSManagedObjectContext
     let authenticationStatus: ZMAuthenticationStatus
-    let loginRequestStrategy: ZMLoginTranscoder
-    let loginCodeRequestStrategy: ZMLoginCodeRequestTranscoder
     let operationLoop: UnauthenticatedOperationLoop
     weak var delegate: UnauthenticatedSessionDelegate?
     
@@ -47,11 +45,17 @@ public class UnauthenticatedSession : NSObject {
         self.delegate = delegate
         self.moc = moc
         self.authenticationStatus = authenticationStatus
-        self.loginRequestStrategy = ZMLoginTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)
-        self.loginCodeRequestStrategy = ZMLoginCodeRequestTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)
+        
+        let loginRequestStrategy = ZMLoginTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)
+        let loginCodeRequestStrategy = ZMLoginCodeRequestTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)!
+        let registrationRequestStrategy = ZMRegistrationTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)!
+        let phoneNumberVerificationRequestStrategy = ZMPhoneNumberVerificationTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)!
+        
         self.operationLoop = UnauthenticatedOperationLoop(transportSession: transportSession, requestStrategies: [
-                self.loginRequestStrategy,
-                self.loginCodeRequestStrategy
+                loginRequestStrategy,
+                loginCodeRequestStrategy,
+                registrationRequestStrategy,
+                phoneNumberVerificationRequestStrategy
              ])
     }    
 }

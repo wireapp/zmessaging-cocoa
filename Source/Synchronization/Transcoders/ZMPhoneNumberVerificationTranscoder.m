@@ -41,7 +41,7 @@
 
 @implementation ZMPhoneNumberVerificationTranscoder
 
-- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatusDirectory:(ZMAuthenticationStatus *)authenticationStatus;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus;
 {
     self = [super init];
     if (self) {
