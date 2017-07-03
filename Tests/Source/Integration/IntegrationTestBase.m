@@ -657,6 +657,11 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 @implementation  MockFlowManager
 
+- (void)networkChanged
+{
+    // nop
+}
+
 - (BOOL)isReady
 {
     return YES;

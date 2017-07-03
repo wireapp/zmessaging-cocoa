@@ -126,6 +126,7 @@ extern NSString * const SelfUserPassword;
 
 @property (nonatomic) id<AVSFlowManagerDelegate> delegate;
 
+- (void)networkChanged;
 - (BOOL)isReady;
 + (instancetype)getInstance;
 
