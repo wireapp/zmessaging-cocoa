@@ -72,6 +72,7 @@
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
+        // will create a transient notification
         [session sendIsTypingEventForConversation:self.groupConversation user:self.user1 started:YES];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
