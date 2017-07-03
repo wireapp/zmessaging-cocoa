@@ -53,6 +53,7 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
         case .teamUpdate: updateTeam(with : event)
         case .teamMemberJoin: processAddedMember(with: event)
         case .teamMemberLeave: processRemovedMember(with: event)
+        case .teamMemberUpdate: processUpdatedMember(with: event)
         case .teamConversationCreate: createTeamConversation(with: event)
         case .teamConversationDelete: deleteTeamConversation(with: event)
         // Note: "conversation-delete" is not handled yet, 
@@ -116,6 +117,13 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
         } else {
             log.error("Trying to delete non existent membership of \(user) in \(team)")
         }
+    }
+
+    private func processUpdatedMember(with event: ZMUpdateEvent) {
+        guard nil != event.teamId, let data = event.dataPayload else { return }
+        guard let userId = (data[TeamEventPayloadKey.user.rawValue] as? String).flatMap(UUID.init) else { return }
+        guard let member = Member.fetch(withRemoteIdentifier: userId, in: managedObjectContext) else { return }
+        member.needsToBeUpdatedFromBackend = true
     }
 
     private func createTeamConversation(with event: ZMUpdateEvent) {

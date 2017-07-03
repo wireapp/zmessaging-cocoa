@@ -582,6 +582,45 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         return
     }
 
+    // MARK: - Team Member-Update
+
+    func testThatItFlagsAmemberTobeUpdatedFromTheBackendWhenReceivingTeamMemberUpdateEvent() {
+        // given
+        let teamId = UUID.create()
+        let userId = UUID.create()
+
+        syncMOC.performGroupedBlock {
+            let team = Team.fetchOrCreate(with: teamId, create: true, in: self.syncMOC, created: nil)!
+            let user = ZMUser(remoteID: userId, createIfNeeded: true, in: self.syncMOC)!
+            user.needsToBeUpdatedFromBackend = false
+            let member = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
+            XCTAssertFalse(member.needsToBeUpdatedFromBackend)
+            XCTAssert(self.syncMOC.saveOrRollback())
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
+
+        let payload: [String: Any] = [
+            "type": "team.member-update",
+            "team": teamId.transportString(),
+            "time": Date().transportString(),
+            "data": ["user" : userId.transportString()]
+        ]
+
+        // when
+        processEvent(fromPayload: payload)
+
+        // then
+        guard let user = ZMUser.fetch(withRemoteIdentifier: userId, in: uiMOC) else { return XCTFail("No user") }
+        guard let team = Team.fetch(withRemoteIdentifier: teamId, in: uiMOC) else { return XCTFail("No team") }
+        guard let member = user.membership else { return XCTFail("No member") }
+
+        XCTAssertFalse(user.needsToBeUpdatedFromBackend)
+        XCTAssert(member.needsToBeUpdatedFromBackend)
+        XCTAssertFalse(team.needsToBeUpdatedFromBackend)
+        XCTAssertFalse(team.needsToRedownloadMembers)
+        XCTAssertEqual(member.team, team)
+    }
+
     // MARK: - Team Conversation-Create
 
     func testThatItCreatesANewTeamConversationWhenReceivingATeamConversationCreateUpdateEvent() {
