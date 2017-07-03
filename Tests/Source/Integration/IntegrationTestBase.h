@@ -124,7 +124,7 @@ extern NSString * const SelfUserPassword;
 
 @interface  MockFlowManager : NSObject
 
-@property (nonatomic) id<AVSFlowManagerDelegate> delegate;
+@property (nonatomic, weak) id<AVSFlowManagerDelegate> delegate;
 
 - (void)networkChanged;
 - (BOOL)isReady;
