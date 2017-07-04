@@ -324,7 +324,6 @@
 		F19F1D1D1EFBC2F000275E27 /* ZMAuthenticationStatus_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = F19F1D191EFBC2F000275E27 /* ZMAuthenticationStatus_Internal.h */; };
 		F19F1D1E1EFBC2F000275E27 /* ZMAuthenticationStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = F19F1D1A1EFBC2F000275E27 /* ZMAuthenticationStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F19F1D1F1EFBC2F000275E27 /* ZMAuthenticationStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = F19F1D1B1EFBC2F000275E27 /* ZMAuthenticationStatus.m */; };
-		F19F1D201EFBC2F000275E27 /* ZMAuthenticationStatus+Testing.h in Headers */ = {isa = PBXBuildFile; fileRef = F19F1D1C1EFBC2F000275E27 /* ZMAuthenticationStatus+Testing.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F19F1D251EFBC34E00275E27 /* ZMUserSessionAuthenticationNotification.h in Headers */ = {isa = PBXBuildFile; fileRef = F19F1D211EFBC34E00275E27 /* ZMUserSessionAuthenticationNotification.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F19F1D261EFBC34E00275E27 /* ZMUserSessionAuthenticationNotification.m in Sources */ = {isa = PBXBuildFile; fileRef = F19F1D221EFBC34E00275E27 /* ZMUserSessionAuthenticationNotification.m */; };
 		F19F1D271EFBC34E00275E27 /* ZMUserSessionRegistrationNotification.h in Headers */ = {isa = PBXBuildFile; fileRef = F19F1D231EFBC34E00275E27 /* ZMUserSessionRegistrationNotification.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -892,7 +891,6 @@
 		F19F1D191EFBC2F000275E27 /* ZMAuthenticationStatus_Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMAuthenticationStatus_Internal.h; sourceTree = "<group>"; };
 		F19F1D1A1EFBC2F000275E27 /* ZMAuthenticationStatus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMAuthenticationStatus.h; sourceTree = "<group>"; };
 		F19F1D1B1EFBC2F000275E27 /* ZMAuthenticationStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMAuthenticationStatus.m; sourceTree = "<group>"; };
-		F19F1D1C1EFBC2F000275E27 /* ZMAuthenticationStatus+Testing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ZMAuthenticationStatus+Testing.h"; sourceTree = "<group>"; };
 		F19F1D211EFBC34E00275E27 /* ZMUserSessionAuthenticationNotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMUserSessionAuthenticationNotification.h; sourceTree = "<group>"; };
 		F19F1D221EFBC34E00275E27 /* ZMUserSessionAuthenticationNotification.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMUserSessionAuthenticationNotification.m; sourceTree = "<group>"; };
 		F19F1D231EFBC34E00275E27 /* ZMUserSessionRegistrationNotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMUserSessionRegistrationNotification.h; sourceTree = "<group>"; };
@@ -1914,7 +1912,6 @@
 				F19F1D191EFBC2F000275E27 /* ZMAuthenticationStatus_Internal.h */,
 				F19F1D1A1EFBC2F000275E27 /* ZMAuthenticationStatus.h */,
 				F19F1D1B1EFBC2F000275E27 /* ZMAuthenticationStatus.m */,
-				F19F1D1C1EFBC2F000275E27 /* ZMAuthenticationStatus+Testing.h */,
 				F19F1D131EFBC18E00275E27 /* UnauthenticatedSession.swift */,
 				163495841F010AF0004E80DB /* UnauthenticatedSession+Registration.swift */,
 				F1A94BD11F010287003083D9 /* UnauthenticatedSession+Login.swift */,
@@ -2041,7 +2038,6 @@
 			files = (
 				09E393BB1BAB0BB500F3EA1B /* ZMUserSession+OTR.h in Headers */,
 				F19F1D1E1EFBC2F000275E27 /* ZMAuthenticationStatus.h in Headers */,
-				F19F1D201EFBC2F000275E27 /* ZMAuthenticationStatus+Testing.h in Headers */,
 				16C22BA41BF4D5D7007099D9 /* NSError+ZMUserSessionInternal.h in Headers */,
 				F9FD167B1BDFCDAD00725F5C /* ZMClientRegistrationStatus.h in Headers */,
 				F9B71F411CB28449001DB03F /* ZMNotifications+UserSessionInternal.h in Headers */,

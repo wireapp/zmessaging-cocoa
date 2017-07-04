@@ -200,7 +200,6 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)prepareForLoginWithCredentials:(ZMCredentials *)credentials
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    self.registeredOnThisDevice = NO;
     BOOL wasDuplicated = self.duplicateRegistrationPhoneNumber;
     [self resetLoginAndRegistrationStatus];
     if(wasDuplicated && credentials.credentialWithPhone) {
