@@ -22,26 +22,26 @@ import WireTransport
 import WireUtilities
 
 @objc
-public protocol AccountStateDelegate : class {
+public protocol SessionManagerDelegate : class {
     
-    func unauthenticatedSessionCreated(session : UnauthenticatedSession)
-    func userSessionCreated(session : ZMUserSession)
-    func willStartMigratingLocalStore()
+    func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession)
+    func sessionManagerCreated(userSession : ZMUserSession)
+    func sessionManagerWillStartMigratingLocalStore()
 }
 
 @objc
-public class AccountManager : NSObject {
+public class SessionManager : NSObject {
     public let appGroupIdentifier: String
     public let appVersion: String
     public let mediaManager: AVSMediaManager
     public var analytics: AnalyticsType?
     let transportSession: ZMTransportSession
-    public weak var delegate : AccountStateDelegate? = nil
+    public weak var delegate : SessionManagerDelegate? = nil
     var authenticationToken: Any?
     let authenticationStatus: ZMAuthenticationStatus
     var userSession: ZMUserSession?
     
-    public init(appGroupIdentifier: String, appVersion: String, mediaManager: AVSMediaManager, analytics: AnalyticsType?, delegate: AccountStateDelegate?, application: ZMApplication, launchOptions: [UIApplicationLaunchOptionsKey : Any]) {
+    public init(appGroupIdentifier: String, appVersion: String, mediaManager: AVSMediaManager, analytics: AnalyticsType?, delegate: SessionManagerDelegate?, application: ZMApplication, launchOptions: [UIApplicationLaunchOptionsKey : Any]) {
         self.appGroupIdentifier = appGroupIdentifier
         self.appVersion = appVersion
         self.mediaManager = mediaManager
@@ -73,7 +73,7 @@ public class AccountManager : NSObject {
                                                 appVersion: appVersion,
                                                 appGroupIdentifier: appGroupIdentifier)!
                 
-                delegate?.userSessionCreated(session: userSession)
+                delegate?.sessionManagerCreated(userSession: userSession)
                 userSession.application(application, didFinishLaunchingWithOptions: launchOptions)
                 if let url = launchOptions[.url] as? URL {
                     userSession.didLaunch(with: url)
@@ -81,7 +81,7 @@ public class AccountManager : NSObject {
             }
         
             if ZMUserSession.needsToPrepareLocalStore(usingAppGroupIdentifier: appGroupIdentifier) {
-                delegate?.willStartMigratingLocalStore()
+                delegate?.sessionManagerWillStartMigratingLocalStore()
                 ZMUserSession.prepareLocalStore(usingAppGroupIdentifier: appGroupIdentifier) {
                     DispatchQueue.main.async(execute: createSession)
                 }
@@ -91,7 +91,7 @@ public class AccountManager : NSObject {
         } else {
             do {
                 let unauthenticatedSession = try UnauthenticatedSession(authenticationStatus: authenticationStatus, transportSession: transportSession, delegate: self)
-                delegate?.unauthenticatedSessionCreated(session: unauthenticatedSession)
+                delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
             } catch let error {
                 fatal("Can't create unauthenticated session: \(error)")
             }
@@ -124,7 +124,7 @@ public class AccountManager : NSObject {
     
 }
 
-extension AccountManager: UnauthenticatedSessionDelegate {
+extension SessionManager: UnauthenticatedSessionDelegate {
     func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) {
         if let userSession = userSession, let emailCredentials = credentials as? ZMEmailCredentials {
             userSession.setEmailCredentials(emailCredentials)
@@ -136,7 +136,7 @@ extension AccountManager: UnauthenticatedSessionDelegate {
     }
 }
 
-extension AccountManager: ZMAuthenticationObserver {
+extension SessionManager: ZMAuthenticationObserver {
     
     @objc public func authenticationDidSucceed() {
         guard self.userSession == nil else { return }
@@ -157,6 +157,6 @@ extension AccountManager: ZMAuthenticationObserver {
             updateProfileImage(imageData: profileImageData)
         }
         
-        delegate?.userSessionCreated(session: userSession)
+        delegate?.sessionManagerCreated(userSession: userSession)
     }
 }

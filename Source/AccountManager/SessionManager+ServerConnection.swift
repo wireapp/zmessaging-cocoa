@@ -36,7 +36,7 @@ public protocol ServerConnection {
     func removeObserver(_ token: Any)
 }
 
-extension AccountManager {
+extension SessionManager {
     
     public var serverConnection : ServerConnection? {
         return self
@@ -44,7 +44,7 @@ extension AccountManager {
     
 }
 
-extension AccountManager : ServerConnection {
+extension SessionManager : ServerConnection {
     
     public var isOffline: Bool {
         return !transportSession.reachability.mayBeReachable
