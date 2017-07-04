@@ -39,7 +39,6 @@
 #import <WireSyncEngine/ZMUserSession+Background.h>
 #import <WireSyncEngine/ZMAuthenticationStatus.h>
 #import <WireSyncEngine/ZMClientRegistrationStatus.h>
-#import <WireSyncEngine/ZMAuthenticationStatus+Testing.h>
 #import <WireSyncEngine/ZMUserSessionAuthenticationNotification.h>
 #import <WireSyncEngine/ZMAPSMessageDecoder.h>
 #import <WireSyncEngine/ZMUserTranscoder.h>
