@@ -181,8 +181,16 @@ extension TeamSyncRequestStrategy: ZMRemoteIdentifierObjectTranscoder {
             let membersPayload = payload?["members"] as? [[String: Any]]
             
             if let team = Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext, created: nil) {
-                membersPayload?.forEach { payload in
-                    Member.createOrUpdate(with: payload, in: team, context: managedObjectContext)
+                if response.result == .success, let membersDict = membersPayload {
+                    let existingMembers = team.members
+                    let newMembers = membersDict.flatMap { payload in
+                        Member.createOrUpdate(with: payload, in: team, context: managedObjectContext)
+                    }
+                    
+                    let membersToDelete = existingMembers.subtracting(newMembers)
+                    membersToDelete.forEach {
+                        managedObjectContext.delete($0)
+                    }
                 }
                 
                 if response.result == .permanentError {

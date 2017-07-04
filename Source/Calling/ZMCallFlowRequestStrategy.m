@@ -40,7 +40,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 @property (nonatomic) NSNotificationQueue *voiceGainNotificationQueue;
 @property (nonatomic) BOOL pushChannelIsOpen;
 @property (nonatomic, readonly) NSManagedObjectContext *uiManagedObjectContext;
-@property (nonatomic) id authenticationObserverToken;
 @property (nonatomic, strong) dispatch_queue_t avsLogQueue;
 @property (nonatomic, readonly, weak) id<ZMApplication> application;
 
@@ -75,15 +74,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         
         [application registerObserverForDidBecomeActive:self selector:@selector(appDidBecomeActive:)];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
-        ZM_WEAK(self);
-        self.authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note){
-            ZM_STRONG(self);
-            if (note.type == ZMAuthenticationNotificationAuthenticationDidSuceeded) {
-                [self.managedObjectContext performGroupedBlock:^{
-                    [self registerSelfUser];
-                }];
-            }
-        }];
         self.pushChannelIsOpen = NO;
         self.avsLogQueue = dispatch_queue_create("AVSLog", DISPATCH_QUEUE_SERIAL);
     }
@@ -115,7 +105,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.application unregisterObserverForStateChange:self];
-    [ZMUserSessionAuthenticationNotification removeObserver:self.authenticationObserverToken];
 }
 
 - (AVSFlowManager *)flowManager
@@ -184,15 +173,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     if (!oldValue && newValue && self.requestStack.count > 0) {
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
-}
-
-- (void)registerSelfUser
-{
-    NSString *selfUserID = [ZMUser selfUserInContext:self.managedObjectContext].remoteIdentifier.transportString;
-    if (selfUserID == nil) {
-        return;
-    }
-    [self.flowManager setSelfUser:selfUserID];
 }
 
 - (BOOL)isFlowManagerReady

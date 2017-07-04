@@ -59,27 +59,11 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 @property (nonatomic) NSArray *connectedUsers;
 @property (nonatomic) NSArray *allUsers;
 @property (nonatomic) NSArray *nonConnectedUsers;
-@property (nonatomic) MockFlowManager *mockFlowManager;
 @property (nonatomic) MockLinkPreviewDetector *mockLinkPreviewDetector;
 @property (nonatomic) SearchDirectory *sharedSearchDirectory;
 
 
 @end
-
-
-@interface MockFlowManager (Instance)
-+ (instancetype)getInstance;
-@end
-
-@implementation MockFlowManager (Instance)
-
-+ (instancetype)getInstance
-{
-    return ZMCallFlowRequestStrategyInternalFlowManagerOverride;
-}
-
-@end
-
 
 @implementation IntegrationTestBase
 
@@ -91,9 +75,8 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     [LinkPreviewDetectorHelper setTest_debug_linkPreviewDetector:self.mockLinkPreviewDetector];
     
     self.mockObjectIDToRemoteID = [NSMutableDictionary dictionary];
-    self.mockFlowManager = self.mockTransportSession.mockFlowManager;
 
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = self.mockFlowManager;
+    ZMCallFlowRequestStrategyInternalFlowManagerOverride = [[MockFlowManager alloc] init];
     WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self;
     
     [self createObjects];
@@ -118,7 +101,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     [self.sharedSearchDirectory tearDown];
     
     self.mockObjectIDToRemoteID = nil;
-    self.mockFlowManager = nil;
     self.conversationChangeObserver = nil;
     self.userChangeObserver = nil;
     self.messageChangeObserver = nil;
@@ -673,11 +655,22 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 @end
 
 
-@implementation  MockFlowManager (AdditionalMethods)
+@implementation  MockFlowManager
+
+- (void)networkChanged
+{
+    // nop
+}
 
 - (BOOL)isReady
 {
     return YES;
 }
+
++ (instancetype)getInstance
+{
+    return ZMCallFlowRequestStrategyInternalFlowManagerOverride;
+}
+
 
 @end

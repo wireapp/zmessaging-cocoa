@@ -61,7 +61,6 @@ extern NSString * const SelfUserPassword;
 @property (nonatomic, readonly) NSArray *connectedUsers;
 @property (nonatomic, readonly) NSArray *nonConnectedUsers;
 @property (nonatomic, readonly) NSArray *allUsers;
-@property (nonatomic, readonly) MockFlowManager *mockFlowManager;
 @property (nonatomic, readonly) MockLinkPreviewDetector *mockLinkPreviewDetector;
 @property (nonatomic, readonly) SearchDirectory *sharedSearchDirectory;
 
@@ -123,8 +122,12 @@ extern NSString * const SelfUserPassword;
 
 
 
-@interface  MockFlowManager (AdditionalMethods)
+@interface  MockFlowManager : NSObject
 
+@property (nonatomic, weak) id<AVSFlowManagerDelegate> delegate;
+
+- (void)networkChanged;
 - (BOOL)isReady;
++ (instancetype)getInstance;
 
 @end

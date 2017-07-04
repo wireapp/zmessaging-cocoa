@@ -371,23 +371,4 @@
     XCTAssertNil(request);
 }
 
-- (void)testThatItRegisteresSelfUser
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // given
-        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-        selfUser.remoteIdentifier = [NSUUID createUUID];
-        
-        // expect
-        [(AVSFlowManager *)[self.internalFlowManager expect] setSelfUser:selfUser.remoteIdentifier.transportString];
-        
-        // when
-        [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    [self.internalFlowManager verify];
-}
-
 @end

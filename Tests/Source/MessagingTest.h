@@ -90,15 +90,6 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 
 
 
-@interface MessagingTest (AVS)
-
-- (void)simulateMediaFlowEstablishedOnConversation:(ZMConversation *)conversation;
-- (void)simulateMediaFlowReleasedOnConversation:(ZMConversation *)conversation;
-- (void)simulateParticipantsChanged:(NSArray *)users onConversation:(ZMConversation *)uiConversation;
-
-@end
-
-
 @interface MessagingTest (UserTesting)
 
 - (void)setEmailAddress:(NSString *)emailAddress onUser:(ZMUser *)user;
