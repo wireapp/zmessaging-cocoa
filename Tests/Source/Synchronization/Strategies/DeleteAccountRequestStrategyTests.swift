@@ -25,11 +25,12 @@ class DeleteAccountRequestStrategyTests: MessagingTest {
     
     fileprivate var sut : DeleteAccountRequestStrategy!
     fileprivate var mockApplicationStatus : MockApplicationStatus!
+    fileprivate let cookieStorage = ZMPersistentCookieStorage()
     
     override func setUp() {
         super.setUp()
         self.mockApplicationStatus = MockApplicationStatus()
-        self.sut = DeleteAccountRequestStrategy(withManagedObjectContext: self.uiMOC, applicationStatus:mockApplicationStatus)
+        self.sut = DeleteAccountRequestStrategy(withManagedObjectContext: self.uiMOC, applicationStatus:mockApplicationStatus, cookieStorage: cookieStorage)
     }
     
     override func tearDown() {

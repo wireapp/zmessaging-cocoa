@@ -147,7 +147,8 @@
     
     [self resetUIandSyncContextsAndResetPersistentStore:YES];
     
-    [ZMPersistentCookieStorage deleteAllKeychainItems];
+    ZMPersistentCookieStorage *cookieStorage = [[ZMPersistentCookieStorage alloc] init];
+    [cookieStorage deleteUserKeychainItems];
     
     self.testMOC = [MockModelObjectContextFactory testContext];
     [self.testMOC addGroup:self.dispatchGroup];
@@ -336,26 +337,14 @@
     [self verifyMockLater:clientMessageTranscoder];
     id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
     [self verifyMockLater:selfStrategy];
-    id registrationTranscoder = [OCMockObject mockForClass:ZMRegistrationTranscoder.class];
-    [self verifyMockLater:registrationTranscoder];
-    id phoneNumberVerificationTranscoder = [OCMockObject mockForClass:ZMPhoneNumberVerificationTranscoder.class];
-    [self verifyMockLater:phoneNumberVerificationTranscoder];
     id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
     [self verifyMockLater:missingUpdateEventsTranscoder];
     id callFlowRequestStrategy = [OCMockObject mockForClass:ZMCallFlowRequestStrategy.class];
     [self verifyMockLater:callFlowRequestStrategy];
-    id loginTranscoder = [OCMockObject mockForClass:ZMLoginTranscoder.class];
-    [self verifyMockLater:loginTranscoder];
-    id loginCodeRequestTranscoder = [OCMockObject mockForClass:ZMLoginCodeRequestTranscoder.class];
-    [self verifyMockLater:loginCodeRequestTranscoder];
     
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
     [[[objectDirectory stub] andReturn:selfStrategy] selfStrategy];
-    [[[objectDirectory stub] andReturn:registrationTranscoder] registrationTranscoder];
-    [[[objectDirectory stub] andReturn:phoneNumberVerificationTranscoder] phoneNumberVerificationTranscoder];
     [[[objectDirectory stub] andReturn:missingUpdateEventsTranscoder] missingUpdateEventsTranscoder];
-    [[[objectDirectory stub] andReturn:loginTranscoder] loginTranscoder];
-    [[[objectDirectory stub] andReturn:loginCodeRequestTranscoder] loginCodeRequestTranscoder];
     
     [[[objectDirectory stub] andReturn:moc] moc];
     [self verifyMockLater:objectDirectory];

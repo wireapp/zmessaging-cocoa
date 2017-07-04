@@ -28,10 +28,9 @@ class ApplicationStatusDirectoryTests : MessagingTest {
         super.setUp()
         
         let cookieStorage = ZMPersistentCookieStorage()
-        let cookie = ZMCookie(managedObjectContext: syncMOC, cookieStorage: cookieStorage)
         let mockApplication = ApplicationMock()
         
-        sut = ApplicationStatusDirectory(withManagedObjectContext: syncMOC, cookie: cookie!, requestCancellation: self, application: mockApplication, syncStateDelegate: self)
+        sut = ApplicationStatusDirectory(withManagedObjectContext: syncMOC, cookieStorage: cookieStorage, requestCancellation: self, application: mockApplication, syncStateDelegate: self)
     }
     
     override func tearDown() {

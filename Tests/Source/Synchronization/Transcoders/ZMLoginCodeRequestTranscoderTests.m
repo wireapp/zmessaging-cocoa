@@ -39,14 +39,8 @@
 - (void)setUp {
     [super setUp];
     
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:nil];
-    
-    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
-    [[[applicationStatusDirectory stub] andReturn:self.authenticationStatus] authenticationStatus];
-    [[[applicationStatusDirectory stub] andReturnValue:@(ZMSynchronizationStateUnauthenticated)] synchronizationState];
-    [(ZMApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturnValue:@(ZMOperationStateForeground)] operationState];
-    
-    self.sut = [[ZMLoginCodeRequestTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatusDirectory:applicationStatusDirectory];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:nil];
+    self.sut = [[ZMLoginCodeRequestTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus];
 }
 
 - (void)tearDown {

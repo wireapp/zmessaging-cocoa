@@ -47,10 +47,10 @@ class OperationLoopNewRequestObserver {
 
 
 @objc class MockAuthenticationProvider: NSObject, AuthenticationStatusProvider {
-    var mockAuthenticationPhase: ZMAuthenticationPhase = .authenticated
+    var mockIsAuthenticated: Bool = true
     
-    var currentPhase: ZMAuthenticationPhase {
-        return mockAuthenticationPhase
+    var isAuthenticated: Bool {
+        return mockIsAuthenticated
     }
 }
 
@@ -475,7 +475,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     
     func testThatItDoesNotStartABackgroundActivityWhenTheStatusIsNotAuthenticated() {
         // given
-        authenticationProvider.mockAuthenticationPhase = .unauthenticated
+        authenticationProvider.mockIsAuthenticated = false
         
         // when
         sut.didReceiveVoIPNotification(createEventsWithID())

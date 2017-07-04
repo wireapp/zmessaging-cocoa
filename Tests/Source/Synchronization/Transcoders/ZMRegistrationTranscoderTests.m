@@ -59,15 +59,9 @@
     (void) [[[classMock stub] andReturn:self.registrationDownstreamSync] syncWithSingleRequestTranscoder:OCMOCK_ANY managedObjectContext:self.uiMOC];
     
     self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"com.wearezeta.test-WireSyncEngine"];
-    ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.uiMOC cookieStorage:self.cookieStorage];
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:cookie];
-    
-    id mockApplicationStatusDirectory = [OCMockObject mockForClass:[ZMApplicationStatusDirectory class]];
-    [[[mockApplicationStatusDirectory stub] andReturn:self.authenticationStatus] authenticationStatus];
-    [[[mockApplicationStatusDirectory stub] andReturnValue:@(ZMSynchronizationStateUnauthenticated)] synchronizationState];
-    [(ZMApplicationStatusDirectory *)[[mockApplicationStatusDirectory stub] andReturnValue:@(ZMOperationStateForeground)] operationState];
-    
-    self.sut = (id) [[ZMRegistrationTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatusDirectory:mockApplicationStatusDirectory];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:self.cookieStorage];
+        
+    self.sut = (id) [[ZMRegistrationTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus];
     [classMock stopMocking];
 }
 
