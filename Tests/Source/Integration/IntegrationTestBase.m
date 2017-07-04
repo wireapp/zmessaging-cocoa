@@ -311,7 +311,8 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     
     [self resetUIandSyncContextsAndResetPersistentStore:wipeCache];
     if(wipeCache) {
-        [ZMPersistentCookieStorage deleteAllKeychainItems];
+        ZMPersistentCookieStorage *cookieStorage = [[ZMPersistentCookieStorage alloc] init];
+        [cookieStorage deleteUserKeychainItems];
     }
     
     // Workaround for hotfix introduced in 40.2 to reregister for push notifications.
@@ -428,6 +429,8 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
 - (BOOL)logInWithCredentials:(ZMCredentials *)credentials shouldIgnoreAuthenticationFailures:(BOOL)shouldIgnoreAuthenticationFailures;
 {
+    NOT_USED(credentials);
+    
     id authenticationObserver = [OCMockObject niceMockForProtocol:@protocol(ZMAuthenticationObserver)];
 
     if (shouldIgnoreAuthenticationFailures) {
@@ -442,7 +445,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
     }] authenticationDidSucceed];
 
     id token = [self.userSession addAuthenticationObserver:authenticationObserver];
-    [self.userSession loginWithCredentials:credentials];
+//    [self.userSession loginWithCredentials:credentials]; // TODO jacob
     
     BOOL done = [self waitOnMainLoopUntilBlock:^BOOL{
         return didSucceed;

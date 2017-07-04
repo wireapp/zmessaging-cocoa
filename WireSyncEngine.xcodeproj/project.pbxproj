@@ -124,7 +124,6 @@
 		5435C5551E13D9A0002D9766 /* NSManagedObjectContext+KeyValueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5435C5541E13D9A0002D9766 /* NSManagedObjectContext+KeyValueStore.swift */; };
 		543ED0011D79E0EE00A9CDF3 /* ApplicationMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 543ED0001D79E0EE00A9CDF3 /* ApplicationMock.swift */; };
 		5442A7321E42244C00415104 /* libPhoneNumberiOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5442A7311E42244C00415104 /* libPhoneNumberiOS.framework */; };
-		5447E4631AECDC2E00411FCD /* ZMUserSessionRegistrationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5447E4611AECDC2E00411FCD /* ZMUserSessionRegistrationTests.m */; };
 		5447E4681AECDE6500411FCD /* ZMUserSessionTestsBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 5447E4661AECDE6500411FCD /* ZMUserSessionTestsBase.m */; };
 		544913B41B0247700044DE36 /* ZMCredentialsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 544913B21B0247700044DE36 /* ZMCredentialsTests.m */; };
 		544BA11A1A433DE400D3B852 /* WireSyncEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 542049EF196AB84B000D8A94 /* WireSyncEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -142,8 +141,6 @@
 		545434AB19AB6ADA003892D9 /* ZMMissingUpdateEventsTranscoderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54F8D72F19AB677300146664 /* ZMMissingUpdateEventsTranscoderTests.m */; };
 		545434AC19AB6ADA003892D9 /* ZMSelfTranscoderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54F8D73119AB677400146664 /* ZMSelfTranscoderTests.m */; };
 		545434AE19AB6ADA003892D9 /* ZMUserTranscoderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54F8D73319AB677400146664 /* ZMUserTranscoderTests.m */; };
-		5454A69D1AEFA01D0022AFA4 /* EmailRegistrationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5454A69B1AEFA01D0022AFA4 /* EmailRegistrationTests.m */; };
-		5454A6A11AEFA0A70022AFA4 /* PhoneRegistrationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5454A69F1AEFA0A70022AFA4 /* PhoneRegistrationTests.m */; };
 		545643D31C62C12E00A2129C /* ConversationTests+OTR.m in Sources */ = {isa = PBXBuildFile; fileRef = 09914E501BD6613600C10BF8 /* ConversationTests+OTR.m */; };
 		545643D61C62C1A800A2129C /* ConversationTestsBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 545643D51C62C1A800A2129C /* ConversationTestsBase.m */; };
 		545816FA1E93E20700BFAF7E /* WireProtos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54E03A5B1E93CEED0089AC69 /* WireProtos.framework */; };
@@ -172,7 +169,6 @@
 		54877C9619922C0B0097FB58 /* UserProfileTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54877C9419922C0B0097FB58 /* UserProfileTests.m */; };
 		54880E3D194B5845007271AA /* ZMOperationLoopTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D858D72B109C5D9A85645B /* ZMOperationLoopTests.m */; };
 		548BBA1C195071E30041945E /* ZMUserSessionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54610D32192C9D7200FE7201 /* ZMUserSessionTests.m */; };
-		5490F8ED1AEFD2B3004696F4 /* ZMUserSessionAuthenticationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5490F8EB1AEFD2B3004696F4 /* ZMUserSessionAuthenticationTests.m */; };
 		5492C6C519ACCCA8008F41E2 /* ConnectionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5492C6C319ACCCA8008F41E2 /* ConnectionTests.m */; };
 		549552541D645683004F21F6 /* AddressBookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549552511D64567C004F21F6 /* AddressBookTests.swift */; };
 		54973A361DD48CAB007F8702 /* NSManagedObject+EncryptionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54973A351DD48CAB007F8702 /* NSManagedObject+EncryptionContext.swift */; };
@@ -256,7 +252,6 @@
 		54F0A0951B3018D7003386BC /* ProxiedRequestsStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54F0A0931B3018D7003386BC /* ProxiedRequestsStatus.swift */; };
 		54F4DC5A1A4438B300FDB6EA /* WireSyncEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 549815931A43232400A7CE2E /* WireSyncEngine.framework */; };
 		54F7217E19A62225009A8AF5 /* ZMUpdateEventsBufferTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54F7217C19A62225009A8AF5 /* ZMUpdateEventsBufferTests.m */; };
-		54FC8A11192CD55000D3C016 /* LoginFlowTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54FC8A0F192CD55000D3C016 /* LoginFlowTests.m */; };
 		54FEAAA91BC7BB9C002DE521 /* ZMBlacklistDownloader+Testing.h in Headers */ = {isa = PBXBuildFile; fileRef = 54FEAAA81BC7BB9C002DE521 /* ZMBlacklistDownloader+Testing.h */; };
 		85D8522CF8DE246DDD5BD12C /* MockEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85AAE7FA09852AB9B0D6A /* MockEntity.m */; };
 		85D85B0D7E5F7D9A55B5E07B /* IntegrationTestBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85FD47DF54EE1F532B5BE /* IntegrationTestBase.m */; };
@@ -2359,7 +2354,6 @@
 				1660AA111ECE3C1C0056D403 /* SearchTaskTests.swift in Sources */,
 				F95706591DE5F6D40087442C /* SearchUserImageStrategyTests.swift in Sources */,
 				098CFBBB1B7B9C94000B02B1 /* BaseTestSwiftHelpers.swift in Sources */,
-				5447E4631AECDC2E00411FCD /* ZMUserSessionRegistrationTests.m in Sources */,
 				543ED0011D79E0EE00A9CDF3 /* ApplicationMock.swift in Sources */,
 				878F63E51EF91E7C006E819B /* HotFixDuplicatesTests.swift in Sources */,
 				F976790A1D771B3900CC075D /* BackgroundAPNSConfirmationStatusTests.swift in Sources */,
@@ -2386,7 +2380,6 @@
 				09D7A88A1AE7E591008F190C /* ZMPhoneNumberVerificationTranscoderTests.m in Sources */,
 				542DFEE81DDCA4FD000F5B95 /* UserProfileUpdateRequestStrategyTests.swift in Sources */,
 				548241F01AB09C1500E0ED07 /* APNSTests.m in Sources */,
-				54FC8A11192CD55000D3C016 /* LoginFlowTests.m in Sources */,
 				09BA924C1BD55FA5000DC962 /* UserClientRequestStrategyTests.swift in Sources */,
 				A9692F8A1986476900849241 /* NSString_NormalizationTests.m in Sources */,
 				54880E3D194B5845007271AA /* ZMOperationLoopTests.m in Sources */,
@@ -2408,7 +2401,6 @@
 				F9B71F4C1CB2B841001DB03F /* NSManagedObjectContext+TestHelpers.m in Sources */,
 				F991CE151CB55512004D8465 /* ZMConversation+Testing.m in Sources */,
 				545434A919AB6ADA003892D9 /* ZMConversationTranscoderTests.m in Sources */,
-				5454A69D1AEFA01D0022AFA4 /* EmailRegistrationTests.m in Sources */,
 				F9ABE8551EFD56BF00D83214 /* MemberDownloadRequestStrategyTests.swift in Sources */,
 				54D785011A37256C00F47798 /* ZMEncodedNSUUIDWithTimestampTests.m in Sources */,
 				54C2F6991A6FA988003D09D9 /* ZMLocalNotificationForEventTest.m in Sources */,
@@ -2448,9 +2440,7 @@
 				F9C598AD1A0947B300B1F760 /* ZMBlacklistDownloaderTest.m in Sources */,
 				BFE53F551D5A2F7000398378 /* DeleteMessagesTests.swift in Sources */,
 				16A702D01E92998100B8410D /* ApplicationStatusDirectoryTests.swift in Sources */,
-				5490F8ED1AEFD2B3004696F4 /* ZMUserSessionAuthenticationTests.m in Sources */,
 				093694451BA9633300F36B3A /* UserClientRequestFactoryTests.swift in Sources */,
-				5454A6A11AEFA0A70022AFA4 /* PhoneRegistrationTests.m in Sources */,
 				F94F6B331E54B9C000D46A29 /* CallingRequestStrategyTests.swift in Sources */,
 				545643D61C62C1A800A2129C /* ConversationTestsBase.m in Sources */,
 				3E26BED51A4037370071B4C9 /* IsTypingTests.m in Sources */,

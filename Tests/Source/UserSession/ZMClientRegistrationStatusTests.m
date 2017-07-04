@@ -27,7 +27,6 @@
 #import "ZMClientRegistrationStatus+Internal.h"
 #import "NSError+ZMUserSession.h"
 #import "ZMUserSessionAuthenticationNotification.h"
-#import "ZMCookie.h"
 
 @interface FakeCredentialProfider : NSObject <ZMCredentialProvider>
 @property (nonatomic) NSUInteger  clearCallCount;
@@ -59,8 +58,6 @@
 @interface ZMClientRegistrationStatusTests : MessagingTest
 
 @property (nonatomic) ZMClientRegistrationStatus *sut;
-@property (nonatomic) FakeCredentialProfider *loginProvider;
-@property (nonatomic) FakeCredentialProfider *updateProvider;
 @property (nonatomic) id mockCookieStorage;
 @property (nonatomic) id mockClientRegistrationDelegate;
 @property (nonatomic) id sessionToken;
@@ -74,18 +71,13 @@
 - (void)setUp {
     [super setUp];
     [self.uiMOC setPersistentStoreMetadata:nil forKey:ZMPersistedClientIdKey]; // make sure to call this before initializing sut
-    self.loginProvider = [[FakeCredentialProfider alloc] init];
-    self.updateProvider = [[FakeCredentialProfider alloc] init];
     self.sessionNotifications = [NSMutableArray array];
     self.mockCookieStorage = [OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]];
     self.mockClientRegistrationDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMClientRegistrationStatusDelegate)];
     [[[self.mockCookieStorage stub] andReturn:[NSData data]] authenticationCookieData];
     
-    ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:self.mockCookieStorage];
     self.sut = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC
-                                                        loginCredentialProvider:self.loginProvider
-                                                       updateCredentialProvider:self.updateProvider
-                                                                         cookie:cookie
+                                                                  cookieStorage:self.mockCookieStorage
                                                      registrationStatusDelegate:self.mockClientRegistrationDelegate];
     self.sessionToken = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note) {
         [self.sessionNotifications addObject:note];
@@ -95,8 +87,7 @@
 - (void)tearDown {
     [ZMUserSessionAuthenticationNotification removeObserver:self.sessionToken];
     [self.sessionNotifications removeAllObjects];
-    self.loginProvider = nil;
-    self.updateProvider = nil;
+    self.mockCookieStorage = nil;
     [self.sut tearDown];
     self.sut = nil;
     [super tearDown];
@@ -146,20 +137,6 @@
     
     // then
     XCTAssertEqual(selfUser.clients.count, 1u);
-}
-
-- (void)testThatItUsesUpdateCredentialsIfItHasSome
-{
-    // given
-    self.updateProvider.email = @"iam@example.com";
-    self.updateProvider.password = @"thisIsDifferent";
-    
-    // when
-    ZMEmailCredentials *credentials = [self.sut emailCredentials];
-    
-    // then
-    XCTAssertEqual(credentials.email, self.updateProvider.email);
-    XCTAssertEqual(credentials.password, self.updateProvider.password);
 }
 
 - (void)testThatItReturns_WaitingForSelfUser_IFSelfUserDoesNotHaveRemoteID
@@ -299,8 +276,6 @@
 
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseRegistered);
-    XCTAssertEqual(self.loginProvider.clearCallCount, 1u);
-    XCTAssertEqual(self.updateProvider.clearCallCount, 1u);
 }
 
 - (void)testThatItNotfiesDelegateWhenClientIsRegistered
@@ -368,8 +343,7 @@
     selfUser.remoteIdentifier = [NSUUID UUID];
     selfUser.emailAddress = @"email@domain.com";
     [[[self.mockCookieStorage stub] andReturn:[NSData data]] authenticationCookieData];
-    self.loginProvider.shouldReturnNilCredentials = YES;
-    self.updateProvider.shouldReturnNilCredentials = YES;
+    self.sut.emailCredentials = nil;
     
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseUnregistered);
 
@@ -383,7 +357,7 @@
     
     // and when
     // the user entered the password, we can proceed trying to register the client
-    self.loginProvider.shouldReturnNilCredentials = NO;
+    self.sut.emailCredentials = [ZMEmailCredentials credentialsWithEmail:@"john.doe@domain.com" password:@"12345789"];
     
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseUnregistered);

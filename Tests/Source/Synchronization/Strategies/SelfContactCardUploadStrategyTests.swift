@@ -22,23 +22,20 @@ import WireLinkPreview
 
 class SelfContactCardUploadStrategyTests : MessagingTest {
     
-    var sut : WireSyncEngine.SelfContactCardUploadStrategy!
-    var authenticationStatus : MockAuthenticationStatus!
+    var sut : SelfContactCardUploadStrategy!
     var clientRegistrationStatus : ZMMockClientRegistrationStatus!
     
     override func setUp() {
         super.setUp()
-        self.authenticationStatus = MockAuthenticationStatus(phase: .authenticated)
-        self.clientRegistrationStatus = ZMMockClientRegistrationStatus()
+        self.clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: ZMPersistentCookieStorage(), registrationStatusDelegate: nil)
         self.clientRegistrationStatus.mockPhase = .registered
         
-        self.sut = WireSyncEngine.SelfContactCardUploadStrategy(authenticationStatus: self.authenticationStatus,
-                                                               clientRegistrationStatus: self.clientRegistrationStatus,
-                                                               managedObjectContext: self.syncMOC)
+        self.sut = SelfContactCardUploadStrategy(authenticationStatus: MockAuthenticationProvider(),
+                                                 clientRegistrationStatus: self.clientRegistrationStatus,
+                                                 managedObjectContext: self.syncMOC)
     }
     
     override func tearDown() {
-        self.authenticationStatus = nil
         self.clientRegistrationStatus.tearDown()
         self.clientRegistrationStatus = nil
         self.sut = nil

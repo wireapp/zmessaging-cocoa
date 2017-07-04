@@ -95,7 +95,7 @@
     
     self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
     [[[[self.applicationStatusDirectoryMock expect] andReturn: self.applicationStatusDirectoryMock] classMethod] alloc];
-    (void) [[[self.applicationStatusDirectoryMock expect] andReturn:self.applicationStatusDirectoryMock] initWithManagedObjectContext:OCMOCK_ANY cookie:OCMOCK_ANY requestCancellation:OCMOCK_ANY application:OCMOCK_ANY syncStateDelegate:OCMOCK_ANY];
+    (void) [[[self.applicationStatusDirectoryMock expect] andReturn:self.applicationStatusDirectoryMock] initWithManagedObjectContext:OCMOCK_ANY cookieStorage:OCMOCK_ANY requestCancellation:OCMOCK_ANY application:OCMOCK_ANY syncStateDelegate:OCMOCK_ANY];
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.syncStatusMock] syncStatus];
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.operationStatusMock] operationStatus];
     [(ZMApplicationStatusDirectory *)[[self.applicationStatusDirectoryMock stub] andReturn:self.userProfileImageUpdateStatus] userProfileImageUpdateStatus];
@@ -171,7 +171,7 @@
     
     self.sut = [[ZMSyncStrategy alloc] initWithSyncManagedObjectContextMOC:self.syncMOC
                                                     uiManagedObjectContext:self.uiMOC
-                                                                    cookie:nil
+                                                             cookieStorage:nil
                                                               mediaManager:nil
                                                        onDemandFlowManager:nil
                                                          syncStateDelegate:self.syncStateDelegate
@@ -185,9 +185,6 @@
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
     XCTAssertEqual(self.sut.selfStrategy, selfStrategy);
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
-    XCTAssertEqual(self.sut.registrationTranscoder, registrationTranscoder);
-    XCTAssertEqual(self.sut.loginCodeRequestTranscoder, loginCodeRequestTranscoder);
-    XCTAssertEqual(self.sut.phoneNumberVerificationTranscoder, phoneNumberVerificationTranscoder);
     
     WaitForAllGroupsToBeEmpty(0.5);
 }
