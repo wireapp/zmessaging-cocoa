@@ -79,8 +79,6 @@
     // given
     NSString *version = @"The-version-123";
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
-    [[[[transportSession stub] classMethod] andReturn:transportSession] alloc];
-    (void) [[[transportSession expect] andReturn:transportSession] initWithBaseURL:OCMOCK_ANY websocketURL:OCMOCK_ANY mainGroupQueue:OCMOCK_ANY initialAccessToken:OCMOCK_ANY application:OCMOCK_ANY sharedContainerIdentifier:OCMOCK_ANY];
     [[[transportSession stub] andReturn:[OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]]] cookieStorage];
     
     // expect
@@ -90,6 +88,8 @@
     // when
     ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
                                                                analytics:nil
+                                                        transportSession:transportSession
+                                                                  userId:nil
                                                               appVersion:version
                                                       appGroupIdentifier:self.groupIdentifier];
     XCTAssertNotNil(session);
@@ -447,17 +447,18 @@
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-- (void)testThatItNotifiesAuthenticationCenterObserversWhenTheCredentialsChange
-{
-    // given
-    self.dataChangeNotificationsCount = 0;
-    
-    // when
-    [self.sut.authenticationStatus prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:@"bar@bar.bar" password:@"boo"]];
-    
-    // then
-    XCTAssertEqual(self.dataChangeNotificationsCount, 1u);
-}
+// TODO jacob delete?
+//- (void)testThatItNotifiesAuthenticationCenterObserversWhenTheCredentialsChange
+//{
+//    // given
+//    self.dataChangeNotificationsCount = 0;
+//    
+//    // when
+//    [self.sut.authenticationStatus prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:@"bar@bar.bar" password:@"boo"]];
+//    
+//    // then
+//    XCTAssertEqual(self.dataChangeNotificationsCount, 1u);
+//}
 
 @end
 

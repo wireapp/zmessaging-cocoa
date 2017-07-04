@@ -39,15 +39,9 @@
 - (void)setUp {
     [super setUp];
     
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.uiMOC cookie:nil];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:nil];
     
-    id applicationStatusDirectory = [OCMockObject mockForClass:[ZMApplicationStatusDirectory class]];
-    [[[applicationStatusDirectory stub] andReturn:self.authenticationStatus] authenticationStatus];
-    [[[applicationStatusDirectory stub] andReturnValue:@(ZMSynchronizationStateUnauthenticated)] synchronizationState];
-    [[[applicationStatusDirectory stub] andReturnValue:@(BackgroundNotificationFetchStatusDone)] notificationFetchStatus];
-    [(ZMApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturnValue:@(ZMOperationStateForeground)] operationState];
-    
-    self.sut = [[ZMPhoneNumberVerificationTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatusDirectory:applicationStatusDirectory];
+    self.sut = [[ZMPhoneNumberVerificationTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus];
 }
 
 - (void)tearDown {
@@ -326,7 +320,7 @@
 
 - (void)testThatIfPhoneActivationRequestFailsItClearsPhoneNumberAndCode
 {
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.sut.managedObjectContext];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     XCTAssertNil(selfUser.phoneNumber);
     
     //given

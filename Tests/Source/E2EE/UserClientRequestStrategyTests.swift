@@ -1,4 +1,4 @@
-//
+
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -31,9 +31,8 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     var clientRegistrationStatus: ZMMockClientRegistrationStatus!
     var authenticationStatus: MockAuthenticationStatus!
     var clientUpdateStatus: ZMMockClientUpdateStatus!
+    let fakeCredentialsProvider = FakeCredentialProvider()
     
-    var loginProvider: FakeCredentialProvider!
-    var updateProvider: FakeCredentialProvider!
     var cookieStorage : ZMPersistentCookieStorage!
     
     var spyKeyStore: SpyUserClientKeyStore!
@@ -45,13 +44,9 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
 
         self.spyKeyStore = SpyUserClientKeyStore(in: UserClientKeysStore.otrDirectoryURL)
         cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer")
-        let cookie = ZMCookie(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage)
-        loginProvider = FakeCredentialProvider()
-        updateProvider = FakeCredentialProvider()
-        clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, loginCredentialProvider:loginProvider, update:updateProvider, cookie:cookie, registrationStatusDelegate: nil)
-        authenticationStatus = MockAuthenticationStatus(cookie: cookie);
+        clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage, registrationStatusDelegate: nil)
         clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
-        sut = UserClientRequestStrategy(authenticationStatus:authenticationStatus, clientRegistrationStatus: clientRegistrationStatus, clientUpdateStatus:clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
+        sut = UserClientRequestStrategy(clientRegistrationStatus: clientRegistrationStatus, clientUpdateStatus:clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
         NotificationCenter.default.addObserver(self, selector: #selector(UserClientRequestStrategyTests.didReceiveAuthenticationNotification(_:)), name: NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil)
     }
     
@@ -98,8 +93,8 @@ extension UserClientRequestStrategyTests {
         let request = self.sut.nextRequest()
         
         // then
-        let expectedRequest = try! sut.requestsFactory.registerClientRequest(client, credentials: self.updateProvider.emailCredentials(), authenticationStatus:authenticationStatus).transportRequest!
-        
+        let expectedRequest = try! sut.requestsFactory.registerClientRequest(client, credentials: fakeCredentialsProvider.emailCredentials(), cookieLabel: "mycookie").transportRequest!
+                
         AssertOptionalNotNil(request, "Should return request if there is inserted UserClient object") { request in
             XCTAssertNotNil(request.payload, "Request should contain payload")
             XCTAssertEqual(request.method, expectedRequest.method,"")

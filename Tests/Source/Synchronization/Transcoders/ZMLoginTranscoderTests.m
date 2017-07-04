@@ -80,20 +80,13 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [super setUp];
     
     self.originalLoginTimerInterval = DefaultPendingValidationLoginAttemptInterval;
-    ZMCookie *cookie = [[ZMCookie alloc] initWithManagedObjectContext:self.uiMOC cookieStorage:[ZMPersistentCookieStorage storageForServerName:@"test"]];
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithManagedObjectContext:self.syncMOC cookie:cookie];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:[ZMPersistentCookieStorage storageForServerName:@"test"]];
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
-    
-    self.mockApplicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
-    [[[self.mockApplicationStatusDirectory stub] andReturn:self.authenticationStatus] authenticationStatus];
-    [[[self.mockApplicationStatusDirectory stub] andReturn:self.mockClientRegistrationStatus] clientRegistrationStatus];
-    [[[self.mockApplicationStatusDirectory stub] andReturnValue:@(ZMSynchronizationStateUnauthenticated)] synchronizationState];
-    [(ZMApplicationStatusDirectory *)[[self.mockApplicationStatusDirectory stub] andReturnValue:@(ZMOperationStateForeground)] operationState];
     
     self.mockLocale = [OCMockObject niceMockForClass:[NSLocale class]];
     [[[self.mockLocale stub] andReturn:[NSLocale localeWithLocaleIdentifier:@"fr_FR"]] currentLocale];
     
-    self.sut = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatusDirectory:self.mockApplicationStatusDirectory];
+    self.sut = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus];
     
     self.testEmailCredentials = [ZMEmailCredentials credentialsWithEmail:TestEmail password:TestPassword];
     self.testPhoneNumberCredentials = [ZMPhoneCredentials credentialsWithPhoneNumber:TestPhoneNumber verificationCode:TestPhoneCode];
@@ -112,7 +105,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)testThatItCreatesTheTimedRequestSyncWithZeroDelayInDefaultConstructor
 {
     // given
-    ZMLoginTranscoder *sut = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatusDirectory:self.mockApplicationStatusDirectory];
+    ZMLoginTranscoder *sut = [[ZMLoginTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus];
     
     // then
     XCTAssertNotNil(sut.timedDownstreamSync);

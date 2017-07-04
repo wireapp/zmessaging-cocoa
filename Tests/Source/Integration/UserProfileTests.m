@@ -137,7 +137,7 @@
     [[authenticationObserver expect] authenticationDidSucceed];
     
     // when
-    [self.userSession registerSelfUser:user];
+//    [self.userSession registerSelfUser:user]; // TODO jacob
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

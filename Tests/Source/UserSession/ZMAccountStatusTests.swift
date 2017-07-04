@@ -24,7 +24,7 @@ class MockCookieStorage : NSObject, ZMCookieProvider {
     
     var shouldReturnCookie : Bool = false
     
-    var data : Data! {
+    var data : Data? {
         if shouldReturnCookie {
             return Data()
         }
