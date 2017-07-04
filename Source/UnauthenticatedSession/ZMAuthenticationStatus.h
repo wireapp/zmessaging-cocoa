@@ -116,10 +116,8 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 @interface NSManagedObjectContext (Registration)
 
+@property (nonatomic) BOOL registeredOnThisDevice;
 - (NSString *)legacyCookieLabel;
-
-- (void)setRegisteredOnThisDevice:(BOOL)registeredOnThisDevice;
-- (BOOL)isRegisteredOnThisDevice;
 
 @end
 

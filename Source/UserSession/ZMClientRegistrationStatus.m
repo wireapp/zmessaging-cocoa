@@ -211,7 +211,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (BOOL)isAddingEmailNecessary
 {
-    return ![self.managedObjectContext isRegisteredOnThisDevice] && self.isWaitingForSelfUserEmail;
+    return ![self.managedObjectContext registeredOnThisDevice] && self.isWaitingForSelfUserEmail;
 }
 
 - (void)prepareForClientRegistration

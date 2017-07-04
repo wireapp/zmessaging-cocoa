@@ -53,7 +53,7 @@
 
 - (BOOL)registeredOnThisDevice
 {
-    return [self.managedObjectContext isRegisteredOnThisDevice];
+    return [self.managedObjectContext registeredOnThisDevice];
 }
 
 @end
