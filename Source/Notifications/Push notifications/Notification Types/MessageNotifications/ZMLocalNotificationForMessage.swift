@@ -24,7 +24,7 @@ public protocol NotificationForMessage : LocalNotification {
     associatedtype MessageType : ZMMessage
     
     var contentType : ZMLocalNotificationContentType { get }
-    init?(message: MessageType, application: Application?)
+    init?(message: MessageType, application: ZMApplication?)
     func copyByAddingMessage(_ message: MessageType) -> Self?
     func configureAlertBody(_ message: MessageType) -> String
     static func shouldCreateNotification(_ message: MessageType) -> Bool
@@ -105,9 +105,9 @@ final public class ZMLocalNotificationForMessage : ZMLocalNotification, Notifica
     }
     
     var eventCount : Int = 1
-    unowned public var application : Application
+    unowned public var application : ZMApplication
     
-    public required init?(message: ZMOTRMessage, application: Application?) {
+    public required init?(message: ZMOTRMessage, application: ZMApplication?) {
         self.contentType = ZMLocalNotificationContentType.typeForMessage(message)
         guard type(of: self).canCreateNotification(message, contentType: contentType),
               let conversation = message.conversation,

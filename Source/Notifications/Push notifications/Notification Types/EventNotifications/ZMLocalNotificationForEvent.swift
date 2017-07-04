@@ -21,7 +21,7 @@ import Foundation
 
 public protocol LocalNotification {
     var conversationID : UUID? { get }
-    var application : Application {get}
+    var application : ZMApplication {get}
     var notifications : [UILocalNotification] {get set}
     func cancelNotifications()
 }
@@ -38,12 +38,12 @@ public protocol EventNotification : LocalNotification {
     var ignoresSilencedState : Bool { get }
     var eventType : ZMUpdateEventType { get }
     var managedObjectContext: NSManagedObjectContext {get }
-    init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?)
+    init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: ZMApplication?)
 }
 
 
 public extension ZMLocalNotificationForEvent {
-    public static func notification(forEvent event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?, sessionTracker: SessionTracker) -> ZMLocalNotificationForEvent? {
+    public static func notification(forEvent event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: ZMApplication?, sessionTracker: SessionTracker) -> ZMLocalNotificationForEvent? {
         switch event.type {
         case .conversationOtrMessageAdd:
             if let note = ZMLocalNotificationForReaction(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application: application) {
@@ -78,7 +78,7 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
         return notifications
     }
     
-    open let application : Application
+    open let application : ZMApplication
     open let managedObjectContext : NSManagedObjectContext
     
     open var events : [ZMUpdateEvent] = []
@@ -94,7 +94,7 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
         return [:]
     }
     
-    required public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?) {
+    required public init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: ZMApplication?) {
         self.application = application ?? UIApplication.shared
         self.events = events
         if let senderUUID = events.last?.senderUUID() {

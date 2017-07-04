@@ -41,7 +41,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     
     fileprivate var callInProgressObserverToken : NSObjectProtocol? = nil
     
-    public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookieStorage : ZMPersistentCookieStorage, requestCancellation: ZMRequestCancellation, application : Application, syncStateDelegate: ZMSyncStateDelegate) {
+    public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookieStorage : ZMPersistentCookieStorage, requestCancellation: ZMRequestCancellation, application : ZMApplication, syncStateDelegate: ZMSyncStateDelegate) {
         self.requestCancellation = requestCancellation
         self.apnsConfirmationStatus = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: managedObjectContext, backgroundActivityFactory: BackgroundActivityFactory.sharedInstance())
         self.operationStatus = OperationStatus()

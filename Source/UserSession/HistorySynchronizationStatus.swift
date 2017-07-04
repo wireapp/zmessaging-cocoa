@@ -35,13 +35,13 @@ import Foundation
 {
     fileprivate var isSyncing = false
     fileprivate var isInBackground = false
-    fileprivate let application : Application
+    fileprivate let application : ZMApplication
     
     /// Managed object context used to execute on the right thread
     fileprivate var moc : NSManagedObjectContext
     
     public init(managedObjectContext: NSManagedObjectContext,
-                application: Application) {
+                application: ZMApplication) {
         self.moc = managedObjectContext
         self.isSyncing = true
         self.isInBackground = false

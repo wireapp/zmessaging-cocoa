@@ -27,7 +27,7 @@ import UIKit
     let backgroundTime : TimeInterval = 25
     private var tornDown = false
     private var messageNonces : [UUID : ZMBackgroundActivity] = [:]
-    private unowned var application : Application
+    private unowned var application : ZMApplication
     private unowned var managedObjectContext : NSManagedObjectContext
     private unowned var backgroundActivityFactory : BackgroundActivityFactory
 
@@ -35,7 +35,7 @@ import UIKit
         return messageNonces.count > 0 && application.applicationState == .background
     }
     
-    @objc public init(application: Application,
+    @objc public init(application: ZMApplication,
                       managedObjectContext: NSManagedObjectContext,
                       backgroundActivityFactory: BackgroundActivityFactory) {
         self.application = application

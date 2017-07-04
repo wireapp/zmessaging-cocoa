@@ -20,7 +20,7 @@ import Foundation
 import UIKit
 
 /// An abstraction of the application (UIApplication, NSApplication)
-@objc(ZMApplication) public protocol Application : NSObjectProtocol {
+@objc public protocol ZMApplication : NSObjectProtocol {
     
     /// the current application state
     var applicationState : UIApplicationState { get }
@@ -66,7 +66,7 @@ import UIKit
 }
 
 
-extension UIApplication : Application {
+extension UIApplication : ZMApplication {
     
     public var alertNotificationsEnabled : Bool {
         return self.currentUserNotificationSettings?.types.contains(.alert) ?? false

@@ -28,14 +28,14 @@ public class LocalNotificationDispatcher: NSObject {
     let callingNotifications: ZMLocalNotificationSet
     let failedMessageNotification: ZMLocalNotificationSet
     
-    let application: Application
+    let application: ZMApplication
     let sessionTracker: SessionTracker
     let syncMOC: NSManagedObjectContext
     var isTornDown: Bool
     
     @objc(initWithManagedObjectContext:application:)
     public init(in managedObjectContext: NSManagedObjectContext,
-                application: Application) {
+                application: ZMApplication) {
         self.syncMOC = managedObjectContext
         self.eventNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherEventNotificationsKey", keyValueStore: managedObjectContext)
         self.failedMessageNotification = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherFailedNotificationsKey", keyValueStore: managedObjectContext)

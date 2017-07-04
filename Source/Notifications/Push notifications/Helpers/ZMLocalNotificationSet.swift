@@ -35,11 +35,11 @@ import WireTransport
     
     var oldNotifications = [UILocalNotification]()
     
-    weak var application: Application?
+    weak var application: ZMApplication?
     let archivingKey : String
     let keyValueStore : ZMSynchonizableKeyValueStore
     
-    public init(application: Application, archivingKey: String, keyValueStore: ZMSynchonizableKeyValueStore) {
+    public init(application: ZMApplication, archivingKey: String, keyValueStore: ZMSynchonizableKeyValueStore) {
         self.application = application
         self.archivingKey = archivingKey
         self.keyValueStore = keyValueStore

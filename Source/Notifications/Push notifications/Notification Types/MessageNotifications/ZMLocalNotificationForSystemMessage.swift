@@ -33,9 +33,9 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
         return notifications
     }
     
-    unowned public var application : Application
+    unowned public var application : ZMApplication
     
-    public required init?(message: ZMSystemMessage, application: Application?) {
+    public required init?(message: ZMSystemMessage, application: ZMApplication?) {
         self.contentType = ZMLocalNotificationContentType.typeForMessage(message)
         guard type(of: self).canCreateNotification(message),
               let sender = message.sender
