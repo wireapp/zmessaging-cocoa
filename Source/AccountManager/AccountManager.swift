@@ -26,7 +26,7 @@ public protocol AccountStateDelegate : class {
     
     func unauthenticatedSessionCreated(session : UnauthenticatedSession)
     func userSessionCreated(session : ZMUserSession)
-    
+    func willStartMigratingLocalStore()
 }
 
 @objc
@@ -41,7 +41,7 @@ public class AccountManager : NSObject {
     let authenticationStatus: ZMAuthenticationStatus
     var userSession: ZMUserSession?
     
-    public init(appGroupIdentifier: String, appVersion: String, mediaManager: AVSMediaManager, analytics: AnalyticsType?, delegate: AccountStateDelegate?) {
+    public init(appGroupIdentifier: String, appVersion: String, mediaManager: AVSMediaManager, analytics: AnalyticsType?, delegate: AccountStateDelegate?, application: ZMApplication, launchOptions: [UIApplicationLaunchOptionsKey : Any]) {
         self.appGroupIdentifier = appGroupIdentifier
         self.appVersion = appVersion
         self.mediaManager = mediaManager
@@ -65,17 +65,29 @@ public class AccountManager : NSObject {
         authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(observer: self)
 
         if storeExists {
+            let createSession = {
+                let userSession = ZMUserSession(mediaManager: mediaManager,
+                                                analytics: analytics,
+                                                transportSession: self.transportSession,
+                                                userId:nil,
+                                                appVersion: appVersion,
+                                                appGroupIdentifier: appGroupIdentifier)!
+                
+                delegate?.userSessionCreated(session: userSession)
+                userSession.application(application, didFinishLaunchingWithOptions: launchOptions)
+                if let url = launchOptions[.url] as? URL {
+                    userSession.didLaunch(with: url)
+                }
+            }
         
-            // TODO migrate if necessary
-            
-            let userSession = ZMUserSession(mediaManager: mediaManager,
-                                            analytics: analytics,
-                                            transportSession: transportSession,
-                                            userId:nil,
-                                            appVersion: appVersion,
-                                            appGroupIdentifier: appGroupIdentifier)!
-            
-            delegate?.userSessionCreated(session: userSession)
+            if ZMUserSession.needsToPrepareLocalStore(usingAppGroupIdentifier: appGroupIdentifier) {
+                delegate?.willStartMigratingLocalStore()
+                ZMUserSession.prepareLocalStore(usingAppGroupIdentifier: appGroupIdentifier) {
+                    DispatchQueue.main.async(execute: createSession)
+                }
+            } else {
+                createSession()
+            }
         } else {
             do {
                 let unauthenticatedSession = try UnauthenticatedSession(authenticationStatus: authenticationStatus, transportSession: transportSession, delegate: self)
