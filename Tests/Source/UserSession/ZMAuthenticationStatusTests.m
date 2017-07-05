@@ -76,7 +76,7 @@
     self.sut = nil;
     self.cookieStorage = nil;
     
-    [ZMUserSessionAuthenticationNotification removeObserver:self.authenticationObserverToken];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:self.authenticationObserverToken];
     self.authenticationObserverToken = nil;
     
     [ZMUserSessionRegistrationNotification removeObserver:self.registrationObserverToken];

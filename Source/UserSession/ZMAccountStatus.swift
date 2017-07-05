@@ -143,7 +143,7 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, 
     
     deinit {
         ZMUserSession.removeInitalSyncCompletionObserver(self)
-        ZMUserSessionAuthenticationNotification.removeObserver(authenticationToken)
+        ZMUserSessionAuthenticationNotification.removeObserver(for: authenticationToken)
         ZMUserSessionRegistrationNotification.removeObserver(registrationToken)
     }
 

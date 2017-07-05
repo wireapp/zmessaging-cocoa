@@ -105,7 +105,7 @@
     XCTAssertEqual(self.authenticationStatus.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     
-    [ZMUserSessionAuthenticationNotification removeObserver:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 
@@ -132,7 +132,7 @@
     XCTAssertEqual(self.authenticationStatus.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     
-    [ZMUserSessionAuthenticationNotification removeObserver:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 
@@ -159,7 +159,7 @@
     XCTAssertEqual(self.authenticationStatus.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     
-    [ZMUserSessionAuthenticationNotification removeObserver:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 
@@ -186,7 +186,7 @@
     XCTAssertEqual(self.authenticationStatus.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     
-    [ZMUserSessionAuthenticationNotification removeObserver:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 @end

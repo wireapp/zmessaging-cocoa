@@ -83,7 +83,7 @@ public enum ClientUpdateError : NSInteger {
     }
     
     public func tearDown() {
-        ZMUserSessionAuthenticationNotification.removeObserver(self.authenticationToken)
+        ZMUserSessionAuthenticationNotification.removeObserver(for: self.authenticationToken)
         authenticationToken = nil
         tornDown = true
     }

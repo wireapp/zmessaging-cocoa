@@ -85,7 +85,7 @@
 }
 
 - (void)tearDown {
-    [ZMUserSessionAuthenticationNotification removeObserver:self.sessionToken];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:self.sessionToken];
     [self.sessionNotifications removeAllObjects];
     self.mockCookieStorage = nil;
     [self.sut tearDown];
@@ -205,7 +205,7 @@
     XCTAssertTrue(notificationReceived);
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseUnregistered);
     
-    [ZMUserSessionAuthenticationNotification removeObserver:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)testThatItResets_LocallyModifiedKeys_AfterUserSelectedClientToDelete

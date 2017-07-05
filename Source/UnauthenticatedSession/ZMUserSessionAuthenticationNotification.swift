@@ -33,7 +33,7 @@ import Foundation
 }
 
 extension ZMUserSessionAuthenticationNotification {
-    @objc public static func addObserver(observer: ZMAuthenticationObserver) -> ZMAuthenticationObserverToken {
+    @objc public static func addObserver(_ observer: ZMAuthenticationObserver) -> ZMAuthenticationObserverToken {
         return addObserver { [weak observer] in
             let error = $0.error
             switch $0.type {

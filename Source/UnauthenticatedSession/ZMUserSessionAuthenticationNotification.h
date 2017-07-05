@@ -51,7 +51,7 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionAuthenticationNotificationType) {
 + (void)notifyLoginCodeRequestDidSucceed;
 
 + (id<ZMAuthenticationObserverToken>)addObserverWithBlock:(void(^)(ZMUserSessionAuthenticationNotification *))block ZM_MUST_USE_RETURN;
-+ (void)removeObserver:(id<ZMAuthenticationObserverToken>)token;
++ (void)removeObserverForToken:(id<ZMAuthenticationObserverToken>)token;
 
 @end
 

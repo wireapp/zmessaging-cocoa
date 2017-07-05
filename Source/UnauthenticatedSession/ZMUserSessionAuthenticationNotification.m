@@ -72,7 +72,7 @@ static NSString *const UserSessionAuthenticationNotificationName =  @"ZMUserSess
     }];
 }
 
-+ (void)removeObserver:(id<ZMAuthenticationObserverToken>)token
++ (void)removeObserverForToken:(id<ZMAuthenticationObserverToken>)token
 {
     [[NSNotificationCenter defaultCenter] removeObserver:token name:UserSessionAuthenticationNotificationName object:nil];
 }

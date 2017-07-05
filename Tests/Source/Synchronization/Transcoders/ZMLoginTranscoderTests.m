@@ -144,7 +144,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     //then
     XCTAssert(notified);
-    [ZMUserSessionAuthenticationNotification removeObserver:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)expectRegistrationSucceedAfter:(void(^)())block;
