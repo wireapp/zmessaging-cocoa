@@ -360,7 +360,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         [syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
     
-    if (!self.listPaginator.hasMoreToFetch && self.lastUpdateEventID != nil && self.isSyncing) {
+    if (!self.listPaginator.hasMoreToFetch && self.isSyncing) {
         
         // The fetch of the notification stream was initiated after the push channel was established
         // so we must restart the fetching to be sure that we haven't missed any notifications.
