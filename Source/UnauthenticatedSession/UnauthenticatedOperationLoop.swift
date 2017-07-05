@@ -32,6 +32,20 @@ class UnauthenticatedOperationLoop: NSObject {
         super.init()
         RequestAvailableNotification.addObserver(self)
     }
+    
+    deinit {
+        for requestStrategy in requestStrategies {
+                        
+            if let requestStrategy = requestStrategy as? NSObject {
+                let tearDownSelector = Selector("tearDown") // TODO referer to a teardown protocol
+                
+                if requestStrategy.responds(to: tearDownSelector) {
+                    requestStrategy.perform(tearDownSelector)
+                }
+            }
+            
+        }
+    }
 }
 
 extension UnauthenticatedOperationLoop: RequestAvailableObserver {
@@ -39,8 +53,10 @@ extension UnauthenticatedOperationLoop: RequestAvailableObserver {
         self.transportSession.attemptToEnqueueSyncRequest { () -> ZMTransportRequest? in
             let request = (self.requestStrategies as NSArray).nextRequest()
             
-            request?.add(ZMCompletionHandler(on: self.operationQueue, block: {_ in 
-                RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+            request?.add(ZMCompletionHandler(on: self.operationQueue, block: {_ in
+                self.operationQueue.performGroupedBlock { [weak self] in
+                    self?.newRequestsAvailable()
+                }
             }))
             
             return request
