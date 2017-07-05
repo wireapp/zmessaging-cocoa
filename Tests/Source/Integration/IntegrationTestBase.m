@@ -27,7 +27,6 @@
 #import "ZMUserSession+Authentication.h"
 #import "ZMUserSession+Registration.h"
 #import "ZMCredentials.h"
-#import <WireSyncEngine/ZMAuthenticationStatus+Testing.h>
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMCallFlowRequestStrategy.h"
 #import "ZMOperationLoop+Private.h"
@@ -444,7 +443,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         didSucceed = YES;
     }] authenticationDidSucceed];
 
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
 //    [self.userSession loginWithCredentials:credentials]; // TODO jacob
     
     BOOL done = [self waitOnMainLoopUntilBlock:^BOOL{
@@ -461,7 +460,7 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
 
     }
     
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
     return done;
 }
 

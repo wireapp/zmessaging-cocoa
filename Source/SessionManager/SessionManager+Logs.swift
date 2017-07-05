@@ -16,17 +16,16 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+import Foundation
 
-@import WireUtilities;
-@import WireTransport;
-@import WireDataModel;
-
-#import "ZMUserSession.h"
-
-@interface ZMUserSession (Private)
-
-@property (nonatomic, readonly) ZMTransportSession *transportSession;
-
-- (void)tearDown;
-
-@end
+extension SessionManager {
+    
+    static func enableLogsByEnvironmentVariable() {
+        if let tags = ProcessInfo.processInfo.environment["ZMLOG_TAGS"] {
+            for tag in (tags.characters.split { $0 == "," }.map { String($0) }) {
+                ZMSLog.set(level: .debug, tag: tag)
+            }
+        }
+    }
+    
+}

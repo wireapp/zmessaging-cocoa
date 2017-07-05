@@ -204,13 +204,16 @@ ZM_EMPTY_ASSERTING_INIT()
 - (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
+                     apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                               userId:(NSUUID * __unused)uuid
                           appVersion:(NSString *)appVersion
                   appGroupIdentifier:(NSString *)appGroupIdentifier;
 {
     self.applicationGroupIdentifier = appGroupIdentifier;
 
-    ZMAPNSEnvironment *apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
+    if (apnsEnvironment == nil) {
+        apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
+    }
     
     self.storeURL = [self.class storeURLForAppGroupIdentifier:appGroupIdentifier];
     self.keyStoreURL = [self.class keyStoreURLForAppGroupIdentifier:appGroupIdentifier];
@@ -227,16 +230,19 @@ ZM_EMPTY_ASSERTING_INIT()
     [[BackgroundActivityFactory sharedInstance] setMainGroupQueue:userInterfaceContext];
     
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
-    transportSession.requestLoopDetectionCallback = ^(NSString *path) {
-        // The tracker will return NO in case the path should be ignored.
-        if (! [tracker tagWithPath:path]) {
-            return;
-        }
-        ZMLogWarn(@"Request loop happening at path: %@", path);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportRequestLoopNotificationName object:nil userInfo:@{@"path" : path}];
-        });
-    };
+    
+    if ([transportSession respondsToSelector:@selector(setRequestLoopDetectionCallback:)]) {
+        transportSession.requestLoopDetectionCallback = ^(NSString *path) {
+            // The tracker will return NO in case the path should be ignored.
+            if (! [tracker tagWithPath:path]) {
+                return;
+            }
+            ZMLogWarn(@"Request loop happening at path: %@", path);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportRequestLoopNotificationName object:nil userInfo:@{@"path" : path}];
+            });
+        };
+    }
     
     
     self = [self initWithTransportSession:transportSession
@@ -268,7 +274,6 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if(self) {
         
-        [ZMUserSession enableLogsByEnvironmentVariable];
         self.appVersion = appVersion;
         [ZMUserAgent setWireAppVersion:appVersion];
         self.didStartInitialSync = NO;

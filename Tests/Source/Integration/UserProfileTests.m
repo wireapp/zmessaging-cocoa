@@ -131,7 +131,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id authenticationObserverToken = [self.userSession addAuthenticationObserver:authenticationObserver];
+    id authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     
     // expect
     [[authenticationObserver expect] authenticationDidSucceed];
@@ -142,7 +142,7 @@
     
     // then
     [authenticationObserver verify];
-    [self.userSession removeAuthenticationObserverForToken:authenticationObserverToken];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:authenticationObserverToken];
 }
 
 @end

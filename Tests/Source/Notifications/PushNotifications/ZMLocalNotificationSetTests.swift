@@ -57,9 +57,9 @@ class MockEventNotification : MockLocalNotification, EventNotification {
     var eventTypeUnderTest : ZMUpdateEventType?
     var ignoresSilencedState : Bool { return false }
     var eventType : ZMUpdateEventType { return eventTypeUnderTest ?? .unknown }
-    unowned var application: Application
+    unowned var application: ZMApplication
     unowned var managedObjectContext: NSManagedObjectContext
-    required init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: Application?) {
+    required init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: ZMApplication?) {
         self.managedObjectContext = managedObjectContext
         self.application = application!
         super.init(conversationID: conversation?.remoteIdentifier)

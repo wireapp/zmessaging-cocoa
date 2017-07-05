@@ -49,7 +49,7 @@ import WireSyncEngine
 }
 
 // MARK: - Application protocol
-extension ApplicationMock : Application {
+extension ApplicationMock : ZMApplication {
     
     public func scheduleLocalNotification(_ notification: UILocalNotification) {
         self.scheduledLocalNotifications.append(notification)

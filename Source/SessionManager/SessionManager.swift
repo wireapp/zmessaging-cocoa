@@ -35,30 +35,65 @@ public class SessionManager : NSObject {
     public let appVersion: String
     public let mediaManager: AVSMediaManager
     public var analytics: AnalyticsType?
+    var apnsEnvironment : ZMAPNSEnvironment?
     let transportSession: ZMTransportSession
     public weak var delegate : SessionManagerDelegate? = nil
     var authenticationToken: Any?
     let authenticationStatus: ZMAuthenticationStatus
     var userSession: ZMUserSession?
     
-    public init(appGroupIdentifier: String, appVersion: String, mediaManager: AVSMediaManager, analytics: AnalyticsType?, delegate: SessionManagerDelegate?, application: ZMApplication, launchOptions: [UIApplicationLaunchOptionsKey : Any]) {
-        self.appGroupIdentifier = appGroupIdentifier
-        self.appVersion = appVersion
-        self.mediaManager = mediaManager
-        self.analytics = analytics
-        self.delegate = delegate
+    public convenience init(appGroupIdentifier: String,
+                appVersion: String,
+                mediaManager: AVSMediaManager,
+                analytics: AnalyticsType?,
+                delegate: SessionManagerDelegate?,
+                application: ZMApplication,
+                launchOptions: [UIApplicationLaunchOptionsKey : Any]) {
         
         ZMBackendEnvironment.setupEnvironments()
+        
         let environment = ZMBackendEnvironment(userDefaults: .standard)
         let backendURL = environment.backendURL
         let websocketURL = environment.backendWSURL
         let cookieStorage = ZMPersistentCookieStorage(forServerName: backendURL.host!)
-        authenticationStatus = ZMAuthenticationStatus(cookieStorage: cookieStorage)
-        transportSession = ZMTransportSession(baseURL: backendURL,
-                                              websocketURL: websocketURL,
-                                              cookieStorage: cookieStorage,
-                                              initialAccessToken: nil,
-                                              sharedContainerIdentifier: nil)
+        let transportSession = ZMTransportSession(baseURL: backendURL,
+                                                  websocketURL: websocketURL,
+                                                  cookieStorage: cookieStorage,
+                                                  initialAccessToken: nil,
+                                                  sharedContainerIdentifier: nil)
+        
+        self.init(appGroupIdentifier: appGroupIdentifier,
+                  appVersion: appVersion,
+                  transportSession: transportSession,
+                  mediaManager: mediaManager,
+                  analytics: analytics,
+                  delegate: delegate,
+                  application: application,
+                  launchOptions: launchOptions)
+        
+    }
+    
+    public init(appGroupIdentifier: String,
+                appVersion: String,
+                transportSession: ZMTransportSession,
+                apnsEnvironment: ZMAPNSEnvironment? = nil,
+                mediaManager: AVSMediaManager,
+                analytics: AnalyticsType?,
+                delegate: SessionManagerDelegate?,
+                application: ZMApplication,
+                launchOptions: [UIApplicationLaunchOptionsKey : Any]) {
+        
+        SessionManager.enableLogsByEnvironmentVariable()
+        
+        self.appGroupIdentifier = appGroupIdentifier
+        self.appVersion = appVersion
+        self.apnsEnvironment = apnsEnvironment
+        self.mediaManager = mediaManager
+        self.analytics = analytics
+        self.delegate = delegate
+        self.transportSession = transportSession
+        
+        authenticationStatus = ZMAuthenticationStatus(cookieStorage: transportSession.cookieStorage)
         
         super.init()
         
@@ -69,6 +104,7 @@ public class SessionManager : NSObject {
                 let userSession = ZMUserSession(mediaManager: mediaManager,
                                                 analytics: analytics,
                                                 transportSession: self.transportSession,
+                                                apnsEnvironment: self.apnsEnvironment,
                                                 userId:nil,
                                                 appVersion: appVersion,
                                                 appGroupIdentifier: appGroupIdentifier)!
@@ -96,6 +132,10 @@ public class SessionManager : NSObject {
                 fatal("Can't create unauthenticated session: \(error)")
             }
         }
+    }
+    
+    deinit {
+        userSession?.tearDown()
     }
     
     public var isLoggedIn: Bool {
@@ -143,6 +183,7 @@ extension SessionManager: ZMAuthenticationObserver {
         let userSession = ZMUserSession(mediaManager: mediaManager,
                                         analytics: analytics,
                                         transportSession: transportSession,
+                                        apnsEnvironment: apnsEnvironment,
                                         userId:nil,
                                         appVersion: appVersion,
                                         appGroupIdentifier: appGroupIdentifier)!
@@ -157,6 +198,6 @@ extension SessionManager: ZMAuthenticationObserver {
             updateProfileImage(imageData: profileImageData)
         }
         
-        delegate?.sessionManagerCreated(userSession: userSession)
+        self.delegate?.sessionManagerCreated(userSession: userSession)
     }
 }

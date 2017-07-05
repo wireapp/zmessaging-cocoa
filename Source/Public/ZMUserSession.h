@@ -33,10 +33,10 @@
 @class ZMCallKitDelegate;
 @class CallingRequestStrategy;
 @class AVSMediaManager;
+@class ZMAPNSEnvironment;
 
 @protocol UserProfile;
 @protocol AnalyticsType;
-//@protocol AVSMediaManager;
 @protocol ZMNetworkAvailabilityObserver;
 @protocol ZMRequestsToOpenViewsDelegate;
 @protocol ZMThirdPartyServicesDelegate;
@@ -88,6 +88,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 - (instancetype)initWithMediaManager:(AVSMediaManager *)mediaManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
+                     apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                               userId:(NSUUID *)uuid
                           appVersion:(NSString *)appVersion
                   appGroupIdentifier:(NSString *)appGroupIdentifier;

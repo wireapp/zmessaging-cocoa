@@ -326,7 +326,7 @@
     [self performPretendingUiMocIsSyncMoc:^{
         [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
         // then
-        XCTAssertTrue(self.authenticationStatus.registeredOnThisDevice);
+        XCTAssertTrue(self.authenticationStatus.completedRegistration);
     }];
 }
 
@@ -536,7 +536,7 @@
         [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
     
         // then
-        XCTAssertFalse(self.authenticationStatus.registeredOnThisDevice);
+        XCTAssertFalse(self.authenticationStatus.completedRegistration);
     }];
 }
 

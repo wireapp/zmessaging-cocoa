@@ -95,8 +95,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
                               appVersion:(NSString *)appVersion
                       appGroupIdentifier:(NSString *)appGroupIdentifier;
 
-- (void)tearDown;
-
 @property (nonatomic) ZMPushRegistrant *pushRegistrant;
 @property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;

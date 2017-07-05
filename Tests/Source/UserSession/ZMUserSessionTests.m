@@ -89,6 +89,7 @@
     ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
                                                                analytics:nil
                                                         transportSession:transportSession
+                                                         apnsEnvironment:nil
                                                                   userId:nil
                                                               appVersion:version
                                                       appGroupIdentifier:self.groupIdentifier];
