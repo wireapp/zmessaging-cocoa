@@ -1544,10 +1544,10 @@
     }];
 }
 
-- (void)testThatRemovingUsersFromAnArchivedConversation_Unarchives_ThisConversation
+- (void)testThatRemovingUsersFromAnArchivedConversation_DoesNotUnarchive_ThisConversation
 {
     // expect
-    BOOL shouldUnarchive = YES;
+    BOOL shouldUnarchive = NO;
     
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -2138,7 +2138,7 @@
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
     XCTAssertEqual(window.messages.count, 1u);
     XCTAssertEqual(conversation.messages.count, 1u);
-    XCTAssertFalse(conversation.isArchived);
+    XCTAssertTrue(conversation.isArchived);
 }
 
 - (void)testThatOpeningClearedConversationRevealsIt

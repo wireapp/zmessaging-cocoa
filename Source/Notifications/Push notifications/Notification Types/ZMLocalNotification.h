@@ -43,11 +43,8 @@ extern NSString * _Null_unspecified const ZMPushStringUnknownAdd;
 extern NSString * _Null_unspecified const ZMPushStringMessageAddMany;
 
 extern NSString * _Null_unspecified const ZMPushStringMemberJoin;
-extern NSString * _Null_unspecified const ZMPushStringMemberLeave;
-extern NSString * _Null_unspecified const ZMPushStringMemberLeaveSender;
 
 extern NSString * _Null_unspecified const ZMPushStringMemberJoinMany;
-extern NSString * _Null_unspecified const ZMPushStringMemberLeaveMany;
 
 extern NSString * _Null_unspecified const ZMPushStringKnock;
 extern NSString * _Null_unspecified const ZMPushStringReaction;
@@ -56,7 +53,6 @@ extern NSString * _Null_unspecified const ZMPushStringCallStarts;
 extern NSString * _Null_unspecified const ZMPushStringCallMissed;
 extern NSString * _Null_unspecified const ZMPushStringVideoCallStarts;
 
-extern NSString * _Null_unspecified const ZMPushStringConversationRename;
 extern NSString * _Null_unspecified const ZMPushStringConnectionRequest;
 extern NSString * _Null_unspecified const ZMPushStringConnectionAccepted;
 
