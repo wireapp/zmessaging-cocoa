@@ -1333,7 +1333,7 @@
 				A926F1E0196C12ED0045BB47 /* Registration */,
 				A957B4B91962FB610060EE03 /* Notifications */,
 				54BAF1BB19212EBA008042FB /* UserSession */,
-				F19F1D361EFBF60A00275E27 /* AccountManager */,
+				F19F1D361EFBF60A00275E27 /* SessionManager */,
 				F19F1D121EFBC17A00275E27 /* UnauthenticatedSession */,
 				3E89FFA3191B6E15002D3A3E /* Data Model */,
 				85D85DBFC1F3A95767DEEA45 /* Synchronization */,
@@ -1915,13 +1915,13 @@
 			path = UnauthenticatedSession;
 			sourceTree = "<group>";
 		};
-		F19F1D361EFBF60A00275E27 /* AccountManager */ = {
+		F19F1D361EFBF60A00275E27 /* SessionManager */ = {
 			isa = PBXGroup;
 			children = (
 				F19F1D371EFBF61800275E27 /* SessionManager.swift */,
 				1634958A1F0254CB004E80DB /* SessionManager+ServerConnection.swift */,
 			);
-			path = AccountManager;
+			path = SessionManager;
 			sourceTree = "<group>";
 		};
 		F928651C19F7A3D30097539C /* Push Notifications */ = {

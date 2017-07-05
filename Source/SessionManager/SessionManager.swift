@@ -62,7 +62,7 @@ public class SessionManager : NSObject {
         
         super.init()
         
-        authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(observer: self)
+        authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(self)
 
         if storeExists {
             let createSession = {
