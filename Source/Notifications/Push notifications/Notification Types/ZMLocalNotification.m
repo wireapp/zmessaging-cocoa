@@ -60,10 +60,14 @@ NSString *const ZMPushStringMessageAddMany = @"add.message.many"; // "x new mess
 /// 2 users, 1 conversation
 NSString *const ZMPushStringMemberJoin = @"member.join";
 // "[senderName] added you / [userName] to [conversationName]"
+NSString *const ZMPushStringMemberLeave = @"member.leave";
+// "[senderName] removed you / [userName] from [conversationName]"
 
 
 NSString *const ZMPushStringMemberJoinMany = @"member.join.many";
 // "[senderName] added people to [conversationName]"
+NSString *const ZMPushStringMemberLeaveMany = @"member.leave.many";
+// "[senderName] removed people from [conversationName]"
 
 NSString *const ZMPushStringKnock = @"knock"; // "[senderName] pinged you x times in [conversationName]" // "x pings in
 NSString *const ZMPushStringReaction = @"reaction"; // "[senderName] [emoji] your message in [conversationName]"

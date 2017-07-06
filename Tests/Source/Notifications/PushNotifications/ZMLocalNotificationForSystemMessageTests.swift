@@ -127,12 +127,12 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         //    "push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@ removed people from a conversation";
 
         XCTAssertNil(notificationForParticipantsRemoved(groupConversation, aSender: sender, otherUsers: [otherUser]))
-        XCTAssertNil(notificationForParticipantsRemoved(groupConversation, aSender: sender, otherUsers: [selfUser]))
         XCTAssertNil(notificationForParticipantsRemoved(groupConversation, aSender: sender, otherUsers: [otherUser, otherUser2]))
-        
         XCTAssertNil(notificationForParticipantsRemoved(groupConversationWithoutName, aSender: sender, otherUsers: [otherUser]))
-        XCTAssertNil(notificationForParticipantsRemoved(groupConversationWithoutName, aSender: sender, otherUsers: [selfUser]))
         XCTAssertNil(notificationForParticipantsRemoved(groupConversationWithoutName, aSender: sender, otherUsers: [otherUser, otherUser2]))
+
+        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversation, aSender: sender, otherUsers: [selfUser]), "Super User removed you from Super Conversation")
+        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversationWithoutName, aSender: sender, otherUsers: [selfUser]), "Super User removed you from a conversation")
     }
 
     func testThatItCreatesANotificationForConnectionRequest(){
