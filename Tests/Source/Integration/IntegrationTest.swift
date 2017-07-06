@@ -28,7 +28,7 @@ extension IntegrationTest {
     
     @objc
     func _setUp() {
-        resetKeychain()
+        ZMPersistentCookieStorage.setDoNotPersistToKeychain(!useRealKeychain)
         
         NSManagedObjectContext.setUseInMemoryStore(useInMemoryStore)
         
@@ -36,7 +36,8 @@ extension IntegrationTest {
         mockTransportSession = MockTransportSession(dispatchGroup: self.dispatchGroup)
         WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self;
         ZMCallFlowRequestStrategyInternalFlowManagerOverride = MockFlowManager()
-        
+        mockTransportSession?.cookieStorage.deleteUserKeychainItems()
+                
         createSessionManager()
     }
     
@@ -48,12 +49,17 @@ extension IntegrationTest {
         mockTransportSession?.tearDown()
         mockTransportSession = nil
         sessionManager = nil
+        selfUser = nil
+        selfConversation = nil
+        
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        resetInMemoryDatabases()
     }
     
-    func resetKeychain() {
-        ZMPersistentCookieStorage.setDoNotPersistToKeychain(!useRealKeychain)
-        let cookieStorage = ZMPersistentCookieStorage()
-        cookieStorage.deleteUserKeychainItems()
+    func resetInMemoryDatabases() {
+        NSManagedObjectContext.resetUserInterfaceContext()
+        NSManagedObjectContext.resetSharedPersistentStoreCoordinator()
     }
     
     func createSessionManager() {
