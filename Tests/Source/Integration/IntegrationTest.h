@@ -28,6 +28,8 @@
 @class AVSMediaManager;
 @class ZMAPNSEnvironment;
 @class UnauthenticatedSession;
+@class MockUser;
+@class MockConversation;
 
 @interface IntegrationTest : ZMTBaseTest
 
@@ -41,5 +43,8 @@
 @property (nonatomic, nullable) UnauthenticatedSession *unauthenticatedSession;
 @property (nonatomic, readonly) BOOL useInMemoryStore;
 @property (nonatomic, readonly) BOOL useRealKeychain;
+
+@property (nonatomic, nullable) MockUser *selfUser;
+@property (nonatomic, nullable) MockConversation *selfConversation;
 
 @end

@@ -233,61 +233,66 @@
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 3u);
 }
 
-//- (void)testThatItLogsInWithAPhoneNumberIfThePhoneNumberIsAlreadyRegisteredToAnotherUser
-//{
-//    // given
-//    NSString *phone = @"+4912345678900";
-//    NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
-//    
-//    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-//        NOT_USED(session);
-//        self.selfUser.phone = phone;
-//    }];
-//    
-//    // expect
-//    [[self.authenticationObserver expect] loginCodeRequestDidSucceed];
-//    [[self.authenticationObserver expect] authenticationDidSucceed];
-//    
-//    // when
-//    [self.unauthenticatedSession requestPhoneVerificationCodeForRegistration:phone];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//    [self.unauthenticatedSession verifyPhoneNumberForRegistration:phone verificationCode:code];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//    
-//    // then
-//    ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
-//    XCTAssertEqualObjects(selfUser.name, selfUser.name);
-//    XCTAssertEqualObjects(selfUser.phoneNumber, phone);
-//    XCTAssertEqual(selfUser.accentColorValue, selfUser.accentColorValue);
-//    
-//}
+- (void)testThatItLogsInWithAPhoneNumberIfThePhoneNumberIsAlreadyRegisteredToAnotherUser
+{
+    // given
+    [self createDefaultUsersAndConversations];
+    
+    NSString *phone = @"+4912345678900";
+    NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
+    
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        NOT_USED(session);
+        self.selfUser.phone = phone;
+    }];
+    
+    // expect
+    [[self.authenticationObserver expect] loginCodeRequestDidSucceed];
+    [[self.authenticationObserver expect] authenticationDidSucceed];
+    [[self.authenticationObserver expect] authenticationDidSucceed]; // client was registered
+    
+    // when
+    [self.unauthenticatedSession requestPhoneVerificationCodeForRegistration:phone];
+    WaitForAllGroupsToBeEmpty(0.5);
+    [self.unauthenticatedSession verifyPhoneNumberForRegistration:phone verificationCode:code];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
+    XCTAssertEqualObjects(selfUser.name, selfUser.name);
+    XCTAssertEqualObjects(selfUser.phoneNumber, phone);
+    XCTAssertEqual(selfUser.accentColorValue, selfUser.accentColorValue);
+    
+}
 
-//- (void)testThatItReturnsAPhoneVerificationFailureWithAlreadyRegisteredPhoneNumber
-//{
-//    // given
-//    NSString *phone = @"+4912345678900";
-//    NSString *code = self.mockTransportSession.invalidPhoneVerificationCode;
-//    
-//    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-//        NOT_USED(session);
-//        self.selfUser.phone = phone;
-//    }];
-//    
-//    // expect
-//    [[self.authenticationObserver expect] loginCodeRequestDidSucceed];
-//    [[self.registrationObserver expect] registrationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
-//        XCTAssertEqual(error.code, (int) ZMUserSessionPhoneNumberIsAlreadyRegistered);
-//        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
-//        return YES;
-//    }]];
-//    
-//    // when
-//    [self.unauthenticatedSession requestPhoneVerificationCodeForRegistration:phone];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//    [self.unauthenticatedSession verifyPhoneNumberForRegistration:phone verificationCode:code];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//
-//}
+- (void)testThatItReturnsAPhoneVerificationFailureWithAlreadyRegisteredPhoneNumber
+{
+    // given
+    [self createDefaultUsersAndConversations];
+    
+    NSString *phone = @"+4912345678900";
+    NSString *code = self.mockTransportSession.invalidPhoneVerificationCode;
+    
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        NOT_USED(session);
+        self.selfUser.phone = phone;
+    }];
+    
+    // expect
+    [[self.authenticationObserver expect] loginCodeRequestDidSucceed];
+    [[self.registrationObserver expect] registrationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
+        XCTAssertEqual(error.code, (int) ZMUserSessionPhoneNumberIsAlreadyRegistered);
+        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
+        return YES;
+    }]];
+    
+    // when
+    [self.unauthenticatedSession requestPhoneVerificationCodeForRegistration:phone];
+    WaitForAllGroupsToBeEmpty(0.5);
+    [self.unauthenticatedSession verifyPhoneNumberForRegistration:phone verificationCode:code];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+}
 
 - (void)testThatWeCanAskForThePhoneRegistrationCodeTwice
 {

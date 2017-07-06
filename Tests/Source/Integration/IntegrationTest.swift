@@ -23,6 +23,9 @@ import WireTesting
 
 extension IntegrationTest {
     
+    static let SelfUserEmail = "myself@user.example.com"
+    static let SelfUserPassword = "fgf0934';$@#%"
+    
     @objc
     func _setUp() {
         resetKeychain()
@@ -72,6 +75,28 @@ extension IntegrationTest {
                                         delegate: self,
                                         application: application,
                                         launchOptions: [:])
+    }
+    
+    @objc
+    func createDefaultUsersAndConversations() {
+        
+        mockTransportSession?.performRemoteChanges({ session in
+            let selfUser = session.insertSelfUser(withName: "The Self User")
+            selfUser.email = IntegrationTest.SelfUserEmail
+            selfUser.password = IntegrationTest.SelfUserPassword
+            selfUser.phone = ""
+            selfUser.accentID = 2
+            session.addProfilePicture(to: selfUser)
+            session.addV3ProfilePicture(to: selfUser)
+            
+            let selfConversation = session.insertSelfConversation(withSelfUser: selfUser)
+            selfConversation.identifier = selfUser.identifier
+            
+            self.selfUser = selfUser
+            self.selfConversation = selfConversation
+        })
+        
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
 }
