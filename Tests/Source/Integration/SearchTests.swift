@@ -513,28 +513,27 @@ class SearchTests : IntegrationTestBase {
         var userName : String? = nil
         
         mockTransportSession.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
+            profileImageData = MockAsset(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
             userName = self.user4.name
         }
         
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssert(logInAndWaitForSyncToBeComplete())
+        mockTransportSession.resetReceivedRequests()
         
         // when
-        guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
-        guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
-        mockTransportSession.resetReceivedRequests()
-        searchUser.requestSmallProfileImage(in: userSession)
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        guard let searchQuery = userName?.components(separatedBy: " ").last else { return XCTFail() }
+        guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { return XCTFail() }
+        XCTAssert(waitForEverythingToBeDone())
         
         // then
         XCTAssertEqual(searchUser.imageSmallProfileData, profileImageData)
         
         let requests = mockTransportSession.receivedRequests()
-        XCTAssertEqual(requests.count, 2)
-        XCTAssertEqual(requests[0].path, "/users?ids=\(user4.identifier)")
-        XCTAssertEqual(requests[0].method, .methodGET)
-        XCTAssertEqual(requests[1].path, "/assets/v3/\(user4.previewProfileAssetIdentifier!)")
+        guard requests.count == 3 else { return XCTFail("Wrong number of requests") }
+        XCTAssertEqual(requests[1].path, "/users?ids=\(user4.identifier)")
         XCTAssertEqual(requests[1].method, .methodGET)
+        XCTAssertEqual(requests[2].path, "/assets/v3/\(user4.previewProfileAssetIdentifier!)")
+        XCTAssertEqual(requests[2].method, .methodGET)
     }
     
     func testThatItDownloadsMediumAssetForSearchUserWhenAssetAndLegacyIdArePresentUsingV3() {
