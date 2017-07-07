@@ -62,6 +62,17 @@ extension IntegrationTest {
         NSManagedObjectContext.resetSharedPersistentStoreCoordinator()
     }
     
+    @objc
+    func recreateSessionManager() {
+        userSession = nil
+        unauthenticatedSession = nil
+        sessionManager = nil
+        
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        createSessionManager()
+    }
+    
     func createSessionManager() {
         
         guard let bundleIdentifier = Bundle.init(for: type(of: self)).bundleIdentifier,
@@ -128,6 +139,10 @@ extension IntegrationTest : SessionManagerDelegate {
     
     public func sessionManagerCreated(unauthenticatedSession: UnauthenticatedSession) {
         self.unauthenticatedSession = unauthenticatedSession
+        
+        unauthenticatedSession.moc.performGroupedBlockAndWait {
+            unauthenticatedSession.moc.add(self.dispatchGroup)
+        }
     }
     
     public func sessionManagerWillStartMigratingLocalStore() {
