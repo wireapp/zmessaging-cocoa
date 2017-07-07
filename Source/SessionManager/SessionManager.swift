@@ -38,7 +38,7 @@ public class SessionManager : NSObject {
     var apnsEnvironment : ZMAPNSEnvironment?
     let transportSession: ZMTransportSession
     public weak var delegate : SessionManagerDelegate? = nil
-    var authenticationToken: Any?
+    var authenticationToken: ZMAuthenticationObserverToken?
     let authenticationStatus: ZMAuthenticationStatus
     var userSession: ZMUserSession?
     
@@ -109,6 +109,7 @@ public class SessionManager : NSObject {
                                                 appVersion: appVersion,
                                                 appGroupIdentifier: appGroupIdentifier)!
                 
+                self.userSession = userSession
                 delegate?.sessionManagerCreated(userSession: userSession)
                 userSession.application(application, didFinishLaunchingWithOptions: launchOptions)
                 if let url = launchOptions[.url] as? URL {
@@ -135,6 +136,10 @@ public class SessionManager : NSObject {
     }
     
     deinit {
+        if let authenticationToken = authenticationToken {
+            ZMUserSessionAuthenticationNotification.removeObserver(for: authenticationToken)
+        }
+        
         userSession?.tearDown()
     }
     
@@ -144,7 +149,7 @@ public class SessionManager : NSObject {
     
     var storeExists : Bool {
         guard let storeURL = ZMUserSession.storeURL(forAppGroupIdentifier: appGroupIdentifier) else { return false }
-        return FileManager.default.fileExists(atPath: storeURL.path)
+        return NSManagedObjectContext.storeExists(at: storeURL)
     }
     
     @objc public var currentUser: ZMUser? {
