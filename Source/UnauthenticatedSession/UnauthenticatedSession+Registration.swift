@@ -53,34 +53,23 @@ extension UnauthenticatedSession {
         let phoneVerificationCode = user.phoneVerificationCode
         let invitationCode = user.invitationCode
         
-        if phoneNumber == nil {
-            do {
+        do {
+            if phoneNumber == nil {
                 var password = password as NSString?
                 try ZMUser.validatePassword(&password)
-            } catch {
-                ZMUserSessionRegistrationNotification.notifyRegistrationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
             }
-        }
-        
-        if (invitationCode != nil && phoneNumber != nil) {
-            do {
+            else if (invitationCode != nil && phoneNumber != nil) {
                 var phoneVerificationCode = phoneVerificationCode as NSString?
                 try ZMUser.validatePhoneVerificationCode(&phoneVerificationCode)
-            } catch {
-                ZMUserSessionRegistrationNotification.notifyRegistrationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
             }
-        }
-        
-        if (phoneNumber != nil) {
-            do {
+            else if (phoneNumber != nil) {
                 var phoneNumber = phoneNumber as NSString?
                 try ZMUser.validatePhoneNumber(&phoneNumber)
-            } catch {
-                ZMUserSessionRegistrationNotification.notifyRegistrationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
             }
+        } catch {
+            ZMUserSessionRegistrationNotification.notifyRegistrationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
+            return
         }
-        
-        // TODO store registration user
         
         authenticationStatus.prepareForRegistration(of: user)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
