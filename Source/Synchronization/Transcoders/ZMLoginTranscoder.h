@@ -26,13 +26,11 @@
 
 NS_ASSUME_NONNULL_BEGIN;
 
-@interface ZMLoginTranscoder : NSObject <RequestStrategy>
+@interface ZMLoginTranscoder : NSObject <RequestStrategy, TearDownCapable>
 
 - (instancetype)init NS_UNAVAILABLE;
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus;
-
-- (void)tearDown;
 
 @end
 

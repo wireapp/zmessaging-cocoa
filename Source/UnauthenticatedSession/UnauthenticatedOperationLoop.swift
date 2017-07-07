@@ -18,6 +18,7 @@
 
 import Foundation
 import WireTransport
+import WireMessageStrategy
 
 class UnauthenticatedOperationLoop: NSObject {
     
@@ -34,17 +35,7 @@ class UnauthenticatedOperationLoop: NSObject {
     }
     
     deinit {
-        for requestStrategy in requestStrategies {
-                        
-            if let requestStrategy = requestStrategy as? NSObject {
-                let tearDownSelector = Selector("tearDown") // TODO referer to a teardown protocol
-                
-                if requestStrategy.responds(to: tearDownSelector) {
-                    requestStrategy.perform(tearDownSelector)
-                }
-            }
-            
-        }
+        requestStrategies.forEach({ ($0 as? TearDownCapable)?.tearDown() })
     }
 }
 
