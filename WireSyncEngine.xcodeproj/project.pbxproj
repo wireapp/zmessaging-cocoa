@@ -41,6 +41,7 @@
 		1618B4101DE5FAD4003F015C /* ZMUserSession+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3EC2357F192B617700B72C21 /* ZMUserSession+Internal.h */; };
 		1621D2711D770FB1007108C2 /* ZMSyncStateDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1632C4B21F0E91FE007BE89D /* EmailRegistrationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5454A69B1AEFA01D0022AFA4 /* EmailRegistrationTests.m */; };
+		1632C4B31F0FD270007BE89D /* LoginFlowTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54FC8A0F192CD55000D3C016 /* LoginFlowTests.m */; };
 		1633875C1F066B610015034C /* ZMRegistrationTranscoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 54F8D71919AB541400146664 /* ZMRegistrationTranscoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		163495851F010AF0004E80DB /* UnauthenticatedSession+Registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163495841F010AF0004E80DB /* UnauthenticatedSession+Registration.swift */; };
 		1634958B1F0254CB004E80DB /* SessionManager+ServerConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1634958A1F0254CB004E80DB /* SessionManager+ServerConnection.swift */; };
@@ -2496,6 +2497,7 @@
 				545434A219AB6975003892D9 /* ZMRegistrationTranscoderTests.m in Sources */,
 				85D85B0D7E5F7D9A55B5E07B /* IntegrationTestBase.m in Sources */,
 				545FC3341A5B003A005EEA26 /* ObjectTranscoderTests.m in Sources */,
+				1632C4B31F0FD270007BE89D /* LoginFlowTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

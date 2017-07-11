@@ -21,6 +21,21 @@ import WireTesting
 
 @testable import WireSyncEngine
 
+class AuthenticationObserver : NSObject, ZMAuthenticationObserver {
+    
+    var onFailure : (() -> Void)?
+    var onSuccess : (() -> Void)?
+    
+    func authenticationDidFail(_ error: Error) {
+        onFailure?()
+    }
+    
+    func authenticationDidSucceed() {
+        onSuccess?()
+    }
+    
+}
+
 extension IntegrationTest {
     
     static let SelfUserEmail = "myself@user.example.com"
@@ -63,16 +78,26 @@ extension IntegrationTest {
     }
     
     @objc
-    func recreateSessionManager() {
+    func destroySessionManager() {
         userSession = nil
         unauthenticatedSession = nil
         sessionManager = nil
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+    }
+    
+    @objc
+    func deleteAuthenticationCookie() {
+        mockTransportSession?.cookieStorage.deleteUserKeychainItems()
+    }
+    
+    @objc
+    func recreateSessionManager() {
+        destroySessionManager()
         createSessionManager()
     }
     
+    @objc
     func createSessionManager() {
         
         guard let bundleIdentifier = Bundle.init(for: type(of: self)).bundleIdentifier,
@@ -114,6 +139,57 @@ extension IntegrationTest {
         })
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+    
+    @objc
+    func login() -> Bool {
+        let credentials = ZMEmailCredentials(email: IntegrationTest.SelfUserEmail, password: IntegrationTest.SelfUserPassword)
+        return login(withCredentials: credentials, ignoreAuthenticationFailures: false)
+    }
+    
+    @objc(loginAndIgnoreAuthenticationFailures:)
+    func login(ignoreAuthenticationFailures: Bool) -> Bool {
+        let credentials = ZMEmailCredentials(email: IntegrationTest.SelfUserEmail, password: IntegrationTest.SelfUserPassword)
+        return login(withCredentials: credentials, ignoreAuthenticationFailures: ignoreAuthenticationFailures)
+    }
+    
+    @objc
+    func login(withCredentials credentials: ZMCredentials, ignoreAuthenticationFailures: Bool = false) -> Bool {
+        
+        let authenticationObserver = AuthenticationObserver()
+        var didSucceed = false
+        
+        authenticationObserver.onSuccess = {
+            didSucceed = true
+        }
+        
+        authenticationObserver.onFailure = {
+            if !ignoreAuthenticationFailures {
+                XCTFail("Failed to authenticate")
+            }
+        }
+        
+        let token = ZMUserSessionAuthenticationNotification.addObserver(authenticationObserver)
+        unauthenticatedSession?.login(with: credentials)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        ZMUserSessionAuthenticationNotification.removeObserver(for: token)
+        
+        return didSucceed
+    }
+    
+    @objc(userForMockUser:)
+    func user(for mockUser: MockUser) -> ZMUser? {
+        let uuid = mockUser.identifier.uuid()
+        let data = (uuid as NSUUID).data() as NSData
+        let predicate = NSPredicate(format: "remoteIdentifier_data == %@", data)
+        let request = ZMUser.sortedFetchRequest(with: predicate)
+        let result = userSession?.managedObjectContext.executeFetchRequestOrAssert(request) as? [ZMUser]
+        
+        if let user = result?.first {
+            return user
+        } else {
+            return nil
+        }
     }
     
 }

@@ -21,26 +21,21 @@
 @import WireDataModel;
 
 #import "NSError+ZMUserSessionInternal.h"
-#import "IntegrationTestBase.h"
-
 #import "ZMUserSession+Internal.h"
-#import "ZMUserSession+Authentication.h"
-#import "ZMUserSession+Registration.h"
 #import "ZMUserSession+OTR.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 #import "ZMCredentials.h"
 #import <WireSyncEngine/ZMAuthenticationStatus.h>
 
 extern NSTimeInterval DebugLoginFailureTimerOverride;
 
-@interface LoginFlowTests : IntegrationTestBase <ZMAuthenticationObserver>
+@interface LoginFlowTests : IntegrationTest <ZMAuthenticationObserver>
 
-@property (atomic) NSUInteger authenticationSuccessCount;
 @property (nonatomic) NSMutableArray *authenticationFailures;
-@property (nonatomic) NSMutableArray *loginCodeRequestFailures;
 
 @end
-
 
 
 @implementation LoginFlowTests
@@ -48,23 +43,15 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)setUp
 {
     self.authenticationFailures = [NSMutableArray array];
-    self.loginCodeRequestFailures = [NSMutableArray array];
-    self.authenticationSuccessCount = 0;
+    
     [super setUp];
 }
 
 - (void)tearDown
 {
     self.authenticationFailures = nil;
-    self.loginCodeRequestFailures = [NSMutableArray array];
-    self.authenticationSuccessCount = 0;
     DebugLoginFailureTimerOverride = 0;
     [super tearDown];
-}
-
-- (void)loginCodeRequestDidFail:(NSError *)error
-{
-    [self.loginCodeRequestFailures addObject:error];
 }
 
 - (void)authenticationDidFail:(NSError *)error
@@ -72,15 +59,10 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     [self.authenticationFailures addObject:error];
 }
 
-- (void)authenticationDidSucceed
-{
-    ++self.authenticationSuccessCount;
-}
-
 - (void)testThatItNotifiesIfTheClientNeedsToBeRegistered
 {
     // given
-    [self.syncMOC setPersistentStoreMetadata:nil forKey:@"PersistedClientId"];
+    [self createDefaultUsersAndConversations];
     
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
@@ -91,39 +73,34 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         self.selfUser.password = password;
     }];
     
-    
-    id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
-//        ZMCredentials *cred = [ZMEmailCredentials credentialsWithEmail:email password:password];
-//        [self.userSession loginWithCredentials:cred]; TODO jacob
-    };
-    
-    
+    // expect
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials userInfo:nil]];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     
-    XCTestExpectation *expectation = [self expectationWithDescription:@"Authentication did succeed"];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Login did succeed"];
+    [[authenticationObserver expect] authenticationDidSucceed]; // authentication
     [[[authenticationObserver expect] andDo:^(NSInvocation *invocation ZM_UNUSED) {
         [expectation fulfill];
     }] authenticationDidSucceed];
     
     // when
-    [self.userSession start];
+    ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
+    [self.unauthenticatedSession loginWithCredentials:credentials];
     
     // then
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     [authenticationObserver verify];
     XCTAssertNotNil([self.mockTransportSession.cookieStorage authenticationCookieData]);
     XCTAssertTrue(self.userSession.isLoggedIn);
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)testThatWeCanLogInWithEmail
 {
     // given
-    [self.syncMOC setPersistentStoreMetadata:@"someID" forKey:@"PersistedClientId"];
+    [self createDefaultUsersAndConversations];
 
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
@@ -134,53 +111,46 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         self.selfUser.password = password;
     }];
     
-
-    id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
-//        ZMCredentials *cred = [ZMEmailCredentials credentialsWithEmail:email password:password];
-//        [self.userSession loginWithCredentials:cred]; // TODO jacob
-    };
-    
-    
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials userInfo:nil]];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     
-    XCTestExpectation *expectation = [self expectationWithDescription:@"Authentication did succeed"];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Login did succeed"];
+    [[authenticationObserver expect] authenticationDidSucceed]; // authentication
     [[[authenticationObserver expect] andDo:^(NSInvocation *invocation ZM_UNUSED) {
         [expectation fulfill];
     }] authenticationDidSucceed];
     
     // when
-    [self.userSession start];
+    ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
+    [self.unauthenticatedSession loginWithCredentials:credentials];
 
     // then
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     [authenticationObserver verify];
     XCTAssertNotNil([self.mockTransportSession.cookieStorage authenticationCookieData]);
     XCTAssertTrue(self.userSession.isLoggedIn);
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)testThatWeCanLoginWithAValidPreExistingCookie
 {
     // given
-    [self.syncMOC setPersistentStoreMetadata:@"someID" forKey:@"PersistedClientId"];
+    [self createDefaultUsersAndConversations];
+    XCTAssertTrue([self login]);
     
-//    [self.userSession.authenticationStatus setAuthenticationCookieData:[@"cookieData" dataUsingEncoding:NSUTF8StringEncoding]]; // TODO jacob
-    
-    id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
-
     // expect
+    id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
+    
     XCTestExpectation *expectation = [self expectationWithDescription:@"Authentication did succeed"];
     [[[authenticationObserver expect] andDo:^(NSInvocation *invocation ZM_UNUSED) {
         [expectation fulfill];
     }] authenticationDidSucceed];
     
     // when
-    [self.userSession start];
+    [self recreateSessionManager];
     
     // then
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
@@ -188,12 +158,11 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertNotNil([self.mockTransportSession.cookieStorage authenticationCookieData]);
     XCTAssertTrue(self.userSession.isLoggedIn);
     
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)testThatWeReceiveAuthenticationErrorWithWrongCredentials
 {
-    
     // given
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
@@ -204,35 +173,29 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         selfUser.password = password;
     }];
     
-    
-    id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
-//        ZMCredentials *cred = [ZMEmailCredentials credentialsWithEmail:email password:@"wrong-password"];
-//        [self.userSession loginWithCredentials:cred]; // TODO jacob
-    };
-
-
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials userInfo:nil]];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"Authentication did fail"];
     [[[authenticationObserver expect] andDo:^(NSInvocation *invocation ZM_UNUSED) {
         [expectation fulfill];
     }] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidCredentials userInfo:nil]];
     
-    
     // when
-    [self.userSession start];
-    
+    ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:@"wrong-password"];
+    [self.unauthenticatedSession loginWithCredentials:credentials];
     
     // then
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     [authenticationObserver verify];
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)testThatWhenTransportSessionDeletesCookieInResponseToFailedLoginWeDoNotContinueSendingMoreRequests
 {
+    // given
+    [self createDefaultUsersAndConversations];
+    
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
     __block MockUser *selfUser;
@@ -242,36 +205,31 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         selfUser.password = password;
     }];
 
-    
-//    id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
-//        ZMCredentials *cred = [ZMEmailCredentials credentialsWithEmail:email password:password];
-//        [self.userSession loginWithCredentials:cred]; // TODO jacob
-    };
-
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-//    [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials userInfo:nil]]; // TODO jacob
-//    [[authenticationObserver stub] authenticationDidFail:OCMOCK_ANY];
+    [[authenticationObserver expect] authenticationDidSucceed]; // authentication
+    [[authenticationObserver stub] authenticationDidFail:OCMOCK_ANY];
 
-    
     id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
-    
     
     // getting access token fails
     __block NSInteger numberOfRequests = 0;
+    ZM_WEAK(self);
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
+        ZM_STRONG(self);
         NOT_USED(request);
         ++numberOfRequests;
         if (numberOfRequests == 1) {
-            return nil; // allow login ...
+            return nil; // allow authentication ...
         }
         //  ... but no request after it
         NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeAuthenticationFailed userInfo:nil];
-//        [self.userSession.authenticationStatus setAuthenticationCookieData:nil]; // TODO jacob
+        [self.mockTransportSession.cookieStorage setAuthenticationCookieData:nil];
         return [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:error];
     };
     
     // when
-    [self.userSession start];
+    ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
+    [self.unauthenticatedSession loginWithCredentials:credentials];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // should not make more requests
@@ -279,11 +237,14 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertFalse(self.userSession.isLoggedIn);
     [authenticationObserver verify];
     
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)testThatWhenTransportSessionDeletesCookieInResponseToFailedRenewTokenWeGoToUnathorizedState
 {
+    // given
+    [self createDefaultUsersAndConversations];
+    
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
     __block MockUser *selfUser;
@@ -293,23 +254,15 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         selfUser.password = password;
     }];
     
-    
-    id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
-//        ZMCredentials *cred = [ZMEmailCredentials credentialsWithEmail:email password:password];
-//        [self.userSession loginWithCredentials:cred]; // TODO jacob
-    };
-    
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials userInfo:nil]];
     [[authenticationObserver stub] authenticationDidSucceed];
-    
-    
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
-    
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     
     // getting access token fails
     __block NSInteger numberOfRequests = 0;
+    ZM_WEAK(self);
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
+        ZM_STRONG(self);
         NOT_USED(request);
         ++numberOfRequests;
         if (numberOfRequests == 1) {
@@ -317,12 +270,13 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         }
         //  ... but no request after it
         NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeAuthenticationFailed userInfo:nil];
-        [self.userSession.authenticationStatus setAuthenticationCookieData:nil];
+        [self.mockTransportSession.cookieStorage setAuthenticationCookieData:nil];
         return [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:error];
     };
     
     // when
-    [self.userSession start];
+    ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
+    [self.unauthenticatedSession loginWithCredentials:credentials];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // should not make more requests
@@ -330,26 +284,27 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertFalse(self.userSession.isLoggedIn);
     [authenticationObserver verify];
     
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 
 - (void)testThatTheLoginTimesOutOnNetworkErrors
 {
     // given
-
     NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeTryAgainLater userInfo:nil];
+    ZM_WEAK(self);
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
+        ZM_STRONG(self);
         NOT_USED(request);
         self.mockTransportSession.disableEnqueueRequests = YES;
         return [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:error];
     };
-    id token = [self.userSession addAuthenticationObserver:self];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:self];
     DebugLoginFailureTimerOverride = 0.2;
     
     // when
-//    ZMCredentials *cred = [ZMEmailCredentials credentialsWithEmail:@"janet@fo.example.com" password:@"::FsdF:#$:fgsdAG"];
-//    [self.userSession loginWithCredentials:cred]; // TODO jacob
+    ZMCredentials *cred = [ZMEmailCredentials credentialsWithEmail:@"janet@fo.example.com" password:@"::FsdF:#$:fgsdAG"];
+    [self.unauthenticatedSession loginWithCredentials:cred];
     
     // then
     XCTAssertTrue([self waitOnMainLoopUntilBlock:^BOOL{
@@ -363,23 +318,29 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     // after
     DebugLoginFailureTimerOverride = 0;
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)testThatWhenWeLoginItChecksForTheHistory
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self createDefaultUsersAndConversations];
     
+    // create history
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[]];
+        [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[]];
+    }];
+    
+    XCTAssertTrue([self login]);
     XCTAssertFalse(self.userSession.hadHistoryAtLastLogin);
     
     // when
-    [self recreateUserSessionAndWipeCache:NO];
+    [self destroySessionManager];
+    [self deleteAuthenticationCookie];
+    [self createSessionManager];
     WaitForAllGroupsToBeEmpty(0.5);
-
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     // then
     XCTAssertTrue(self.userSession.hadHistoryAtLastLogin);
@@ -388,17 +349,17 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 @end
 
 
-
 @implementation LoginFlowTests (PushToken)
 
 - (void)testThatItRegisteresThePushTokenWithTheBackend;
 {
+    [self createDefaultUsersAndConversations];
     NSData *deviceToken = [@"asdfasdf" dataUsingEncoding:NSUTF8StringEncoding];
     NSString *deviceTokenAsHex = @"6173646661736466";
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     [self.userSession setPushToken:deviceToken];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     NSArray *registeredTokens = self.mockTransportSession.pushTokens;
@@ -417,14 +378,16 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatWeCanLogInWithPhoneNumber
 {
     // given
+    [self createDefaultUsersAndConversations];
+    
     NSString *phone = @"+4912345678900";
-//    NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
+    NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
         self.selfUser.phone = phone;
     }];
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     
     XCTestExpectation *loginCodeRequestExpectation = [self expectationWithDescription:@"login code request completed"];
     
@@ -433,17 +396,18 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         NOT_USED(inv);
         [loginCodeRequestExpectation fulfill];
     }] loginCodeRequestDidSucceed];
-    [[authenticationObserver expect] authenticationDidSucceed];
+    [[authenticationObserver expect] authenticationDidSucceed]; // authentication
+    [[authenticationObserver expect] authenticationDidSucceed]; // client registration
 
     // when
-//    [self.userSession requestPhoneVerificationCodeForLogin:phone]; TODO jacob
+    [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
     // and when
-//    [self.userSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code]]; // TODO jacob
+    [self.unauthenticatedSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -452,13 +416,13 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertEqualObjects(selfUser.name, self.selfUser.name);
     XCTAssertEqualObjects(selfUser.phoneNumber, phone);
     
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)testThatItNotifiesIfTheLoginCodeCanNotBeRequested
 {
     // given
-//    NSString *phone = @"+4912345678900";
+    NSString *phone = @"+4912345678900";
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
         if([request.path isEqualToString:@"/login/send"]) {
@@ -468,66 +432,72 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     };
     
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     
     // expect
     [[authenticationObserver expect] loginCodeRequestDidFail:OCMOCK_ANY];
     
     // when
-//    [self.userSession requestPhoneVerificationCodeForLogin:phone]; // TODO jacob
+    [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     [authenticationObserver verify];
     
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)testThatItNotifiesIfTheLoginFails
 {
     // given
+    [self createDefaultUsersAndConversations];
+    
     NSString *phone = @"+4912345678900";
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
         self.selfUser.phone = phone;
     }];
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     
     // expect
     [[authenticationObserver expect] loginCodeRequestDidSucceed];
     [[authenticationObserver expect] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidCredentials userInfo:nil]];
     
     // when
-//    [self.userSession requestPhoneVerificationCodeForLogin:phone]; // TODO jacob
+    [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
     // and when
-//    [self.userSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.invalidPhoneVerificationCode]]; // TODO jacob
+    [self.unauthenticatedSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.invalidPhoneVerificationCode]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     [authenticationObserver verify];
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 @end
-
-
 
 
 @implementation LoginFlowTests (ClientRegistration_Errors)
 
 - (void)testThatItFetchesSelfUserBeforeRegisteringSelfClient
 {
+    // given
+    [self createDefaultUsersAndConversations];
+    
     // expect
     __block BOOL didCreateSelfClient = NO;
     __block BOOL didFetchSelfUser = NO;
+    ZM_WEAK(self);
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
+        ZM_STRONG(self);
+        
         if([request.path isEqualToString:@"/clients"] && request.method == ZMMethodPOST) {
             XCTAssertTrue(didFetchSelfUser);
             didCreateSelfClient = YES;
@@ -540,7 +510,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     };
     
     // and when
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -551,6 +521,8 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatWeCanLoginAfterRegisteringAnEmailAddressAndClient
 {
     // given
+    [self createDefaultUsersAndConversations];
+    
     NSString *phone = @"+4912345678900";
     NSString *email = @"email@example.com";
     NSString *password = @"newPassword";
@@ -562,10 +534,10 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         self.selfUser.email = nil;
         self.selfUser.password = nil;
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     
     // expect
     id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
@@ -585,7 +557,8 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     [[[[authenticationObserver expect] andDo:provideCredentials] andDo:verifyEmailAddress] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsToRegisterEmailToRegisterClient userInfo:nil]];
     
-    [[authenticationObserver expect] authenticationDidSucceed];
+    [[authenticationObserver expect] authenticationDidSucceed]; // authentication
+    [[authenticationObserver expect] authenticationDidSucceed]; // client creation
     
     __block BOOL didRun = NO;
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
@@ -601,7 +574,8 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     };
     
     // and when
-    XCTAssertTrue([self loginAndWaitForSyncToBeCompleteWithPhone:phone ignoringAuthenticationFailure:YES]);
+    ZMPhoneCredentials *credentials = [ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.phoneVerificationCodeForLogin];
+    XCTAssertTrue([self loginWithCredentials:credentials ignoreAuthenticationFailures:YES]);
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -612,12 +586,14 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertEqualObjects(selfUser.phoneNumber, phone);
     XCTAssertEqualObjects(selfUser.emailAddress, email);
     
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)testThatWeRecoverFromEnteringAWrongEmailAddressWhenRegisteringAClientAfterLoggingInWithPhone
 {
     // given
+    [self createDefaultUsersAndConversations];
+    
     NSString *phone = @"+4912345678900";
     NSString *wrongPassword = @"wrongPassword";
 
@@ -626,10 +602,10 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session whiteListPhone:phone];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     __block BOOL didCallTooManyTimes = NO;
     __block NSUInteger runCount = 0;
     
@@ -638,9 +614,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     id provideWrongCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
         [self.mockTransportSession resetReceivedRequests];
         ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:SelfUserEmail password:wrongPassword];
-        [self.userSession performChanges:^{
-//            [self.userSession loginWithCredentials:credentials]; // TODO jacob
-        }];
+        [self.unauthenticatedSession loginWithCredentials:credentials];
     };
     
     // second check how often the request to register the client with the wrong credentials is sent
@@ -653,10 +627,14 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         XCTAssertFalse(didCallTooManyTimes);
     };
     
+    [[authenticationObserver expect] authenticationDidSucceed]; // authentication
     [[[authenticationObserver expect] andDo:provideWrongCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsPasswordToRegisterClient userInfo:nil]];
     [[[authenticationObserver stub] andDo:checkCallCount] authenticationDidFail:[NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionInvalidCredentials userInfo:nil]];
     
+    ZM_WEAK(self);
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
+        ZM_STRONG(self);
+        
         // when trying to register without email credentials, the BE tells us we need credentials
         if(!didCallTooManyTimes && [request.path isEqualToString:@"/clients"] && request.method == ZMMethodPOST) {
             NSDictionary *payload;
@@ -677,141 +655,126 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     };
     
     // and when
-    [self.userSession performChanges:^{
-//        [self.userSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.phoneVerificationCodeForLogin]]; // TODO jacob
-    }];
-    WaitForEverythingToBeDoneWithTimeout(0.5);
+    [self.unauthenticatedSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.phoneVerificationCodeForLogin]];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     [authenticationObserver verify];
-    
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
-
 
 - (void)testThatItCanRegisterNewClientAfterDeletingSelfClient
 {
     // given
+    [self createDefaultUsersAndConversations];
+    
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
-    [[authenticationObserver expect] authenticationDidSucceed];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
+    [[authenticationObserver expect] authenticationDidSucceed]; // authentication
+    [[authenticationObserver expect] authenticationDidSucceed]; // client creation
+    [[authenticationObserver expect] authenticationDidFail:OCMOCK_ANY]; // logout
     
     // (1) register client and recreate session
     {
-        XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-        WaitForEverythingToBeDone();
+        XCTAssertTrue([self login]);
+        WaitForAllGroupsToBeEmpty(0.5);
         
-        [self recreateUserSessionAndWipeCache:NO];
-        WaitForEverythingToBeDone();
+        [self destroySessionManager];
+        [self deleteAuthenticationCookie];
+        [self createSessionManager];
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
-    // (2) login again after the client was deleted from the backend
+    // (2) delete self client
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        MockUserClient *selfClient = self.selfUser.clients.anyObject;
+        [session deleteUserClientWithIdentifier:selfClient.identifier forUser:self.selfUser];
+    }];
+    
+    // (3) login again after the client was deleted from the backend
     {
         // expect
         id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
             ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:SelfUserEmail password:SelfUserPassword];
-            [self.userSession performChanges:^{
-//                [self.userSession loginWithCredentials:credentials]; // TODO jacob
-            }];
+            [self.unauthenticatedSession loginWithCredentials:credentials];
         };
+        
+        [[authenticationObserver expect] authenticationDidSucceed]; // authentication
         [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:nil]];
+        [[authenticationObserver expect] authenticationDidSucceed]; // authentication
+        [[authenticationObserver expect] authenticationDidSucceed]; // client creation
 
-        [[authenticationObserver expect] authenticationDidSucceed];
-        [[authenticationObserver expect] authenticationDidSucceed];
-        
-        __block BOOL didVerifySelfClient = NO;
-        self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
-            // when logging with a verified client, we fetch the client list from the BE to verify the client is still verified
-            // here we return a list that DOES NOT include the current selfClient
-            if(!didVerifySelfClient && [request.path isEqualToString:@"/clients"] && request.method == ZMMethodGET) {
-                didVerifySelfClient = YES;
-                NSArray *emptyClientList = @[];
-                return [ZMTransportResponse responseWithPayload:emptyClientList HTTPStatus:200 transportSessionError:nil];
-            }
-            return nil;
-        };
-        
         // and when
-        XCTAssertTrue([self logInAndWaitForSyncToBeCompleteIgnoringAuthenticationFailures:YES]);
+        XCTAssertTrue([self loginAndIgnoreAuthenticationFailures:YES]);
         WaitForAllGroupsToBeEmpty(0.5);
     
         // then
-        XCTAssert(didVerifySelfClient);
         [authenticationObserver verify];
         ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
         XCTAssertEqualObjects(selfUser.name, self.selfUser.name);
     }
-    [self.userSession removeAuthenticationObserverForToken:token];
+    
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 
 - (void)testThatItCanRegisterNewClientAfterDeletingSelfClientAndReceivingNeedsPasswordToRegisterClient
 {
     // given
-    self.registeredOnThisDevice = YES;
+    [self createDefaultUsersAndConversations];
+    
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
-    [[authenticationObserver expect] authenticationDidSucceed];
-    __block BOOL didTryToRegisterClient = NO;
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
+    [[authenticationObserver expect] authenticationDidSucceed]; // authentication
+    [[authenticationObserver expect] authenticationDidSucceed]; // client registration
+    [[authenticationObserver expect] authenticationDidFail:OCMOCK_ANY]; // logout
     
     // (1) register client and recreate session
     {
-        XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-        WaitForEverythingToBeDone();
+        XCTAssertTrue([self login]);
+        WaitForAllGroupsToBeEmpty(0.5);
         
-        self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
-            // when logging with a verified client, we fetch the client list from the BE to verify the client is still verified
-            // here we return a list that DOES NOT include the current selfClient
-            if(!didTryToRegisterClient && [request.path isEqualToString:@"/clients"] && request.method == ZMMethodPOST) {
-                didTryToRegisterClient = YES;
-                NSDictionary *payload = @{@"label" : @"missing-auth"};
-                return [ZMTransportResponse responseWithPayload:payload HTTPStatus:400 transportSessionError:nil];
-            }
-            return nil;
-        };
+        // "delete" the self client
+        [self.userSession.managedObjectContext setPersistentStoreMetadata:nil forKey:ZMPersistedClientIdKey];
+        [self.userSession.managedObjectContext saveOrRollback];
 
-        [self recreateUserSessionAndWipeCache:NO];
-        WaitForEverythingToBeDone();
+        [self destroySessionManager];
+        [self deleteAuthenticationCookie];
+        [self createSessionManager];
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
-    // (2) login again after the client was deleted from the backend
+    // (2) login again after losing our client (BE will ask for password on 2nd client)
     {
         // expect
         id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
             ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:SelfUserEmail password:SelfUserPassword];
             [self.userSession performChanges:^{
-//                [self.userSession loginWithCredentials:credentials]; // TODO jacob
+                [self.unauthenticatedSession loginWithCredentials:credentials];
             }];
         };
         
+        [[authenticationObserver expect] authenticationDidSucceed]; // authentication
         [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsPasswordToRegisterClient userInfo:nil]];
+        [[authenticationObserver expect] authenticationDidSucceed]; // client registration
         
-        [[authenticationObserver expect] authenticationDidSucceed];
-        [[authenticationObserver expect] authenticationDidSucceed];
-        
-        
-        // and when
-        [self.uiMOC setPersistentStoreMetadata:nil forKey:ZMPersistedClientIdKey];
-        [self.uiMOC saveOrRollback];
-        
-        XCTAssertTrue([self logInAndWaitForSyncToBeCompleteIgnoringAuthenticationFailures:YES]);
+        // when
+        XCTAssertTrue([self loginAndIgnoreAuthenticationFailures:YES]);
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        XCTAssert(didTryToRegisterClient);
         [authenticationObserver verify];
         ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
         XCTAssertEqualObjects(selfUser.name, self.selfUser.name);
     }
-    [self.userSession removeAuthenticationObserverForToken:token];
+    
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
-
 
 - (void)testThatItCanRegisterANewClientAfterDeletingClients
 {
     // given
-    [self recreateUserSessionAndWipeCache:YES];
-    WaitForAllGroupsToBeEmpty(0.5);
+    [self createDefaultUsersAndConversations];
     
     __block NSString *idToDelete;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -821,10 +784,9 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
 
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id token = [self.userSession addAuthenticationObserver:authenticationObserver];
+    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     
     // expect
-
     id deleteClients = ^(NSInvocation *invocation ZM_UNUSED) {
         // simulate the user selecting a client to delete
         [self.userSession performChanges:^{
@@ -838,10 +800,11 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         }];
     };
     
+    [[authenticationObserver expect] authenticationDidSucceed]; // authentication
     [[[authenticationObserver expect] andDo:deleteClients] authenticationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
         return error.code == ZMUserSessionCanNotRegisterMoreClients;
     }]];
-    [[authenticationObserver expect] authenticationDidSucceed];
+    [[authenticationObserver expect] authenticationDidSucceed]; // client registration
 
     __block BOOL didTryToRegister = NO;
     __block BOOL didDeleteClient = NO;
@@ -863,7 +826,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     };
     
     // and when
-    XCTAssertTrue([self logInAndWaitForSyncToBeCompleteIgnoringAuthenticationFailures:YES]);
+    XCTAssertTrue([self loginAndIgnoreAuthenticationFailures:YES]);
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -872,7 +835,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
     XCTAssertEqualObjects(selfUser.name, self.selfUser.name);
     
-    [self.userSession removeAuthenticationObserverForToken:token];
+    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 @end
