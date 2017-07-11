@@ -233,7 +233,7 @@ extension UserClientRequestStrategyTests {
         XCTAssertEqual(receivedAuthenticationNotifications.count, 1, "should only receive one notification")
         let note = receivedAuthenticationNotifications.first
         AssertOptionalNotNil(note, "Authentication should fail. Observers should be notified") { note in
-            XCTAssertEqual(note.error as NSError, expectedError)
+            XCTAssertEqual(note.error! as NSError, expectedError)
             XCTAssertEqual(note.type, ZMUserSessionAuthenticationNotificationType.authenticationNotificationAuthenticationDidFail)
         }
     }
@@ -264,7 +264,7 @@ extension UserClientRequestStrategyTests {
         XCTAssertEqual(receivedAuthenticationNotifications.count, 1, "should only receive one notification")
         let note = receivedAuthenticationNotifications.first
         AssertOptionalNotNil(note, "Authentication should fail. Observers should be notified") { note in
-            XCTAssertEqual(note.error as NSError, expectedError)
+            XCTAssertEqual(note.error! as NSError, expectedError)
             XCTAssertEqual(note.type, ZMUserSessionAuthenticationNotificationType.authenticationNotificationAuthenticationDidFail)
         }
     }

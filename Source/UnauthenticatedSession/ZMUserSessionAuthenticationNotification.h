@@ -36,7 +36,7 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionAuthenticationNotificationType) {
 @interface ZMUserSessionAuthenticationNotification : ZMNotification
 
 @property (nonatomic) ZMUserSessionAuthenticationNotificationType type;
-@property (nonatomic) NSError *error;
+@property (nonatomic, nullable) NSError *error;
 
 /// Notifies all @c ZMAuthenticationObserver that the authentication failed
 + (void)notifyAuthenticationDidFail:(NSError *)error;

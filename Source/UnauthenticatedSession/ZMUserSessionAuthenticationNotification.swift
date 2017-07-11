@@ -38,11 +38,11 @@ extension ZMUserSessionAuthenticationNotification {
             let error = $0.error
             switch $0.type {
             case .authenticationNotificationLoginCodeRequestDidFail:
-                observer?.loginCodeRequestDidFail?(error)
+                observer?.loginCodeRequestDidFail?(error!)
             case .authenticationNotificationLoginCodeRequestDidSucceed:
                 observer?.loginCodeRequestDidSucceed?()
             case .authenticationNotificationAuthenticationDidFail:
-                observer?.authenticationDidFail?(error)
+                observer?.authenticationDidFail?(error!)
             case .authenticationNotificationAuthenticationDidSuceeded:
                 observer?.authenticationDidSucceed?()
             }
