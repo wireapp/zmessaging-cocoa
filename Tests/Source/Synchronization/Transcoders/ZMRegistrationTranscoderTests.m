@@ -330,39 +330,6 @@
     }];
 }
 
-- (void)testThatItUpdatesTheSelfUserAfterSuccessfullRegistration
-{
-    // given
-    NSString *name = @"Name";
-    NSString *emailAddress = @"user@example.com";
-    NSUUID *remoteID = [NSUUID createUUID];
-    ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:emailAddress password:@"foobar$$"];
-    user.name = name;
-    [[self.registrationDownstreamSync expect] resetCompletionState];
-    [[self.registrationDownstreamSync expect] readyForNextRequest];
-    [self.authenticationStatus prepareForRegistrationOfUser:user];
-    
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"name": name,
-                                                                               @"email": emailAddress,
-                                                                               @"id": remoteID.transportString}
-                                                                  HTTPStatus:200
-                                                       transportSessionError:nil];
-    
-    // expect
-    [[self.registrationDownstreamSync expect] resetCompletionState];
-    [[self.registrationDownstreamSync expect] readyForNextRequest];
-    
-    // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didReceiveResponse:response forSingleRequest:self.registrationDownstreamSync];
-    }];
-
-    // then
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
-    XCTAssertEqualObjects(selfUser.name, name);
-    XCTAssertEqualObjects(selfUser.emailAddress, emailAddress);
-}
-
 - (void)testThatItDoesNotSetTheSelfUserIDAfterRegistration
 {
     // given

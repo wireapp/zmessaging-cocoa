@@ -401,54 +401,56 @@
 
 @implementation ZMUserSessionTests (AuthenticationCenter)
 
-- (void)testThatRegistrationDidFailNotifiesTheAuthenticationObserver
-{
-    // given
-    NSError *error = [NSError errorWithDomain:@"foo" code:201 userInfo:@{}];
-    
-    // expect
-    [[(id) self.registrationObserver expect] registrationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *receivedError) {
-        XCTAssertEqual([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
-        XCTAssertEqualObjects(error, receivedError);
-        return YES;
-    }]];
-    
-    // when
-    [ZMUserSessionRegistrationNotification notifyRegistrationDidFail:error];
-    WaitForAllGroupsToBeEmpty(0.5);
-}
+// TODO jacob move to another test
+//- (void)testThatRegistrationDidFailNotifiesTheAuthenticationObserver
+//{
+//    // given
+//    NSError *error = [NSError errorWithDomain:@"foo" code:201 userInfo:@{}];
+//    
+//    // expect
+//    [[(id) self.registrationObserver expect] registrationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *receivedError) {
+//        XCTAssertEqual([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
+//        XCTAssertEqualObjects(error, receivedError);
+//        return YES;
+//    }]];
+//    
+//    // when
+//    [ZMUserSessionRegistrationNotification notifyRegistrationDidFail:error];
+//    WaitForAllGroupsToBeEmpty(0.5);
+//}
 
-- (void)testThatAuthenticationDidSucceedNotifiesTheAuthenticationObserver
-{
-    // expect
-    [[[(id) self.authenticationObserver expect] andDo:^(NSInvocation *i ZM_UNUSED){
-        XCTAssertEqual([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
-    }] authenticationDidSucceed];
-    
-    // when
-    [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
-    WaitForAllGroupsToBeEmpty(0.5);
-}
+// TODO jacob move to another test
+//- (void)testThatAuthenticationDidSucceedNotifiesTheAuthenticationObserver
+//{
+//    // expect
+//    [[[(id) self.authenticationObserver expect] andDo:^(NSInvocation *i ZM_UNUSED){
+//        XCTAssertEqual([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
+//    }] authenticationDidSucceed];
+//    
+//    // when
+//    [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
+//    WaitForAllGroupsToBeEmpty(0.5);
+//}
 
+// TODO jacob move to another test
+//- (void)testThatAuthenticationDidFailNotifiesTheAuthenticationObserver
+//{
+//    // given
+//    NSError *error = [NSError errorWithDomain:@"foo" code:201 userInfo:@{}];
+//    
+//    // expect
+//    [[(id) self.authenticationObserver expect] authenticationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *receivedError) {
+//        XCTAssertEqual([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
+//        XCTAssertEqualObjects(error, receivedError);
+//        return YES;
+//    }]];
+//    
+//    // when
+//    [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:error];
+//    WaitForAllGroupsToBeEmpty(0.5);
+//}
 
-- (void)testThatAuthenticationDidFailNotifiesTheAuthenticationObserver
-{
-    // given
-    NSError *error = [NSError errorWithDomain:@"foo" code:201 userInfo:@{}];
-    
-    // expect
-    [[(id) self.authenticationObserver expect] authenticationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *receivedError) {
-        XCTAssertEqual([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
-        XCTAssertEqualObjects(error, receivedError);
-        return YES;
-    }]];
-    
-    // when
-    [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:error];
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
-// TODO jacob delete?
+// TODO jacob move to another test
 //- (void)testThatItNotifiesAuthenticationCenterObserversWhenTheCredentialsChange
 //{
 //    // given
@@ -521,7 +523,6 @@
     [[transportSession stub] configurePushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
     self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com"];
     [[[transportSession stub] andReturn:self.cookieStorage] cookieStorage];
-    self.authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
     [[transportSession stub] setAccessTokenRenewalFailureHandler:[OCMArg checkWithBlock:^BOOL(ZMCompletionHandlerBlock obj) {
         self.authFailHandler = obj;
         return YES;

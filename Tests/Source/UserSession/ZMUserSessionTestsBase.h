@@ -66,11 +66,7 @@
 @property (nonatomic) id requestAvailableNotification;
 @property (nonatomic) id operationLoop;
 @property (nonatomic) id apnsEnvironment;
-
-@property (nonatomic) id<ZMAuthenticationObserver> authenticationObserver;
-@property (nonatomic) id<ZMRegistrationObserver> registrationObserver;
-
-@property (nonatomic) ZMAuthenticationStatus * authenticationStatus;
 @property (nonatomic) ZMClientRegistrationStatus * clientRegistrationStatus;
 @property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
+
 @end

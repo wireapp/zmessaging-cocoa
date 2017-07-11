@@ -34,8 +34,6 @@
 
 @interface ZMUserSessionTestsBase ()
 
-//@property (nonatomic) id<ZMAuthenticationObserverToken> authenticationObserverToken; // TODO jacob
-//@property (nonatomic) id<ZMRegistrationObserverToken> registrationObserverToken; // TODO jacob
 @property (nonatomic) ZMOperationStatus *operationStatus;
 
 @end
@@ -71,7 +69,6 @@
     self.mediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:self.cookieStorage managedObjectContext:nil];
     self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:self.cookieStorage registrationStatusDelegate:nil];
     self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
     self.operationStatus = [[ZMOperationStatus alloc] init];
@@ -107,32 +104,16 @@
     
     WaitForAllGroupsToBeEmpty(0.5);
     
-//    self.authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)]; // TODO jacob
-//    self.authenticationObserverToken = [self.sut addAuthenticationObserver:self.authenticationObserver];
-    
-//    self.registrationObserver = [OCMockObject mockForProtocol:@protocol(ZMRegistrationObserver)]; // TODO jacob
-//    self.registrationObserverToken = [self.sut addRegistrationObserver:self.registrationObserver];
-    
-    
     self.validCookie = [@"valid-cookie" dataUsingEncoding:NSUTF8StringEncoding];
     [self verifyMockLater:self.transportSession];
     [self verifyMockLater:self.syncStrategy];
-    [self verifyMockLater:self.authenticationObserver];
-    [self verifyMockLater:self.registrationObserver];
     [self verifyMockLater:self.operationLoop];
-    
-    
-    
-//    [self.sut.authenticationStatus addAuthenticationCenterObserver:self]; // TODO jacob
-    
 }
 
 - (void)tearDown
 {
     [self.clientRegistrationStatus tearDown];
     self.clientRegistrationStatus = nil;
-//    [self.sut.authenticationStatus removeAuthenticationCenterObserver:self]; // TODO jacob
-    self.authenticationStatus = nil;
     self.proxiedRequestStatus = nil;
     self.operationStatus = nil;
     
@@ -169,14 +150,6 @@
     
     [self.apnsEnvironment stopMocking];
     self.apnsEnvironment = nil;
-
-//    [self.sut removeAuthenticationObserverForToken:self.authenticationObserverToken]; // TODO jacob
-//    self.authenticationObserverToken = nil;
-//    self.authenticationObserver = nil;
-    
-//    [self.sut removeRegistrationObserverForToken:self.registrationObserverToken]; // TODO jacob
-//    self.registrationObserverToken = nil;
-//    self.registrationObserver = nil;
     
     id tempSut = self.sut;
     self.sut = nil;

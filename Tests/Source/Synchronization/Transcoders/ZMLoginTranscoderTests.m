@@ -28,6 +28,7 @@
 #import "ZMUserSessionRegistrationNotification.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMAuthenticationStatus.h"
+#import "ZMAuthenticationStatus_Internal.h"
 
 @import WireUtilities;
 
@@ -610,9 +611,9 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     NSDictionary *expectedPayload = @{@"email" : self.testEmailCredentials.email,
                                       @"locale" : [NSLocale formattedLocaleIdentifier]};
     ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:self.testEmailCredentials.email password:@"12345678"];
-
-    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus expect] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseWaitingForEmailVerfication)] currentPhase];
-    [[[self.mockClientRegistrationStatus expect] andReturn:credentials] emailCredentials];
+    
+    [self.authenticationStatus didFailLoginWithEmailBecausePendingValidation];
+    [self.authenticationStatus setLoginCredentials:credentials];
     
     [ZMUserSessionRegistrationNotification resendValidationForRegistrationEmail];
     WaitForAllGroupsToBeEmpty(0.5);

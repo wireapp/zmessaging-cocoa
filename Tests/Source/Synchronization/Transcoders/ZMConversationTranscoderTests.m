@@ -69,9 +69,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         return YES;
     }]];
     
-    id authStatusMock = [OCMockObject niceMockForClass:[ZMAuthenticationStatus class]];
-    [[[authStatusMock stub] andReturnValue:@YES] registeredOnThisDevice];
-    
     self.downloadedEvents = downloadedEvents;
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
@@ -1947,9 +1944,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertTrue([self.syncMOC saveOrRollback]);
     }];
     
-    id authStatusMock = [OCMockObject mockForClass:[ZMAuthenticationStatus class]];
-    [[[authStatusMock stub] andReturnValue:@YES] registeredOnThisDevice];
-    
     self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2141,10 +2135,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItDoesAppendsNewConversationSystemMessage
 {
     // given
-    id authStatusMock = [OCMockObject niceMockForClass:[ZMAuthenticationStatus class]];
-    [[[authStatusMock stub] andReturnValue:@YES] registeredOnThisDevice];
-    [(ZMAuthenticationStatus *)[[authStatusMock stub] andReturnValue:OCMOCK_VALUE((ZMAuthenticationPhase){ZMAuthenticationPhaseAuthenticated})] currentPhase];
-    
     self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     
     __block NSDictionary *rawConversation;
@@ -3555,10 +3545,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItMergesConversationsWhenItProcessesAConversationCreateEventForAOneOnOneConversationAndTheConnectionAlreadyHasAConversation
 {
     // given
-    id authStatusMock = [OCMockObject niceMockForClass:[ZMAuthenticationStatus class]];
-    [[[authStatusMock stub] andReturnValue:@YES] registeredOnThisDevice];
-    [(ZMAuthenticationStatus *)[[authStatusMock stub] andReturnValue:OCMOCK_VALUE((ZMAuthenticationPhase){ZMAuthenticationPhaseAuthenticated})] currentPhase];
-    
     id accountStatus = [OCMockObject niceMockForClass:[ZMAccountStatus class]];
     [[[accountStatus stub]
       andReturnValue: OCMOCK_VALUE((AccountState){AccountStateOldDeviceActiveAccount})] currentAccountState];

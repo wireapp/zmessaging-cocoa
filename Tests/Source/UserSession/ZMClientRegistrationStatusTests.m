@@ -476,7 +476,7 @@
     NSError *error = [NSError errorWithDomain:@"ClientManagement" code:ClientUpdateErrorSelfClientIsInvalid userInfo:nil];
 
     // expect
-    [[self.mockCookieStorage expect] setAuthenticationCookieData:nil];
+    [[self.mockCookieStorage expect] deleteUserKeychainItems];
     
     // when
     [ZMClientUpdateNotification notifyFetchingClientsDidFail:error];
