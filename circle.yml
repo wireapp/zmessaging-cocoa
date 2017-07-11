@@ -2,23 +2,28 @@ machine:
   xcode:
     version: "8.3.2"
   environment:
-    DESTINATION: "platform=iOS Simulator,name=iPhone 6,OS=10.3"
+    DEPENDENCIES_BASE_URL: "https://raw.githubusercontent.com/wireapp/wire-ios-shared-resources/master"
+
+checkout:
+  post:
+    # Download other scripts
+    - curl -O "${DEPENDENCIES_BASE_URL}/environment.sh"
+    - bash environment.sh
+    - curl -O "${DEPENDENCIES_BASE_URL}/dependencies.sh"
+    - curl -O "${DEPENDENCIES_BASE_URL}/build.sh"
+    - curl -O "${DEPENDENCIES_BASE_URL}/test.sh"
+    - curl -O "${DEPENDENCIES_BASE_URL}/post_test.sh"
 
 dependencies:
   override:
-    - bundle install --path ~/.gem
-    - carthage bootstrap
-    - curl -O https://raw.githubusercontent.com/wireapp/wire-ios-shared-resources/master/Dangerfile
+    - bash dependencies.sh
   cache_directories:
     - Carthage/Build
     - ~/.gem
 
 test:
   override:
-    - set -o pipefail && xcodebuild -scheme WireSyncEngine-ios build-for-testing -enableCodeCoverage YES -destination "${DESTINATION}" | tee $CIRCLE_ARTIFACTS/xcode_build.log | xcpretty
-    - set -o pipefail && xcodebuild -scheme WireSyncEngine-ios test-without-building -enableCodeCoverage YES -destination "${DESTINATION}" | tee $CIRCLE_ARTIFACTS/xcode_test.log | xcpretty -r junit --output $CIRCLE_TEST_REPORTS/junit/tests.xml
-    - bundle exec slather coverage --html --scheme WireSyncEngine-ios --output-directory $CIRCLE_TEST_REPORTS/code_coverage/ WireSyncEngine.xcodeproj
-    - bundle exec danger
-  pre:
-    - mkdir -p $CIRCLE_TEST_REPORTS/junit/
-    - mkdir -p $CIRCLE_TEST_REPORTS/code_coverage/
+    - bash build.sh
+    - bash test.sh
+  post:
+    - bash post_test.sh

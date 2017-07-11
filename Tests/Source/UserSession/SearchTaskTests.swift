@@ -510,14 +510,14 @@ class SearchTaskTests : MessagingTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
-    func testThatItOnlyReturnsTeamConversationsWhenPassingTeamParameter() {
+    func testThatItReturnsAllConversationsWhenPassingTeamParameter() {
         // given
         let resultArrived = expectation(description: "received result")
         let team = Team.insertNewObject(in: uiMOC)
-        let conversation = createGroupConversation(withName: "Beach Club")
-        _ = createGroupConversation(withName: "Beach Club")
+        let conversationInTeam = createGroupConversation(withName: "Beach Club")
+        let conversationNotInTeam = createGroupConversation(withName: "Beach Club")
         
-        conversation.team = team
+        conversationInTeam.team = team
         
         uiMOC.saveOrRollback()
         
@@ -527,7 +527,7 @@ class SearchTaskTests : MessagingTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.conversations, [conversation])
+            XCTAssertEqual(Set(result.conversations), Set([conversationInTeam, conversationNotInTeam]))
         }
         
         // when
