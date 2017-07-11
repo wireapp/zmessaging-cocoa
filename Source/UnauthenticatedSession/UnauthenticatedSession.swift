@@ -31,15 +31,16 @@ public class UnauthenticatedSession : NSObject {
     let operationLoop: UnauthenticatedOperationLoop
     weak var delegate: UnauthenticatedSessionDelegate?
     
-    convenience init(authenticationStatus: ZMAuthenticationStatus, transportSession: ZMTransportSession, delegate: UnauthenticatedSessionDelegate? = nil) throws {
+    convenience init(transportSession: ZMTransportSession, delegate: UnauthenticatedSessionDelegate? = nil) throws {
         let model = NSManagedObjectModel()
         let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
         try coordinator.addPersistentStore(ofType: NSInMemoryStoreType, configurationName: nil, at: nil, options: nil)
         let moc = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         moc.createDispatchGroups()
         moc.persistentStoreCoordinator = coordinator
+        let authenticationStatus = ZMAuthenticationStatus(cookieStorage: transportSession.cookieStorage, managedObjectContext: moc)
         
-        self.init(moc: moc, authenticationStatus: authenticationStatus, transportSession: transportSession, delegate: delegate)
+        self.init(moc: moc, authenticationStatus: authenticationStatus!, transportSession: transportSession, delegate: delegate)
     }
     
     init(moc: NSManagedObjectContext, authenticationStatus: ZMAuthenticationStatus, transportSession: ZMTransportSession, delegate: UnauthenticatedSessionDelegate?) {

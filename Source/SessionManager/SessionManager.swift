@@ -39,8 +39,8 @@ public class SessionManager : NSObject {
     let transportSession: ZMTransportSession
     public weak var delegate : SessionManagerDelegate? = nil
     var authenticationToken: ZMAuthenticationObserverToken?
-    let authenticationStatus: ZMAuthenticationStatus
     var userSession: ZMUserSession?
+    var unauthenticatedSession: UnauthenticatedSession?
     
     public convenience init(appGroupIdentifier: String,
                 appVersion: String,
@@ -93,8 +93,6 @@ public class SessionManager : NSObject {
         self.delegate = delegate
         self.transportSession = transportSession
         
-        authenticationStatus = ZMAuthenticationStatus(cookieStorage: transportSession.cookieStorage)
-        
         super.init()
         
         authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(self)
@@ -127,7 +125,8 @@ public class SessionManager : NSObject {
             }
         } else {
             do {
-                let unauthenticatedSession = try UnauthenticatedSession(authenticationStatus: authenticationStatus, transportSession: transportSession, delegate: self)
+                let unauthenticatedSession = try UnauthenticatedSession(transportSession: transportSession, delegate: self)
+                self.unauthenticatedSession = unauthenticatedSession
                 delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
             } catch let error {
                 fatal("Can't create unauthenticated session: \(error)")
@@ -183,8 +182,20 @@ extension SessionManager: UnauthenticatedSessionDelegate {
 
 extension SessionManager: ZMAuthenticationObserver {
     
+    @objc public func authenticationDidFail(_ error: Error) {
+        guard self.unauthenticatedSession == nil else { return }
+        
+        do {
+            let unauthenticatedSession = try UnauthenticatedSession(transportSession: transportSession, delegate: self)
+            self.unauthenticatedSession = unauthenticatedSession
+            delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
+        } catch let error {
+            fatal("Can't create unauthenticated session: \(error)")
+        }
+    }
+    
     @objc public func authenticationDidSucceed() {
-        guard self.userSession == nil else { return }
+        guard self.userSession == nil, let authenticationStatus = self.unauthenticatedSession?.authenticationStatus else { return }
         let userSession = ZMUserSession(mediaManager: mediaManager,
                                         analytics: analytics,
                                         transportSession: transportSession,
@@ -196,7 +207,7 @@ extension SessionManager: ZMAuthenticationObserver {
         userSession.setEmailCredentials(authenticationStatus.emailCredentials())
         
         userSession.syncManagedObjectContext.performGroupedBlock {
-            userSession.syncManagedObjectContext.registeredOnThisDevice = self.authenticationStatus.completedRegistration
+            userSession.syncManagedObjectContext.registeredOnThisDevice = authenticationStatus.completedRegistration
         }
         
         if let profileImageData =  authenticationStatus.profileImageData {

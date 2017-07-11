@@ -41,10 +41,11 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 @implementation ZMAuthenticationStatus
 
-- (instancetype)initWithCookieStorage:(ZMPersistentCookieStorage *)cookieStorage;
+- (instancetype)initWithCookieStorage:(ZMPersistentCookieStorage *)cookieStorage managedObjectContext:(NSManagedObjectContext *)managedObjectContext;
 {
     self = [super init];
     if(self) {
+        self.moc = managedObjectContext;
         self.cookieStorage = cookieStorage;
         self.isWaitingForLogin = !self.isLoggedIn;
     }

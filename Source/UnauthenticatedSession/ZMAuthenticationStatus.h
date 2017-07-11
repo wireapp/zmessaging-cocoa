@@ -70,7 +70,7 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 @property (nonatomic) NSData *profileImageData;
 
 
-- (instancetype)initWithCookieStorage:(ZMPersistentCookieStorage *)cookieStorage;
+- (instancetype)initWithCookieStorage:(ZMPersistentCookieStorage *)cookieStorage managedObjectContext:(NSManagedObjectContext *)managedObjectContext;
 
 - (void)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
 - (void)removeAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
