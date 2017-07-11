@@ -26,6 +26,7 @@
 @class ZMClientRegistrationStatus;
 @class NSManagedObjectContext;
 @class LocalNotificationDispatcher;
+@class AVSMediaManager;
 
 @protocol ZMSyncStateDelegate;
 @protocol ZMTransportData;
@@ -51,7 +52,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                            cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
              localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
-                            mediaManager:(id<AVSMediaManager>)mediaManager
+                            mediaManager:(AVSMediaManager *)mediaManager
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                    uiMOC:(NSManagedObjectContext *)uiMOC
                                  syncMOC:(NSManagedObjectContext *)syncMOC

@@ -39,6 +39,7 @@
 @class ClientUpdateStatus;
 @class AVSFlowManager;
 @class ZMCallKitDelegate;
+@class AVSMediaManager;
 
 extern NSString * const ZMAppendAVSLogNotificationName;
 
@@ -88,7 +89,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
                     userInterfaceContext:(NSManagedObjectContext *)userInterfaceContext
                 syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
-                            mediaManager:(id<AVSMediaManager>)mediaManager
+                            mediaManager:(AVSMediaManager *)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application

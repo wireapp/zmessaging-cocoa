@@ -118,7 +118,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (instancetype)initWithSyncManagedObjectContextMOC:(NSManagedObjectContext *)syncMOC
                              uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
                                       cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-                                       mediaManager:(id<AVSMediaManager>)mediaManager
+                                       mediaManager:(AVSMediaManager *)mediaManager
                                 onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                   syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                        localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
@@ -213,7 +213,7 @@ ZM_EMPTY_ASSERTING_INIT()
 }
 
 - (void)createTranscodersWithLocalNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-                                         mediaManager:(id<AVSMediaManager>)mediaManager
+                                         mediaManager:(AVSMediaManager *)mediaManager
                                   onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
 {
     self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventMOC syncMOC:self.syncMOC];

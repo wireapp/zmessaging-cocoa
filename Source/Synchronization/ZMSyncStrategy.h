@@ -38,9 +38,9 @@
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
 @class ZMApplicationStatusDirectory;
+@class AVSMediaManager;
 
 @protocol ZMTransportData;
-@protocol AVSMediaManager;
 @protocol ZMSyncStateDelegate;
 @protocol ZMBackgroundable;
 @protocol ApplicationStateOwner;
@@ -51,7 +51,7 @@
 - (instancetype)initWithSyncManagedObjectContextMOC:(NSManagedObjectContext *)syncMOC
                              uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
                                       cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-                                       mediaManager:(id<AVSMediaManager>)mediaManager
+                                       mediaManager:(AVSMediaManager *)mediaManager
                                 onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
                                   syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                        localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher

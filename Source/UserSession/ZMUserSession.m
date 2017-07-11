@@ -61,7 +61,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @interface ZMUserSession ()
 @property (nonatomic) ZMOperationLoop *operationLoop;
 @property (nonatomic) ZMTransportRequest *runningLoginRequest;
-@property (nonatomic) BOOL ownsQueue;
 @property (nonatomic) ZMTransportSession *transportSession;
 @property (nonatomic) NSManagedObjectContext *managedObjectContext;
 @property (nonatomic) NSManagedObjectContext *syncManagedObjectContext;
@@ -201,7 +200,7 @@ ZM_EMPTY_ASSERTING_INIT()
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
-- (instancetype)initWithMediaManager:(id<AVSMediaManager>)mediaManager
+- (instancetype)initWithMediaManager:(AVSMediaManager *)mediaManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
                      apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
@@ -244,7 +243,6 @@ ZM_EMPTY_ASSERTING_INIT()
         };
     }
     
-    
     self = [self initWithTransportSession:transportSession
                      userInterfaceContext:userInterfaceContext
                  syncManagedObjectContext:syncMOC
@@ -254,16 +252,13 @@ ZM_EMPTY_ASSERTING_INIT()
                               application:application
                                appVersion:appVersion
                        appGroupIdentifier:appGroupIdentifier];
-    if (self != nil) {
-        self.ownsQueue = YES;
-    }
     return self;
 }
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
                     userInterfaceContext:(NSManagedObjectContext *)userInterfaceContext
                 syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
-                            mediaManager:(id<AVSMediaManager>)mediaManager
+                            mediaManager:(AVSMediaManager *)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
@@ -400,11 +395,6 @@ ZM_EMPTY_ASSERTING_INIT()
     self.localNotificationDispatcher = nil;
     [self.blackList teardown];
     
-    if(self.ownsQueue) {
-        [self.transportSession tearDown];
-        self.transportSession = nil;
-    }
-    
     __block NSMutableArray *keysToRemove = [NSMutableArray array];
     [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
         if ([obj respondsToSelector:@selector((tearDown))]) {
@@ -520,7 +510,7 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
 }
 
-- (void)setMediaManager:(id <AVSMediaManager>)delegate;
+- (void)setMediaManager:(AVSMediaManager *)delegate;
 {
     NOT_USED(delegate);
 }
