@@ -104,7 +104,7 @@ class MockAuthenticationStatus: ZMAuthenticationStatus {
     init(phase: ZMAuthenticationPhase = .authenticated, cookieString: String = "label", cookieStorage: ZMPersistentCookieStorage? = nil) {
         self.mockPhase = phase
         self.cookieString = cookieString
-        super.init(cookieStorage: cookieStorage)
+        super.init(cookieStorage: cookieStorage, managedObjectContext: nil)
     }
     
     override var currentPhase: ZMAuthenticationPhase {

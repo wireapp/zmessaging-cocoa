@@ -48,7 +48,7 @@
     [super setUp];
     
     self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"foo.bar"];
-    self.sut = [[ZMAuthenticationStatus alloc] initWithCookieStorage:self.cookieStorage];
+    self.sut = [[ZMAuthenticationStatus alloc] initWithCookieStorage:self.cookieStorage managedObjectContext:nil];
     ZM_WEAK(self);
     // If a test fires any notification and it's not listening for it, this will fail
     self.authenticationCallback = ^(id note ZM_UNUSED){

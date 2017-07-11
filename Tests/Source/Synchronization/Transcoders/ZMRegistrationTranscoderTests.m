@@ -59,7 +59,7 @@
     (void) [[[classMock stub] andReturn:self.registrationDownstreamSync] syncWithSingleRequestTranscoder:OCMOCK_ANY managedObjectContext:self.uiMOC];
     
     self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"com.wearezeta.test-WireSyncEngine"];
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:self.cookieStorage];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:self.cookieStorage managedObjectContext:self.uiMOC];
         
     self.sut = (id) [[ZMRegistrationTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus];
     [classMock stopMocking];

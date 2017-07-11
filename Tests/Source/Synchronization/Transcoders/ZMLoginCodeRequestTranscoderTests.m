@@ -39,7 +39,7 @@
 - (void)setUp {
     [super setUp];
     
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:nil];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:nil managedObjectContext: self.uiMOC];
     self.sut = [[ZMLoginCodeRequestTranscoder alloc] initWithManagedObjectContext:self.uiMOC authenticationStatus:self.authenticationStatus];
 }
 

@@ -71,7 +71,7 @@
     self.mediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:self.cookieStorage];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:self.cookieStorage managedObjectContext:nil];
     self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:self.cookieStorage registrationStatusDelegate:nil];
     self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
     self.operationStatus = [[ZMOperationStatus alloc] init];

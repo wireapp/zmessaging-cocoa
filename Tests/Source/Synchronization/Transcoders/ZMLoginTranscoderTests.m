@@ -80,7 +80,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [super setUp];
     
     self.originalLoginTimerInterval = DefaultPendingValidationLoginAttemptInterval;
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:[ZMPersistentCookieStorage storageForServerName:@"test"]];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:[ZMPersistentCookieStorage storageForServerName:@"test"] managedObjectContext:nil];
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
     
     self.mockLocale = [OCMockObject niceMockForClass:[NSLocale class]];
