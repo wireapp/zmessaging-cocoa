@@ -55,7 +55,6 @@ extern NSString * _Null_unspecified const ZMPushStringCallStarts;
 extern NSString * _Null_unspecified const ZMPushStringCallMissed;
 extern NSString * _Null_unspecified const ZMPushStringVideoCallStarts;
 
-extern NSString * _Null_unspecified const ZMPushStringConversationRename;
 extern NSString * _Null_unspecified const ZMPushStringConnectionRequest;
 extern NSString * _Null_unspecified const ZMPushStringConnectionAccepted;
 
