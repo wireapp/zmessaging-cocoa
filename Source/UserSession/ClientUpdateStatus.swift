@@ -202,6 +202,10 @@ public enum ClientUpdateError : NSInteger {
         }
     }
     
+    public func didDetectCurrentClientDeletion() {
+        needsToVerifySelfClientOnAuthenticationDidSucceed = false
+    }
+    
     open func didDeleteClient() {
         if isWaitingToDeleteClients && !hasClientsToDelete {
             isWaitingToDeleteClients = false

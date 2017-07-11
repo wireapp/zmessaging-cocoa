@@ -401,6 +401,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
                 }
             } else {
                 clientRegistrationStatus?.didDetectCurrentClientDeletion()
+                clientUpdateStatus?.didDetectCurrentClientDeletion()
             }
             
         default: break
