@@ -26,13 +26,32 @@
 #import "ZMConnectionTranscoder+Internal.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
-@interface ConnectionTests : IntegrationTestBase
+@interface ConnectionTests : IntegrationTest
 
 @property (nonatomic) NSUInteger previousZMConnectionTranscoderPageSize;
+@property (nonatomic) ConversationChangeObserver *conversationChangeObserver;
 
 @end
 
 @implementation ConnectionTests
+
+
+- (void)setUp
+{
+    [super setUp];
+    
+    [self createSelfUserAndConversation];
+    [self createExtraUsersAndConversations];
+    
+    self.conversationChangeObserver = [[ConversationChangeObserver alloc] init];
+}
+
+- (void)tearDown
+{
+    self.conversationChangeObserver = nil;
+    
+    [super tearDown];
+}
 
 
 - (ZMConversation *)oneOnOneConversationForConnectedMockUser:(MockUser*)mockUser
@@ -50,11 +69,11 @@
     [self createUserWithName:searchUserName uuid:userID];
     
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     // when
     [self searchAndConnectToUserWithName:searchUserName searchQuery:@"McUser"];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     ZMTransportRequest *foundRequest = [self.mockTransportSession.receivedRequests firstObjectMatchingWithBlock:^BOOL(ZMTransportRequest *request) {
@@ -72,15 +91,19 @@
     NSUUID *userID = [NSUUID createUUID];
     [self createUserWithName:searchUserName uuid:userID];
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     [self searchAndConnectToUserWithName:searchUserName searchQuery:@"McUser"];
-    WaitForEverythingToBeDone();
-    [self recreateUserSessionAndWipeCache:YES];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    [self destroySharedSearchDirectory];
+    [self destroySessionManager];
+    [self deleteAuthenticationCookie];
+    [self createSessionManager];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForEverythingToBeDone();
+    XCTAssertTrue([self login]);
     
     // then
     NSArray *allConversations = [ZMConversationList conversationsInUserSession:self.userSession];
@@ -109,8 +132,7 @@
         [self.groupConversation addUsersByUser:self.selfUser addedUsers:@[users[0]]];
     }];
 
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     
@@ -137,7 +159,7 @@
 - (void)testThatAPendingIncomingConnectionRequestIsDisplayedCorrectly;
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
     ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession];
 
@@ -163,13 +185,13 @@
 {
     // given
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
     ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession];
     
     // when
     NSString *userName = @"Hans Von Üser";
-    MockUser *mockUser = [self createSentConnectionToUserWithName:userName uuid:NSUUID.createUUID];
+    MockUser *mockUser = [self createSentConnectionFromUserWithName:userName uuid:NSUUID.createUUID];
 
     // then
     ZMConversation *conversation = [self oneOnOneConversationForConnectedMockUser:mockUser];
@@ -190,7 +212,7 @@
 - (void)testThatAConnectionRequestIsRemovedFromThePendingConnectionsListWhenItIsIgnored;
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
 
     MockUser *mockUser = [self createPendingConnectionFromUserWithName:@"Hans Von Üser" uuid:NSUUID.createUUID];
     ZMConversation *conversation = [self oneOnOneConversationForConnectedMockUser:mockUser];
@@ -217,9 +239,9 @@
 - (void)testThatAConnectionRequestIsRemovedFromConversationsListWhenItIsCancelled;
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
-    MockUser *mockUser = [self createSentConnectionToUserWithName:@"Hans Von Üser" uuid:NSUUID.createUUID];
+    MockUser *mockUser = [self createSentConnectionFromUserWithName:@"Hans Von Üser" uuid:NSUUID.createUUID];
     ZMConversation *conversation = [self oneOnOneConversationForConnectedMockUser:mockUser];
     ZMUser *user = [self userForMockUser:mockUser];
     XCTAssertEqual(user, conversation.connectedUser);
@@ -245,7 +267,7 @@
 {
     // given
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     MockUser *mockUser1 = [self createPendingConnectionFromUserWithName:@"Hans Von Üser" uuid:NSUUID.createUUID];
     ZMConversation *conversation1 = [self oneOnOneConversationForConnectedMockUser:mockUser1];
@@ -314,7 +336,6 @@
 {
     MockConversation *conversation =
     [session insertConversationWithSelfUser:self.selfUser creator:mockUser otherUsers:nil type:ZMTConversationTypeGroup];
-    [self storeRemoteIDForObject:conversation];
     MockConnection *connection = [session insertConnectionWithSelfUser:self.selfUser toUser:mockUser];
     connection.message = @"Hello, my friend.";
     connection.status = @"pending";
@@ -325,8 +346,7 @@
 - (void)testThatConnectionRequestsFromTwoUsersTriggerNotifications;
 {
     // given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     XCTAssertEqual(conversationList.count, 3u);
@@ -340,12 +360,10 @@
     NSString *userName1 = @"Hans Von Üser";
     NSUUID *userID1 = NSUUID.createUUID;
     MockUser *mockUser1 = [self createUserWithName:userName1 uuid:userID1];
-    [self storeRemoteIDForObject:mockUser1];
     
     NSString *userName2 = @"Hannelore Isstgern";
     NSUUID *userID2 = NSUUID.createUUID;
     MockUser *mockUser2 = [self createUserWithName:userName2 uuid:userID2];
-    [self storeRemoteIDForObject:mockUser2];
     
     ZMUser *realUser1;
     ZMUser *realUser2;
@@ -360,7 +378,8 @@
             [self addConnectionRequestInMockTransportsession:session forUser:mockUser1];
             [self addConnectionRequestInMockTransportsession:session forUser:mockUser2];
         }];
-        WaitForEverythingToBeDone();
+//        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
     // then the conversations should be accessible after sync and have the status pending
@@ -397,7 +416,8 @@
             [realUser1 accept];
             [realUser2 accept];
         }];
-        WaitForEverythingToBeDone();
+//        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
         [self.mockTransportSession waitForAllRequestsToCompleteWithTimeout:0.5];
     }
     
@@ -461,18 +481,15 @@
         XCTAssertNotNil(mockUser1.identifier);
         mockUser1.email = @"";
         mockUser1.phone = @"";
-        [self storeRemoteIDForObject:mockUser1];
         
         mockUser2 = [session insertUserWithName:userName2];
         XCTAssertNotNil(mockUser2.identifier);
         mockUser2.email = @"";
         mockUser2.phone = @"";
-        [self storeRemoteIDForObject:mockUser2];
     }];
-    WaitForEverythingToBeDone();
-    
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
     WaitForAllGroupsToBeEmpty(0.5);
+    
+    XCTAssertTrue([self login]);
 
     ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger count = active.count;
@@ -488,7 +505,7 @@
             [self searchAndConnectToUserWithName:userName1 searchQuery:@"Hans"];
             [self searchAndConnectToUserWithName:userName2 searchQuery:@"Hannelore"];
         }];
-        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
     // we should see two new active conversations
@@ -520,9 +537,9 @@
             [session remotelyAcceptConnectionToUser:mockUser1];
             [session remotelyAcceptConnectionToUser:mockUser2];
         }];
-        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
         [NSThread sleepForTimeInterval:0.1];
-        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -561,23 +578,20 @@
 
 - (void)testThatWeSeeANewConversationSystemMessageWhenAcceptingAConnectionRequest;
 {
-    self.registeredOnThisDevice = YES;
-    
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(self.selfToUser1Conversation);
     XCTAssertNotNil(conversation);
     
     [self.userSession saveOrRollbackChanges];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     XCTAssertEqual(conversation.conversationType, ZMConversationTypeOneOnOne);
     XCTAssertEqual(conversation.messages.count, 1u);
     id<ZMConversationMessage> message = conversation.messages.lastObject;
     XCTAssertEqualObjects([message class], [ZMSystemMessage class]);
     XCTAssertEqual(((ZMSystemMessage *)message).systemMessageType, ZMSystemMessageTypeUsingNewDevice);
-
 }
 
 
@@ -592,11 +606,10 @@
         XCTAssertNotNil(mockUser1.identifier);
         mockUser1.email = @"";
         mockUser1.phone = @"";
-        [self storeRemoteIDForObject:mockUser1];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     NSArray *active = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger count = active.count;
@@ -608,7 +621,7 @@
         [self.userSession performChanges:^{
             [self searchAndConnectToUserWithName:userName1 searchQuery:@"Hans"];
         }];
-        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
     // we should see a new active conversation
@@ -628,7 +641,7 @@
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
             [session remotelyAcceptConnectionToUser:mockUser1];
         }];
-        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
     // we should not see a system message in the conversation
@@ -652,11 +665,10 @@
         XCTAssertNotNil(mockUser1.identifier);
         mockUser1.email = @"";
         mockUser1.phone = @"";
-        [self storeRemoteIDForObject:mockUser1];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMConversation *conv1;
     ZMUser *realUser1;
@@ -666,7 +678,7 @@
         [self.userSession performChanges:^{
             [self searchAndConnectToUserWithName:userName1 searchQuery:@"Hans"];
         }];
-        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
     // we should see a new active conversation
@@ -686,7 +698,7 @@
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
             [session remotelyAcceptConnectionToUser:mockUser1];
         }];
-        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
     // we should not see a system message in the conversation
@@ -707,11 +719,10 @@
         XCTAssertNotNil(mockUser1.identifier);
         mockUser1.email = @"foo@bar.example.com";
         mockUser1.phone = @"123123124";
-        [self storeRemoteIDForObject:mockUser1];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMConversation *conv1;
     
@@ -720,7 +731,7 @@
         [self.userSession performChanges:^{
             [self searchAndConnectToUserWithName:userName1 searchQuery:@"Hans"];
         }];
-        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
     // we should see two new active conversations
@@ -744,7 +755,7 @@
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
             [session remotelyAcceptConnectionToUser:mockUser1];
         }];
-        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
     XCTAssertTrue([self waitOnMainLoopUntilBlock:^BOOL{
@@ -776,7 +787,7 @@
         XCTAssertTrue(conv1ParticipantsChanged);
     }
     
-    WaitForEverythingToBeDoneWithTimeout(0.1);
+    WaitForAllGroupsToBeEmpty(0.5);
     (void)token1;
 }
 
@@ -791,11 +802,10 @@
         XCTAssertNotNil(mockUser1.identifier);
         mockUser1.email = @"";
         mockUser1.phone = @"";
-        [self storeRemoteIDForObject:mockUser1];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMConversationList *activeConversations = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger activeCount = activeConversations.count;
@@ -809,7 +819,7 @@
         [self.userSession performChanges:^{
             [self searchAndConnectToUserWithName:userName1 searchQuery:@"Hans"];
         }];
-        WaitForEverythingToBeDone();
+        WaitForAllGroupsToBeEmpty(0.5);
     }
     
     // we should see one new active conversation
@@ -838,11 +848,10 @@
         XCTAssertNotNil(mockUser.identifier);
         mockUser.email = @"";
         mockUser.phone = @"";
-        [self storeRemoteIDForObject:mockUser];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     NSArray *active = [ZMConversationList conversationsInUserSession:self.userSession];
     
@@ -850,7 +859,7 @@
     [self.userSession performChanges:^{
         [self searchAndConnectToUserWithName:userName1 searchQuery:@"Hans"];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // the new conversation should be the first item in the list
 
@@ -862,10 +871,10 @@
 - (void)testThatItResendsConnectionRequestAfterItWasCancelled
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     WaitForAllGroupsToBeEmpty(0.5);
 
-    MockUser *mockUser = [self createSentConnectionToUserWithName:@"Hans Von Üser" uuid:NSUUID.createUUID];
+    MockUser *mockUser = [self createSentConnectionFromUserWithName:@"Hans Von Üser" uuid:NSUUID.createUUID];
     ZMConversation *conversation = [self oneOnOneConversationForConnectedMockUser:mockUser];
     ZMUser *user = [self userForMockUser:mockUser];
     XCTAssertEqual(user, conversation.connectedUser);
@@ -912,6 +921,8 @@
 - (void)testThatItPaginatesConnectionsRequests
 {
     // given
+    [self setupTestThatItPaginatesConnectionsRequests];
+    
     XCTAssertEqual(ZMConnectionTranscoderPageSize, 2u);
     
     __block NSUInteger numberOfConnections;
@@ -928,8 +939,7 @@
     }];
     
     // when
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForEverythingToBeDone();
+    XCTAssertTrue([self login]);
     
     // then
     NSUInteger expectedRequests = (NSUInteger) (numberOfConnections / (float)ZMConnectionTranscoderPageSize + 0.5f);
@@ -941,7 +951,7 @@
     }
     
     XCTAssertEqual(expectedRequests, foundRequests);
-    XCTAssertEqual([ZMConnection connectionsInMangedObjectContext:self.uiMOC].count, numberOfConnections);
+    XCTAssertEqual([ZMConnection connectionsInMangedObjectContext:self.userSession.managedObjectContext].count, numberOfConnections);
     
     // then
     ZMConnectionTranscoderPageSize = self.previousZMConnectionTranscoderPageSize;
@@ -1011,7 +1021,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = self.responseBlockForConnectionLimit;
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     ZMConversationList *conversations = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger beforeInsertingCount = conversations.count;
     
@@ -1034,7 +1044,7 @@
     
     self.mockTransportSession.responseGeneratorBlock = self.responseBlockForConnectionLimit;
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     XCTAssertEqual(observer.notifications.count, 0u);
     
     // when
@@ -1047,7 +1057,7 @@
 
 - (void)testThatItResetsTheConversationWhenAConnectionStatusChangeFromPendingToAcceptedIsRejectedByTheBackend
 {
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     ZMConversationList *pending = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
     NSUInteger pendingCount = pending.count;
 
@@ -1106,7 +1116,7 @@
     // create pending conversation from remote user
     MockUser *mockUser = [self createPendingConnectionFromUserWithName:@"Hans" uuid:NSUUID.createUUID];
     
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMUser *realUser1 = [self userForMockUser:mockUser];
     self.mockTransportSession.responseGeneratorBlock = self.responseBlockForConnectionLimit;
