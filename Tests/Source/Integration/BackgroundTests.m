@@ -32,29 +32,33 @@
 static NSTimeInterval zmMessageExpirationTimer = 0.3;
 
 
+@interface BackgroundTests : IntegrationTest
 
-@interface BackgroundTests : IntegrationTestBase
 @end
 
 
 @implementation BackgroundTests
 
-- (void)setUp {
+- (void)setUp
+{
     [super setUp];
+    
+    [self createSelfUserAndConversation];
+    [self createExtraUsersAndConversations];
 }
 
-- (void)tearDown {
-    
+- (void)tearDown
+{
     self.mockTransportSession.disableEnqueueRequests = NO;
     [ZMMessage resetDefaultExpirationTime];
+    
     [super tearDown];
 }
-
 
 - (void)testThatItSendsUILocalNotificationsForExpiredMessageRequestsWhenGoingToTheBackground
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
         (void)request;
         return ResponseGenerator.ResponseNotCompleted;
@@ -82,7 +86,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
 {
     // given
     [ZMMessage setDefaultExpirationTime:zmMessageExpirationTimer];
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     self.mockTransportSession.disableEnqueueRequests = YES;
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
@@ -106,7 +110,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
 {
     // given
     [ZMMessage setDefaultExpirationTime:zmMessageExpirationTimer];
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     self.mockTransportSession.disableEnqueueRequests = YES;
     ZMConversation *conversation = [self conversationForMockConversation:self.selfConversation];
@@ -124,9 +128,6 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     
     // then
     XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0u);
-
 }
 
-
 @end
-

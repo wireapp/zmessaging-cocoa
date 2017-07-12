@@ -69,13 +69,17 @@ class VoiceChannelParticipantTestObserver : VoiceChannelParticipantObserver {
     }
 }
 
-class CallingV3Tests : IntegrationTestBase {
+class CallingV3Tests : IntegrationTest {
     
     var stateObserver : VoiceChannelStateTestObserver!
     var participantObserver : VoiceChannelParticipantTestObserver!
     
     override func setUp() {
         super.setUp()
+        
+        createSelfUserAndConversation()
+        createExtraUsersAndConversations()
+        
         stateObserver = VoiceChannelStateTestObserver()
         participantObserver = VoiceChannelParticipantTestObserver()
     }
@@ -87,7 +91,7 @@ class CallingV3Tests : IntegrationTestBase {
     }
     
     func selfJoinCall(isStart: Bool) {
-        userSession.enqueueChanges {
+        userSession?.enqueueChanges {
             _ = self.conversationUnderTest.voiceChannelInternal?.join(video: false)
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -95,8 +99,8 @@ class CallingV3Tests : IntegrationTestBase {
     
     func selfDropCall(){
         let convIdRef = self.conversationIdRef
-        let userIdRef = self.selfUser.identifier.cString(using: .utf8)
-        userSession.enqueueChanges {
+        let userIdRef = self.selfUser!.identifier.cString(using: .utf8)
+        userSession?.enqueueChanges {
             self.conversationUnderTest.voiceChannelInternal?.leave()
             WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
                                              conversationId: convIdRef,
@@ -109,8 +113,8 @@ class CallingV3Tests : IntegrationTestBase {
     
     func selfIgnoreCall(){
         let convIdRef = self.conversationIdRef
-        let userIdRef = self.selfUser.identifier.cString(using: .utf8)
-        userSession.performChanges{
+        let userIdRef = self.selfUser!.identifier.cString(using: .utf8)
+        userSession?.performChanges{
             self.conversationUnderTest.voiceChannelInternal?.ignore()
             WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
                                              conversationId: convIdRef,
@@ -174,21 +178,21 @@ class CallingV3Tests : IntegrationTestBase {
     
     var useGroupConversation : Bool = false
     var mockConversationUnderTest : MockConversation {
-        return useGroupConversation ? groupConversation : selfToUser2Conversation
+        return useGroupConversation ? groupConversation! : selfToUser2Conversation!
     }
     
     var conversationUnderTest : ZMConversation {
-        return conversation(for: mockConversationUnderTest)
+        return conversation(for: mockConversationUnderTest)!
     }
     
     var localSelfUser : ZMUser {
-        return user(for: selfUser)
+        return user(for: selfUser!)!
     }
     
     func testJoiningAndLeavingAnEmptyVoiceChannel_OneOnOne(){
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete());
-        stateObserver.observe(conversation: conversationUnderTest, context: uiMOC)
+        XCTAssertTrue(login());
+        stateObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
 
         // when
         selfJoinCall(isStart: true)
@@ -208,9 +212,9 @@ class CallingV3Tests : IntegrationTestBase {
     
     func testJoiningAndLeavingAnVoiceChannel_Group_2ParticipantsLeft(){
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete());
+        XCTAssertTrue(login());
         useGroupConversation = true
-        stateObserver.observe(conversation: conversationUnderTest, context: uiMOC)
+        stateObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
         
         // when
         selfJoinCall(isStart: true)
@@ -240,9 +244,9 @@ class CallingV3Tests : IntegrationTestBase {
     
     func testJoiningAndLeavingAnEmptyVoiceChannel_Group(){
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete());
+        XCTAssertTrue(login());
         useGroupConversation = true
-        stateObserver.observe(conversation: conversationUnderTest, context: uiMOC)
+        stateObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
         
         // when
         selfJoinCall(isStart: true)
@@ -270,8 +274,8 @@ class CallingV3Tests : IntegrationTestBase {
     func testThatItSendsOutAllExpectedNotificationsWhenSelfUserCalls_OneOnOne() {
     
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
-        stateObserver.observe(conversation: conversationUnderTest, context: uiMOC)
+        XCTAssertTrue(login())
+        stateObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
 
         // (1) self calling & backend acknowledges
         //
@@ -317,11 +321,11 @@ class CallingV3Tests : IntegrationTestBase {
         // no active users -> self is calling -> self connected to active channel -> no active users
         
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         useGroupConversation = true
         
-        stateObserver.observe(conversation: conversationUnderTest, context: uiMOC)
-        participantObserver.observe(conversation: conversationUnderTest, context: uiMOC)
+        stateObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
+        participantObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
         
         // (1) self calling & backend acknowledges
         //
@@ -370,8 +374,8 @@ class CallingV3Tests : IntegrationTestBase {
     
     func testThatItSendsOutAllExpectedNotificationsWhenOtherUserCalls_OneOnOne() {
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
-        stateObserver.observe(conversation: conversationUnderTest, context: uiMOC)
+        XCTAssertTrue(login())
+        stateObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
 
         let user = conversationUnderTest.connectedUser!
 
@@ -410,10 +414,10 @@ class CallingV3Tests : IntegrationTestBase {
 
     func testThatItSendsOutAllExpectedNotificationsWhenOtherUserCalls_Group() {
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         useGroupConversation = true
-        stateObserver.observe(conversation: conversationUnderTest, context: uiMOC)
-        participantObserver.observe(conversation: conversationUnderTest, context: uiMOC)
+        stateObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
+        participantObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
         
         let user = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
         
@@ -456,8 +460,8 @@ class CallingV3Tests : IntegrationTestBase {
     
     func testThatItSendsANotificationWhenWeIgnoreACall() {
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
-        stateObserver.observe(conversation: conversationUnderTest, context: uiMOC)
+        XCTAssertTrue(login())
+        stateObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
         let user = conversationUnderTest.connectedUser!
 
         // (1) other user joins
@@ -488,8 +492,8 @@ class CallingV3Tests : IntegrationTestBase {
     func testThatItSendsANotificationIfIgnoringACallAndImmediatelyAcceptingIt() {
         
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
-        stateObserver.observe(conversation: conversationUnderTest, context: uiMOC)
+        XCTAssertTrue(login())
+        stateObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
         let user = conversationUnderTest.connectedUser!
 
         // (1) other user joins and we ignore
@@ -513,7 +517,7 @@ class CallingV3Tests : IntegrationTestBase {
 
     func testThatItFiresAConversationChangeNotificationWhenAGroupCallIsDeclined() {
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         useGroupConversation = true
         
         let user = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
@@ -553,7 +557,7 @@ class CallingV3Tests : IntegrationTestBase {
 
     func testThatItFiresAConversationChangeNotificationWhenAGroupCallIsJoined() {
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         useGroupConversation = true
         
         let localUser1 = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
@@ -609,7 +613,7 @@ class CallingV3Tests : IntegrationTestBase {
     
     func testThatItCanIgnoreACallAndReinitiateNewCallWhenCallEnded(){
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         useGroupConversation = true
         let user = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
         
@@ -633,7 +637,7 @@ class CallingV3Tests : IntegrationTestBase {
     
     func testThatItCanIgnoreACallAndSeeNewCallWhenCallEnded(){
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         useGroupConversation = true
         let user = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
         
@@ -662,7 +666,7 @@ class CallingV3Tests : IntegrationTestBase {
 extension CallingV3Tests {
     
     func fetchAllClients(){
-        userSession.performChanges {
+        userSession?.performChanges {
             self.conversationUnderTest.appendMessage(withText: "foo") // make sure we have all clients
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -672,7 +676,7 @@ extension CallingV3Tests {
     func testThatItCreatesASystemMessageWhenWeMissedACall(){
         
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         let user = conversationUnderTest.connectedUser!
         fetchAllClients()
 
@@ -699,10 +703,10 @@ extension CallingV3Tests {
     
     func testThatTheMissedCallSystemMessageUnarchivesTheConversation(){
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         fetchAllClients()
 
-        self.userSession.performChanges {
+        self.userSession?.performChanges {
             self.conversationUnderTest.isArchived = true
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -725,7 +729,7 @@ extension CallingV3Tests {
     func testThatItCreatesAPerformedCallSystemMessageWhenTheCallIsEnded() {
         
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         fetchAllClients()
         let user = conversationUnderTest.connectedUser!
         let messageCount = conversationUnderTest.messages.count;
@@ -749,11 +753,11 @@ extension CallingV3Tests {
     
     func testThatThePerformedCallSystemMessageUnarchivesTheConversation() {
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         fetchAllClients()
         let user = conversationUnderTest.connectedUser!
         
-        self.userSession.performChanges {
+        self.userSession?.performChanges {
             self.conversationUnderTest.isArchived = true
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -774,12 +778,12 @@ extension CallingV3Tests {
     
     func testThatItUpdatesTheLastModifiedDateOfTheConversationWithTheIncomingCallTimestamp(){
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         let user = conversationUnderTest.connectedUser!
         
         // Time gets truncated to integer values under the hood, doing the same to avoid false positives
         let timeIntervalBeforeCall = TimeInterval(UInt32(Date().timeIntervalSince1970))
-        XCTAssertLessThan(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, timeIntervalBeforeCall)
+        XCTAssertLessThan(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, timeIntervalBeforeCall) // TODO jacob flakey
         
         // when
         otherStartCall(user: user)

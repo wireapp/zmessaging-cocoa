@@ -21,6 +21,7 @@
 
 #import "IntegrationTestBase.h"
 #import "ZMUserSession+OTR.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface FakeClientObserver : NSObject <ZMClientUpdateObserver>
 @property (nonatomic) NSArray *fetchedClients;
@@ -64,7 +65,7 @@
 @end
 
 
-@interface ClientManagementTests : IntegrationTestBase
+@interface ClientManagementTests : IntegrationTest
 @property (nonatomic) FakeClientObserver *observer;
 @property (nonatomic) id<ZMClientUpdateObserverToken> token;
 @end
@@ -74,6 +75,12 @@
 - (void)setUp
 {
     [super setUp];
+    
+    [self createSelfUserAndConversation];
+    [self createExtraUsersAndConversations];
+    
+    XCTAssert([self login]);
+    
     self.observer = [[FakeClientObserver alloc] init];
     self.token = [self.userSession addClientUpdateObserver:self.observer];
 }
@@ -103,7 +110,6 @@
 - (void)testThatItFetchesClientsFromTheSettingsMenu
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
     [self insertTwoSelfClientsOnMockTransporSession];
     
     // when
@@ -129,9 +135,6 @@
 - (void)testThatItCanDeleteClientsFromSettingsMenu
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
     ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:SelfUserEmail password:SelfUserPassword];
     [self insertTwoSelfClientsOnMockTransporSession];
 
@@ -164,8 +167,6 @@
 - (void)testThatItAddsAUserClientWhenReceivingANotificationForANewClient
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
-    
     ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
     UserChangeObserver *observer = [[UserChangeObserver alloc] initWithUser:selfUser];
     
@@ -174,10 +175,9 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         mockClient = [session registerClientForUser:self.selfUser label:@"Foo client" type:@"permanent"];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    
     XCTAssertEqual(observer.notifications.count, 1u);
     UserChangeInfo *firstChangeInfo = observer.notifications.firstObject;
     XCTAssertTrue(firstChangeInfo.clientsChanged);
@@ -191,9 +191,7 @@
 - (void)testThatItAddsAUserClientAndDegradesTheSecurityWhenReceivingANotificationForANewClient
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
-
-    [self establishSessionBetweenSelfUserAndMockUser:self.user1];
+    [self establishSessionWithMockUser:self.user1];
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     UserClient *selfClient = [ZMUser selfUserInUserSession:self.userSession].selfClient;
     [self.userSession performChanges:^{
@@ -207,7 +205,7 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session registerClientForUser:self.selfUser label:@"Foo client" type:@"permanent"];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
@@ -224,9 +222,7 @@
 - (void)testThatItCanNotSendAMessageAfterReceivingANotificationForANewClient
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
-    
-    [self establishSessionBetweenSelfUserAndMockUser:self.user1];
+    [self establishSessionWithMockUser:self.user1];
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     UserClient *selfClient = [ZMUser selfUserInUserSession:self.userSession].selfClient;
     [self.userSession performChanges:^{
@@ -240,7 +236,7 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session registerClientForUser:self.selfUser label:@"Foo client" type:@"permanent"];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
@@ -264,7 +260,6 @@
 - (void)testThatItRemovesAUserClientWhenReceivingANotificationForAClient
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
     ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
 
     UserClient *currentSelfClient = selfUser.selfClient;
@@ -272,7 +267,7 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         mockClient = [session registerClientForUser:self.selfUser label:@"Second client" type:@"permanent"];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     XCTAssertEqual(selfUser.clients.count, 2u);
 
@@ -282,7 +277,7 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session deleteUserClientWithIdentifier:mockClient.identifier forUser:self.selfUser];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(observer.notifications.count, 1u);
