@@ -236,7 +236,7 @@
 - (void)testThatItLogsInWithAPhoneNumberIfThePhoneNumberIsAlreadyRegisteredToAnotherUser
 {
     // given
-    [self createDefaultUsersAndConversations];
+    [self createSelfUserAndConversation];
     
     NSString *phone = @"+4912345678900";
     NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
@@ -268,7 +268,7 @@
 - (void)testThatItReturnsAPhoneVerificationFailureWithAlreadyRegisteredPhoneNumber
 {
     // given
-    [self createDefaultUsersAndConversations];
+    [self createSelfUserAndConversation];
     
     NSString *phone = @"+4912345678900";
     NSString *code = self.mockTransportSession.invalidPhoneVerificationCode;

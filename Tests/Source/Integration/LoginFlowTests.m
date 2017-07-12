@@ -42,15 +42,17 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
 - (void)setUp
 {
-    self.authenticationFailures = [NSMutableArray array];
-    
     [super setUp];
+    
+    self.authenticationFailures = [NSMutableArray array];
+    [self createSelfUserAndConversation];
 }
 
 - (void)tearDown
 {
     self.authenticationFailures = nil;
     DebugLoginFailureTimerOverride = 0;
+    
     [super tearDown];
 }
 
@@ -62,8 +64,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatItNotifiesIfTheClientNeedsToBeRegistered
 {
     // given
-    [self createDefaultUsersAndConversations];
-    
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -100,8 +100,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatWeCanLogInWithEmail
 {
     // given
-    [self createDefaultUsersAndConversations];
-
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -137,7 +135,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatWeCanLoginWithAValidPreExistingCookie
 {
     // given
-    [self createDefaultUsersAndConversations];
     XCTAssertTrue([self login]);
     
     // expect
@@ -194,8 +191,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatWhenTransportSessionDeletesCookieInResponseToFailedLoginWeDoNotContinueSendingMoreRequests
 {
     // given
-    [self createDefaultUsersAndConversations];
-    
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
     __block MockUser *selfUser;
@@ -243,8 +238,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatWhenTransportSessionDeletesCookieInResponseToFailedRenewTokenWeGoToUnathorizedState
 {
     // given
-    [self createDefaultUsersAndConversations];
-    
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
     __block MockUser *selfUser;
@@ -324,9 +317,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatWhenWeLoginItChecksForTheHistory
 {
     // given
-    [self createDefaultUsersAndConversations];
-    
-    // create history
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[]];
         [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[]];
@@ -353,7 +343,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
 - (void)testThatItRegisteresThePushTokenWithTheBackend;
 {
-    [self createDefaultUsersAndConversations];
     NSData *deviceToken = [@"asdfasdf" dataUsingEncoding:NSUTF8StringEncoding];
     NSString *deviceTokenAsHex = @"6173646661736466";
     XCTAssertTrue([self login]);
@@ -378,8 +367,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatWeCanLogInWithPhoneNumber
 {
     // given
-    [self createDefaultUsersAndConversations];
-    
     NSString *phone = @"+4912345678900";
     NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -451,8 +438,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatItNotifiesIfTheLoginFails
 {
     // given
-    [self createDefaultUsersAndConversations];
-    
     NSString *phone = @"+4912345678900";
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
@@ -488,9 +473,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
 - (void)testThatItFetchesSelfUserBeforeRegisteringSelfClient
 {
-    // given
-    [self createDefaultUsersAndConversations];
-    
     // expect
     __block BOOL didCreateSelfClient = NO;
     __block BOOL didFetchSelfUser = NO;
@@ -521,8 +503,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatWeCanLoginAfterRegisteringAnEmailAddressAndClient
 {
     // given
-    [self createDefaultUsersAndConversations];
-    
     NSString *phone = @"+4912345678900";
     NSString *email = @"email@example.com";
     NSString *password = @"newPassword";
@@ -592,8 +572,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatWeRecoverFromEnteringAWrongEmailAddressWhenRegisteringAClientAfterLoggingInWithPhone
 {
     // given
-    [self createDefaultUsersAndConversations];
-    
     NSString *phone = @"+4912345678900";
     NSString *wrongPassword = @"wrongPassword";
 
@@ -666,8 +644,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatItCanRegisterNewClientAfterDeletingSelfClient
 {
     // given
-    [self createDefaultUsersAndConversations];
-    
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
     id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     [[authenticationObserver expect] authenticationDidSucceed]; // authentication
@@ -721,8 +697,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatItCanRegisterNewClientAfterDeletingSelfClientAndReceivingNeedsPasswordToRegisterClient
 {
     // given
-    [self createDefaultUsersAndConversations];
-    
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
     id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     [[authenticationObserver expect] authenticationDidSucceed]; // authentication
@@ -774,8 +748,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatItCanRegisterANewClientAfterDeletingClients
 {
     // given
-    [self createDefaultUsersAndConversations];
-    
     __block NSString *idToDelete;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         MockUserClient *client = [session registerClientForUser:self.selfUser label:@"idToDelete" type:@"permanent"];

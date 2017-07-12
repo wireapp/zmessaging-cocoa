@@ -65,7 +65,17 @@ extension IntegrationTest {
         mockTransportSession = nil
         sessionManager = nil
         selfUser = nil
+        user1 = nil
+        user2 = nil
+        user3 = nil
+        user4 = nil
+        user5 = nil
+        selfToUser1Conversation = nil
+        selfToUser2Conversation = nil
+        connectionSelfToUser1 = nil
+        connectionSelfToUser2 = nil
         selfConversation = nil
+        groupConversation = nil
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -120,7 +130,7 @@ extension IntegrationTest {
     }
     
     @objc
-    func createDefaultUsersAndConversations() {
+    func createSelfUserAndConversation() {
         
         mockTransportSession?.performRemoteChanges({ session in
             let selfUser = session.insertSelfUser(withName: "The Self User")
@@ -139,6 +149,75 @@ extension IntegrationTest {
         })
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+    
+    @objc
+    func createExtraUsersAndConversations() {
+        
+        mockTransportSession?.performRemoteChanges({ session in
+            let user1 = session.insertUser(withName: "Extra User1")
+            user1.email = "user1@example.com"
+            user1.phone = "6543"
+            user1.accentID = 3
+            session.addProfilePicture(to: user1)
+            session.addV3ProfilePicture(to: user1)
+            self.user1 = user1
+            
+            let user2 = session.insertUser(withName: "Extra User2")
+            user2.email = "user2@example.com"
+            user2.phone = "4534"
+            user2.accentID = 1
+            self.user2 = user2
+            
+            let user3 = session.insertUser(withName: "Extra User3")
+            user3.email = "user3@example.com"
+            user3.phone = "340958"
+            user3.accentID = 4
+            session.addProfilePicture(to: user3)
+            session.addV3ProfilePicture(to: user3)
+            self.user3 = user3
+            
+            let user4 = session.insertUser(withName: "Extra User4")
+            user4.email = "user4@example.com"
+            user4.phone = "2349857"
+            user4.accentID = 7
+            session.addProfilePicture(to: user4)
+            session.addV3ProfilePicture(to: user4)
+            self.user4 = user4
+            
+            let user5 = session.insertUser(withName: "Extra User5")
+            user5.email = "user5@example.com"
+            user5.phone = "555466434325"
+            user5.accentID = 7
+            self.user5 = user5
+            
+            let selfToUser1Conversation = session.insertOneOnOneConversation(withSelfUser: self.selfUser!, otherUser:user1)
+            selfToUser1Conversation.creator = self.selfUser
+            selfToUser1Conversation.setValue("Connection conversation to user 1", forKey:"name")
+            self.selfToUser1Conversation = selfToUser1Conversation
+            
+            let selfToUser2Conversation = session.insertOneOnOneConversation(withSelfUser: self.selfUser!, otherUser:user2)
+            selfToUser2Conversation.creator = user2
+            selfToUser2Conversation.setValue("Connection conversation to user 2", forKey:"name")
+            self.selfToUser2Conversation = selfToUser2Conversation
+            
+            let groupConversation = session.insertGroupConversation(withSelfUser:self.selfUser!, otherUsers: [user1, user2, user3])
+            groupConversation.creator = user3;
+            groupConversation.changeName(by:self.selfUser!, name:"Group conversation")
+            self.groupConversation = groupConversation
+            
+            let connectionSelfToUser1 = session.insertConnection(withSelfUser:self.selfUser!, to:user1)
+            connectionSelfToUser1.status = "accepted"
+            connectionSelfToUser1.lastUpdate = Date(timeIntervalSinceNow: -3)
+            connectionSelfToUser1.conversation = selfToUser1Conversation
+            self.connectionSelfToUser1 = connectionSelfToUser1
+            
+            let connectionSelfToUser2 = session.insertConnection(withSelfUser:self.selfUser!, to:user2)
+            connectionSelfToUser2.status = "accepted"
+            connectionSelfToUser2.lastUpdate = Date(timeIntervalSinceNow: -5)
+            connectionSelfToUser2.conversation = selfToUser2Conversation
+            self.connectionSelfToUser2 = connectionSelfToUser2
+        })
     }
     
     @objc
@@ -190,6 +269,38 @@ extension IntegrationTest {
         } else {
             return nil
         }
+    }
+    
+    @objc(conversationForMockConversation:)
+    func conversation(for mockConversation: MockConversation) -> ZMConversation? {
+        let uuid = mockConversation.identifier.uuid()
+        let data = (uuid as NSUUID).data() as NSData
+        let predicate = NSPredicate(format: "remoteIdentifier_data == %@", data)
+        let request = ZMConversation.sortedFetchRequest(with: predicate)
+        let result = userSession?.managedObjectContext.executeFetchRequestOrAssert(request) as? [ZMConversation]
+        
+        if let conversation = result?.first {
+            return conversation
+        } else {
+            return nil
+        }
+    }
+        
+    @objc(establishSessionWithMockUser:)
+    func establishSession(with mockUser: MockUser) {
+        mockTransportSession?.performRemoteChanges({ session in
+            if mockUser.clients.count == 0 {
+                session.registerClient(for: mockUser, label: "Wire for MS-DOS", type: "permanent")
+            }
+            
+            for client in mockUser.clients {
+                self.userSession?.syncManagedObjectContext.performGroupedBlockAndWait {
+                    self.establishSessionFromSelf(toRemote: client as! MockUserClient)
+                }
+            }
+        })
+        
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
 }

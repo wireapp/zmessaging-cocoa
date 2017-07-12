@@ -29,10 +29,6 @@
 
 @interface APNSTests : IntegrationTest
 
-@property (nonatomic) MockUser *user1;
-@property (nonatomic) MockConversation *selfToUser1Conversation;
-@property (nonatomic) MockConnection *connectionSelfToUser1;
-
 @end
 
 @implementation APNSTests
@@ -41,38 +37,8 @@
 {
     [super setUp];
     
-    [self createDefaultUsersAndConversations];
-    [self createUser1Fixture];
-}
-
-- (void)tearDown
-{
-    self.user1 = nil;
-    self.selfToUser1Conversation = nil;
-    self.connectionSelfToUser1 = nil;
-    
-    [super tearDown];
-}
-
-- (void)createUser1Fixture
-{
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        self.user1 = [session insertUserWithName:@"Extra User1"];
-        self.user1.email = @"user1@example.com";
-        self.user1.phone = @"6543";
-        self.user1.accentID = 3;
-        [session addProfilePictureToUser:self.user1];
-        [session addV3ProfilePictureToUser:self.user1];
-        
-        self.selfToUser1Conversation = [session insertOneOnOneConversationWithSelfUser:self.selfUser otherUser:self.user1];
-        self.selfToUser1Conversation.creator = self.selfUser;
-        [self.selfToUser1Conversation setValue:@"Connection conversation to user 1" forKey:@"name"];
-        
-        self.connectionSelfToUser1 = [session insertConnectionWithSelfUser:self.selfUser toUser:self.user1];
-        self.connectionSelfToUser1.status = @"accepted";
-        self.connectionSelfToUser1.lastUpdate = [NSDate dateWithTimeIntervalSinceNow:-3];
-        self.connectionSelfToUser1.conversation = self.selfToUser1Conversation;
-    }];
+    [self createSelfUserAndConversation];
+    [self createExtraUsersAndConversations];
 }
 
 - (NSDictionary *)APNSPayloadForNotificationPayload:(NSDictionary *)notificationPayload identifier:(NSUUID *)identifier {
