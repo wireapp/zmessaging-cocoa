@@ -21,16 +21,15 @@
 #import "IntegrationTestBase.h"
 #import "ZMTyping.h"
 #import "ZMTypingUsers.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
-
-@interface IsTypingTests : IntegrationTestBase <ZMTypingChangeObserver>
+@interface IsTypingTests : IntegrationTest <ZMTypingChangeObserver>
 
 @property (nonatomic) NSTimeInterval oldTimeout;
 @property (nonatomic) NSMutableArray *notifications;
 
 @end
-
 
 
 @implementation IsTypingTests
@@ -39,7 +38,12 @@
 {
     self.oldTimeout = ZMTypingDefaultTimeout;
     ZMTypingDefaultTimeout = 2;
+    
     [super setUp];
+    
+    [self createSelfUserAndConversation];
+    [self createExtraUsersAndConversations];
+    
     self.notifications = [NSMutableArray array];
 }
 
@@ -57,7 +61,7 @@
 
 - (void)testThatItSendsTypingNotifications;
 {
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     ZMUser *user1 = [self userForMockUser:self.user1];
@@ -79,7 +83,7 @@
 
 - (void)testThatItTypingStatusTimesOut;
 {
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     [conversation addTypingObserver:self];
@@ -104,8 +108,7 @@
 - (void)testThatItResetsIsTypingWhenATypingUserSendsAMessage
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForEverythingToBeDone();
+    XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     [conversation addTypingObserver:self];
@@ -135,7 +138,7 @@
 - (void)testThatIt_DoesNot_ResetIsTypingWhenA_DifferentUser_ThanTheTypingUserSendsAMessage
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     [conversation addTypingObserver:self];

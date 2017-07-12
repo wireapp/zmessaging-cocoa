@@ -19,18 +19,25 @@
 
 #import "IntegrationTestBase.h"
 #import "ZMUserSession.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
-@interface GiphyTests : IntegrationTestBase
+@interface GiphyTests : IntegrationTest
 
 @end
 
 @implementation GiphyTests
 
+- (void)setUp
+{
+    [super setUp];
+    
+    [self createSelfUserAndConversation];
+}
 
 - (void)testThatItSendsARequestAndInvokesCallback {
     
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"callback called"];
     NSArray *expectedPayload = @[@"bar"];
@@ -39,7 +46,9 @@
     WaitForAllGroupsToBeEmpty(0.5);
     [self.mockTransportSession resetReceivedRequests];
     
+    ZM_WEAK(self);
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request){
+        ZM_STRONG(self);
         if([request.path hasPrefix:@"/proxy/giphy"]) {
             XCTAssertEqualObjects(request.path, @"/proxy/giphy/foo/bar/baz");
             XCTAssertEqual(request.method, ZMMethodGET);
