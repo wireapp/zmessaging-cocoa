@@ -23,17 +23,24 @@
 @import WireDataModel;
 @import WireMessageStrategy;
 
-#import "IntegrationTestBase.h"
 #import "ZMUserSession.h"
 #import "ZMUser+Testing.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
-@interface UserTests : IntegrationTestBase
+@interface UserTests : IntegrationTest
 
 @end
 
 
-
 @implementation UserTests
+
+- (void)setUp
+{
+    [super setUp];
+    
+    [self createSelfUserAndConversation];
+    [self createExtraUsersAndConversations];
+}
 
 - (NSArray *)allVisibileUsers
 {
@@ -58,8 +65,7 @@
 
 - (void)testThatSelfUserImagesAreDownloaded
 {
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForEverythingToBeDone();
+    XCTAssertTrue([self login]);
     
     // then
     XCTAssertTrue([ZMUser selfUserInUserSession:self.userSession].imageMediumData != nil);
@@ -69,7 +75,7 @@
 - (void)testThatAllUsersAreDownloaded
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     // then
     for(MockUser *mockUser in self.allVisibileUsers) {
@@ -81,7 +87,7 @@
 - (void)testThatUserSmallImageIsRedownloaded
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMUser *someUser = [self userForMockUser:self.allVisibileUsers.firstObject];
     someUser.imageSmallProfileData = [self verySmallJPEGData];
@@ -91,7 +97,7 @@
     [(NSCache *)someUser.managedObjectContext.userInfo[@"userImagesCache"] removeAllObjects];
     [someUser requestSmallProfileImageInUserSession:self.userSession];
     
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     NSData *newImageData = [someUser imageSmallProfileData];
     XCTAssertNotNil(newImageData);
 }
@@ -99,7 +105,7 @@
 - (void)testThatUserMediumImageIsRedownloaded
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMUser *someUser = [self userForMockUser:self.allVisibileUsers.firstObject];
     someUser.imageMediumData = [self verySmallJPEGData];
@@ -109,7 +115,7 @@
     [(NSCache *)someUser.managedObjectContext.userInfo[@"userImagesCache"] removeAllObjects];
     [someUser requestMediumProfileImageInUserSession:self.userSession];
     
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     NSData *newImageData = [someUser imageMediumData];
     XCTAssertNotNil(newImageData);
 }
@@ -117,8 +123,7 @@
 
 - (void)testThatDisplayNameDoesNotChangesIfAUserWithADifferentNameIsAdded
 {
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForEverythingToBeDone();
+    XCTAssertTrue([self login]);
     
     // Create a conversation and change SelfUser name
     
@@ -143,11 +148,10 @@
     __block MockUser *extraUser;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         extraUser = [session insertUserWithName:@"Max Tester"];
-        [self storeRemoteIDForObject:extraUser];
         [self.groupConversation addUsersByUser:self.selfUser addedUsers:@[extraUser]];
         XCTAssertNotNil(extraUser.name);
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     
@@ -165,8 +169,7 @@
 
 - (void)testThatClientsGetAddedAndDeletedForUserWhenRequested
 {
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForEverythingToBeDone();
+    XCTAssertTrue([self login]);
     
     // given
     NSString *firstIdentifier  = @"aba6d37a35e64c4f";
@@ -175,7 +178,9 @@
     NSString *userID = [self userForMockUser:self.user1].remoteIdentifier.transportString;
     NSString *clientsPath = [NSString stringWithFormat:@"users/%@/clients", userID];
     
+    ZM_WEAK(self);
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
+        ZM_STRONG(self);
         if ([request.path containsString:clientsPath]) {
             id <ZMTransportData> payload = [self payloadForUserClientsWithIDs:[NSSet setWithObjects:firstIdentifier, secondIdentifier, nil]];
             return [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
@@ -186,7 +191,7 @@
     // when
     ZMUser *user = [self userForMockUser:self.user1];
     [user fetchUserClients];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     NSSet <NSString *>*remoteIdentifiers = [user.clients mapWithBlock:^NSString *(UserClient *userClient) {
         return userClient.remoteIdentifier;
@@ -199,6 +204,7 @@
     XCTAssertTrue(![remoteIdentifiers containsObject:thirdIdentifier]);
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
+        ZM_STRONG(self);
         if ([request.path containsString:clientsPath]) {
             id <ZMTransportData> payload = [self payloadForUserClientsWithIDs:[NSSet setWithObjects:secondIdentifier, thirdIdentifier, nil]];
             return [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
@@ -208,7 +214,7 @@
     
     // when
     [user fetchUserClients];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     remoteIdentifiers = [user.clients mapWithBlock:^NSString *(UserClient *userClient) {
         return userClient.remoteIdentifier;

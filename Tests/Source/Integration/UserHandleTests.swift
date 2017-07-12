@@ -21,7 +21,7 @@ import Foundation
 @testable import WireSyncEngine
 import WireMockTransport
 
-class UserHandleTests : IntegrationTestBase {
+class UserHandleTests : IntegrationTest {
     
     var userProfileStatusObserver : TestUserProfileUpdateObserver!
     
@@ -29,12 +29,18 @@ class UserHandleTests : IntegrationTestBase {
     
     override func setUp() {
         super.setUp()
+        
+        createSelfUserAndConversation()
+        createExtraUsersAndConversations()
+        
+        XCTAssertTrue(login())
+        
         self.userProfileStatusObserver = TestUserProfileUpdateObserver()
-        self.observerToken = self.userSession.userProfile.add(observer: self.userProfileStatusObserver)
+        self.observerToken = self.userSession?.userProfile.add(observer: self.userProfileStatusObserver)
     }
     
     override func tearDown() {
-        self.userSession.userProfile.removeObserver(token: self.observerToken)
+        self.userSession?.userProfile.removeObserver(token: self.observerToken)
         self.observerToken = nil
         self.userProfileStatusObserver = nil
         super.tearDown()
@@ -44,10 +50,9 @@ class UserHandleTests : IntegrationTestBase {
         
         // GIVEN
         let handle = "Oscar"
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
         
         // WHEN
-        self.userSession.userProfile.requestCheckHandleAvailability(handle: handle)
+        self.userSession?.userProfile.requestCheckHandleAvailability(handle: handle)
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -66,13 +71,13 @@ class UserHandleTests : IntegrationTestBase {
         
         // GIVEN
         let handle = "Oscar"
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
-        self.mockTransportSession.performRemoteChanges { (session) in
-            self.user1.handle = handle
+
+        self.mockTransportSession?.performRemoteChanges { (session) in
+            self.user1?.handle = handle
         }
         
         // WHEN
-        self.userSession.userProfile.requestCheckHandleAvailability(handle: handle)
+        self.userSession?.userProfile.requestCheckHandleAvailability(handle: handle)
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -91,10 +96,9 @@ class UserHandleTests : IntegrationTestBase {
         
         // GIVEN
         let handle = "Evelyn"
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
         
         // WHEN
-        self.userSession.userProfile.requestSettingHandle(handle: handle)
+        self.userSession?.userProfile.requestSettingHandle(handle: handle)
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -111,8 +115,8 @@ class UserHandleTests : IntegrationTestBase {
         let selfUser = ZMUser.selfUser(inUserSession: self.userSession)!
         XCTAssertEqual(selfUser.handle, handle)
         
-        self.mockTransportSession.performRemoteChanges { _ in
-            XCTAssertEqual(self.selfUser.handle, handle)
+        self.mockTransportSession?.performRemoteChanges { _ in
+            XCTAssertEqual(self.selfUser!.handle, handle)
         }
     }
     
@@ -120,13 +124,13 @@ class UserHandleTests : IntegrationTestBase {
         
         // GIVEN
         let handle = "Evelyn"
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
-        self.mockTransportSession.performRemoteChanges { (session) in
-            self.user1.handle = handle
+
+        self.mockTransportSession?.performRemoteChanges { (session) in
+            self.user1?.handle = handle
         }
         
         // WHEN
-        self.userSession.userProfile.requestSettingHandle(handle: handle)
+        self.userSession?.userProfile.requestSettingHandle(handle: handle)
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -145,8 +149,8 @@ class UserHandleTests : IntegrationTestBase {
         
         // GIVEN
         let handle = "Evelyn"
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
-        self.mockTransportSession.responseGeneratorBlock = { req in
+        
+        self.mockTransportSession?.responseGeneratorBlock = { req in
             if req.path == "/self/handle" {
                 return ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil)
             }
@@ -154,7 +158,7 @@ class UserHandleTests : IntegrationTestBase {
         }
         
         // WHEN
-        self.userSession.userProfile.requestSettingHandle(handle: handle)
+        self.userSession?.userProfile.requestSettingHandle(handle: handle)
         
         // THEN
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
