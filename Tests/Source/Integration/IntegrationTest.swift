@@ -59,6 +59,8 @@ extension IntegrationTest {
     @objc
     func _tearDown() {
         ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil
+        sharedSearchDirectory?.tearDown()
+        sharedSearchDirectory = nil
         userSession = nil
         unauthenticatedSession = nil
         mockTransportSession?.tearDown()
@@ -103,6 +105,7 @@ extension IntegrationTest {
     
     @objc
     func recreateSessionManager() {
+        destroySharedSearchDirectory()
         destroySessionManager()
         createSessionManager()
     }
@@ -127,6 +130,18 @@ extension IntegrationTest {
                                         delegate: self,
                                         application: application,
                                         launchOptions: [:])
+    }
+    
+    @objc
+    func createSharedSearchDirectory() {
+        guard sharedSearchDirectory == nil else { return }
+        guard let userSession = userSession else { XCTFail("Could not create shared SearchDirectory");  return }
+        sharedSearchDirectory = SearchDirectory(userSession: userSession)
+    }
+    
+    func destroySharedSearchDirectory() {
+        sharedSearchDirectory?.tearDown()
+        sharedSearchDirectory = nil
     }
     
     @objc
@@ -301,6 +316,54 @@ extension IntegrationTest {
         })
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+    
+}
+
+extension IntegrationTest {
+    
+    @discardableResult
+    @objc(createSentConnectionFromUserWithName:uuid:)
+    func createSentConnection(fromUserWithName name: String, uuid: UUID) -> MockUser {
+        return createConnection(fromUserWithName: name, uuid: uuid, status: "sent")
+    }
+    
+    @discardableResult
+    @objc(createPendingConnectionFromUserWithName:uuid:)
+    func createPendingConnection(fromUserWithName name: String, uuid: UUID) -> MockUser {
+        return createConnection(fromUserWithName: name, uuid: uuid, status: "pending")
+    }
+
+    @discardableResult
+    @objc(createConnectionFromUserWithName:uuid:status:)
+    func createConnection(fromUserWithName name: String, uuid: UUID, status: String) -> MockUser {
+        let mockUser = createUser(withName: name, uuid: uuid)
+        
+        mockTransportSession?.performRemoteChanges({ session in
+            let connection = session.insertConnection(withSelfUser:self.selfUser!, to:mockUser)
+            connection.message = "Hello, my friend."
+            connection.status = status
+            connection.lastUpdate = Date(timeIntervalSinceNow:-20000)
+            
+            let conversation = session.insertConversation(withSelfUser: self.selfUser!, creator:mockUser, otherUsers:[], type:.invalid)
+            connection.conversation = conversation
+        })
+        
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        return mockUser
+    }
+    
+    @discardableResult
+    @objc(createUserWithName:uuid:)
+    func createUser(withName name: String, uuid: UUID) -> MockUser {
+        var user : MockUser? = nil
+        mockTransportSession?.performRemoteChanges({ session in
+            user = session.insertUser(withName: name)
+            user?.identifier = uuid.transportString()
+        })
+        
+        return user!
     }
     
 }
