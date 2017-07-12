@@ -90,6 +90,7 @@
                                                                analytics:nil
                                                         transportSession:transportSession
                                                          apnsEnvironment:nil
+                                                             application:[UIApplication sharedApplication]
                                                                   userId:nil
                                                               appVersion:version
                                                       appGroupIdentifier:self.groupIdentifier];

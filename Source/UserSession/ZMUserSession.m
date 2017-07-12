@@ -204,6 +204,7 @@ ZM_EMPTY_ASSERTING_INIT()
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
                      apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
+                         application:(id<ZMApplication>)application
                               userId:(NSUUID * __unused)uuid
                           appVersion:(NSString *)appVersion
                   appGroupIdentifier:(NSString *)appGroupIdentifier;
@@ -222,10 +223,8 @@ ZM_EMPTY_ASSERTING_INIT()
     [syncMOC performBlockAndWait:^{
         syncMOC.analytics = analytics;
     }];
-
-    UIApplication *application = [UIApplication sharedApplication];
     
-    [[BackgroundActivityFactory sharedInstance] setApplication:application];
+    [[BackgroundActivityFactory sharedInstance] setApplication:[UIApplication sharedApplication]]; // TODO make BackgroundActivityFactory work with ZMApplication
     [[BackgroundActivityFactory sharedInstance] setMainGroupQueue:userInterfaceContext];
     
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];

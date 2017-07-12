@@ -36,6 +36,7 @@ public class SessionManager : NSObject {
     public let mediaManager: AVSMediaManager
     public var analytics: AnalyticsType?
     var apnsEnvironment : ZMAPNSEnvironment?
+    let application : ZMApplication
     let transportSession: ZMTransportSession
     public weak var delegate : SessionManagerDelegate? = nil
     var authenticationToken: ZMAuthenticationObserverToken?
@@ -88,6 +89,7 @@ public class SessionManager : NSObject {
         self.appGroupIdentifier = appGroupIdentifier
         self.appVersion = appVersion
         self.apnsEnvironment = apnsEnvironment
+        self.application = application
         self.mediaManager = mediaManager
         self.analytics = analytics
         self.delegate = delegate
@@ -103,6 +105,7 @@ public class SessionManager : NSObject {
                                                 analytics: analytics,
                                                 transportSession: self.transportSession,
                                                 apnsEnvironment: self.apnsEnvironment,
+                                                application: self.application,
                                                 userId:nil,
                                                 appVersion: appVersion,
                                                 appGroupIdentifier: appGroupIdentifier)!
@@ -200,6 +203,7 @@ extension SessionManager: ZMAuthenticationObserver {
                                         analytics: analytics,
                                         transportSession: transportSession,
                                         apnsEnvironment: apnsEnvironment,
+                                        application: application,
                                         userId:nil,
                                         appVersion: appVersion,
                                         appGroupIdentifier: appGroupIdentifier)!

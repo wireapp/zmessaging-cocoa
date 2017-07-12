@@ -41,6 +41,7 @@
 @protocol ZMRequestsToOpenViewsDelegate;
 @protocol ZMThirdPartyServicesDelegate;
 @protocol UserProfileImageUpdateProtocol;
+@protocol ZMApplication;
 @class TopConversationsDirectory;
 
 @protocol ZMAVSLogObserver <NSObject>
@@ -89,6 +90,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
                      apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
+                         application:(id<ZMApplication>)application
                               userId:(NSUUID *)uuid
                           appVersion:(NSString *)appVersion
                   appGroupIdentifier:(NSString *)appGroupIdentifier;
