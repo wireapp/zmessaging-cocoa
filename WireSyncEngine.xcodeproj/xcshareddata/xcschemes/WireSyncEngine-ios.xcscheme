@@ -81,9 +81,6 @@
                   Identifier = "SendAndReceiveMessagesTests">
                </Test>
                <Test
-                  Identifier = "SlowSyncTests">
-               </Test>
-               <Test
                   Identifier = "TeamTests">
                </Test>
                <Test
