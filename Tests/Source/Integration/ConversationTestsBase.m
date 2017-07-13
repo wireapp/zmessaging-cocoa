@@ -211,7 +211,6 @@
 - (MockConversationWindowObserver *)windowObserverAfterLogginInAndInsertingMessagesInMockConversation:(MockConversation *)mockConversation;
 {
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     
     const int MESSAGES = 10;
