@@ -102,7 +102,6 @@
     
     // when
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     NSFetchRequest *fetchRequest = [ZMConversation sortedFetchRequest];
@@ -239,14 +238,12 @@
 {
     // given
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession resetReceivedRequests];
     
     // when
     [self recreateSessionManager];
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     BOOL hasNotificationsRequest = NO;
@@ -281,7 +278,6 @@
     // when
     [self recreateSessionManager];
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     BOOL hasNotificationsRequest = NO;
@@ -582,7 +578,6 @@
 {
     // given
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     [self.application setBackground];
     [self.application simulateApplicationDidEnterBackground];
