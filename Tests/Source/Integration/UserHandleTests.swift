@@ -72,8 +72,8 @@ class UserHandleTests : IntegrationTest {
         // GIVEN
         let handle = "Oscar"
 
-        self.mockTransportSession?.performRemoteChanges { (session) in
-            self.user1?.handle = handle
+        self.mockTransportSession.performRemoteChanges { (session) in
+            self.user1.handle = handle
         }
         
         // WHEN
@@ -115,8 +115,8 @@ class UserHandleTests : IntegrationTest {
         let selfUser = ZMUser.selfUser(inUserSession: self.userSession)!
         XCTAssertEqual(selfUser.handle, handle)
         
-        self.mockTransportSession?.performRemoteChanges { _ in
-            XCTAssertEqual(self.selfUser!.handle, handle)
+        self.mockTransportSession.performRemoteChanges { _ in
+            XCTAssertEqual(self.selfUser.handle, handle)
         }
     }
     
@@ -125,8 +125,8 @@ class UserHandleTests : IntegrationTest {
         // GIVEN
         let handle = "Evelyn"
 
-        self.mockTransportSession?.performRemoteChanges { (session) in
-            self.user1?.handle = handle
+        self.mockTransportSession.performRemoteChanges { (session) in
+            self.user1.handle = handle
         }
         
         // WHEN
@@ -150,7 +150,7 @@ class UserHandleTests : IntegrationTest {
         // GIVEN
         let handle = "Evelyn"
         
-        self.mockTransportSession?.responseGeneratorBlock = { req in
+        self.mockTransportSession.responseGeneratorBlock = { req in
             if req.path == "/self/handle" {
                 return ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil)
             }

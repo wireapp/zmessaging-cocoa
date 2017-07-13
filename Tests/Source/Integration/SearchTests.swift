@@ -52,7 +52,7 @@ class SearchTests : IntegrationTest {
         let userName = "JohnnyMnemonic"
         var user : MockUser? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
+        mockTransportSession.performRemoteChanges { (changes) in
             user = changes.insertUser(withName: userName)
             user?.email = "johnny@example.com"
             user?.phone = ""
@@ -72,7 +72,7 @@ class SearchTests : IntegrationTest {
         XCTAssertTrue(newUser.isPendingApprovalByOtherUser)
         
         // remote user accepts connection
-        mockTransportSession?.performRemoteChanges { (changes) in
+        mockTransportSession.performRemoteChanges { (changes) in
             changes.remotelyAcceptConnection(to: user!)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -88,13 +88,13 @@ class SearchTests : IntegrationTest {
         var user : MockUser? = nil
         let remoteIdentifier = UUID.create()
         
-        mockTransportSession?.performRemoteChanges { (changes) in
+        mockTransportSession.performRemoteChanges { (changes) in
             user = changes.insertUser(withName: userName)
             user?.email = "johnny@example.com"
             user?.phone = ""
             user?.identifier = remoteIdentifier.transportString()
             
-            let connection = changes.createConnectionRequest(from: user!, to: self.selfUser!, message: "Holo")
+            let connection = changes.createConnectionRequest(from: user!, to: self.selfUser, message: "Holo")
             connection.status = "pending"
             
         }
@@ -110,7 +110,7 @@ class SearchTests : IntegrationTest {
         let userName = "JohnnyMnemonic"
         var user : MockUser? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
+        mockTransportSession.performRemoteChanges { (changes) in
             user = changes.insertUser(withName: userName)
             user?.email = "johnny@example.com"
             user?.phone = ""
@@ -144,12 +144,12 @@ class SearchTests : IntegrationTest {
         let userName = "JohnnyMnemonic"
         var user : MockUser? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
+        mockTransportSession.performRemoteChanges { (changes) in
             user = changes.insertUser(withName: userName)
             user?.email = "johnny@example.com"
             user?.phone = ""
             
-            self.groupConversation?.addUsers(by: self.selfUser!, addedUsers: [user!])
+            self.groupConversation.addUsers(by: self.selfUser, addedUsers: [user!])
         }
         
         XCTAssertTrue(login())
@@ -183,9 +183,9 @@ class SearchTests : IntegrationTest {
         var profileImageData : Data? = nil
         var userName : String? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession!.managedObjectContext, forID: self.user1!.smallProfileImageIdentifier!)?.data
-            userName = self.user1?.name
+        mockTransportSession.performRemoteChanges { (changes) in
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user1.smallProfileImageIdentifier!)?.data
+            userName = self.user1.name
         }
         
         XCTAssertTrue(login())
@@ -205,9 +205,9 @@ class SearchTests : IntegrationTest {
         var profileImageData : Data? = nil
         var userName : String? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession!.managedObjectContext, forID: self.user4!.smallProfileImageIdentifier!)?.data
-            userName = self.user4?.name
+        mockTransportSession.performRemoteChanges { (changes) in
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
+            userName = self.user4.name
         }
         
         XCTAssertTrue(login())
@@ -225,8 +225,8 @@ class SearchTests : IntegrationTest {
         // given
         var userName : String? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            userName = self.user5?.name
+        mockTransportSession.performRemoteChanges { (changes) in
+            userName = self.user5.name
         }
         
         XCTAssertTrue(login())
@@ -245,15 +245,15 @@ class SearchTests : IntegrationTest {
         // given
         var userName : String? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            userName = self.user4?.name
+        mockTransportSession.performRemoteChanges { (changes) in
+            userName = self.user4.name
         }
         
         XCTAssertTrue(login())
         
         // delay mock transport session response
         let semaphore = DispatchSemaphore(value: 0)
-        mockTransportSession?.responseGeneratorBlock = { (request) in
+        mockTransportSession.responseGeneratorBlock = { (request) in
             if request.path.hasPrefix("/asset") {
                 semaphore.wait()
             }
@@ -284,12 +284,12 @@ class SearchTests : IntegrationTest {
         var userName : String? = nil
         
         // We need not to have v3 profile pictures
-        user4?.previewProfileAssetIdentifier = nil
-        user4?.completeProfileAssetIdentifier = nil
+        user4.previewProfileAssetIdentifier = nil
+        user4.completeProfileAssetIdentifier = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession!.managedObjectContext, forID: self.user4!.smallProfileImageIdentifier!)?.data
-            userName = self.user4?.name
+        mockTransportSession.performRemoteChanges { (changes) in
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
+            userName = self.user4.name
         }
         
         XCTAssertTrue(login())
@@ -301,8 +301,8 @@ class SearchTests : IntegrationTest {
         let mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
         let mediumImageCache = ZMSearchUser.searchUserToMediumImageCache()
         
-        guard let remoteIdentifer = UUID(uuidString: user4!.identifier) else { XCTFail(); return }
-        guard let mediumImageIdenitifer = UUID(uuidString: user4!.mediumImageIdentifier!) else { XCTFail(); return }
+        guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
+        guard let mediumImageIdenitifer = UUID(uuidString: user4.mediumImageIdentifier!) else { XCTFail(); return }
         
         
         guard let searchUserAsset = mediumAssetIDCache?.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
@@ -325,12 +325,12 @@ class SearchTests : IntegrationTest {
         var userName : String? = nil
         
         // We need not to have v3 profile pictures
-        user4?.previewProfileAssetIdentifier = nil
-        user4?.completeProfileAssetIdentifier = nil
+        user4.previewProfileAssetIdentifier = nil
+        user4.completeProfileAssetIdentifier = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession!.managedObjectContext, forID: self.user4!.smallProfileImageIdentifier!)?.data
-            userName = self.user4?.name
+        mockTransportSession.performRemoteChanges { (changes) in
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
+            userName = self.user4.name
         }
         
         XCTAssertTrue(login())
@@ -338,8 +338,8 @@ class SearchTests : IntegrationTest {
         let mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
         let mediumImageCache = ZMSearchUser.searchUserToMediumImageCache()
         
-        guard let remoteIdentifer = UUID(uuidString: user4!.identifier) else { XCTFail(); return }
-        guard let mediumImageIdenitifer = UUID(uuidString: user4!.mediumImageIdentifier!) else { XCTFail(); return }
+        guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
+        guard let mediumImageIdenitifer = UUID(uuidString: user4.mediumImageIdentifier!) else { XCTFail(); return }
         
         // first search
         do {
@@ -392,12 +392,12 @@ class SearchTests : IntegrationTest {
         var userName : String? = nil
         
         // We need not to have v3 profile pictures
-        user4?.previewProfileAssetIdentifier = nil
-        user4?.completeProfileAssetIdentifier = nil
+        user4.previewProfileAssetIdentifier = nil
+        user4.completeProfileAssetIdentifier = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession!.managedObjectContext, forID: self.user4!.smallProfileImageIdentifier!)?.data
-            userName = self.user4?.name
+        mockTransportSession.performRemoteChanges { (changes) in
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
+            userName = self.user4.name
         }
         
         XCTAssertTrue(login())
@@ -405,8 +405,8 @@ class SearchTests : IntegrationTest {
         let mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
         let mediumImageCache = ZMSearchUser.searchUserToMediumImageCache()
         
-        guard let remoteIdentifer = UUID(uuidString: user4!.identifier) else { XCTFail(); return }
-        guard let mediumImageIdenitifer = UUID(uuidString: user4!.mediumImageIdentifier!) else { XCTFail(); return }
+        guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
+        guard let mediumImageIdenitifer = UUID(uuidString: user4.mediumImageIdentifier!) else { XCTFail(); return }
         
         // (1) search
         guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
@@ -434,8 +434,8 @@ class SearchTests : IntegrationTest {
         // given
         var userName : String? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            userName = self.user4?.name
+        mockTransportSession.performRemoteChanges { (changes) in
+            userName = self.user4.name
         }
         
         XCTAssertTrue(login())
@@ -443,7 +443,7 @@ class SearchTests : IntegrationTest {
         // delay mock transport session response
         let semaphore = DispatchSemaphore(value: 0)
         var hasRun = false
-        mockTransportSession?.responseGeneratorBlock = { (request) in
+        mockTransportSession.responseGeneratorBlock = { (request) in
             if request.path.hasPrefix("/asset") && !hasRun {
                 hasRun = true
                 semaphore.wait()
@@ -486,9 +486,9 @@ class SearchTests : IntegrationTest {
         var profileImageData : Data? = nil
         var userName : String? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession!.managedObjectContext, forID: self.user1!.smallProfileImageIdentifier!)?.data
-            userName = self.user1?.name
+        mockTransportSession.performRemoteChanges { (changes) in
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user1.smallProfileImageIdentifier!)?.data
+            userName = self.user1.name
         }
         
         XCTAssertTrue(login())
@@ -496,16 +496,16 @@ class SearchTests : IntegrationTest {
         guard let user = searchForConnectedUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
         
         // when
-        mockTransportSession?.resetReceivedRequests()
+        mockTransportSession.resetReceivedRequests()
         user.requestSmallProfileImage(in: userSession)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(user.imageSmallProfileData, profileImageData)
         
-        let requests = mockTransportSession!.receivedRequests()
+        let requests = mockTransportSession.receivedRequests()
         XCTAssertEqual(requests.count, 1)
-        XCTAssertEqual(requests.first?.path, "/assets/v3/\(user1!.previewProfileAssetIdentifier!)")
+        XCTAssertEqual(requests.first?.path, "/assets/v3/\(user1.previewProfileAssetIdentifier!)")
         XCTAssertEqual(requests.first?.method, .methodGET)
     }
     
@@ -514,9 +514,9 @@ class SearchTests : IntegrationTest {
         var profileImageData : Data? = nil
         var userName : String? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession!.managedObjectContext, forID: self.user4!.smallProfileImageIdentifier!)?.data
-            userName = self.user4?.name
+        mockTransportSession.performRemoteChanges { (changes) in
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
+            userName = self.user4.name
         }
         
         XCTAssertTrue(login())
@@ -524,18 +524,18 @@ class SearchTests : IntegrationTest {
         // when
         guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
-        mockTransportSession?.resetReceivedRequests()
+        mockTransportSession.resetReceivedRequests()
         searchUser.requestSmallProfileImage(in: userSession)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(searchUser.imageSmallProfileData, profileImageData)
         
-        let requests = mockTransportSession!.receivedRequests()
+        let requests = mockTransportSession.receivedRequests()
         XCTAssertEqual(requests.count, 2)
-        XCTAssertEqual(requests[0].path, "/users?ids=\(user4!.identifier)")
+        XCTAssertEqual(requests[0].path, "/users?ids=\(user4.identifier)")
         XCTAssertEqual(requests[0].method, .methodGET)
-        XCTAssertEqual(requests[1].path, "/assets/v3/\(user4!.previewProfileAssetIdentifier!)")
+        XCTAssertEqual(requests[1].path, "/assets/v3/\(user4.previewProfileAssetIdentifier!)")
         XCTAssertEqual(requests[1].method, .methodGET)
     }
     
@@ -552,15 +552,15 @@ class SearchTests : IntegrationTest {
         var completeProfileImageData : Data? = nil
         var userName : String? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            changes.addV3ProfilePicture(to: self.user4!)
+        mockTransportSession.performRemoteChanges { (changes) in
+            changes.addV3ProfilePicture(to: self.user4)
             
             if legacyPayloadPresent {
-                self.user4?.removeLegacyPictures()
+                self.user4.removeLegacyPictures()
             }
             
-            completeProfileImageData = MockAsset.init(in: self.mockTransportSession!.managedObjectContext, forID: self.user4!.completeProfileAssetIdentifier!)?.data
-            userName = self.user4?.name
+            completeProfileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.completeProfileAssetIdentifier!)?.data
+            userName = self.user4.name
         }
         
         XCTAssertTrue(login())
@@ -572,12 +572,12 @@ class SearchTests : IntegrationTest {
         let mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
         let mediumImageCache = ZMSearchUser.searchUserToMediumImageCache()
         
-        guard let remoteIdentifer = UUID(uuidString: user4!.identifier) else { XCTFail(); return }
+        guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
         guard let searchUserAsset = mediumAssetIDCache?.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
-        XCTAssertEqual(searchUserAsset.assetKey, user4!.completeProfileAssetIdentifier)
+        XCTAssertEqual(searchUserAsset.assetKey, user4.completeProfileAssetIdentifier)
         XCTAssertNil(mediumImageCache?.object(forKey: remoteIdentifer as AnyObject))
         
-        mockTransportSession?.resetReceivedRequests()
+        mockTransportSession.resetReceivedRequests()
         
         // when requesting medium image
         userSession?.performChanges {
@@ -588,9 +588,9 @@ class SearchTests : IntegrationTest {
         // then
         XCTAssertEqual(searchUser.imageMediumData, completeProfileImageData)
         
-        let requests = mockTransportSession!.receivedRequests()
+        let requests = mockTransportSession.receivedRequests()
         XCTAssertEqual(requests.count, 1)
-        XCTAssertEqual(requests[0].path, "/assets/v3/\(user4!.completeProfileAssetIdentifier!)")
+        XCTAssertEqual(requests[0].path, "/assets/v3/\(user4.completeProfileAssetIdentifier!)")
         XCTAssertEqual(requests[0].method, .methodGET)
     }
     
@@ -599,12 +599,12 @@ class SearchTests : IntegrationTest {
         var completeProfileImageData : Data? = nil
         var userName : String? = nil
         
-        mockTransportSession?.performRemoteChanges { (changes) in
-            changes.addV3ProfilePicture(to: self.user4!)
-            self.user4?.removeLegacyPictures()
+        mockTransportSession.performRemoteChanges { (changes) in
+            changes.addV3ProfilePicture(to: self.user4)
+            self.user4.removeLegacyPictures()
             
-            completeProfileImageData = MockAsset.init(in: self.mockTransportSession!.managedObjectContext, forID: self.user4!.completeProfileAssetIdentifier!)?.data
-            userName = self.user4?.name
+            completeProfileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.completeProfileAssetIdentifier!)?.data
+            userName = self.user4.name
         }
         
         XCTAssertTrue(login())
@@ -616,7 +616,7 @@ class SearchTests : IntegrationTest {
         let mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
         let mediumImageCache = ZMSearchUser.searchUserToMediumImageCache()
         
-        guard let remoteIdentifer = UUID(uuidString: user4!.identifier) else { XCTFail(); return }
+        guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
         
         mediumAssetIDCache?.removeAllObjects()
         
@@ -625,7 +625,7 @@ class SearchTests : IntegrationTest {
         XCTAssertNil(searchUser.completeAssetKey)
         
         // We reset the requests after having performed the search and fetching the users (in comparison to the other tests).
-        mockTransportSession?.resetReceivedRequests()
+        mockTransportSession.resetReceivedRequests()
         
         // when requesting medium image
         userSession?.performChanges {
@@ -636,11 +636,11 @@ class SearchTests : IntegrationTest {
         // then
         XCTAssertEqual(searchUser.imageMediumData, completeProfileImageData)
         
-        let requests = mockTransportSession!.receivedRequests()
+        let requests = mockTransportSession.receivedRequests()
         XCTAssertEqual(requests.count, 2)
-        XCTAssertEqual(requests[0].path, "/users?ids=\(user4!.identifier)")
+        XCTAssertEqual(requests[0].path, "/users?ids=\(user4.identifier)")
         XCTAssertEqual(requests[0].method, .methodGET)
-        XCTAssertEqual(requests[1].path, "/assets/v3/\(user4!.completeProfileAssetIdentifier!)")
+        XCTAssertEqual(requests[1].path, "/assets/v3/\(user4.completeProfileAssetIdentifier!)")
         XCTAssertEqual(requests[1].method, .methodGET)
     }
     

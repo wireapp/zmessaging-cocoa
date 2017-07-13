@@ -34,10 +34,10 @@ class OTRTests : IntegrationTest {
         // given
         XCTAssert(login())
         
-        guard let conversation = self.conversation(for: self.selfToUser1Conversation!) else {return XCTFail()}
+        guard let conversation = self.conversation(for: self.selfToUser1Conversation) else {return XCTFail()}
         
         let text = "Foo bar, but encrypted"
-        self.mockTransportSession?.resetReceivedRequests()
+        self.mockTransportSession.resetReceivedRequests()
         
         // when
         var message: ZMConversationMessage?
@@ -49,7 +49,7 @@ class OTRTests : IntegrationTest {
         // then
         XCTAssertNotNil(message)
         let expected = "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/messages"
-        let requests = mockTransportSession!.receivedRequests()
+        let requests = mockTransportSession.receivedRequests()
         XCTAssertEqual(requests[0].path, expected)
         XCTAssertEqual(requests[1].path, "/users/prekeys")
         XCTAssertEqual(requests[2].path, expected)
@@ -59,8 +59,8 @@ class OTRTests : IntegrationTest {
         // given
         XCTAssert(login())
 
-        guard let conversation = self.conversation(for: self.selfToUser1Conversation!) else { return XCTFail() }
-        self.mockTransportSession?.resetReceivedRequests()
+        guard let conversation = self.conversation(for: self.selfToUser1Conversation) else { return XCTFail() }
+        self.mockTransportSession.resetReceivedRequests()
         let imageData = self.verySmallJPEGData()
         
         // when
@@ -73,7 +73,7 @@ class OTRTests : IntegrationTest {
         
         // then
         XCTAssertNotNil(message)
-        let requests = mockTransportSession!.receivedRequests()
+        let requests = mockTransportSession.receivedRequests()
         let messageSendingPath = "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/messages"
         XCTAssertEqual(requests[0].path, "/assets/v3")
         XCTAssertEqual(requests[1].path, messageSendingPath)
@@ -85,11 +85,11 @@ class OTRTests : IntegrationTest {
         
         // given
         XCTAssert(login())
-        self.mockTransportSession?.resetReceivedRequests()
+        self.mockTransportSession.resetReceivedRequests()
         
     
         var didReregister = false
-        self.mockTransportSession?.responseGeneratorBlock = { response in
+        self.mockTransportSession.responseGeneratorBlock = { response in
             if response.path.contains("/clients/") && response.payload?.asDictionary()?["sigkeys"] != nil {
                 didReregister = true
                 return ZMTransportResponse(payload: [] as ZMTransportData, httpStatus: 200, transportSessionError: nil)
@@ -111,11 +111,11 @@ class OTRTests : IntegrationTest {
         
         // given
         XCTAssert(login())
-        self.mockTransportSession?.resetReceivedRequests()
+        self.mockTransportSession.resetReceivedRequests()
 
         var tryCount = 0
         var (firstMac, firstEnc) = (String(), String())
-        self.mockTransportSession?.responseGeneratorBlock = { response in
+        self.mockTransportSession.responseGeneratorBlock = { response in
             guard let payload = response.payload?.asDictionary() else { return nil }
             
             if response.path.contains("/clients/") && payload["sigkeys"] != nil {

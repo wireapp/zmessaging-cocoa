@@ -99,7 +99,7 @@ class CallingV3Tests : IntegrationTest {
     
     func selfDropCall(){
         let convIdRef = self.conversationIdRef
-        let userIdRef = self.selfUser!.identifier.cString(using: .utf8)
+        let userIdRef = self.selfUser.identifier.cString(using: .utf8)
         userSession?.enqueueChanges {
             self.conversationUnderTest.voiceChannelInternal?.leave()
             WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
@@ -113,7 +113,7 @@ class CallingV3Tests : IntegrationTest {
     
     func selfIgnoreCall(){
         let convIdRef = self.conversationIdRef
-        let userIdRef = self.selfUser!.identifier.cString(using: .utf8)
+        let userIdRef = self.selfUser.identifier.cString(using: .utf8)
         userSession?.performChanges{
             self.conversationUnderTest.voiceChannelInternal?.ignore()
             WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
@@ -178,7 +178,7 @@ class CallingV3Tests : IntegrationTest {
     
     var useGroupConversation : Bool = false
     var mockConversationUnderTest : MockConversation {
-        return useGroupConversation ? groupConversation! : selfToUser2Conversation!
+        return useGroupConversation ? groupConversation : selfToUser2Conversation
     }
     
     var conversationUnderTest : ZMConversation {
@@ -186,7 +186,7 @@ class CallingV3Tests : IntegrationTest {
     }
     
     var localSelfUser : ZMUser {
-        return user(for: selfUser!)!
+        return user(for: selfUser)!
     }
     
     func testJoiningAndLeavingAnEmptyVoiceChannel_OneOnOne(){

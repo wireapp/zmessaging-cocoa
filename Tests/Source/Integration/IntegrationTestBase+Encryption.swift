@@ -246,7 +246,7 @@ extension IntegrationTest {
         self.userSession!.syncManagedObjectContext.saveOrRollback()
         
         var lastPrekey: String?
-        self.mockTransportSession?.performRemoteChanges { (session) in
+        self.mockTransportSession.performRemoteChanges { (session) in
             lastPrekey = remoteClient.lastPrekey.value
         }
         

@@ -51,7 +51,7 @@ extension IntegrationTest {
         mockTransportSession = MockTransportSession(dispatchGroup: self.dispatchGroup)
         WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self;
         ZMCallFlowRequestStrategyInternalFlowManagerOverride = MockFlowManager()
-        mockTransportSession?.cookieStorage.deleteUserKeychainItems()
+        mockTransportSession.cookieStorage.deleteUserKeychainItems()
                 
         createSessionManager()
     }
@@ -63,7 +63,7 @@ extension IntegrationTest {
         sharedSearchDirectory = nil
         userSession = nil
         unauthenticatedSession = nil
-        mockTransportSession?.tearDown()
+        mockTransportSession.tearDown()
         mockTransportSession = nil
         sessionManager = nil
         selfUser = nil
@@ -100,7 +100,7 @@ extension IntegrationTest {
     
     @objc
     func deleteAuthenticationCookie() {
-        mockTransportSession?.cookieStorage.deleteUserKeychainItems()
+        mockTransportSession.cookieStorage.deleteUserKeychainItems()
     }
     
     @objc
@@ -147,7 +147,7 @@ extension IntegrationTest {
     @objc
     func createSelfUserAndConversation() {
         
-        mockTransportSession?.performRemoteChanges({ session in
+        mockTransportSession.performRemoteChanges({ session in
             let selfUser = session.insertSelfUser(withName: "The Self User")
             selfUser.email = IntegrationTest.SelfUserEmail
             selfUser.password = IntegrationTest.SelfUserPassword
@@ -169,7 +169,7 @@ extension IntegrationTest {
     @objc
     func createExtraUsersAndConversations() {
         
-        mockTransportSession?.performRemoteChanges({ session in
+        mockTransportSession.performRemoteChanges({ session in
             let user1 = session.insertUser(withName: "Extra User1")
             user1.email = "user1@example.com"
             user1.phone = "6543"
@@ -206,28 +206,28 @@ extension IntegrationTest {
             user5.accentID = 7
             self.user5 = user5
             
-            let selfToUser1Conversation = session.insertOneOnOneConversation(withSelfUser: self.selfUser!, otherUser:user1)
+            let selfToUser1Conversation = session.insertOneOnOneConversation(withSelfUser: self.selfUser, otherUser:user1)
             selfToUser1Conversation.creator = self.selfUser
             selfToUser1Conversation.setValue("Connection conversation to user 1", forKey:"name")
             self.selfToUser1Conversation = selfToUser1Conversation
             
-            let selfToUser2Conversation = session.insertOneOnOneConversation(withSelfUser: self.selfUser!, otherUser:user2)
+            let selfToUser2Conversation = session.insertOneOnOneConversation(withSelfUser: self.selfUser, otherUser:user2)
             selfToUser2Conversation.creator = user2
             selfToUser2Conversation.setValue("Connection conversation to user 2", forKey:"name")
             self.selfToUser2Conversation = selfToUser2Conversation
             
-            let groupConversation = session.insertGroupConversation(withSelfUser:self.selfUser!, otherUsers: [user1, user2, user3])
+            let groupConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [user1, user2, user3])
             groupConversation.creator = user3;
-            groupConversation.changeName(by:self.selfUser!, name:"Group conversation")
+            groupConversation.changeName(by:self.selfUser, name:"Group conversation")
             self.groupConversation = groupConversation
             
-            let connectionSelfToUser1 = session.insertConnection(withSelfUser:self.selfUser!, to:user1)
+            let connectionSelfToUser1 = session.insertConnection(withSelfUser:self.selfUser, to:user1)
             connectionSelfToUser1.status = "accepted"
             connectionSelfToUser1.lastUpdate = Date(timeIntervalSinceNow: -3)
             connectionSelfToUser1.conversation = selfToUser1Conversation
             self.connectionSelfToUser1 = connectionSelfToUser1
             
-            let connectionSelfToUser2 = session.insertConnection(withSelfUser:self.selfUser!, to:user2)
+            let connectionSelfToUser2 = session.insertConnection(withSelfUser:self.selfUser, to:user2)
             connectionSelfToUser2.status = "accepted"
             connectionSelfToUser2.lastUpdate = Date(timeIntervalSinceNow: -5)
             connectionSelfToUser2.conversation = selfToUser2Conversation
@@ -314,7 +314,7 @@ extension IntegrationTest {
         
     @objc(establishSessionWithMockUser:)
     func establishSession(with mockUser: MockUser) {
-        mockTransportSession?.performRemoteChanges({ session in
+        mockTransportSession.performRemoteChanges({ session in
             if mockUser.clients.count == 0 {
                 session.registerClient(for: mockUser, label: "Wire for MS-DOS", type: "permanent")
             }
@@ -350,13 +350,13 @@ extension IntegrationTest {
     func createConnection(fromUserWithName name: String, uuid: UUID, status: String) -> MockUser {
         let mockUser = createUser(withName: name, uuid: uuid)
         
-        mockTransportSession?.performRemoteChanges({ session in
-            let connection = session.insertConnection(withSelfUser:self.selfUser!, to:mockUser)
+        mockTransportSession.performRemoteChanges({ session in
+            let connection = session.insertConnection(withSelfUser:self.selfUser, to:mockUser)
             connection.message = "Hello, my friend."
             connection.status = status
             connection.lastUpdate = Date(timeIntervalSinceNow:-20000)
             
-            let conversation = session.insertConversation(withSelfUser: self.selfUser!, creator:mockUser, otherUsers:[], type:.invalid)
+            let conversation = session.insertConversation(withSelfUser: self.selfUser, creator:mockUser, otherUsers:[], type:.invalid)
             connection.conversation = conversation
         })
         
@@ -369,7 +369,7 @@ extension IntegrationTest {
     @objc(createUserWithName:uuid:)
     func createUser(withName name: String, uuid: UUID) -> MockUser {
         var user : MockUser? = nil
-        mockTransportSession?.performRemoteChanges({ session in
+        mockTransportSession.performRemoteChanges({ session in
             user = session.insertUser(withName: name)
             user?.identifier = uuid.transportString()
         })

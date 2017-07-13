@@ -55,7 +55,7 @@ class TeamTests : IntegrationTest {
 
     func remotelyInsertTeam(members: [MockUser], isBound: Bool = true) -> MockTeam {
         var mockTeam : MockTeam!
-        mockTransportSession?.performRemoteChanges { (session) in
+        mockTransportSession.performRemoteChanges { (session) in
             mockTeam = session.insertTeam(withName: "Super-Team", isBound: isBound, users: Set(members))
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -70,16 +70,16 @@ extension TeamTests {
     
     func testThatItNotifiesAboutChangedTeamName(){
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser!, self.user1!])
+        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
         XCTAssert(login())
-        guard let localSelfUser = user(for: selfUser!) else { return XCTFail() }
+        guard let localSelfUser = user(for: selfUser) else { return XCTFail() }
         XCTAssertTrue(localSelfUser.hasTeam)
         
         let teamObserver = TestTeamObserver()
         
         // when
-        mockTransportSession?.performRemoteChanges { (session) in
+        mockTransportSession.performRemoteChanges { (session) in
             mockTeam.name = "Super-Duper-Team"
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -99,18 +99,18 @@ extension TeamTests {
     
     func testThatOtherUserCanBeRemovedRemotely(){
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser!, self.user1!])
+        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
         XCTAssert(login())
 
-        let user = self.user(for: user1!)!
-        let localSelfUser = self.user(for: selfUser!)!
+        let user = self.user(for: user1)!
+        let localSelfUser = self.user(for: selfUser)!
         XCTAssert(user.hasTeam)
         XCTAssert(localSelfUser.hasTeam)
 
         // when
-        mockTransportSession?.performRemoteChanges { (session) in
-            session.removeMember(with: self.user1!, from: mockTeam)
+        mockTransportSession.performRemoteChanges { (session) in
+            session.removeMember(with: self.user1, from: mockTeam)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -120,15 +120,15 @@ extension TeamTests {
     
     func testThatSelfUserCanBeRemovedRemotely(){
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser!, self.user1!])
+        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
         XCTAssert(login())
 
         XCTAssert(ZMUser.selfUser(in: userSession!.managedObjectContext).hasTeam)
         
         // when
-        mockTransportSession?.performRemoteChanges { (session) in
-            session.removeMember(with: self.selfUser!, from: mockTeam)
+        mockTransportSession.performRemoteChanges { (session) in
+            session.removeMember(with: self.selfUser, from: mockTeam)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -138,14 +138,14 @@ extension TeamTests {
     
     func testThatItNotifiesAboutSelfUserRemovedRemotely(){
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser!, self.user1!])
+        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
         XCTAssert(login())
         let selfUserObserver = UserChangeObserver(user: ZMUser.selfUser(in: userSession!.managedObjectContext))!
 
         // when
-        mockTransportSession?.performRemoteChanges { (session) in
-            session.removeMember(with: self.selfUser!, from: mockTeam)
+        mockTransportSession.performRemoteChanges { (session) in
+            session.removeMember(with: self.selfUser, from: mockTeam)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -159,14 +159,14 @@ extension TeamTests {
     
     func testThatItNotifiesAboutOtherUserRemovedRemotely(){
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser!, self.user1!])
+        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
         XCTAssert(login())
         let teamObserver = TestTeamObserver()
         
         // when
-        mockTransportSession?.performRemoteChanges { (session) in
-            session.removeMember(with: self.user1!, from: mockTeam)
+        mockTransportSession.performRemoteChanges { (session) in
+            session.removeMember(with: self.user1, from: mockTeam)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -180,14 +180,14 @@ extension TeamTests {
     
     func testThatItDeletesAllTeamConversationsWhenTheSelfMemberIsRemoved() {
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser!, self.user1!])
+        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
         XCTAssert(login())
         let list = ZMConversationList.conversations(inUserSession: self.userSession!)
         XCTAssertEqual(list.count, 3)
 
-        mockTransportSession?.performRemoteChanges { (session) in
-            session.insertTeamConversation(to: mockTeam, with: [self.selfUser!, self.user1!], creator: self.user1!)
+        mockTransportSession.performRemoteChanges { (session) in
+            session.insertTeamConversation(to: mockTeam, with: [self.selfUser, self.user1], creator: self.user1)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -195,8 +195,8 @@ extension TeamTests {
         XCTAssertEqual(list.count, 4)
         
         // when
-        mockTransportSession?.performRemoteChanges { (session) in
-            session.removeMember(with: self.selfUser!, from: mockTeam)
+        mockTransportSession.performRemoteChanges { (session) in
+            session.removeMember(with: self.selfUser, from: mockTeam)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -219,15 +219,15 @@ extension TeamTests {
     
     func testThatOtherUserCanBeAddedRemotely(){
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser!])
+        let mockTeam = remotelyInsertTeam(members: [self.selfUser])
         XCTAssert(login())
         
-        let user = self.user(for: user1!)!
+        let user = self.user(for: user1)!
         XCTAssertFalse(user.hasTeam)
         
         // when
-        mockTransportSession?.performRemoteChanges { (session) in
-            session.insertMember(with: self.user1!, in: mockTeam)
+        mockTransportSession.performRemoteChanges { (session) in
+            session.insertMember(with: self.user1, in: mockTeam)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -237,14 +237,14 @@ extension TeamTests {
     
     func testThatItNotifiesAboutOtherUserAddedRemotely(){
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser!])
+        let mockTeam = remotelyInsertTeam(members: [self.selfUser])
 
         XCTAssert(login())
         let teamObserver = TestTeamObserver()
         
         // when
-        mockTransportSession?.performRemoteChanges { (session) in
-            session.insertMember(with: self.user1!, in: mockTeam)
+        mockTransportSession.performRemoteChanges { (session) in
+            session.insertMember(with: self.user1, in: mockTeam)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -274,9 +274,9 @@ extension TeamTests {
         XCTAssert(userSession!.managedObjectContext.saveOrRollback())
         
         // 2. Force a slow sync by returning a 404 when hitting /notifications
-        mockTransportSession?.responseGeneratorBlock = { request in
+        mockTransportSession.responseGeneratorBlock = { request in
             if request.path.hasPrefix("/notifications") && !request.path.contains("cancel_fallback") {
-                defer { self.mockTransportSession?.responseGeneratorBlock = nil }
+                defer { self.mockTransportSession.responseGeneratorBlock = nil }
                 return ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
             }
             return nil
