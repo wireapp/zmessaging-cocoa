@@ -18,6 +18,7 @@
 
 
 #import "ConversationTestsBase.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 @implementation ConversationTestsBase
@@ -31,12 +32,12 @@
 - (void)tearDown
 {
     self.receivedConversationWindowChangeNotifications = nil;
-    [self.syncMOC performGroupedBlockAndWait:^{
-        [self.syncMOC zm_teardownMessageObfuscationTimer];
+    [self.userSession.syncManagedObjectContext performGroupedBlockAndWait:^{
+        [self.userSession.syncManagedObjectContext zm_teardownMessageObfuscationTimer];
     }];
     XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout: 0.5]);
     
-    [self.uiMOC zm_teardownMessageDeletionTimer];
+    [self.userSession.managedObjectContext zm_teardownMessageDeletionTimer];
     XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout: 0.5]);
     
     [super tearDown];
@@ -59,13 +60,16 @@
 
 - (void)setupGroupConversationWithOnlyConnectedParticipants
 {
+    [self createSelfUserAndConversation];
+    [self createExtraUsersAndConversations];
+
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         self.groupConversationWithOnlyConnected = [session insertGroupConversationWithSelfUser:self.selfUser
                                                                                     otherUsers:@[self.user1, self.user2]];
         self.groupConversationWithOnlyConnected.creator = self.selfUser;
-        [self storeRemoteIDForObject:self.groupConversationWithOnlyConnected];
         [self.groupConversationWithOnlyConnected changeNameByUser:self.selfUser name:@"Group conversation with only connected participants"];
-        [self setDate:[NSDate dateWithTimeInterval:1000 sinceDate:self.groupConversation.lastEventTime] forAllEventsInMockConversation:self.groupConversationWithOnlyConnected];
+        // TODO: Delete if all tests pass
+        //[self setDate:[NSDate dateWithTimeInterval:1000 sinceDate:self.groupConversation.lastEventTime] forAllEventsInMockConversation:self.groupConversationWithOnlyConnected];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -76,7 +80,7 @@
                                             verify:(void(^)(ZMConversation *))verifyConversation
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     
@@ -128,7 +132,7 @@
                                 verifyWithObserver:(void(^)(ZMConversation *, ConversationChangeObserver *))verifyConversation;
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     afterLoginBlock();
     WaitForAllGroupsToBeEmpty(0.5);
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
@@ -169,7 +173,7 @@
                                         verify:(void(^)(ZMConversation *))verifyConversation
 {
     // given
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     
@@ -206,8 +210,8 @@
 
 - (MockConversationWindowObserver *)windowObserverAfterLogginInAndInsertingMessagesInMockConversation:(MockConversation *)mockConversation;
 {
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForEverythingToBeDone();
+    XCTAssertTrue([self login]);
+    WaitForAllGroupsToBeEmpty(0.5);
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     
     const int MESSAGES = 10;

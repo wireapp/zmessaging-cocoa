@@ -18,14 +18,30 @@
 
 #import "ConversationTestsBase.h"
 #import "MockLinkPreviewDetector.h"
+#import "MockLinkPreviewDetector.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @import WireUtilities;
 
 @interface LinkPreviewTests : ConversationTestsBase
+@property (nonatomic) MockLinkPreviewDetector *mockLinkPreviewDetector;
 
 @end
 
 @implementation LinkPreviewTests
+
+- (void)setUp
+{
+    [super setUp];
+    self.mockLinkPreviewDetector = [[MockLinkPreviewDetector alloc] initWithTestImageData:[self mediumJPEGData]];
+    [LinkPreviewDetectorHelper setTest_debug_linkPreviewDetector:self.mockLinkPreviewDetector];
+}
+
+- (void)tearDown
+{
+    self.mockLinkPreviewDetector = nil;
+    [super tearDown];
+}
 
 - (void)createEncryptionDataWithOrignalAssetData:(NSData *)assetData encryptedData:(NSData **)encryptedData otrKey:(NSData **)otrKey sha256:(NSData **)sha256;
 {
@@ -93,13 +109,11 @@
 - (void)testThatItInsertCorrectLinkPreviewMessage_ArticleWithoutImage;
 {
     // need to check mock transport if we have the image
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssert([self login]);
     
     NSString *text = ZMTestURLArticleWithoutPictureString;
     
-    
+
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     
     ZMLinkPreview *expectedLinkPreview = [self.mockLinkPreviewDetector linkPreviewFromURLString:text includeAsset:NO includingTweet:NO];
@@ -118,8 +132,7 @@
 - (void)testThatItInsertCorrectLinkPreviewMessage_ArticleWithImage;
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+    XCTAssert([self login]);
     NSString *text = ZMTestURLArticleWithPictureString;
     
     
@@ -146,8 +159,7 @@
 - (void)testThatItInsertCorrectLinkPreviewMessage_TweetWithoutImage;
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+        XCTAssert([self login]);
     
     NSString *text = ZMTestURLRegularTweetString;
     ZMLinkPreview *expectedLinkPreview = [self.mockLinkPreviewDetector linkPreviewFromURLString:text includeAsset:NO includingTweet:YES];
@@ -170,8 +182,7 @@
 - (void)testThatItInsertCorrectLinkPreviewMessage_TweetWithImage;
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+        XCTAssert([self login]);
     
     NSString *text = ZMTestURLTweetWithPictureString;
     ZMLinkPreview *expectedLinkPreview = [self.mockLinkPreviewDetector linkPreviewFromURLString:text includeAsset:YES includingTweet:YES];
@@ -194,8 +205,7 @@
 - (void)testThatItUpdateMessageWhenReceivingLinkPreviewFollowUp_WithoutImage;
 {
     // given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+        XCTAssert([self login]);
     
     MockConversation *mockConversation = self.selfToUser1Conversation;
     [self prefetchRemoteClientByInsertingMessageInConversation:mockConversation];
@@ -238,8 +248,7 @@
 - (void)testThatItUpdateMessageWhenReceivingLinkPreviewFollowUp_WithoutImage_onlyArticle;
 {
     // given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+        XCTAssert([self login]);
     
     MockConversation *mockConversation = self.selfToUser1Conversation;
     [self prefetchRemoteClientByInsertingMessageInConversation:mockConversation];
@@ -292,8 +301,7 @@
 - (void)testThatItUpdateMessageWhenReceivingLinkPreviewFollowUp_WithImage;
 {
     // given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+        XCTAssert([self login]);
     
     
     MockConversation *mockConversation = self.selfToUser1Conversation;
@@ -359,8 +367,7 @@
 {
     // need to check mock transport if we have the image
     
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
+        XCTAssert([self login]);
     
     NSString *text = ZMTestURLArticleWithoutPictureString;
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
@@ -378,9 +385,10 @@
     __block ZMClientMessage *message = conversation.messages.lastObject;
     XCTAssertTrue(message.isEphemeral);
     [self checkForValidLinkPreviewInMessage:message expectedLinkPreview:expectedLinkPreview failureRecorder:NewFailureRecorder()];
-    
-    [self.syncMOC performBlockAndWait:^{
-        [self.syncMOC zm_teardownMessageObfuscationTimer];
+
+    NSManagedObjectContext *synMOC = self.userSession.syncManagedObjectContext;
+    [synMOC performBlockAndWait:^{
+        [synMOC zm_teardownMessageObfuscationTimer];
     }];
 }
 
