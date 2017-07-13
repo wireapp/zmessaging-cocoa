@@ -270,6 +270,17 @@ extension IntegrationTest {
         
         return didSucceed
     }
+
+
+    @objc(prefetchRemoteClientByInsertingMessageInConversation:)
+    func prefetchClientByInsertingMessage(in mockConversation: MockConversation) {
+        guard let convo = conversation(for: mockConversation) else { return }
+        userSession?.performChanges {
+            convo.appendMessage(withText: "hum, t'es sûr?")
+        }
+
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+    }
     
     @objc(userForMockUser:)
     func user(for mockUser: MockUser) -> ZMUser? {
