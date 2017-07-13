@@ -24,23 +24,23 @@ class DeleteMessagesTests: ConversationTestsBase {
 
     func testThatItCreatesARequestToSendADeletedMessageAndDeletesItLocallencrypty() {
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         var message: ZMConversationMessage! = nil
         
-        userSession.performChanges {
+        userSession?.performChanges {
             guard let conversation = self.conversation(for: self.selfToUser1Conversation) else {return XCTFail()}
             message = conversation.appendMessage(withText: "Hello")
         }
         
-        XCTAssertTrue(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNotNil(message)
 
         // when
         mockTransportSession.resetReceivedRequests()
-        userSession.performChanges {
+        userSession?.performChanges {
             ZMMessage.deleteForEveryone(message)
         }
-        XCTAssertTrue(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
         let requests = mockTransportSession.receivedRequests()
@@ -53,7 +53,7 @@ class DeleteMessagesTests: ConversationTestsBase {
 
     func testThatItDeletesAMessageIfItIsDeletedRemotelyByTheSender() {
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         
         let fromClient = user1.clients.anyObject() as! MockUserClient
         let toClient = selfUser.clients.anyObject() as! MockUserClient
@@ -64,7 +64,7 @@ class DeleteMessagesTests: ConversationTestsBase {
             self.selfToUser1Conversation.encryptAndInsertData(from: fromClient, to: toClient, data: textMessage.data())
         }
         
-        XCTAssertTrue(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         guard let conversation = self.conversation(for: selfToUser1Conversation) else {return XCTFail()}
@@ -78,7 +78,7 @@ class DeleteMessagesTests: ConversationTestsBase {
             self.selfToUser1Conversation.encryptAndInsertData(from: fromClient, to: toClient, data: genericMessage.data())
         }
         
-        XCTAssertTrue(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertTrue(message.hasBeenDeleted)
@@ -90,7 +90,7 @@ class DeleteMessagesTests: ConversationTestsBase {
     
     func testThatItDoesNotDeleteAMessageIfItIsDeletedRemotelyBySomeoneElse() {
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         
         let firstClient = user1.clients.anyObject() as! MockUserClient
         let secondClient = user2.clients.anyObject() as! MockUserClient
@@ -102,7 +102,7 @@ class DeleteMessagesTests: ConversationTestsBase {
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: textMessage.data())
         }
         
-        XCTAssertTrue(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         guard let conversation = self.conversation(for: selfToUser1Conversation) else {return XCTFail()}
@@ -117,7 +117,7 @@ class DeleteMessagesTests: ConversationTestsBase {
             self.selfToUser1Conversation.encryptAndInsertData(from: secondClient, to: selfClient, data: genericMessage.data())
         }
         
-        XCTAssertTrue(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertFalse(message.hasBeenDeleted)
@@ -127,15 +127,15 @@ class DeleteMessagesTests: ConversationTestsBase {
 
     func testThatItRetriesToSendADeletedMessageIfItCouldNotBeSentBefore() {
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         var message: ZMConversationMessage! = nil
         
-        userSession.performChanges {
+        userSession?.performChanges {
             guard let conversation = self.conversation(for: self.selfToUser1Conversation) else {return XCTFail()}
             message = conversation.appendMessage(withText: "Hello")
         }
         
-        XCTAssertTrue(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNotNil(message)
         
         // when
@@ -152,10 +152,10 @@ class DeleteMessagesTests: ConversationTestsBase {
             return nil
         }
         
-        userSession.performChanges {
+        userSession?.performChanges {
             ZMMessage.deleteForEveryone(message)
         }
-        XCTAssertTrue(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
         let requests = mockTransportSession.receivedRequests()
@@ -169,7 +169,7 @@ class DeleteMessagesTests: ConversationTestsBase {
     
     func testThatItNotifiesTheObserverIfAMessageGetsDeletedRemotely() {
         // given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
         
         let fromClient = user1.clients.anyObject() as! MockUserClient
         let toClient = selfUser.clients.anyObject() as! MockUserClient
@@ -180,7 +180,7 @@ class DeleteMessagesTests: ConversationTestsBase {
             self.selfToUser1Conversation.encryptAndInsertData(from: fromClient, to: toClient, data: textMessage.data())
         }
         
-        XCTAssertTrue(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         guard let conversation = self.conversation(for: selfToUser1Conversation) else {return XCTFail()}
         let window = conversation.conversationWindow(withSize: 10)
         let observer = MessageWindowChangeObserver(messageWindow: window)!
@@ -196,7 +196,7 @@ class DeleteMessagesTests: ConversationTestsBase {
             self.selfToUser1Conversation.encryptAndInsertData(from: fromClient, to: toClient, data: genericMessage.data())
         }
         
-        XCTAssertTrue(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertTrue(message.hasBeenDeleted)

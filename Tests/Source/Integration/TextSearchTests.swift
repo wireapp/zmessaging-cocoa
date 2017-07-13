@@ -31,10 +31,10 @@ fileprivate class MockSearchDelegate: TextSearchQueryDelegate {
 
 
 class TextSearchTests: ConversationTestsBase {
-
+        
     func testThatItFindsAMessageSendRemotely() {
         // Given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
 
         let firstClient = user1.clients.anyObject() as! MockUserClient
         let selfClient = selfUser.clients.anyObject() as! MockUserClient
@@ -45,7 +45,7 @@ class TextSearchTests: ConversationTestsBase {
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: genericMessage.data())
         }
 
-        XCTAssert(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         guard let convo = conversation(for: selfToUser1Conversation) else { return XCTFail("Undable to get conversation") }
         let lastMessage = convo.messages.lastObject as? ZMMessage
@@ -57,7 +57,7 @@ class TextSearchTests: ConversationTestsBase {
 
     func testThatItFindsAMessageEditedRemotely() {
         // Given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
 
         let firstClient = user1.clients.anyObject() as! MockUserClient
         let selfClient = selfUser.clients.anyObject() as! MockUserClient
@@ -69,7 +69,7 @@ class TextSearchTests: ConversationTestsBase {
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: genericMessage.data())
         }
 
-        XCTAssert(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         guard let convo = conversation(for: selfToUser1Conversation) else { return XCTFail("Undable to get conversation") }
         guard let lastMessage = convo.messages.lastObject as? ZMMessage else { return XCTFail("Undable to get message") }
@@ -81,7 +81,7 @@ class TextSearchTests: ConversationTestsBase {
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: genericMessage.data())
         }
 
-        XCTAssert(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         guard let editedMessage = convo.messages.lastObject as? ZMMessage else { return XCTFail("Undable to get message") }
         XCTAssertEqual(editedMessage.textMessageData?.messageText, "This is an edit!!")
 
@@ -92,7 +92,7 @@ class TextSearchTests: ConversationTestsBase {
 
     func testThatItDoesNotFindAnEphemeralMessageSentRemotely() {
         // Given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
 
         let firstClient = user1.clients.anyObject() as! MockUserClient
         let selfClient = selfUser.clients.anyObject() as! MockUserClient
@@ -108,7 +108,7 @@ class TextSearchTests: ConversationTestsBase {
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: genericMessage.data())
         }
 
-        XCTAssert(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         guard let convo = conversation(for: selfToUser1Conversation) else { return XCTFail("Undable to get conversation") }
         let lastMessage = convo.messages.lastObject as? ZMMessage
@@ -120,7 +120,7 @@ class TextSearchTests: ConversationTestsBase {
 
     func testThatItDoesNotFindAMessageDeletedRemotely() {
         // Given
-        XCTAssertTrue(logInAndWaitForSyncToBeComplete())
+        XCTAssertTrue(login())
 
         let firstClient = user1.clients.anyObject() as! MockUserClient
         let selfClient = selfUser.clients.anyObject() as! MockUserClient
@@ -132,7 +132,7 @@ class TextSearchTests: ConversationTestsBase {
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: genericMessage.data())
         }
 
-        XCTAssert(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         guard let convo = conversation(for: selfToUser1Conversation) else { return XCTFail("Undable to get conversation") }
         let lastMessage = convo.messages.lastObject as? ZMMessage

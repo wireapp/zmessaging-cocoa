@@ -25,10 +25,10 @@
 
 #import "MessagingTest.h"
 #import "ZMUserSession.h"
-#import "IntegrationTestBase.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMConversationTranscoder+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 #import "ConversationTestsBase.h"
 
 @interface FileTransferTests : ConversationTestsBase
@@ -39,7 +39,7 @@
 
 - (NSArray *)filterOutRequestsForLastRead:(NSArray *)requests
 {
-    NSString *conversationPrefix = [NSString stringWithFormat:@"/conversations/%@/otr/messages",  [ZMConversation selfConversationInContext:self.uiMOC].remoteIdentifier.transportString];
+    NSString *conversationPrefix = [NSString stringWithFormat:@"/conversations/%@/otr/messages",  [ZMConversation selfConversationInContext:self.userSession.managedObjectContext].remoteIdentifier.transportString];
     return [requests filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id  obj, NSDictionary __unused *bindings) {
         return ![((ZMTransportRequest *)obj).path hasPrefix:conversationPrefix];
     }]];
@@ -48,9 +48,7 @@
 - (void)testThatItSendsATextMessageAfterAFileMessage
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -83,9 +81,7 @@
 - (void)testThatItReceivesAVideoFileMessageThumbnailSentRemotely
 {
     // given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *thumbnailAssetID = NSUUID.createUUID;
@@ -153,10 +149,7 @@
 - (void)testThatAFileUpload_AssetOriginal_MessageIsReceivedWhenSentRemotely
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
-
+    XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
@@ -195,9 +188,7 @@
 - (void)testThatAFileUpload_AssetUploaded_MessageIsReceivedAndUpdatesTheOriginalMessageWhenSentRemotely
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *assetID = NSUUID.createUUID;
@@ -220,9 +211,9 @@
 - (void)testThatItUpdatesAFileMessageWhenTheUploadIsCancelledRemotely
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+//    self.registeredOnThisDevice = YES;
+    XCTAssertTrue([self login]);
+//    WaitForAllGroupsToBeEmpty(0.5);
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce.transportString  expiresAfter:nil];
@@ -240,12 +231,10 @@
     XCTAssertEqual(message.transferState, ZMFileTransferStateCancelledUpload);
 }
 
-- (void)testThatItUpdatesAFileMessageWhenTheUploadFailesRemotlely
+- (void)testThatItUpdatesAFileMessageWhenTheUploadFailsRemotely
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *failed = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedFAILED messageID:nonce.transportString expiresAfter:nil];
@@ -268,9 +257,7 @@
 - (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_Downloaded_AfterSuccesfullDecryption
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *assetID = NSUUID.createUUID;
@@ -323,9 +310,7 @@
 - (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_FailedDownload_AfterFailedDecryption
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *assetID = NSUUID.createUUID;
@@ -452,9 +437,7 @@
 - (void)testThatItSendsAFileMessage_WithVideo_Ephemeral
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForEverythingToBeDone();
+    XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     conversation.messageDestructionTimeout = 10;
@@ -476,7 +459,7 @@
     [self.userSession performChanges:^{
         fileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData]];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     //then
     XCTAssertTrue(fileMessage.isEphemeral);
@@ -515,11 +498,9 @@
 - (void)testThatAFileUpload_AssetOriginal_MessageIsReceivedWhenSentRemotely_Ephemeral
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
-    [self establishSessionBetweenSelfUserAndMockUser:self.user1];
+    [self establishSessionWithMockUser:self.user1];
     WaitForAllGroupsToBeEmpty(0.5);
 
     NSUUID *nonce = NSUUID.createUUID;
@@ -560,9 +541,7 @@
 - (void)testThatAFileUpload_AssetUploaded_MessageIsReceivedAndUpdatesTheOriginalMessageWhenSentRemotely_Ephemeral
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *assetID = NSUUID.createUUID;
@@ -587,9 +566,7 @@
 - (void)testThatItUpdatesAFileMessageWhenTheUploadIsCancelledRemotely_Ephemeral
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce.transportString  expiresAfter:@30];
@@ -613,9 +590,7 @@
 - (void)testThatItUpdatesAFileMessageWhenTheUploadFailesRemotlely_Ephemeral
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *failed = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedFAILED messageID:nonce.transportString expiresAfter:@30];
@@ -638,9 +613,7 @@
 - (void)testThatItReceivesAVideoFileMessageThumbnailSentRemotely_Ephemeral
 {
     // given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *thumbnailAssetID = NSUUID.createUUID;
@@ -710,9 +683,7 @@
 - (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_FailedDownload_AfterFailedDecryption_Ephemeral
 {
     //given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *assetID = NSUUID.createUUID;
@@ -774,9 +745,7 @@
 - (void)testThatItReceivesAVideoFileMessageThumbnailSentRemotely_V3
 {
     // given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *thumbnailAssetID = NSUUID.createUUID;
@@ -847,9 +816,7 @@
 - (void)testThatItReceivesAVideoFileMessageThumbnailSentRemotely_Ephemeral_V3
 {
     // given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *thumbnailAssetID = NSUUID.createUUID;
@@ -918,9 +885,7 @@
 - (void)testThatAFileUpload_AssetUploaded_MessageIsReceivedAndUpdatesTheOriginalMessageWhenSentRemotely_V3
 {
     // given
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *assetID = NSUUID.createUUID;
@@ -947,10 +912,7 @@
 - (void)testThatItSendsAFileMessage_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1000,10 +962,7 @@
 - (void)testThatItSendsNoneVideoFileMessage_withThumbnail_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1059,10 +1018,7 @@
 - (void)testThatItResendsAFailedFileMessage_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
 
@@ -1106,10 +1062,7 @@
 - (void)testThatItSendsATextMessageAfterAFileMessage_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1141,10 +1094,7 @@
 - (void)testThatItDoesNotSendAFileWhenTheOriginalRequestFails_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1182,10 +1132,7 @@
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheFileDataUploadFails_400_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1235,10 +1182,7 @@
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheFileDataUploadFails_NetworkError_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1288,10 +1232,7 @@
 - (void)testThatItDoesSendACancelledUploadMessageWhenTheFileDataUploadIsCancelled_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1346,10 +1287,7 @@
 - (void)testThatItDoesNotSendACancelledUploadMessageWhenThePlaceholderUploadFails_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1393,10 +1331,8 @@
 - (void)testThatItDoesReuploadTheAssetMetadataAfterReceivingA_412_MissingClients_V3
 {
     //given
+    XCTAssertTrue([self login]);
     
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertEqual(conversation.messages.count, 1lu);
     XCTAssertNotNil(conversation);
@@ -1454,10 +1390,7 @@
 - (void)testThatItSendsAFileMessage_WithVideo_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForEverythingToBeDone();
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1479,7 +1412,7 @@
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
         fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
 
     // then
     XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
@@ -1526,10 +1459,7 @@
 - (void)testThatItResendsAFailedFileMessage_WithVideo_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1581,10 +1511,7 @@
 - (void)testThatItResendsAFailedFileMessage_WithVideo_ThumbnailGenericMessageUploadFailed_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1641,10 +1568,7 @@
 - (void)testThatItResendsAFailedFileMessage_UploadingFullAssetFails_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1698,10 +1622,7 @@
 - (void)testThatItResendsAFailedFileMessage_UploadingFullAssetGenericMessageFails_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1758,10 +1679,7 @@
 - (void)testThatItDoesNotSendAFileWhenTheOriginalRequestFails_WithVideo_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1800,10 +1718,7 @@
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheThumbnailUploadFails_400_WithVideo_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1855,10 +1770,7 @@
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheFullAssetUploadFails_400_WithVideo_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1915,10 +1827,7 @@
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheThumbnailUploadFails_NetworkError_WithVideo_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -1969,10 +1878,7 @@
 - (void)testThatItDoesSendAFailedUploadMessageWhenTheFileDataUploadFails_NetworkError_WithVideo_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -2029,10 +1935,7 @@
 - (void)testThatItDoesSendACancelledUploadMessageWhenTheThumbnailDataUploadIsCancelled_WithVideo_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -2061,12 +1964,12 @@
         ZMVideoMetadata *metadata = [[ZMVideoMetadata alloc] initWithFileURL:fileURL thumbnail:self.mediumJPEGData];
         fileMessage = (id)[conversation appendMessageWithFileMetadata:metadata];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
 
     [self.userSession performChanges:^{
         [fileMessage.fileMessageData cancelTransfer];
     }];
-    WaitForEverythingToBeDone();
+    WaitForAllGroupsToBeEmpty(0.5);
 
     //then
     XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateFailedToSend);
@@ -2098,10 +2001,7 @@
 - (void)testThatItDoesSendACancelledUploadMessageWhenTheFileDataUploadIsCancelled_WithVideo_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -2172,10 +2072,7 @@
 - (void)testThatItDoesNotSendACancelledUploadMessageWhenThePlaceholderUploadFails_WithVideo_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -2220,10 +2117,8 @@
 - (void)testThatItDoesReuploadTheAssetMetadataAfterReceivingA_412_MissingClients_WithVideo_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
+
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertEqual(conversation.messages.count, 1lu);
@@ -2289,10 +2184,7 @@
 - (void)testThatItSendsARegularFileMessageForAFileWithVideoButNilThumbnail_V3
 {
     //given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
@@ -2351,11 +2243,7 @@
 - (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_Downloaded_AfterSuccesfullDecryption_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *assetID = NSUUID.createUUID;
@@ -2411,10 +2299,7 @@
 - (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_FailedDownload_AfterFailedDecryption_V3
 {
     // given
-    
-    self.registeredOnThisDevice = YES;
-    XCTAssertTrue([self logInAndWaitForSyncToBeComplete]);
-    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
 
     NSUUID *nonce = NSUUID.createUUID;
     NSUUID *assetID = NSUUID.createUUID;
