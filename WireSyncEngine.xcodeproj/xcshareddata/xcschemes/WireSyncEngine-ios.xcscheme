@@ -84,9 +84,6 @@
                   Identifier = "SlowSyncTests">
                </Test>
                <Test
-                  Identifier = "TeamTests">
-               </Test>
-               <Test
                   Identifier = "TextSearchTests">
                </Test>
             </SkippedTests>
