@@ -570,7 +570,6 @@ NSString * const SelfUserPassword = @"fgf0934';$@#%";
         MockConversation *mockConversation = [session insertConversationWithSelfUser:self.selfUser creator:mockUser otherUsers:nil type:ZMTConversationTypeInvalid];
         connection1.conversation = mockConversation;
         [self storeRemoteIDForObject:mockConversation];
-
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

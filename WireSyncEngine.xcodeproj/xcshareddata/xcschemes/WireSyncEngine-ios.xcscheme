@@ -54,9 +54,6 @@
             </BuildableReference>
             <SkippedTests>
                <Test
-                  Identifier = "ConversationTests">
-               </Test>
-               <Test
                   Identifier = "ConversationTestsOTR">
                </Test>
                <Test
