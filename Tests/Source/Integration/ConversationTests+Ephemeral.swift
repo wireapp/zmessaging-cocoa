@@ -46,7 +46,7 @@ extension ConversationTests_Ephemeral {
         // when
         conversation.messageDestructionTimeout = 100
         var message : ZMClientMessage!
-        self.userSession?.performChanges{
+        self.userSession?.performChanges {
             message = conversation.appendMessage(withText: "Hello") as! ZMClientMessage
             XCTAssertTrue(message.isEphemeral)
         }

@@ -113,8 +113,6 @@ extern NSString * const SelfUserPassword;
 - (void)remotelyAppendSelfConversationWithZMLastReadForMockConversation:(MockConversation *)mockConversation
                                                                  atTime:(NSDate *)newClearedTimeStamp;
 
-- (void)remotelyAppendSelfConversationWithZMMessageHideForMessageID:(NSString *)messageID
-                                                     conversationID:(NSString *)conversationID;
 - (void)simulateAppStopped;
 - (void)simulateAppRestarted;
 

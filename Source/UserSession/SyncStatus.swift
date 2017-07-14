@@ -160,7 +160,8 @@ extension SyncStatus {
         precondition(phase == currentSyncPhase, "Failed syncPhase does not match currentPhase")
         
         if currentSyncPhase == .fetchingMissedEvents {
-            currentSyncPhase = hasPersistedLastEventID ? SyncPhase.fetchingLastUpdateEventID.nextPhase! : .fetchingLastUpdateEventID
+            managedObjectContext.zm_lastNotificationID = nil
+            currentSyncPhase = .fetchingLastUpdateEventID
             needsToRestartQuickSync = false
         }
     }
