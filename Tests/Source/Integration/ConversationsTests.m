@@ -327,7 +327,6 @@
 {
     // given
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *groupConversation = [self conversationForMockConversation:self.groupConversation];
     XCTAssertNotNil(groupConversation);
@@ -348,7 +347,6 @@
 {
     // given
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     ZMUser *user3 = [self userForMockUser:self.user3];
     ZMConversation *groupConversation = [self conversationForMockConversation:self.groupConversation];
@@ -640,7 +638,6 @@
 {
     // given
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation1 = [self conversationForMockConversation:self.selfToUser1Conversation];
     ZMConversation *conversation2 = [self conversationForMockConversation:self.selfToUser2Conversation];
@@ -683,7 +680,6 @@
     // given
     
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
 
     __block MockConversation *groupConversation;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -897,7 +893,6 @@
 - (void)testThatTheConversationListOrderIsUpdatedAsWeReceiveMessages
 {
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
 
     // given
     __block MockConversation *mockExtraConversation;
@@ -975,7 +970,6 @@
 {
     // given
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     ZMConversation *conversation1 = [self conversationForMockConversation:self.selfToUser1Conversation];
@@ -1229,7 +1223,6 @@
         }];
         
         XCTAssertTrue([self login]);
-        WaitForAllGroupsToBeEmpty(0.5);
         [self.mockTransportSession resetReceivedRequests];
         
         ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
@@ -1259,7 +1252,6 @@
     {
         // Wait for sync to be done
         XCTAssertTrue([self login]);
-        WaitForAllGroupsToBeEmpty(0.5);
         
         // then
         ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
@@ -1272,7 +1264,6 @@
 {
     // given
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     [self.userSession performChanges:^{
@@ -1303,7 +1294,6 @@
     {
         // given
         XCTAssertTrue([self login]);
-        WaitForAllGroupsToBeEmpty(0.5);
         [self.mockTransportSession resetReceivedRequests];
         
         ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
@@ -1331,7 +1321,6 @@
     {
         // Wait for sync to be done
         XCTAssertTrue([self login]);
-        WaitForAllGroupsToBeEmpty(0.5);
         
         // then
         ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
@@ -1344,7 +1333,6 @@
 {
     // given
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     [self.userSession performChanges:^{
@@ -1413,7 +1401,6 @@
 {
     // given
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     [self.userSession performChanges:^{
@@ -1620,7 +1607,6 @@
 {
     // login
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     // given
     MockUserClient *fromClient = self.user1.clients.anyObject;
@@ -1638,7 +1624,6 @@
     
     [self recreateSessionManagerAndDeleteLocalData];
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertEqual(conversation.estimatedUnreadCount, 0u);
@@ -1663,7 +1648,6 @@
 {
     // given
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession resetReceivedRequests];
     ZMConversation *conv =  [self conversationForMockConversation:self.selfToUser1Conversation];
@@ -1711,7 +1695,6 @@
     
     // when
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
 
     NSArray *activeConversations = [ZMConversationList conversationsInUserSession:self.userSession];
     NSArray *pendingConversations = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
@@ -1740,7 +1723,6 @@
 - (void)loginAndFillConversationWithMessages:(MockConversation *)mockConversation messagesCount:(NSUInteger)messagesCount
 {
     XCTAssertTrue([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     MockUser *otherUser = (id)[mockConversation.activeUsers firstObjectNotInSet:[NSSet setWithObject:self.selfUser]];
@@ -1820,9 +1802,7 @@
     {
         // Wait for sync to be done
         XCTAssertTrue([self login]);
-        WaitForAllGroupsToBeEmpty(0.5);
     
-
         // then
         conversation = [self conversationForMockConversation:self.groupConversation];
         WaitForAllGroupsToBeEmpty(0.5);
@@ -1892,7 +1872,6 @@
     {
         // Wait for sync to be done
         XCTAssertTrue([self login]);
-        WaitForAllGroupsToBeEmpty(0.5);
         
         // then
         conversation = [self conversationForMockConversation:self.groupConversation];
@@ -1944,7 +1923,6 @@
     {
         // Wait for sync to be done
         XCTAssertTrue([self login]);
-        WaitForAllGroupsToBeEmpty(0.5);
         
         // then
         conversation = [self conversationForMockConversation:self.groupConversation];
@@ -2050,7 +2028,6 @@
         [self recreateSessionManagerAndDeleteLocalData];
         WaitForAllGroupsToBeEmpty(0.5);
         XCTAssertTrue([self login]);
-        WaitForAllGroupsToBeEmpty(0.5);
     }
     
     // then
