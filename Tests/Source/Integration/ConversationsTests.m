@@ -213,10 +213,7 @@
     // Re-create contexts
     [self recreateSessionManagerAndDeleteLocalData];
     XCTAssert([self login]);
-    
-    // Wait for sync to be done
-    WaitForAllGroupsToBeEmpty(0.5);
-    
+        
     {
         ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
         XCTAssertNotNil(conversation);
