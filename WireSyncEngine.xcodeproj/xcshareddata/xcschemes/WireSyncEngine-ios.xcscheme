@@ -66,9 +66,6 @@
                   Identifier = "ConversationTests_Ephemeral">
                </Test>
                <Test
-                  Identifier = "ConversationTests_MessageEditing">
-               </Test>
-               <Test
                   Identifier = "DeleteMessagesTests">
                </Test>
                <Test

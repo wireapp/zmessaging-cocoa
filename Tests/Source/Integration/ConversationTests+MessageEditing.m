@@ -22,6 +22,7 @@
 
 #import "ConversationTestsBase.h"
 #import "NotificationObservers.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface ConversationTests_MessageEditing : ConversationTestsBase
 
@@ -36,7 +37,7 @@
 - (void)testThatItSendsOutARequestToEditAMessage
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
+    XCTAssert([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     
     __block ZMMessage *message;
@@ -71,7 +72,7 @@
 - (void)testThatItInsertsNewMessageAtSameIndexAsOriginalMessage
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
+    XCTAssert([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     
     __block ZMMessage *message;
@@ -85,9 +86,8 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    id convToken = [ConversationChangeInfo addObserver:self.conversationChangeObserver forConversation:conversation];
-    [self.conversationChangeObserver clearNotifications];
-    
+    ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
+        
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:10];
     MessageWindowChangeObserver *windowObserver = [[MessageWindowChangeObserver alloc] initWithMessageWindow:window];
     NSUInteger messageIndex = [window.messages indexOfObject:message];
@@ -104,8 +104,8 @@
     NSUInteger editedMessageIndex = [window.messages indexOfObject:editMessage];
     XCTAssertEqual(editedMessageIndex, messageIndex);
     
-    XCTAssertEqual(self.conversationChangeObserver.notifications.count, 1u);
-    ConversationChangeInfo *convInfo =  self.conversationChangeObserver.notifications.firstObject;
+    XCTAssertEqual(observer.notifications.count, 1u);
+    ConversationChangeInfo *convInfo =  observer.notifications.firstObject;
     XCTAssertTrue(convInfo.messagesChanged);
     XCTAssertFalse(convInfo.participantsChanged);
     XCTAssertFalse(convInfo.nameChanged);
@@ -131,14 +131,12 @@
     XCTAssertEqualObjects(windowInfo2.insertedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(windowInfo2.updatedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
     XCTAssertEqualObjects(windowInfo2.zm_movedIndexPairs, @[]);
-    
-    (void)convToken;
 }
 
 - (void)testThatItCanEditAnEditedMessage
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
+    XCTAssert([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     
     __block ZMMessage *message;
@@ -178,7 +176,7 @@
 - (void)testThatItKeepsTheContentWhenMessageSendingFailsButOverwritesTheNonce
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
+    XCTAssert([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     
     __block ZMMessage *message;
@@ -220,7 +218,7 @@
 - (void)testThatWhenResendingAFailedEditMessageItInsertsANewOne
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
+    XCTAssert([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     
     __block ZMMessage *message;
@@ -278,7 +276,7 @@
 - (void)testThatItProcessesEditingMessages
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
+    XCTAssert([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     NSUInteger messageCount = conversation.messages.count;
     
@@ -312,7 +310,7 @@
 - (void)testThatItSendsOutNotificationAboutUpdatedMessages
 {
     // given
-    XCTAssert([self logInAndWaitForSyncToBeComplete]);
+    XCTAssert([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     
     MockUserClient *fromClient = self.user1.clients.anyObject;
@@ -327,8 +325,7 @@
     ZMClientMessage *receivedMessage = conversation.messages.lastObject;
     NSUUID *messageNone = receivedMessage.nonce;
     
-    id convToken = [ConversationChangeInfo addObserver:self.conversationChangeObserver forConversation:conversation];
-    [self.conversationChangeObserver clearNotifications];
+    ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:10];
     MessageWindowChangeObserver *windowObserver = [[MessageWindowChangeObserver alloc] initWithMessageWindow:window];
@@ -352,8 +349,8 @@
     NSUInteger editedMessageIndex = [window.messages indexOfObject:editedMessage];
     XCTAssertEqual(editedMessageIndex, messageIndex);
     
-    XCTAssertEqual(self.conversationChangeObserver.notifications.count, 1u);
-    ConversationChangeInfo *convInfo =  self.conversationChangeObserver.notifications.firstObject;
+    XCTAssertEqual(observer.notifications.count, 1u);
+    ConversationChangeInfo *convInfo =  observer.notifications.firstObject;
     XCTAssertTrue(convInfo.messagesChanged);
     XCTAssertFalse(convInfo.participantsChanged);
     XCTAssertFalse(convInfo.nameChanged);
@@ -371,8 +368,6 @@
     XCTAssertEqualObjects(windowInfo.insertedIndexes, [NSIndexSet indexSetWithIndex:messageIndex]);
     XCTAssertEqualObjects(windowInfo.updatedIndexes, [NSIndexSet indexSet]);
     XCTAssertEqualObjects(windowInfo.zm_movedIndexPairs, @[]);
-    
-    (void)convToken;
 }
 
 
