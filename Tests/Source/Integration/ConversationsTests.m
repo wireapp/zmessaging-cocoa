@@ -908,11 +908,6 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-//    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-//        NOT_USED(session);
-//        [self setDate:[NSDate dateWithTimeInterval:1000 sinceDate:self.groupConversation.lastEventTime] forAllEventsInMockConversation:mockExtraConversation];
-//    }];
-    
     // when
     ZMConversation *extraConversation = [self conversationForMockConversation:mockExtraConversation];
     ZMConversation *groupConversation = [self conversationForMockConversation:self.groupConversation];
