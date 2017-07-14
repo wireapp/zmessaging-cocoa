@@ -798,7 +798,7 @@
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     
-    WaitForAllGroupsToBeEmpty(0.01);
+    WaitForAllGroupsToBeEmpty(0.1);
     XCTAssertEqual(conversation.messages.count - initialMessageCount, 1lu);
     
     // when
@@ -822,7 +822,7 @@
     XCTAssertFalse(systemMessage.needsUpdatingUsers);
     
     // when
-    WaitForAllGroupsToBeEmpty(0.01);
+    WaitForAllGroupsToBeEmpty(0.1);
     [self performRemoteChangesNotInNotificationStream:^(id<MockTransportSessionObjectCreation> session __unused) {
         [self.groupConversation removeUsersByUser:self.user2 removedUser:self.user3];
         [self.groupConversation addUsersByUser:self.user2 addedUsers:@[self.user1, self.user5]];
