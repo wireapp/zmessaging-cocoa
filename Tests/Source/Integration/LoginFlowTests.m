@@ -249,6 +249,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
     [[authenticationObserver stub] authenticationDidSucceed];
+    [[authenticationObserver stub] authenticationDidFail:OCMOCK_ANY];
     id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     
     // getting access token fails

@@ -198,7 +198,11 @@ extension SessionManager: ZMAuthenticationObserver {
     }
     
     @objc public func authenticationDidSucceed() {
-        guard self.userSession == nil, let authenticationStatus = self.unauthenticatedSession?.authenticationStatus else { return }
+        guard self.userSession == nil, let authenticationStatus = self.unauthenticatedSession?.authenticationStatus else {
+            RequestAvailableNotification.notifyNewRequestsAvailable(self)
+            return
+        }
+        
         let userSession = ZMUserSession(mediaManager: mediaManager,
                                         analytics: analytics,
                                         transportSession: transportSession,
