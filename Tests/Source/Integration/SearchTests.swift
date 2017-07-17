@@ -532,11 +532,9 @@ class SearchTests : IntegrationTest {
         XCTAssertEqual(searchUser.imageSmallProfileData, profileImageData)
         
         let requests = mockTransportSession.receivedRequests()
-        XCTAssertEqual(requests.count, 2)
-        XCTAssertEqual(requests[0].path, "/users?ids=\(user4.identifier)")
+        XCTAssertEqual(requests.count, 1)
+        XCTAssertEqual(requests[0].path, "/assets/v3/\(user4.previewProfileAssetIdentifier!)")
         XCTAssertEqual(requests[0].method, .methodGET)
-        XCTAssertEqual(requests[1].path, "/assets/v3/\(user4.previewProfileAssetIdentifier!)")
-        XCTAssertEqual(requests[1].method, .methodGET)
     }
     
     func testThatItDownloadsMediumAssetForSearchUserWhenAssetAndLegacyIdArePresentUsingV3() {
