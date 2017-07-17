@@ -56,6 +56,8 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     }
     
     override func tearDown() {
+        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectoryURL)
+        
         self.clientRegistrationStatus.tearDown()
         self.clientRegistrationStatus = nil
         self.clientUpdateStatus.tearDown()
