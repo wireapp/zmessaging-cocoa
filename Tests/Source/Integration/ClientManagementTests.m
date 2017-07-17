@@ -19,7 +19,6 @@
 
 @import WireTesting;
 
-#import "IntegrationTestBase.h"
 #import "ZMUserSession+OTR.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
@@ -135,7 +134,7 @@
 - (void)testThatItCanDeleteClientsFromSettingsMenu
 {
     // given
-    ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:SelfUserEmail password:SelfUserPassword];
+    ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:IntegrationTest.SelfUserPassword];
     [self insertTwoSelfClientsOnMockTransporSession];
 
     [self.userSession performChanges:^{

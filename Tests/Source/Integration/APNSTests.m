@@ -18,7 +18,6 @@
 
 @import WireDataModel;
 
-#import "IntegrationTestBase.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Background+Testing.h"

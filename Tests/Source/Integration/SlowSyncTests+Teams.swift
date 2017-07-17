@@ -17,7 +17,14 @@
 //
 
 
-class SlowSyncTestsTeams: IntegrationTestBase {
+class SlowSyncTestsTeams: IntegrationTest {
+
+    func mockMember(_ mockMember : MockMember, isEqualTo member: Member) -> Bool {
+        return mockMember.user.identifier == member.user?.remoteIdentifier?.transportString()
+            && mockMember.team.identifier == member.team?.remoteIdentifier?.transportString()
+    }
+    
+    /// MARK -
 
     func DISABLED_testThatItFetchesTeamsAndMembersDuringSlowSync() {
         // Given
@@ -33,10 +40,10 @@ class SlowSyncTestsTeams: IntegrationTestBase {
             otherMember.permissions = .admin
         }
 
-        XCTAssert(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // When
-        XCTAssert(logInAndWaitForSyncToBeComplete())
+        XCTAssert(login())
 
         // Then
         var fetchedTeams = false, fetchedMembers = false
@@ -53,7 +60,7 @@ class SlowSyncTestsTeams: IntegrationTestBase {
         XCTAssert(fetchedMembers)
 
         do {
-            let selfUser = ZMUser.selfUser(in: syncMOC)
+            let selfUser = ZMUser.selfUser(in: userSession!.syncManagedObjectContext)
             XCTAssert(selfUser.hasTeam)
             guard let team = selfUser.team else { return XCTFail("Team missing") }
 
@@ -66,7 +73,7 @@ class SlowSyncTestsTeams: IntegrationTestBase {
             let member = team.members.first { mockMember(otherMember, isEqualTo: $0) }
             XCTAssertNotNil(member)
             XCTAssertEqual(member?.permissions, .admin)
-            XCTAssertEqual(member?.user?.remoteIdentifier, user(for: user5).remoteIdentifier)
+            XCTAssertEqual(member?.user?.remoteIdentifier, user(for: user5)?.remoteIdentifier)
         }
     }
 
@@ -87,10 +94,10 @@ class SlowSyncTestsTeams: IntegrationTestBase {
             conversation.team = team
         }
 
-        XCTAssert(waitForEverythingToBeDone())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // When
-        XCTAssert(logInAndWaitForSyncToBeComplete())
+        XCTAssert(login())
 
         // Then
         var fetchedTeams = false, fetchedMembers = false
@@ -116,14 +123,14 @@ class SlowSyncTestsTeams: IntegrationTestBase {
             XCTAssertEqual(conversation.conversationType, .group)
 
             XCTAssertTrue(conversation.otherActiveParticipants.contains(user(for: user3)!))
-            XCTAssertTrue(user(for: user3).isGuest(in: conversation))
-            XCTAssertTrue(user(for: user5).isTeamMember)
+            XCTAssertTrue(user(for: user3)!.isGuest(in: conversation))
+            XCTAssertTrue(user(for: user5)!.isTeamMember)
             XCTAssertTrue(realSelfUser.isTeamMember)
 
             let selfMember = realSelfUser.membership
             XCTAssertNotNil(selfMember)
             XCTAssertEqual(selfMember?.permissions, .member)
-            let user5Member = user(for: user5).membership
+            let user5Member = user(for: user5)?.membership
             XCTAssertEqual(user5Member?.permissions, .admin)
             XCTAssertEqual(team.name, "Wire GmbH")
             XCTAssertEqual(team.members.count, 2)

@@ -20,7 +20,6 @@
 @import WireMockTransport;
 @import WireDataModel;
 
-#import "IntegrationTestBase.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"

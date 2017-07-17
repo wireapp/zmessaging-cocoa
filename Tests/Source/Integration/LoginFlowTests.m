@@ -592,7 +592,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // first provide the wrong credentials
     id provideWrongCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
         [self.mockTransportSession resetReceivedRequests];
-        ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:SelfUserEmail password:wrongPassword];
+        ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:wrongPassword];
         [self.unauthenticatedSession loginWithCredentials:credentials];
     };
     
@@ -672,7 +672,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     {
         // expect
         id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
-            ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:SelfUserEmail password:SelfUserPassword];
+            ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:IntegrationTest.SelfUserPassword];
             [self.unauthenticatedSession loginWithCredentials:credentials];
         };
         
@@ -723,7 +723,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     {
         // expect
         id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
-            ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:SelfUserEmail password:SelfUserPassword];
+            ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:IntegrationTest.SelfUserPassword];
             [self.userSession performChanges:^{
                 [self.unauthenticatedSession loginWithCredentials:credentials];
             }];
