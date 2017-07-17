@@ -410,10 +410,10 @@ extension SyncStatusTests {
         sut.failCurrentSyncPhase(phase: .fetchingMissedEvents)
         
         // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
     }
     
-    func testThatItDoesNotSaveLastNotificationIDWhenSlowSyncFailed(){
+    func testThatItClearsLastNotificationIDWhenQuickSyncFails(){
         // given
         let oldID = UUID.timeBasedUUID() as UUID
         let newID = UUID.timeBasedUUID() as UUID
@@ -426,8 +426,7 @@ extension SyncStatusTests {
         sut.failCurrentSyncPhase(phase: .fetchingMissedEvents)
         
         // then
-        XCTAssertEqual(uiMOC.zm_lastNotificationID, oldID)
-        XCTAssertNotEqual(uiMOC.zm_lastNotificationID, newID)
+        XCTAssertNil(uiMOC.zm_lastNotificationID)
     }
     
     func testThatItSavesLastNotificationIDOnlyAfterSlowSyncFinishedSuccessfullyAfterFailedQuickSync(){
@@ -444,9 +443,11 @@ extension SyncStatusTests {
         
         // then
         XCTAssertNotEqual(uiMOC.zm_lastNotificationID, newID)
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
         
         // and when
+        sut.finishCurrentSyncPhase(phase: .fetchingLastUpdateEventID)
+        // then
         sut.finishCurrentSyncPhase(phase: .fetchingTeams)
         // then
         XCTAssertNotEqual(uiMOC.zm_lastNotificationID, newID)
