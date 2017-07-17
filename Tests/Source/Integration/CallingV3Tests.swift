@@ -127,7 +127,7 @@ class CallingV3Tests : IntegrationTest {
     
     func otherStartCall(user: ZMUser, isVideoCall: Bool = false, shouldRing: Bool = true) {
         let userIdRef = user.remoteIdentifier!.transportString().cString(using: .utf8)
-        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, messageTime: UInt32(Date().timeIntervalSince1970), userId: userIdRef, isVideoCall: isVideoCall ? 1 : 0, shouldRing: shouldRing ? 1 : 0, contextRef: wireCallCenterRef)
+        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, messageTime: UInt32(ceil(Date().timeIntervalSince1970)), userId: userIdRef, isVideoCall: isVideoCall ? 1 : 0, shouldRing: shouldRing ? 1 : 0, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
@@ -781,9 +781,8 @@ extension CallingV3Tests {
         XCTAssertTrue(login())
         let user = conversationUnderTest.connectedUser!
         
-        // Time gets truncated to integer values under the hood, doing the same to avoid false positives
-        let timeIntervalBeforeCall = TimeInterval(UInt32(Date().timeIntervalSince1970))
-        XCTAssertLessThan(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, timeIntervalBeforeCall) // TODO jacob flakey
+        let timeIntervalBeforeCall = Date().timeIntervalSince1970
+        XCTAssertLessThan(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, timeIntervalBeforeCall)
         
         // when
         otherStartCall(user: user)
