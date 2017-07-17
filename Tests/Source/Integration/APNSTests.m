@@ -515,11 +515,15 @@
 
         ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Hello" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
         
-        self.mockTransportSession.pushChannel.keepOpen = NO;
+        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+            // close push channel since we want to receive the message via APNS
+            session.pushChannel.keepOpen = NO;
+            [session simulatePushChannelClosed];
+        }];
+        WaitForAllGroupsToBeEmpty(0.2);
+        
         __block MockEvent *event;
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-            [session simulatePushChannelClosed];
-            
             // insert message on "backend"
             event = [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:textMessage.data];
             
@@ -537,6 +541,7 @@
         XCTestExpectation *confirmationExpectation = [self expectationWithDescription:@"Did send confirmation"];
         XCTestExpectation *missingClientsExpectation = [self expectationWithDescription:@"Did fetch missing client"];
         __block NSUInteger requestCount = 0;
+        
         ZM_WEAK(self);
         self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
             ZM_STRONG(self);
