@@ -109,8 +109,9 @@ extension UserProfileUpdateStatus {
                                                       object: nil,
                                                       queue: OperationQueue.main)
         {
-            (anynote: Notification) in
-            guard let note = anynote.userInfo?[UserProfileUpdateNotification.userInfoKey] as? UserProfileUpdateNotification else {
+            [weak observer] (anynote: Notification) in
+            guard let note = anynote.userInfo?[UserProfileUpdateNotification.userInfoKey] as? UserProfileUpdateNotification,
+                  let observer = observer else {
                 return
             }
             switch note.type {
