@@ -58,7 +58,7 @@ class UserProfileUpdateStatusTests : MessagingTest {
 }
 
 extension UserProfileUpdateStatusTests {
-    func testThatItDoesNotReatinObserver() {
+    func testThatItDoesNotRetainObserver() {
         // GIVEN
         var observer: TestUserProfileUpdateObserver? = TestUserProfileUpdateObserver()
         
