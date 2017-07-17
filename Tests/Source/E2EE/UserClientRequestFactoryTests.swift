@@ -38,6 +38,8 @@ class UserClientRequestFactoryTests: MessagingTest {
     }
     
     override func tearDown() {
+        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectoryURL)  
+        
         self.authenticationStatus = nil
         self.sut = nil
         self.spyKeyStore = nil
