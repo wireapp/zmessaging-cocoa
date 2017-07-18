@@ -42,6 +42,7 @@ public class SessionManager : NSObject {
     var authenticationToken: ZMAuthenticationObserverToken?
     var userSession: ZMUserSession?
     var unauthenticatedSession: UnauthenticatedSession?
+    let storeProvider: LocalStoreProviderProtocol
     
     public convenience init(appGroupIdentifier: String,
                 appVersion: String,
@@ -82,9 +83,12 @@ public class SessionManager : NSObject {
                 analytics: AnalyticsType?,
                 delegate: SessionManagerDelegate?,
                 application: ZMApplication,
-                launchOptions: [UIApplicationLaunchOptionsKey : Any]) {
+                launchOptions: [UIApplicationLaunchOptionsKey : Any],
+                storeProvider: LocalStoreProviderProtocol = LocalStoreProvider()
+                ) {
         
         SessionManager.enableLogsByEnvironmentVariable()
+        self.storeProvider = storeProvider
         
         self.appGroupIdentifier = appGroupIdentifier
         self.appVersion = appVersion
@@ -99,7 +103,7 @@ public class SessionManager : NSObject {
         
         authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(self)
 
-        if storeExists {
+        if storeProvider.storeExists(forAppGroupIdentifier: appGroupIdentifier) {
             let createSession = {
                 let userSession = ZMUserSession(mediaManager: mediaManager,
                                                 analytics: analytics,
@@ -118,9 +122,9 @@ public class SessionManager : NSObject {
                 }
             }
         
-            if ZMUserSession.needsToPrepareLocalStore(usingAppGroupIdentifier: appGroupIdentifier) {
+            if storeProvider.needsToPrepareLocalStore(usingAppGroupIdentifier: appGroupIdentifier) {
                 delegate?.sessionManagerWillStartMigratingLocalStore()
-                ZMUserSession.prepareLocalStore(usingAppGroupIdentifier: appGroupIdentifier) {
+                storeProvider.prepareLocalStore(usingAppGroupIdentifier: appGroupIdentifier) {
                     DispatchQueue.main.async(execute: createSession)
                 }
             } else {
@@ -147,11 +151,6 @@ public class SessionManager : NSObject {
     
     public var isLoggedIn: Bool {
         return transportSession.cookieStorage.authenticationCookieData != nil
-    }
-    
-    var storeExists : Bool {
-        guard let storeURL = ZMUserSession.storeURL(forAppGroupIdentifier: appGroupIdentifier) else { return false }
-        return NSManagedObjectContext.storeExists(at: storeURL)
     }
     
     @objc public var currentUser: ZMUser? {
