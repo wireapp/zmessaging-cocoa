@@ -17,34 +17,111 @@
 //
 
 import Foundation
+import UIKit
 
-public protocol LocalStoreProviderProtocol {
-    func storeExists(forAppGroupIdentifier appGroupIdentifier:String) -> Bool
-    func storeURL(forAppGroupIdentifier appGroupIdentifier: String) -> URL
-    func needsToPrepareLocalStore(usingAppGroupIdentifier appGroupIdentifier: String) -> Bool
-    func prepareLocalStore(usingAppGroupIdentifier appGroupIdentifier: String, completion completionHandler: (() -> ()))
+private let zmLog = ZMSLog(tag: "LocalStoreProvider")
+
+@objc public protocol LocalStoreProviderProtocol: NSObjectProtocol {
+    var appGroupIdentifier: String { get }
+    var storeExists: Bool { get }
+    var storeURL: URL? { get }
+    var keyStoreURL: URL? { get }
+    var cachesURL: URL? { get }
+    var sharedContainerDirectory: URL? { get }
+    
+    /// Whether the local store is ready to be opened. If it returns false, the user session can't be started yet
+    var isStoreReady: Bool { get }
+
+    /// Returns true if data store needs to be migrated.
+    var needsToPrepareLocalStore: Bool { get }
+    
+    /// Should be called <b>before</b> using ZMUserSession when applications is started if needsToPrepareLocalStore returns true
+    /// It will intialize persistent store and perform migration (if needed) on background thread.
+    /// - Parameter completionHandler: called when local store is ready to be used (and the ZMUserSession is ready to be initialized). Called on an arbitrary thread, it is the responsability of the caller to switch to the desired thread.
+    func prepareLocalStore(completion completionHandler: @escaping (() -> ()))
 }
 
-class LocalStoreProvider {
+@objc public class LocalStoreProvider: NSObject {
     
+    public let appGroupIdentifier: String
+    public init(appGroupIdentifier: String) {
+        self.appGroupIdentifier = appGroupIdentifier
+    }
+    
+    public convenience override init() {
+        let bundle = Bundle.main
+        let groupIdentifier = "group.\(bundle.bundleIdentifier!)"
+        self.init(appGroupIdentifier: groupIdentifier)
+    }
 }
 
 extension LocalStoreProvider: LocalStoreProviderProtocol {
-    func storeURL(forAppGroupIdentifier appGroupIdentifier: String) -> URL {
-        fatalError()
+    
+    public var sharedContainerDirectory: URL? {
+        let fileManager = FileManager.default
+        let directoryInContainer = fileManager.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)
+        
+        guard let directory = directoryInContainer else {
+            // Seems like the shared container is not available. This could happen for series of reasons:
+            // 1. The app is compiled with with incorrect provisioning profile (for example with 3rd parties)
+            // 2. App is running on simulator and there is no correct provisioning profile on the system
+            // 3. Bug with signing
+            //
+            // The app should allow not having a shared container in cases 1 and 2; in case 3 the app should crash
+            
+            let deploymentEnvironment = ZMDeploymentEnvironment().environmentType()
+            if TARGET_IPHONE_SIMULATOR == 0 && (deploymentEnvironment == ZMDeploymentEnvironmentType.appStore || deploymentEnvironment == ZMDeploymentEnvironmentType.internal) {
+                return nil
+            }
+            else {
+                zmLog.error(String(format: "ERROR: self.databaseDirectoryURL == nil and deploymentEnvironment = %d", deploymentEnvironment.rawValue))
+                zmLog.error("================================WARNING================================")
+                zmLog.error("Wire is going to use APPLICATION SUPPORT directory to host the EventDecoder database")
+                zmLog.error("================================WARNING================================")
+            }
+            return fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        }
+        return directory
     }
     
-    func storeExists(forAppGroupIdentifier appGroupIdentifier:String) -> Bool {
-        let storeURL = self.storeURL(forAppGroupIdentifier: appGroupIdentifier)
+    public var cachesURL: URL? {
+        let fileManager = FileManager.default
+        if let directoryInContainer = fileManager.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) {
+            return directoryInContainer.appendingPathComponent("Library", isDirectory: true).appendingPathComponent("Caches", isDirectory: true)
+        } else {
+            return nil
+        }
+    }
+    
+    public var isStoreReady: Bool {
+        return NSManagedObjectContext.storeIsReady()
+    }
+    
+    public var storeURL: URL? {
+        guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return nil }
+        return sharedContainerDirectory?.appendingPathComponent(bundleIdentifier, isDirectory: true).appendingPathComponent("store.wiredatabase")
+    }
+    
+    
+    public var keyStoreURL: URL? {
+        return sharedContainerDirectory
+    }
+    
+    public var storeExists: Bool {
+        guard let storeURL = self.storeURL else { return false }
         return NSManagedObjectContext.storeExists(at: storeURL)
     }
     
-    func needsToPrepareLocalStore(usingAppGroupIdentifier appGroupIdentifier: String) -> Bool {
-        fatalError()
+    public var needsToPrepareLocalStore: Bool {
+        guard let storeURL = self.storeURL else { return false }
+        return NSManagedObjectContext.needsToPrepareLocalStore(at: storeURL)
     }
     
-    func prepareLocalStore(usingAppGroupIdentifier appGroupIdentifier: String, completion completionHandler: (() -> ())) {
-        fatalError()
+    public func prepareLocalStore(completion completionHandler: @escaping (() -> ())) {
+        let environment = ZMDeploymentEnvironment().environmentType()
+        let shouldBackupCorruptedDatabase = environment == .internal // TODO: on debug build as well
+        
+        NSManagedObjectContext.prepareLocalStore(at: self.storeURL, backupCorruptedDatabase: shouldBackupCorruptedDatabase, synchronous: false, completionHandler: completionHandler)
     }
-
+    
 }

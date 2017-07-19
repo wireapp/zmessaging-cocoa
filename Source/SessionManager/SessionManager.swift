@@ -31,7 +31,7 @@ public protocol SessionManagerDelegate : class {
 
 @objc
 public class SessionManager : NSObject {
-    public let appGroupIdentifier: String
+    public let localStoreProvider: LocalStoreProviderProtocol
     public let appVersion: String
     public let mediaManager: AVSMediaManager
     public var analytics: AnalyticsType?
@@ -44,8 +44,7 @@ public class SessionManager : NSObject {
     var unauthenticatedSession: UnauthenticatedSession?
     let storeProvider: LocalStoreProviderProtocol
     
-    public convenience init(appGroupIdentifier: String,
-                appVersion: String,
+    public convenience init(appVersion: String,
                 mediaManager: AVSMediaManager,
                 analytics: AnalyticsType?,
                 delegate: SessionManagerDelegate?,
@@ -63,8 +62,9 @@ public class SessionManager : NSObject {
                                                   cookieStorage: cookieStorage,
                                                   initialAccessToken: nil,
                                                   sharedContainerIdentifier: nil)
+        let localStoreProvider = LocalStoreProvider()
         
-        self.init(appGroupIdentifier: appGroupIdentifier,
+        self.init(localStoreProvider: localStoreProvider,
                   appVersion: appVersion,
                   transportSession: transportSession,
                   mediaManager: mediaManager,
@@ -75,7 +75,7 @@ public class SessionManager : NSObject {
         
     }
     
-    public init(appGroupIdentifier: String,
+    public init(localStoreProvider: LocalStoreProviderProtocol,
                 appVersion: String,
                 transportSession: ZMTransportSession,
                 apnsEnvironment: ZMAPNSEnvironment? = nil,
@@ -90,7 +90,7 @@ public class SessionManager : NSObject {
         SessionManager.enableLogsByEnvironmentVariable()
         self.storeProvider = storeProvider
         
-        self.appGroupIdentifier = appGroupIdentifier
+        self.localStoreProvider = localStoreProvider
         self.appVersion = appVersion
         self.apnsEnvironment = apnsEnvironment
         self.application = application
@@ -103,7 +103,7 @@ public class SessionManager : NSObject {
         
         authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(self)
 
-        if storeProvider.storeExists(forAppGroupIdentifier: appGroupIdentifier) {
+        if storeProvider.storeExists {
             let createSession = {
                 let userSession = ZMUserSession(mediaManager: mediaManager,
                                                 analytics: analytics,
@@ -112,7 +112,7 @@ public class SessionManager : NSObject {
                                                 application: self.application,
                                                 userId:nil,
                                                 appVersion: appVersion,
-                                                appGroupIdentifier: appGroupIdentifier)!
+                                                storeProvider: storeProvider)!
                 
                 self.userSession = userSession
                 delegate?.sessionManagerCreated(userSession: userSession)
@@ -122,9 +122,9 @@ public class SessionManager : NSObject {
                 }
             }
         
-            if storeProvider.needsToPrepareLocalStore(usingAppGroupIdentifier: appGroupIdentifier) {
+            if storeProvider.needsToPrepareLocalStore {
                 delegate?.sessionManagerWillStartMigratingLocalStore()
-                storeProvider.prepareLocalStore(usingAppGroupIdentifier: appGroupIdentifier) {
+                storeProvider.prepareLocalStore() {
                     DispatchQueue.main.async(execute: createSession)
                 }
             } else {
@@ -209,7 +209,7 @@ extension SessionManager: ZMAuthenticationObserver {
                                         application: application,
                                         userId:nil,
                                         appVersion: appVersion,
-                                        appGroupIdentifier: appGroupIdentifier)!
+                                        storeProvider: storeProvider)!
         self.userSession = userSession
         userSession.setEmailCredentials(authenticationStatus.emailCredentials())
         

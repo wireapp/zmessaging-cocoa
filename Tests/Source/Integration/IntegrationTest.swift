@@ -122,15 +122,14 @@ extension IntegrationTest {
     @objc
     func createSessionManager() {
         
-        guard let bundleIdentifier = Bundle.init(for: type(of: self)).bundleIdentifier,
-              let mediaManager = mediaManager,
+        guard let mediaManager = mediaManager,
               let application = application,
               let transportSession = transportSession
         else { XCTFail(); return }
         
-        let groupIdentifier = "group.\(bundleIdentifier)"
-        
-        sessionManager = SessionManager(appGroupIdentifier: groupIdentifier,
+        let storeProvider = WireSyncEngine.LocalStoreProvider()
+
+        sessionManager = SessionManager(localStoreProvider: storeProvider,
                                         appVersion: "0.0.0",
                                         transportSession: transportSession,
                                         apnsEnvironment: apnsEnvironment,
