@@ -41,24 +41,36 @@ private let zmLog = ZMSLog(tag: "LocalStoreProvider")
     func prepareLocalStore(completion completionHandler: @escaping (() -> ()))
 }
 
+protocol FileManagerProtocol: class {
+    func containerURL(forSecurityApplicationGroupIdentifier groupIdentifier: String) -> URL?
+    func urls(for directory: FileManager.SearchPathDirectory, in domainMask: FileManager.SearchPathDomainMask) -> [URL]
+}
+
+extension FileManager: FileManagerProtocol {}
+
 @objc public class LocalStoreProvider: NSObject {
     
     public let appGroupIdentifier: String
-    public init(appGroupIdentifier: String) {
+    let bundleIdentifier: String
+
+    let fileManager: FileManagerProtocol
+    init(bundleIdentifier: String, appGroupIdentifier: String, fileManager: FileManagerProtocol) {
+        self.bundleIdentifier = bundleIdentifier
         self.appGroupIdentifier = appGroupIdentifier
+        self.fileManager = fileManager
     }
     
-    public convenience override init() {
+    public override convenience init() {
         let bundle = Bundle.main
-        let groupIdentifier = "group.\(bundle.bundleIdentifier!)"
-        self.init(appGroupIdentifier: groupIdentifier)
+        let bundleIdentifier = bundle.bundleIdentifier!
+        let groupIdentifier = "group." + bundleIdentifier
+        self.init(bundleIdentifier: bundleIdentifier, appGroupIdentifier: groupIdentifier, fileManager: FileManager.default)
     }
 }
 
 extension LocalStoreProvider: LocalStoreProviderProtocol {
     
     public var sharedContainerDirectory: URL? {
-        let fileManager = FileManager.default
         let directoryInContainer = fileManager.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)
         
         guard let directory = directoryInContainer else {
@@ -76,21 +88,16 @@ extension LocalStoreProvider: LocalStoreProviderProtocol {
             else {
                 zmLog.error(String(format: "ERROR: self.databaseDirectoryURL == nil and deploymentEnvironment = %d", deploymentEnvironment.rawValue))
                 zmLog.error("================================WARNING================================")
-                zmLog.error("Wire is going to use APPLICATION SUPPORT directory to host the EventDecoder database")
+                zmLog.error("Wire is going to use APPLICATION SUPPORT directory to host the database")
                 zmLog.error("================================WARNING================================")
             }
-            return fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+            return fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
         }
         return directory
     }
     
     public var cachesURL: URL? {
-        let fileManager = FileManager.default
-        if let directoryInContainer = fileManager.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) {
-            return directoryInContainer.appendingPathComponent("Library", isDirectory: true).appendingPathComponent("Caches", isDirectory: true)
-        } else {
-            return nil
-        }
+        return fileManager.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)?.appendingPathComponent("Library", isDirectory: true).appendingPathComponent("Caches", isDirectory: true)
     }
     
     public var isStoreReady: Bool {
@@ -98,10 +105,8 @@ extension LocalStoreProvider: LocalStoreProviderProtocol {
     }
     
     public var storeURL: URL? {
-        guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return nil }
         return sharedContainerDirectory?.appendingPathComponent(bundleIdentifier, isDirectory: true).appendingPathComponent("store.wiredatabase")
     }
-    
     
     public var keyStoreURL: URL? {
         return sharedContainerDirectory
