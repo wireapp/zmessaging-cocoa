@@ -20,6 +20,7 @@ import Foundation
 import AddressBook
 import WireDataModel
 import WireCryptobox
+import avs
 @testable import WireSyncEngine
 
 
@@ -265,5 +266,24 @@ public class MockSyncStateDelegate : NSObject, ZMSyncStateDelegate {
     public func didRegister(_ userClient: UserClient!) {
         registeredUserClient = userClient
     }
+}
+
+@objc
+public class MockFlowManager : NSObject {
+
+    public weak var delegate : AVSFlowManagerDelegate? = nil
+    
+    public func networkChanged() {
+        // nop
+    }
+    
+    public func isReady() -> Bool {
+        return true
+    }
+    
+    public static func getInstance() -> AnyObject? {
+        return ZMCallFlowRequestStrategyInternalFlowManagerOverride
+    }
+    
 }
 

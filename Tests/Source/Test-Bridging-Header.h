@@ -20,7 +20,6 @@
 #import <WireSyncEngine/WireSyncEngine.h>
 #import "MessagingTest.h"
 #import "ZMUserSessionTestsBase.h"
-#import "IntegrationTestBase.h"
 #import "MessagingTest+EventFactory.h"
 #import "ConversationTestsBase.h"
 #import "ZMLocalNotificationForEventTest.h"

@@ -52,38 +52,6 @@
                BlueprintName = "WireSyncEngine-iOS-Tests"
                ReferencedContainer = "container:WireSyncEngine.xcodeproj">
             </BuildableReference>
-            <SkippedTests>
-               <Test
-                  Identifier = "ConversationTests">
-               </Test>
-               <Test
-                  Identifier = "ConversationTestsOTR">
-               </Test>
-               <Test
-                  Identifier = "ConversationTests_Confirmation">
-               </Test>
-               <Test
-                  Identifier = "ConversationTests_Ephemeral">
-               </Test>
-               <Test
-                  Identifier = "ConversationTests_MessageEditing">
-               </Test>
-               <Test
-                  Identifier = "DeleteMessagesTests">
-               </Test>
-               <Test
-                  Identifier = "FileTransferTests">
-               </Test>
-               <Test
-                  Identifier = "LinkPreviewTests">
-               </Test>
-               <Test
-                  Identifier = "SendAndReceiveMessagesTests">
-               </Test>
-               <Test
-                  Identifier = "TextSearchTests">
-               </Test>
-            </SkippedTests>
          </TestableReference>
       </Testables>
       <MacroExpansion>

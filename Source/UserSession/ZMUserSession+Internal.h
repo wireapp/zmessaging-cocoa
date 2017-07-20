@@ -94,7 +94,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
-                      appGroupIdentifier:(NSString *)appGroupIdentifier;
+                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 
 @property (nonatomic) ZMPushRegistrant *pushRegistrant;
 @property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;

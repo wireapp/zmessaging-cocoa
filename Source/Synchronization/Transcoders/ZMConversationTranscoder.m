@@ -357,7 +357,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     // Message events already update the conversation on insert. There is no need to do it here, since different message types (e.g. edit and delete) might have a different effect on the lastModifiedDate and unreadCount
     if (timeStamp != nil && !isMessageEvent) {
         [conversation updateLastServerTimeStampIfNeeded:timeStamp];
-        if (event.type != ZMUpdateEventConversationMemberUpdate) {
+        if ([self shouldUnarchiveOrUpdateLastModifiedWithEvent:event]) {
             conversation.lastModifiedDate = [NSDate lastestOfDate:conversation.lastModifiedDate and:timeStamp];
         }
     }
@@ -376,8 +376,21 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     
     // Unarchive conversations when applicable
     // Message events are parsed separately since they might contain "invisible" messages
-    if (!isMessageEvent) {
+    if (!isMessageEvent && [self shouldUnarchiveOrUpdateLastModifiedWithEvent:event]) {
         [conversation unarchiveConversationFromEvent:event];
+    }
+}
+
+- (BOOL)shouldUnarchiveOrUpdateLastModifiedWithEvent:(ZMUpdateEvent *)event
+{
+    switch (event.type) {
+        case ZMUpdateEventConversationMemberUpdate:
+        case ZMUpdateEventConversationMemberLeave:
+        case ZMUpdateEventConversationRename:
+            return NO;
+
+        default:
+            return YES;
     }
 }
 

@@ -22,7 +22,7 @@ import WireTesting;
 class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest {
     
     
-    func testThatItCreatesANotificationForConversationRename(){
+    func testThatItDoesNotCreateANotificationForConversationRename() {
         // given
         let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
         systemMessage.systemMessageType = .conversationNameChanged
@@ -34,9 +34,7 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         let note = ZMLocalNotificationForSystemMessage(message: systemMessage, application: application)
         
         // then
-        XCTAssertNotNil(note)
-        guard let uiNote = note?.uiNotifications.first else { return XCTFail() }
-        XCTAssertEqual(uiNote.alertBody, "Super User renamed a conversation to New Name")
+        XCTAssertNil(note)
     }
     
     func alertBodyForParticipantAdded(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> String?{
@@ -77,17 +75,19 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         XCTAssertEqual(alertBodyForParticipantAdded(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: selfUser)), "Super User added you to a conversation")
         XCTAssertEqual(alertBodyForParticipantAdded(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: otherUser, otherUser2)), "Super User added people to a conversation")
     }
-    
-    func alertBodyForParticipantRemoved(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> String?{
-        // given
+
+    func notificationForParticipantsRemoved(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> ZMLocalNotificationForSystemMessage? {
         let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
         systemMessage.systemMessageType = .participantsRemoved
         systemMessage.users = otherUsers
         systemMessage.sender = aSender
         systemMessage.visibleInConversation = conversation
-        
-        // when
-        let note = ZMLocalNotificationForSystemMessage(message: systemMessage, application: application)
+        return ZMLocalNotificationForSystemMessage(message: systemMessage, application: application)
+    }
+    
+    func alertBodyForParticipantRemoved(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> String? {
+        // given
+        let note = notificationForParticipantsRemoved(conversation, aSender: aSender, otherUsers: otherUsers)
         
         // then
         guard let uiNote = note?.uiNotifications.first else { return nil }
@@ -109,7 +109,7 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         XCTAssertNil(note)
     }
     
-    func testThatItCreatesANotificationForParticipantRemoved(){
+    func testThatItDoesNotCreateNotificationsForParticipantRemoved() {
         
         //    "push.notification.member.leave.self" = "%1$@ removed you from %2$@";
         //    "push.notification.member.leave.self.noconversationname" = "%1$@ removed you from a conversation";
@@ -125,14 +125,14 @@ class ZMLocalNotificationForSystemMessageTests : ZMLocalNotificationForEventTest
         //
         //    "push.notification.member.leave.many.nootherusername" = "%1$@ removed people from %2$@";
         //    "push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@ removed people from a conversation";
-        
-        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: otherUser)), "Super User removed Other User from Super Conversation")
-        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: selfUser)), "Super User removed you from Super Conversation")
-        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: otherUser, otherUser2)), "Super User removed people from Super Conversation")
-        
-        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: otherUser)), "Super User removed Other User from a conversation")
-        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: selfUser)), "Super User removed you from a conversation")
-        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: otherUser, otherUser2)), "Super User removed people from a conversation")
+
+        XCTAssertNil(notificationForParticipantsRemoved(groupConversation, aSender: sender, otherUsers: [otherUser]))
+        XCTAssertNil(notificationForParticipantsRemoved(groupConversation, aSender: sender, otherUsers: [otherUser, otherUser2]))
+        XCTAssertNil(notificationForParticipantsRemoved(groupConversationWithoutName, aSender: sender, otherUsers: [otherUser]))
+        XCTAssertNil(notificationForParticipantsRemoved(groupConversationWithoutName, aSender: sender, otherUsers: [otherUser, otherUser2]))
+
+        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversation, aSender: sender, otherUsers: [selfUser]), "Super User removed you from Super Conversation")
+        XCTAssertEqual(alertBodyForParticipantRemoved(groupConversationWithoutName, aSender: sender, otherUsers: [selfUser]), "Super User removed you from a conversation")
     }
 
     func testThatItCreatesANotificationForConnectionRequest(){

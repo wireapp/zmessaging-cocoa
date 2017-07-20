@@ -20,6 +20,7 @@
 #import <Foundation/Foundation.h>
 #include "ZMUserSessionTestsBase.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
+@import WireSyncEngine;
 
 @implementation ThirdPartyServices
 
@@ -91,6 +92,8 @@
     [[[self.apnsEnvironment stub] andReturn:@"APNS"] transportTypeForTokenType:ZMAPNSTypeNormal];
     [[[self.apnsEnvironment stub] andReturn:@"APNS_VOIP"] transportTypeForTokenType:ZMAPNSTypeVoIP];
     
+    id<LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] init];
+    
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                           userInterfaceContext:self.uiMOC
                                       syncManagedObjectContext:self.syncMOC
@@ -99,7 +102,7 @@
                                                  operationLoop:self.operationLoop
                                                    application:self.application
                                                     appVersion:@"00000"
-                                            appGroupIdentifier:self.groupIdentifier];
+                                                 storeProvider:storeProvider];
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
     
     WaitForAllGroupsToBeEmpty(0.5);

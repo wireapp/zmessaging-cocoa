@@ -2219,6 +2219,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 {
     // given
     NSUUID* conversationID = [NSUUID createUUID];
+    NSDate *lastModifiedDate = [NSDate dateWithTimeIntervalSinceNow:-1000];
     
     __block ZMConversation *conversation;
     __block NSUUID* userID;
@@ -2228,10 +2229,11 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         selfUser = [ZMUser selfUserInContext:self.syncMOC];
         selfUser.remoteIdentifier = [NSUUID createUUID];
         userID = selfUser.remoteIdentifier;
-        
+
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = conversationID;
+        conversation.lastModifiedDate = lastModifiedDate;
         [self.syncMOC saveOrRollback];
         
         XCTAssertTrue(conversation.isSelfAnActiveMember);
@@ -2249,6 +2251,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         XCTAssertFalse(conversation.isSelfAnActiveMember);
         XCTAssertFalse(conversation.isArchived);
+        XCTAssertEqualObjects(conversation.lastModifiedDate, lastModifiedDate);
     }];
 }
 

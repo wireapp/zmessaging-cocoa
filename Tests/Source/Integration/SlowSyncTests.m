@@ -25,7 +25,6 @@
 
 #import "MessagingTest.h"
 #import "ZMUserSession+Internal.h"
-#import "IntegrationTestBase.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMLoginTranscoder+Internal.h"
 #import "ZMConversationTranscoder.h"
@@ -335,13 +334,6 @@
 {
     // given
     XCTAssertTrue([self login]);
-    
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        NOT_USED(session);
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Hello, Test!" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
-        [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession resetReceivedRequests];
 

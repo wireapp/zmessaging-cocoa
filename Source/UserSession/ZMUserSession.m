@@ -75,7 +75,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
-@property (nonatomic) NSString *applicationGroupIdentifier;
+@property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
 @property (nonatomic) NSURL *storeURL;
 @property (nonatomic) NSURL *keyStoreURL;
 @property (nonatomic, readwrite) NSURL *sharedContainerURL;
@@ -121,80 +121,6 @@ ZM_EMPTY_ASSERTING_INIT()
     return [[NSProcessInfo processInfo] environment][@"ZMEncryptionOnly"] != nil;
 }
 
-+ (NSURL *)sharedContainerDirectoryForApplicationGroup:(NSString *)appGroupIdentifier
-{
-    NSFileManager *fm = NSFileManager.defaultManager;
-    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:appGroupIdentifier];
-    
-    if (nil == sharedContainerURL) {
-        // Seems like the shared container is not available. This could happen for series of reasons:
-        // 1. The app is compiled with with incorrect provisioning profile (for example with 3rd parties)
-        // 2. App is running on simulator and there is no correct provisioning profile on the system
-        // 3. Bug with signing
-        //
-        // The app should allow not having a shared container in cases 1 and 2; in case 3 the app should crash
-        
-        ZMDeploymentEnvironmentType deploymentEnvironment = [[ZMDeploymentEnvironment alloc] init].environmentType;
-        if (!TARGET_IPHONE_SIMULATOR && (deploymentEnvironment == ZMDeploymentEnvironmentTypeAppStore || deploymentEnvironment == ZMDeploymentEnvironmentTypeInternal)) {
-            RequireString(nil != sharedContainerURL, "Unable to create shared container url using app group identifier: %s", appGroupIdentifier.UTF8String);
-        }
-        else {
-            sharedContainerURL = [[fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask] firstObject];
-            ZMLogError(@"ERROR: self.databaseDirectoryURL == nil and deploymentEnvironment = %d", deploymentEnvironment);
-            ZMLogError(@"================================WARNING================================");
-            ZMLogError(@"Wire is going to use APPLICATION SUPPORT directory to host the database");
-            ZMLogError(@"================================WARNING================================");
-        }
-    }
-    
-    return sharedContainerURL;
-}
-
-+ (NSURL *)cachesURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
-{
-    NSFileManager *fm = NSFileManager.defaultManager;
-    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:appGroupIdentifier];
-    
-    if (sharedContainerURL != nil) {
-        return [[sharedContainerURL URLByAppendingPathComponent:@"Library" isDirectory:YES] URLByAppendingPathComponent:@"Caches" isDirectory:YES];
-    }
-    
-    return nil;
-}
-
-+ (NSURL *)keyStoreURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
-{
-    return [self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
-}
-
-+ (NSURL *)storeURLForAppGroupIdentifier:(NSString *)appGroupIdentifier
-{
-    return [[[self sharedContainerDirectoryForApplicationGroup:appGroupIdentifier]
-             URLByAppendingPathComponent:[NSBundle mainBundle].bundleIdentifier isDirectory:YES]
-             URLByAppendingPathComponent:@"store.wiredatabase"];
-}
-
-+ (BOOL)needsToPrepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier
-{
-    return [NSManagedObjectContext needsToPrepareLocalStoreAtURL:[self storeURLForAppGroupIdentifier:appGroupIdentifier]];
-}
-
-+ (void)prepareLocalStoreUsingAppGroupIdentifier:(NSString *)appGroupIdentifier completion:(void (^)())completionHandler
-{
-    ZMDeploymentEnvironmentType environment = [[ZMDeploymentEnvironment alloc] init].environmentType;
-    BOOL shouldBackupCorruptedDatabase = environment == ZMDeploymentEnvironmentTypeInternal || DEBUG;
-    
-    [NSManagedObjectContext prepareLocalStoreAtURL:[self storeURLForAppGroupIdentifier:appGroupIdentifier]
-                           backupCorruptedDatabase:shouldBackupCorruptedDatabase
-                                       synchronous:NO
-                                 completionHandler:completionHandler];
-}
-
-+ (BOOL)storeIsReady
-{
-    return [NSManagedObjectContext storeIsReady];
-}
-
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -207,17 +133,16 @@ ZM_EMPTY_ASSERTING_INIT()
                          application:(id<ZMApplication>)application
                               userId:(NSUUID * __unused)uuid
                           appVersion:(NSString *)appVersion
-                  appGroupIdentifier:(NSString *)appGroupIdentifier;
+                  storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 {
-    self.applicationGroupIdentifier = appGroupIdentifier;
+    self.storeProvider = storeProvider;
 
     if (apnsEnvironment == nil) {
         apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
     }
     
-    self.storeURL = [self.class storeURLForAppGroupIdentifier:appGroupIdentifier];
-    self.keyStoreURL = [self.class keyStoreURLForAppGroupIdentifier:appGroupIdentifier];
-    RequireString(nil != self.storeURL, "Unable to get a store URL using group identifier: %s", appGroupIdentifier.UTF8String);
+    self.storeURL = storeProvider.storeURL;
+    self.keyStoreURL = storeProvider.keyStoreURL;
     NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContextWithStoreAtURL:self.storeURL];
     NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreAtURL:self.storeURL keyStoreURL:self.keyStoreURL];
     [syncMOC performBlockAndWait:^{
@@ -250,7 +175,7 @@ ZM_EMPTY_ASSERTING_INIT()
                             operationLoop:nil
                               application:application
                                appVersion:appVersion
-                       appGroupIdentifier:appGroupIdentifier];
+                            storeProvider:storeProvider];
     return self;
 }
 
@@ -262,7 +187,7 @@ ZM_EMPTY_ASSERTING_INIT()
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
-                      appGroupIdentifier:(NSString *)appGroupIdentifier;
+                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
 
 {
     self = [super init];
@@ -275,7 +200,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
 
-        self.sharedContainerURL = [self.class sharedContainerDirectoryForApplicationGroup:appGroupIdentifier];
+        self.sharedContainerURL = storeProvider.sharedContainerDirectory;
         self.apnsEnvironment = apnsEnvironment;
         self.networkIsOnline = YES;
         self.managedObjectContext = userInterfaceContext;
@@ -287,7 +212,7 @@ ZM_EMPTY_ASSERTING_INIT()
         }];
         self.managedObjectContext.zm_syncContext = self.syncManagedObjectContext;
         
-        NSURL *cacheLocation = [self.class cachesURLForAppGroupIdentifier:appGroupIdentifier];
+        NSURL *cacheLocation = storeProvider.cachesURL;
         
         UserImageLocalCache *userImageCache = [[UserImageLocalCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_userImageCache = userImageCache;
@@ -334,7 +259,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                               uiMOC:self.managedObjectContext
                                                                                             syncMOC:self.syncManagedObjectContext
                                                                                   syncStateDelegate:self
-                                                                                 appGroupIdentifier:appGroupIdentifier
+                                                                                 appGroupIdentifier:storeProvider.appGroupIdentifier // TODO: pass storeProvider instead
                                                                                         application:application];
             
             __weak id weakSelf = self;

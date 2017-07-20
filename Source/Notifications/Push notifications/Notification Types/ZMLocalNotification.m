@@ -62,8 +62,6 @@ NSString *const ZMPushStringMemberJoin = @"member.join";
 // "[senderName] added you / [userName] to [conversationName]"
 NSString *const ZMPushStringMemberLeave = @"member.leave";
 // "[senderName] removed you / [userName] from [conversationName]"
-NSString *const ZMPushStringMemberLeaveSender = @"member.leave.sender";
-// "[senderName] left [conversationName]"
 
 
 NSString *const ZMPushStringMemberJoinMany = @"member.join.many";
@@ -79,7 +77,6 @@ NSString *const ZMPushStringCallStarts = @"call.started"; // "[senderName] wants
 NSString *const ZMPushStringCallMissed = @"call.missed"; // "[senderName] called you x times"
 NSString *const ZMPushStringCallMissedMany = @"call.missed.many"; // "You have x missed calls in a conversation"
 
-NSString *const ZMPushStringConversationRename = @"conversation.rename"; // "[senderName] renamed a conversation to [newConversationName]"
 NSString *const ZMPushStringConnectionRequest = @"connection.request"; // "[senderName] wants to connect: [messageText]"
 NSString *const ZMPushStringConnectionAccepted = @"connection.accepted"; // "[senderName] accepted your connection request"
 

@@ -18,7 +18,6 @@
 
 @import WireDataModel;
 
-#import "IntegrationTestBase.h"
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Background+Testing.h"
@@ -41,38 +40,13 @@
     [self createExtraUsersAndConversations];
 }
 
-- (NSDictionary *)APNSPayloadForNotificationPayload:(NSDictionary *)notificationPayload identifier:(NSUUID *)identifier {
-    
-    return @{ @"aps" :
-                  @{
-                      @"content-available" : @(1)
-                      },
-              @"data" :
-                  @{
-                      @"data": @{
-                              @"id" : identifier ? identifier.transportString : @"bf96c4ce-c7d1-11e4-8001-22000a5a00c8",
-                              @"payload" : @[notificationPayload],
-                              @"transient" : @(0)
-                              }
-                      }
-              };
-    
-}
-
-
-- (NSDictionary *)APNSPayloadForNotificationPayload:(NSDictionary *)notificationPayload {
-    
-    return [self APNSPayloadForNotificationPayload:notificationPayload identifier:nil];
-    
-}
-
-
 - (void)testThatAConversationIsCreatedFromAnAPNS
 {
     // given
-    BOOL const useAPNS = YES;
-    
     XCTAssertTrue([self login]);
+    
+    [self closePushChannelAndWaitUntilClosed]; // do not use websocket
+    
     NSString *conversationName = @"MYCONVO";
     __block NSString *conversationID;
     WaitForAllGroupsToBeEmpty(0.2);
@@ -81,9 +55,6 @@
     ZMConversationList *conversationsList = [ZMConversationList conversationsInUserSession:self.userSession];
     NSUInteger oldCount = conversationsList.count;
     
-    if(useAPNS) {
-        self.mockTransportSession.pushChannel.keepOpen = NO;
-    }
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         [conversation changeNameByUser:self.selfUser name:conversationName];
@@ -104,9 +75,7 @@
     [self.application setBackground];
     
     // when
-    if(useAPNS) {
-        [self.userSession receivedPushNotificationWithPayload:[self APNSPayloadForNotificationPayload:payload] completionHandler:nil source:ZMPushNotficationTypeVoIP];
-    }
+    [self.userSession receivedPushNotificationWithPayload:[self APNSPayloadForNotificationPayload:payload] completionHandler:nil source:ZMPushNotficationTypeVoIP];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -287,13 +256,14 @@
 {
     XCTAssertTrue([self login]);
     
-    self.mockTransportSession.pushChannel.keepOpen = NO;  // do not use websocket
+    [self.mockTransportSession resetReceivedRequests];
+    
+    [self closePushChannelAndWaitUntilClosed]; // do not use websocket
     
     NSUUID *identifier = NSUUID.createUUID;
     __block NSDictionary *conversationTransportData;
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session simulatePushChannelClosed];
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
     }];
@@ -309,7 +279,6 @@
     [self.application setBackground];
     
     // when
-    [self.mockTransportSession resetReceivedRequests];
     NSDictionary *apnsPayload = [self APNSPayloadForNotificationPayload:payload identifier:identifier];
     NSUUID *lastNotificationId = self.userSession.syncManagedObjectContext.zm_lastNotificationID;
     [self.userSession receivedPushNotificationWithPayload:apnsPayload completionHandler:nil source:ZMPushNotficationTypeVoIP];
@@ -331,14 +300,13 @@
 {
     XCTAssertTrue([self login]);
     
-    self.mockTransportSession.pushChannel.keepOpen = NO; // do not use websocket
+    [self closePushChannelAndWaitUntilClosed]; // do not use websocket
     
     NSUUID *identifier = NSUUID.createUUID;
 
     __block NSDictionary *conversationTransportData;
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session simulatePushChannelClosed];
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
     }];
@@ -397,7 +365,8 @@
 {
     XCTAssertTrue([self login]);
     
-    self.mockTransportSession.pushChannel.keepOpen = NO; // do not use websocket
+    [self closePushChannelAndWaitUntilClosed]; // do not use websocket
+    
     ZMUser *selfUser = [self userForMockUser:self.selfUser];
     XCTAssertEqual(selfUser.clients.count, 1u);
 
@@ -405,7 +374,6 @@
     
     __block NSString *convIdentifier;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session simulatePushChannelClosed];
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
         convIdentifier = conversation.identifier;
@@ -451,7 +419,8 @@
 {
     XCTAssertTrue([self login]);
     
-    self.mockTransportSession.pushChannel.keepOpen = NO;  // do not use websocket
+    [self closePushChannelAndWaitUntilClosed]; // do not use websocket
+    
     ZMUser *selfUser = [self userForMockUser:self.selfUser];
     XCTAssertEqual(selfUser.clients.count, 1u);
     
@@ -459,7 +428,6 @@
     
     __block NSString *convIdentifier;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session simulatePushChannelClosed];
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
         convIdentifier = conversation.identifier;
@@ -515,11 +483,10 @@
 
         ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Hello" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
         
-        self.mockTransportSession.pushChannel.keepOpen = NO;
+        [self closePushChannelAndWaitUntilClosed]; // do not use websocket
+        
         __block MockEvent *event;
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-            [session simulatePushChannelClosed];
-            
             // insert message on "backend"
             event = [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:textMessage.data];
             
@@ -537,6 +504,7 @@
         XCTestExpectation *confirmationExpectation = [self expectationWithDescription:@"Did send confirmation"];
         XCTestExpectation *missingClientsExpectation = [self expectationWithDescription:@"Did fetch missing client"];
         __block NSUInteger requestCount = 0;
+        
         ZM_WEAK(self);
         self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
             ZM_STRONG(self);
@@ -605,5 +573,38 @@
              };
 }
 
+- (NSDictionary *)APNSPayloadForNotificationPayload:(NSDictionary *)notificationPayload identifier:(NSUUID *)identifier {
+    
+    return @{ @"aps" :
+                  @{
+                      @"content-available" : @(1)
+                      },
+              @"data" :
+                  @{
+                      @"data": @{
+                              @"id" : identifier ? identifier.transportString : @"bf96c4ce-c7d1-11e4-8001-22000a5a00c8",
+                              @"payload" : @[notificationPayload],
+                              @"transient" : @(0)
+                              }
+                      }
+              };
+    
+}
+
+
+- (NSDictionary *)APNSPayloadForNotificationPayload:(NSDictionary *)notificationPayload {
+    
+    return [self APNSPayloadForNotificationPayload:notificationPayload identifier:nil];
+    
+}
+
+- (void)closePushChannelAndWaitUntilClosed
+{
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        session.pushChannel.keepOpen = NO;
+        [session simulatePushChannelClosed];
+    }];
+    WaitForAllGroupsToBeEmpty(0.2);
+}
 
 @end

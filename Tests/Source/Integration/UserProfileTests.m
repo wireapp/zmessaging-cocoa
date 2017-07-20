@@ -16,8 +16,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-
-#import "IntegrationTestBase.h"
 #import "NSError+ZMUserSession.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"

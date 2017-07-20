@@ -133,13 +133,7 @@
     
     NSUUID *lastNotificationID = [[response.payload asDictionary] optionalUuidForKey:@"id"];
     
-    if(response.payload == nil) {
-        if (status.isSyncing) {
-            [status failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
-        }
-        return;
-    }
-    else if (response.HTTPStatus == 404 && status.currentSyncPhase == self.expectedSyncPhase) {
+    if (response.HTTPStatus == 404 && status.currentSyncPhase == self.expectedSyncPhase) {
         [status finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
     else if (lastNotificationID != nil) {

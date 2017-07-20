@@ -23,7 +23,7 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
 
     public typealias MessageType = ZMSystemMessage
     public let contentType : ZMLocalNotificationContentType
-    static let supportedMessageTypes : [ZMSystemMessageType] = [.participantsRemoved, .participantsAdded, .conversationNameChanged, .connectionRequest]
+    static let supportedMessageTypes : [ZMSystemMessageType] = [.participantsRemoved, .participantsAdded, .connectionRequest]
 
     let senderUUID : UUID
     public var notifications : [UILocalNotification] = []
@@ -37,15 +37,15 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
     
     public required init?(message: ZMSystemMessage, application: ZMApplication?) {
         self.contentType = ZMLocalNotificationContentType.typeForMessage(message)
-        guard type(of: self).canCreateNotification(message),
-              let sender = message.sender
-        else {return nil}
-        
+        guard type(of: self).canCreateNotification(message), let sender = message.sender else { return nil }
+
         // We don't want to create notifications when a user leaves the conversation
-        if message.systemMessageType == .participantsRemoved, let removedUser = message.users.first, message.sender == removedUser {
+        if message.systemMessageType == .participantsRemoved,
+            let removedUser = message.users.first,
+            removedUser != ZMUser.selfUser(in: message.managedObjectContext!)  {
             return nil
         }
-        
+
         self.senderUUID = sender.remoteIdentifier!
         self.application = application ?? UIApplication.shared
         super.init(conversationID: message.conversation?.remoteIdentifier)
@@ -58,8 +58,6 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
         switch message.systemMessageType {
         case .participantsRemoved, .participantsAdded:
             return alertBodyForParticipantEvents(message)
-        case .conversationNameChanged:
-            return ZMPushStringConversationRename.localizedString(with: message.sender, count:nil, text:message.text)
         case .connectionRequest:
             return ZMPushStringConnectionRequest.localizedString(withUserName: message.text)
         default:

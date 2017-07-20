@@ -111,17 +111,25 @@ extension IntegrationTest {
     }
     
     @objc
+    func recreateSessionManagerAndDeleteLocalData() {
+        destroySharedSearchDirectory()
+        destroySessionManager()
+        destroyPersistentStore()
+        deleteAuthenticationCookie()
+        createSessionManager()
+    }
+    
+    @objc
     func createSessionManager() {
         
-        guard let bundleIdentifier = Bundle.init(for: type(of: self)).bundleIdentifier,
-              let mediaManager = mediaManager,
+        guard let mediaManager = mediaManager,
               let application = application,
               let transportSession = transportSession
         else { XCTFail(); return }
         
-        let groupIdentifier = "group.\(bundleIdentifier)"
-        
-        sessionManager = SessionManager(appGroupIdentifier: groupIdentifier,
+        let storeProvider = WireSyncEngine.LocalStoreProvider()
+
+        sessionManager = SessionManager(storeProvider: storeProvider,
                                         appVersion: "0.0.0",
                                         transportSession: transportSession,
                                         apnsEnvironment: apnsEnvironment,
@@ -139,9 +147,15 @@ extension IntegrationTest {
         sharedSearchDirectory = SearchDirectory(userSession: userSession)
     }
     
+    @objc
     func destroySharedSearchDirectory() {
         sharedSearchDirectory?.tearDown()
         sharedSearchDirectory = nil
+    }
+    
+    @objc
+    func destroyPersistentStore() {
+        NSManagedObjectContext.resetSharedPersistentStoreCoordinator()
     }
     
     @objc
@@ -213,6 +227,7 @@ extension IntegrationTest {
             
             let selfToUser2Conversation = session.insertOneOnOneConversation(withSelfUser: self.selfUser, otherUser:user2)
             selfToUser2Conversation.creator = user2
+
             selfToUser2Conversation.setValue("Connection conversation to user 2", forKey:"name")
             self.selfToUser2Conversation = selfToUser2Conversation
             
@@ -338,7 +353,7 @@ extension IntegrationTest {
     func createSentConnection(fromUserWithName name: String, uuid: UUID) -> MockUser {
         return createConnection(fromUserWithName: name, uuid: uuid, status: "sent")
     }
-    
+        
     @discardableResult
     @objc(createPendingConnectionFromUserWithName:uuid:)
     func createPendingConnection(fromUserWithName name: String, uuid: UUID) -> MockUser {
@@ -377,6 +392,24 @@ extension IntegrationTest {
         return user!
     }
     
+}
+
+extension IntegrationTest {
+    @objc(remotelyAppendSelfConversationWithZMClearedForMockConversation:atTime:)
+    func remotelyAppendSelfConversationWithZMCleared(for mockConversation: MockConversation, at time: Date) {
+        let genericMessage = ZMGenericMessage(clearedTimestamp: time, ofConversationWithID: mockConversation.identifier, nonce: NSUUID.create().transportString())
+        mockTransportSession.performRemoteChanges { session in
+            self.selfConversation.insertClientMessage(from: self.selfUser, data: genericMessage.data())
+        }
+    }
+    
+    @objc(remotelyAppendSelfConversationWithZMLastReadForMockConversation:atTime:)
+    func remotelyAppendSelfConversationWithZMLastRead(for mockConversation: MockConversation, at time: Date) {
+        let genericMessage = ZMGenericMessage(lastRead: time, ofConversationWithID: mockConversation.identifier, nonce: NSUUID.create().transportString())
+        mockTransportSession.performRemoteChanges { session in
+            self.selfConversation.insertClientMessage(from: self.selfUser, data: genericMessage.data())
+        }
+    }
 }
 
 extension IntegrationTest : SessionManagerDelegate {

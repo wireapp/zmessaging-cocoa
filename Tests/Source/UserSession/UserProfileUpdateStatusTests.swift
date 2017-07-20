@@ -57,6 +57,25 @@ class UserProfileUpdateStatusTests : MessagingTest {
     }
 }
 
+extension UserProfileUpdateStatusTests {
+    func testThatItDoesNotRetainObserver() {
+        // GIVEN
+        var observer: TestUserProfileUpdateObserver? = TestUserProfileUpdateObserver()
+        
+        // WHEN
+        let _ = self.sut.add(observer: observer!)
+        
+        weak var weakObserver = observer
+        
+        autoreleasepool {
+            observer = nil
+        }
+        
+        // THEN
+        XCTAssertNil(weakObserver)
+    }
+}
+
 // MARK: - Changing email
 extension UserProfileUpdateStatusTests {
     func testThatItReturnsErrorWhenPreparingForEmailChangeAndUserUserHasNoEmail() {

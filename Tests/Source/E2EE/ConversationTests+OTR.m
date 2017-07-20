@@ -16,8 +16,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 // 
 
-
-#import "IntegrationTestBase.h"
 #import "ConversationTestsBase.h"
 #import "NotificationObservers.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
@@ -1865,7 +1863,7 @@
     // (2) selfUser deletes remote selfUser client
     {
         [self.userSession performChanges:^{
-            [self.userSession deleteClients:@[otherSelfClient] withCredentials:[ZMEmailCredentials credentialsWithEmail:SelfUserEmail password:SelfUserPassword]];
+            [self.userSession deleteClients:@[otherSelfClient] withCredentials:[ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:IntegrationTest.SelfUserPassword]];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         
@@ -2042,7 +2040,7 @@
     WaitForAllGroupsToBeEmpty(1.0);
     
     [self.userSession performChanges:^{
-        [self.userSession deleteClients:@[notSelfClient] withCredentials:[ZMEmailCredentials credentialsWithEmail:SelfUserEmail password:SelfUserPassword]];
+        [self.userSession deleteClients:@[notSelfClient] withCredentials:[ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:IntegrationTest.SelfUserPassword]];
     }];
     WaitForAllGroupsToBeEmpty(1.0);
     

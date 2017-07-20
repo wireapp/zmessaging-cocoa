@@ -18,7 +18,6 @@
 
 @import WireDataModel;
 
-#import "IntegrationTestBase.h"
 #import "ZMTyping.h"
 #import "ZMTypingUsers.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
