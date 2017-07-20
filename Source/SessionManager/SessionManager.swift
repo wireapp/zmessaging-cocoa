@@ -31,7 +31,6 @@ public protocol SessionManagerDelegate : class {
 
 @objc
 public class SessionManager : NSObject {
-    public let localStoreProvider: LocalStoreProviderProtocol
     public let appVersion: String
     public let mediaManager: AVSMediaManager
     public var analytics: AnalyticsType?
@@ -64,7 +63,7 @@ public class SessionManager : NSObject {
                                                   sharedContainerIdentifier: nil)
         let localStoreProvider = LocalStoreProvider()
         
-        self.init(localStoreProvider: localStoreProvider,
+        self.init(storeProvider: localStoreProvider,
                   appVersion: appVersion,
                   transportSession: transportSession,
                   mediaManager: mediaManager,
@@ -75,7 +74,7 @@ public class SessionManager : NSObject {
         
     }
     
-    public init(localStoreProvider: LocalStoreProviderProtocol,
+    public init(storeProvider: LocalStoreProviderProtocol,
                 appVersion: String,
                 transportSession: ZMTransportSession,
                 apnsEnvironment: ZMAPNSEnvironment? = nil,
@@ -83,14 +82,12 @@ public class SessionManager : NSObject {
                 analytics: AnalyticsType?,
                 delegate: SessionManagerDelegate?,
                 application: ZMApplication,
-                launchOptions: [UIApplicationLaunchOptionsKey : Any],
-                storeProvider: LocalStoreProviderProtocol = LocalStoreProvider()
+                launchOptions: [UIApplicationLaunchOptionsKey : Any]
                 ) {
         
         SessionManager.enableLogsByEnvironmentVariable()
         self.storeProvider = storeProvider
         
-        self.localStoreProvider = localStoreProvider
         self.appVersion = appVersion
         self.apnsEnvironment = apnsEnvironment
         self.application = application

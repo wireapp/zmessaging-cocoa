@@ -129,7 +129,7 @@ extension IntegrationTest {
         
         let storeProvider = WireSyncEngine.LocalStoreProvider()
 
-        sessionManager = SessionManager(localStoreProvider: storeProvider,
+        sessionManager = SessionManager(storeProvider: storeProvider,
                                         appVersion: "0.0.0",
                                         transportSession: transportSession,
                                         apnsEnvironment: apnsEnvironment,

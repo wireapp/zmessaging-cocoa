@@ -19,6 +19,98 @@
 import XCTest
 import WireTesting
 
-class SessionManagerTests: ZMTBaseTest {
+class MockLocalStoreProvider: NSObject, LocalStoreProviderProtocol {
+    var appGroupIdentifier: String
+    var storeURL: URL?
+    var keyStoreURL: URL?
+    var cachesURL: URL?
+    var sharedContainerDirectory: URL?
+
+    override init() {
+        appGroupIdentifier = "group." + Bundle.main.bundleIdentifier!
+        sharedContainerDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        keyStoreURL = sharedContainerDirectory
+        cachesURL = sharedContainerDirectory
+        storeURL = sharedContainerDirectory?.appendingPathComponent("wire.db")
+    }
+    
+    var storeExists = true
+    var isStoreReady = true
+    var needsToPrepareLocalStore = false
+    
+    var prepareLocalStoreCalled = false
+    func prepareLocalStore(completion completionHandler: @escaping (() -> ())) {
+        prepareLocalStoreCalled = true
+        completionHandler()
+    }
+}
+
+class SessionManagerTestDelegate: SessionManagerDelegate {
+    var unauthenticatedSession : UnauthenticatedSession?
+    func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession) {
+        self.unauthenticatedSession = unauthenticatedSession
+    }
+    
+    var userSession : ZMUserSession?
+    func sessionManagerCreated(userSession : ZMUserSession) {
+        self.userSession = userSession
+    }
+    
+    var startedMigrationCalled = false
+    func sessionManagerWillStartMigratingLocalStore() {
+        startedMigrationCalled = true
+    }
+}
+
+class SessionManagerTests: IntegrationTest {
+    
+    var storeProvider: MockLocalStoreProvider!
+    var delegate: SessionManagerTestDelegate!
+    
+    override func setUp() {
+        super.setUp()
+        storeProvider = MockLocalStoreProvider()
+        delegate = SessionManagerTestDelegate()
+    }
+    
+    func createManager() -> SessionManager {
+        return SessionManager(storeProvider: storeProvider,
+                              appVersion: "0.0.0",
+                              transportSession: transportSession!,
+                              mediaManager: mediaManager!,
+                              analytics: nil,
+                              delegate: delegate,
+                              application: application!,
+                              launchOptions: [:])
+    }
+    
+    override func tearDown() {
+        storeProvider = nil
+        delegate = nil
+        super.tearDown()
+    }
+    
+    func testThatItCreatesUnauthenticatedSessionAndNotifiesDelegateIfStoreIsNotAvailable() {
+        // given
+        storeProvider.storeExists = false
         
+        // when
+        _ = createManager()
+        
+        // then
+        XCTAssertNil(delegate.userSession)
+        XCTAssertNotNil(delegate.unauthenticatedSession)
+    }
+    
+    func testThatItCreatesUserSessionAndNotifiesDelegateIfStoreIsAvailable() {
+        // given
+        storeProvider.storeExists = true
+        
+        // when
+        _ = createManager()
+        
+        // then
+        XCTAssertNotNil(delegate.userSession)
+        XCTAssertNil(delegate.unauthenticatedSession)
+    }
 }
