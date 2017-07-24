@@ -21,6 +21,7 @@ import Foundation
 protocol UnauthenticatedSessionDelegate: class {
     func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials)
     func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data)
+    func session(session: UnauthenticatedSession, createdAccount account: Account)
 }
 
 
@@ -31,7 +32,7 @@ public class UnauthenticatedSession : NSObject {
     let moc: NSManagedObjectContext
     let authenticationStatus: ZMAuthenticationStatus
     private let operationLoop: UnauthenticatedOperationLoop
-    private let transportSession: UnauthenticatedTransportSession
+    private let transportSession: UnauthenticatedTransportSessionProtocol
 
     weak var delegate: UnauthenticatedSessionDelegate?
     
@@ -43,14 +44,15 @@ public class UnauthenticatedSession : NSObject {
         moc.createDispatchGroups()
         moc.persistentStoreCoordinator = coordinator
         let authenticationStatus = ZMAuthenticationStatus(cookieStorage: nil, managedObjectContext: moc)
-        self.init(moc: moc, authenticationStatus: authenticationStatus!, backendURL: backendURL, delegate: delegate)
+        let transportSession = UnauthenticatedTransportSession(baseURL: backendURL)
+        self.init(moc: moc, authenticationStatus: authenticationStatus!, transportSession: transportSession, delegate: delegate)
     }
     
-    init(moc: NSManagedObjectContext, authenticationStatus: ZMAuthenticationStatus, backendURL: URL, delegate: UnauthenticatedSessionDelegate?) {
+    init(moc: NSManagedObjectContext, authenticationStatus: ZMAuthenticationStatus, transportSession: UnauthenticatedTransportSessionProtocol, delegate: UnauthenticatedSessionDelegate?) {
         self.delegate = delegate
         self.moc = moc
         self.authenticationStatus = authenticationStatus
-        self.transportSession = UnauthenticatedTransportSession(baseURL: backendURL)
+        self.transportSession = transportSession
         self.operationLoop = UnauthenticatedOperationLoop(transportSession: transportSession, operationQueue: moc, requestStrategies: [
                 ZMLoginTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus),
                 ZMLoginCodeRequestTranscoder(managedObjectContext: moc, authenticationStatus: authenticationStatus)!,
@@ -66,9 +68,10 @@ public class UnauthenticatedSession : NSObject {
 // MARK: - UnauthenticatedTransportSessionDelegate
 
 extension UnauthenticatedSession: UnauthenticatedTransportSessionDelegate {
-
-    public func session(_ session: UnauthenticatedTransportSession, cookieDataBecomeAvailable data: Data) {
-        // TODO: Hold on to cookie (in memory) and create regular transport session once user ID is there.
+    
+    public func session(_ session: UnauthenticatedTransportSession, didReceiveUserInfo userInfo: UserInfo) {
+        let account = Account(userName: "", userIdentifier: userInfo.identifier)
+        delegate?.session(session: self, createdAccount: account)
     }
     
 }
