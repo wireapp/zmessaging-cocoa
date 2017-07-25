@@ -78,6 +78,15 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
         return;
     }
     
+    if (lastSavedVersion == nil) {
+        ZMLogDebug(@"No saved last version. We assume it's a new database and don't apply any HotFix.");
+        [self.syncMOC performGroupedBlock:^{
+            [self saveNewVersion:currentVersionString];
+            [self.syncMOC saveOrRollback];
+        }];
+        return;
+    }
+    
     ZMLogDebug(@"Applying HotFix with last saved version %@, current version %@.", lastSavedVersion.versionString, currentVersion.versionString);
     [self.syncMOC performGroupedBlock:^{
         [self applyFixesSinceVersion:lastSavedVersion];
