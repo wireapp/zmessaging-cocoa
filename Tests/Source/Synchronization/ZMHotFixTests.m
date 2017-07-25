@@ -199,16 +199,18 @@
     XCTAssertEqual(self.fakeHotFixDirectory.method2CallCount, 0u);
 }
 
-- (void)testThatItCallsAllMethodsIfThereIsNoLastSavedVersion
+- (void)testThatItDoesntCallAnyMethodsIfThereIsNoLastSavedVersionButUpdateLastSavedVersion
 {
     // when
     [self.sut applyPatchesForCurrentVersion:@"1.0"];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.fakeHotFixDirectory.method1CallCount, 1u);
-    XCTAssertEqual(self.fakeHotFixDirectory.method2CallCount, 1u);
-    XCTAssertEqual(self.fakeHotFixDirectory.method3CallCount, 1u);
+    NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
+    XCTAssertEqualObjects(newVersion, @"1.0");
+    XCTAssertEqual(self.fakeHotFixDirectory.method1CallCount, 0u);
+    XCTAssertEqual(self.fakeHotFixDirectory.method2CallCount, 0u);
+    XCTAssertEqual(self.fakeHotFixDirectory.method3CallCount, 0u);
 }
 
 - (void)testThatItRunsFixesOnlyOnce
