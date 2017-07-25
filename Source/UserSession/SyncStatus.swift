@@ -132,6 +132,8 @@ extension SyncStatus {
     public func finishCurrentSyncPhase(phase : SyncPhase) {
         precondition(phase == currentSyncPhase, "Finished syncPhase does not match currentPhase")
         
+        zmLog.debug("finished sync phase: \(phase)")
+        
         guard let nextPhase = currentSyncPhase.nextPhase else { return }
         
         if currentSyncPhase.isLastSlowSyncPhase {
@@ -146,8 +148,11 @@ extension SyncStatus {
                 // We need to restart fetching the notification stream since we might be missing notifications
                 currentSyncPhase = .fetchingMissedEvents
                 needsToRestartQuickSync = false
+                zmLog.debug("restarting quick sync since push channel was closed")
                 return
             }
+            
+            zmLog.debug("sync complete")
             syncStateDelegate.didFinishSync()
             managedObjectContext.zm_userInterface.perform{
                 ZMUserSession.notifyInitialSyncCompleted()
@@ -158,6 +163,8 @@ extension SyncStatus {
     
     public func failCurrentSyncPhase(phase : SyncPhase) {
         precondition(phase == currentSyncPhase, "Failed syncPhase does not match currentPhase")
+        
+        zmLog.debug("failed sync phase: \(phase)")
         
         if currentSyncPhase == .fetchingMissedEvents {
             managedObjectContext.zm_lastNotificationID = nil

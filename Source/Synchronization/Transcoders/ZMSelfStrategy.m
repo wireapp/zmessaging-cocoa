@@ -299,6 +299,9 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
             }
         }
         
+        // Save to ensure self user is update to date when sync finishes
+        [self.managedObjectContext saveOrRollback];
+        
         if (self.isSyncing) {
             [syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
         }

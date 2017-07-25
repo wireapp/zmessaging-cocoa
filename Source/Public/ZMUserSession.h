@@ -123,6 +123,9 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 
 @property (nonatomic, readonly) NSURL *storeURL;
 
+/// The sync has been completed as least once
+@property (nonatomic, readonly) BOOL hasCompletedInitialSync;
+           
 @end
 
 
