@@ -178,8 +178,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)startLoginTimer
 {
-    [self.loginTimer cancel];
-    self.loginTimer = nil;
+    [self stopLoginTimer];
     self.loginTimer = [ZMTimer timerWithTarget:self];
     self.loginTimer.userInfo = @{ TimerInfoOriginalCredentialsKey : self.loginCredentials };
     [self.loginTimer fireAfterTimeInterval:(DebugLoginFailureTimerOverride > 0 ?: 60 )];

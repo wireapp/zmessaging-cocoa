@@ -50,6 +50,18 @@
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
+@interface MockTransportSession (Reachability)
+@property (nonatomic, readonly) ZMReachability *reachability;
+@end
+
+@implementation MockTransportSession (Reachability)
+
+- (ZMReachability *)reachability
+{
+    return nil;
+}
+
+@end
 
 @interface MessagingTest () 
 
