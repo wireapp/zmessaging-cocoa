@@ -148,7 +148,7 @@
     [self resetUIandSyncContextsAndResetPersistentStore:YES];
     
     ZMPersistentCookieStorage *cookieStorage = [[ZMPersistentCookieStorage alloc] init];
-    [cookieStorage deleteUserKeychainItems];
+    [cookieStorage deleteKeychainItems];
     
     self.testMOC = [MockModelObjectContextFactory testContext];
     [self.testMOC addGroup:self.dispatchGroup];

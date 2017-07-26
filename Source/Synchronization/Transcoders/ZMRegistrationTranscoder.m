@@ -108,7 +108,7 @@
     NSString *email = authStatus.registrationUser.emailAddress;
     NSString *name = authStatus.registrationUser.name;
     NSString *invitationCode = authStatus.registrationUser.invitationCode;
-    NSString *cookieLabel = authStatus.cookieLabel;
+    NSString *cookieLabel = CookieLabel.current.value;
     
     ZMAccentColor accentColor = authStatus.registrationUser.accentColorValue;
     

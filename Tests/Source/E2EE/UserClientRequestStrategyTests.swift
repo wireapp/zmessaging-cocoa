@@ -43,7 +43,7 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
         super.setUp()
 
         self.spyKeyStore = SpyUserClientKeyStore(in: UserClientKeysStore.otrDirectoryURL)
-        cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer")
+        cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer", userIdentifier: .create())
         clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage, registrationStatusDelegate: nil)
         clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
         sut = UserClientRequestStrategy(clientRegistrationStatus: clientRegistrationStatus, clientUpdateStatus:clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)

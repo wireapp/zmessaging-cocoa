@@ -147,7 +147,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 - (void)tearDown;
 {
     self.tornDown = YES;
-    self.shouldStopEnqueueing = true;
+    self.shouldStopEnqueueing = YES;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [ZMRequestAvailableNotification removeObserver:self];

@@ -62,7 +62,7 @@ static NSString *const HasHistoryKey = @"hasHistory";
 
 - (void)deleteUserKeychainItems;
 {
-    [self.transportSession.cookieStorage deleteUserKeychainItems];
+    [self.transportSession.cookieStorage deleteKeychainItems];
 }
 
 - (void)resetStateAndExit;

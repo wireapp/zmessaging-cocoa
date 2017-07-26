@@ -59,10 +59,8 @@
     
     id classMock = [OCMockObject mockForClass:ZMSingleRequestSync.class];
     (void) [[[classMock stub] andReturn:self.registrationDownstreamSync] syncWithSingleRequestTranscoder:OCMOCK_ANY groupQueue:groupQueue];
-    
-    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"com.wearezeta.test-WireSyncEngine"];
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:self.cookieStorage groupQueue:groupQueue];
-        
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue];
+
     self.sut = (id) [[ZMRegistrationTranscoder alloc] initWithGroupQueue:groupQueue authenticationStatus:self.authenticationStatus];
     [classMock stopMocking];
 }
@@ -79,7 +77,7 @@
 
 - (NSDictionary *)expectedPayloadWithLocale:(NSString *)locale email:(NSString *)email password:(NSString *)password
 {
-    NSString *cookieLabel = self.authenticationStatus.cookieLabel;
+    NSString *cookieLabel = CookieLabel.current.value;
     NSDictionary *expectedPayload = @{
                                       @"name" : @"foo",
                                       @"password" : password,

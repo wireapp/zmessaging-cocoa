@@ -22,32 +22,48 @@ import WireUtilities
 protocol UnauthenticatedSessionDelegate: class {
     func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials)
     func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data)
+    func session(session: UnauthenticatedSession, createdAccount account: Account)
 }
+
+
 
 @objc
 public class UnauthenticatedSession : NSObject {
     
     public let groupQueue: DispatchGroupQueue
     let authenticationStatus: ZMAuthenticationStatus
-    let operationLoop: UnauthenticatedOperationLoop
+    private let operationLoop: UnauthenticatedOperationLoop
+    private let transportSession: UnauthenticatedTransportSessionProtocol
+    private var tornDown = false
+
     weak var delegate: UnauthenticatedSessionDelegate?
-        
-    init(transportSession: ZMTransportSession, delegate: UnauthenticatedSessionDelegate?) {
+
+    init(transportSession: UnauthenticatedTransportSessionProtocol, delegate: UnauthenticatedSessionDelegate?) {
         self.delegate = delegate
-        self.groupQueue = DispatchGroupQueue(queue: DispatchQueue.main)
-        self.authenticationStatus = ZMAuthenticationStatus(cookieStorage: transportSession.cookieStorage, groupQueue: groupQueue)
-        
-        let loginRequestStrategy = ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)
-        let loginCodeRequestStrategy = ZMLoginCodeRequestTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!
-        let registrationRequestStrategy = ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!
-        let phoneNumberVerificationRequestStrategy = ZMPhoneNumberVerificationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!
-        
+        self.groupQueue = DispatchGroupQueue(queue: .main)
+        self.authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue)
+        self.transportSession = transportSession
         self.operationLoop = UnauthenticatedOperationLoop(transportSession: transportSession, operationQueue: groupQueue, requestStrategies: [
-                loginRequestStrategy,
-                loginCodeRequestStrategy,
-                registrationRequestStrategy,
-                phoneNumberVerificationRequestStrategy
-             ])
+            ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus),
+            ZMLoginCodeRequestTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
+            ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
+            ZMPhoneNumberVerificationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!
+        ])
+
+        super.init()
+        transportSession.didReceiveUserInfo =  UserInfoAvailableClosure(queue: .main) { [weak self] info in
+            guard let `self` = self else { return }
+            let account = Account(userName: "", userIdentifier: info.identifier)
+            self.delegate?.session(session: self, createdAccount: account)
+        }
     }
-    
+
+    deinit {
+        precondition(tornDown, "Need to call tearDown before deinit")
+    }
+
+    func tearDown() {
+        operationLoop.tearDown()
+        tornDown = true
+    }
 }

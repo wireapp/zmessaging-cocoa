@@ -32,7 +32,6 @@
 @interface ZMAuthenticationStatusTests : MessagingTest
 
 @property (nonatomic) ZMAuthenticationStatus *sut;
-@property (nonatomic) ZMPersistentCookieStorage *cookieStorage;
 
 @property (nonatomic) id authenticationObserverToken;
 @property (nonatomic, copy) void(^authenticationCallback)(ZMUserSessionAuthenticationNotification *note);
@@ -46,11 +45,10 @@
 
 - (void)setUp {
     [super setUp];
-    
-    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"foo.bar"];
-    [self.cookieStorage deleteUserKeychainItems];
+
     DispatchGroupQueue *groupQueue = [[DispatchGroupQueue alloc] initWithQueue:dispatch_get_main_queue()];
-    self.sut = [[ZMAuthenticationStatus alloc] initWithCookieStorage:self.cookieStorage groupQueue:groupQueue];
+    self.sut = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue];
+
     ZM_WEAK(self);
     // If a test fires any notification and it's not listening for it, this will fail
     self.authenticationCallback = ^(id note ZM_UNUSED){
@@ -75,8 +73,6 @@
 - (void)tearDown {
 
     self.sut = nil;
-    self.cookieStorage = nil;
-    
     [ZMUserSessionAuthenticationNotification removeObserverForToken:self.authenticationObserverToken];
     self.authenticationObserverToken = nil;
     
@@ -100,7 +96,7 @@
 - (void)testThatItIsLoggedInWhenThereIsAuthenticationDataSelfUserSyncedAndClientIsAlreadyRegistered
 {
     // when
-    [self.cookieStorage setAuthenticationCookieData:[NSData data]];
+    self.sut.authenticationCookieData = NSData.data;
     [self.uiMOC setPersistentStoreMetadata:@"someID" forKey:ZMPersistedClientIdKey];
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     selfUser.remoteIdentifier = [NSUUID new];
@@ -739,13 +735,12 @@
 - (void)testThatItReturnsTheSameCookieLabel
 {
     // when
-    NSString *cookieLabel1 = [self.sut cookieLabel];
-    NSString *cookieLabel2= [self.sut cookieLabel];
+    CookieLabel *cookieLabel1 = CookieLabel.current;
+    CookieLabel *cookieLabel2 = CookieLabel.current;
     
     // then
     XCTAssertNotNil(cookieLabel1);
     XCTAssertEqualObjects(cookieLabel1, cookieLabel2);
-
 }
 
 @end

@@ -410,8 +410,8 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)invalidateCookieAndNotify
 {
     self.emailCredentials = nil;
-    [self.cookieStorage deleteUserKeychainItems];
-    
+    [self.cookieStorage deleteKeychainItems];
+
     NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:nil];
     [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:outError];
 }

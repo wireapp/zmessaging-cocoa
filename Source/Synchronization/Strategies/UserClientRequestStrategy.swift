@@ -172,17 +172,14 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     }
     
     public func request(forInserting managedObject: ZMManagedObject, forKeys keys: Set<String>?) -> ZMUpstreamRequest? {
-        if let managedObject = managedObject as? UserClient {
-            guard let clientStatus = clientRegistrationStatus else { fatal("clientRegistrationStatus is not available") }
-            let cookieLabel = clientStatus.cookieStorage.cookieLabel
-            let request = try? requestsFactory.registerClientRequest(managedObject, credentials: clientRegistrationStatus?.emailCredentials, cookieLabel: cookieLabel)
-            return request
-        }
-        else {
-            fatal("Called requestForInsertingObject() on \(managedObject)")
-        }
+        guard let client = managedObject as? UserClient else { fatal("Called requestForInsertingObject() on \(managedObject)") }
+        return try? requestsFactory.registerClientRequest(
+                client,
+                credentials: clientRegistrationStatus?.emailCredentials,
+                cookieLabel: CookieLabel.current.value
+            )
     }
-    
+
     public func shouldRetryToSyncAfterFailed(toUpdate managedObject: ZMManagedObject, request upstreamRequest: ZMUpstreamRequest, response: ZMTransportResponse, keysToParse: Set<String>) -> Bool {
         if keysToParse.contains(ZMUserClientNumberOfKeysRemainingKey) {
             return false

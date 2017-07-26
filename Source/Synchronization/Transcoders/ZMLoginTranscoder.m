@@ -115,6 +115,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     {
         request = [self.timedDownstreamSync nextRequest];
     }
+
     return request;
 }
 
@@ -180,8 +181,8 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     else {
         return nil;
     }
-    if (authenticationStatus.cookieLabel.length != 0) {
-        payload[@"label"] = authenticationStatus.cookieLabel;
+    if (CookieLabel.current.length != 0) {
+        payload[@"label"] = CookieLabel.current.value;
     }
     return [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:LoginMethod payload:payload authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken];
 
