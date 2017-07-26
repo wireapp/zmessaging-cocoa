@@ -32,7 +32,7 @@ class StoreUpdateEventTests: MessagingTest {
     
     override func tearDown() {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        eventMOC.tearDown()
+        eventMOC.tearDownEventMOC()
         super.tearDown()
     }
     
