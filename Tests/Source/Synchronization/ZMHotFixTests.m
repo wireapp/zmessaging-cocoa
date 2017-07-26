@@ -258,6 +258,7 @@
 - (void)testThatItSendsOutResetPushTokenNotificationVersion_40_4
 {
     // given
+    [self saveNewVersion];
     PushTokenNotificationObserver *observer = [[PushTokenNotificationObserver alloc] init];
     
     // when
@@ -290,6 +291,7 @@
 - (void)testThatItRemovesTheSharingExtensionURLs
 {
     // given
+    [self saveNewVersion];
     NSURL *directoryURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:[NSUserDefaults groupName]];
     NSURL *imageURL = [directoryURL URLByAppendingPathComponent:@"profile_images"];
     NSURL *conversationUrl = [directoryURL URLByAppendingPathComponent:@"conversations"];
@@ -315,6 +317,7 @@
 - (void)testThatItCopiesTheAPSDecryptionKeysFromKeyChainToSelfClient_41_43
 {
     // given
+    [self saveNewVersion];
     UserClient *userClient = [self createSelfClient];
     NSData *encryptionKey = [NSData randomEncryptionKey];
     NSData *verificationKey = [NSData randomEncryptionKey];
@@ -362,6 +365,7 @@
 - (void)testThatItSetsNeedsToUploadSignalingKeysIfKeysNotPresentInKeyChain_41_43
 {
     // given
+    [self saveNewVersion];
     UserClient *userClient = [self createSelfClient];
     XCTAssertFalse(userClient.needsToUploadSignalingKeys);
     XCTAssertFalse([userClient hasLocalModificationsForKey:@"needsToUploadSignalingKeys"]);
@@ -402,6 +406,7 @@
 - (void)testThatItSetsNotUploadedAssetClientMessagesToFailedAndAlsoExpiresFailedImageMessages_42_11
 {
     // given
+    [self saveNewVersion];
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
     conversation.conversationType = ZMConversationTypeOneOnOne;
     
@@ -515,6 +520,7 @@
 - (void)testThatItRemovesPendingConfirmationsForDeletedMessages_54_0_1
 {
     // given
+    [self saveNewVersion];
     [self.syncMOC setPersistentStoreMetadata:@YES forKey:@"HasHistory"];
     
     ZMConversation *oneOnOneConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
@@ -550,6 +556,7 @@
 
 - (void)testThatItPurgesPinCachesInHostBundle_60_0_0
 {
+    [self saveNewVersion];
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
     // given
@@ -599,6 +606,7 @@
 - (void)testThatItMarksConnectedUsersToBeUpdatedFromTheBackend_62_3_1
 {
     // given
+    [self saveNewVersion];
     ZMUser *connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
     connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
     connectedUser.connection.status = ZMConnectionStatusAccepted;
@@ -640,6 +648,7 @@
     // to redownload all users as soon as we support downloading profile pictures using the /v3/ endpoint.
 
     // given
+    [self saveNewVersion];
     ZMUser *connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
     connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
     connectedUser.connection.status = ZMConnectionStatusAccepted;
