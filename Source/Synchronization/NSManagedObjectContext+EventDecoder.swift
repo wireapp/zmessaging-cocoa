@@ -34,8 +34,9 @@ extension NSManagedObjectContext {
         let managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         managedObjectContext.persistentStoreCoordinator = eventPersistentStoreCoordinator
         managedObjectContext.createDispatchGroups()
-        managedObjectContext.isEventMOC = true
-        
+        managedObjectContext.performGroupedBlock {
+            managedObjectContext.isEventMOC = true
+        }
         addPersistentStore(eventPersistentStoreCoordinator!, appGroupIdentifier: appGroupIdentifier)
         return managedObjectContext
     }
