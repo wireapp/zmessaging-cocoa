@@ -22,11 +22,11 @@ import WireMessageStrategy
 
 class UnauthenticatedOperationLoop: NSObject {
     
-    let transportSession: ZMTransportSession
+    let transportSession: TransportSession
     let requestStrategies: [RequestStrategy]
     let operationQueue : ZMSGroupQueue
     
-    init(transportSession: ZMTransportSession, operationQueue: ZMSGroupQueue, requestStrategies: [RequestStrategy]) {
+    init(transportSession: TransportSession, operationQueue: ZMSGroupQueue, requestStrategies: [RequestStrategy]) {
         self.transportSession = transportSession
         self.requestStrategies = requestStrategies
         self.operationQueue = operationQueue
@@ -41,7 +41,7 @@ class UnauthenticatedOperationLoop: NSObject {
 
 extension UnauthenticatedOperationLoop: RequestAvailableObserver {
     func newRequestsAvailable() {
-        self.transportSession.attemptToEnqueueSyncRequest { () -> ZMTransportRequest? in
+        self.transportSession.attemptToEnqueueSyncRequestWithGenerator { () -> ZMTransportRequest? in
             let request = (self.requestStrategies as NSArray).nextRequest()
             
             request?.add(ZMCompletionHandler(on: self.operationQueue, block: {_ in

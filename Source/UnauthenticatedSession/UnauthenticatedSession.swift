@@ -24,6 +24,24 @@ protocol UnauthenticatedSessionDelegate: class {
     func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data)
 }
 
+public protocol ReachabilityProvider {
+    var mayBeReachable: Bool { get }
+}
+
+extension ZMReachability: ReachabilityProvider {}
+
+public protocol TransportSession {
+    var cookieStorage: ZMPersistentCookieStorage { get }
+    var reachabilityProvider: ReachabilityProvider { get }
+    @discardableResult func attemptToEnqueueSyncRequestWithGenerator(_ generator: @escaping ZMTransportRequestGenerator) -> ZMTransportEnqueueResult
+}
+
+extension ZMTransportSession: TransportSession {
+    public var reachabilityProvider: ReachabilityProvider {
+        return self.reachability
+    }
+}
+
 @objc
 public class UnauthenticatedSession : NSObject {
     
@@ -32,7 +50,7 @@ public class UnauthenticatedSession : NSObject {
     let operationLoop: UnauthenticatedOperationLoop
     weak var delegate: UnauthenticatedSessionDelegate?
         
-    init(transportSession: ZMTransportSession, delegate: UnauthenticatedSessionDelegate?) {
+    init(transportSession: TransportSession, delegate: UnauthenticatedSessionDelegate?) {
         self.delegate = delegate
         self.groupQueue = DispatchGroupQueue(queue: DispatchQueue.main)
         self.authenticationStatus = ZMAuthenticationStatus(cookieStorage: transportSession.cookieStorage, groupQueue: groupQueue)
