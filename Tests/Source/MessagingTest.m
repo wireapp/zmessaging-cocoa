@@ -50,6 +50,8 @@
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
+static ZMReachability *sharedReachabilityMock = nil;
+
 @interface MockTransportSession (Reachability)
 @property (nonatomic, readonly) ZMReachability *reachability;
 @end
@@ -58,7 +60,12 @@
 
 - (ZMReachability *)reachability
 {
-    return nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedReachabilityMock = OCMClassMock(ZMReachability.class);
+        [[[(id)sharedReachabilityMock stub] andReturnValue:[NSNumber numberWithBool:YES]] mayBeReachable];
+    });
+    return sharedReachabilityMock;
 }
 
 @end
