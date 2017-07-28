@@ -73,9 +73,9 @@ public final class UnauthenticatedSessionTests: XCTestCase {
     }
     
     public override func tearDown() {
-        super.tearDown()
         sut = nil
         transportSession = nil
+        super.tearDown()
     }
     
     func testThatDuringLoginItThrowsErrorWhenNoCredentials() {
