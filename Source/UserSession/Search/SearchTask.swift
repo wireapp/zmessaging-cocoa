@@ -58,6 +58,7 @@ public class SearchTask {
     public func start() {
         performLocalSearch()
         performRemoteSearch()
+        performRemoteSearchForTeamUser()
     }
     
     func resportResult() {
@@ -189,4 +190,78 @@ extension SearchTask {
         return ZMTransportRequest(getFromPath: "/search/contacts?q=\(encodedQuery)&size=\(fetchLimit)")
     }
     
+}
+
+extension SearchTask {
+    
+    func performRemoteSearchForTeamUser() {
+        guard request.searchOptions.contains(.directory) else { return }
+        
+        tasksRemaining += 1
+        
+        context.performGroupedBlock {
+            let request = self.searchRequestInDirectory(withHandle: self.request.query)
+            
+            request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
+                guard
+                    let session = self?.session,
+                    let query = self?.request.query,
+                    let payload = response.payload?.asArray(),
+                    let userPayload = (payload.first as? ZMTransportData)?.asDictionary()
+                    else {
+                        return
+                }
+                
+                guard
+                    let handle = userPayload["handle"] as? String,
+                    let name = userPayload["name"] as? String,
+                    let id = userPayload["id"] as? String
+                    else {
+                        return
+                }
+                
+                let document = ["handle": handle, "name": name, "id": id]
+                let documentPayload = ["documents": [document]]
+                guard let result = SearchResult(payload: documentPayload, query: query, userSession: session) else {
+                    return
+                }
+                
+                if let prevResult = self?.result {
+                    if !prevResult.directory.contains(result.directory.first!) {
+                        self?.result = SearchResult(
+                            contacts: prevResult.contacts,
+                            teamMembers: prevResult.teamMembers,
+                            addressBook: prevResult.addressBook,
+                            directory: result.directory + prevResult.directory,
+                            conversations: prevResult.conversations
+                        )
+                    }
+                }
+                
+                self?.tasksRemaining -= 1
+                self?.resportResult()
+            }))
+            
+            request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
+                self?.taskIdentifier = taskIdentifier
+            }))
+            
+            self.session.transportSession.enqueueSearch(request)
+        }
+    }
+    
+    func searchRequestInDirectory(withHandle handle : String) -> ZMTransportRequest {
+        var handle = handle
+        
+        if handle.hasPrefix("@") {
+            handle = handle.substring(from: handle.index(after: handle.startIndex))
+        }
+        
+        handle = handle.lowercased()
+        var queryCharacterSet = CharacterSet.urlQueryAllowed
+        queryCharacterSet.remove(charactersIn: "=&+")
+        let encodedQuery = handle.addingPercentEncoding(withAllowedCharacters: queryCharacterSet) ?? ""
+        
+        return ZMTransportRequest(getFromPath: "/users?handles=\(encodedQuery)")
+    }
 }
