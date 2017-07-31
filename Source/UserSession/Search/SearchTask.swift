@@ -61,7 +61,7 @@ public class SearchTask {
         performRemoteSearchForTeamUser()
     }
     
-    func resportResult() {
+    func reportResult() {
         let isCompleted = tasksRemaining == 0
         
         resultHandlers.forEach { $0(result, isCompleted) }
@@ -98,7 +98,7 @@ extension SearchTask {
                 }
                 
                 self.tasksRemaining -= 1
-                self.resportResult()
+                self.reportResult()
             }
         }
     }
@@ -154,7 +154,7 @@ extension SearchTask {
                 
                 defer {
                     self?.tasksRemaining -= 1
-                    self?.resportResult()
+                    self?.reportResult()
                 }
                 
                 guard
@@ -208,7 +208,7 @@ extension SearchTask {
                 
                 defer {
                     self?.tasksRemaining -= 1
-                    self?.resportResult()
+                    self?.reportResult()
                 }
                 
                 guard
