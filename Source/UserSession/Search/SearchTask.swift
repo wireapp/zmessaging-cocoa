@@ -154,6 +154,7 @@ extension SearchTask {
                 
                 defer {
                     self?.tasksRemaining -= 1
+                    self?.resportResult()
                 }
                 
                 guard
@@ -168,8 +169,6 @@ extension SearchTask {
                 if let updatedResult = self?.result.union(withRemoteResult: result) {
                     self?.result = updatedResult
                 }
-                
-                self?.resportResult()
             }))
             
             request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
@@ -209,6 +208,7 @@ extension SearchTask {
                 
                 defer {
                     self?.tasksRemaining -= 1
+                    self?.resportResult()
                 }
                 
                 guard
@@ -245,7 +245,6 @@ extension SearchTask {
                         )
                     }
                 }
-                self?.resportResult()
             }))
             
             request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
