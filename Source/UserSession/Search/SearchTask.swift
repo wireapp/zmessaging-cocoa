@@ -29,7 +29,20 @@ public class SearchTask {
     fileprivate var taskIdentifier : ZMTaskIdentifier?
     fileprivate var resultHandlers : [ResultHandler] = []
     fileprivate var result : SearchResult = SearchResult(contacts: [], teamMembers: [], addressBook: [],  directory: [], conversations: [])
-    fileprivate var tasksRemaining = 0
+    
+    fileprivate var tasksRemaining = 0 {
+        didSet {
+            // only trigger handles if decrement to 0
+            if oldValue > tasksRemaining {
+                let isCompleted = tasksRemaining == 0
+                resultHandlers.forEach { $0(result, isCompleted) }
+                
+                if isCompleted {
+                    resultHandlers.removeAll()
+                }
+            }
+        }
+    }
     
     public init(request: SearchRequest, context: NSManagedObjectContext, session: ZMUserSession) {
         self.request = request
@@ -60,17 +73,6 @@ public class SearchTask {
         performRemoteSearch()
         performRemoteSearchForTeamUser()
     }
-    
-    func reportResult() {
-        let isCompleted = tasksRemaining == 0
-        
-        resultHandlers.forEach { $0(result, isCompleted) }
-        
-        if isCompleted {
-            resultHandlers.removeAll()
-        }
-    }
-    
 }
 
 extension SearchTask {
@@ -98,7 +100,6 @@ extension SearchTask {
                 }
                 
                 self.tasksRemaining -= 1
-                self.reportResult()
             }
         }
     }
@@ -154,7 +155,6 @@ extension SearchTask {
                 
                 defer {
                     self?.tasksRemaining -= 1
-                    self?.reportResult()
                 }
                 
                 guard
@@ -208,7 +208,6 @@ extension SearchTask {
                 
                 defer {
                     self?.tasksRemaining -= 1
-                    self?.reportResult()
                 }
                 
                 guard
