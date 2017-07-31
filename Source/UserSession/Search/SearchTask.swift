@@ -230,8 +230,8 @@ extension SearchTask {
                     return
                 }
                 
-                if let prevResult = self?.result {
-                    if !prevResult.directory.contains(result.directory.first!) {
+                if let prevResult = self?.result, let firstResult = self?.result.directory.first {
+                    if !prevResult.directory.contains(firstResult) {
                         self?.result = SearchResult(
                             contacts: prevResult.contacts,
                             teamMembers: prevResult.teamMembers,
