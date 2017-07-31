@@ -183,11 +183,10 @@ extension SearchTask {
             query = query.substring(from: query.index(after: query.startIndex))
         }
         
-        var queryCharacterSet = CharacterSet.urlQueryAllowed
-        queryCharacterSet.remove(charactersIn: "=&+")
-        let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: queryCharacterSet) ?? ""
-        
-        return ZMTransportRequest(getFromPath: "/search/contacts?q=\(encodedQuery)&size=\(fetchLimit)")
+        let url = NSURLComponents()
+        url.path = "/search/contacts"
+        url.queryItems = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "size", value: String(fetchLimit))]
+        return ZMTransportRequest(getFromPath: url.string ?? "")
     }
     
 }
@@ -257,11 +256,9 @@ extension SearchTask {
             handle = handle.substring(from: handle.index(after: handle.startIndex))
         }
         
-        handle = handle.lowercased()
-        var queryCharacterSet = CharacterSet.urlQueryAllowed
-        queryCharacterSet.remove(charactersIn: "=&+")
-        let encodedQuery = handle.addingPercentEncoding(withAllowedCharacters: queryCharacterSet) ?? ""
-        
-        return ZMTransportRequest(getFromPath: "/users?handles=\(encodedQuery)")
+        let url = NSURLComponents()
+        url.path = "/users"
+        url.query = "handles=\(handle.lowercased())"
+        return ZMTransportRequest(getFromPath: url.string ?? "")
     }
 }
