@@ -477,11 +477,13 @@
     __block MockUser *mockUser2;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         mockUser1 = [session insertUserWithName:userName1];
+        mockUser1.handle = @"hans";
         XCTAssertNotNil(mockUser1.identifier);
         mockUser1.email = @"";
         mockUser1.phone = @"";
         
         mockUser2 = [session insertUserWithName:userName2];
+        mockUser2.handle = @"hannelore";
         XCTAssertNotNil(mockUser2.identifier);
         mockUser2.email = @"";
         mockUser2.phone = @"";
