@@ -202,6 +202,11 @@ extension SearchTask {
             let request = self.searchRequestInDirectory(withHandle: self.request.query)
             
             request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
+                
+                defer {
+                    self?.tasksRemaining -= 1
+                }
+                
                 guard
                     let session = self?.session,
                     let query = self?.request.query,
@@ -236,8 +241,6 @@ extension SearchTask {
                         )
                     }
                 }
-                
-                self?.tasksRemaining -= 1
                 self?.resportResult()
             }))
             
