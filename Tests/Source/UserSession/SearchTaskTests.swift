@@ -53,7 +53,7 @@ class SearchTaskTests : MessagingTest {
         let remoteResultArrived = expectation(description: "received remote result")
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
-            let mockUser = remoteChanges.insertUser(withName: "Sponge Bob")
+            let mockUser = remoteChanges.insertUser(withName: "Dale Cooper")
             mockUser.handle = "bob"
         }
         
@@ -65,7 +65,7 @@ class SearchTaskTests : MessagingTest {
             remoteResultArrived.fulfill()
             XCTAssertEqual(result.directory.count, 1)
             let user = result.directory.first
-            XCTAssertEqual(user?.name, "Sponge Bob")
+            XCTAssertEqual(user?.name, "Dale Cooper")
             XCTAssertEqual(user?.handle, "bob")
         }
         
