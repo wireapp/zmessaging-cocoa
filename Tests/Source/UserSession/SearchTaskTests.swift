@@ -47,6 +47,34 @@ class SearchTaskTests : MessagingTest {
         return conversation
     }
     
+    func testThatItFindsASingleUnconnectedUserByHandle() {
+        
+        // given
+        let remoteResultArrived = expectation(description: "received remote result")
+        
+        mockTransportSession.performRemoteChanges { (remoteChanges) in
+            let mockUser = remoteChanges.insertUser(withName: "Sponge Bob")
+            mockUser.handle = "bob"
+        }
+        
+        let request = SearchRequest(query: "bob", searchOptions: [.directory])
+        let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
+        
+        // expect
+        task.onResult { (result, _) in
+            remoteResultArrived.fulfill()
+            XCTAssertEqual(result.directory.count, 1)
+            let user = result.directory.first
+            XCTAssertEqual(user?.name, "Sponge Bob")
+            XCTAssertEqual(user?.handle, "bob")
+        }
+        
+        // when
+        task.performRemoteSearchForTeamUser()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        
+    }
+    
     // MARK: Contacts Search
 
     func testThatItFindsASingleUser() {
