@@ -53,7 +53,7 @@ class SearchTaskTests : MessagingTest {
         let remoteResultArrived = expectation(description: "received remote result")
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
-            let mockUser = remoteChanges.insertUser(withName: "Sponge Bob")
+            let mockUser = remoteChanges.insertUser(withName: "Dale Cooper")
             mockUser.handle = "bob"
         }
         
