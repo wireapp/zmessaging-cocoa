@@ -26,6 +26,7 @@
 @interface ZMUserSession (Private)
 
 @property (nonatomic, readonly) ZMTransportSession *transportSession;
+@property (nonatomic, readonly) NSManagedObjectContext *searchManagedObjectContext;
 
 - (void)tearDown;
 

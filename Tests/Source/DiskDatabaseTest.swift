@@ -27,15 +27,20 @@ public class DiskDatabaseTest: ZMTBaseTest {
     
     public override func setUp() {
         super.setUp()
-        NSManagedObjectContext.setUseInMemoryStore(false)
+        StorageStack.shared.createStorageAsInMemory = false
         
         cleanUp()
-        
         createDatabase()
-        NSManagedObjectContext.prepareLocalStore(at: storeURL, backupCorruptedDatabase: false, synchronous: true) {
-            self.moc = NSManagedObjectContext.createUserInterfaceContextWithStore(at: self.storeURL)
+
+        let keyStoreURL = storeURL.deletingLastPathComponent()
+        let semaphore = DispatchSemaphore(value: 0)
+
+        StorageStack.shared.createManagedObjectContextDirectory(at: storeURL, keyStore: keyStoreURL) {
+            self.moc = $0.uiContext
+            semaphore.signal()
         }
-        
+
+        semaphore.wait()
         assert(self.waitForAllGroupsToBeEmpty(withTimeout: 1))
     }
     
@@ -45,9 +50,15 @@ public class DiskDatabaseTest: ZMTBaseTest {
     }
     
     private func createDatabase() {
-        NSManagedObjectContext.prepareLocalStore(at: storeURL, backupCorruptedDatabase: false, synchronous: true, completionHandler:nil)
-        
-        NSManagedObjectContext.resetSharedPersistentStoreCoordinator()
+        let keyStoreURL = storeURL.deletingLastPathComponent()
+        let semaphore = DispatchSemaphore(value: 0)
+
+        StorageStack.shared.createManagedObjectContextDirectory(at: storeURL, keyStore: keyStoreURL) { _ in
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        StorageStack.reset()
     }
     
     private func cleanUp() {
@@ -59,8 +70,7 @@ public class DiskDatabaseTest: ZMTBaseTest {
             try? fileManager.removeItem(atPath: supportCachesPath)
         }
         
-        NSManagedObjectContext.resetSharedPersistentStoreCoordinator()
-        NSManagedObjectContext.resetUserInterfaceContext()
+        StorageStack.reset()
     }
 }
 

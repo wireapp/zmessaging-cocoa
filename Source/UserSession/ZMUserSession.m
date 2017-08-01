@@ -62,8 +62,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMOperationLoop *operationLoop;
 @property (nonatomic) ZMTransportRequest *runningLoginRequest;
 @property (nonatomic) ZMTransportSession *transportSession;
-@property (nonatomic) NSManagedObjectContext *managedObjectContext;
-@property (nonatomic) NSManagedObjectContext *syncManagedObjectContext;
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
@@ -75,9 +73,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
-@property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
-@property (nonatomic) NSURL *storeURL;
-@property (nonatomic) NSURL *keyStoreURL;
+@property (nonatomic) ManagedObjectContextDirectory *contextDirectory;
 @property (nonatomic, readwrite) NSURL *sharedContainerURL;
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 @property (nonatomic) BOOL hasCompletedInitialSync;
@@ -134,24 +130,18 @@ ZM_EMPTY_ASSERTING_INIT()
                          application:(id<ZMApplication>)application
                               userId:(NSUUID * __unused)uuid
                           appVersion:(NSString *)appVersion
-                  storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
+                    contextDirectory:(ManagedObjectContextDirectory *)contextDirectory;
 {
-    self.storeProvider = storeProvider;
-
     if (apnsEnvironment == nil) {
         apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
     }
-    
-    self.storeURL = storeProvider.storeURL;
-    self.keyStoreURL = storeProvider.keyStoreURL;
-    NSManagedObjectContext *userInterfaceContext = [NSManagedObjectContext createUserInterfaceContextWithStoreAtURL:self.storeURL];
-    NSManagedObjectContext *syncMOC = [NSManagedObjectContext createSyncContextWithStoreAtURL:self.storeURL keyStoreURL:self.keyStoreURL];
-    [syncMOC performBlockAndWait:^{
-        syncMOC.analytics = analytics;
+
+    [contextDirectory.syncContext performBlockAndWait:^{
+        contextDirectory.syncContext.analytics = analytics;
     }];
-    
+
     [[BackgroundActivityFactory sharedInstance] setApplication:[UIApplication sharedApplication]]; // TODO make BackgroundActivityFactory work with ZMApplication
-    [[BackgroundActivityFactory sharedInstance] setMainGroupQueue:userInterfaceContext];
+    [[BackgroundActivityFactory sharedInstance] setMainGroupQueue:contextDirectory.uiContext];
     
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
     
@@ -169,31 +159,31 @@ ZM_EMPTY_ASSERTING_INIT()
     }
     
     self = [self initWithTransportSession:transportSession
-                     userInterfaceContext:userInterfaceContext
-                 syncManagedObjectContext:syncMOC
                              mediaManager:mediaManager
                           apnsEnvironment:apnsEnvironment
                             operationLoop:nil
                               application:application
                                appVersion:appVersion
-                            storeProvider:storeProvider];
+                            contextDirectory:contextDirectory
+                            storeProvider:[[LocalStoreProvider alloc] init]]; // TODO: Inject or combine with injection of context directory (localstore provider could hold on to the directory and be injected);
     return self;
 }
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
-                    userInterfaceContext:(NSManagedObjectContext *)userInterfaceContext
-                syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
                             mediaManager:(AVSMediaManager *)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
-                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
+                        contextDirectory:(ManagedObjectContextDirectory *)contextDirectory
+                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 
 {
     self = [super init];
     if(self) {
-        
+
+        self.contextDirectory = contextDirectory;
+
         self.appVersion = appVersion;
         [ZMUserAgent setWireAppVersion:appVersion];
         self.didStartInitialSync = NO;
@@ -204,9 +194,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.sharedContainerURL = storeProvider.sharedContainerDirectory;
         self.apnsEnvironment = apnsEnvironment;
         self.networkIsOnline = YES;
-        self.managedObjectContext = userInterfaceContext;
         self.managedObjectContext.isOffline = NO;
-        self.syncManagedObjectContext = syncManagedObjectContext;
         
         [self.syncManagedObjectContext performBlockAndWait:^{
             self.syncManagedObjectContext.zm_userInterfaceContext = self.managedObjectContext;
@@ -232,9 +220,8 @@ ZM_EMPTY_ASSERTING_INIT()
             self.syncManagedObjectContext.zm_userImageCache = userImageCache;
             self.syncManagedObjectContext.zm_fileAssetCache = fileAssetCache;
             
-            self.localNotificationDispatcher =
-            [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:syncManagedObjectContext application:application];
-            
+            self.localNotificationDispatcher = [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncManagedObjectContext
+                                                                                                     application:application];
            self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
                                                                                          userSession:self];
             
@@ -245,7 +232,6 @@ ZM_EMPTY_ASSERTING_INIT()
             
             self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
         }];
-
 
         _application = application;
         self.topConversationsDirectory = [[TopConversationsDirectory alloc] initWithManagedObjectContext:self.managedObjectContext];
@@ -340,8 +326,7 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
     
     NSManagedObjectContext *uiMoc = self.managedObjectContext;
-    self.managedObjectContext = nil;
-    self.syncManagedObjectContext = nil;
+    self.contextDirectory = nil;
     
     BOOL shouldWaitOnUiMoc = !([NSOperationQueue currentQueue] == [NSOperationQueue mainQueue] && uiMoc.concurrencyType == NSMainQueueConcurrencyType);
     
@@ -385,6 +370,26 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)registerForResetPushTokensNotification
 {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetPushTokens) name:ZMUserSessionResetPushTokensNotificationName object:nil];
+}
+
+- (NSManagedObjectContext *)managedObjectContext
+{
+    return self.contextDirectory.uiContext;
+}
+
+- (NSManagedObjectContext *)syncManagedObjectContext
+{
+    return self.contextDirectory.syncContext;
+}
+
+- (NSManagedObjectContext *)searchManagedObjectContext
+{
+    return self.contextDirectory.searchContext;
+}
+
+- (NSURL *)storeURL
+{
+    return self.contextDirectory.storeURL;
 }
 
 - (void)didRequestToOpenSyncConversation:(NSNotification *)note

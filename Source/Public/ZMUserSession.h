@@ -42,7 +42,7 @@
 @protocol ZMThirdPartyServicesDelegate;
 @protocol UserProfileImageUpdateProtocol;
 @protocol ZMApplication;
-@protocol LocalStoreProviderProtocol;
+@class ManagedObjectContextDirectory;
 @class TopConversationsDirectory;
 
 @protocol ZMAVSLogObserver <NSObject>
@@ -78,7 +78,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
                          application:(id<ZMApplication>)application
                               userId:(NSUUID *)uuid
                           appVersion:(NSString *)appVersion
-                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
+                    contextDirectory:(ManagedObjectContextDirectory *)contextDirectory;
 
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;

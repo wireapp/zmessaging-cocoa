@@ -82,7 +82,7 @@ static NSString *const HasHistoryKey = @"hasHistory";
             ;
         }
         
-        [NSManagedObjectContext setClearPersistentStoreOnStart:YES];
+        // [NSManagedObjectContext setClearPersistentStoreOnStart:YES]; TODO
         
         [[NSUserDefaults standardUserDefaults] synchronize];
         [[NSUserDefaults sharedUserDefaults] synchronize];
@@ -94,7 +94,8 @@ static NSString *const HasHistoryKey = @"hasHistory";
 
 + (void)deleteCacheOnRelaunch;
 {
-    [NSManagedObjectContext setClearPersistentStoreOnStart:YES];
+    exit(0); // TODO
+    // [NSManagedObjectContext setClearPersistentStoreOnStart:YES];
 }
 
 @end

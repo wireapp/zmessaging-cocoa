@@ -149,6 +149,11 @@
     
     // when
     [self recreateSessionManager];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    if (nil == self.userSession) {
+        return XCTFail(@"No user session available");
+    }
     
     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];

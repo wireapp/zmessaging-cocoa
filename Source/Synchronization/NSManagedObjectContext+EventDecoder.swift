@@ -40,7 +40,7 @@ extension NSManagedObjectContext {
         addPersistentStore(eventPersistentStoreCoordinator!, appGroupIdentifier: appGroupIdentifier)
         return managedObjectContext
     }
-    
+
     public func tearDownEventMOC() {
         precondition(isEventMOC, "Invalid operation: tearDownEventMOC called on context not marked as event MOC")
         if let store = persistentStoreCoordinator?.persistentStores.first {
@@ -68,7 +68,7 @@ extension NSManagedObjectContext {
     fileprivate static func addPersistentStore(_ psc: NSPersistentStoreCoordinator, appGroupIdentifier: String?, isSecondTry: Bool = false) {
         guard let storeURL = storeURL(forAppGroupIdentifier: appGroupIdentifier) else { return }
         do {
-            let storeType = useInMemoryStore() ? NSInMemoryStoreType : NSSQLiteStoreType
+            let storeType = StorageStack.shared.createStorageAsInMemory ? NSInMemoryStoreType : NSSQLiteStoreType
             try psc.addPersistentStore(ofType: storeType, configurationName: nil, at: storeURL, options: nil)
         } catch {
             if isSecondTry {

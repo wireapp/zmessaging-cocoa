@@ -20,6 +20,17 @@ import XCTest
 import WireTesting
 
 class MockLocalStoreProvider: NSObject, LocalStoreProviderProtocol {
+
+    var storeExists = true
+    var createStackCalled = false
+
+    var contextDirectory: ManagedObjectContextDirectory!
+
+    func createStorageStack(migration: (() -> Void)?, completion: @escaping (ManagedObjectContextDirectory) -> Void) {
+        createStackCalled = true
+        completion(contextDirectory)
+    }
+
     var appGroupIdentifier: String
     var storeURL: URL?
     var keyStoreURL: URL?
@@ -33,16 +44,7 @@ class MockLocalStoreProvider: NSObject, LocalStoreProviderProtocol {
         cachesURL = sharedContainerDirectory
         storeURL = sharedContainerDirectory?.appendingPathComponent("wire.db")
     }
-    
-    var storeExists = true
-    var isStoreReady = true
-    var needsToPrepareLocalStore = false
-    
-    var prepareLocalStoreCalled = false
-    func prepareLocalStore(completion completionHandler: @escaping (() -> ())) {
-        prepareLocalStoreCalled = true
-        completionHandler()
-    }
+
 }
 
 class SessionManagerTestDelegate: SessionManagerDelegate {

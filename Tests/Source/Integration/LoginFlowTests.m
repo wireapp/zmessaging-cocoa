@@ -654,7 +654,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // (1) register client and recreate session
     {
         XCTAssertTrue([self login]);
-        WaitForAllGroupsToBeEmpty(0.5);
         
         [self destroySessionManager];
         [self deleteAuthenticationCookie];
@@ -707,7 +706,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // (1) register client and recreate session
     {
         XCTAssertTrue([self login]);
-        WaitForAllGroupsToBeEmpty(0.5);
         
         // "delete" the self client
         [self.userSession.managedObjectContext setPersistentStoreMetadata:nil forKey:ZMPersistedClientIdKey];

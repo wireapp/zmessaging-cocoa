@@ -29,12 +29,20 @@ class AnalyticsTests: XCTestCase {
     var analytics: MockAnalytics!
     
     func createSyncMOC() -> NSManagedObjectContext {
-        let storeURL = PersistentStoreRelocator.storeURL(in: .documentDirectory)
-        let keyStoreURL = storeURL?.deletingLastPathComponent()
-        
-        return NSManagedObjectContext.createSyncContextWithStore(at: storeURL, keyStore: keyStoreURL)
+        let storeURL = PersistentStoreRelocator.storeURL(in: .documentDirectory)!
+        let keyStoreURL = storeURL.deletingLastPathComponent()
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var context: NSManagedObjectContext!
+        StorageStack.shared.createManagedObjectContextDirectory(at: storeURL, keyStore: keyStoreURL, startedMigrationCallback: nil) {
+            context = $0.syncContext
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return context
     }
-    
+
     override func setUp() {
         super.setUp()
         analytics = MockAnalytics()
