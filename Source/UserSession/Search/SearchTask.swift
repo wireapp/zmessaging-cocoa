@@ -189,7 +189,8 @@ extension SearchTask {
         let url = NSURLComponents()
         url.path = "/search/contacts"
         url.queryItems = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "size", value: String(fetchLimit))]
-        return ZMTransportRequest(getFromPath: url.string ?? "")
+        let urlStr = url.string?.replacingOccurrences(of: "+", with: "%2B") ?? ""
+        return ZMTransportRequest(getFromPath: urlStr)
     }
     
 }
@@ -255,7 +256,7 @@ extension SearchTask {
     }
     
     func searchRequestInDirectory(withHandle handle : String) -> ZMTransportRequest {
-        var handle = handle
+        var handle = handle.lowercased()
         
         if handle.hasPrefix("@") {
             handle = handle.substring(from: handle.index(after: handle.startIndex))
@@ -263,7 +264,8 @@ extension SearchTask {
         
         let url = NSURLComponents()
         url.path = "/users"
-        url.query = "handles=\(handle.lowercased())"
-        return ZMTransportRequest(getFromPath: url.string ?? "")
+        url.queryItems = [URLQueryItem(name: "handles", value: handle)]
+        let urlStr = url.string?.replacingOccurrences(of: "+", with: "%2B") ?? ""
+        return ZMTransportRequest(getFromPath: urlStr)
     }
 }
