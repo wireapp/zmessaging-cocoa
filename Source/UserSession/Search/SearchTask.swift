@@ -234,19 +234,23 @@ extension SearchTask {
                     return
                 }
                 
-                if let prevResult = self?.result, let firstResult = self?.result.directory.first {
-                    if !prevResult.directory.contains(firstResult) {
-                        self?.result = SearchResult(
-                            contacts: prevResult.contacts,
-                            teamMembers: prevResult.teamMembers,
-                            addressBook: prevResult.addressBook,
-                            directory: result.directory + prevResult.directory,
-                            conversations: prevResult.conversations
-                        )
+                if let user = result.directory.first {
+                    if let prevResult = self?.result {
+                        // prepend result to prevResult only if it doesn't contain it
+                        if !prevResult.directory.contains(user) {
+                            self?.result = SearchResult(
+                                contacts: prevResult.contacts,
+                                teamMembers: prevResult.teamMembers,
+                                addressBook: prevResult.addressBook,
+                                directory: result.directory + prevResult.directory,
+                                conversations: prevResult.conversations
+                            )
+                        }
+                    } else {
+                        self?.result = result
                     }
-                } else {
-                    self?.result = result
                 }
+                
             }))
             
             request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
