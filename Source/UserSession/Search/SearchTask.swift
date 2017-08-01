@@ -244,6 +244,8 @@ extension SearchTask {
                             conversations: prevResult.conversations
                         )
                     }
+                } else {
+                    self?.result = result
                 }
             }))
             
