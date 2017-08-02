@@ -154,9 +154,9 @@
     NSManagedObjectContext *mocSync = nil;
     @autoreleasepool {
         // given
-        NSManagedObjectContext *mocUI = [[NSManagedObjectContext alloc] init];
+        NSManagedObjectContext *mocUI = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
 
-        mocSync = [[NSManagedObjectContext alloc] init];
+        mocSync = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
         
         mocUI.zm_syncContext = mocSync;
         mocSync.zm_userInterfaceContext = mocUI;
@@ -178,9 +178,9 @@
     NSManagedObjectContext *mocUI = nil;
     @autoreleasepool {
         // given
-        mocUI = [[NSManagedObjectContext alloc] init];
+        mocUI = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
         
-        NSManagedObjectContext *mocSync = [[NSManagedObjectContext alloc] init];
+        NSManagedObjectContext *mocSync = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
         
         mocUI.zm_syncContext = mocSync;
         mocSync.zm_userInterfaceContext = mocUI;
