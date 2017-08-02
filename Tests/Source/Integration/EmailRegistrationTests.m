@@ -36,6 +36,9 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)setUp {
     self.originalLoginTimerInterval = DefaultPendingValidationLoginAttemptInterval;
     [super setUp];
+    XCTAssert([self waitWithTimeout:0.5 verificationBlock:^BOOL{
+        return nil != self.unauthenticatedSession;
+    }]);
 }
 
 - (void)tearDown {
@@ -63,6 +66,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [[authenticationObserver expect] authenticationDidSucceed]; // client registration
     
     // when
+    XCTAssertNotNil(self.unauthenticatedSession);
     [self.unauthenticatedSession registerUser:user];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -131,6 +135,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session whiteListEmail:user.emailAddress];
     }];
+
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

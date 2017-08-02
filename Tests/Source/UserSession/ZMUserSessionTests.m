@@ -83,7 +83,9 @@
     // expect
     id userAgent = [OCMockObject mockForClass:ZMUserAgent.class];
     [[[userAgent expect] classMethod] setWireAppVersion:version];
-    id<LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithUserIdentifier:NSUUID.createUUID];
+
+    id <LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL
+                                                                                                 userIdentifier: NSUUID.createUUID];
 
     // when
     ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
@@ -223,7 +225,8 @@
     id pushChannel = [OCMockObject niceMockForProtocol:@protocol(ZMPushChannel)];
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     id cookieStorage = [OCMockObject niceMockForClass:ZMPersistentCookieStorage.class];
-    id<LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithUserIdentifier:[NSUUID createUUID]];
+    id <LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL
+                                                                                                  userIdentifier: NSUUID.createUUID];
     
     // expect
     [[pushChannel expect] setClientID:userClient.remoteIdentifier];
@@ -447,7 +450,8 @@
 - (void)testThatItSetsItselfAsADelegateOfTheTransportSessionAndForwardsUserClientID
 {
     // given
-    id<LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithUserIdentifier:[NSUUID createUUID]];
+    id <LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL
+                                                                                                  userIdentifier: NSUUID.createUUID];
     id transportSession = [OCMockObject mockForClass:ZMTransportSession.class];
     id pushChannel = [OCMockObject mockForProtocol:@protocol(ZMPushChannel)];
     

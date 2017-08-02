@@ -165,7 +165,7 @@ ZM_EMPTY_ASSERTING_INIT()
                             operationLoop:nil
                               application:application
                                appVersion:appVersion
-                            storeProvider:storeProvider]; // TODO: Inject or combine with injection of context directory (localstore provider could hold on to the directory and be injected);
+                            storeProvider:storeProvider];
     return self;
 }
 
@@ -350,7 +350,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (BOOL)isLoggedIn
 {
     return self.authenticationStatus.isAuthenticated &&
-    self.clientRegistrationStatus.currentPhase == ZMClientRegistrationPhaseRegistered;
+           self.clientRegistrationStatus.currentPhase == ZMClientRegistrationPhaseRegistered;
 }
 
 - (void)registerForRequestToOpenConversationNotification

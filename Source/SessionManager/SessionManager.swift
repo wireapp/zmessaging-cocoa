@@ -93,15 +93,6 @@ open class AuthenticatedSessionFactory {
 
 }
 
-open class StoreProviderFactory: NSObject {
-
-    open func provider(for account: Account?) -> LocalStoreProviderProtocol {
-        return LocalStoreProvider(userIdentifier: account?.userIdentifier)
-    }
-
-}
-
-
 @objc
 public protocol SessionManagerDelegate : class {
 
@@ -117,16 +108,17 @@ public class SessionManager : NSObject {
 
     public let appVersion: String
     public weak var delegate: SessionManagerDelegate? = nil
-    
-    fileprivate let authenticatedSessionFactory: AuthenticatedSessionFactory
-    fileprivate let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
-    fileprivate let storeProviderFactory: StoreProviderFactory
-    fileprivate let accountManager: AccountManager
-    
+
     let application: ZMApplication
     var userSession: ZMUserSession?
     var unauthenticatedSession: UnauthenticatedSession?
     var authenticationToken: ZMAuthenticationObserverToken?
+    
+    fileprivate let authenticatedSessionFactory: AuthenticatedSessionFactory
+    fileprivate let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
+    fileprivate let accountManager: AccountManager
+
+    fileprivate let sharedContainerURL: URL
 
     public convenience init(
         appVersion: String,
@@ -150,7 +142,6 @@ public class SessionManager : NSObject {
             appVersion: appVersion,
             authenticatedSessionFactory: authenticatedSessionFactory,
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
-            storeProviderFactory: StoreProviderFactory(),
             delegate: delegate,
             application: application,
             launchOptions: launchOptions
@@ -161,30 +152,53 @@ public class SessionManager : NSObject {
         appVersion: String,
         authenticatedSessionFactory: AuthenticatedSessionFactory,
         unauthenticatedSessionFactory: UnauthenticatedSessionFactory,
-        storeProviderFactory: StoreProviderFactory,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
         launchOptions: LaunchOptions
         ) {
 
         SessionManager.enableLogsByEnvironmentVariable()
-        self.storeProviderFactory = storeProviderFactory
         self.appVersion = appVersion
         self.application = application
         self.delegate = delegate
 
-        guard let sharedContainerURL = storeProviderFactory.provider(for: nil).sharedContainerDirectory else {
+        guard let sharedContainerURL = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else {
             preconditionFailure("Unable to get shared container URL")
         }
 
-        accountManager = AccountManager(sharedDirectory: sharedContainerURL)
+        self.sharedContainerURL = sharedContainerURL
+        self.accountManager = AccountManager(sharedDirectory: sharedContainerURL)
         self.authenticatedSessionFactory = authenticatedSessionFactory
         self.unauthenticatedSessionFactory = unauthenticatedSessionFactory
         
         super.init()
         authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(self)
 
-        select(account: accountManager.selectedAccount) { [weak self] session in
+        if let account = accountManager.selectedAccount {
+            selectInitialAccount(account, launchOptions: launchOptions)
+        } else {
+            // We do not have an account, this means we are either dealing with a fresh install,
+            // or an update from a previous version and need to store the initial Account.
+            // In order to do so we open the old database and get the userId.
+            LocalStoreProvider.openOldDatabaseRetrievingSelfUser(
+                in: sharedContainerURL,
+                migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
+                completion: { [weak self] user in
+                    guard let `self` = self else { return }
+                    if let user = user {
+                        let account = Account(userName: user.name ?? "", userIdentifier: user.remoteIdentifier!, teamName: user.team?.name)
+                        self.accountManager.addAndSelect(account)
+                        let migrator = ZMPersistentCookieStorageMigrator(userIdentifier: user.remoteIdentifier!, serverName: authenticatedSessionFactory.environment.backendURL.host!)
+                        _ = migrator.createStoreMigratingLegacyStoreIfNeeded()
+                    }
+
+                    self.selectInitialAccount(self.accountManager.selectedAccount, launchOptions: launchOptions)
+            })
+        }
+    }
+
+    private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
+        select(account: account) { [weak self] session in
             guard let `self` = self else { return }
             session.application(self.application, didFinishLaunchingWithOptions: launchOptions)
             (launchOptions[.url] as? URL).apply(session.didLaunch)
@@ -192,9 +206,10 @@ public class SessionManager : NSObject {
     }
 
     fileprivate func select(account: Account?, completion: @escaping (ZMUserSession) -> Void) {
-        let storeProvider = storeProviderFactory.provider(for: account)
+        guard let account = account else { return createUnauthenticatedSession() }
+        let storeProvider = LocalStoreProvider(sharedContainerDirectory: sharedContainerURL, userIdentifier: account.userIdentifier)
 
-        if let account = account, nil != account.cookieStorage().authenticationCookieData, storeProvider.storeExists {
+        if nil != account.cookieStorage().authenticationCookieData {
             storeProvider.createStorageStack(
                 migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
                 completion: { [weak self] provider in self?.createSession(for: account, with: provider, completion: completion) }
@@ -210,6 +225,18 @@ public class SessionManager : NSObject {
         }
 
         self.userSession = session
+        let authenticationStatus = unauthenticatedSession?.authenticationStatus
+
+        unauthenticatedSession?.tearDown()
+        unauthenticatedSession = nil
+
+        session.syncManagedObjectContext.performGroupedBlock {
+            session.setEmailCredentials(authenticationStatus?.emailCredentials())
+            if let registered = authenticationStatus?.completedRegistration {
+                session.syncManagedObjectContext.registeredOnThisDevice = registered
+            }
+        }
+
         delegate?.sessionManagerCreated(userSession: session)
         completion(session)
     }
@@ -260,12 +287,11 @@ extension SessionManager: UnauthenticatedSessionDelegate {
     func session(session: UnauthenticatedSession, createdAccount account: Account) {
         accountManager.addAndSelect(account)
 
-        storeProviderFactory.provider(for: account).createStorageStack(migration: nil) { [weak self] provider in
+        let provider = LocalStoreProvider(sharedContainerDirectory: sharedContainerURL, userIdentifier: account.userIdentifier)
+
+        provider.createStorageStack(migration: nil) { [weak self] provider in
             self?.createSession(for: account, with: provider) { userSession in
-                userSession.setEmailCredentials(session.authenticationStatus.emailCredentials())
-                userSession.syncManagedObjectContext.performGroupedBlock {
-                    userSession.syncManagedObjectContext.registeredOnThisDevice = session.authenticationStatus.completedRegistration
-                }
+
 
                 if let profileImageData = session.authenticationStatus.profileImageData {
                     self?.updateProfileImage(imageData: profileImageData)

@@ -22,46 +22,6 @@ import WireTesting
 @testable import WireSyncEngine
 
 
-class MockStoreProviderFactory: StoreProviderFactory {
-
-    let mockProvider: LocalStoreProviderProtocol
-
-    init(provider: LocalStoreProviderProtocol) {
-        self.mockProvider = provider
-        super.init()
-    }
-
-    override func provider(for account: Account?) -> LocalStoreProviderProtocol {
-        return mockProvider
-    }
-
-}
-
-class MockLocalStoreProvider: NSObject, LocalStoreProviderProtocol {
-
-    var userIdentifier: UUID?
-    var storeExists = true
-    var createStackCalled = false
-    var contextDirectory: ManagedObjectContextDirectory?
-
-    func createStorageStack(migration: (() -> Void)?, completion: @escaping (LocalStoreProviderProtocol) -> Void) {
-        createStackCalled = true
-        completion(self)
-    }
-
-    var appGroupIdentifier: String
-    var cachesURL: URL?
-    var sharedContainerDirectory: URL?
-
-    override init() {
-        userIdentifier = .create()
-        appGroupIdentifier = "group." + Bundle.main.bundleIdentifier!
-        sharedContainerDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
-        cachesURL = sharedContainerDirectory
-    }
-
-}
-
 class SessionManagerTestDelegate: SessionManagerDelegate {
     var unauthenticatedSession : UnauthenticatedSession?
     func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession) {
@@ -80,17 +40,15 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
 }
 
 class SessionManagerTests: IntegrationTest {
-    
-    var storeProvider: MockLocalStoreProvider!
+
     var delegate: SessionManagerTestDelegate!
     
     override func setUp() {
         super.setUp()
-        storeProvider = MockLocalStoreProvider()
         delegate = SessionManagerTestDelegate()
     }
     
-    func createManager() -> SessionManager? {
+    @discardableResult func createManager() -> SessionManager? {
         guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return nil }
 
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol & ReachabilityProvider)
@@ -105,7 +63,6 @@ class SessionManagerTests: IntegrationTest {
             appVersion: "0.0.0",
             authenticatedSessionFactory: authenticatedSessionFactory,
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
-            storeProviderFactory: MockStoreProviderFactory(provider: storeProvider),
             delegate: delegate,
             application: application,
             launchOptions: [:]
@@ -113,17 +70,13 @@ class SessionManagerTests: IntegrationTest {
     }
     
     override func tearDown() {
-        storeProvider = nil
         delegate = nil
         super.tearDown()
     }
     
     func testThatItCreatesUnauthenticatedSessionAndNotifiesDelegateIfStoreIsNotAvailable() {
-        // given
-        storeProvider.storeExists = false
-        
         // when
-        _ = createManager()
+        createManager()
         
         // then
         XCTAssertNil(delegate.userSession)
@@ -132,14 +85,22 @@ class SessionManagerTests: IntegrationTest {
     
     func testThatItCreatesUserSessionAndNotifiesDelegateIfStoreIsAvailable() {
         // given
-        guard let manager = storeProvider.sharedContainerDirectory.map(AccountManager.init) else { return XCTFail() }
-        let account = Account(userName: "", userIdentifier: .create())
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let manager = AccountManager(sharedDirectory: sharedContainer)
+        let account = Account(userName: "", userIdentifier: currentUserIdentifier)
         account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         manager.addAndSelect(account)
-        storeProvider.storeExists = true
+
+        let provider = LocalStoreProvider(sharedContainerDirectory: sharedContainer, userIdentifier: currentUserIdentifier)
+        var completed = false
+        provider.createStorageStack(migration: nil) { configuration in
+            completed = true
+        }
+
+        XCTAssert(wait(withTimeout: 0.5) { completed })
 
         // when
-        _ = createManager()
+        createManager()
         
         // then
         XCTAssertNotNil(delegate.userSession)

@@ -95,6 +95,8 @@ extension IntegrationTest {
     
     @objc
     func _setUp() {
+        sharedContainerDirectory = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory)
+        deleteSharedContainerContent()
         ZMPersistentCookieStorage.setDoNotPersistToKeychain(!useRealKeychain)
         StorageStack.shared.createStorageAsInMemory = useInMemoryStore
         
@@ -130,10 +132,11 @@ extension IntegrationTest {
         selfConversation = nil
         groupConversation = nil
 
-        Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory).apply(AccountManager.delete)
+        deleteSharedContainerContent()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         resetInMemoryDatabases()
+        sharedContainerDirectory = nil
     }
     
     func resetInMemoryDatabases() {
@@ -148,9 +151,16 @@ extension IntegrationTest {
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
+
+    private func deleteSharedContainerContent() {
+        try? FileManager.default.contentsOfDirectory(at: sharedContainerDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles).forEach {
+            try? FileManager.default.removeItem(at: $0)
+        }
+    }
     
     @objc
     func deleteAuthenticationCookie() {
+        ZMPersistentCookieStorage.deleteAllKeychainItems()
         mockTransportSession.cookieStorage.deleteKeychainItems()
     }
     
@@ -187,7 +197,6 @@ extension IntegrationTest {
             appVersion: "0.0.0",
             authenticatedSessionFactory: authenticatedSessionFactory,
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
-            storeProviderFactory: StoreProviderFactory(),
             delegate: self,
             application: application,
             launchOptions: [:]
@@ -219,6 +228,7 @@ extension IntegrationTest {
             let selfUser = session.insertSelfUser(withName: "The Self User")
             selfUser.email = IntegrationTest.SelfUserEmail
             selfUser.password = IntegrationTest.SelfUserPassword
+            selfUser.identifier = self.currentUserIdentifier.transportString()
             selfUser.phone = ""
             selfUser.accentID = 2
             session.addProfilePicture(to: selfUser)

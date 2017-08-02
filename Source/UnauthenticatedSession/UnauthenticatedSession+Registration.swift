@@ -47,7 +47,7 @@ protocol RegistrationObserver {
 extension UnauthenticatedSession {
     
     @objc(registerUser:)
-    public func register(user : ZMCompleteRegistrationUser) {
+    public func register(user: ZMCompleteRegistrationUser) {
         let password = user.password
         let phoneNumber = user.phoneNumber
         let phoneVerificationCode = user.phoneVerificationCode

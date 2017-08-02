@@ -16,32 +16,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import Foundation
-import UIKit
-
-private let zmLog = ZMSLog(tag: "LocalStoreProvider")
-
-@objc public protocol LocalStoreProviderProtocol: NSObjectProtocol {
-    var userIdentifier: UUID? { get }
-    var appGroupIdentifier: String { get }
-    var cachesURL: URL? { get }
-    var sharedContainerDirectory: URL? { get }
-    var storeExists: Bool { get }
-    var contextDirectory: ManagedObjectContextDirectory? { get }
-    
-    /// Should be called <b>before</b> using ZMUserSession when applications is started if needsToPrepareLocalStore returns true
-    /// It will intialize persistent store and perform migration (if needed) on background thread.
-    /// - Parameter completionHandler: called when local store is ready to be used (and the ZMUserSession is ready to be initialized). Called on the main thread, it is the responsability of the caller to switch to the desired thread.
-    func createStorageStack(migration: (() -> Void)?, completion: @escaping (LocalStoreProviderProtocol) -> Void)
-}
-
-protocol FileManagerProtocol: class {
-    func containerURL(forSecurityApplicationGroupIdentifier groupIdentifier: String) -> URL?
-    func cachesURLForAccount(with accountIdentifier: UUID?, in sharedContainerURL: URL) -> URL
-    func urls(for directory: FileManager.SearchPathDirectory, in domainMask: FileManager.SearchPathDomainMask) -> [URL]
-}
-
-extension FileManager: FileManagerProtocol {}
 
 public extension Bundle {
     var appGroupIdentifier: String? {
@@ -49,74 +23,58 @@ public extension Bundle {
     }
 }
 
+@objc public protocol LocalStoreProviderProtocol: class {
+    var userIdentifier: UUID { get }
+    var sharedContainerDirectory: URL { get }
+    var contextDirectory: ManagedObjectContextDirectory? { get }
+}
+
 
 /// Encapsulates all storage related data and methods. LocalStoreProviderProtocol protocol
 /// is used instead of concrete class to let us inject a custom implementation in tests
-@objc public class LocalStoreProvider: NSObject {
-    
-    public let appGroupIdentifier: String
-    public let userIdentifier: UUID?
-    let bundleIdentifier: String
+@objc public class LocalStoreProvider: NSObject, LocalStoreProviderProtocol {
+    public let userIdentifier: UUID
+    public let sharedContainerDirectory: URL
     public var contextDirectory: ManagedObjectContextDirectory?
 
-    let fileManager: FileManagerProtocol
-    init(bundleIdentifier: String, appGroupIdentifier: String, userIdentifier: UUID?, fileManager: FileManagerProtocol) {
-        self.bundleIdentifier = bundleIdentifier
-        self.appGroupIdentifier = appGroupIdentifier
+    public init(sharedContainerDirectory: URL, userIdentifier: UUID) {
         self.userIdentifier = userIdentifier
-        self.fileManager = fileManager
-    }
-    
-    public convenience init(userIdentifier: UUID?) {
-        self.init(
-            bundleIdentifier: Bundle.main.bundleIdentifier!,
-            appGroupIdentifier: Bundle.main.appGroupIdentifier!,
-            userIdentifier: userIdentifier,
-            fileManager: FileManager.default
-        )
-    }
-}
-
-extension LocalStoreProvider: LocalStoreProviderProtocol {
-    
-    public var sharedContainerDirectory: URL? {
-        return FileManager.sharedContainerDirectory(for: appGroupIdentifier)
-    }
-    
-    public var cachesURL: URL? {
-        return sharedContainerDirectory.map {
-            fileManager.cachesURLForAccount(with: userIdentifier, in: $0)
-        }
-    }
-    
-    public var storeExists: Bool {
-        return StorageStack.shared.storeExists
+        self.sharedContainerDirectory = sharedContainerDirectory
     }
 
     public func createStorageStack(migration: (() -> Void)?, completion: @escaping (LocalStoreProviderProtocol) -> Void) {
-        precondition(nil != sharedContainerDirectory)
-        
-        if let userIdentifier = self.userIdentifier {
-            StorageStack.shared.createManagedObjectContextDirectory(
-                forAccountWith: userIdentifier,
-                inContainerAt: sharedContainerDirectory!,
-                startedMigrationCallback: { migration?() },
-                completionHandler: { [weak self] contextDirectory in
-                    guard let `self` = self else { return }
-                    self.contextDirectory = contextDirectory
-                    completion(self)
+        StorageStack.shared.createManagedObjectContextDirectory(
+            forAccountWith: userIdentifier,
+            inContainerAt: sharedContainerDirectory,
+            startedMigrationCallback: { migration?() },
+            completionHandler: { [weak self] contextDirectory in
+                guard let `self` = self else { return }
+                self.contextDirectory = contextDirectory
+                completion(self)
+            }
+        )
+    }
+
+    public static func openOldDatabaseRetrievingSelfUser(
+        in sharedContainer: URL,
+        migration: (() -> Void)?,
+        completion: @escaping (ZMUser?) -> Void
+        ) {
+        StorageStack.shared.createManagedObjectContextFromLegacyStore(
+            inContainerAt: sharedContainer,
+            startedMigrationCallback: { migration?() },
+            completionHandler: { contextDirectory in
+                contextDirectory.uiContext.performGroupedBlock {
+                    // TODO: If the selfUser does not have a remoteIdentifier we need to delete the old database
+                    // This can happen if a user openened an old version of the app without logging in and then updating
+                    let selfUser = ZMUser.selfUser(in: contextDirectory.uiContext)
+                    if nil != selfUser.remoteIdentifier {
+                        completion(selfUser)
+                    } else {
+                        completion(nil)
+                    }
                 }
-            )
-        } else {
-            StorageStack.shared.createManagedObjectContextFromLegacyStore(
-                inContainerAt: sharedContainerDirectory!,
-                startedMigrationCallback: { migration?() },
-                completionHandler: { [weak self] contextDirectory in
-                    guard let `self` = self else { return }
-                    self.contextDirectory = contextDirectory
-                    completion(self)
-                }
-            )
-        }
+            }
+        )
     }
 }
