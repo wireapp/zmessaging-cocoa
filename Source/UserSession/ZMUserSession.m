@@ -94,9 +94,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 - (void)pushChannelDidChange:(NSNotification *)note;
 @end
 
-@interface ZMUserSession (AlertView) <UIAlertViewDelegate>
-@end
-
 
 NSURL *__nullable CBCreateTemporaryDirectoryAndReturnURL(void);
 
@@ -779,17 +776,6 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 - (BOOL)isOffline;
 {
     return [self.userInfo[IsOfflineKey] boolValue];
-}
-
-@end
-
-
-
-@implementation ZMUserSession (AlertView)
-
-- (void)alertView:(UIAlertView * __unused)alertView clickedButtonAtIndex:(NSInteger __unused)buttonIndex
-{
-    [self openAppstore];
 }
 
 @end

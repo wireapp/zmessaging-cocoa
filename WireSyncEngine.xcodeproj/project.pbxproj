@@ -141,7 +141,6 @@
 		544BA1311A433DE400D3B852 /* ZMNetworkState.h in Headers */ = {isa = PBXBuildFile; fileRef = 546D45FD19E29D92004C478D /* ZMNetworkState.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		544BA1361A43401400D3B852 /* ZMCallFlowRequestStrategyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3EAD6A10199BBEE200D519DB /* ZMCallFlowRequestStrategyTests.m */; };
 		544BA1571A43424F00D3B852 /* WireSyncEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 549815931A43232400A7CE2E /* WireSyncEngine.framework */; };
-		544D1C281DF95224003B2FC8 /* AddressBookIOS8.swift in Sources */ = {isa = PBXBuildFile; fileRef = 544D1C271DF95224003B2FC8 /* AddressBookIOS8.swift */; };
 		544F8FF31DDCD34600D1AB04 /* UserProfileUpdateNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 544F8FF21DDCD34600D1AB04 /* UserProfileUpdateNotifications.swift */; };
 		545434A219AB6975003892D9 /* ZMRegistrationTranscoderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54F8D73019AB677400146664 /* ZMRegistrationTranscoderTests.m */; };
 		545434A719AB6ADA003892D9 /* ZMConnectionTranscoderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 54F8D72B19AB677300146664 /* ZMConnectionTranscoderTest.m */; };
@@ -205,7 +204,7 @@
 		5498165A1A432BC800A7CE2E /* ZMUpdateEventsBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 54F7217919A611DE009A8AF5 /* ZMUpdateEventsBuffer.m */; };
 		549816601A432BC800A7CE2E /* ZMCallFlowRequestStrategy.m in Sources */ = {isa = PBXBuildFile; fileRef = 3EAD6A0A199BB79200D519DB /* ZMCallFlowRequestStrategy.m */; };
 		54991D581DEDCF2B007E282F /* AddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54991D571DEDCF2B007E282F /* AddressBook.swift */; };
-		54991D5A1DEDD07E007E282F /* AddressBookIOS9.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54991D591DEDD07E007E282F /* AddressBookIOS9.swift */; };
+		54991D5A1DEDD07E007E282F /* ContactAddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54991D591DEDD07E007E282F /* ContactAddressBook.swift */; };
 		549AEA3B1D6340BC003C0BEC /* AddressBookUploadRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549AEA3A1D6340BC003C0BEC /* AddressBookUploadRequestStrategy.swift */; };
 		549AEA3D1D6365C1003C0BEC /* ZMUserSession+AddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549AEA3C1D6365C1003C0BEC /* ZMUserSession+AddressBook.swift */; };
 		549AEA3F1D636EF3003C0BEC /* AddressBookUploadRequestStrategyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549AEA3E1D636EF3003C0BEC /* AddressBookUploadRequestStrategyTest.swift */; };
@@ -664,7 +663,6 @@
 		5447E4651AECDC5000411FCD /* ZMUserSessionTestsBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMUserSessionTestsBase.h; sourceTree = "<group>"; };
 		5447E4661AECDE6500411FCD /* ZMUserSessionTestsBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMUserSessionTestsBase.m; sourceTree = "<group>"; };
 		544913B21B0247700044DE36 /* ZMCredentialsTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMCredentialsTests.m; sourceTree = "<group>"; };
-		544D1C271DF95224003B2FC8 /* AddressBookIOS8.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookIOS8.swift; sourceTree = "<group>"; };
 		544F8FF21DDCD34600D1AB04 /* UserProfileUpdateNotifications.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileUpdateNotifications.swift; sourceTree = "<group>"; };
 		5454A69B1AEFA01D0022AFA4 /* EmailRegistrationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmailRegistrationTests.m; sourceTree = "<group>"; };
 		5454A69F1AEFA0A70022AFA4 /* PhoneRegistrationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PhoneRegistrationTests.m; sourceTree = "<group>"; };
@@ -707,7 +705,7 @@
 		549815931A43232400A7CE2E /* WireSyncEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WireSyncEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		549815961A43232400A7CE2E /* WireSyncEngine-ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "WireSyncEngine-ios-Info.plist"; sourceTree = "<group>"; };
 		54991D571DEDCF2B007E282F /* AddressBook.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBook.swift; sourceTree = "<group>"; };
-		54991D591DEDD07E007E282F /* AddressBookIOS9.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookIOS9.swift; sourceTree = "<group>"; };
+		54991D591DEDD07E007E282F /* ContactAddressBook.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContactAddressBook.swift; sourceTree = "<group>"; };
 		549AEA3A1D6340BC003C0BEC /* AddressBookUploadRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookUploadRequestStrategy.swift; sourceTree = "<group>"; };
 		549AEA3C1D6365C1003C0BEC /* ZMUserSession+AddressBook.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+AddressBook.swift"; sourceTree = "<group>"; };
 		549AEA3E1D636EF3003C0BEC /* AddressBookUploadRequestStrategyTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookUploadRequestStrategyTest.swift; sourceTree = "<group>"; };
@@ -1789,9 +1787,8 @@
 		A926F1E0196C12ED0045BB47 /* Registration */ = {
 			isa = PBXGroup;
 			children = (
-				544D1C271DF95224003B2FC8 /* AddressBookIOS8.swift */,
-				54991D591DEDD07E007E282F /* AddressBookIOS9.swift */,
 				54991D571DEDCF2B007E282F /* AddressBook.swift */,
+				54991D591DEDD07E007E282F /* ContactAddressBook.swift */,
 				54DE9BEA1DE74FFB00EFFB9C /* RandomHandleGenerator.swift */,
 			);
 			path = Registration;
@@ -2646,7 +2643,7 @@
 				F159F4161F1E4C4C001B7D80 /* LocalStoreProvider.swift in Sources */,
 				1660AA0D1ECDB0250056D403 /* SearchTask.swift in Sources */,
 				F9245BED1CBF95A8009D1E85 /* ZMHotFixDirectory+Swift.swift in Sources */,
-				54991D5A1DEDD07E007E282F /* AddressBookIOS9.swift in Sources */,
+				54991D5A1DEDD07E007E282F /* ContactAddressBook.swift in Sources */,
 				165D3A151E1D3EF30052E654 /* WireCallCenterV3.swift in Sources */,
 				1634958B1F0254CB004E80DB /* SessionManager+ServerConnection.swift in Sources */,
 				54034F381BB1A6D900F4ED62 /* ZMUserSession+Logs.swift in Sources */,
@@ -2667,7 +2664,6 @@
 				F9ABE84F1EFD568B00D83214 /* TeamDownloadRequestStrategy.swift in Sources */,
 				871667FA1BB2AE9C009C6EEA /* APSSignalingKeysStore.swift in Sources */,
 				54A343471D6B589A004B65EA /* AddressBookSearch.swift in Sources */,
-				544D1C281DF95224003B2FC8 /* AddressBookIOS8.swift in Sources */,
 				F98EDCD91D82B913001E65CB /* ZMLocalNotificationForSystemMessage.swift in Sources */,
 				F98EDCEA1D82B924001E65CB /* SessionTracker.swift in Sources */,
 				549815DA1A432BC700A7CE2E /* ZMUserSession+Background.m in Sources */,
@@ -2914,6 +2910,7 @@
 				ENABLE_TESTABILITY = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
@@ -2926,6 +2923,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 			};
 			name = Release;
@@ -2950,6 +2948,7 @@
 					"$(SDKROOT)/usr/include/libxml2",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Resources/WireSyncEngine-ios-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";
@@ -2978,6 +2977,7 @@
 					"$(SDKROOT)/usr/include/libxml2",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Resources/WireSyncEngine-ios-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";

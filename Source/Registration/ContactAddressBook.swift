@@ -21,17 +21,17 @@ import Contacts
 
 /// iOS Contacts-based address book
 @available(iOS 9.0, *)
-class AddressBookIOS9 : AddressBook {
+class ContactAddressBook : AddressBook {
     
     let store = CNContactStore()
 }
 
 @available(iOS 9.0, *)
-extension AddressBookIOS9 : AddressBookAccessor {
+extension ContactAddressBook : AddressBookAccessor {
     
     /// Gets a specific address book user by the local address book indentifier
     internal func contact(identifier: String) -> ContactRecord? {
-        return try? store.unifiedContact(withIdentifier: identifier, keysToFetch: AddressBookIOS9.keysToFetch)
+        return try? store.unifiedContact(withIdentifier: identifier, keysToFetch: ContactAddressBook.keysToFetch)
     }
 
     
@@ -52,7 +52,7 @@ extension AddressBookIOS9 : AddressBookAccessor {
         }
         
         let predicate: NSPredicate = CNContact.predicateForContacts(matchingName: query.lowercased())
-        guard let foundContacts = try? CNContactStore().unifiedContacts(matching: predicate, keysToFetch: AddressBookIOS9.keysToFetch) else {
+        guard let foundContacts = try? CNContactStore().unifiedContacts(matching: predicate, keysToFetch: ContactAddressBook.keysToFetch) else {
             return []
         }
         return foundContacts
@@ -61,7 +61,7 @@ extension AddressBookIOS9 : AddressBookAccessor {
     /// Enumerates the contacts, invoking the block for each contact.
     /// If the block returns false, it will stop enumerating them.
     internal func enumerateRawContacts(block: @escaping (ContactRecord) -> (Bool)) {
-        let request = CNContactFetchRequest(keysToFetch: AddressBookIOS9.keysToFetch)
+        let request = CNContactFetchRequest(keysToFetch: ContactAddressBook.keysToFetch)
         request.sortOrder = .userDefault
         try! store.enumerateContacts(with: request) { (contact, stop) in
             let shouldContinue = block(contact)

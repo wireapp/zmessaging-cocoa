@@ -167,11 +167,7 @@ class AddressBook {
             return nil
         }
         
-        if #available(iOS 9.0, *) {
-            return AddressBookIOS9()
-        } else {
-            return AddressBookIOS8()
-        }
+        return ContactAddressBook()
     }
     
     /// Uses the passed in closure, or the standard method if the closure is nil, to
