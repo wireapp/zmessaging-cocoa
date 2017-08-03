@@ -219,6 +219,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         //  ... but no request after it
         NSError *error = [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeAuthenticationFailed userInfo:nil];
         [self.mockTransportSession.cookieStorage setAuthenticationCookieData:nil];
+        [ZMPersistentCookieStorage deleteAllKeychainItems];
         return [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:error];
     };
     
@@ -330,11 +331,13 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     [self destroySessionManager];
     [self deleteAuthenticationCookie];
     [self createSessionManager];
+    
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertTrue([self login]);
 
     // then
     XCTAssertTrue(self.userSession.hadHistoryAtLastLogin);
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 @end
@@ -585,7 +588,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
     id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
-    __block BOOL didCallTooManyTimes = NO;
     __block NSUInteger runCount = 0;
     
     // expect
@@ -596,26 +598,16 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         [self.unauthenticatedSession loginWithCredentials:credentials];
     };
     
-    // second check how often the request to register the client with the wrong credentials is sent
-    id checkCallCount = ^(NSInvocation *invocation ZM_UNUSED) {
-        // If everything goes right, we only send one request
-        XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
-        didCallTooManyTimes = (runCount > 2);
-        // If didCallTooManyTimes is true that means that we are still sending out requests while waiting for the user to enter the correct password
-        // This should not happen!
-        XCTAssertFalse(didCallTooManyTimes);
-    };
-    
     [[authenticationObserver expect] authenticationDidSucceed]; // authentication
     [[[authenticationObserver expect] andDo:provideWrongCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsPasswordToRegisterClient userInfo:nil]];
-    [[[authenticationObserver stub] andDo:checkCallCount] authenticationDidFail:[NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionInvalidCredentials userInfo:nil]];
+    [[authenticationObserver expect] authenticationDidFail:[NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionInvalidCredentials userInfo:nil]];
     
     ZM_WEAK(self);
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
         ZM_STRONG(self);
         
         // when trying to register without email credentials, the BE tells us we need credentials
-        if(!didCallTooManyTimes && [request.path isEqualToString:@"/clients"] && request.method == ZMMethodPOST) {
+        if(runCount <= 2 && [request.path isEqualToString:@"/clients"] && request.method == ZMMethodPOST) {
             NSDictionary *payload;
             if (runCount == 0) {
                 payload = @{@"label" : @"missing-auth"};
@@ -625,19 +617,15 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
             runCount++;
             return [ZMTransportResponse responseWithPayload:payload HTTPStatus:400 transportSessionError:nil];
         }
-        if (didCallTooManyTimes) {
-            XCTFail("We sent too many requests trying to register a client.");
-            // Without this catch the test might crash
-            [[authenticationObserver expect] authenticationDidSucceed];
-        }
         return nil;
     };
-    
+
     // and when
     [self.unauthenticatedSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.phoneVerificationCodeForLogin]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssertEqual(runCount, 2lu);
     [authenticationObserver verify];
     [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
@@ -649,7 +637,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     [[authenticationObserver expect] authenticationDidSucceed]; // authentication
     [[authenticationObserver expect] authenticationDidSucceed]; // client creation
-    [[authenticationObserver expect] authenticationDidFail:OCMOCK_ANY]; // logout
     
     // (1) register client and recreate session
     {
@@ -675,10 +662,10 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
             [self.unauthenticatedSession loginWithCredentials:credentials];
         };
         
-        [[authenticationObserver expect] authenticationDidSucceed]; // authentication
+        [[authenticationObserver expect] authenticationDidSucceed]; // Authentication
+        [[authenticationObserver expect] authenticationDidSucceed]; // ZMUserSession Start
         [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:nil]];
         [[authenticationObserver expect] authenticationDidSucceed]; // authentication
-        [[authenticationObserver expect] authenticationDidSucceed]; // client creation
 
         // and when
         XCTAssertTrue([self loginAndIgnoreAuthenticationFailures:YES]);
@@ -701,7 +688,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     [[authenticationObserver expect] authenticationDidSucceed]; // authentication
     [[authenticationObserver expect] authenticationDidSucceed]; // client registration
-    [[authenticationObserver expect] authenticationDidFail:OCMOCK_ANY]; // logout
     
     // (1) register client and recreate session
     {

@@ -227,9 +227,6 @@ public class SessionManager : NSObject {
         self.userSession = session
         let authenticationStatus = unauthenticatedSession?.authenticationStatus
 
-        unauthenticatedSession?.tearDown()
-        unauthenticatedSession = nil
-
         session.syncManagedObjectContext.performGroupedBlock {
             session.setEmailCredentials(authenticationStatus?.emailCredentials())
             if let registered = authenticationStatus?.completedRegistration {
@@ -291,8 +288,6 @@ extension SessionManager: UnauthenticatedSessionDelegate {
 
         provider.createStorageStack(migration: nil) { [weak self] provider in
             self?.createSession(for: account, with: provider) { userSession in
-
-
                 if let profileImageData = session.authenticationStatus.profileImageData {
                     self?.updateProfileImage(imageData: profileImageData)
                 }
@@ -307,12 +302,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
 extension SessionManager: ZMAuthenticationObserver {
 
     @objc public func authenticationDidFail(_ error: Error) {
-        guard self.unauthenticatedSession == nil else { return }
-
-        // Dispose the user session if it is there
-        userSession?.tearDown()
-        userSession = nil
-        createUnauthenticatedSession()
+        // no-op
     }
 
     @objc public func authenticationDidSucceed() {

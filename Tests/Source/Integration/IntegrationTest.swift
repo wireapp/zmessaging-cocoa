@@ -481,12 +481,12 @@ extension IntegrationTest : SessionManagerDelegate {
     public func sessionManagerCreated(userSession: ZMUserSession) {
         self.userSession = userSession
         
-        userSession.syncManagedObjectContext.performGroupedBlockAndWait {
+        userSession.syncManagedObjectContext.performGroupedBlock {
             userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
             userSession.syncManagedObjectContext.add(self.dispatchGroup)
         }
         
-        userSession.managedObjectContext.performGroupedBlockAndWait {
+        userSession.managedObjectContext.performGroupedBlock {
             userSession.managedObjectContext.add(self.dispatchGroup)
         }
         

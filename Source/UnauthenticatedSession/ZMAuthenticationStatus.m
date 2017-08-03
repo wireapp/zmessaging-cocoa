@@ -385,7 +385,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)setAuthenticationCookieData:(NSData *)data;
 {
-    ZMLogDebug(@"Setting cookie data: %@", data != nil ? @"Nil" : @"Not nil");
+    ZMLogDebug(@"Setting cookie data: %@", @(data.length));
     _authenticationCookieData = data;
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }

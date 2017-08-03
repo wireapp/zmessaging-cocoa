@@ -59,6 +59,7 @@ public class UnauthenticatedSession : NSObject {
             let account = Account(userName: "", userIdentifier: info.identifier)
             let cookieStorage = account.cookieStorage()
             cookieStorage.authenticationCookieData = info.cookieData
+            self.authenticationStatus.authenticationCookieData = info.cookieData
             self.delegate?.session(session: self, createdAccount: account)
         }
     }
