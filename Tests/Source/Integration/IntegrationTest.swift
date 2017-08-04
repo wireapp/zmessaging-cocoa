@@ -199,7 +199,8 @@ extension IntegrationTest {
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
             delegate: self,
             application: application,
-            launchOptions: [:]
+            launchOptions: [:],
+            dispatchGroup: self.dispatchGroup
         )
     }
     
@@ -481,15 +482,10 @@ extension IntegrationTest : SessionManagerDelegate {
     public func sessionManagerCreated(userSession: ZMUserSession) {
         self.userSession = userSession
         
-        userSession.syncManagedObjectContext.performGroupedBlock {
+        userSession.syncManagedObjectContext.performGroupedBlockAndWait {
             userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
-            userSession.syncManagedObjectContext.add(self.dispatchGroup)
         }
-        
-        userSession.managedObjectContext.performGroupedBlock {
-            userSession.managedObjectContext.add(self.dispatchGroup)
-        }
-        
+
         userSession.managedObjectContext.performGroupedBlock {
             userSession.start()
         }

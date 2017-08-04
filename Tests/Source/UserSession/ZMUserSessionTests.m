@@ -85,7 +85,7 @@
     [[[userAgent expect] classMethod] setWireAppVersion:version];
 
     id <LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL
-                                                                                                 userIdentifier: NSUUID.createUUID];
+                                                                                                  userIdentifier: NSUUID.createUUID dispatchGroup:self.dispatchGroup];
 
     // when
     ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
@@ -226,7 +226,7 @@
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     id cookieStorage = [OCMockObject niceMockForClass:ZMPersistentCookieStorage.class];
     id <LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL
-                                                                                                  userIdentifier: NSUUID.createUUID];
+                                                                                                  userIdentifier: NSUUID.createUUID dispatchGroup:self.dispatchGroup];
     
     // expect
     [[pushChannel expect] setClientID:userClient.remoteIdentifier];
@@ -451,7 +451,7 @@
 {
     // given
     id <LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL
-                                                                                                  userIdentifier: NSUUID.createUUID];
+                                                                                                  userIdentifier: NSUUID.createUUID dispatchGroup: self.dispatchGroup];
     id transportSession = [OCMockObject mockForClass:ZMTransportSession.class];
     id pushChannel = [OCMockObject mockForProtocol:@protocol(ZMPushChannel)];
     

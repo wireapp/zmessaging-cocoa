@@ -36,16 +36,19 @@ public extension Bundle {
     public let userIdentifier: UUID
     public let sharedContainerDirectory: URL
     public var contextDirectory: ManagedObjectContextDirectory?
+    private let dispatchGroup: ZMSDispatchGroup?
 
-    public init(sharedContainerDirectory: URL, userIdentifier: UUID) {
+    @objc public init(sharedContainerDirectory: URL, userIdentifier: UUID, dispatchGroup: ZMSDispatchGroup? = nil) {
         self.userIdentifier = userIdentifier
         self.sharedContainerDirectory = sharedContainerDirectory
+        self.dispatchGroup = dispatchGroup
     }
 
     public func createStorageStack(migration: (() -> Void)?, completion: @escaping (LocalStoreProviderProtocol) -> Void) {
         StorageStack.shared.createManagedObjectContextDirectory(
             forAccountWith: userIdentifier,
             inContainerAt: sharedContainerDirectory,
+            dispatchGroup: dispatchGroup,
             startedMigrationCallback: { migration?() },
             completionHandler: { [weak self] contextDirectory in
                 guard let `self` = self else { return }
@@ -57,14 +60,15 @@ public extension Bundle {
 
     public static func openOldDatabaseRetrievingSelfUser(
         in sharedContainer: URL,
+        dispatchGroup: ZMSDispatchGroup? = nil,
         migration: (() -> Void)?,
         completion: @escaping (ZMUser?) -> Void
         ) {
         StorageStack.shared.createManagedObjectContextFromLegacyStore(
             inContainerAt: sharedContainer,
+            dispatchGroup: dispatchGroup,
             startedMigrationCallback: { migration?() },
             completionHandler: { contextDirectory in
-                contextDirectory.uiContext.performGroupedBlock {
                     // TODO: If the selfUser does not have a remoteIdentifier we need to delete the old database
                     // This can happen if a user openened an old version of the app without logging in and then updating
                     let selfUser = ZMUser.selfUser(in: contextDirectory.uiContext)
@@ -73,7 +77,6 @@ public extension Bundle {
                     } else {
                         completion(nil)
                     }
-                }
             }
         )
     }

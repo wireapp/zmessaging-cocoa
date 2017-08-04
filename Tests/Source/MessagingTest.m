@@ -331,6 +331,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 
     [StorageStack.shared createManagedObjectContextDirectoryForAccountWith:self.accountIdentifier
                                                              inContainerAt:self.sharedContainerURL
+                                                             dispatchGroup: self.dispatchGroup
                                                   startedMigrationCallback:nil
                                                          completionHandler:^(ManagedObjectContextDirectory * _Nonnull directory) {
                                                              self.contextDirectory = directory;
