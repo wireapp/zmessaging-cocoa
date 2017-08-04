@@ -25,13 +25,20 @@ protocol UnauthenticatedSessionDelegate: class {
     func session(session: UnauthenticatedSession, createdAccount account: Account)
 }
 
+@objc public protocol UserInfoParser: class {
+    @objc(parseUserInfoFromResponse:)
+    func parseUserInfo(from response: ZMTransportResponse)
+}
+
+private let log = ZMSLog(tag: "UnauthenticatedSession")
+
 
 @objc
-public class UnauthenticatedSession : NSObject {
+public class UnauthenticatedSession: NSObject {
     
     public let groupQueue: DispatchGroupQueue
     let authenticationStatus: ZMAuthenticationStatus
-    let operationLoop: UnauthenticatedOperationLoop
+    private(set) var operationLoop: UnauthenticatedOperationLoop!
     private let transportSession: UnauthenticatedTransportSessionProtocol & ReachabilityProvider
     private var tornDown = false
 
@@ -42,26 +49,18 @@ public class UnauthenticatedSession : NSObject {
         self.groupQueue = DispatchGroupQueue(queue: .main)
         self.authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue)
         self.transportSession = transportSession
+        super.init()
+
         self.operationLoop = UnauthenticatedOperationLoop(
             transportSession: transportSession,
             operationQueue: groupQueue,
             requestStrategies: [
-                ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus),
+                ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus, userInfoParser: self),
                 ZMLoginCodeRequestTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
-                ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
+                ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus, userInfoParser: self)!,
                 ZMPhoneNumberVerificationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!
             ]
         )
-
-        super.init()
-        transportSession.didReceiveUserInfo =  UserInfoAvailableClosure(queue: .main) { [weak self] info in
-            guard let `self` = self else { return }
-            let account = Account(userName: "", userIdentifier: info.identifier)
-            let cookieStorage = account.cookieStorage()
-            cookieStorage.authenticationCookieData = info.cookieData
-            self.authenticationStatus.authenticationCookieData = info.cookieData
-            self.delegate?.session(session: self, createdAccount: account)
-        }
     }
 
     deinit {
@@ -72,4 +71,21 @@ public class UnauthenticatedSession : NSObject {
         operationLoop.tearDown()
         tornDown = true
     }
+
+}
+
+// MARK: - UserInfoParser
+
+extension UnauthenticatedSession: UserInfoParser {
+
+    public func parseUserInfo(from response: ZMTransportResponse) {
+        guard let info = response.extractUserInfo() else { return log.warn("Failed to parse UserInfo from response: \(response)") }
+        log.debug("Parsed UserInfo from response: \(info)")
+        let account = Account(userName: "", userIdentifier: info.identifier)
+        let cookieStorage = account.cookieStorage()
+        cookieStorage.authenticationCookieData = info.cookieData
+        self.authenticationStatus.authenticationCookieData = info.cookieData
+        self.delegate?.session(session: self, createdAccount: account)
+    }
+
 }

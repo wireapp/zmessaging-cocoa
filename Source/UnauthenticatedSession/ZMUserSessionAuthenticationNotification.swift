@@ -30,10 +30,14 @@ import Foundation
     
     /// Invoked when the authentication succeeded and the user now has a valid 
     @objc optional func authenticationDidSucceed()
+
+    @objc optional func clientRegistrationDidSucceed()
+
+    @objc optional func didDetectSelfClientDeletion()
 }
 
 extension ZMUserSessionAuthenticationNotification {
-    @objc public static func addObserver(_ observer: ZMAuthenticationObserver) -> ZMAuthenticationObserverToken {
+    @objc(addObserver:) public static func addObserver(_ observer: ZMAuthenticationObserver) -> ZMAuthenticationObserverToken {
         return addObserver { [weak observer] in
             let error = $0.error
             switch $0.type {
@@ -45,6 +49,10 @@ extension ZMUserSessionAuthenticationNotification {
                 observer?.authenticationDidFail?(error!)
             case .authenticationNotificationAuthenticationDidSuceeded:
                 observer?.authenticationDidSucceed?()
+            case .authenticationNotificationDidRegisterClient:
+                observer?.clientRegistrationDidSucceed?()
+            case .authenticationNotificationDidDetectSelfClientDeletion:
+                observer?.didDetectSelfClientDeletion?()
             }
         }
     }

@@ -26,6 +26,7 @@
 #import "ZMCredentials.h"
 #import "ZMUserSessionRegistrationNotification.h"
 #import "NSError+ZMUserSessionInternal.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface ZMRegistrationTranscoderTests : ObjectTranscoderTests
 
@@ -35,6 +36,7 @@
 @property (nonatomic) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic) ZMPersistentCookieStorage *cookieStorage;
 @property (nonatomic) id mockLocale;
+@property (nonatomic) MockUserInfoParser *mockUserInfoParser;
 
 @end
 
@@ -60,8 +62,11 @@
     id classMock = [OCMockObject mockForClass:ZMSingleRequestSync.class];
     (void) [[[classMock stub] andReturn:self.registrationDownstreamSync] syncWithSingleRequestTranscoder:OCMOCK_ANY groupQueue:groupQueue];
     self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue];
+    self.mockUserInfoParser = [[MockUserInfoParser alloc] init];
 
-    self.sut = (id) [[ZMRegistrationTranscoder alloc] initWithGroupQueue:groupQueue authenticationStatus:self.authenticationStatus];
+    self.sut = (id) [[ZMRegistrationTranscoder alloc] initWithGroupQueue:groupQueue
+                                                    authenticationStatus:self.authenticationStatus
+                                                          userInfoParser:self.mockUserInfoParser];
     [classMock stopMocking];
 }
 
@@ -72,6 +77,7 @@
     self.cookieStorage = nil;
     self.authenticationStatus = nil;
     self.mockLocale = nil;
+    self.mockUserInfoParser = nil;
     [super tearDown];
 }
 

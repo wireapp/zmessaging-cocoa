@@ -33,6 +33,8 @@ class AuthenticationObserver : NSObject, ZMAuthenticationObserver {
     func authenticationDidSucceed() {
         onSuccess?()
     }
+
+
     
 }
 
@@ -482,12 +484,12 @@ extension IntegrationTest : SessionManagerDelegate {
     public func sessionManagerCreated(userSession: ZMUserSession) {
         self.userSession = userSession
         
-        userSession.syncManagedObjectContext.performGroupedBlockAndWait {
+        userSession.syncManagedObjectContext.performGroupedBlock {
             userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
-        }
 
-        userSession.managedObjectContext.performGroupedBlock {
-            userSession.start()
+            userSession.managedObjectContext.performGroupedBlock {
+                userSession.start()
+            }
         }
     }
     

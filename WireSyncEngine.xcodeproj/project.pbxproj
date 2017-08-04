@@ -301,6 +301,7 @@
 		BF491CD11F03D7CF0055EE44 /* PermissionsDownloadRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF491CD01F03D7CF0055EE44 /* PermissionsDownloadRequestStrategy.swift */; };
 		BF491CD51F03E0FC0055EE44 /* PermissionsDownloadRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF491CD41F03E0FC0055EE44 /* PermissionsDownloadRequestStrategyTests.swift */; };
 		BF4BA0321E89085E00AE99DC /* SearchDirectoryUserIDTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4BA0311E89085E00AE99DC /* SearchDirectoryUserIDTable.swift */; };
+		BF50CFA71F39ACE8007833A4 /* MockUserInfoParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF50CFA51F39ABCF007833A4 /* MockUserInfoParser.swift */; };
 		BF6D5D031C4948830049F712 /* WireSyncEngine124.momd in Resources */ = {isa = PBXBuildFile; fileRef = BF6D5D021C4948830049F712 /* WireSyncEngine124.momd */; };
 		BF6D5D051C494D730049F712 /* WireSyncEngine125.momd in Resources */ = {isa = PBXBuildFile; fileRef = BF6D5D041C494D730049F712 /* WireSyncEngine125.momd */; };
 		BF735CFA1E70003D003BC61F /* SystemMessageCallObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF735CF91E70003D003BC61F /* SystemMessageCallObserver.swift */; };
@@ -876,6 +877,7 @@
 		BF491CD01F03D7CF0055EE44 /* PermissionsDownloadRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PermissionsDownloadRequestStrategy.swift; sourceTree = "<group>"; };
 		BF491CD41F03E0FC0055EE44 /* PermissionsDownloadRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PermissionsDownloadRequestStrategyTests.swift; sourceTree = "<group>"; };
 		BF4BA0311E89085E00AE99DC /* SearchDirectoryUserIDTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchDirectoryUserIDTable.swift; sourceTree = "<group>"; };
+		BF50CFA51F39ABCF007833A4 /* MockUserInfoParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockUserInfoParser.swift; sourceTree = "<group>"; };
 		BF6D5D021C4948830049F712 /* WireSyncEngine124.momd */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WireSyncEngine124.momd; sourceTree = "<group>"; };
 		BF6D5D041C494D730049F712 /* WireSyncEngine125.momd */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WireSyncEngine125.momd; sourceTree = "<group>"; };
 		BF735CF91E70003D003BC61F /* SystemMessageCallObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SystemMessageCallObserver.swift; sourceTree = "<group>"; };
@@ -1679,6 +1681,7 @@
 				542DFEE71DDCA4FD000F5B95 /* UserProfileUpdateRequestStrategyTests.swift */,
 				54F8D73319AB677400146664 /* ZMUserTranscoderTests.m */,
 				54C11BAB19D1EB7500576A96 /* ZMLoginTranscoderTests.m */,
+				BF50CFA51F39ABCF007833A4 /* MockUserInfoParser.swift */,
 				09531F1A1AE9644800B8556A /* ZMLoginCodeRequestTranscoderTests.m */,
 				09D7A8881AE7E591008F190C /* ZMPhoneNumberVerificationTranscoderTests.m */,
 			);
@@ -2416,6 +2419,7 @@
 				A9692F8A1986476900849241 /* NSString_NormalizationTests.m in Sources */,
 				54880E3D194B5845007271AA /* ZMOperationLoopTests.m in Sources */,
 				F9410F631DE44C2E007451FF /* TypingStrategyTests.swift in Sources */,
+				BF50CFA71F39ACE8007833A4 /* MockUserInfoParser.swift in Sources */,
 				F98EDCF81D82EB1D001E65CB /* SessionTrackerTest.swift in Sources */,
 				16DCAD6F1B147706008C1DD9 /* NSURL+LaunchOptionsTests.m in Sources */,
 				541228451AEE422C00D9ED1C /* ZMAuthenticationStatusTests.m in Sources */,

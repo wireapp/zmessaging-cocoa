@@ -27,7 +27,7 @@
 #include "NSError+ZMUserSessionInternal.h"
 #include "ZMUserSessionRegistrationNotification.h"
 #include "ZMUserSessionAuthenticationNotification.h"
-
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMAuthenticationStatus_Internal.h"
 
 
@@ -38,6 +38,10 @@ NSTimeInterval DebugLoginFailureTimerOverride = 0;
 
 static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
+@interface ZMAuthenticationStatus () <ZMAuthenticationObserver>
+@property (nonatomic) id<ZMAuthenticationObserverToken> authenticationObserverToken;
+@end
+
 
 @implementation ZMAuthenticationStatus
 
@@ -47,6 +51,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     if(self) {
         self.groupQueue = groupQueue;
         self.isWaitingForLogin = !self.isLoggedIn;
+        self.authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserver:self];
     }
     return self;
 }
@@ -456,3 +461,12 @@ static NSString * const CookieLabelKey = @"ZMCookieLabel";
 
 @end
 
+
+@implementation ZMAuthenticationStatus (ZMAuthenticationObserver)
+
+- (void)didDetectSelfClientDeletion
+{
+    self.authenticationCookieData = nil;
+}
+
+@end

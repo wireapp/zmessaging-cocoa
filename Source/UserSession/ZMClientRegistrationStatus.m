@@ -287,7 +287,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     
     [self fetchExistingSelfClientsAfterClientRegistered:client];
     
-    [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
+    [ZMUserSessionAuthenticationNotification notifyDidRegisterClient];
     [self.registrationStatusDelegate didRegisterUserClient:client];
     self.emailCredentials = nil;
     self.needsToCheckCredentials = NO;
@@ -411,6 +411,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 {
     self.emailCredentials = nil;
     [self.cookieStorage deleteKeychainItems];
+//    [ZMUserSessionAuthenticationNotification notifyDidDetectSelfClientDeletion];
 
     NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:nil];
     [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:outError];

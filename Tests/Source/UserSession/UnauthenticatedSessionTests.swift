@@ -24,7 +24,6 @@ final class TestUnauthenticatedTransportSession: UnauthenticatedTransportSession
     public var mockMaybeReachable = true
     public var cookieStorage = ZMPersistentCookieStorage()
     var nextEnqueueResult: EnqueueResult = .nilRequest
-    var didReceiveUserInfo: UserInfoAvailableClosure?
 
     func enqueueRequest(withGenerator generator: () -> ZMTransportRequest?) -> EnqueueResult {
         return nextEnqueueResult

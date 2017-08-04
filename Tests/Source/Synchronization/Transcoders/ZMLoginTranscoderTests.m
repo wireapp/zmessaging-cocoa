@@ -29,6 +29,8 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMAuthenticationStatus_Internal.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
+
 
 @import WireUtilities;
 
@@ -72,6 +74,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 @property (nonatomic) ZMCredentials *testPhoneNumberCredentials;
 @property (nonatomic) NSTimeInterval originalLoginTimerInterval;
 @property (nonatomic) id mockLocale;
+@property (nonatomic) MockUserInfoParser *mockUserInfoParser;
 
 @end
 
@@ -89,8 +92,12 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     self.mockLocale = [OCMockObject niceMockForClass:[NSLocale class]];
     [[[self.mockLocale stub] andReturn:[NSLocale localeWithLocaleIdentifier:@"fr_FR"]] currentLocale];
+
+    self.mockUserInfoParser = [[MockUserInfoParser alloc] init];
     
-    self.sut = [[ZMLoginTranscoder alloc] initWithGroupQueue:self.groupQueue authenticationStatus:self.authenticationStatus];
+    self.sut = [[ZMLoginTranscoder alloc] initWithGroupQueue:self.groupQueue
+                                        authenticationStatus:self.authenticationStatus
+                                              userInfoParser:self.mockUserInfoParser];
     
     self.testEmailCredentials = [ZMEmailCredentials credentialsWithEmail:TestEmail password:TestPassword];
     self.testPhoneNumberCredentials = [ZMPhoneCredentials credentialsWithPhoneNumber:TestPhoneNumber verificationCode:TestPhoneCode];
@@ -103,6 +110,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     self.authenticationStatus = nil;
     self.mockClientRegistrationStatus = nil;
     self.mockLocale = nil;
+    self.mockUserInfoParser = nil;
     DefaultPendingValidationLoginAttemptInterval = self.originalLoginTimerInterval;
     [super tearDown];
 }
@@ -110,7 +118,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)testThatItCreatesTheTimedRequestSyncWithZeroDelayInDefaultConstructor
 {
     // given
-    ZMLoginTranscoder *sut = [[ZMLoginTranscoder alloc] initWithGroupQueue:self.groupQueue authenticationStatus:self.authenticationStatus];
+    ZMLoginTranscoder *sut = [[ZMLoginTranscoder alloc] initWithGroupQueue:self.groupQueue authenticationStatus:self.authenticationStatus userInfoParser:nil];
     
     // then
     XCTAssertNotNil(sut.timedDownstreamSync);

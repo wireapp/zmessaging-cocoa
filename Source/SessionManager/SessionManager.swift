@@ -222,12 +222,13 @@ public class SessionManager : NSObject {
         }
     }
 
-    fileprivate func createSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: (ZMUserSession) -> Void) {
+    fileprivate func createSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession) -> Void) {
         guard let session = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
         }
 
         self.userSession = session
+        log.debug("Created ZMUserSession for account \(account.userName) — \(account.userIdentifier)")
         let authenticationStatus = unauthenticatedSession?.authenticationStatus
 
         session.syncManagedObjectContext.performGroupedBlock {
@@ -235,13 +236,16 @@ public class SessionManager : NSObject {
             if let registered = authenticationStatus?.completedRegistration {
                 session.syncManagedObjectContext.registeredOnThisDevice = registered
             }
-        }
 
-        delegate?.sessionManagerCreated(userSession: session)
-        completion(session)
+            session.managedObjectContext.performGroupedBlock {
+                completion(session)
+                self.delegate?.sessionManagerCreated(userSession: session)
+            }
+        }
     }
 
     fileprivate func createUnauthenticatedSession() {
+        log.debug("Creating unauthenticated session")
         self.unauthenticatedSession?.tearDown()
         let unauthenticatedSession = unauthenticatedSessionFactory.session(withDelegate: self)
         self.unauthenticatedSession = unauthenticatedSession
@@ -289,11 +293,13 @@ extension SessionManager: UnauthenticatedSessionDelegate {
 
         let provider = LocalStoreProvider(sharedContainerDirectory: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup)
 
+        dispatchGroup?.enter()
         provider.createStorageStack(migration: nil) { [weak self] provider in
             self?.createSession(for: account, with: provider) { userSession in
                 if let profileImageData = session.authenticationStatus.profileImageData {
                     self?.updateProfileImage(imageData: profileImageData)
                 }
+                self?.dispatchGroup?.leave()
             }
         }
     }
@@ -304,8 +310,10 @@ extension SessionManager: UnauthenticatedSessionDelegate {
 
 extension SessionManager: ZMAuthenticationObserver {
 
-    @objc public func authenticationDidFail(_ error: Error) {
-        // no-op
+    @objc public func clientRegistrationDidSucceed() {
+        log.debug("Tearing down unauthenticated session as reaction to successfull client registration")
+        unauthenticatedSession?.tearDown()
+        unauthenticatedSession = nil
     }
 
     @objc public func authenticationDidSucceed() {

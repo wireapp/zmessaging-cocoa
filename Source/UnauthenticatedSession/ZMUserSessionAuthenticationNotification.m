@@ -64,6 +64,20 @@ static NSString *const UserSessionAuthenticationNotificationName =  @"ZMUserSess
     [[NSNotificationCenter defaultCenter] postNotification:note];
 }
 
++ (void)notifyDidRegisterClient
+{
+    ZMUserSessionAuthenticationNotification *note = [ZMUserSessionAuthenticationNotification new];
+    note.type = ZMAuthenticationNotificationDidRegisterClient;
+    [[NSNotificationCenter defaultCenter] postNotification:note];
+}
+
++ (void)notifyDidDetectSelfClientDeletion
+{
+    ZMUserSessionAuthenticationNotification *note = [ZMUserSessionAuthenticationNotification new];
+    note.type = ZMAuthenticationNotificationDidDetectSelfClientDeletion;
+    [[NSNotificationCenter defaultCenter] postNotification:note];
+}
+
 + (id<ZMAuthenticationObserverToken>)addObserverWithBlock:(void (^)(ZMUserSessionAuthenticationNotification *))block
 {
     NSCParameterAssert(block);
