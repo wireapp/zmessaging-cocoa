@@ -22,15 +22,6 @@
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 @import WireSyncEngine;
 
-@interface MockLocalStoreProvider : NSObject <LocalStoreProviderProtocol>
-
-@property (nonatomic, copy) NSUUID * _Nonnull userIdentifier;
-@property (nonatomic, copy) NSURL * _Nonnull sharedContainerDirectory;
-@property (nonatomic, strong) ManagedObjectContextDirectory * _Nullable contextDirectory;
-
-- (nonnull instancetype)initWithSharedContainerDirectory:(NSURL * _Nonnull)sharedContainerDirectory userIdentifier:(NSUUID * _Nonnull)userIdentifier contextDirectory:(ManagedObjectContextDirectory * _Nonnull)contextDirectory;
-
-@end
 
 @implementation MockLocalStoreProvider
 

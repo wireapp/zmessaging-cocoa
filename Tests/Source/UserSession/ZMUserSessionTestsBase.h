@@ -50,6 +50,18 @@
 
 @end
 
+@protocol LocalStoreProviderProtocol;
+
+@interface MockLocalStoreProvider : NSObject <LocalStoreProviderProtocol>
+
+@property (nonatomic, copy) NSUUID *userIdentifier;
+@property (nonatomic, copy) NSURL *sharedContainerDirectory;
+@property (nonatomic, strong) ManagedObjectContextDirectory *contextDirectory;
+
+- (instancetype)initWithSharedContainerDirectory:(NSURL *)sharedContainerDirectory userIdentifier:(NSUUID *)userIdentifier contextDirectory:(ManagedObjectContextDirectory *)contextDirectory;
+
+@end
+
 @interface ZMUserSessionTestsBase : MessagingTest <ZMAuthenticationStatusObserver>
 
 @property (nonatomic) id transportSession;
