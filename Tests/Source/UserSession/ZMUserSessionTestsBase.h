@@ -68,5 +68,6 @@
 @property (nonatomic) id apnsEnvironment;
 @property (nonatomic) ZMClientRegistrationStatus * clientRegistrationStatus;
 @property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
+@property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
 
 @end

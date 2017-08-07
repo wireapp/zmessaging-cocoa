@@ -84,9 +84,6 @@
     id userAgent = [OCMockObject mockForClass:ZMUserAgent.class];
     [[[userAgent expect] classMethod] setWireAppVersion:version];
 
-    id <LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL
-                                                                                                  userIdentifier: NSUUID.createUUID dispatchGroup:self.dispatchGroup];
-
     // when
     ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
                                                                analytics:nil
@@ -94,7 +91,7 @@
                                                          apnsEnvironment:nil
                                                              application:UIApplication.sharedApplication
                                                               appVersion:version
-                                                           storeProvider:storeProvider];
+                                                           storeProvider:self.storeProvider];
     XCTAssertNotNil(session);
     
     // then
@@ -225,8 +222,6 @@
     id pushChannel = [OCMockObject niceMockForProtocol:@protocol(ZMPushChannel)];
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     id cookieStorage = [OCMockObject niceMockForClass:ZMPersistentCookieStorage.class];
-    id <LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL
-                                                                                                  userIdentifier: NSUUID.createUUID dispatchGroup:self.dispatchGroup];
     
     // expect
     [[pushChannel expect] setClientID:userClient.remoteIdentifier];
@@ -235,14 +230,12 @@
     
     // when
     ZMUserSession *userSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                            userInterfaceContext:self.uiMOC
-                                                        syncManagedObjectContext:self.syncMOC
                                                                     mediaManager:self.mediaManager
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:storeProvider];
+                                                                   storeProvider:self.storeProvider];
     [userSession didRegisterUserClient:userClient];
     
     // then
@@ -450,8 +443,6 @@
 - (void)testThatItSetsItselfAsADelegateOfTheTransportSessionAndForwardsUserClientID
 {
     // given
-    id <LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL
-                                                                                                  userIdentifier: NSUUID.createUUID dispatchGroup: self.dispatchGroup];
     id transportSession = [OCMockObject mockForClass:ZMTransportSession.class];
     id pushChannel = [OCMockObject mockForProtocol:@protocol(ZMPushChannel)];
     
@@ -480,14 +471,12 @@
 
     // when
     ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                            userInterfaceContext:self.uiMOC
-                                                        syncManagedObjectContext:self.syncMOC
                                                                     mediaManager:self.mediaManager
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:storeProvider];
+                                                                   storeProvider:self.storeProvider];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

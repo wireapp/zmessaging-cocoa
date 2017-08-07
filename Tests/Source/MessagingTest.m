@@ -77,7 +77,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 @property (nonatomic) ManagedObjectContextDirectory *contextDirectory;
 
 @property (nonatomic) NSString *groupIdentifier;
-@property (nonatomic) NSUUID *accountIdentifier;
+@property (nonatomic) NSUUID *userIdentifier;
 @property (nonatomic) NSURL *sharedContainerURL;
 
 @property (nonatomic) MockTransportSession *mockTransportSession;
@@ -121,7 +121,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 - (NSURL *)storeURL
 {
-    return [NSFileManager currentStoreURLForAccountWith:self.accountIdentifier in:self.sharedContainerURL];
+    return [NSFileManager currentStoreURLForAccountWith:self.userIdentifier in:self.sharedContainerURL];
 }
 
 - (NSURL *)keyStoreURL
@@ -132,13 +132,14 @@ static ZMReachability *sharedReachabilityMock = nil;
 - (void)setUp;
 {
     [super setUp];
+    
     NSFileManager *fm = NSFileManager.defaultManager;
     NSString *bundleIdentifier = [NSBundle bundleForClass:self.class].bundleIdentifier;
     self.groupIdentifier = [@"group." stringByAppendingString:bundleIdentifier];
-    self.accountIdentifier = [NSUUID UUID];
+    self.userIdentifier = [NSUUID UUID];
     self.sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
     
-    NSURL *otrFolder = [NSFileManager keyStoreURLForAccountWith:self.accountIdentifier in:self.sharedContainerURL createParentIfNeeded:NO];
+    NSURL *otrFolder = [NSFileManager keyStoreURLForAccountWith:self.userIdentifier in:self.sharedContainerURL createParentIfNeeded:NO];
     [fm removeItemAtURL:otrFolder error: nil];
     
     _application = [[ApplicationMock alloc] init];
@@ -329,7 +330,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 
     StorageStack.shared.createStorageAsInMemory = self.shouldUseInMemoryStore;
 
-    [StorageStack.shared createManagedObjectContextDirectoryForAccountWith:self.accountIdentifier
+    [StorageStack.shared createManagedObjectContextDirectoryForAccountWith:self.userIdentifier
                                                              inContainerAt:self.sharedContainerURL
                                                              dispatchGroup: self.dispatchGroup
                                                   startedMigrationCallback:nil
@@ -361,7 +362,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     WaitForAllGroupsToBeEmpty(2);
     
     [self performPretendingUiMocIsSyncMoc:^{
-        [self.uiMOC setupUserKeyStoreInSharedContainer:self.sharedContainerURL withAccountIdentifier:self.accountIdentifier];
+        [self.uiMOC setupUserKeyStoreInSharedContainer:self.sharedContainerURL withAccountIdentifier:self.userIdentifier];
     }];
     
     [self.uiMOC saveOrRollback];
@@ -408,7 +409,7 @@ static ZMReachability *sharedReachabilityMock = nil;
         id mockUserSession = [OCMockObject niceMockForClass:[ZMUserSession class]];
         [[[mockUserSession stub] andReturn:self.uiMOC] managedObjectContext];
         [[[mockUserSession stub] andReturn:self.syncMOC] syncManagedObjectContext];
-        [[[mockUserSession stub] andReturn:self.accountIdentifier] accountIdentifier];
+        [[[mockUserSession stub] andReturn:self.searchMOC] searchManagedObjectContext];
         [[[mockUserSession stub] andReturn:self.sharedContainerURL] sharedContainerURL];
         [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockTransportSession] transportSession];
         _mockUserSession = mockUserSession;

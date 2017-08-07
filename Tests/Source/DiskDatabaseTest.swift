@@ -34,7 +34,10 @@ public class DiskDatabaseTest: ZMTBaseTest {
         super.setUp()
 
         accountId = .create()
-
+        
+        let bundleIdentifier = Bundle.main.bundleIdentifier
+        let groupIdentifier = "group." + bundleIdentifier!
+        sharedContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupIdentifier)
         cleanUp()
         createDatabase()
 
@@ -62,17 +65,10 @@ public class DiskDatabaseTest: ZMTBaseTest {
     }
     
     private func cleanUp() {
-        let storeURL = FileManager.currentStoreURLForAccount(with: accountId, in: sharedContainerURL)
-        let supportCachesPath = (storeURL as NSURL).deletingLastPathComponent!.path
-        
-        let fileManager = FileManager.default
-        
-        if fileManager.fileExists(atPath: supportCachesPath) {
-            try? fileManager.removeItem(atPath: supportCachesPath)
-        } else {
-            XCTFail("Store was not created")
+        try? FileManager.default.contentsOfDirectory(at: sharedContainerURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles).forEach {
+            try? FileManager.default.removeItem(at: $0)
         }
-        
+
         StorageStack.reset()
     }
 }

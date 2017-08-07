@@ -88,14 +88,12 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 + (NSString *)databaseIdentifier;
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
-                    userInterfaceContext:(NSManagedObjectContext *)userInterfaceContext
-                syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
                             mediaManager:(AVSMediaManager *)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
-                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;;
+                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 
 - (void)tearDown;
 

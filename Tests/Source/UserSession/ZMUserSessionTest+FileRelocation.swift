@@ -33,10 +33,10 @@ class ZMUserSessionRelocationTests : ZMUserSessionTestsBase {
         XCTAssertTrue(itemNames.count > 0)
         
         // when
-        ZMUserSession.moveCachesIfNeededForAccount(with: self.accountIdentifier, in: self.sut.sharedContainerURL)
+        ZMUserSession.moveCachesIfNeededForAccount(with: self.userIdentifier, in: self.sut.sharedContainerURL)
         
         // then
-        let newLocation = FileManager.default.cachesURLForAccount(with: self.accountIdentifier, in: self.sharedContainerURL)
+        let newLocation = FileManager.default.cachesURLForAccount(with: self.userIdentifier, in: self.sharedContainerURL)
         let movedItemNames = try FileManager.default.contentsOfDirectory(atPath: newLocation.path)
         XCTAssertTrue(movedItemNames.count > 0)
         itemNames.forEach {
