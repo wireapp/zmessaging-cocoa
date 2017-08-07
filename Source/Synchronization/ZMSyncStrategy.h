@@ -48,16 +48,14 @@
 
 @interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory>
 
-- (instancetype)initWithSyncManagedObjectContextMOC:(NSManagedObjectContext *)syncMOC
-                             uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
-                                      cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-                                       mediaManager:(AVSMediaManager *)mediaManager
-                                onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-                                  syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
-                       localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-                           taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
-                                 appGroupIdentifier:(NSString *)appGroupIdentifier
-                                        application:(id<ZMApplication>)application;
+- (instancetype)initWithStoreProvider:(id<LocalStoreProviderProtocol>)storeProvider
+                        cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
+                         mediaManager:(AVSMediaManager *)mediaManager
+                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                    syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
+         localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
+             taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
+                          application:(id<ZMApplication>)application;
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;

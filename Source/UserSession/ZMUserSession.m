@@ -175,7 +175,7 @@ ZM_EMPTY_ASSERTING_INIT()
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
-                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
+                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
 {
     self = [super init];
     if(self) {
@@ -236,14 +236,12 @@ ZM_EMPTY_ASSERTING_INIT()
         [self.syncManagedObjectContext performBlockAndWait:^{
     
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
-                                                                                             cookieStorage:session.cookieStorage
+                                                                                      cookieStorage:session.cookieStorage
                                                                         localNotificationdispatcher:self.localNotificationDispatcher
                                                                                        mediaManager:mediaManager
                                                                                 onDemandFlowManager:self.onDemandFlowManager
-                                                                                              uiMOC:self.managedObjectContext
-                                                                                            syncMOC:self.syncManagedObjectContext
+                                                                                      storeProvider:storeProvider
                                                                                   syncStateDelegate:self
-                                                                                 appGroupIdentifier:NSBundle.mainBundle.appGroupIdentifier
                                                                                         application:application];
             
             __weak id weakSelf = self;

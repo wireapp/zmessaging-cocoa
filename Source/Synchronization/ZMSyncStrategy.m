@@ -115,31 +115,29 @@
 ZM_EMPTY_ASSERTING_INIT()
 
 
-- (instancetype)initWithSyncManagedObjectContextMOC:(NSManagedObjectContext *)syncMOC
-                             uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
-                                      cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-                                       mediaManager:(AVSMediaManager *)mediaManager
-                                onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-                                  syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
-                       localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-                           taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
-                                 appGroupIdentifier:(NSString *)appGroupIdentifier
-                                        application:(id<ZMApplication>)application;
+- (instancetype)initWithStoreProvider:(id<LocalStoreProviderProtocol>)storeProvider
+                        cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
+                         mediaManager:(AVSMediaManager *)mediaManager
+                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                    syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
+         localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
+             taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
+                          application:(id<ZMApplication>)application
 {
     self = [super init];
     if (self) {
         self.syncStateDelegate = syncStateDelegate;
-        self.notificationDispatcher = [[NotificationDispatcher alloc] initWithManagedObjectContext: uiMOC];
+        self.notificationDispatcher = [[NotificationDispatcher alloc] initWithManagedObjectContext: storeProvider.contextDirectory.uiContext];
         self.application = application;
         self.localNotificationDispatcher = localNotificationsDispatcher;
-        self.syncMOC = syncMOC;
-        self.uiMOC = uiMOC;
+        self.syncMOC = storeProvider.contextDirectory.syncContext;
+        self.uiMOC = storeProvider.contextDirectory.uiContext;
         self.hotFix = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
 
-        self.eventMOC = [NSManagedObjectContext createEventContextWithAppGroupIdentifier:appGroupIdentifier];
+        self.eventMOC = [NSManagedObjectContext createEventContextWithSharedContainerURL:storeProvider.sharedContainerDirectory userIdentifier:storeProvider.userIdentifier];
         [self.eventMOC addGroup:self.syncMOC.dispatchGroup];
         
-        self.applicationStatusDirectory = [[ZMApplicationStatusDirectory alloc] initWithManagedObjectContext:syncMOC
+        self.applicationStatusDirectory = [[ZMApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncMOC
                                                                                                cookieStorage:cookieStorage
                                                                                          requestCancellation:taskCancellationProvider
                                                                                                  application:application
@@ -200,7 +198,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
 
         ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:self.syncMOC]);
-        ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:uiMOC]);
+        ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:storeProvider.contextDirectory.uiContext]);
 
         [application registerObserverForDidEnterBackground:self selector:@selector(appDidEnterBackground:)];
         [application registerObserverForWillEnterForeground:self selector:@selector(appWillEnterForeground:)];

@@ -26,7 +26,7 @@ class StoreUpdateEventTests: MessagingTest {
 
     override func setUp() {
         super.setUp()
-        eventMOC = NSManagedObjectContext.createEventContext(withAppGroupIdentifier: nil)
+        eventMOC = NSManagedObjectContext.createEventContext(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
         eventMOC.add(self.dispatchGroup)
     }
     
