@@ -61,7 +61,6 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
         
         self.clientRegistrationStatus.tearDown()
         self.clientRegistrationStatus = nil
-        self.clientUpdateStatus.tearDown()
         self.clientUpdateStatus = nil
         self.spyKeyStore = nil
         self.sut.tearDown()
