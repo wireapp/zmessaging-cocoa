@@ -461,23 +461,8 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)start;
 {
-    [self didStartApplication];
     [self refreshTokensIfNeeded];
     [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-}
-
-- (void)didStartApplication
-{
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        if (self.isLoggedIn) {
-            [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
-        } else if (self.authenticationStatus.isAuthenticated) {
-            [self.clientRegistrationStatus prepareForClientRegistration];
-        } else {
-            [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials
-                                                                                                               userInfo:nil]];
-        }
-    }];
 }
 
 - (void)refreshTokensIfNeeded

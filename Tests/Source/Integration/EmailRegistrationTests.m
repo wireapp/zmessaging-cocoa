@@ -149,7 +149,6 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [registrationObserver verify];
 }
 
-
 - (void)testThatIfRegisteringWithADuplicateEmailWeLogInIfWeHaveTheRightPassword
 {
     // given

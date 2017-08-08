@@ -136,26 +136,14 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 {
     // given
     XCTAssertTrue([self login]);
-    
-    // expect
-    id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
-    
-    XCTestExpectation *expectation = [self expectationWithDescription:@"Authentication did succeed"];
-    [[[authenticationObserver expect] andDo:^(NSInvocation *invocation ZM_UNUSED) {
-        [expectation fulfill];
-    }] authenticationDidSucceed];
-    
+
     // when
     [self recreateSessionManager];
     
     // then
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    [authenticationObserver verify];
+    WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertNotNil([self.mockTransportSession.cookieStorage authenticationCookieData]);
     XCTAssertTrue(self.userSession.isLoggedIn);
-    
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)testThatWeReceiveAuthenticationErrorWithWrongCredentials
@@ -663,7 +651,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         };
 
         [[authenticationObserver expect] authenticationDidSucceed]; // Login
-        [[authenticationObserver expect] authenticationDidSucceed]; // ZMUserSession Start
         [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:nil]];
         // TODO: Fix this faulty test that never checks if we actually register a new client!
 //        [[authenticationObserver expect] clientRegistrationDidSucceed]; // Client Registration
