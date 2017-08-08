@@ -128,6 +128,7 @@ public class SessionManager : NSObject {
                 createSession()
             }
         } else {
+            transportSession.cookieStorage.deleteUserKeychainItems()
             let unauthenticatedSession = UnauthenticatedSession(transportSession: transportSession, delegate: self)
             self.unauthenticatedSession = unauthenticatedSession
             delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
