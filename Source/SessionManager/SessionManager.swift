@@ -278,17 +278,17 @@ public class SessionManager : NSObject {
 
 extension SessionManager: UnauthenticatedSessionDelegate {
 
-    func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) {
+    public func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) {
         if let userSession = userSession, let emailCredentials = credentials as? ZMEmailCredentials {
             userSession.setEmailCredentials(emailCredentials)
         }
     }
     
-    func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data) {
+    public func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data) {
         updateProfileImage(imageData: imageData)
     }
     
-    func session(session: UnauthenticatedSession, createdAccount account: Account) {
+    public func session(session: UnauthenticatedSession, createdAccount account: Account) {
         accountManager.addAndSelect(account)
 
         let provider = LocalStoreProvider(sharedContainerDirectory: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup)

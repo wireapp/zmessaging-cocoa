@@ -19,7 +19,7 @@
 import Foundation
 import WireUtilities
 
-protocol UnauthenticatedSessionDelegate: class {
+public protocol UnauthenticatedSessionDelegate: class {
     func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials)
     func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data)
     func session(session: UnauthenticatedSession, createdAccount account: Account)
