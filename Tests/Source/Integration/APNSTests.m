@@ -124,7 +124,7 @@
     return (didContainRemoteRequest && didContainVOIPRequest);
 }
 
-- (void)DISABLED_testThatItUpdatesNewTokensIfNeeded
+- (void)testThatItUpdatesNewTokensIfNeeded
 {
     XCTAssertTrue([self login]);
     [self.mockTransportSession resetReceivedRequests];
@@ -147,6 +147,15 @@
         }];
     };
     
+    // expect
+    id mockPushRegistrant = [OCMockObject niceMockForClass:ZMPushRegistrant.class];
+    [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
+
+    [[[mockPushRegistrant stub] andReturn:mockPushRegistrant] alloc];
+    (void)[[[mockPushRegistrant stub] andReturn:mockPushRegistrant] initWithDidUpdateCredentials:OCMOCK_ANY
+                                                                               didReceivePayload:OCMOCK_ANY
+                                                                              didInvalidateToken:OCMOCK_ANY];
+
     // when
     [self recreateSessionManager];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -154,10 +163,7 @@
     if (nil == self.userSession) {
         return XCTFail(@"No user session available");
     }
-    
-    id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
-    [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-    
+
     WaitForAllGroupsToBeEmpty(0.5);
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {

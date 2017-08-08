@@ -48,11 +48,6 @@ public enum ClientUpdateError : NSInteger {
     fileprivate var isFetchingClients = false
     fileprivate var isWaitingToDeleteClients = false
     fileprivate var needsToVerifySelfClient = false
-    fileprivate var needsToVerifySelfClientOnAuthenticationDidSucceed = false
-
-    fileprivate var tornDown = false
-    
-    fileprivate var authenticationToken : ZMAuthenticationObserverToken!
     fileprivate var internalCredentials : ZMEmailCredentials?
 
     open var credentials : ZMEmailCredentials? {
@@ -62,14 +57,10 @@ public enum ClientUpdateError : NSInteger {
     public init(syncManagedObjectContext: NSManagedObjectContext) {
         self.syncManagedObjectContext = syncManagedObjectContext
         super.init()
-        self.authenticationToken = ZMUserSessionAuthenticationNotification.addObserver { [weak self] note in
-            if note.type == .authenticationNotificationAuthenticationDidSuceeded {
-                self?.syncManagedObjectContext.performGroupedBlock {
-                    self?.authenticationDidSucceed()
-                }
-            }
-        }
-        self.needsToVerifySelfClientOnAuthenticationDidSucceed = !ZMClientRegistrationStatus.needsToRegisterClient(in: self.syncManagedObjectContext)
+        
+        let hasSelfClient = !ZMClientRegistrationStatus.needsToRegisterClient(in: self.syncManagedObjectContext)
+        
+        needsToFetchClients(andVerifySelfClient: hasSelfClient)
         
         // check if we are already trying to delete the client
         if let selfUser = ZMUser.selfUser(in: syncManagedObjectContext).selfClient() , selfUser.markedToDelete {
@@ -80,20 +71,6 @@ public enum ClientUpdateError : NSInteger {
             selfUser.markedToDelete = false
             selfUser.resetLocallyModifiedKeys(Set(arrayLiteral: ZMUserClientMarkedToDeleteKey))
         }
-    }
-    
-    public func tearDown() {
-        ZMUserSessionAuthenticationNotification.removeObserver(for: self.authenticationToken)
-        authenticationToken = nil
-        tornDown = true
-    }
-    
-    deinit {
-        assert(tornDown)
-    }
-    
-    func authenticationDidSucceed() {
-        needsToFetchClients(andVerifySelfClient: needsToVerifySelfClientOnAuthenticationDidSucceed)
     }
     
     open var currentPhase : ClientUpdatePhase {
@@ -203,7 +180,7 @@ public enum ClientUpdateError : NSInteger {
     }
     
     public func didDetectCurrentClientDeletion() {
-        needsToVerifySelfClientOnAuthenticationDidSucceed = false
+        needsToVerifySelfClient = false
     }
     
     open func didDeleteClient() {

@@ -42,13 +42,14 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
 class SessionManagerTests: IntegrationTest {
 
     var delegate: SessionManagerTestDelegate!
+    var sut: SessionManager?
     
     override func setUp() {
         super.setUp()
         delegate = SessionManagerTestDelegate()
     }
     
-    @discardableResult func createManager() -> SessionManager? {
+    func createManager() -> SessionManager? {
         guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return nil }
 
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol & ReachabilityProvider)
@@ -65,18 +66,20 @@ class SessionManagerTests: IntegrationTest {
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
             delegate: delegate,
             application: application,
-            launchOptions: [:]
+            launchOptions: [:],
+            dispatchGroup: dispatchGroup
         )
     }
     
     override func tearDown() {
         delegate = nil
+        sut = nil
         super.tearDown()
     }
     
     func testThatItCreatesUnauthenticatedSessionAndNotifiesDelegateIfStoreIsNotAvailable() {
         // when
-        createManager()
+        sut = createManager()
         
         // then
         XCTAssertNil(delegate.userSession)
@@ -100,7 +103,8 @@ class SessionManagerTests: IntegrationTest {
         XCTAssert(wait(withTimeout: 0.5) { completed })
 
         // when
-        createManager()
+        sut = createManager()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         
         // then
         XCTAssertNotNil(delegate.userSession)

@@ -382,7 +382,7 @@
     // then
     XCTAssertEqual(self.sessionNotifications.count, 1u);
     ZMUserSessionAuthenticationNotification *note = self.sessionNotifications.firstObject;
-    XCTAssertEqual(note.type, ZMAuthenticationNotificationAuthenticationDidSuceeded);
+    XCTAssertEqual(note.type, ZMAuthenticationNotificationDidRegisterClient);
 }
 
 - (void)testThatItNotifiesTheUIIfTheClientWasAlreadyRegisteredBeforeFetchingTheSelfUser

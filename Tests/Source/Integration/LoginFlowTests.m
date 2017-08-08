@@ -672,6 +672,13 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)testThatItCanRegisterNewClientAfterDeletingSelfClientAndReceivingNeedsPasswordToRegisterClient
 {
     // given
+    NSString *phone = @"+4912345678900";
+    NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        NOT_USED(session);
+        self.selfUser.phone = phone;
+    }];
+
     id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
     id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     [[authenticationObserver expect] authenticationDidSucceed]; // authentication
@@ -700,13 +707,16 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
                 [self.unauthenticatedSession loginWithCredentials:credentials];
             }];
         };
-        
+
+        [[authenticationObserver expect] loginCodeRequestDidSucceed]; // authentication
         [[authenticationObserver expect] authenticationDidSucceed]; // authentication
         [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsPasswordToRegisterClient userInfo:nil]];
         [[authenticationObserver expect] clientRegistrationDidSucceed]; // client registration
         
         // when
-        XCTAssertTrue([self loginAndIgnoreAuthenticationFailures:YES]);
+//        XCTAssertTrue([self loginAndIgnoreAuthenticationFailures:YES]);
+        [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
+        XCTAssertTrue([self loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code] ignoreAuthenticationFailures:YES]);
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then

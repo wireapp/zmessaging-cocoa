@@ -42,7 +42,7 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     override func setUp() {
         super.setUp()
 
-        self.spyKeyStore = SpyUserClientKeyStore(in: sharedContainerURL, accountIdentifier: userIdentifier)
+        self.spyKeyStore = SpyUserClientKeyStore(accountDirectory: accountDirectory, applicationContainer: sharedContainerURL)
         cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer", userIdentifier: userIdentifier)
 
         clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage, registrationStatusDelegate: nil)
@@ -57,11 +57,10 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     }
     
     override func tearDown() {
-        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectoryURL)
+        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectory)
         
         self.clientRegistrationStatus.tearDown()
         self.clientRegistrationStatus = nil
-        self.clientUpdateStatus.tearDown()
         self.clientUpdateStatus = nil
         self.spyKeyStore = nil
         self.sut.tearDown()
@@ -211,7 +210,7 @@ extension UserClientRequestStrategyTests {
         let note = receivedAuthenticationNotifications.first
         AssertOptionalNotNil(note, "Authentication should succeed. Observers should be notified") { note in
             XCTAssertNil(note.error)
-            XCTAssertEqual(note.type, ZMUserSessionAuthenticationNotificationType.authenticationNotificationAuthenticationDidSuceeded)
+            XCTAssertEqual(note.type, ZMUserSessionAuthenticationNotificationType.authenticationNotificationDidRegisterClient)
         }
     }
     

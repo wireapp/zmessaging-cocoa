@@ -27,14 +27,16 @@ public class DiskDatabaseTest: ZMTBaseTest {
     var moc: NSManagedObjectContext!
     
     var storeURL : URL {
-        return FileManager.currentStoreURLForAccount(with: accountId, in: sharedContainerURL)
+        return StorageStack.accountFolder(
+            accountIdentifier: accountId,
+            applicationContainer: sharedContainerURL
+            ).appendingPersistentStoreLocation()
     }
     
     public override func setUp() {
         super.setUp()
 
         accountId = .create()
-        
         let bundleIdentifier = Bundle.main.bundleIdentifier
         let groupIdentifier = "group." + bundleIdentifier!
         sharedContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupIdentifier)
@@ -57,7 +59,7 @@ public class DiskDatabaseTest: ZMTBaseTest {
         StorageStack.reset()
         StorageStack.shared.createStorageAsInMemory = false
 
-        StorageStack.shared.createManagedObjectContextDirectory(forAccountWith: accountId, inContainerAt: storeURL) {
+        StorageStack.shared.createManagedObjectContextDirectory(accountIdentifier: accountId, applicationContainer: storeURL) {
             self.moc = $0.uiContext
         }
 

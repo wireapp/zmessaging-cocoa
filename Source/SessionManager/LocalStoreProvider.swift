@@ -46,8 +46,8 @@ public extension Bundle {
 
     public func createStorageStack(migration: (() -> Void)?, completion: @escaping (LocalStoreProviderProtocol) -> Void) {
         StorageStack.shared.createManagedObjectContextDirectory(
-            forAccountWith: userIdentifier,
-            inContainerAt: sharedContainerDirectory,
+            accountIdentifier: userIdentifier,
+            applicationContainer: sharedContainerDirectory,
             dispatchGroup: dispatchGroup,
             startedMigrationCallback: { migration?() },
             completionHandler: { [weak self] contextDirectory in
@@ -58,26 +58,15 @@ public extension Bundle {
         )
     }
 
-    public static func openOldDatabaseRetrievingSelfUser(
+    public static func fetchUserIDFromLegacyStore(
         in sharedContainer: URL,
-        dispatchGroup: ZMSDispatchGroup? = nil,
         migration: (() -> Void)?,
-        completion: @escaping (ZMUser?) -> Void
+        completion: @escaping (UUID?) -> Void
         ) {
-        StorageStack.shared.createManagedObjectContextFromLegacyStore(
-            inContainerAt: sharedContainer,
-            dispatchGroup: dispatchGroup,
-            startedMigrationCallback: { migration?() },
-            completionHandler: { contextDirectory in
-                    // TODO: If the selfUser does not have a remoteIdentifier we need to delete the old database
-                    // This can happen if a user openened an old version of the app without logging in and then updating
-                    let selfUser = ZMUser.selfUser(in: contextDirectory.uiContext)
-                    if nil != selfUser.remoteIdentifier {
-                        completion(selfUser)
-                    } else {
-                        completion(nil)
-                    }
-            }
+        StorageStack.shared.fetchUserIDFromLegacyStore(
+            applicationContainer: sharedContainer,
+            startedMigrationCallback: migration,
+            completionHandler: completion
         )
     }
 }

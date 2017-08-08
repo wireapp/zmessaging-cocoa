@@ -32,7 +32,7 @@ class AnalyticsTests: ZMTBaseTest {
 
     func createSyncContext() -> NSManagedObjectContext {
         var context: NSManagedObjectContext?
-        StorageStack.shared.createManagedObjectContextDirectory(forAccountWith: accountID, inContainerAt: sharedContainerURL) {
+        StorageStack.shared.createManagedObjectContextDirectory(accountIdentifier: accountID, applicationContainer: sharedContainerURL) {
             context = $0.syncContext
         }
         XCTAssert(wait(withTimeout: 0.5) { context != nil })

@@ -37,12 +37,11 @@ class ClientUpdateStatusTests: MessagingTest {
     
     override func tearDown() {
         ZMClientUpdateNotification.removeObserver(clientObserverToken)
-        self.sut.tearDown()
         super.tearDown()
     }
     
-    func testThatItReturnsDoneByDefault() {
-        XCTAssertEqual(self.sut.currentPhase, ClientUpdatePhase.done)
+    func testThatItReturnsfetchingClientsByDefault() {
+        XCTAssertEqual(self.sut.currentPhase, ClientUpdatePhase.fetchingClients)
     }
  
     func testThatItReturnsFetchingClientsWhenFetchStarted() {
@@ -311,7 +310,6 @@ class ClientUpdateStatusTests: MessagingTest {
         // GIVEN
         // remove previous
         ZMClientUpdateNotification.removeObserver(clientObserverToken)
-        self.sut.tearDown()
 
         // delete self client
         let selfClient = insertSelfClient()
