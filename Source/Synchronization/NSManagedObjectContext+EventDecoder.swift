@@ -19,6 +19,7 @@
 
 import Foundation
 import WireSystem
+import WireDataModel
 
 private let zmLog = ZMSLog(tag: "EventDecoder")
 
@@ -30,6 +31,9 @@ extension NSManagedObjectContext {
     /// - parameter appGroupIdentifier: Optional identifier for a shared container group to be used to store the database,
     /// if `nil` is passed a default of `group. + bundleIdentifier` will be used (e.g. when testing)
     public static func createEventContext(withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID?) -> NSManagedObjectContext {
+        let oldStoreURL = storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: nil)
+        let newStoreURL = storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
+        migrateOldStoreIfNeeded(oldStoreURL: oldStoreURL, newStoreURL: newStoreURL)
         eventPersistentStoreCoordinator = createPersistentStoreCoordinator()
         let managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         managedObjectContext.persistentStoreCoordinator = eventPersistentStoreCoordinator
@@ -39,6 +43,19 @@ extension NSManagedObjectContext {
         }
         addPersistentStore(eventPersistentStoreCoordinator!, withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
         return managedObjectContext
+    }
+    
+    fileprivate static func migrateOldStoreIfNeeded(oldStoreURL: URL, newStoreURL: URL) {
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: oldStoreURL.path) && !fileManager.fileExists(atPath: newStoreURL.path) {
+            FileManager.default.createAndProtectDirectory(at: newStoreURL.deletingLastPathComponent())
+            let relocator = PersistentStoreRelocator(newStoreURL: newStoreURL, previousStoreURL: oldStoreURL)
+            do {
+                try relocator.moveStoreIfNecessary() {}
+            } catch {
+                fatal("Migrating event store from previous location:\(error.localizedDescription)")
+            }
+        }
     }
 
     public func tearDownEventMOC() {
@@ -66,7 +83,7 @@ extension NSManagedObjectContext {
     }
     
     fileprivate static func addPersistentStore(_ psc: NSPersistentStoreCoordinator, withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID?, isSecondTry: Bool = false) {
-        guard let storeURL = storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier) else { return }
+        let storeURL = self.storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
         do {
             let storeType = StorageStack.shared.createStorageAsInMemory ? NSInMemoryStoreType : NSSQLiteStoreType
             try psc.addPersistentStore(ofType: storeType, configurationName: nil, at: storeURL, options: nil)
@@ -82,7 +99,7 @@ extension NSManagedObjectContext {
         }
     }
     
-    fileprivate static func storeURL(withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID?) -> URL? {
+    fileprivate static func storeURL(withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID?) -> URL {
         let storeURL: URL
         if let userIdentifier = userIdentifier {
             storeURL = sharedContainerURL.appendingPathComponent(userIdentifier.uuidString, isDirectory:true)
@@ -90,9 +107,7 @@ extension NSManagedObjectContext {
             storeURL = sharedContainerURL
         }
         
-        FileManager.default.createAndProtectDirectory(at: storeURL)
-        
         let storeFileName = "ZMEventModel.sqlite"
-        return storeURL.appendingPathComponent(storeFileName)
+        return storeURL.appendingPathComponent(storeFileName, isDirectory: false)
     }
 }
