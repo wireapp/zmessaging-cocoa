@@ -69,10 +69,10 @@ extension NSManagedObjectContext {
 
     fileprivate static func createPersistentStoreCoordinator() -> NSPersistentStoreCoordinator {
         guard let modelURL = Bundle(for: StoredUpdateEvent.self).url(forResource: "ZMEventModel", withExtension:"momd") else {
-            fatalError("Error loading model from bundle")
+            fatal("Error loading model from bundle")
         }
         guard let mom = NSManagedObjectModel(contentsOf: modelURL) else {
-            fatalError("Error initializing mom from: \(modelURL)")
+            fatal("Error initializing mom from: \(modelURL)")
         }
         return NSPersistentStoreCoordinator(managedObjectModel: mom)
     }
@@ -84,7 +84,7 @@ extension NSManagedObjectContext {
             try psc.addPersistentStore(ofType: storeType, configurationName: nil, at: storeURL, options: nil)
         } catch {
             if isSecondTry {
-                zmLog.error("Error adding persistent store \(error)")
+                fatal("Error adding persistent store \(error)")
             } else {
                 let stores = psc.persistentStores
                 stores.forEach { try! psc.remove($0) }
