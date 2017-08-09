@@ -41,7 +41,7 @@ private let log = ZMSLog(tag: "Teams")
 
 
 extension TeamDownloadRequestStrategy: ZMEventConsumer {
-
+    
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
         events.forEach(process)
     }
@@ -104,6 +104,10 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
             if user.isSelfUser {
                 // We delete the local team in case the members user was the self user
                 deleteTeamAndConversations(team)
+                // log out
+                applicationStatus?.clientRegistrationDelegate.didDetectCurrentClientDeletion()
+                ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.clientDeletedRemotely, userInfo: .none))
+                
             } else {
                 // Remove member from all team conversations he was a participant of
                 team.conversations.filter {
