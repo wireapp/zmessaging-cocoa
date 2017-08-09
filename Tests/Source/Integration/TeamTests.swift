@@ -150,8 +150,8 @@ extension TeamTests {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(selfUserObserver.notifications.count, 1)
-        guard let userChange = selfUserObserver.notifications.lastObject as? UserChangeInfo else {
+        XCTAssertGreaterThanOrEqual(selfUserObserver.notifications.count, 1)
+        guard let userChange = selfUserObserver.notifications.firstObject as? UserChangeInfo else {
             return XCTFail("no notification received")
         }
         XCTAssertTrue(userChange.teamsChanged)

@@ -41,13 +41,15 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     
     override func setUp() {
         super.setUp()
-
-        self.spyKeyStore = SpyUserClientKeyStore(in: UserClientKeysStore.otrDirectoryURL)
-        cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer")
-        clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage, registrationStatusDelegate: nil)
-        clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
-        sut = UserClientRequestStrategy(clientRegistrationStatus: clientRegistrationStatus, clientUpdateStatus:clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
-        NotificationCenter.default.addObserver(self, selector: #selector(UserClientRequestStrategyTests.didReceiveAuthenticationNotification(_:)), name: NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil)
+        
+        self.syncMOC.performGroupedBlockAndWait {
+            self.spyKeyStore = SpyUserClientKeyStore(in: UserClientKeysStore.otrDirectoryURL)
+            self.cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer")
+            self.clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: self.cookieStorage, registrationStatusDelegate: nil)
+            self.clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
+            self.sut = UserClientRequestStrategy(clientRegistrationStatus: self.clientRegistrationStatus, clientUpdateStatus:self.clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
+            NotificationCenter.default.addObserver(self, selector: #selector(UserClientRequestStrategyTests.didReceiveAuthenticationNotification(_:)), name: NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil)
+        }
     }
     
     
@@ -436,24 +438,30 @@ extension UserClientRequestStrategyTests {
     
     func testThatDeletesClientsThatWereNotInTheFetchResponse() {
         
-        // given
-        let selfClient = self.createSelfClient()
-        let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        let nextResponse = ZMTransportResponse(payload: payloadForClients() as ZMTransportData?, httpStatus: 200, transportSessionError: nil)
-        let newClient = UserClient.insertNewObject(in: self.syncMOC)
-        newClient.user = selfUser
-        newClient.remoteIdentifier = "deleteme"
-        self.syncMOC.saveOrRollback()
+        var selfUser: ZMUser!
+        var selfClient: UserClient!
+        var newClient: UserClient!
         
-        // when
-        _ = sut.nextRequest()
-        sut.didReceive(nextResponse, forSingleRequest: sut.fetchAllClientsSync)
+        syncMOC.performGroupedBlockAndWait {
+            // given
+            selfClient = self.createSelfClient()
+            selfUser = ZMUser.selfUser(in: self.syncMOC)
+            let nextResponse = ZMTransportResponse(payload: self.payloadForClients() as ZMTransportData?, httpStatus: 200, transportSessionError: nil)
+            newClient = UserClient.insertNewObject(in: self.syncMOC)
+            newClient.user = selfUser
+            newClient.remoteIdentifier = "deleteme"
+            self.syncMOC.saveOrRollback()
+            
+            // when
+            _ = self.sut.nextRequest()
+            self.sut.didReceive(nextResponse, forSingleRequest: self.sut.fetchAllClientsSync)
+        }
+        
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // then
         XCTAssertTrue(selfUser.clients.contains(selfClient))
         XCTAssertFalse(selfUser.clients.contains(newClient))
-        
     }
 }
 
@@ -508,6 +516,7 @@ extension UserClientRequestStrategyTests {
             
             // when
             let _ = self.sut.updateUpdatedObject(client, requestUserInfo:nil, response: response, keysToParse:Set(arrayLiteral: ZMUserClientMarkedToDeleteKey))
+            self.syncMOC.saveOrRollback()
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
