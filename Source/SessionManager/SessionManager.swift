@@ -181,23 +181,23 @@ public class SessionManager : NSObject {
         } else {
             // We do not have an account, this means we are either dealing with a fresh install,
             // or an update from a previous version and need to store the initial Account.
-            // In order to do so we open the old database and get the userId.
-            LocalStoreProvider.openOldDatabaseRetrievingSelfUser(
+            // In order to do so we open the old database and get the user identifier.
+            LocalStoreProvider.fetchUserIDFromLegacyStore(
                 in: sharedContainerURL,
-                dispatchGroup: dispatchGroup,
                 migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
-                completion: { [weak self] user in
+                completion: { [weak self] identifier in
                     guard let `self` = self else { return }
-                    if let user = user {
-                        let account = Account(userName: user.name ?? "", userIdentifier: user.remoteIdentifier!, teamName: user.team?.name)
-                        self.accountManager.addAndSelect(account)
-                        let migrator = ZMPersistentCookieStorageMigrator(userIdentifier: user.remoteIdentifier!, serverName: authenticatedSessionFactory.environment.backendURL.host!)
-                        _ = migrator.createStoreMigratingLegacyStoreIfNeeded()
-                    }
-
+                    identifier.apply(self.migrateAccount)
                     self.selectInitialAccount(self.accountManager.selectedAccount, launchOptions: launchOptions)
             })
         }
+    }
+
+    private func migrateAccount(with identifier: UUID) {
+        let account = Account(userName: "", userIdentifier: identifier)
+        accountManager.addAndSelect(account)
+        let migrator = ZMPersistentCookieStorageMigrator(userIdentifier: identifier, serverName: authenticatedSessionFactory.environment.backendURL.host!)
+        _ = migrator.createStoreMigratingLegacyStoreIfNeeded()
     }
 
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {

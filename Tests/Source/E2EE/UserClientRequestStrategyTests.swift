@@ -42,7 +42,7 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     override func setUp() {
         super.setUp()
 
-        self.spyKeyStore = SpyUserClientKeyStore(in: sharedContainerURL, accountIdentifier: userIdentifier)
+        self.spyKeyStore = SpyUserClientKeyStore(accountDirectory: accountDirectory, applicationContainer: sharedContainerURL)
         cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer", userIdentifier: userIdentifier)
 
         clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage, registrationStatusDelegate: nil)
@@ -57,7 +57,7 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     }
     
     override func tearDown() {
-        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectoryURL)
+        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectory)
         
         self.clientRegistrationStatus.tearDown()
         self.clientRegistrationStatus = nil

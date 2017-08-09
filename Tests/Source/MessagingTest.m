@@ -121,7 +121,12 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 - (NSURL *)storeURL
 {
-    return [NSFileManager currentStoreURLForAccountWith:self.userIdentifier in:self.sharedContainerURL];
+    return self.accountDirectory.URLAppendingPersistentStoreLocation;
+}
+
+- (NSURL *)accountDirectory
+{
+    return [StorageStack accountFolderWithAccountIdentifier:self.userIdentifier applicationContainer:self.sharedContainerURL];
 }
 
 - (NSURL *)keyStoreURL
@@ -139,7 +144,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     self.userIdentifier = [NSUUID UUID];
     self.sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
     
-    NSURL *otrFolder = [NSFileManager keyStoreURLForAccountWith:self.userIdentifier in:self.sharedContainerURL createParentIfNeeded:NO];
+    NSURL *otrFolder = [NSFileManager keyStoreURLForAccountInDirectory:self.accountDirectory createParentIfNeeded:NO];
     [fm removeItemAtURL:otrFolder error: nil];
     
     _application = [[ApplicationMock alloc] init];
@@ -330,13 +335,13 @@ static ZMReachability *sharedReachabilityMock = nil;
 
     StorageStack.shared.createStorageAsInMemory = self.shouldUseInMemoryStore;
 
-    [StorageStack.shared createManagedObjectContextDirectoryForAccountWith:self.userIdentifier
-                                                             inContainerAt:self.sharedContainerURL
-                                                             dispatchGroup: self.dispatchGroup
-                                                  startedMigrationCallback:nil
-                                                         completionHandler:^(ManagedObjectContextDirectory * _Nonnull directory) {
-                                                             self.contextDirectory = directory;
-                                                         }];
+    [StorageStack.shared createManagedObjectContextDirectoryForAccountIdentifier:self.userIdentifier
+                                                            applicationContainer:self.sharedContainerURL
+                                                                   dispatchGroup:self.dispatchGroup
+                                                        startedMigrationCallback:nil
+                                                               completionHandler:^(ManagedObjectContextDirectory * _Nonnull directory) {
+                                                                   self.contextDirectory = directory;
+                                                               }];
 
     XCTAssert([self waitWithTimeout:0.5 verificationBlock:^BOOL{
         return nil != self.contextDirectory;
@@ -362,7 +367,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     WaitForAllGroupsToBeEmpty(2);
     
     [self performPretendingUiMocIsSyncMoc:^{
-        [self.uiMOC setupUserKeyStoreInSharedContainer:self.sharedContainerURL withAccountIdentifier:self.userIdentifier];
+        [self.uiMOC setupUserKeyStoreInAccountDirectory:self.accountDirectory applicationContainer:self.sharedContainerURL];
     }];
     
     [self.uiMOC saveOrRollback];
