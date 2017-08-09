@@ -360,12 +360,12 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
             user.remoteIdentifier = userId
             
             _ = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
-            self.syncMOC.saveOrRollback()
             
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.remoteIdentifier = conversationId
             conversation.team = team
             conversation.teamRemoteIdentifier = teamId
+            self.syncMOC.saveOrRollback()
             
             let payload : [String: Any] = [
                 "data": ["user": userId.transportString()],
@@ -393,16 +393,4 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
         XCTAssert(self.waitForCustomExpectations(withTimeout: 0.5))
         ZMUserSessionAuthenticationNotification.removeObserver(for: authToken)
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
 }
