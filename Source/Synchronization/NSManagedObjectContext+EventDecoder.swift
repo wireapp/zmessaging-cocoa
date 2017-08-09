@@ -31,10 +31,10 @@ extension NSManagedObjectContext {
     /// - parameter appGroupIdentifier: Optional identifier for a shared container group to be used to store the database,
     /// if `nil` is passed a default of `group. + bundleIdentifier` will be used (e.g. when testing)
     public static func createEventContext(withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID?) -> NSManagedObjectContext {
-        let oldStoreURL = storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: nil)
+        let previousStoreURL = storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: nil) // Passing no user identifier resolves to the old location before multiple accounts
         let newStoreURL = storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
         FileManager.default.createAndProtectDirectory(at: newStoreURL.deletingLastPathComponent())
-        migrateOldStoreIfNeeded(oldStoreURL: oldStoreURL, newStoreURL: newStoreURL)
+        relocateStoreIfNeeded(previousStoreURL: previousStoreURL, newStoreURL: newStoreURL)
         eventPersistentStoreCoordinator = createPersistentStoreCoordinator()
         let managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         managedObjectContext.persistentStoreCoordinator = eventPersistentStoreCoordinator
@@ -46,10 +46,10 @@ extension NSManagedObjectContext {
         return managedObjectContext
     }
     
-    fileprivate static func migrateOldStoreIfNeeded(oldStoreURL: URL, newStoreURL: URL) {
+    fileprivate static func relocateStoreIfNeeded(previousStoreURL: URL, newStoreURL: URL) {
         let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: oldStoreURL.path) && !fileManager.fileExists(atPath: newStoreURL.path) {
-            PersistentStoreRelocator.moveStore(from: oldStoreURL, to: newStoreURL)
+        if fileManager.fileExists(atPath: previousStoreURL.path) && !fileManager.fileExists(atPath: newStoreURL.path) {
+            PersistentStoreRelocator.moveStore(from: previousStoreURL, to: newStoreURL)
         }
     }
 
