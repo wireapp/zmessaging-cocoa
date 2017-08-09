@@ -33,6 +33,7 @@ extension NSManagedObjectContext {
     public static func createEventContext(withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID?) -> NSManagedObjectContext {
         let oldStoreURL = storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: nil)
         let newStoreURL = storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
+        FileManager.default.createAndProtectDirectory(at: newStoreURL.deletingLastPathComponent())
         migrateOldStoreIfNeeded(oldStoreURL: oldStoreURL, newStoreURL: newStoreURL)
         eventPersistentStoreCoordinator = createPersistentStoreCoordinator()
         let managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
@@ -48,7 +49,6 @@ extension NSManagedObjectContext {
     fileprivate static func migrateOldStoreIfNeeded(oldStoreURL: URL, newStoreURL: URL) {
         let fileManager = FileManager.default
         if fileManager.fileExists(atPath: oldStoreURL.path) && !fileManager.fileExists(atPath: newStoreURL.path) {
-            FileManager.default.createAndProtectDirectory(at: newStoreURL.deletingLastPathComponent())
             PersistentStoreRelocator.moveStore(from: oldStoreURL, to: newStoreURL)
         }
     }
