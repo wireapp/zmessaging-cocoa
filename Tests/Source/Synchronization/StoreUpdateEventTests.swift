@@ -60,8 +60,8 @@ class UpdateEventsStoreMigrationTests: MessagingTest {
     func testThatItReopensTheExistingStoreInNewLocation() throws {
         // given
         StorageStack.shared.createStorageAsInMemory = false
-        let eventMOC_oldLocation = NSManagedObjectContext.createEventContext(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
-        eventMOC_oldLocation.add(self.dispatchGroup)
+        let eventMOC_sameLocation = NSManagedObjectContext.createEventContext(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
+        eventMOC_sameLocation.add(self.dispatchGroup)
         
         // given
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
@@ -69,15 +69,15 @@ class UpdateEventsStoreMigrationTests: MessagingTest {
         let payload = self.payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
         let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: UUID.create())!
         
-        guard let storedEvent1 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_oldLocation, index: 0),
-            let storedEvent2 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_oldLocation, index: 1),
-            let storedEvent3 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_oldLocation, index: 2)
+        guard let storedEvent1 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_sameLocation, index: 0),
+            let storedEvent2 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_sameLocation, index: 1),
+            let storedEvent3 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_sameLocation, index: 2)
             else {
                 return XCTFail("Could not create storedEvents")
         }
-        try eventMOC_oldLocation.save()
+        try eventMOC_sameLocation.save()
         let objectIDs = Set([storedEvent1, storedEvent2, storedEvent3].map { $0.objectID.uriRepresentation() })
-        eventMOC_oldLocation.tearDownEventMOC()
+        eventMOC_sameLocation.tearDownEventMOC()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
