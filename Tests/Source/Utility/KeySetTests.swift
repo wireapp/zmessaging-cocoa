@@ -37,7 +37,7 @@ class KeySetTests: MessagingTest {
     func testThatItCanIterate() {
         // given
         let sut = KeySet(["foo", "bar"])
-        var result: [KeyPath] = []
+        var result: [WireDataModel.KeyPath] = []
         
         // when
         for k in sut {
