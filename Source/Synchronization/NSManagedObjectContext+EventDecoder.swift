@@ -49,12 +49,7 @@ extension NSManagedObjectContext {
         let fileManager = FileManager.default
         if fileManager.fileExists(atPath: oldStoreURL.path) && !fileManager.fileExists(atPath: newStoreURL.path) {
             FileManager.default.createAndProtectDirectory(at: newStoreURL.deletingLastPathComponent())
-            let relocator = PersistentStoreRelocator(newStoreURL: newStoreURL, previousStoreURL: oldStoreURL)
-            do {
-                try relocator.moveStoreIfNecessary() {}
-            } catch {
-                fatal("Migrating event store from previous location:\(error.localizedDescription)")
-            }
+            PersistentStoreRelocator.moveStore(from: oldStoreURL, to: newStoreURL)
         }
     }
 
