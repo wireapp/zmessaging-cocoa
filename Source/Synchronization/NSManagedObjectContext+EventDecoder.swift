@@ -59,9 +59,7 @@ extension NSManagedObjectContext {
         guard let modelURL = Bundle(for: StoredUpdateEvent.self).url(forResource: "ZMEventModel", withExtension:"momd") else {
             fatalError("Error loading model from bundle")
         }
-        guard let mom = NSManagedObjectModel(contentsOf: modelURL) else {
-            fatalError("Error initializing mom from: \(modelURL)")
-        }
+        let mom = NSManagedObjectModel(contentsOf: modelURL)
         return NSPersistentStoreCoordinator(managedObjectModel: mom)
     }
     
