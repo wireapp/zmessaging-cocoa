@@ -255,7 +255,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
             return nil;
         }
         
-        ZMStartActivity("Generating next request");
         ZMTransportRequest *request = [self.syncStrategy nextRequest];
         [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *response) {
             ZM_STRONG(self);
