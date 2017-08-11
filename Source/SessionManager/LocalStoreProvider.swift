@@ -45,15 +45,18 @@ public extension Bundle {
     }
 
     public func createStorageStack(migration: (() -> Void)?, completion: @escaping (LocalStoreProviderProtocol) -> Void) {
+        var strongSelf : LocalStoreProvider? = self
+        
         StorageStack.shared.createManagedObjectContextDirectory(
             accountIdentifier: userIdentifier,
             applicationContainer: sharedContainerDirectory,
             dispatchGroup: dispatchGroup,
             startedMigrationCallback: { migration?() },
-            completionHandler: { [weak self] contextDirectory in
-                guard let `self` = self else { return }
+            completionHandler: { contextDirectory in
+                guard let `self` = strongSelf else { return }
                 self.contextDirectory = contextDirectory
                 completion(self)
+                strongSelf = nil
             }
         )
     }
