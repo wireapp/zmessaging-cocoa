@@ -507,6 +507,7 @@ class ZMCallKitDelegateTest: MessagingTest {
     func testThatItStartsCallForUserKnownByEmail() {
         // given
         let otherUser = self.otherUser(moc: self.uiMOC)
+        ZMBareUser
         otherUser.emailAddress = "testThatItStartsCallForUserKnownByEmail@email.com"
         createOneOnOneConversation(user: otherUser)
         

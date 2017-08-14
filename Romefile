@@ -1,0 +1,15 @@
+[Cache]
+  local = ~/work/Rome/
+
+[RepositoryMap]
+  wire-ios-link-preview = WireLinkPreview
+  wire-ios-system = WireSystem
+  wire-ios-cryptobox = WireCryptobox
+  wire-ios-testing = WireTesting
+  wire-ios-utilities = WireUtilities
+  wire-ios-images = WireImages
+  wire-ios-transport = WireTransport
+  wire-ios-data-model = WireDataModel
+  wire-ios-mocktransport = WireMockTransport
+  wire-ios-request-strategy = WireRequestStrategy
+  wire-ios-message-strategy = WireMessageStrategy
