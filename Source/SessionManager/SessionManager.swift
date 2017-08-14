@@ -23,89 +23,82 @@ import WireUtilities
 
 
 private let log = ZMSLog(tag: "SessionManager")
+public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 
-open class UnauthenticatedSessionFactory {
-    
-    let environment: ZMBackendEnvironment
-    
-    init() {
-        self.environment = ZMBackendEnvironment(userDefaults: .standard)
-    }
-    
-    func session(withDelegate delegate: UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
-        let transportSession = UnauthenticatedTransportSession(baseURL: environment.backendURL)
-        return UnauthenticatedSession(transportSession: transportSession, delegate: delegate)
-    }
 
-}
-
-extension Account {
-    func cookieStorage() -> ZMPersistentCookieStorage {
-        let backendURL = ZMBackendEnvironment(userDefaults: .standard).backendURL.host!
-        return ZMPersistentCookieStorage(forServerName: backendURL, userIdentifier: userIdentifier)
-    }
-}
-
-open class AuthenticatedSessionFactory {
-
-    let appVersion: String
-    let mediaManager: AVSMediaManager
-    var analytics: AnalyticsType?
-    var apnsEnvironment : ZMAPNSEnvironment?
-    let application : ZMApplication
-    let environment: ZMBackendEnvironment
-
-    public init(
-        appVersion: String,
-        apnsEnvironment: ZMAPNSEnvironment? = nil,
-        application: ZMApplication,
-        mediaManager: AVSMediaManager,
-        analytics: AnalyticsType? = nil
-        ) {
-        self.appVersion = appVersion
-        self.mediaManager = mediaManager
-        self.analytics = analytics
-        self.apnsEnvironment = apnsEnvironment
-        self.application = application
-        ZMBackendEnvironment.setupEnvironments()
-        self.environment = ZMBackendEnvironment(userDefaults: .standard)
-    }
-    
-    func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
-        let transportSession = ZMTransportSession(
-            baseURL: environment.backendURL,
-            websocketURL: environment.backendWSURL,
-            cookieStorage: account.cookieStorage(),
-            initialAccessToken: nil,
-            sharedContainerIdentifier: nil
-        )
-        
-        return ZMUserSession(
-            mediaManager: mediaManager,
-            analytics: analytics,
-            transportSession: transportSession,
-            apnsEnvironment: apnsEnvironment,
-            application: application,
-            appVersion: appVersion,
-            storeProvider: storeProvider
-        )
-    }
-
-}
-
-@objc
-public protocol SessionManagerDelegate : class {
-
+@objc public protocol SessionManagerDelegate : class {
     func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession)
     func sessionManagerCreated(userSession : ZMUserSession)
     func sessionManagerWillStartMigratingLocalStore()
     func sessionManagerDidBlacklistCurrentVersion()
 }
 
-@objc
-public class SessionManager : NSObject {
 
-    public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
+
+/// The `SessionManager` class handles the creation of `ZMUserSession` and `UnauthenticatedSession`
+/// objects, the handover between them as well as account switching.
+///
+/// There are multiple things neccessary in order to store (and switch between) multiple accounts on one device, a couple of them are:
+/// 1. The folder structure in the app sandbox has to be modeled in a way in which files can be associated with a single account.
+/// 2. The login flow should not rely on any persistent state (e.g. no database has to be created on disk before being logged in).
+/// 3. There has to be a persistent layer storing information about accounts and the currently selected / active account.
+/// 
+/// The wire account database and a couple of other related files are stored in the shared container in a folder named by the accounts
+/// `remoteIdentifier`. All information about different accounts on a device are stored by the `AccountManager` (see the documentation
+/// of that class for more information). The `SessionManager`s main responsibility at the moment is checking whether there is a selected 
+/// `Account` or not, and creating an `UnauthenticatedSession` or `ZMUserSession` accordingly. An `UnauthenticatedSession` is used
+/// to create requests to either log in existing users or to register new users. It uses its own `UnauthenticatedOperationLoop`, 
+/// which is a stripped down version of the regular `ZMOperationLoop`. This unauthenticated operation loop only uses a small subset
+/// of transcoders needed to perform the login / registration (and related phone number verification) requests. For more information
+/// see `UnauthenticatedOperationLoop`.
+///
+/// The result of using an ``UnauthenticatedSession` is retriving a remoteIdentifier of a logged in user, as well as a valid cookie.
+/// Once those became available, the session will notify the session manager, which in turn will create a regular `ZMUserSession`.
+/// For more information about the cookie retrieval consult the documentation in `UnauthenticatedSession`.
+///
+/// The flow creating either an `UnauthenticatedSession` or `ZMUserSession` after creating an instance of `SessionManager` 
+/// is depicted on a high level in the following diagram:
+///
+///
+/// +-----------------------------------------+
+/// |         `SessionManager.init`           |
+/// +-----------------------------------------+
+///
+///                    +
+///                    |
+///                    |
+///                    v
+///
+/// +-----------------------------------------+        YES           Load the selected Account and its
+/// | Is there a stored and selected Account? |   +------------->    cookie from disk.
+/// +-----------------------------------------+                      Create a `ZMUserSession` using the cookie.
+///
+///                    +
+///                    |
+///                    | NO
+///                    |
+///                    v
+///
+/// +------------------+---------------------+
+/// | Check if there is a database present   |        YES           Open the existing database, retrieve the user identifier,
+/// | in the legacy directory (not keyed by  |  +-------------->    create an account with it and select it. Migrate the existing
+/// | the users remoteIdentifier)?           |                      cookie for that account and start at the top again.
+/// +----------------------------------------+
+///
+///                    +
+///                    |
+///                    | NO
+///                    |
+///                    v
+///
+/// +------------------+---------------------+
+/// | Create a `UnauthenticatedSession` to   |
+/// | start the registration or login flow.  |
+/// +----------------------------------------+
+///
+
+
+@objc public class SessionManager : NSObject {
 
     public let appVersion: String
     var isAppVersionBlacklisted = false
@@ -115,7 +108,7 @@ public class SessionManager : NSObject {
     var userSession: ZMUserSession?
     var unauthenticatedSession: UnauthenticatedSession?
     var authenticationToken: ZMAuthenticationObserverToken?
-    var blacklistVerificator : ZMBlacklistVerificator?
+    var blacklistVerificator: ZMBlacklistVerificator?
     
     fileprivate let authenticatedSessionFactory: AuthenticatedSessionFactory
     fileprivate let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
@@ -136,7 +129,7 @@ public class SessionManager : NSObject {
         let unauthenticatedSessionFactory = UnauthenticatedSessionFactory()
         let authenticatedSessionFactory = AuthenticatedSessionFactory(
             appVersion: appVersion,
-            apnsEnvironment: nil, // TODO
+            apnsEnvironment: nil,
             application: application,
             mediaManager: mediaManager,
             analytics: analytics
@@ -211,6 +204,7 @@ public class SessionManager : NSObject {
         }
     }
 
+    /// Creates an account with the given identifier and migrates its cookie storage.
     private func migrateAccount(with identifier: UUID) {
         let account = Account(userName: "", userIdentifier: identifier)
         accountManager.addAndSelect(account)
