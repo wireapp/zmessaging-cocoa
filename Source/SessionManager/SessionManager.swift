@@ -41,7 +41,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 /// There are multiple things neccessary in order to store (and switch between) multiple accounts on one device, a couple of them are:
 /// 1. The folder structure in the app sandbox has to be modeled in a way in which files can be associated with a single account.
 /// 2. The login flow should not rely on any persistent state (e.g. no database has to be created on disk before being logged in).
-/// 3. There has to be a persistent layer storing information about accounts and the currently selected / active account.
+/// 3. There has to be a persistence layer storing information about accounts and the currently selected / active account.
 /// 
 /// The wire account database and a couple of other related files are stored in the shared container in a folder named by the accounts
 /// `remoteIdentifier`. All information about different accounts on a device are stored by the `AccountManager` (see the documentation
