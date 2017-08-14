@@ -52,7 +52,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 /// of transcoders needed to perform the login / registration (and related phone number verification) requests. For more information
 /// see `UnauthenticatedOperationLoop`.
 ///
-/// The result of using an ``UnauthenticatedSession` is retriving a remoteIdentifier of a logged in user, as well as a valid cookie.
+/// The result of using an `UnauthenticatedSession` is retriving a remoteIdentifier of a logged in user, as well as a valid cookie.
 /// Once those became available, the session will notify the session manager, which in turn will create a regular `ZMUserSession`.
 /// For more information about the cookie retrieval consult the documentation in `UnauthenticatedSession`.
 ///
