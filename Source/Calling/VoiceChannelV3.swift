@@ -233,7 +233,7 @@ public extension CallState {
     
     var connectionState : VoiceChannelV2ConnectionState {
         switch self {
-        case .unknown, .terminating, .incoming, .none:
+        case .unknown, .terminating, .incoming, .none, .establishedDataChannel:
             return .notConnected
         case .established:
             return .connected
@@ -256,6 +256,8 @@ public extension CallState {
             return .selfIsJoiningActiveChannelDegraded
         case .answered:
             return .selfIsJoiningActiveChannel
+        case .establishedDataChannel:
+            return .establishedDataChannel
         case .established:
             return .selfConnectedToActiveChannel
         case .outgoing where securityLevel == .secureWithIgnored:

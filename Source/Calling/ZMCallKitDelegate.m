@@ -535,11 +535,11 @@ NS_ASSUME_NONNULL_END
     [self.calls setObject:call forKey:callConversation.remoteIdentifier];
     
     call.onEstablished = ^{
-//        [action fulfillWithDateConnected:[NSDate date]]; Disabled for now, pending further investigation
+        [action fulfillWithDateConnected:[NSDate date]];
     };
     
     call.onFailedToJoin = ^{
-//        [action fail]; Disabled for now, pending further investigation
+        [action fail];
     };
     
     [userSession performChanges:^{
@@ -547,8 +547,6 @@ NS_ASSUME_NONNULL_END
             [action fail];
         }
     }];
-    
-    [action fulfill];
 }
 
 - (void)provider:(CXProvider *)provider performEndCallAction:(nonnull CXEndCallAction *)action
