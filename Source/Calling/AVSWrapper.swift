@@ -53,7 +53,7 @@ public class AVSWrapper : AVSWrapperType {
             observer)
         
         if resultValue != 0 {
-            fatal("Failed to initialise AVS")
+            fatal("Failed to initialise AVS (error code: \(resultValue))")
         }
         
         wcall_set_video_state_handler({ (state, _) in
