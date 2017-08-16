@@ -29,6 +29,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 @objc public protocol SessionManagerDelegate : class {
     func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession)
     func sessionManagerCreated(userSession : ZMUserSession)
+    func sessionManagerDidLogout()
     func sessionManagerWillStartMigratingLocalStore()
     func sessionManagerDidBlacklistCurrentVersion()
 }
@@ -218,6 +219,14 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             session.application(self.application, didFinishLaunchingWithOptions: launchOptions)
             (launchOptions[.url] as? URL).apply(session.didLaunch)
         }
+    }
+
+    public func logoutCurrentSession() {
+        userSession?.resetStateAndExit()
+        userSession = nil
+        delegate?.sessionManagerDidLogout()
+
+        createUnauthenticatedSession()
     }
 
     fileprivate func select(account: Account?, completion: @escaping (ZMUserSession) -> Void) {
