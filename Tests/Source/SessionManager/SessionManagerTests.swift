@@ -23,9 +23,13 @@ import WireTesting
 
 
 class SessionManagerTestDelegate: SessionManagerDelegate {
+
+    func sessionManagerDidLogout() {
+        // no op
+    }
     
     func sessionManagerDidBlacklistCurrentVersion() {
-        
+        // no op
     }
 
     var unauthenticatedSession : UnauthenticatedSession?
@@ -42,6 +46,7 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     func sessionManagerWillStartMigratingLocalStore() {
         startedMigrationCalled = true
     }
+
 }
 
 class SessionManagerTests: IntegrationTest {
