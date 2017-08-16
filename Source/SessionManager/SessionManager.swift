@@ -277,8 +277,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     }
 
     @objc public var currentUser: ZMUser? {
-        guard let userSession = userSession else { return nil }
-        return ZMUser.selfUser(in: userSession.managedObjectContext)
+        guard let moc = userSession?.managedObjectContext  else { return nil }
+        return ZMUser.selfUser(in: moc)
     }
     
     @objc public var isUserSessionActive: Bool {
