@@ -51,8 +51,11 @@
 - (void)tearDown {
     [self _tearDown];
     
+    [self.mockMediaManager stopMocking];
     self.mockMediaManager = nil;
+    [self.mockAPNSEnvironment stopMocking];
     self.mockAPNSEnvironment = nil;
+    self.currentUserIdentifier = nil;
     
     [super tearDown];
 }

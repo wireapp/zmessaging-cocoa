@@ -134,7 +134,7 @@ extension IntegrationTest {
         connectionSelfToUser2 = nil
         selfConversation = nil
         groupConversation = nil
-
+        application = nil
         deleteSharedContainerContent()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
