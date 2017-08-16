@@ -69,20 +69,22 @@ class SessionManagerTests: IntegrationTest {
     func createManager() -> SessionManager? {
         guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return nil }
         let environment = ZMBackendEnvironment(type: .staging)
-        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment)
+        let reachability = TestReachability()
+        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
             transportSession: transportSession,
-            environment: environment
+            environment: environment,
+            reachability: reachability
         )
         
         return SessionManager(
             appVersion: "0.0.0",
             authenticatedSessionFactory: authenticatedSessionFactory,
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
-            reachability: TestReachability(),
+            reachability: reachability,
             delegate: delegate,
             application: application,
             launchOptions: [:],

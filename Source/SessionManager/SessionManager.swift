@@ -133,13 +133,14 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 
         let serverNames = [environment.backendURL, environment.backendWSURL].flatMap{ $0.host }
         let reachability = ZMReachability(serverNames: serverNames, observer: nil, queue: .main, group: group)
-        let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(environment: environment)
+        let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(environment: environment, reachability: reachability)
         let authenticatedSessionFactory = AuthenticatedSessionFactory(
             appVersion: appVersion,
             apnsEnvironment: nil,
             application: application,
             mediaManager: mediaManager,
             environment: environment,
+            reachability: reachability,
             analytics: analytics
           )
 
@@ -247,7 +248,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     }
 
     fileprivate func createSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession) -> Void) {
-        guard let session = authenticatedSessionFactory.session(for: account, storeProvider: provider, reachability: reachability) else {
+        guard let session = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
         }
 
@@ -271,7 +272,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     fileprivate func createUnauthenticatedSession() {
         log.debug("Creating unauthenticated session")
         self.unauthenticatedSession?.tearDown()
-        let unauthenticatedSession = unauthenticatedSessionFactory.session(withDelegate: self, reachability: reachability)
+        let unauthenticatedSession = unauthenticatedSessionFactory.session(withDelegate: self)
         self.unauthenticatedSession = unauthenticatedSession
         delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
     }

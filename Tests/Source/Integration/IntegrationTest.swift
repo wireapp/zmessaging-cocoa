@@ -42,7 +42,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     let transportSession: ZMTransportSession
 
-    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, transportSession: ZMTransportSession, environment: ZMBackendEnvironment) {
+    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider) {
         self.transportSession = transportSession
         super.init(
             appVersion: "0.0.0",
@@ -50,11 +50,12 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             application: application,
             mediaManager: mediaManager,
             environment: environment,
+            reachability: reachability,
             analytics: nil
         )
     }
 
-    override func session(for account: Account, storeProvider: LocalStoreProviderProtocol, reachability: ReachabilityProvider) -> ZMUserSession? {
+    override func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
         return ZMUserSession(
             mediaManager: mediaManager,
             analytics: analytics,
@@ -73,13 +74,12 @@ final class MockUnauthenticatedSessionFactory: UnauthenticatedSessionFactory {
 
     let transportSession: UnauthenticatedTransportSessionProtocol
     
-
-    init(transportSession: UnauthenticatedTransportSessionProtocol, environment: ZMBackendEnvironment) {
+    init(transportSession: UnauthenticatedTransportSessionProtocol, environment: ZMBackendEnvironment, reachability: ReachabilityProvider) {
         self.transportSession = transportSession
-        super.init(environment: environment)
+        super.init(environment: environment, reachability: reachability)
     }
 
-    override func session(withDelegate delegate: WireSyncEngine.UnauthenticatedSessionDelegate, reachability: ReachabilityProvider) -> UnauthenticatedSession {
+    override func session(withDelegate delegate: WireSyncEngine.UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
         return UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: delegate)
     }
 
@@ -184,20 +184,22 @@ extension IntegrationTest {
         guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return XCTFail() }
         StorageStack.shared.createStorageAsInMemory = useInMemoryStore
         let environment = ZMBackendEnvironment(type: .staging)
-        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment)
+        let reachability = TestReachability()
+        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
             transportSession: transportSession,
-            environment: environment
+            environment: environment,
+            reachability: reachability
         )
 
         sessionManager = SessionManager(
             appVersion: "0.0.0",
             authenticatedSessionFactory: authenticatedSessionFactory,
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
-            reachability: TestReachability(),
+            reachability: reachability,
             delegate: self,
             application: application,
             launchOptions: [:],
