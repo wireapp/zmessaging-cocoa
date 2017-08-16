@@ -70,6 +70,7 @@ public class UnauthenticatedSession: NSObject {
     }
 
     func tearDown() {
+        self.transportSession.tearDown()
         operationLoop.tearDown()
         tornDown = true
     }
