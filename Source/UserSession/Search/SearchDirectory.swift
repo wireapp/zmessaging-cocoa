@@ -42,6 +42,7 @@ public class SearchDirectory : NSObject {
     public func tearDown() {
         userSession.syncManagedObjectContext.performGroupedBlock {
             SearchDirectory.userIDsMissingProfileImage.removeDirectory(self)
+            SearchDirectory.userIDsMissingProfileImage.clear()
             ZMSearchUser.searchUserToMediumImageCache().removeAllObjects()
         }
 
