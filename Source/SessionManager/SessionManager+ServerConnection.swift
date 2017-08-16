@@ -47,13 +47,11 @@ extension SessionManager {
 extension SessionManager : ServerConnection {
     
     public var isOffline: Bool {
-//        return !(transportSession?.reachability.mayBeReachable ?? true)
-        return false
+        return !reachability.mayBeReachable
     }
     
     public var isMobileConnection: Bool {
-//        return transportSession?.reachability.isMobileConnection ?? false
-        return false
+        return reachability.isMobileConnection
     }
 
     /// Add observer of server connection. Returns a token for de-registering the observer.

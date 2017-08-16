@@ -41,7 +41,7 @@ extension UnauthenticatedSession {
             delegate?.session(session: self, updatedCredentials: credentials)
         } else if credentials.isInvalid {
             ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
-        } else if !self.operationLoop.transportSession.mayBeReachable {
+        } else if !self.reachability.mayBeReachable {
             ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.networkError, userInfo:nil))
         } else {
             self.authenticationStatus.prepareForLogin(with: credentials)

@@ -110,7 +110,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     var unauthenticatedSession: UnauthenticatedSession?
     var authenticationToken: ZMAuthenticationObserverToken?
     var blacklistVerificator: ZMBlacklistVerificator?
-    
+    let reachability: ReachabilityProvider & ReachabilityTearDown
+
     fileprivate let authenticatedSessionFactory: AuthenticatedSessionFactory
     fileprivate let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
     fileprivate let accountManager: AccountManager
@@ -126,13 +127,21 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         launchOptions: LaunchOptions,
         blacklistDownloadInterval : TimeInterval
         ) {
+        
+        ZMBackendEnvironment.setupEnvironments()
+        let environment = ZMBackendEnvironment(userDefaults: .standard)
+        let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
 
-        let unauthenticatedSessionFactory = UnauthenticatedSessionFactory()
+        let serverNames = [environment.backendURL, environment.backendWSURL].flatMap{ $0.host }
+        let reachability = ZMReachability(serverNames: serverNames, observer: nil, queue: .main, group: group)
+        let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(environment: environment, reachability: reachability)
         let authenticatedSessionFactory = AuthenticatedSessionFactory(
             appVersion: appVersion,
             apnsEnvironment: nil,
             application: application,
             mediaManager: mediaManager,
+            environment: environment,
+            reachability: reachability,
             analytics: analytics
           )
 
@@ -140,6 +149,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             appVersion: appVersion,
             authenticatedSessionFactory: authenticatedSessionFactory,
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
+            reachability: reachability,
             delegate: delegate,
             application: application,
             launchOptions: launchOptions
@@ -164,6 +174,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         appVersion: String,
         authenticatedSessionFactory: AuthenticatedSessionFactory,
         unauthenticatedSessionFactory: UnauthenticatedSessionFactory,
+        reachability: ReachabilityProvider & ReachabilityTearDown,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
         launchOptions: LaunchOptions,
@@ -184,7 +195,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         self.accountManager = AccountManager(sharedDirectory: sharedContainerURL)
         self.authenticatedSessionFactory = authenticatedSessionFactory
         self.unauthenticatedSessionFactory = unauthenticatedSessionFactory
-        
+        self.reachability = reachability
         super.init()
         authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(self)
 
@@ -283,6 +294,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         blacklistVerificator?.teardown()
         userSession?.tearDown()
         unauthenticatedSession?.tearDown()
+        reachability.tearDown()
     }
 
     @objc public var currentUser: ZMUser? {

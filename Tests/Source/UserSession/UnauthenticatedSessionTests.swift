@@ -20,20 +20,14 @@ import XCTest
 @testable import WireSyncEngine
 
 
-final class TestUnauthenticatedTransportSession: UnauthenticatedTransportSessionProtocol, ReachabilityProvider {
+final class TestUnauthenticatedTransportSession: UnauthenticatedTransportSessionProtocol {
 
-    public var mockMaybeReachable = true
     public var cookieStorage = ZMPersistentCookieStorage()
     var nextEnqueueResult: EnqueueResult = .nilRequest
 
     func enqueueRequest(withGenerator generator: () -> ZMTransportRequest?) -> EnqueueResult {
         return nextEnqueueResult
     }
-
-    var mayBeReachable: Bool {
-        return mockMaybeReachable
-    }
-
 }
 
 
@@ -85,12 +79,14 @@ public final class UnauthenticatedSessionTests: XCTestCase {
     var transportSession: TestUnauthenticatedTransportSession!
     var sut: UnauthenticatedSession!
     var mockDelegate: MockUnauthenticatedSessionDelegate!
+    var reachability: TestReachability!
     
     public override func setUp() {
         super.setUp()
         transportSession = TestUnauthenticatedTransportSession()
         mockDelegate = MockUnauthenticatedSessionDelegate()
-        sut = UnauthenticatedSession(transportSession: transportSession, delegate: mockDelegate)
+        reachability = TestReachability()
+        sut = UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: mockDelegate)
     }
     
     public override func tearDown() {
@@ -98,13 +94,14 @@ public final class UnauthenticatedSessionTests: XCTestCase {
         sut = nil
         transportSession = nil
         mockDelegate = nil
+        reachability = nil
         super.tearDown()
     }
     
     func testThatDuringLoginItThrowsErrorWhenNoCredentials() {
         let observer = TestAuthenticationObserver()
         // given
-        transportSession.mockMaybeReachable = false
+        reachability.mayBeReachable = false
         // when
         sut.login(with: ZMCredentials())
         // then
@@ -116,7 +113,7 @@ public final class UnauthenticatedSessionTests: XCTestCase {
     func testThatDuringLoginItThrowsErrorWhenOffline() {
         let observer = TestAuthenticationObserver()
         // given
-        transportSession.mockMaybeReachable = false
+        reachability.mayBeReachable = false
         // when
         sut.login(with: ZMEmailCredentials(email: "my@mail.com", password: "my-password"))
         // then

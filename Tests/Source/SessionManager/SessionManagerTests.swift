@@ -49,6 +49,18 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
 
 }
 
+class TestReachability: ReachabilityProvider, ReachabilityTearDown {
+    var mayBeReachable = true
+    var isMobileConnection = true
+    var oldMayBeReachable = true
+    var oldIsMobileConnection = true
+    
+    var tearDownCalled = false
+    func tearDown() {
+        tearDownCalled = true
+    }
+}
+
 class SessionManagerTests: IntegrationTest {
 
     var delegate: SessionManagerTestDelegate!
@@ -61,19 +73,23 @@ class SessionManagerTests: IntegrationTest {
     
     func createManager() -> SessionManager? {
         guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return nil }
-
-        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol & ReachabilityProvider)
+        let environment = ZMBackendEnvironment(type: .staging)
+        let reachability = TestReachability()
+        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
-            transportSession: transportSession
+            transportSession: transportSession,
+            environment: environment,
+            reachability: reachability
         )
-
+        
         return SessionManager(
             appVersion: "0.0.0",
             authenticatedSessionFactory: authenticatedSessionFactory,
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
+            reachability: reachability,
             delegate: delegate,
             application: application,
             launchOptions: [:],
