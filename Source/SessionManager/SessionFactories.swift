@@ -34,6 +34,7 @@ open class AuthenticatedSessionFactory {
         apnsEnvironment: ZMAPNSEnvironment? = nil,
         application: ZMApplication,
         mediaManager: AVSMediaManager,
+        environment: ZMBackendEnvironment,
         analytics: AnalyticsType? = nil
         ) {
         self.appVersion = appVersion
@@ -41,15 +42,15 @@ open class AuthenticatedSessionFactory {
         self.analytics = analytics
         self.apnsEnvironment = apnsEnvironment
         self.application = application
-        ZMBackendEnvironment.setupEnvironments()
-        self.environment = ZMBackendEnvironment(userDefaults: .standard)
+        self.environment = environment
     }
 
-    func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
+    func session(for account: Account, storeProvider: LocalStoreProviderProtocol, reachability: ReachabilityProvider) -> ZMUserSession? {
         let transportSession = ZMTransportSession(
             baseURL: environment.backendURL,
             websocketURL: environment.backendWSURL,
             cookieStorage: account.cookieStorage(),
+            reachability: reachability,
             initialAccessToken: nil,
             sharedContainerIdentifier: nil
         )
@@ -72,13 +73,13 @@ open class UnauthenticatedSessionFactory {
 
     let environment: ZMBackendEnvironment
 
-    init() {
-        self.environment = ZMBackendEnvironment(userDefaults: .standard)
+    init(environment: ZMBackendEnvironment) {
+        self.environment = environment
     }
 
-    func session(withDelegate delegate: UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
-        let transportSession = UnauthenticatedTransportSession(baseURL: environment.backendURL)
-        return UnauthenticatedSession(transportSession: transportSession, delegate: delegate)
+    func session(withDelegate delegate: UnauthenticatedSessionDelegate, reachability: ReachabilityProvider) -> UnauthenticatedSession {
+        let transportSession = UnauthenticatedTransportSession(baseURL: environment.backendURL, reachability: reachability)
+        return UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: delegate)
     }
 
 }

@@ -38,17 +38,19 @@ public class UnauthenticatedSession: NSObject {
     
     public let groupQueue: DispatchGroupQueue
     let authenticationStatus: ZMAuthenticationStatus
+    let reachability: ReachabilityProvider
     private(set) var operationLoop: UnauthenticatedOperationLoop!
-    private let transportSession: UnauthenticatedTransportSessionProtocol & ReachabilityProvider
+    private let transportSession: UnauthenticatedTransportSessionProtocol
     private var tornDown = false
 
     weak var delegate: UnauthenticatedSessionDelegate?
 
-    init(transportSession: UnauthenticatedTransportSessionProtocol & ReachabilityProvider, delegate: UnauthenticatedSessionDelegate?) {
+    init(transportSession: UnauthenticatedTransportSessionProtocol, reachability: ReachabilityProvider, delegate: UnauthenticatedSessionDelegate?) {
         self.delegate = delegate
         self.groupQueue = DispatchGroupQueue(queue: .main)
         self.authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue)
         self.transportSession = transportSession
+        self.reachability = reachability
         super.init()
 
         self.operationLoop = UnauthenticatedOperationLoop(
