@@ -13,22 +13,13 @@ import avs
 @objc public class MemoryVC: UIViewController {
 
     var session: SessionManager!
+    var button: UIButton!
     
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.session = SessionManager(
-            appVersion: "0.0.0",
-            mediaManager: AVSMediaManager.default(),
-            analytics: nil,
-            delegate: nil,
-            application: UIApplication.shared,
-            launchOptions: [:],
-            blacklistDownloadInterval : 40000
-        )
-        
-        let button = UIButton(frame: self.view.bounds)
-        button.setTitle("Boon", for: .normal)
+        button = UIButton(frame: self.view.bounds)
+        button.setTitle("Start", for: .normal)
         self.view.addSubview(button)
         button.addTarget(self, action: #selector(boom(_:)), for: .touchUpInside)
     }
@@ -39,8 +30,22 @@ import avs
     }
     
     public func boom(_ sender: Any?) {
-        self.session = nil
-        print("Boom")
+        if self.session == nil {
+            button.setTitle("Boon", for: .normal)
+            self.session = SessionManager(
+                appVersion: "0.0.0",
+                mediaManager: AVSMediaManager.default(),
+                analytics: nil,
+                delegate: nil,
+                application: UIApplication.shared,
+                launchOptions: [:],
+                blacklistDownloadInterval : 40000
+            )
+        } else {
+            self.session = nil
+            button.setTitle("Start", for: .normal)
+            print("Boom")
+        }
     }
     
 }
