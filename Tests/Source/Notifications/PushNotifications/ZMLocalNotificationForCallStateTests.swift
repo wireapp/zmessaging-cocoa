@@ -47,7 +47,7 @@ class ZMLocalNotificationForCallStateTests : MessagingTest {
         
         // given
         let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
-        note.update(forCallState: .incoming(video: false, shouldRing: true))
+        note.update(forCallState: .incoming(video: false, shouldRing: true, degraded: false))
         
         // when
         guard let uiNote = note.notifications.first else {
@@ -64,7 +64,7 @@ class ZMLocalNotificationForCallStateTests : MessagingTest {
         
         // given
         let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
-        note.update(forCallState: .incoming(video: false, shouldRing: false))
+        note.update(forCallState: .incoming(video: false, shouldRing: false, degraded: false))
         
         // when
         XCTAssertEqual(note.notifications.count, 0)
@@ -74,7 +74,7 @@ class ZMLocalNotificationForCallStateTests : MessagingTest {
         
         // given
         let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
-        note.update(forCallState: .incoming(video: true, shouldRing: true))
+        note.update(forCallState: .incoming(video: true, shouldRing: true, degraded: false))
         
         // when
         guard let uiNote = note.notifications.first else {
@@ -91,7 +91,7 @@ class ZMLocalNotificationForCallStateTests : MessagingTest {
         
         // given
         let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
-        note.update(forCallState: .incoming(video: true, shouldRing: false))
+        note.update(forCallState: .incoming(video: true, shouldRing: false, degraded: false))
         
         // when
         XCTAssertEqual(note.notifications.count, 0)

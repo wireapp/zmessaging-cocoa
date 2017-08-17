@@ -21,12 +21,20 @@
 @import WireTransport;
 @import WireDataModel;
 
+@class OperationStatus;
+@class ManagedObjectContextChangeObserver;
+@class LocalNotificationDispatcher;
+
 #import "ZMUserSession.h"
 
 @interface ZMUserSession (Private)
 
 @property (nonatomic, readonly) ZMTransportSession *transportSession;
 @property (nonatomic, readonly) NSManagedObjectContext *searchManagedObjectContext;
+@property (nonatomic, readonly) OperationStatus *operationStatus;
+@property (nonatomic, readonly) LocalNotificationDispatcher *localNotificationDispatcher;
+@property (nonatomic) ManagedObjectContextChangeObserver *messageReplyObserver;
+@property (nonatomic) ManagedObjectContextChangeObserver *likeMesssageObserver;
 
 - (void)tearDown;
 

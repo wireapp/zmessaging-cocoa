@@ -23,6 +23,5 @@
 #import "MessagingTest+EventFactory.h"
 #import "ConversationTestsBase.h"
 #import "ZMLocalNotificationForEventTest.h"
-#import "ZMCallKitDelegateTests+Mocking.h"
-#import "ZMCallKitDelegate+TypeConformance.h"
+#import "CallKitDelegateTests+Mocking.h"
 #import "IntegrationTest.h"

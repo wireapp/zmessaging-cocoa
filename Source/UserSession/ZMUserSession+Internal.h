@@ -38,7 +38,7 @@
 @class UserProfileUpdateStatus;
 @class ClientUpdateStatus;
 @class AVSFlowManager;
-@class ZMCallKitDelegate;
+@class CallKitDelegate;
 @class AVSMediaManager;
 
 extern NSString * const ZMAppendAVSLogNotificationName;
@@ -62,7 +62,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic) BOOL pushChannelIsOpen;
 @property (nonatomic) BOOL didNotifyThirdPartyServices;
 @property (nonatomic, readonly) id<ZMApplication> application;
-@property (nonatomic) ZMCallKitDelegate *callKitDelegate;
+@property (nonatomic) CallKitDelegate *callKitDelegate;
 @property (nonatomic) ZMCallStateObserver *callStateObserver;
 @property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 @property (nonatomic) ManagedObjectContextChangeObserver *messageReplyObserver;

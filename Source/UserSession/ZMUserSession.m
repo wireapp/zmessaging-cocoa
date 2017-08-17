@@ -41,12 +41,12 @@
 #import "ZMAVSBridge.h"
 #import "ZMOnDemandFlowManager.h"
 #import "ZMCallFlowRequestStrategy.h"
-#import "ZMCallKitDelegate.h"
+//#import "ZMCallKitDelegate.h"
 #import "ZMOperationLoop+Private.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 #import "ZMClientRegistrationStatus.h"
-#import "ZMCallKitDelegate+TypeConformance.h"
+//#import "ZMCallKitDelegate+TypeConformance.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
@@ -266,14 +266,14 @@ ZM_EMPTY_ASSERTING_INIT()
         self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithSharedContainerURL:self.storeProvider.applicationContainer];
         
         if ([self.class useCallKit]) {
-            CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[ZMCallKitDelegate providerConfiguration]];
+            CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[CallKitDelegate providerConfiguration]];
             CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
             
-            self.callKitDelegate = [[ZMCallKitDelegate alloc] initWithCallKitProvider:provider
-                                                                       callController:callController
-                                                                  onDemandFlowManager:self.onDemandFlowManager
-                                                                          userSession:self
-                                                                         mediaManager:(AVSMediaManager *)mediaManager];
+            self.callKitDelegate = [[CallKitDelegate alloc] initWithProvider:provider
+                                                              callController:callController
+                                                                 userSession:self
+                                                         onDemandFlowManager:self.onDemandFlowManager
+                                                                mediaManager:mediaManager];
         }
         
         [self.syncManagedObjectContext performBlockAndWait:^{
@@ -549,7 +549,7 @@ ZM_EMPTY_ASSERTING_INIT()
     return self.onDemandFlowManager.flowManager;
 }
 
-- (ZMOperationStatus *)operationStatus
+- (OperationStatus *)operationStatus
 {
     return self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus;
 }

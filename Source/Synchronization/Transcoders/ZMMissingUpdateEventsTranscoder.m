@@ -42,7 +42,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 @property (nonatomic) BackgroundAPNSPingBackStatus *pingbackStatus;
 @property (nonatomic) EventsWithIdentifier *notificationEventsToCancel;
 @property (nonatomic, weak) SyncStatus* syncStatus;
-@property (nonatomic, weak) ZMOperationStatus* operationStatus;
+@property (nonatomic, weak) OperationStatus* operationStatus;
 @property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response;
@@ -326,7 +326,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
     NOT_USED(paginator);
     SyncStatus *syncStatus = self.syncStatus;
-    ZMOperationStatus *operationStatus = self.operationStatus;
+    OperationStatus *operationStatus = self.operationStatus;
     
     NSString *timestamp = ((NSString *) response.payload.asDictionary[@"time"]);
     if (timestamp) {

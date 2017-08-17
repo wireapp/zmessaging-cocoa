@@ -63,7 +63,7 @@ public enum BackgroundTaskResult : UInt {
     }
 }
 
-@objc(ZMOperationStatus)
+@objc
 public class OperationStatus : NSObject {
         
     public weak var delegate : OperationStatusDelegate?

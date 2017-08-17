@@ -115,7 +115,6 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     
     public var mockIsVideoCall : Bool = false
 
-    public var overridenCallingProtocol : CallingProtocol = .version2
     public var startCallShouldFail : Bool = false {
         didSet{
             (avsWrapper as! MockAVSWrapper).startCallShouldFail = startCallShouldFail
@@ -139,11 +138,7 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     public var didCallRejectCall : Bool {
         return (avsWrapper as! MockAVSWrapper).didCallRejectCall
     }
-    
-    public override var callingProtocol: CallingProtocol {
-        return overridenCallingProtocol
-    }
-    
+        
     public override var nonIdleCalls : [UUID : CallState ] {
         return mockNonIdleCalls
     }

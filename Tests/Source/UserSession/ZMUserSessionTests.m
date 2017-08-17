@@ -1169,7 +1169,7 @@
     // expect
     [self.application setInactive];
 
-    [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
+    [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMCallAcceptAction withBlock:^(id mockDelegate) {
         [[mockDelegate expect] showConversation:conversation];
     }];
     

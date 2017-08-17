@@ -32,7 +32,6 @@ public final class CallStateObserver : NSObject {
     fileprivate var callStateToken : WireCallCenterObserverToken? = nil
     fileprivate var missedCalltoken : WireCallCenterObserverToken? = nil
     fileprivate let systemMessageGenerator = CallSystemMessageGenerator()
-    fileprivate var voiceChannelStatetoken : WireCallCenterObserverToken? = nil
 
     deinit {
         if let token = callStateToken {
@@ -52,7 +51,6 @@ public final class CallStateObserver : NSObject {
         
         self.callStateToken = WireCallCenterV3.addCallStateObserver(observer: self)
         self.missedCalltoken = WireCallCenterV3.addMissedCallObserver(observer: self)
-        self.voiceChannelStatetoken = WireCallCenter.addVoiceChannelStateObserver(observer: self, context: userSession.managedObjectContext)
     }
     
     fileprivate var callInProgress : Bool = false {
@@ -68,6 +66,10 @@ public final class CallStateObserver : NSObject {
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
+        
+        if let noneIdleCallCount = WireCallCenterV3.activeInstance?.nonIdleCalls.count {
+            callInProgress = noneIdleCallCount > 0
+        }
         
         syncManagedObjectContext.performGroupedBlock {
             guard
@@ -108,7 +110,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             guard let uiConv = (try? uiMOC.existingObject(with: convObjectID)) as? ZMConversation else { return }
             
             switch callState {
-            case .incoming(video: _, shouldRing: let shouldRing):
+            case .incoming(video: _, shouldRing: let shouldRing, degraded: _):
                 uiConv.isIgnoringCall = uiConv.isSilenced || !shouldRing
                 uiConv.isCallDeviceActive = false
             case .terminating, .none:
@@ -147,21 +149,3 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
     }
 
 }
-
-extension CallStateObserver : VoiceChannelStateObserver {
-    
-    public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
-        guard let userSession = userSession else { return }
-        callInProgress = WireCallCenter.nonIdleCallConversations(inUserSession: userSession).count > 0
-    }
-    
-    public func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation) {
-        // no-op
-    }
-    
-    public func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol) {
-        // no-op
-    }
-    
-}
-

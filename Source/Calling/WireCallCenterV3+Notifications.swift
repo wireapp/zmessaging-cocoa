@@ -18,6 +18,23 @@
 
 import Foundation
 
+@objc
+public enum ReceivedVideoState : UInt {
+    /// Sender is not sending video
+    case stopped
+    /// Sender is sending video
+    case started
+    /// Sender is sending video but currently has a bad connection
+    case badConnection
+}
+
+@objc
+public protocol ReceivedVideoObserver : class {
+    
+    @objc(callCenterDidChangeReceivedVideoState:)
+    func callCenterDidChange(receivedVideoState: ReceivedVideoState)
+    
+}
 
 protocol SelfPostingNotification {
     static var notificationName : Notification.Name { get }
@@ -66,8 +83,6 @@ public struct WireCallCenterCallStateNotification : SelfPostingNotification {
     let userId : UUID?
     let messageTime : Date?
 }
-
-
 
 /// MARK - Missed call observer
 
@@ -201,6 +216,16 @@ extension WireCallCenterV3 {
         }
     }
     
+    /// Register observer of the call center call state. This will inform you when there's an incoming call etc.
+    /// Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
+    public class func addCallStateObserver(observer: WireCallCenterCallStateObserver, conversation: ZMConversation) -> WireCallCenterObserverToken  {
+        return NotificationCenter.default.addObserver(forName: WireCallCenterCallStateNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
+            if let note = note.userInfo?[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification, note.conversationId == conversation.remoteIdentifier {
+                observer?.callCenterDidChange(callState: note.callState, conversationId: note.conversationId, userId: note.userId, timeStamp: note.messageTime)
+            }
+        }
+    }
+    
     /// Register observer of missed calls.
     /// Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
     public class func addMissedCallObserver(observer: WireCallCenterMissedCallObserver) -> WireCallCenterObserverToken  {
@@ -218,6 +243,33 @@ extension WireCallCenterV3 {
             if let note = note.userInfo?[WireCallCenterV3VideoNotification.userInfoKey] as? WireCallCenterV3VideoNotification {
                 observer?.callCenterDidChange(receivedVideoState: note.receivedVideoState)
             }
+        }
+    }
+    
+    /// Add observer of particpants in a voice channel. Returns a token which needs to be retained as long as the observer should be active.
+    public class func addVoiceChannelParticipantObserver(observer: VoiceChannelParticipantObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
+        let remoteID = conversation.remoteIdentifier!
+        return NotificationCenterObserverToken(name: VoiceChannelParticipantNotification.notificationName, object: nil, queue: .main) {
+            [weak observer] (note) in
+            guard let note = note.userInfo?[VoiceChannelParticipantNotification.userInfoKey] as? VoiceChannelParticipantNotification,
+                let strongObserver = observer
+                else { return }
+            
+            if note.conversationId == remoteID {
+                strongObserver.voiceChannelParticipantsDidChange(note)
+            }
+        }
+    }
+    
+    /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
+    public class func addVoiceGainObserver(observer: VoiceGainObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
+        return NotificationCenterObserverToken(name: VoiceGainNotification.notificationName, object: conversation.remoteIdentifier! as NSUUID, queue: .main) { [weak observer] (note) in
+            guard let note = note.userInfo?[VoiceGainNotification.userInfoKey] as? VoiceGainNotification,
+                let observer = observer,
+                let user = ZMUser(remoteID: note.userId, createIfNeeded: false, in: context)
+                else { return }
+            
+            observer.voiceGainDidChange(forParticipant: user, volume: note.volume)
         }
     }
     
@@ -301,12 +353,12 @@ class VoiceChannelParticipantV3Snapshot {
         VoiceChannelParticipantNotification(setChangeInfo: newStateUpdate.changeInfo, conversationId: self.conversationId).post()
     }
     
-    public func connectionState(forUserWith userId: UUID) -> VoiceChannelV2ConnectionState {
+    public func callParticipantState(forUserWith userId: UUID) -> CallParticipantState {
         let tempMember = CallMember(userId: userId, audioEstablished: false)
         guard let idx = members.order[tempMember] else {
-            return .notConnected
+            return .unconnected
         }
         let member = members.array[idx]
-        return member.audioEstablished ? .connected : .connecting
+        return member.audioEstablished ? .connected(muted: false, sendingVideo: false) : .connecting
     }
 }

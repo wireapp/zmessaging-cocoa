@@ -88,7 +88,7 @@
     
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.syncStatusMock = [OCMockObject mockForClass:SyncStatus.class];
-    self.operationStatusMock = [OCMockObject mockForClass:ZMOperationStatus.class];
+    self.operationStatusMock = [OCMockObject mockForClass:OperationStatus.class];
     self.userProfileImageUpdateStatus = [OCMockObject niceMockForClass:UserProfileImageUpdateStatus.class];
     
     self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
