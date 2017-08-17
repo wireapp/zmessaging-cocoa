@@ -21,6 +21,9 @@
 #import "ZMOperationLoop.h"
 
 @class APSSignalingKeysStore;
+@class ZMSyncStrategy;
+@class BackgroundAPNSPingBackStatus;
+@class ZMSyncStrategy;
 
 // Required by OperationLoop+Background.h
 @interface ZMOperationLoop ()

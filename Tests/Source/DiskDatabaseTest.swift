@@ -22,45 +22,60 @@ import XCTest
 import WireTesting
 
 public class DiskDatabaseTest: ZMTBaseTest {
-    let storeURL = PersistentStoreRelocator.storeURL(in: .cachesDirectory)!
+    var sharedContainerURL : URL!
+    var accountId : UUID!
     var moc: NSManagedObjectContext!
+    
+    var storeURL : URL {
+        return StorageStack.accountFolder(
+            accountIdentifier: accountId,
+            applicationContainer: sharedContainerURL
+            ).appendingPersistentStoreLocation()
+    }
     
     public override func setUp() {
         super.setUp()
-        NSManagedObjectContext.setUseInMemoryStore(false)
-        
+
+        accountId = .create()
+        let bundleIdentifier = Bundle.main.bundleIdentifier
+        let groupIdentifier = "group." + bundleIdentifier!
+        sharedContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupIdentifier)
         cleanUp()
-        
         createDatabase()
-        NSManagedObjectContext.prepareLocalStore(at: storeURL, backupCorruptedDatabase: false, synchronous: true) {
-            self.moc = NSManagedObjectContext.createUserInterfaceContextWithStore(at: self.storeURL)
-        }
-        
-        assert(self.waitForAllGroupsToBeEmpty(withTimeout: 1))
+
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 1))
+        XCTAssert(FileManager.default.fileExists(atPath: storeURL.path))
     }
     
     public override func tearDown() {
-        super.tearDown()
+        cleanUp()
         moc = nil
+        sharedContainerURL = nil
+        accountId = nil
+        super.tearDown()
     }
     
     private func createDatabase() {
-        NSManagedObjectContext.prepareLocalStore(at: storeURL, backupCorruptedDatabase: false, synchronous: true, completionHandler:nil)
-        
-        NSManagedObjectContext.resetSharedPersistentStoreCoordinator()
+        StorageStack.reset()
+        StorageStack.shared.createStorageAsInMemory = false
+
+        StorageStack.shared.createManagedObjectContextDirectory(accountIdentifier: accountId, applicationContainer: storeURL) {
+            self.moc = $0.uiContext
+            self.moc.performGroupedBlock {
+                let selfUser = ZMUser.selfUser(in: self.moc)
+                selfUser.remoteIdentifier = self.accountId
+            }
+        }
+
+        XCTAssert(wait(withTimeout: 0.5) { self.moc != nil })
     }
     
     private func cleanUp() {
-        let supportCachesPath = (storeURL as NSURL).deletingLastPathComponent!.path
-        
-        let fileManager = FileManager.default
-        
-        if fileManager.fileExists(atPath: supportCachesPath) {
-            try? fileManager.removeItem(atPath: supportCachesPath)
+        try? FileManager.default.contentsOfDirectory(at: sharedContainerURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles).forEach {
+            try? FileManager.default.removeItem(at: $0)
         }
-        
-        NSManagedObjectContext.resetSharedPersistentStoreCoordinator()
-        NSManagedObjectContext.resetUserInterfaceContext()
+
+        StorageStack.reset()
     }
 }
 

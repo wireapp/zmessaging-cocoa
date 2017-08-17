@@ -28,6 +28,7 @@
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMUserSessionRegistrationNotification.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 NSString * const ZMLoginURL = @"/login?persist=true";
 NSString * const ZMResendVerificationURL = @"/activate/send";
@@ -38,6 +39,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
 @interface ZMLoginTranscoder () <ZMRequestVerificationEmailObserver>
 
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
+@property (nonatomic, weak) id<UserInfoParser> userInfoParser;
 @property (nonatomic, readonly) ZMSingleRequestSync *verificationResendRequest;
 @property (nonatomic) id<ZMRequestVerificationEmailObserverToken> emailResendObserverToken;
 @property (nonatomic) id<ZMSGroupQueue> groupQueue;
@@ -49,15 +51,18 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
 
 - (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue
               authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
+                    userInfoParser:(id<UserInfoParser>)userInfoParser
 {
     return [self initWithGroupQueue:groupQueue
                authenticationStatus:authenticationStatus
+                     userInfoParser:userInfoParser
                 timedDownstreamSync:nil
           verificationResendRequest:nil];
 }
 
 - (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue
               authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
+                    userInfoParser:(id<UserInfoParser>)userInfoParser
                timedDownstreamSync:(ZMTimedSingleRequestSync *)timedDownstreamSync
          verificationResendRequest:(ZMSingleRequestSync *)verificationResendRequest
 {
@@ -66,6 +71,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     if (self != nil) {
         self.groupQueue = groupQueue;
         self.authenticationStatus = authenticationStatus;
+        self.userInfoParser = userInfoParser;
         _timedDownstreamSync = timedDownstreamSync ?: [[ZMTimedSingleRequestSync alloc] initWithSingleRequestTranscoder:self everyTimeInterval:0 groupQueue:groupQueue];
         _verificationResendRequest = verificationResendRequest ?: [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self groupQueue:groupQueue];
         
@@ -115,6 +121,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     {
         request = [self.timedDownstreamSync nextRequest];
     }
+
     return request;
 }
 
@@ -180,8 +187,8 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     else {
         return nil;
     }
-    if (authenticationStatus.cookieLabel.length != 0) {
-        payload[@"label"] = authenticationStatus.cookieLabel;
+    if (CookieLabel.current.length != 0) {
+        payload[@"label"] = CookieLabel.current.value;
     }
     return [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:LoginMethod payload:payload authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken];
 
@@ -210,8 +217,9 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     
     BOOL shouldStartTimer = NO;
     ZMAuthenticationStatus * authenticationStatus = self.authenticationStatus;
-    if (response.result == ZMTransportResponseStatusSuccess)    {
+    if (response.result == ZMTransportResponseStatusSuccess) {
         [authenticationStatus loginSucceed];
+        [self.userInfoParser parseUserInfoFromResponse:response];
     }
     else if (response.result == ZMTransportResponseStatusPermanentError) {
         if (sync == self.timedDownstreamSync) {

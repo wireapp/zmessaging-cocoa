@@ -122,7 +122,7 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, 
         ZMUserSession.addInitalSyncCompletionObserver(self)
         self.authenticationToken = ZMUserSessionAuthenticationNotification.addObserver({ [weak self] (note) in
             switch note.type {
-            case .authenticationNotificationAuthenticationDidSuceeded:
+            case .authenticationNotificationAuthenticationDidSuceeded, .authenticationNotificationDidRegisterClient:
                 self?.didAuthenticate()
             case .authenticationNotificationAuthenticationDidFail:
                 self?.failedToAuthenticate()

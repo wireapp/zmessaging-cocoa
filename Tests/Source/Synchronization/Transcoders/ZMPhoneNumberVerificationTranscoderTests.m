@@ -38,9 +38,9 @@
 
 - (void)setUp {
     [super setUp];
-    
+
     DispatchGroupQueue *groupQueue = [[DispatchGroupQueue alloc] initWithQueue:dispatch_get_main_queue()];
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:nil groupQueue:groupQueue];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue];
     self.sut = [[ZMPhoneNumberVerificationTranscoder alloc] initWithGroupQueue:groupQueue authenticationStatus:self.authenticationStatus];
 }
 

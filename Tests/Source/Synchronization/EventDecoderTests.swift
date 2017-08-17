@@ -22,8 +22,23 @@ import WireTesting
 
 class EventDecoderTest: MessagingTest {
     
-    var eventMOC = NSManagedObjectContext.createEventContext(withAppGroupIdentifier: nil)
+    var eventMOC: NSManagedObjectContext!
     var sut : EventDecoder!
+    
+    override func setUp() {
+        super.setUp()
+        eventMOC = NSManagedObjectContext.createEventContext(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
+        sut = EventDecoder(eventMOC: eventMOC, syncMOC: syncMOC)
+        eventMOC.add(dispatchGroup)
+    }
+    
+    override func tearDown() {
+        EventDecoder.testingBatchSize = nil
+        eventMOC.tearDownEventMOC()
+        eventMOC = nil
+        sut = nil
+        super.tearDown()
+    }
 }
 
 // MARK: - Processing events
@@ -254,19 +269,6 @@ extension EventDecoderTest {
 
 // MARK: - Helpers
 extension EventDecoderTest {
-    
-    override func setUp() {
-        super.setUp()
-        sut = EventDecoder(eventMOC: eventMOC, syncMOC: syncMOC)
-        eventMOC.add(dispatchGroup)
-    }
-    
-    override func tearDown() {
-        EventDecoder.testingBatchSize = nil
-        eventMOC.tearDownEventMOC()
-        super.tearDown()
-    }
-    
     /// Returns an event from the notification stream
     func eventStreamEvent(uuid: UUID? = nil) -> ZMUpdateEvent {
         let conversation = ZMConversation.insertNewObject(in: syncMOC)

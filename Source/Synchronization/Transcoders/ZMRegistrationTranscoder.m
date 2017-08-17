@@ -31,6 +31,7 @@
 
 @interface  ZMRegistrationTranscoder ()
 
+@property (nonatomic, weak) id<UserInfoParser> userInfoParser;
 @property (nonatomic, readonly) ZMSingleRequestSync *registrationSync;
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic) id<ZMSGroupQueue> groupQueue;
@@ -45,12 +46,15 @@
 
 @implementation ZMRegistrationTranscoder
 
-- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
+- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue
+              authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
+                    userInfoParser:(id<UserInfoParser>)userInfoParser
 {
     self = [super init];
     
     if (self != nil) {
         self.groupQueue = groupQueue;
+        self.userInfoParser = userInfoParser;
         _registrationSync = [ZMSingleRequestSync syncWithSingleRequestTranscoder:self groupQueue:groupQueue];
         self.authenticationStatus = authenticationStatus;
         [authenticationStatus addAuthenticationCenterObserver:self];
@@ -108,7 +112,7 @@
     NSString *email = authStatus.registrationUser.emailAddress;
     NSString *name = authStatus.registrationUser.name;
     NSString *invitationCode = authStatus.registrationUser.invitationCode;
-    NSString *cookieLabel = authStatus.cookieLabel;
+    NSString *cookieLabel = CookieLabel.current.value;
     
     ZMAccentColor accentColor = authStatus.registrationUser.accentColorValue;
     
@@ -133,7 +137,7 @@
         payload[@"label"] = cookieLabel;
     }
     
-    //for phone number we will have another end point or different payload
+    // for phone number we will have another end point or different payload
     ZMTransportRequest *request = [[ZMTransportRequest alloc] initWithPath:@"/register" method:ZMMethodPOST payload:payload authentication:ZMTransportRequestAuthNone];
     return request;
 }
@@ -141,13 +145,17 @@
 - (void)didReceiveResponse:(ZMTransportResponse *)response forSingleRequest:(ZMSingleRequestSync *)sync
 {
     NOT_USED(sync);
+    ZMAuthenticationStatus *authenticationStatus = self.authenticationStatus;
     if (response.result == ZMTransportResponseStatusSuccess) {
-        [self.authenticationStatus didCompleteRegistrationSuccessfully];
+        BOOL shouldParseUserInfo = authenticationStatus.currentPhase == ZMAuthenticationPhaseRegisterWithPhone;
+        [authenticationStatus didCompleteRegistrationSuccessfully];
+
+        if (shouldParseUserInfo) {
+            [self.userInfoParser parseUserInfoFromResponse:response];
+        }
     }
     else if (response.result == ZMTransportResponseStatusPermanentError) {
-        //if email is duplicated backed return 400 and json with key-exists label
-        ZMAuthenticationStatus * authenticationStatus = self.authenticationStatus;
-        
+        // if email is duplicated backed return 400 and json with key-exists label
         if([[response payloadLabel] isEqualToString:@"key-exists"]) {
             [authenticationStatus didFailRegistrationWithDuplicatedEmail];
         }

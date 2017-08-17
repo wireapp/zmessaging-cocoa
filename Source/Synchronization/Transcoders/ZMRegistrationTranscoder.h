@@ -20,13 +20,17 @@
 @import WireRequestStrategy;
 @import WireMessageStrategy;
 
+@protocol UserInfoParser;
 @class ZMTransportResponse;
 @class ZMApplicationStatusDirectory;
 
 
 @interface ZMRegistrationTranscoder : NSObject <RequestStrategy>
 
-- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus;
+- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue
+              authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
+                    userInfoParser:(id<UserInfoParser>)userInfoParser;
+
 - (void)resetRegistrationState;
 
 

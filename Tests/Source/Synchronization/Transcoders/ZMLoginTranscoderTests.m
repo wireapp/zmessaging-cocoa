@@ -29,6 +29,8 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMAuthenticationStatus_Internal.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
+
 
 @import WireUtilities;
 
@@ -72,6 +74,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 @property (nonatomic) ZMCredentials *testPhoneNumberCredentials;
 @property (nonatomic) NSTimeInterval originalLoginTimerInterval;
 @property (nonatomic) id mockLocale;
+@property (nonatomic) MockUserInfoParser *mockUserInfoParser;
 
 @end
 
@@ -83,13 +86,18 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     self.groupQueue = [[DispatchGroupQueue alloc] initWithQueue:dispatch_get_main_queue()];
     self.originalLoginTimerInterval = DefaultPendingValidationLoginAttemptInterval;
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:[ZMPersistentCookieStorage storageForServerName:@"test"] groupQueue:self.groupQueue];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:self.groupQueue];
+
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
     
     self.mockLocale = [OCMockObject niceMockForClass:[NSLocale class]];
     [[[self.mockLocale stub] andReturn:[NSLocale localeWithLocaleIdentifier:@"fr_FR"]] currentLocale];
+
+    self.mockUserInfoParser = [[MockUserInfoParser alloc] init];
     
-    self.sut = [[ZMLoginTranscoder alloc] initWithGroupQueue:self.groupQueue authenticationStatus:self.authenticationStatus];
+    self.sut = [[ZMLoginTranscoder alloc] initWithGroupQueue:self.groupQueue
+                                        authenticationStatus:self.authenticationStatus
+                                              userInfoParser:self.mockUserInfoParser];
     
     self.testEmailCredentials = [ZMEmailCredentials credentialsWithEmail:TestEmail password:TestPassword];
     self.testPhoneNumberCredentials = [ZMPhoneCredentials credentialsWithPhoneNumber:TestPhoneNumber verificationCode:TestPhoneCode];
@@ -102,6 +110,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     self.authenticationStatus = nil;
     self.mockClientRegistrationStatus = nil;
     self.mockLocale = nil;
+    self.mockUserInfoParser = nil;
     DefaultPendingValidationLoginAttemptInterval = self.originalLoginTimerInterval;
     [super tearDown];
 }
@@ -109,7 +118,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)testThatItCreatesTheTimedRequestSyncWithZeroDelayInDefaultConstructor
 {
     // given
-    ZMLoginTranscoder *sut = [[ZMLoginTranscoder alloc] initWithGroupQueue:self.groupQueue authenticationStatus:self.authenticationStatus];
+    ZMLoginTranscoder *sut = [[ZMLoginTranscoder alloc] initWithGroupQueue:self.groupQueue authenticationStatus:self.authenticationStatus userInfoParser:nil];
     
     // then
     XCTAssertNotNil(sut.timedDownstreamSync);
@@ -205,7 +214,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     // given
     NSDictionary *payload = @{@"email": self.testEmailCredentials.email,
                               @"password": self.testEmailCredentials.password,
-                              @"label": self.authenticationStatus.cookieLabel};
+                              @"label": CookieLabel.current.value};
     ZMTransportRequest *expectedRequest = [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:ZMMethodPOST payload:payload authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken];
     
     [self.authenticationStatus prepareForLoginWithCredentials:self.testEmailCredentials];
@@ -222,7 +231,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     // given
     NSDictionary *payload = @{@"phone": self.testPhoneNumberCredentials.phoneNumber,
                               @"code": self.testPhoneNumberCredentials.phoneNumberVerificationCode,
-                              @"label": self.authenticationStatus.cookieLabel};
+                              @"label": CookieLabel.current.value};
     ZMTransportRequest *expectedRequest = [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:ZMMethodPOST payload:payload authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken];
     [self.authenticationStatus prepareForLoginWithCredentials:self.testPhoneNumberCredentials];
     

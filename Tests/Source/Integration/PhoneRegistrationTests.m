@@ -93,7 +93,6 @@
     [[[self.registrationObserver expect] andDo:^(NSInvocation *i ZM_UNUSED) {
         [phoneVerifiedExpectation fulfill];
     }] phoneVerificationDidSucceed];
-    [[self.authenticationObserver expect] authenticationDidSucceed];
     
     // when
     [self.unauthenticatedSession verifyPhoneNumberForRegistration:phone verificationCode:code];
@@ -108,7 +107,8 @@
     ZMIncompleteRegistrationUser *user = [self createUserWithPhone:phone code:code];
     
     // expect
-    [[self.authenticationObserver expect] authenticationDidSucceed]; // triggered when registering client
+//    [[self.authenticationObserver expect] authenticationDidSucceed];
+    [[self.authenticationObserver expect] clientRegistrationDidSucceed]; // triggered when registering client
     
     // when
     [self.unauthenticatedSession registerUser:user.completeRegistrationUser];
@@ -138,8 +138,7 @@
     ZMIncompleteRegistrationUser *user = [self createUserWithPhone:phone code:code];
     
     // expect
-    [[self.authenticationObserver expect] authenticationDidSucceed]; // triggered when recieving cookie
-    [[self.authenticationObserver expect] authenticationDidSucceed]; // triggered when registering client
+    [[self.authenticationObserver expect] clientRegistrationDidSucceed]; // triggered when registering client
 
     // when
     [self.unauthenticatedSession registerUser:user.completeRegistrationUser];
@@ -247,7 +246,7 @@
     // expect
     [[self.authenticationObserver expect] loginCodeRequestDidSucceed];
     [[self.authenticationObserver expect] authenticationDidSucceed];
-    [[self.authenticationObserver expect] authenticationDidSucceed]; // client was registered
+    [[self.authenticationObserver expect] clientRegistrationDidSucceed]; // client was registered
     
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForRegistration:phone];

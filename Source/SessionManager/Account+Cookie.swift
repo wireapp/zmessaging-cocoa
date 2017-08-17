@@ -16,18 +16,11 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+extension Account {
 
-@import WireUtilities;
-@import WireTransport;
-@import WireDataModel;
+    func cookieStorage() -> ZMPersistentCookieStorage {
+        let backendURL = ZMBackendEnvironment(userDefaults: .standard).backendURL.host!
+        return ZMPersistentCookieStorage(forServerName: backendURL, userIdentifier: userIdentifier)
+    }
 
-#import "ZMUserSession.h"
-
-@interface ZMUserSession (Private)
-
-@property (nonatomic, readonly) ZMTransportSession *transportSession;
-@property (nonatomic, readonly) NSManagedObjectContext *searchManagedObjectContext;
-
-- (void)tearDown;
-
-@end
+}

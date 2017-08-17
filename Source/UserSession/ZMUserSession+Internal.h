@@ -67,6 +67,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 @property (nonatomic) ManagedObjectContextChangeObserver *messageReplyObserver;
 @property (nonatomic) ManagedObjectContextChangeObserver *likeMesssageObserver;
+@property (nonatomic, readonly) NSURL *sharedContainerURL;
 
 - (void)notifyThirdPartyServices;
 - (void)start;
@@ -87,14 +88,14 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 + (NSString *)databaseIdentifier;
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
-                    userInterfaceContext:(NSManagedObjectContext *)userInterfaceContext
-                syncManagedObjectContext:(NSManagedObjectContext *)syncManagedObjectContext
                             mediaManager:(AVSMediaManager *)mediaManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
+
+- (void)tearDown;
 
 @property (nonatomic) ZMPushRegistrant *pushRegistrant;
 @property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;

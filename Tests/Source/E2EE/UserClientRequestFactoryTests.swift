@@ -32,14 +32,13 @@ class UserClientRequestFactoryTests: MessagingTest {
     
     override func setUp() {
         super.setUp()
-        self.spyKeyStore = SpyUserClientKeyStore(in: UserClientKeysStore.otrDirectoryURL)
-        self.authenticationStatus = MockAuthenticationStatus();
+        self.spyKeyStore = SpyUserClientKeyStore(accountDirectory: accountDirectory, applicationContainer: sharedContainerURL)
+        self.authenticationStatus = MockAuthenticationStatus()
         self.sut = UserClientRequestFactory(keysStore: self.spyKeyStore)
     }
     
     override func tearDown() {
-        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectoryURL)  
-        
+        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectory)
         self.authenticationStatus = nil
         self.sut = nil
         self.spyKeyStore = nil

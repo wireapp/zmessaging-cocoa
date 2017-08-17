@@ -40,6 +40,7 @@
 
 @class MockUser;
 @class ZMClientMessage;
+@class ManagedObjectContextDirectory;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -58,12 +59,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSManagedObjectContext *testMOC;
 @property (nonatomic, readonly) NSManagedObjectContext *alternativeTestMOC;
 @property (nonatomic, readonly) NSManagedObjectContext *searchMOC;
+@property (nonatomic, readonly) ManagedObjectContextDirectory *contextDirectory;
 @property (nonatomic, readonly) ApplicationMock *application;
 
 @property (nonatomic, readonly) MockTransportSession *mockTransportSession;
 @property (nonatomic, readonly) ZMUserSession *mockUserSession;
 
 @property (nonatomic, readonly) NSString *groupIdentifier;
+@property (nonatomic, readonly) NSUUID *userIdentifier;
+@property (nonatomic, readonly) NSURL *sharedContainerURL;
+@property (nonatomic, readonly) NSURL *accountDirectory;
 
 /// reset ui and sync contexts
 - (void)resetUIandSyncContextsAndResetPersistentStore:(BOOL)resetPersistentStore;

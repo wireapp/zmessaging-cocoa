@@ -382,7 +382,7 @@
     // then
     XCTAssertEqual(self.sessionNotifications.count, 1u);
     ZMUserSessionAuthenticationNotification *note = self.sessionNotifications.firstObject;
-    XCTAssertEqual(note.type, ZMAuthenticationNotificationAuthenticationDidSuceeded);
+    XCTAssertEqual(note.type, ZMAuthenticationNotificationDidRegisterClient);
 }
 
 - (void)testThatItNotifiesTheUIIfTheClientWasAlreadyRegisteredBeforeFetchingTheSelfUser
@@ -476,7 +476,7 @@
     NSError *error = [NSError errorWithDomain:@"ClientManagement" code:ClientUpdateErrorSelfClientIsInvalid userInfo:nil];
 
     // expect
-    [[self.mockCookieStorage expect] deleteUserKeychainItems];
+    [[self.mockCookieStorage expect] deleteKeychainItems];
     
     // when
     [ZMClientUpdateNotification notifyFetchingClientsDidFail:error];

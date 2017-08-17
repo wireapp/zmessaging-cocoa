@@ -44,7 +44,7 @@
     [[[mockAPNSEnvironment stub] andReturn:@"APNS"] transportTypeForTokenType:ZMAPNSTypeNormal];
     [[[mockAPNSEnvironment stub] andReturn:@"APNS_VOIP"] transportTypeForTokenType:ZMAPNSTypeVoIP];
     self.mockAPNSEnvironment = mockAPNSEnvironment;
-    
+    self.currentUserIdentifier = [NSUUID createUUID];
     [self _setUp];
 }
 

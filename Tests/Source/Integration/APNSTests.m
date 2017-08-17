@@ -147,12 +147,23 @@
         }];
     };
     
+    // expect
+    id mockPushRegistrant = [OCMockObject niceMockForClass:ZMPushRegistrant.class];
+    [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
+
+    [[[mockPushRegistrant stub] andReturn:mockPushRegistrant] alloc];
+    (void)[[[mockPushRegistrant stub] andReturn:mockPushRegistrant] initWithDidUpdateCredentials:OCMOCK_ANY
+                                                                               didReceivePayload:OCMOCK_ANY
+                                                                              didInvalidateToken:OCMOCK_ANY];
+
     // when
     [self recreateSessionManager];
-    
-    id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
-    [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-    
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    if (nil == self.userSession) {
+        return XCTFail(@"No user session available");
+    }
+
     WaitForAllGroupsToBeEmpty(0.5);
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {

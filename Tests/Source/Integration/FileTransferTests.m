@@ -211,9 +211,7 @@
 - (void)testThatItUpdatesAFileMessageWhenTheUploadIsCancelledRemotely
 {
     //given
-//    self.registeredOnThisDevice = YES;
     XCTAssertTrue([self login]);
-//    WaitForAllGroupsToBeEmpty(0.5);
     
     NSUUID *nonce = NSUUID.createUUID;
     ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce.transportString  expiresAfter:nil];

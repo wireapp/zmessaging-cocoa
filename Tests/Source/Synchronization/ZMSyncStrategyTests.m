@@ -68,6 +68,8 @@
 @property (nonatomic) id operationStatusMock;
 @property (nonatomic) id applicationStatusDirectoryMock;
 @property (nonatomic) id userProfileImageUpdateStatus;
+@property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
+
 @end
 
 
@@ -150,16 +152,17 @@
     
     [self stubChangeTrackerBootstrapInitialization];
     
-    self.sut = [[ZMSyncStrategy alloc] initWithSyncManagedObjectContextMOC:self.syncMOC
-                                                    uiManagedObjectContext:self.uiMOC
-                                                             cookieStorage:nil
-                                                              mediaManager:nil
-                                                       onDemandFlowManager:nil
-                                                         syncStateDelegate:self.syncStateDelegate
-                                              localNotificationsDispatcher:self.mockDispatcher
-                                                  taskCancellationProvider:nil
-                                                        appGroupIdentifier:nil
-                                                               application:self.application];
+    self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
+
+    
+    self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
+                                               cookieStorage:nil
+                                                mediaManager:nil
+                                         onDemandFlowManager:nil
+                                           syncStateDelegate:self.syncStateDelegate
+                                localNotificationsDispatcher:self.mockDispatcher
+                                    taskCancellationProvider:nil
+                                                 application:self.application];
     
     XCTAssertEqual(self.sut.userTranscoder, userTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
@@ -191,7 +194,7 @@
     self.applicationStatusDirectoryMock = nil;
     [self.userProfileImageUpdateStatus stopMocking];
     self.userProfileImageUpdateStatus = nil;
-    
+    self.storeProvider = nil;
     [self.sut tearDown];
     for (id syncObject in self.syncObjects) {
         [syncObject stopMocking];

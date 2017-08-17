@@ -43,6 +43,8 @@
 @protocol UserProfileImageUpdateProtocol;
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
+
+@class ManagedObjectContextDirectory;
 @class TopConversationsDirectory;
 
 @protocol ZMAVSLogObserver <NSObject>
@@ -76,9 +78,8 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
                     transportSession:(ZMTransportSession *)transportSession
                      apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                          application:(id<ZMApplication>)application
-                              userId:(NSUUID *)uuid
                           appVersion:(NSString *)appVersion
-                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
+                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;;
 
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
@@ -112,9 +113,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 @property (nonatomic, readonly) ZMCallKitDelegate *callKitDelegate;
 
 /// The URL of the shared container that has been determinned using the passed in application group identifier
-@property (nonatomic, readonly) NSURL *sharedContainerURL;
-
-@property (nonatomic, readonly) NSURL *storeURL;
+//@property (nonatomic, readonly) NSURL *sharedContainerURL;
 
 /// The sync has been completed as least once
 @property (nonatomic, readonly) BOOL hasCompletedInitialSync;

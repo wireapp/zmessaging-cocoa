@@ -72,15 +72,14 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 @interface MessagingTest () 
 
-@property (nonatomic) NSManagedObjectContext *uiMOC;
-@property (nonatomic) NSManagedObjectContext *syncMOC;
 @property (nonatomic) NSManagedObjectContext *testMOC;
 @property (nonatomic) NSManagedObjectContext *alternativeTestMOC;
-@property (nonatomic) NSManagedObjectContext *searchMOC;
+@property (nonatomic) ManagedObjectContextDirectory *contextDirectory;
 
-@property (nonatomic) NSString *groupIdentifier;;
-@property (nonatomic) NSURL *storeURL;
-@property (nonatomic) NSURL *keyStoreURL;
+@property (nonatomic) NSString *groupIdentifier;
+@property (nonatomic) NSUUID *userIdentifier;
+@property (nonatomic) NSURL *sharedContainerURL;
+
 @property (nonatomic) MockTransportSession *mockTransportSession;
 
 @property (nonatomic) NSTimeInterval originalConversationLastReadTimestampTimerValue; // this will speed up the tests A LOT
@@ -120,18 +119,32 @@ static ZMReachability *sharedReachabilityMock = nil;
     return YES;
 }
 
+- (NSURL *)storeURL
+{
+    return self.accountDirectory.URLAppendingPersistentStoreLocation;
+}
+
+- (NSURL *)accountDirectory
+{
+    return [StorageStack accountFolderWithAccountIdentifier:self.userIdentifier applicationContainer:self.sharedContainerURL];
+}
+
+- (NSURL *)keyStoreURL
+{
+    return self.sharedContainerURL;
+}
+
 - (void)setUp;
 {
     [super setUp];
+    
     NSFileManager *fm = NSFileManager.defaultManager;
     NSString *bundleIdentifier = [NSBundle bundleForClass:self.class].bundleIdentifier;
     self.groupIdentifier = [@"group." stringByAppendingString:bundleIdentifier];
+    self.userIdentifier = [NSUUID UUID];
+    self.sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
     
-    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
-    self.storeURL = [[sharedContainerURL URLByAppendingPathComponent:bundleIdentifier] URLByAppendingPathComponent:@"store.wiredatabase"];
-    self.keyStoreURL = sharedContainerURL;
-    
-    NSURL *otrFolder = [self.keyStoreURL URLByAppendingPathComponent:@"otr"];
+    NSURL *otrFolder = [NSFileManager keyStoreURLForAccountInDirectory:self.accountDirectory createParentIfNeeded:NO];
     [fm removeItemAtURL:otrFolder error: nil];
     
     _application = [[ApplicationMock alloc] init];
@@ -146,7 +159,7 @@ static ZMReachability *sharedReachabilityMock = nil;
         ZM_SILENCE_CALL_TO_UNKNOWN_SELECTOR([self performSelector:selector]);
     }
 
-    [NSManagedObjectContext setUseInMemoryStore:self.shouldUseInMemoryStore];
+    StorageStack.shared.createStorageAsInMemory = self.shouldUseInMemoryStore;
 
     [self resetState];
     
@@ -167,16 +180,31 @@ static ZMReachability *sharedReachabilityMock = nil;
     [self resetUIandSyncContextsAndResetPersistentStore:YES];
     
     ZMPersistentCookieStorage *cookieStorage = [[ZMPersistentCookieStorage alloc] init];
-    [cookieStorage deleteUserKeychainItems];
+    [cookieStorage deleteKeychainItems];
     
     self.testMOC = [MockModelObjectContextFactory testContext];
     [self.testMOC addGroup:self.dispatchGroup];
     self.alternativeTestMOC = [MockModelObjectContextFactory alternativeMocForPSC:self.testMOC.persistentStoreCoordinator];
     [self.alternativeTestMOC addGroup:self.dispatchGroup];
-    self.searchMOC = [NSManagedObjectContext createSearchContextWithStoreAtURL:self.storeURL];
+
     [self.searchMOC addGroup:self.dispatchGroup];
     self.mockTransportSession = [[MockTransportSession alloc] initWithDispatchGroup:self.dispatchGroup];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
+}
+
+- (NSManagedObjectContext *)uiMOC
+{
+    return self.contextDirectory.uiContext;
+}
+
+- (NSManagedObjectContext *)syncMOC
+{
+    return self.contextDirectory.syncContext;
+}
+
+- (NSManagedObjectContext *)searchMOC
+{
+    return self.contextDirectory.searchContext;
 }
 
 - (void)tearDown;
@@ -188,11 +216,12 @@ static ZMReachability *sharedReachabilityMock = nil;
 
     [self resetState];
     [MessagingTest deleteAllFilesInCache];
-    [self removeCachesInSharedContainer];
+    [self removeFilesInSharedContainer];
+
     _application = nil;
     self.groupIdentifier = nil;
-    self.storeURL = nil;
-    self.keyStoreURL = nil;
+    self.sharedContainerURL = nil;
+
     [super tearDown];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
 }
@@ -209,12 +238,15 @@ static ZMReachability *sharedReachabilityMock = nil;
     [moc.userInfo removeObjectsForKeys:keysToRemove];
 }
 
-- (void)removeCachesInSharedContainer
+- (void)removeFilesInSharedContainer
 {
-    NSFileManager *fm = NSFileManager.defaultManager;
-    NSURL *sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
-    NSURL *cachesURL = [sharedContainerURL URLByAppendingPathComponent:@"Library/Caches"];
-    [fm removeItemAtURL:cachesURL error:nil];
+    for (NSURL *url in [NSFileManager.defaultManager contentsOfDirectoryAtURL:self.sharedContainerURL includingPropertiesForKeys:nil options:NSDirectoryEnumerationSkipsHiddenFiles error:nil]) {
+        NSError *error = nil;
+        [NSFileManager.defaultManager removeItemAtURL:url error:&error];
+        if (error) {
+            ZMLogError(@"Error cleaning up %@ in %@: %@", url, self.self.sharedContainerURL, error);
+        }
+    }
 }
 
 - (void)resetState
@@ -237,8 +269,8 @@ static ZMReachability *sharedReachabilityMock = nil;
     self.mockTransportSession = nil;
     
     self.ignoreTestDebugFlagForTestTimers = NO;
-    [NSManagedObjectContext resetUserInterfaceContext];
-    [NSManagedObjectContext resetSharedPersistentStoreCoordinator];
+
+    [StorageStack reset];
 }
 
 - (void)waitAndDeleteAllManagedObjectContexts;
@@ -249,12 +281,10 @@ static ZMReachability *sharedReachabilityMock = nil;
     NSManagedObjectContext *refSearchMoc = self.searchMOC;
     NSManagedObjectContext *refSyncMoc = self.syncMOC;
     WaitForAllGroupsToBeEmpty(2);
-    
-    self.uiMOC = nil;
-    self.syncMOC = nil;
+
+    self.contextDirectory = nil;
     self.testMOC = nil;
     self.alternativeTestMOC = nil;
-    self.searchMOC = nil;
     
     [refUiMOC performBlockAndWait:^{
         // Do nothing.
@@ -295,27 +325,34 @@ static ZMReachability *sharedReachabilityMock = nil;
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    self.uiMOC = nil;
-    self.syncMOC = nil;
+    self.contextDirectory = nil;
     
     WaitForAllGroupsToBeEmpty(2);
     
-    [NSManagedObjectContext resetUserInterfaceContext];
-    
     if (resetPersistentStore) {
-        [NSManagedObjectContext resetSharedPersistentStoreCoordinator];
+        [StorageStack reset];
     }
-    [self performIgnoringZMLogError:^{
-        self.uiMOC = [NSManagedObjectContext createUserInterfaceContextWithStoreAtURL:self.storeURL];
-    }];
+
+    StorageStack.shared.createStorageAsInMemory = self.shouldUseInMemoryStore;
+
+    [StorageStack.shared createManagedObjectContextDirectoryForAccountIdentifier:self.userIdentifier
+                                                            applicationContainer:self.sharedContainerURL
+                                                                   dispatchGroup:self.dispatchGroup
+                                                        startedMigrationCallback:nil
+                                                               completionHandler:^(ManagedObjectContextDirectory * _Nonnull directory) {
+                                                                   self.contextDirectory = directory;
+                                                               }];
+
+    XCTAssert([self waitWithTimeout:0.5 verificationBlock:^BOOL{
+        return nil != self.contextDirectory;
+    }]);
     
     ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100 location:nil];
     FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:nil];
     
     [self.uiMOC addGroup:self.dispatchGroup];
     self.uiMOC.userInfo[@"TestName"] = self.name;
-    
-    self.syncMOC = [NSManagedObjectContext createSyncContextWithStoreAtURL:self.storeURL keyStoreURL:self.keyStoreURL];
+
     [self.syncMOC performGroupedBlockAndWait:^{
         self.syncMOC.userInfo[@"TestName"] = self.name;
         [self.syncMOC addGroup:self.dispatchGroup];
@@ -330,7 +367,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     WaitForAllGroupsToBeEmpty(2);
     
     [self performPretendingUiMocIsSyncMoc:^{
-        [self.uiMOC setupUserKeyStoreForDirectory:self.keyStoreURL];
+        [self.uiMOC setupUserKeyStoreInAccountDirectory:self.accountDirectory applicationContainer:self.sharedContainerURL];
     }];
     
     [self.uiMOC saveOrRollback];
@@ -377,6 +414,8 @@ static ZMReachability *sharedReachabilityMock = nil;
         id mockUserSession = [OCMockObject niceMockForClass:[ZMUserSession class]];
         [[[mockUserSession stub] andReturn:self.uiMOC] managedObjectContext];
         [[[mockUserSession stub] andReturn:self.syncMOC] syncManagedObjectContext];
+        [[[mockUserSession stub] andReturn:self.searchMOC] searchManagedObjectContext];
+        [[[mockUserSession stub] andReturn:self.sharedContainerURL] sharedContainerURL];
         [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockTransportSession] transportSession];
         _mockUserSession = mockUserSession;
     }

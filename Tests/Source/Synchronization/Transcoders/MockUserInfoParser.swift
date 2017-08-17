@@ -17,17 +17,14 @@
 //
 
 
-@import WireUtilities;
-@import WireTransport;
-@import WireDataModel;
+@objc public class MockUserInfoParser: NSObject, UserInfoParser {
 
-#import "ZMUserSession.h"
+    var parseCallCount = 0
+    var parsedResponses = [ZMTransportResponse]()
 
-@interface ZMUserSession (Private)
+    public func parseUserInfo(from response: ZMTransportResponse) {
+        parseCallCount += 1
+        parsedResponses.append(response)
+    }
 
-@property (nonatomic, readonly) ZMTransportSession *transportSession;
-@property (nonatomic, readonly) NSManagedObjectContext *searchManagedObjectContext;
-
-- (void)tearDown;
-
-@end
+}

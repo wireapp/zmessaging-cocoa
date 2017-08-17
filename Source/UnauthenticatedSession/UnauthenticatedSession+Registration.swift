@@ -18,36 +18,35 @@
 
 import Foundation
 
-@objc
-protocol RegistrationObserver {
+@objc protocol RegistrationObserver {
     
     /// Invoked when the registration failed
-    func registrationDidFail(error: Error)
+    @objc optional func registrationDidFail(error: Error)
     
     /// Requesting the phone verification code failed (e.g. invalid number?) even before sending SMS
-    func phoneVerificationCodeRequestDidFail(error: Error)
+    @objc optional func phoneVerificationCodeRequestDidFail(error: Error)
     
     /// Requesting the phone verification code succeded
-    func phoneVerificationCodeRequestDidSucceed()
+    @objc optional func phoneVerificationCodeRequestDidSucceed()
     
     /// Invoked when any kind of phone verification was completed with the right code
-    func phoneVerificationDidSucceed()
+    @objc optional func phoneVerificationDidSucceed()
     
     /// Invoked when any kind of phone verification failed because of wrong code/phone combination
-    func phoneVerificationDidFail(error: Error)
+    @objc optional func phoneVerificationDidFail(error: Error)
     
     /// Email was correctly registered and validated
-    func emailVerificationDidSucceed()
+    @objc optional func emailVerificationDidSucceed()
     
     /// Email was already registered to another user
-    func emailVerificationDidFail(error: Error)
+    @objc optional func emailVerificationDidFail(error: Error)
     
 }
 
 extension UnauthenticatedSession {
     
     @objc(registerUser:)
-    public func register(user : ZMCompleteRegistrationUser) {
+    public func register(user: ZMCompleteRegistrationUser) {
         let password = user.password
         let phoneNumber = user.phoneNumber
         let phoneVerificationCode = user.phoneVerificationCode
@@ -120,34 +119,20 @@ extension UnauthenticatedSession {
             guard let note = note else { return }
             
             switch (note.type) {
-            case ZMUserSessionRegistrationNotificationType.registrationNotificationEmailVerificationDidFail:
-                if observer.responds(to: #selector(observer.emailVerificationDidFail(_:))) {
-                    observer.emailVerificationDidFail!(note.error)
-                }
-            case ZMUserSessionRegistrationNotificationType.registrationNotificationEmailVerificationDidSucceed:
-                if observer.responds(to: #selector(observer.emailVerificationDidSucceed)) {
-                    observer.emailVerificationDidSucceed!()
-                }
-            case ZMUserSessionRegistrationNotificationType.registrationNotificationPhoneNumberVerificationDidFail:
-                if observer.responds(to: #selector(observer.phoneVerificationDidFail(_:))) {
-                    observer.phoneVerificationDidFail!(note.error)
-                }
-            case ZMUserSessionRegistrationNotificationType.registrationNotificationPhoneNumberVerificationCodeRequestDidFail:
-                if observer.responds(to: #selector(observer.phoneVerificationCodeRequestDidFail(_:))) {
-                    observer.phoneVerificationCodeRequestDidFail!(note.error)
-                }
-            case ZMUserSessionRegistrationNotificationType.registrationNotificationPhoneNumberVerificationDidSucceed:
-                if observer.responds(to: #selector(observer.phoneVerificationDidSucceed)) {
-                    observer.phoneVerificationDidSucceed!()
-                }
-            case ZMUserSessionRegistrationNotificationType.registrationNotificationRegistrationDidFail:
-                if observer.responds(to: #selector(observer.registrationDidFail(_:))) {
-                    observer.registrationDidFail!(note.error)
-                }
-            case ZMUserSessionRegistrationNotificationType.registrationNotificationPhoneNumberVerificationCodeRequestDidSucceed:
-                if observer.responds(to: #selector(observer.phoneVerificationCodeRequestDidSucceed)) {
-                    observer.phoneVerificationCodeRequestDidSucceed!()
-                }
+            case .registrationNotificationEmailVerificationDidFail:
+                observer.emailVerificationDidFail?(note.error)
+            case .registrationNotificationEmailVerificationDidSucceed:
+                observer.emailVerificationDidSucceed?()
+            case .registrationNotificationPhoneNumberVerificationDidFail:
+                observer.phoneVerificationDidFail?(note.error)
+            case .registrationNotificationPhoneNumberVerificationCodeRequestDidFail:
+                observer.phoneVerificationCodeRequestDidFail?(note.error)
+            case .registrationNotificationPhoneNumberVerificationDidSucceed:
+                observer.phoneVerificationDidSucceed?()
+            case .registrationNotificationRegistrationDidFail:
+                observer.registrationDidFail?(note.error)
+            case .registrationNotificationPhoneNumberVerificationCodeRequestDidSucceed:
+                observer.phoneVerificationCodeRequestDidSucceed?()
             }
             
         }

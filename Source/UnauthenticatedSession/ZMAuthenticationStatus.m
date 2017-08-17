@@ -27,7 +27,7 @@
 #include "NSError+ZMUserSessionInternal.h"
 #include "ZMUserSessionRegistrationNotification.h"
 #include "ZMUserSessionAuthenticationNotification.h"
-
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMAuthenticationStatus_Internal.h"
 
 
@@ -38,16 +38,20 @@ NSTimeInterval DebugLoginFailureTimerOverride = 0;
 
 static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
+@interface ZMAuthenticationStatus () <ZMAuthenticationObserver>
+@property (nonatomic) id<ZMAuthenticationObserverToken> authenticationObserverToken;
+@end
+
 
 @implementation ZMAuthenticationStatus
 
-- (instancetype)initWithCookieStorage:(ZMPersistentCookieStorage *)cookieStorage groupQueue:(id<ZMSGroupQueue>)groupQueue
+- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue
 {
     self = [super init];
     if(self) {
         self.groupQueue = groupQueue;
-        self.cookieStorage = cookieStorage;
         self.isWaitingForLogin = !self.isLoggedIn;
+        self.authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserver:self];
     }
     return self;
 }
@@ -60,16 +64,6 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (ZMCredentials *)loginCredentials
 {
     return self.internalLoginCredentials;
-}
-
-- (NSString *)cookieLabel
-{
-    return self.cookieStorage.cookieLabel;
-}
-
-- (void)setCookieLabel:(NSString *)label
-{
-    self.cookieStorage.cookieLabel = label;
 }
 
 - (void)resetLoginAndRegistrationStatus
@@ -167,13 +161,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (BOOL)isLoggedIn
 {
-    return self.hasCookie;
-}
-
-- (BOOL)hasCookie;
-{
-    NSData *cookie = [self.cookieStorage authenticationCookieData];
-    return cookie != nil;
+    return nil != self.authenticationCookieData;
 }
 
 - (void)startLoginTimer
@@ -200,7 +188,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)prepareForLoginWithCredentials:(ZMCredentials *)credentials
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    self.cookieStorage.authenticationCookieData = nil;
+    self.authenticationCookieData = nil;
     BOOL wasDuplicated = self.duplicateRegistrationPhoneNumber;
     [self resetLoginAndRegistrationStatus];
     if(wasDuplicated && credentials.credentialWithPhone) {
@@ -215,7 +203,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)prepareForRegistrationOfUser:(ZMCompleteRegistrationUser *)user
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    self.cookieStorage.authenticationCookieData = nil;
+    self.authenticationCookieData = nil;
     self.isWaitingForLogin = YES;
     [self resetLoginAndRegistrationStatus];
     self.registrationUser = user;
@@ -402,8 +390,8 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)setAuthenticationCookieData:(NSData *)data;
 {
-    ZMLogDebug(@"Setting cookie data: %@", data != nil ? @"Nil" : @"Not nil");
-    self.cookieStorage.authenticationCookieData = data;
+    ZMLogDebug(@"Setting cookie data: %@", @(data.length));
+    _authenticationCookieData = data;
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
@@ -473,3 +461,12 @@ static NSString * const CookieLabelKey = @"ZMCookieLabel";
 
 @end
 
+
+@implementation ZMAuthenticationStatus (ZMAuthenticationObserver)
+
+- (void)didDetectSelfClientDeletion
+{
+    self.authenticationCookieData = nil;
+}
+
+@end

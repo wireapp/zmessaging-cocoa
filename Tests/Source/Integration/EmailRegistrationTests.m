@@ -36,6 +36,9 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)setUp {
     self.originalLoginTimerInterval = DefaultPendingValidationLoginAttemptInterval;
     [super setUp];
+    XCTAssert([self waitWithTimeout:0.5 verificationBlock:^BOOL{
+        return nil != self.unauthenticatedSession;
+    }]);
 }
 
 - (void)tearDown {
@@ -60,9 +63,10 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // expect
     [[authenticationObserver expect] authenticationDidSucceed];
-    [[authenticationObserver expect] authenticationDidSucceed]; // client registration
+    [[authenticationObserver expect] clientRegistrationDidSucceed]; // client registration
     
     // when
+    XCTAssertNotNil(self.unauthenticatedSession);
     [self.unauthenticatedSession registerUser:user];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -87,7 +91,10 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [self.unauthenticatedSession registerUser:user];
     WaitForAllGroupsToBeEmpty(0.5);
     [self recreateSessionManager];
+    WaitForAllGroupsToBeEmpty(0.5);
+
     // then
+    XCTAssertNotNil(self.userSession);
     XCTAssertTrue(self.userSession.registeredOnThisDevice);
 }
 
@@ -125,12 +132,13 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // expect
     [[authenticationObserver expect] authenticationDidSucceed];
-    [[authenticationObserver expect] authenticationDidSucceed]; // client registration
+    [[authenticationObserver expect] clientRegistrationDidSucceed]; // client registration
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session whiteListEmail:user.emailAddress];
     }];
+
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -140,7 +148,6 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [self.unauthenticatedSession removeRegistrationObserver:registrationObserverToken];
     [registrationObserver verify];
 }
-
 
 - (void)testThatIfRegisteringWithADuplicateEmailWeLogInIfWeHaveTheRightPassword
 {
@@ -162,7 +169,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // expect
     [[authenticationObserver expect] authenticationDidSucceed];
-    [[authenticationObserver expect] authenticationDidSucceed]; // client registration
+    [[authenticationObserver expect] clientRegistrationDidSucceed]; // client registration
     
     // when
     [self.unauthenticatedSession registerUser:user];
@@ -297,9 +304,12 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [self.unauthenticatedSession registerUser:user];
 
     // wait for more attempts
-    [NSThread sleepForTimeInterval:0.5];
+    XCTAssert([self waitWithTimeout:0.5 verificationBlock:^BOOL{
+        return self.mockTransportSession.receivedRequests.count > 1;
+    }]);
     
     // and when
+
     [self.unauthenticatedSession cancelWaitForEmailVerification];
     [self.mockTransportSession resetReceivedRequests];
     

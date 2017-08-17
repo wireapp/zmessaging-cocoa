@@ -14,31 +14,19 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
-// 
-
-
-
+//
 @import Foundation;
 
 @class ZMTransportSession;
-@class ZMSyncStrategy;
-@class ZMAuthenticationStatus;
-@class ZMClientRegistrationStatus;
-@class NSManagedObjectContext;
 @class LocalNotificationDispatcher;
 @class AVSMediaManager;
 
 @protocol ZMSyncStateDelegate;
-@protocol ZMTransportData;
-@protocol AVSMediaManager;
-@protocol ApplicationStateOwner;
 @protocol ZMApplication;
+@protocol LocalStoreProviderProtocol;
 
 @class ZMOnDemandFlowManager;
 @class ZMPersistentCookieStorage;
-@class BackgroundAPNSPingBackStatus;
-@class ZMAccountStatus;
-@class TopConversationsDirectory;
 
 extern NSString * const ZMPushChannelStateChangeNotificationName;
 extern NSString * const ZMPushChannelIsOpenKey;
@@ -54,10 +42,8 @@ extern NSString * const ZMPushChannelResponseStatusKey;
              localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
                             mediaManager:(AVSMediaManager *)mediaManager
                      onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-                                   uiMOC:(NSManagedObjectContext *)uiMOC
-                                 syncMOC:(NSManagedObjectContext *)syncMOC
+                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
                        syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
-                      appGroupIdentifier:(NSString *)appGroupIdentifier
                              application:(id<ZMApplication>)application;
 
 - (void)tearDown;

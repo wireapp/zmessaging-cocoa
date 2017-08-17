@@ -41,10 +41,10 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     
     override func setUp() {
         super.setUp()
-        
         self.syncMOC.performGroupedBlockAndWait {
-            self.spyKeyStore = SpyUserClientKeyStore(in: UserClientKeysStore.otrDirectoryURL)
-            self.cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer")
+            self.spyKeyStore = SpyUserClientKeyStore(accountDirectory: self.accountDirectory, applicationContainer: self.sharedContainerURL)
+            self.cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer", userIdentifier: self.userIdentifier)
+
             self.clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: self.cookieStorage, registrationStatusDelegate: nil)
             self.clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
             self.sut = UserClientRequestStrategy(clientRegistrationStatus: self.clientRegistrationStatus, clientUpdateStatus:self.clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
@@ -58,11 +58,10 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     }
     
     override func tearDown() {
-        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectoryURL)
+        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectory)
         
         self.clientRegistrationStatus.tearDown()
         self.clientRegistrationStatus = nil
-        self.clientUpdateStatus.tearDown()
         self.clientUpdateStatus = nil
         self.spyKeyStore = nil
         self.sut.tearDown()
@@ -212,7 +211,7 @@ extension UserClientRequestStrategyTests {
         let note = receivedAuthenticationNotifications.first
         AssertOptionalNotNil(note, "Authentication should succeed. Observers should be notified") { note in
             XCTAssertNil(note.error)
-            XCTAssertEqual(note.type, ZMUserSessionAuthenticationNotificationType.authenticationNotificationAuthenticationDidSuceeded)
+            XCTAssertEqual(note.type, ZMUserSessionAuthenticationNotificationType.authenticationNotificationDidRegisterClient)
         }
     }
     
