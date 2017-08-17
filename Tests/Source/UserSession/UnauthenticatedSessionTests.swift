@@ -28,6 +28,8 @@ final class TestUnauthenticatedTransportSession: UnauthenticatedTransportSession
     func enqueueRequest(withGenerator generator: () -> ZMTransportRequest?) -> EnqueueResult {
         return nextEnqueueResult
     }
+    
+    func tearDown() {}
 }
 
 
