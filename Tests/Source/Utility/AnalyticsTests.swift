@@ -50,6 +50,7 @@ class AnalyticsTests: ZMTBaseTest {
         sharedContainerURL = nil
         accountID = nil
         analytics = nil
+        StorageStack.reset()
         super.tearDown()
     }
     
