@@ -106,7 +106,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
     public fileprivate(set) var userSession: ZMUserSession?
-    public fileprivate(set)var unauthenticatedSession: UnauthenticatedSession?
+    public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
 
     let application: ZMApplication
     var authenticationToken: ZMAuthenticationObserverToken?
