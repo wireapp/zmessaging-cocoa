@@ -117,6 +117,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     fileprivate let accountManager: AccountManager
     fileprivate let sharedContainerURL: URL
     fileprivate let dispatchGroup: ZMSDispatchGroup?
+    fileprivate var teamObserver: NSObjectProtocol?
+    fileprivate var selfObserver: NSObjectProtocol?
 
     public convenience init(
         appVersion: String,
@@ -260,9 +262,12 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         guard let session = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
         }
+        let selfUser = ZMUser.selfUser(inUserSession: session)
+        teamObserver = TeamChangeInfo.add(observer: self, for: nil)
+        selfObserver = UserChangeInfo.add(observer: self, forBareUser: selfUser!)
 
         self.userSession = session
-        log.debug("Created ZMUserSession for account \(account.userName) — \(account.userIdentifier)")
+        log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
         let authenticationStatus = unauthenticatedSession?.authenticationStatus
 
         session.syncManagedObjectContext.performGroupedBlock {
@@ -290,6 +295,9 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         if let authenticationToken = authenticationToken {
             ZMUserSessionAuthenticationNotification.removeObserver(for: authenticationToken)
         }
+        if let teamObserver = teamObserver {
+            TeamChangeInfo.remove(observer: teamObserver, for: nil)
+        }
         
         blacklistVerificator?.teardown()
         userSession?.tearDown()
@@ -312,6 +320,43 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
 
+}
+
+// MARK: - TeamObserver
+
+extension SessionManager {
+    func updateCurrentAccount(with team: TeamType? = nil, userName: String? = nil) {
+        guard let session = userSession else { return }
+        let selfUser = ZMUser.selfUser(in: session.syncManagedObjectContext)
+        if let account = accountManager.accounts.first(where: { $0.userIdentifier == selfUser.remoteIdentifier }) {
+            if let name = team?.name {
+                account.teamName = name
+            }
+            if let userName = userName {
+                account.userName = userName
+            }
+            accountManager.add(account)
+        }
+    }
+}
+
+extension SessionManager: TeamObserver {
+    public func teamDidChange(_ changeInfo: TeamChangeInfo) {
+        let team = changeInfo.team
+        updateCurrentAccount(with: team)
+    }
+}
+
+// MARK: - ZMUserObserver
+
+extension SessionManager: ZMUserObserver {
+    public func userDidChange(_ changeInfo: UserChangeInfo) {
+        guard let session = userSession else { return }
+        if changeInfo.teamsChanged || changeInfo.nameChanged {
+            let selfUser = ZMUser.selfUser(in: session.syncManagedObjectContext)
+            updateCurrentAccount(with: selfUser.membership?.team, userName: selfUser.name)
+        }
+    }
 }
 
 // MARK: - UnauthenticatedSessionDelegate
