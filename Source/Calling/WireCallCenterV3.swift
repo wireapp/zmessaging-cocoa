@@ -84,6 +84,8 @@ public enum CallState : Equatable {
     case incoming(video: Bool, shouldRing: Bool)
     /// Call is answered
     case answered
+    /// Call is established (data is flowing)
+    case establishedDataChannel
     /// Call is established (media is flowing)
     case established
     /// Call in process of being terminated
@@ -138,6 +140,8 @@ public enum CallState : Equatable {
             zmLog.debug("answered call")
         case .incoming(video: let isVideo, shouldRing: let shouldRing):
             zmLog.debug("incoming call, isVideo: \(isVideo), shouldRing: \(shouldRing)")
+        case .establishedDataChannel:
+            zmLog.debug("established data channel")
         case .established:
             zmLog.debug("established call")
         case .outgoing:
@@ -241,6 +245,18 @@ internal func answeredCallHandler(conversationId: UnsafePointer<Int8>?, contextR
     
     callCenter.uiMOC.performGroupedBlock {
         callCenter.handleCallState(callState: .answered, conversationId: convID, userId: nil)
+    }
+}
+
+/// Handles when data channel gets established
+/// In order to be passed to C, this function needs to be global
+internal func dataChannelEstablishedHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?,contextRef: UnsafeMutableRawPointer?) {
+    guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
+    
+    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+    
+    callCenter.uiMOC.performGroupedBlock {
+        callCenter.handleCallState(callState: .establishedDataChannel, conversationId: convID, userId: userID)
     }
 }
 
@@ -449,12 +465,8 @@ public struct CallEvent {
     
     fileprivate func handleCallState(callState: CallState, conversationId: UUID, userId: UUID?, messageTime: Date? = nil) {
         callState.logState()
-        var finalCallState = callState
-        var finalUserId = userId
-        defer {
-            updateSnapshots(forCallSate: finalCallState, conversationId: conversationId, userId: finalUserId)
-            WireCallCenterCallStateNotification(callState: finalCallState, conversationId: conversationId, userId: finalUserId, messageTime: messageTime).post()
-        }
+        var callState = callState
+        var userId = userId
         
         switch callState {
         case .established:
@@ -463,14 +475,21 @@ public struct CallEvent {
             if isVideoCall(conversationId: conversationId) {
                 avsWrapper.setVideoSendActive(userId: conversationId, active: true)
             }
+        case .establishedDataChannel:
+            if self.callState(conversationId: conversationId) == .established {
+                return // Ignore if data channel was established after audio
+            }
         case .terminating(reason: let reason):
             if reason == .stillOngoing {
-                finalCallState = .incoming(video: false, shouldRing: false)
-                finalUserId = initiatorForCall(conversationId: conversationId) ?? selfUserId
+                callState = .incoming(video: false, shouldRing: false)
+                userId = initiatorForCall(conversationId: conversationId) ?? selfUserId
             }
         default:
             break
         }
+        
+        updateSnapshots(forCallSate: callState, conversationId: conversationId, userId: userId)
+        WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId, messageTime: messageTime).post()
     }
     
     fileprivate func updateSnapshots(forCallSate callState: CallState, conversationId: UUID, userId: UUID?) {
@@ -483,8 +502,6 @@ public struct CallEvent {
                                                                                      selfUserID: selfUserId,
                                                                                      members: [CallMember(userId: userId!, audioEstablished: false)],
                                                                                      initiator: userId)
-            break
-            
         case .terminating:
             clearSnapshot(conversationId: conversationId)
             

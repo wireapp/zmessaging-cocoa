@@ -58,6 +58,8 @@ public class CallObserver : NSObject, VoiceChannelStateObserver {
         switch voiceChannelState {
         case .selfIsJoiningActiveChannel:
             onAnswered?()
+        case .establishedDataChannel:
+            onEstablished?()
         case .selfConnectedToActiveChannel:
             onEstablished?()
         default:
