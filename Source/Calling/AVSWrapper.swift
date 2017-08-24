@@ -64,6 +64,7 @@ public class AVSWrapper : AVSWrapperType {
             }
         })
         
+        wcall_set_data_chan_estab_handler(dataChannelEstablishedHandler)
         wcall_set_group_changed_handler(groupMemberHandler, observer)
 
         wcall_set_audio_cbr_enabled_handler({ _ in

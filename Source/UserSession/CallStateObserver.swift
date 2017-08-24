@@ -118,7 +118,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 uiConv.isIgnoringCall = false
             case .outgoing, .answered, .established:
                 uiConv.isCallDeviceActive = true
-            case .unknown:
+            case .unknown, .establishedDataChannel:
                 break
             }
             

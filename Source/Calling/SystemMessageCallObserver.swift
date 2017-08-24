@@ -46,7 +46,7 @@ final class CallSystemMessageGenerator: NSObject {
             connectDateByConversation[conversation] = Date()
         case .terminating(reason: let reason):
             systemMessage = appendCallEndedSystemMessage(reason: reason, conversation: conversation, timeStamp: timeStamp)
-        case .none, .unknown, .answered:
+        case .none, .unknown, .answered, .establishedDataChannel:
             break
         }
         return systemMessage

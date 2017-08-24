@@ -28,12 +28,15 @@ open class AuthenticatedSessionFactory {
     var apnsEnvironment : ZMAPNSEnvironment?
     let application : ZMApplication
     let environment: ZMBackendEnvironment
+    let reachability: ReachabilityProvider
 
     public init(
         appVersion: String,
         apnsEnvironment: ZMAPNSEnvironment? = nil,
         application: ZMApplication,
         mediaManager: AVSMediaManager,
+        environment: ZMBackendEnvironment,
+        reachability: ReachabilityProvider,
         analytics: AnalyticsType? = nil
         ) {
         self.appVersion = appVersion
@@ -41,8 +44,8 @@ open class AuthenticatedSessionFactory {
         self.analytics = analytics
         self.apnsEnvironment = apnsEnvironment
         self.application = application
-        ZMBackendEnvironment.setupEnvironments()
-        self.environment = ZMBackendEnvironment(userDefaults: .standard)
+        self.environment = environment
+        self.reachability = reachability
     }
 
     func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
@@ -50,6 +53,7 @@ open class AuthenticatedSessionFactory {
             baseURL: environment.backendURL,
             websocketURL: environment.backendWSURL,
             cookieStorage: account.cookieStorage(),
+            reachability: reachability,
             initialAccessToken: nil,
             sharedContainerIdentifier: nil
         )
@@ -71,14 +75,16 @@ open class AuthenticatedSessionFactory {
 open class UnauthenticatedSessionFactory {
 
     let environment: ZMBackendEnvironment
+    let reachability: ReachabilityProvider
 
-    init() {
-        self.environment = ZMBackendEnvironment(userDefaults: .standard)
+    init(environment: ZMBackendEnvironment, reachability: ReachabilityProvider) {
+        self.environment = environment
+        self.reachability = reachability
     }
 
     func session(withDelegate delegate: UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
-        let transportSession = UnauthenticatedTransportSession(baseURL: environment.backendURL)
-        return UnauthenticatedSession(transportSession: transportSession, delegate: delegate)
+        let transportSession = UnauthenticatedTransportSession(baseURL: environment.backendURL, reachability: reachability)
+        return UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: delegate)
     }
 
 }

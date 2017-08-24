@@ -39,12 +39,8 @@
 /// This will delete user data stored by WireSyncEngine in the keychain.
 - (void)deleteUserKeychainItems;
 
-/// Delete cookies etc. and exit the app.
-/// This is a temporary workaround for QA.
-- (void)resetStateAndExit;
-
-/// This will delete any data stored by WireSyncEngine, but retain the cookies (i.e. keychain)
-+ (void)deleteCacheOnRelaunch;
+/// Delete cookies etc. and logout the current user.
+- (void)closeAndDeleteCookie:(BOOL)deleteCookie;
 
 - (BOOL)hadHistoryAtLastLogin;
 

@@ -217,7 +217,7 @@ public extension CallState {
         
     var callParticipantState : CallParticipantState {
         switch self {
-        case .unknown, .terminating, .incoming, .none:
+        case .unknown, .terminating, .incoming, .none, .establishedDataChannel:
             return .unconnected
         case .established:
             return .connected(muted: false, sendingVideo: false)
@@ -226,5 +226,4 @@ public extension CallState {
         }
     }
     
-
 }
