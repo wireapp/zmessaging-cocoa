@@ -280,7 +280,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.tornDown = YES;
     self.applicationStatusDirectory = nil;
     self.eventDecoder = nil;
-    [self.eventMOC tearDown];
+    [self.eventMOC tearDownEventMOC];
     self.eventMOC = nil;
     [self.application unregisterObserverForStateChange:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self];

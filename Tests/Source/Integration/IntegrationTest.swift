@@ -114,6 +114,7 @@ extension IntegrationTest {
         sharedSearchDirectory?.tearDown()
         sharedSearchDirectory = nil
         userSession = nil
+        unauthenticatedSession?.tearDown()
         unauthenticatedSession = nil
         mockTransportSession?.tearDown()
         mockTransportSession = nil
@@ -131,11 +132,11 @@ extension IntegrationTest {
         selfConversation = nil
         groupConversation = nil
         application = nil
+        resetInMemoryDatabases()
         deleteSharedContainerContent()
+        sharedContainerDirectory = nil
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        resetInMemoryDatabases()
-        sharedContainerDirectory = nil
     }
     
     func resetInMemoryDatabases() {
