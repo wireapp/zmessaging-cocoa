@@ -65,12 +65,14 @@ static NSString *const HasHistoryKey = @"hasHistory";
     [self.transportSession.cookieStorage deleteKeychainItems];
 }
 
-- (void)resetStateAndExit;
+- (void)closeAndDeleteCookie:(BOOL)deleteCookie
 {
     [[NSUserDefaults standardUserDefaults] synchronize];
     [[NSUserDefaults sharedUserDefaults] synchronize];
 
-    [self deleteUserKeychainItems];
+    if (deleteCookie) {
+        [self deleteUserKeychainItems];
+    }
 
     NSManagedObjectContext *refUIMoc = self.managedObjectContext;
     NSManagedObjectContext *refSyncMOC = self.syncManagedObjectContext;
