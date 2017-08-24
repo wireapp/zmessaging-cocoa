@@ -130,9 +130,10 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
         
         [ZMRequestAvailableNotification addObserver:self];
         
+        NSManagedObjectContext *moc = self.syncMOC;
         // this is needed to avoid loading from syncMOC on the main queue
-        [self.syncMOC performGroupedBlock:^{
-            [self.transportSession configurePushChannelWithConsumer:self groupQueue:self.syncMOC];
+        [moc performGroupedBlock:^{
+            [self.transportSession configurePushChannelWithConsumer:self groupQueue:moc];
             [self.transportSession.pushChannel setKeepOpen:syncStrategy.applicationStatusDirectory.operationStatus.operationState == SyncEngineOperationStateForeground];
         }];
     }
@@ -153,6 +154,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     if(self.ownsSyncStrategy) {
         [strategy tearDown];
     }
+    self.transportSession = nil;
     
     RequireString([NSOperationQueue mainQueue] == [NSOperationQueue currentQueue],
                   "Must call be called on the main queue.");

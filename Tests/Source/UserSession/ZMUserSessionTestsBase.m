@@ -149,6 +149,8 @@
         [[NSFileManager defaultManager] removeItemAtURL:item error:nil];
     }
     
+    self.storeProvider = nil;
+    
     self.authFailHandler = nil;
     self.tokenSuccessHandler = nil;
     self.baseURL = nil;

@@ -74,6 +74,7 @@
     self.internalFlowManager = nil;
     self.onDemandFlowManager = nil;
     
+    [self.deploymentEnvironment stopMocking];
     self.deploymentEnvironment = nil;
     ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride = nil;
     ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;

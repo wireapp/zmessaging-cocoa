@@ -103,6 +103,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 - (void)tearDown;
 {
+    self.onDemandFlowManager = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.application unregisterObserverForStateChange:self];
 }

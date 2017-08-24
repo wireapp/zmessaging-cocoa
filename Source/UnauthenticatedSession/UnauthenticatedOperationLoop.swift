@@ -36,6 +36,7 @@ class UnauthenticatedOperationLoop: NSObject {
     func tearDown() {
         shouldEnqueue = false
         requestStrategies.forEach { ($0 as? TearDownCapable)?.tearDown() }
+        transportSession.tearDown()
         tornDown = true
     }
 
