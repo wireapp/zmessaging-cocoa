@@ -170,7 +170,7 @@ extension VoiceChannelV3 : CallActionsInternal {
         
         switch state {
         case .incomingCall, .incomingCallInactive:
-            joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier, isGroup: isGroup) ?? false
+            joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier) ?? false
         case .incomingCallDegraded:
             joined = true // Don't answer call
         default:
@@ -194,8 +194,7 @@ extension VoiceChannelV3 : CallActionsInternal {
               let remoteID = conv.remoteIdentifier
         else { return }
         
-        let isGroup = (conv.conversationType == .group)
-        WireCallCenterV3.activeInstance?.rejectCall(conversationId: remoteID, isGroup: isGroup)
+        WireCallCenterV3.activeInstance?.rejectCall(conversationId: remoteID)
     }
     
 }
