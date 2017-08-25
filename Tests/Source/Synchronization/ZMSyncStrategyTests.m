@@ -88,7 +88,9 @@
 {
     [super setUp];
     
-    self.mockDispatcher = [OCMockObject niceMockForClass:[LocalNotificationDispatcher class]];
+    self.mockDispatcher = [OCMockObject mockForClass:[LocalNotificationDispatcher class]];
+    [(LocalNotificationDispatcher *)[self.mockDispatcher stub] tearDown];
+    [(LocalNotificationDispatcher *)[self.mockDispatcher stub] processEvents:OCMOCK_ANY liveEvents:OCMOCK_ANY prefetchResult:OCMOCK_ANY];
     self.mockUpstreamSync1 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     self.mockUpstreamSync2 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     [self verifyMockLater:self.mockUpstreamSync1];
@@ -96,10 +98,11 @@
     
     self.syncStateDelegate = [[MockSyncStateDelegate alloc] init];
     
-//    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.syncStatusMock = [OCMockObject mockForClass:SyncStatus.class];
     self.operationStatusMock = [OCMockObject mockForClass:ZMOperationStatus.class];
-    self.userProfileImageUpdateStatus = [OCMockObject niceMockForClass:UserProfileImageUpdateStatus.class];
+    self.userProfileImageUpdateStatus = [OCMockObject mockForClass:UserProfileImageUpdateStatus.class];
+    (void)[(UserProfileImageUpdateStatus *)[[self.userProfileImageUpdateStatus stub] andReturn:nil] fetchRequestForTrackedObjects];
+    [(UserProfileImageUpdateStatus *)[self.userProfileImageUpdateStatus stub] objectsDidChange:OCMOCK_ANY];
 
     self.clientRegistrationStatus = [OCMockObject mockForClass:ZMClientRegistrationStatus.class];
     self.pingBackStatus = [OCMockObject mockForClass:BackgroundAPNSPingBackStatus.class];
