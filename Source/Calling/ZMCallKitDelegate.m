@@ -82,7 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic) id<CallKitProviderType> provider;
 @property (nonatomic) id<CallKitCallController> callController;
-@property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
+@property (nonatomic) id<FlowManagerType> flowManager;
 @property (nonatomic, weak) ZMUserSession *userSession;
 @property (nonatomic, weak) AVSMediaManager *mediaManager;
 @property (nonatomic, nullable) ZMConversation *connectedCallConversation;
@@ -203,7 +203,7 @@ NS_ASSUME_NONNULL_END
 
 - (instancetype)initWithCallKitProvider:(id<CallKitProviderType>)callKitProvider
                          callController:(id<CallKitCallController>)callController
-                    onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                            flowManager:(id<FlowManagerType>)flowManager
                             userSession:(ZMUserSession *)userSession
                            mediaManager:(AVSMediaManager *)mediaManager
 
@@ -219,7 +219,7 @@ NS_ASSUME_NONNULL_END
         [self.provider setDelegate:self queue:nil];
         self.userSession = userSession;
         self.mediaManager = mediaManager;
-        self.onDemandFlowManager = onDemandFlowManager;
+        self.flowManager = flowManager;
         self.calls = [[NSMutableDictionary alloc] init];
         
         self.callStateObserverToken = [self observeCallState];
@@ -279,7 +279,7 @@ NS_ASSUME_NONNULL_END
 - (void)logForConversation:(NSString *)conversationId level:(ZMLogLevel_t)level line:(NSUInteger)line message:(NSString *)message
 {
     NSString *messageWithLine = [NSString stringWithFormat:@"%s:%ld:%@ %@", __FILE__, (unsigned long)line, level == ZMLogLevelError ? @"ERROR: " : @"", message];
-    [self.onDemandFlowManager.flowManager appendLogForConversation:conversationId message:messageWithLine];
+    [self.flowManager appendLogFor:[NSUUID uuidWithTransportString:conversationId] message:messageWithLine];
 }
 
 - (void)endAllOngoingCallKitCallsExcept:(ZMConversation *)conversation voiceChannelState:(VoiceChannelV2State)state

@@ -132,6 +132,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         ZMBackendEnvironment.setupEnvironments()
         let environment = ZMBackendEnvironment(userDefaults: .standard)
         let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
+        let flowManager = FlowManager(mediaManager: mediaManager)
 
         let serverNames = [environment.backendURL, environment.backendWSURL].flatMap{ $0.host }
         let reachability = ZMReachability(serverNames: serverNames, observer: nil, queue: .main, group: group)
@@ -141,6 +142,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             apnsEnvironment: nil,
             application: application,
             mediaManager: mediaManager,
+            flowManager: flowManager,
             environment: environment,
             reachability: reachability,
             analytics: analytics

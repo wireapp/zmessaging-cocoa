@@ -29,7 +29,6 @@
 #import <WireSyncEngine/ZMUserSession+OTR.h>
 #import <WireSyncEngine/ZMBareUser+UserSession.h>
 #import <WireSyncEngine/ZMTypingUsers.h>
-#import <WireSyncEngine/ZMOnDemandFlowManager.h>
 
 // PRIVATE
 #import <WireSyncEngine/ZMBlacklistVerificator.h>
@@ -59,7 +58,6 @@
 #import <WireSyncEngine/ZMTyping.h>
 #import <WireSyncEngine/ZMSyncStateDelegate.h>
 #import <WireSyncEngine/VoiceChannelV2+Internal.h>
-#import <WireSyncEngine/ZMAVSBridge.h>
 #import <WireSyncEngine/ZMUserSession+OperationLoop.h>
 #import <WireSyncEngine/ZMOperationLoop+Background.h>
 #import <WireSyncEngine/ZMSimpleListRequestPaginator.h>

@@ -43,6 +43,7 @@
 @protocol UserProfileImageUpdateProtocol;
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
+@protocol FlowManagerType;
 
 @class ManagedObjectContextDirectory;
 @class TopConversationsDirectory;
@@ -74,6 +75,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
  @param storeProvider: An object conforming to the @c LocalStoreProviderProtocol that provides information about local store locations etc.
 */
 - (instancetype)initWithMediaManager:(AVSMediaManager *)mediaManager
+                         flowManager:(id<FlowManagerType>)flowManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
                      apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment

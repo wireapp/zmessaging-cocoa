@@ -24,8 +24,8 @@
 @protocol ZMSyncStateDelegate;
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
+@protocol FlowManagerType;
 
-@class ZMOnDemandFlowManager;
 @class ZMPersistentCookieStorage;
 
 extern NSString * const ZMPushChannelStateChangeNotificationName;
@@ -41,7 +41,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
                            cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
              localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
                             mediaManager:(AVSMediaManager *)mediaManager
-                     onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                             flowManager:(id<FlowManagerType>)flowManager
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
                        syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                              application:(id<ZMApplication>)application;
