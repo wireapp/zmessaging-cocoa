@@ -261,23 +261,3 @@ public class MockSyncStateDelegate : NSObject, ZMSyncStateDelegate {
         registeredUserClient = userClient
     }
 }
-
-@objc
-public class MockFlowManager : NSObject {
-
-    public weak var delegate : AVSFlowManagerDelegate? = nil
-    
-    public func networkChanged() {
-        // nop
-    }
-    
-    public func isReady() -> Bool {
-        return true
-    }
-    
-    public static func getInstance() -> AnyObject? {
-        return ZMCallFlowRequestStrategyInternalFlowManagerOverride
-    }
-    
-}
-

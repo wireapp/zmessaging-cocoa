@@ -42,13 +42,14 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     let transportSession: ZMTransportSession
 
-    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider) {
+    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider) {
         self.transportSession = transportSession
         super.init(
             appVersion: "0.0.0",
             apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
+            flowManager: flowManager,
             environment: environment,
             reachability: reachability,
             analytics: nil
@@ -58,6 +59,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
     override func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
         return ZMUserSession(
             mediaManager: mediaManager,
+            flowManager: flowManager,
             analytics: analytics,
             transportSession: transportSession,
             apnsEnvironment: apnsEnvironment,
@@ -102,7 +104,6 @@ extension IntegrationTest {
         mockTransportSession = MockTransportSession(dispatchGroup: self.dispatchGroup)
         mockTransportSession.cookieStorage = ZMPersistentCookieStorage(forServerName: "ztest.example.com", userIdentifier: currentUserIdentifier)
         WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self;
-        ZMCallFlowRequestStrategyInternalFlowManagerOverride = MockFlowManager()
         mockTransportSession.cookieStorage.deleteKeychainItems()
                 
         createSessionManager()
@@ -110,7 +111,6 @@ extension IntegrationTest {
     
     @objc
     func _tearDown() {
-        ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil
         sharedSearchDirectory?.tearDown()
         sharedSearchDirectory = nil
         userSession = nil
@@ -190,6 +190,7 @@ extension IntegrationTest {
             apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
+            flowManager: FlowManagerMock(),
             transportSession: transportSession,
             environment: environment,
             reachability: reachability

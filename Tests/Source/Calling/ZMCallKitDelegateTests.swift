@@ -190,15 +190,16 @@ class ZMCallKitDelegateTest: MessagingTest {
         selfUser.emailAddress = "self@user.mail"
         selfUser.remoteIdentifier = UUID()
         
+        let flowManager = FlowManagerMock()
         let configuration = ZMCallKitDelegate.providerConfiguration()
         self.callKitProvider = MockCallKitProvider(configuration: configuration)
         self.callKitController = MockCallKitCallController()
-        self.mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: "123", uiMOC: uiMOC)
+        self.mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: "123", uiMOC: uiMOC, flowManager: flowManager)
         self.mockWireCallCenterV3.overridenCallingProtocol = .version2
         
         self.sut = ZMCallKitDelegate(callKitProvider: self.callKitProvider,
                                      callController: self.callKitController,
-                                     onDemandFlowManager: nil,
+                                     flowManager: flowManager,
                                      userSession: self.mockUserSession,
                                      mediaManager: nil)
         
