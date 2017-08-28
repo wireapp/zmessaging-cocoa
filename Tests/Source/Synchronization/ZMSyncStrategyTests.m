@@ -60,7 +60,6 @@
 @property (nonatomic) id userTranscoder;
 @property (nonatomic) id clientMessageTranscoder;
 @property (nonatomic) id clientRegistrationStatus;
-@property (nonatomic) id selfStrategy;
 @property (nonatomic) id connectionTranscoder;
 @property (nonatomic) id pingBackStatus;
 @property (nonatomic) id cookieStorage;
@@ -135,13 +134,6 @@
     (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initIn:self.syncMOC localNotificationDispatcher:self.mockDispatcher applicationStatus:OCMOCK_ANY];
     self.clientMessageTranscoder = clientMessageTranscoder;
     
-    id selfStrategy = [OCMockObject niceMockForClass:ZMSelfStrategy.class];
-    [[[[selfStrategy expect] andReturn:selfStrategy] classMethod] alloc];
-    (void) [(ZMSelfStrategy *)[[selfStrategy expect] andReturn:selfStrategy] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY clientRegistrationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
-    [[selfStrategy stub] contextChangeTrackers];
-    [[selfStrategy expect] tearDown];
-    self.selfStrategy = selfStrategy;
-    
     id connectionTranscoder = [OCMockObject mockForClass:ZMConnectionTranscoder.class];
     [[[[connectionTranscoder expect] andReturn:connectionTranscoder] classMethod] alloc];
     (void) [[[connectionTranscoder expect] andReturn:connectionTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
@@ -185,7 +177,7 @@
     XCTAssertEqual(self.sut.userTranscoder, self.userTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
-    XCTAssertEqual(self.sut.selfStrategy, selfStrategy);
+
     XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -210,8 +202,6 @@
     self.mockUpstreamSync2 = nil;
 //    [self.syncStateDelegate stopMocking];
     self.syncStateDelegate = nil;
-    [self.syncStatusMock stopMocking];
-    self.syncStatusMock = nil;
     [self.userProfileImageUpdateStatus stopMocking];
     self.userProfileImageUpdateStatus = nil;
     self.pingBackStatus = nil;
@@ -224,8 +214,6 @@
     self.conversationTranscoder = nil;
     [self.clientMessageTranscoder stopMocking];
     self.clientMessageTranscoder = nil;
-    [self.selfStrategy stopMocking];
-    self.selfStrategy = nil;
     [self.connectionTranscoder stopMocking];
     self.connectionTranscoder = nil;
     
@@ -233,8 +221,6 @@
     self.operationStatusMock = nil;
     [self.syncStatusMock stopMocking];
     self.syncStatusMock = nil;
-    [self.userProfileImageUpdateStatus stopMocking];
-    self.userProfileImageUpdateStatus = nil;
     self.storeProvider = nil;
     [self.sut tearDown];
     for (id syncObject in self.syncObjects) {
