@@ -490,7 +490,7 @@ extension IntegrationTest : SessionManagerDelegate {
             userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
 
             userSession.managedObjectContext.performGroupedBlock {
-                userSession.start()
+                userSession.registerForRemoteNotifications()
             }
         }
     }
