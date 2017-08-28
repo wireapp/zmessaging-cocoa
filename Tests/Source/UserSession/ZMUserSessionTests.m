@@ -1397,6 +1397,12 @@
 - (void)testThatLogCallbackIsNotTriggeredAfterUnsubscribe
 {
     // given
+    __block ZMConversation *conversation;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        [self.syncMOC saveOrRollback];
+    }];
+    
     NSString *testMessage = @"Sample AVS Log";
     id logObserver = [OCMockObject mockForProtocol:@protocol(ZMAVSLogObserver)];
     [[logObserver reject] logMessage:nil];
@@ -1405,7 +1411,7 @@
     [ZMUserSession removeAVSLogObserver:token];
     
     // when
-    [ZMCallFlowRequestStrategy logMessage:testMessage];
+    [ZMUserSession appendAVSLogMessageForConversation:conversation withMessage:testMessage];
     
     // then
     [logObserver verify];
