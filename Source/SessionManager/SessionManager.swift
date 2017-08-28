@@ -119,7 +119,41 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     fileprivate let sharedContainerURL: URL
     fileprivate let dispatchGroup: ZMSDispatchGroup?
 
-    public convenience init(
+    private static var token: Any?
+    
+    /// The entry point for SessionManager; call this instead of the initializers.
+    ///
+    public static func create(
+        appVersion: String,
+        mediaManager: AVSMediaManager,
+        analytics: AnalyticsType?,
+        delegate: SessionManagerDelegate?,
+        application: ZMApplication,
+        launchOptions: LaunchOptions,
+        blacklistDownloadInterval : TimeInterval,
+        completion: @escaping (SessionManager) -> Void
+        ) {
+        
+        token = FileManager.default.executeWhenFileSystemIsAccessible {
+            completion(SessionManager(
+                appVersion: appVersion,
+                mediaManager: mediaManager,
+                analytics: analytics,
+                delegate: delegate,
+                application: application,
+                launchOptions: launchOptions,
+                blacklistDownloadInterval: blacklistDownloadInterval
+            ))
+            
+            token = nil
+        }
+    }
+    
+    public override init() {
+        fatal("init() not implemented")
+    }
+    
+    private convenience init(
         appVersion: String,
         mediaManager: AVSMediaManager,
         analytics: AnalyticsType?,
@@ -171,7 +205,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         
     }
 
-    public init(
+    init(
         appVersion: String,
         authenticatedSessionFactory: AuthenticatedSessionFactory,
         unauthenticatedSessionFactory: UnauthenticatedSessionFactory,
