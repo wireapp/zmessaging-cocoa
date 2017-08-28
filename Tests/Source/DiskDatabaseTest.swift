@@ -20,7 +20,7 @@
 import Foundation
 import XCTest
 import WireTesting
-@testable import WireDataModel
+import WireDataModel
 
 public class DiskDatabaseTest: ZMTBaseTest {
     var sharedContainerURL : URL!
