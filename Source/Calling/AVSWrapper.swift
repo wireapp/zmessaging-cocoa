@@ -33,6 +33,7 @@ public protocol AVSWrapperType {
     func enableAudioCbr(shouldUseCbr: Bool)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
     func members(in conversationId: UUID) -> [CallMember]
+    func update(callConfig: String?, httpStatusCode: Int)
 }
 
 /// Wraps AVS calls for dependency injection and better testing
@@ -60,6 +61,7 @@ public class AVSWrapper : AVSWrapperType {
                               establishedCallHandler,
                               closedCallHandler,
                               callMetricsHandler,
+                              requestCallConfigHandler,
                               observer)
         
 //        let resultValue = wcall_init(
@@ -134,6 +136,10 @@ public class AVSWrapper : AVSWrapperType {
             
             wcall_recv_msg(handle, bytes, callEvent.data.count, currentTime, serverTime, callEvent.conversationId.transportString(), callEvent.userId.transportString(), callEvent.clientId)
         }
+    }
+    
+    public func update(callConfig: String?, httpStatusCode: Int) {
+        wcall_config_update(handle, Int32(httpStatusCode), callConfig)
     }
     
     public func toggleVideo(conversationID: UUID, active: Bool) {

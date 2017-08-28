@@ -37,6 +37,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     fileprivate let managedObjectContext    : NSManagedObjectContext
     fileprivate let genericMessageStrategy  : GenericMessageRequestStrategy
     fileprivate let flowManager             : FlowManagerType
+    fileprivate var callConfigRequest       : ZMTransportRequest?
     
     public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType) {
         self.managedObjectContext = managedObjectContext
@@ -54,6 +55,11 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     }
     
     public func nextRequest() -> ZMTransportRequest? {
+        if let request = callConfigRequest  {
+            callConfigRequest = nil
+            return request
+        }
+        
         return genericMessageStrategy.nextRequest()
     }
     
@@ -153,6 +159,22 @@ extension CallingRequestStrategy : WireCallCenterTransport {
                 completionHandler(response.httpStatus)
                 
             }
+        }
+    }
+    
+    public func requestCallConfig(completionHandler: @escaping (String?, Int) -> Void) {
+        managedObjectContext.performGroupedBlock {
+            self.callConfigRequest = ZMTransportRequest(path: "/calls/config", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
+            self.callConfigRequest?.add(ZMCompletionHandler(on: self.managedObjectContext.zm_userInterface, block: { (response) in
+                
+                var payloadAsString : String? = nil
+                if let transportData = response.payload?.asTransportData() as? Data {
+                    payloadAsString = String(data: transportData, encoding: .utf8)
+                }
+                
+                completionHandler(payloadAsString, response.httpStatus)
+            }))
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
     }
     

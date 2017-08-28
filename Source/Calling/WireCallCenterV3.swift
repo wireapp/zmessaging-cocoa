@@ -301,6 +301,19 @@ internal func callMetricsHandler(conversationId: UnsafePointer<Int8>?, metrics: 
     }
 }
 
+/// Handle requests for refreshing the calling configuration
+internal func requestCallConfigHandler(handle : UnsafeMutableRawPointer?, contextRef: UnsafeMutableRawPointer?) -> Int32 {
+    guard let contextRef = contextRef else { return EPROTO }
+    
+    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+    
+    callCenter.uiMOC.performGroupedBlock {
+        callCenter.requestCallConfig()
+    }
+    
+    return 0
+}
+
 /// Handles sending call messages
 /// In order to be passed to C, this function needs to be global
 internal func sendCallMessageHandler(token: UnsafeMutableRawPointer?,
@@ -371,6 +384,7 @@ internal func groupMemberHandler(conversationIdRef: UnsafePointer<Int8>?, contex
 @objc
 public protocol WireCallCenterTransport: class {
     func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((_ status: Int) -> Void))
+    func requestCallConfig(completionHandler: @escaping (_ config: String?, _ status : Int) -> Void)
 }
 
 public typealias WireCallMessageToken = UnsafeMutableRawPointer
@@ -472,6 +486,14 @@ public struct CallEvent {
             guard let `self` = self else { return }
             
             self.avsWrapper.handleResponse(httpStatus: status, reason: "", context: token)
+        })
+    }
+    
+    fileprivate func requestCallConfig() {
+        transport?.requestCallConfig(completionHandler: { [weak self] (config, httpStatusCode) in
+            guard let `self` = self else { return }
+            
+            self.avsWrapper.update(callConfig: config, httpStatusCode: httpStatusCode)
         })
     }
     
