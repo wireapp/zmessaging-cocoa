@@ -451,6 +451,7 @@ ZM_EMPTY_ASSERTING_INIT()
         
         // Request the current token, the rest is taken care of
         [self.application registerForRemoteNotifications];
+        [self setupPushNotificationsForApplication:self.application];
     }];
 }
 

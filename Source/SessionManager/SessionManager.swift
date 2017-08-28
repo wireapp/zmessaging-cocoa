@@ -262,7 +262,10 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
                 userIdentifier: account.userIdentifier,
                 dispatchGroup: dispatchGroup,
                 migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
-                completion: { [weak self] provider in self?.createSession(for: account, with: provider, completion: completion) }
+                completion: { [weak self] provider in self?.createSession(for: account, with: provider) { session in
+                    session.registerForRemoteNotifications()
+                    completion(session)
+                }}
             )
         } else {
             createUnauthenticatedSession()
@@ -347,6 +350,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         dispatchGroup?.enter()
         LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
             self?.createSession(for: account, with: provider) { userSession in
+                userSession.registerForRemoteNotifications()
                 if let profileImageData = session.authenticationStatus.profileImageData {
                     self?.updateProfileImage(imageData: profileImageData)
                 }
