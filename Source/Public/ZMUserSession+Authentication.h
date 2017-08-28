@@ -40,7 +40,7 @@
 - (void)deleteUserKeychainItems;
 
 /// Delete cookies etc. and logout the current user.
-- (void)resetStateAndExit;
+- (void)closeAndDeleteCookie:(BOOL)deleteCookie;
 
 - (BOOL)hadHistoryAtLastLogin;
 

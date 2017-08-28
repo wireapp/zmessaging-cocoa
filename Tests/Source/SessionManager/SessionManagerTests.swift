@@ -23,7 +23,11 @@ import WireTesting
 
 
 class SessionManagerTestDelegate: SessionManagerDelegate {
-
+    
+    func sessionManagerWillSuspendSession() {
+        // no-op
+    }
+    
     func sessionManagerDidLogout() {
         // no op
     }

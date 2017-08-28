@@ -512,4 +512,8 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
     
+    public func sessionManagerWillSuspendSession() {
+        // no-op
+    }
+    
 }

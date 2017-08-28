@@ -30,6 +30,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession)
     func sessionManagerCreated(userSession : ZMUserSession)
     func sessionManagerDidLogout()
+    func sessionManagerWillSuspendSession()
     func sessionManagerWillStartMigratingLocalStore()
     func sessionManagerDidBlacklistCurrentVersion()
 }
@@ -231,9 +232,19 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             (launchOptions[.url] as? URL).apply(session.didLaunch)
         }
     }
-
-    public func logoutCurrentSession() {
-        userSession?.resetStateAndExit()
+    
+    public func select(_ account: Account) {
+        delegate?.sessionManagerWillSuspendSession()
+        userSession?.closeAndDeleteCookie(false)
+        userSession = nil
+        
+        select(account: account) { (userSession) in
+            
+        }
+    }
+    
+    public func logoutCurrentSession(deleteCookie: Bool = true) {
+        userSession?.closeAndDeleteCookie(deleteCookie)
         userSession = nil
         delegate?.sessionManagerDidLogout()
 
