@@ -1787,8 +1787,10 @@
         XCTAssertEqual(lastRequest.method, ZMMethodPOST);
         
         token = nil;
+        window = nil;
     }
-    
+    conversation = nil;
+    self.receivedConversationWindowChangeNotifications = nil;
     [self recreateSessionManagerAndDeleteLocalData];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -1910,6 +1912,8 @@
     }
     
     token = nil;
+    conversation = nil;
+    window = nil;
     [self recreateSessionManagerAndDeleteLocalData];
     WaitForAllGroupsToBeEmpty(0.5);
     
