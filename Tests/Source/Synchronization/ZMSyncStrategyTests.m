@@ -64,6 +64,7 @@
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects1;
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects2;
 @property (nonatomic) id mockDispatcher;
+@property (nonatomic) FlowManagerMock *mockflowManager;
 @property (nonatomic) id syncStatusMock;
 @property (nonatomic) id operationStatusMock;
 @property (nonatomic) id applicationStatusDirectoryMock;
@@ -90,6 +91,7 @@
     self.syncStatusMock = [OCMockObject mockForClass:SyncStatus.class];
     self.operationStatusMock = [OCMockObject mockForClass:ZMOperationStatus.class];
     self.userProfileImageUpdateStatus = [OCMockObject niceMockForClass:UserProfileImageUpdateStatus.class];
+    self.mockflowManager = [[FlowManagerMock alloc] init];
     
     self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
     [[[[self.applicationStatusDirectoryMock expect] andReturn: self.applicationStatusDirectoryMock] classMethod] alloc];
@@ -126,7 +128,7 @@
     
     id callFlowRequestStrategy = [OCMockObject niceMockForClass:ZMCallFlowRequestStrategy.class];
     [[[[callFlowRequestStrategy expect] andReturn:callFlowRequestStrategy] classMethod] alloc];
-    (void)[[[callFlowRequestStrategy expect] andReturn:callFlowRequestStrategy] initWithMediaManager:nil onDemandFlowManager:nil managedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY application:self.application];
+    (void)[[[callFlowRequestStrategy expect] andReturn:callFlowRequestStrategy] initWithMediaManager:nil flowManager:self.mockflowManager managedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY application:self.application];
     
     self.updateEventsBuffer = [OCMockObject mockForClass:ZMUpdateEventsBuffer.class];
     [[[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] classMethod] alloc];
@@ -158,7 +160,7 @@
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
                                                cookieStorage:nil
                                                 mediaManager:nil
-                                         onDemandFlowManager:nil
+                                                 flowManager:self.mockflowManager
                                            syncStateDelegate:self.syncStateDelegate
                                 localNotificationsDispatcher:self.mockDispatcher
                                     taskCancellationProvider:nil
@@ -186,6 +188,7 @@
 
 - (void)tearDown;
 {
+    self.mockflowManager = nil;
     [self.operationStatusMock stopMocking];
     self.operationStatusMock = nil;
     [self.syncStatusMock stopMocking];

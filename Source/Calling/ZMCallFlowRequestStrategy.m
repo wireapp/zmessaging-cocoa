@@ -22,7 +22,6 @@
 @import WireDataModel;
 
 #import "ZMCallFlowRequestStrategy.h"
-#import "ZMAVSBridge.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMUserSessionAuthenticationNotification.h"
 
@@ -109,12 +108,12 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 - (void)requestCompletedWithResponse:(ZMTransportResponse *)response forContext:(void const*)context
 {
-    NSData *contentData;
-    if(response.payload != nil) {
+    NSData *contentData = nil;
+    if (response.payload != nil) {
         contentData = [NSJSONSerialization dataWithJSONObject:response.payload options:0 error:nil];
     }
     
-    [self.flowManager reportCallConfig:contentData context:context];
+    [self.flowManager reportCallConfig:contentData httpStatus:response.HTTPStatus context:context];
 }
 
 - (void)appendLogForConversationID:(NSUUID *)conversationID message:(NSString *)message;

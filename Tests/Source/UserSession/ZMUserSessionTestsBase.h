@@ -44,6 +44,8 @@
 
 #import <WireSyncEngine/ZMAuthenticationStatus.h>
 
+@class FlowManagerMock;
+
 @interface ThirdPartyServices : NSObject <ZMThirdPartyServicesDelegate>
 
 @property (nonatomic) NSUInteger uploadCount;
@@ -73,6 +75,7 @@
 @property (nonatomic) ZMUserSession *sut;
 @property (nonatomic) ZMSyncStrategy *syncStrategy;
 @property (nonatomic) id mediaManager;
+@property (nonatomic) FlowManagerMock *flowManagerMock;
 @property (nonatomic) NSUInteger dataChangeNotificationsCount;
 @property (nonatomic) ThirdPartyServices *thirdPartyServices;
 @property (nonatomic) id requestAvailableNotification;

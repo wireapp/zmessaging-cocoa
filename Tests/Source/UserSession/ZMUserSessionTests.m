@@ -86,6 +86,7 @@
 
     // when
     ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
+                                                             flowManager:self.flowManagerMock
                                                                analytics:nil
                                                         transportSession:transportSession
                                                          apnsEnvironment:nil
@@ -231,6 +232,7 @@
     // when
     ZMUserSession *userSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
                                                                     mediaManager:self.mediaManager
+                                                                     flowManager:self.flowManagerMock
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
@@ -472,6 +474,7 @@
     // when
     ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
                                                                     mediaManager:self.mediaManager
+                                                                     flowManager:self.flowManagerMock
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
