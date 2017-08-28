@@ -43,7 +43,6 @@
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfStrategy.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
-#import "ZMCallFlowRequestStrategy.h"
 #import "ZMConnectionTranscoder.h"
 #import "MessagingTest+EventFactory.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
@@ -64,7 +63,6 @@
 @property (nonatomic) id selfStrategy;
 @property (nonatomic) id connectionTranscoder;
 @property (nonatomic) id missingUpdateEventsTranscoder;
-@property (nonatomic) id callFlowRequestStrategy;
 @property (nonatomic) id pingBackStatus;
 @property (nonatomic) id cookieStorage;
 
@@ -129,11 +127,11 @@
     (void) [[[userTranscoder expect] andReturn:userTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
     self.userTranscoder = userTranscoder;
     
-    self.conversationTranscoder = [OCMockObject niceMockForClass:ZMConversationTranscoder.class];
+    self.conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [[[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] classMethod] alloc];
     (void) [[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] initWithSyncStrategy:OCMOCK_ANY applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
 
-    id clientMessageTranscoder = [OCMockObject niceMockForClass:ClientMessageTranscoder.class];
+    id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
     (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initIn:self.syncMOC localNotificationDispatcher:self.mockDispatcher applicationStatus:OCMOCK_ANY];
     self.clientMessageTranscoder = clientMessageTranscoder;
@@ -145,7 +143,7 @@
     [[selfStrategy expect] tearDown];
     self.selfStrategy = selfStrategy;
     
-    id connectionTranscoder = [OCMockObject niceMockForClass:ZMConnectionTranscoder.class];
+    id connectionTranscoder = [OCMockObject mockForClass:ZMConnectionTranscoder.class];
     [[[[connectionTranscoder expect] andReturn:connectionTranscoder] classMethod] alloc];
     (void) [[[connectionTranscoder expect] andReturn:connectionTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
     self.connectionTranscoder = connectionTranscoder;
@@ -154,11 +152,6 @@
     [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
     (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY application:OCMOCK_ANY backgroundAPNSPingbackStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
     self.missingUpdateEventsTranscoder = missingUpdateEventsTranscoder;
-    
-    id callFlowRequestStrategy = [OCMockObject niceMockForClass:ZMCallFlowRequestStrategy.class];
-    [[[[callFlowRequestStrategy expect] andReturn:callFlowRequestStrategy] classMethod] alloc];
-    (void)[[[callFlowRequestStrategy expect] andReturn:callFlowRequestStrategy] initWithMediaManager:nil onDemandFlowManager:nil managedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY application:self.application];
-    self.callFlowRequestStrategy = callFlowRequestStrategy;
     
     self.updateEventsBuffer = [OCMockObject mockForClass:ZMUpdateEventsBuffer.class];
     [[[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] classMethod] alloc];
@@ -244,8 +237,6 @@
     self.connectionTranscoder = nil;
     [self.missingUpdateEventsTranscoder stopMocking];
     self.missingUpdateEventsTranscoder = nil;
-    [self.callFlowRequestStrategy stopMocking];
-    self.callFlowRequestStrategy = nil;
     
     [self.operationStatusMock stopMocking];
     self.operationStatusMock = nil;
@@ -671,6 +662,8 @@
     // when
     [self.sut processSaveWithInsertedObjects:cacheInsertSet updateObjects:cacheUpdateSet];
     WaitForAllGroupsToBeEmpty(0.5);
+    [firstObject stopMocking];
+    [secondObject stopMocking];
 }
 
 
@@ -1118,6 +1111,7 @@
     [self performIgnoringZMLogError:^{
         WaitForAllGroupsToBeEmpty(0.5);
     }];
+    [mockObserver stopMocking];
 }
 
 - (void)testThatItProcessesAllEventsInBufferWhenSyncFinishes
