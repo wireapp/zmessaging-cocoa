@@ -342,13 +342,14 @@ extension SessionManager: UnauthenticatedSessionDelegate {
     public func session(session: UnauthenticatedSession, createdAccount account: Account) {
         accountManager.addAndSelect(account)
 
-        dispatchGroup?.enter()
+        let group = self.dispatchGroup
+        group?.enter()
         LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
             self?.createSession(for: account, with: provider) { userSession in
                 if let profileImageData = session.authenticationStatus.profileImageData {
                     self?.updateProfileImage(imageData: profileImageData)
                 }
-                self?.dispatchGroup?.leave()
+                group?.leave()
             }
         }
     }
