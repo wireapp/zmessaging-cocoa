@@ -62,7 +62,6 @@
 @property (nonatomic) id clientRegistrationStatus;
 @property (nonatomic) id selfStrategy;
 @property (nonatomic) id connectionTranscoder;
-@property (nonatomic) id missingUpdateEventsTranscoder;
 @property (nonatomic) id pingBackStatus;
 @property (nonatomic) id cookieStorage;
 
@@ -148,11 +147,6 @@
     (void) [[[connectionTranscoder expect] andReturn:connectionTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
     self.connectionTranscoder = connectionTranscoder;
     
-    id missingUpdateEventsTranscoder = [OCMockObject niceMockForClass:ZMMissingUpdateEventsTranscoder.class];
-    [[[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] classMethod] alloc];
-    (void) [[[missingUpdateEventsTranscoder expect] andReturn:missingUpdateEventsTranscoder] initWithSyncStrategy:OCMOCK_ANY previouslyReceivedEventIDsCollection:OCMOCK_ANY application:OCMOCK_ANY backgroundAPNSPingbackStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
-    self.missingUpdateEventsTranscoder = missingUpdateEventsTranscoder;
-    
     self.updateEventsBuffer = [OCMockObject mockForClass:ZMUpdateEventsBuffer.class];
     [[[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] classMethod] alloc];
     (void) [[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] initWithUpdateEventConsumer:OCMOCK_ANY];
@@ -164,7 +158,6 @@
                          self.userTranscoder,
                          self.conversationTranscoder,
                          clientMessageTranscoder,
-                         missingUpdateEventsTranscoder
     ];
     
     for(ZMObjectSyncStrategy *strategy in self.syncObjects) {
@@ -235,8 +228,6 @@
     self.selfStrategy = nil;
     [self.connectionTranscoder stopMocking];
     self.connectionTranscoder = nil;
-    [self.missingUpdateEventsTranscoder stopMocking];
-    self.missingUpdateEventsTranscoder = nil;
     
     [self.operationStatusMock stopMocking];
     self.operationStatusMock = nil;
