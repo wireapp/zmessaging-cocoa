@@ -124,7 +124,7 @@
 //                                                                                                 application:self.application
 //                                                                                           syncStateDelegate:self.syncStateDelegate];
     
-    id userTranscoder = [OCMockObject niceMockForClass:ZMUserTranscoder.class];
+    id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
     [[[[userTranscoder expect] andReturn:userTranscoder] classMethod] alloc];
     (void) [[[userTranscoder expect] andReturn:userTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
     self.userTranscoder = userTranscoder;
@@ -495,47 +495,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-- (void)testThatItDoesProcessesFlowUpdateEvents;
-{
-    // given
-    NSMutableArray *expectedEvents = [NSMutableArray array];
-    for (ZMUpdateEventType type = ZMUpdateEventUnknown; type < ZMUpdateEvent_LAST; type++) {
-        // given
-        NSString *typeString = [ZMUpdateEvent eventTypeStringForUpdateEventType:type];
-        if (typeString == nil) {
-            continue;
-        }
-        NSDictionary *eventData = @{
-                                    @"id" : NSUUID.createUUID.transportString,
-                                    @"payload" : @[
-                                            @{
-                                                @"type" :  typeString,
-                                                @"foo" : @"bar"
-                                                }
-                                            ]
-                                    };
-        ZMUpdateEvent *event = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData].firstObject;
-        if (event.isFlowEvent) {
-            [expectedEvents addObject:event];
-        }
-    }
-    
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
-    XCTAssertGreaterThan(expectedEvents.count, 0u);
-    
-    // expect
-    [self expectSyncObjectsToProcessEvents:YES
-                                liveEvents:YES
-                             decryptEvents:YES
-                   returnIDsForPrefetching:YES
-                                withEvents:expectedEvents];
-    [[self.updateEventsBuffer reject] addUpdateEvent:OCMOCK_ANY];
-    
-    // when
-    [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
 - (void)testThatItDoesProcessUpdateEventsIfTheCurrentStateShouldIgnoreThemButIgnoreBufferIsYes
 {
     // given
@@ -662,18 +621,19 @@
     }];
     
     // expect
-    for (id<ZMObjectStrategy> syncObject in self.syncObjects) {
+    for (id syncObject in self.syncObjects) {
         
-        if (![syncObject conformsToProtocol:@protocol(ZMContextChangeTrackerSource)]) {
-            continue;
+        if ([syncObject conformsToProtocol:@protocol(ZMContextChangeTrackerSource)]) {
+            [(ZMUpstreamModifiedObjectSync*)[[self.mockUpstreamSync1 stub] andReturn:self.fetchRequestForTrackedObjects1] fetchRequestForTrackedObjects];
+            [(ZMUpstreamModifiedObjectSync*)[[self.mockUpstreamSync2 stub] andReturn:self.fetchRequestForTrackedObjects2] fetchRequestForTrackedObjects];
+            
+            [[self.mockUpstreamSync1 expect] addTrackedObjects:[NSSet setWithObject:user]];
+            [[self.mockUpstreamSync2 expect] addTrackedObjects:[NSSet setWithObject:conversation]];
+            [self verifyMockLater:syncObject];
         }
-        
-        [(ZMUpstreamModifiedObjectSync*)[[self.mockUpstreamSync1 stub] andReturn:self.fetchRequestForTrackedObjects1] fetchRequestForTrackedObjects];
-        [(ZMUpstreamModifiedObjectSync*)[[self.mockUpstreamSync2 stub] andReturn:self.fetchRequestForTrackedObjects2] fetchRequestForTrackedObjects];
-        
-        [[self.mockUpstreamSync1 expect] addTrackedObjects:[NSSet setWithObject:user]];
-        [[self.mockUpstreamSync2 expect] addTrackedObjects:[NSSet setWithObject:conversation]];
-        [self verifyMockLater:syncObject];
+        if ([syncObject conformsToProtocol:@protocol(RequestStrategy)]) {
+            [[syncObject stub] nextRequest];
+        }
     }
     
     // when
@@ -990,6 +950,15 @@
     return @[
              ClientMessageTranscoder.class,
              ].set;
+}
+
+- (void)expectSyncObjectsToGiveNextRequest
+{
+    for (id obj in self.syncObjects) {
+        if ([obj conformsToProtocol:@protocol(RequestStrategy)]) {
+            [[obj stub] nextRequest];
+        }
+    }
 }
 
 - (void)expectSyncObjectsToProcessEvents:(BOOL)process liveEvents:(BOOL)liveEvents decryptEvents:(BOOL)decyptEvents returnIDsForPrefetching:(BOOL)returnIDs withEvents:(id)events;
