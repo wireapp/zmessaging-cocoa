@@ -190,7 +190,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
 
                 if didRetryRegisteringSignalingKeys {
                     (managedObject as? UserClient)?.needsToUploadSignalingKeys = false
-                    managedObjectContext?.saveOrRollback()
+                    managedObjectContext.saveOrRollback()
                     fatal("UserClientTranscoder sigKey request failed with bad-request - \(upstreamRequest.debugDescription)")
                 }
                 didRetryRegisteringSignalingKeys = true
@@ -202,8 +202,8 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
         else if keysToParse.contains(ZMUserClientMarkedToDeleteKey) {
             let error = self.errorFromFailedDeleteResponse(response)
             if error.code == ClientUpdateError.clientToDeleteNotFound.rawValue {
-                self.managedObjectContext?.delete(managedObject)
-                self.managedObjectContext?.saveOrRollback()
+                self.managedObjectContext.delete(managedObject)
+                self.managedObjectContext.saveOrRollback()
             }
             clientUpdateStatus?.failedToDeleteClient(managedObject as! UserClient, error: error)
             return false
@@ -233,8 +233,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
             
             client.remoteIdentifier = remoteIdentifier
             client.numberOfKeysRemaining = Int32(requestsFactory.keyCount)
-            guard let moc = self.managedObjectContext else { return }
-            _ = UserClient.createOrUpdateSelfUserClient(payload, context: moc)
+            _ = UserClient.createOrUpdateSelfUserClient(payload, context: self.managedObjectContext)
             clientRegistrationStatus?.didRegister(client)
         }
         else {
@@ -263,12 +262,12 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     
     public func errorFromFailedInsertResponse(_ response: ZMTransportResponse!) -> NSError {
         var errorCode: ZMUserSessionErrorCode = .unkownError
-        if let moc = self.managedObjectContext, let response = response, response.result == .permanentError {
+        if let response = response, response.result == .permanentError {
 
             if let errorLabel = response.payload?.asDictionary()?["label"] as? String {
                 switch errorLabel {
                 case "missing-auth":
-                    if let emailAddress = ZMUser.selfUser(in: moc).emailAddress, !emailAddress.isEmpty {
+                    if let emailAddress = ZMUser.selfUser(in: self.managedObjectContext).emailAddress, !emailAddress.isEmpty {
                         errorCode = .needsPasswordToRegisterClient
                     }
                     else {
@@ -304,9 +303,8 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     }
     
     private func received(clients: [[String: AnyObject]]) {
-        guard let moc = self.managedObjectContext else { return }
         func createSelfUserClient(_ clientInfo: [String: AnyObject]) -> UserClient? {
-            let client = UserClient.createOrUpdateSelfUserClient(clientInfo, context: moc)
+            let client = UserClient.createOrUpdateSelfUserClient(clientInfo, context: self.managedObjectContext)
             return client
         }
         
@@ -317,7 +315,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
         // next time the user sends a message or when we will receive the "deleted" event
         // for that client
         let foundClientsIdentifier = Set(clients.flatMap { $0.remoteIdentifier })
-        let selfUser = ZMUser.selfUser(in: moc)
+        let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
         let selfClient = selfUser.selfClient()
         let otherClients = selfUser.clients ?? Set()
         
@@ -329,10 +327,10 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
                 return
             }
             // not there? delete
-            moc.delete($0)
+            self.managedObjectContext.delete($0)
         }
         
-        moc.saveOrRollback()
+        self.managedObjectContext.saveOrRollback()
         clientUpdateStatus?.didFetchClients(clients)
     }
     
@@ -382,13 +380,12 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
             zmLog.error("Client info has unexpected payload")
             return
         }
-        guard let moc = self.managedObjectContext else { return }
         
-        let selfUser = ZMUser.selfUser(in: moc)
+        let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
         
         switch event.type {
         case .userClientAdd:
-            if let client = UserClient.createOrUpdateSelfUserClient(clientInfo, context: moc) {
+            if let client = UserClient.createOrUpdateSelfUserClient(clientInfo, context: self.managedObjectContext) {
                 selfUser.selfClient()?.addNewClientToIgnored(client, causedBy: .none)
             }
         case .userClientRemove:
