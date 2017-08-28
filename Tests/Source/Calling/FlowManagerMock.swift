@@ -29,7 +29,7 @@ public class FlowManagerMock : NSObject, FlowManagerType {
     public var didReportCallConfig : Bool = false
     public var didReportNetworkChanged : Bool = false
     public var didSetVideoCaptureDevice : Bool = false
-    public var delegate: FlowManagerDelegate? = nil
+    public weak var delegate: FlowManagerDelegate? = nil
     
     override init() {
         super.init()
