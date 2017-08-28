@@ -22,6 +22,7 @@
 @import WireSyncEngine;
 @import WireDataModel;
 @import WireMessageStrategy;
+@import OCMock;
 
 
 #import "MessagingTest.h"
@@ -34,9 +35,6 @@
 #import "MessagingTest+EventFactory.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 #import "ZMNotifications+UserSession.h"
-
-// Status
-#import "ZMClientRegistrationStatus.h"
 
 // Transcoders & strategies
 #import "ZMUserTranscoder.h"
@@ -51,19 +49,24 @@
 - (void)tearDown;
 @end
 
+// Only needed to be able to call these internal OCMock methods on teardown
+@protocol MockOCMockMock <NSObject>
+- (NSInvocation *)recordedInvocation;
+
+@end
+
+// A lot of objects end up in retain cycles because of extensive mocking.
+// We need to break them manually by releasing some of the internal arrays
 @implementation OCMockObject (TearDown)
 - (void)tearDown
 {
-    for (__unused id recorder in stubs) {
-//        [recorder tearDown];
+    for (id recorder in stubs) {
+        objc_removeAssociatedObjects([recorder recordedInvocation]);
     }
     [stubs removeAllObjects];
-    
     [exceptions removeAllObjects];
     [expectations removeAllObjects];
     [invocations removeAllObjects];
-    
-    objc_removeAssociatedObjects(self);
 }
 
 @end
@@ -119,33 +122,33 @@
     
     self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
     [[[[self.applicationStatusDirectoryMock expect] andReturn: self.applicationStatusDirectoryMock] classMethod] alloc];
-    (void) [[[self.applicationStatusDirectoryMock expect] andReturn:self.applicationStatusDirectoryMock] initWithManagedObjectContext:OCMOCK_ANY cookieStorage:OCMOCK_ANY requestCancellation:OCMOCK_ANY application:OCMOCK_ANY syncStateDelegate:OCMOCK_ANY];
+    (void) [[[self.applicationStatusDirectoryMock stub] andReturn:self.applicationStatusDirectoryMock] initWithManagedObjectContext:OCMOCK_ANY cookieStorage:OCMOCK_ANY requestCancellation:OCMOCK_ANY application:OCMOCK_ANY syncStateDelegate:OCMOCK_ANY];
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.syncStatusMock] syncStatus];
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.operationStatusMock] operationStatus];
     [(ZMApplicationStatusDirectory *)[[self.applicationStatusDirectoryMock stub] andReturn:self.userProfileImageUpdateStatus] userProfileImageUpdateStatus];
 
     id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
     [[[[userTranscoder expect] andReturn:userTranscoder] classMethod] alloc];
-    (void) [[[userTranscoder expect] andReturn:userTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
+    (void) [[[userTranscoder stub] andReturn:userTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
     self.userTranscoder = userTranscoder;
     
     self.conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [[[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] classMethod] alloc];
-    (void) [[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] initWithSyncStrategy:OCMOCK_ANY applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
+    (void) [[[self.conversationTranscoder stub] andReturn:self.conversationTranscoder] initWithSyncStrategy:OCMOCK_ANY applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
 
     id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
-    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initIn:self.syncMOC localNotificationDispatcher:self.mockDispatcher applicationStatus:OCMOCK_ANY];
+    (void) [[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] initIn:OCMOCK_ANY localNotificationDispatcher:self.mockDispatcher applicationStatus:OCMOCK_ANY];
     self.clientMessageTranscoder = clientMessageTranscoder;
     
     id connectionTranscoder = [OCMockObject mockForClass:ZMConnectionTranscoder.class];
     [[[[connectionTranscoder expect] andReturn:connectionTranscoder] classMethod] alloc];
-    (void) [[[connectionTranscoder expect] andReturn:connectionTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
+    (void) [[[connectionTranscoder stub] andReturn:connectionTranscoder] initWithManagedObjectContext:OCMOCK_ANY applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
     self.connectionTranscoder = connectionTranscoder;
     
     self.updateEventsBuffer = [OCMockObject mockForClass:ZMUpdateEventsBuffer.class];
     [[[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] classMethod] alloc];
-    (void) [[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] initWithUpdateEventConsumer:OCMOCK_ANY];
+    (void) [[[self.updateEventsBuffer stub] andReturn:self.updateEventsBuffer] initWithUpdateEventConsumer:OCMOCK_ANY];
     [self verifyMockLater:self.updateEventsBuffer];
     
 
@@ -248,16 +251,13 @@
         }
     }
     
+    [self.updateEventsBuffer tearDown];
     [self.updateEventsBuffer stopMocking];
     self.updateEventsBuffer = nil;
 
     self.sut = nil;
     self.syncObjects = nil;
     [super tearDown];
-}
-
-- (void)testTest {
-    
 }
 
 - (void)testThatDownloadedEventsAreForwardedToAllIndividualObjects
