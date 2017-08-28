@@ -36,10 +36,10 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 @property (nonatomic, readonly) NSMutableArray *requestStack; ///< inverted FIFO
 @property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
-@property (nonatomic, readonly) id mediaManager;
+@property (nonatomic, readonly, weak) id mediaManager;
 @property (nonatomic) NSNotificationQueue *voiceGainNotificationQueue;
 @property (nonatomic) BOOL pushChannelIsOpen;
-@property (nonatomic, readonly) NSManagedObjectContext *uiManagedObjectContext;
+@property (nonatomic, readonly, weak) NSManagedObjectContext *uiManagedObjectContext;
 @property (nonatomic, strong) dispatch_queue_t avsLogQueue;
 @property (nonatomic, readonly, weak) id<ZMApplication> application;
 

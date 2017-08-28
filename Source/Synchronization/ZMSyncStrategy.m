@@ -278,7 +278,22 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)tearDown
 {
     self.tornDown = YES;
+    self.localNotificationDispatcher = nil;
     self.applicationStatusDirectory = nil;
+    self.connectionTranscoder = nil;
+    self.missingUpdateEventsTranscoder = nil;
+    self.changeTrackerBootStrap = nil;
+    self.callingRequestStrategy = nil;
+    self.callFlowRequestStrategy = nil;
+    self.connectionTranscoder = nil;
+    self.conversationTranscoder = nil;
+    self.eventsBuffer = nil;
+    self.userTranscoder = nil;
+    self.selfStrategy = nil;
+    self.clientMessageTranscoder = nil;
+    self.lastUpdateEventIDTranscoder = nil;
+    self.systemMessageEventConsumer = nil;
+    self.allChangeTrackers = nil;
     self.eventDecoder = nil;
     [self.eventMOC tearDownEventMOC];
     self.eventMOC = nil;
@@ -293,7 +308,7 @@ ZM_EMPTY_ASSERTING_INIT()
             }
         }
     }
-    
+    self.requestStrategies = nil;
     [self.notificationDispatcher tearDown];
     [self.conversationStatusSync tearDown];
 }
