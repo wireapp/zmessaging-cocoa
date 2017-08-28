@@ -240,8 +240,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         userSession?.closeAndDeleteCookie(false)
         userSession = nil
         
-        select(account: account) { (userSession) in
-            
+        select(account: account) { [weak self] (_) in
+            self?.accountManager.select(account)
         }
     }
     
