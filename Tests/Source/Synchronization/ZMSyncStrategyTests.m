@@ -47,6 +47,27 @@
 #import "MessagingTest+EventFactory.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
+@interface OCMockObject (TearDown)
+- (void)tearDown;
+@end
+
+@implementation OCMockObject (TearDown)
+- (void)tearDown
+{
+    for (__unused id recorder in stubs) {
+//        [recorder tearDown];
+    }
+    [stubs removeAllObjects];
+    
+    [exceptions removeAllObjects];
+    [expectations removeAllObjects];
+    [invocations removeAllObjects];
+    
+    objc_removeAssociatedObjects(self);
+}
+
+@end
+
 
 @interface ZMSyncStrategyTests : MessagingTest
 
@@ -55,14 +76,10 @@
 @property (nonatomic) NSArray *syncObjects;
 @property (nonatomic) id updateEventsBuffer;
 @property (nonatomic) MockSyncStateDelegate *syncStateDelegate;
-@property (nonatomic) id backgroundableSession;
 @property (nonatomic) id conversationTranscoder;
 @property (nonatomic) id userTranscoder;
 @property (nonatomic) id clientMessageTranscoder;
-@property (nonatomic) id clientRegistrationStatus;
 @property (nonatomic) id connectionTranscoder;
-@property (nonatomic) id pingBackStatus;
-@property (nonatomic) id cookieStorage;
 
 @property (nonatomic) BOOL shouldStubContextChangeTrackers;
 @property (nonatomic) id mockUpstreamSync1;
@@ -99,12 +116,6 @@
     self.userProfileImageUpdateStatus = [OCMockObject mockForClass:UserProfileImageUpdateStatus.class];
     (void)[(UserProfileImageUpdateStatus *)[[self.userProfileImageUpdateStatus stub] andReturn:nil] fetchRequestForTrackedObjects];
     [(UserProfileImageUpdateStatus *)[self.userProfileImageUpdateStatus stub] objectsDidChange:OCMOCK_ANY];
-
-    self.clientRegistrationStatus = [OCMockObject mockForClass:ZMClientRegistrationStatus.class];
-    self.pingBackStatus = [OCMockObject mockForClass:BackgroundAPNSPingBackStatus.class];
-
-    self.cookieStorage = [OCMockObject mockForClass:ZMPersistentCookieStorage.class];
-    [(ZMPersistentCookieStorage*)[[self.cookieStorage stub] andReturn:[[NSData alloc] init]] data];
     
     self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
     [[[[self.applicationStatusDirectoryMock expect] andReturn: self.applicationStatusDirectoryMock] classMethod] alloc];
@@ -113,13 +124,6 @@
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.operationStatusMock] operationStatus];
     [(ZMApplicationStatusDirectory *)[[self.applicationStatusDirectoryMock stub] andReturn:self.userProfileImageUpdateStatus] userProfileImageUpdateStatus];
 
-    
-//    self.applicationStatusDirectoryMock = [[ZMApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncMOC
-//                                                                                               cookieStorage:self.cookieStorage
-//                                                                                         requestCancellation:[[MockRequestCancellation alloc] init]
-//                                                                                                 application:self.application
-//                                                                                           syncStateDelegate:self.syncStateDelegate];
-    
     id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
     [[[[userTranscoder expect] andReturn:userTranscoder] classMethod] alloc];
     (void) [[[userTranscoder expect] andReturn:userTranscoder] initWithManagedObjectContext:self.syncMOC applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
@@ -196,34 +200,49 @@
 
 - (void)tearDown;
 {
+    self.fetchRequestForTrackedObjects1 = nil;
+    self.fetchRequestForTrackedObjects2 = nil;
     [self.mockDispatcher tearDown];
+    [self.mockDispatcher stopMocking];
     self.mockDispatcher = nil;
+    [self.mockUpstreamSync1 stopMocking];
+    [self.mockUpstreamSync1 tearDown];
     self.mockUpstreamSync1 = nil;
+    [self.mockUpstreamSync2 stopMocking];
+    [self.mockUpstreamSync2 tearDown];
     self.mockUpstreamSync2 = nil;
-//    [self.syncStateDelegate stopMocking];
     self.syncStateDelegate = nil;
+    [self.userProfileImageUpdateStatus tearDown];
     [self.userProfileImageUpdateStatus stopMocking];
     self.userProfileImageUpdateStatus = nil;
-    self.pingBackStatus = nil;
-    self.clientRegistrationStatus = nil;
-    self.cookieStorage = nil;
+    [self.applicationStatusDirectoryMock tearDown];
+    [self.applicationStatusDirectoryMock stopMocking];
     self.applicationStatusDirectoryMock = nil;
+    [self.userTranscoder tearDown];
     [self.userTranscoder stopMocking];
     self.userTranscoder = nil;
+    [self.conversationTranscoder tearDown];
     [self.conversationTranscoder stopMocking];
     self.conversationTranscoder = nil;
+    [self.clientMessageTranscoder tearDown];
     [self.clientMessageTranscoder stopMocking];
     self.clientMessageTranscoder = nil;
+    [self.connectionTranscoder tearDown];
     [self.connectionTranscoder stopMocking];
     self.connectionTranscoder = nil;
     
+    [self.operationStatusMock tearDown];
     [self.operationStatusMock stopMocking];
     self.operationStatusMock = nil;
+    [self.syncStatusMock tearDown];
     [self.syncStatusMock stopMocking];
     self.syncStatusMock = nil;
     self.storeProvider = nil;
     [self.sut tearDown];
     for (id syncObject in self.syncObjects) {
+        if ([syncObject respondsToSelector:@selector(tearDown)]) {
+            [syncObject tearDown];
+        }
         if ([syncObject respondsToSelector:@selector(stopMocking)]) {
             [syncObject stopMocking];
         }
