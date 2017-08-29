@@ -239,6 +239,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     
     public func select(_ account: Account) {
         delegate?.sessionManagerWillSuspendSession()
+        tearDownObservers()
         userSession?.closeAndDeleteCookie(false)
         userSession = nil
         
@@ -248,6 +249,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     }
     
     public func logoutCurrentSession(deleteCookie: Bool = true) {
+        tearDownObservers()
         userSession?.closeAndDeleteCookie(deleteCookie)
         userSession = nil
         delegate?.sessionManagerDidLogout()
@@ -303,15 +305,21 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         self.unauthenticatedSession = unauthenticatedSession
         delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
     }
+    
+    fileprivate func tearDownObservers() {
+        if let teamObserver = teamObserver {
+            TeamChangeInfo.remove(observer: teamObserver, for: nil)
+        }
+        if let userObserver = selfObserver {
+            UserChangeInfo.remove(observer: userObserver, forBareUser: nil)
+        }
+    }
 
     deinit {
         if let authenticationToken = authenticationToken {
             ZMUserSessionAuthenticationNotification.removeObserver(for: authenticationToken)
         }
-        if let teamObserver = teamObserver {
-            TeamChangeInfo.remove(observer: teamObserver, for: nil)
-        }
-        
+        tearDownObservers()
         blacklistVerificator?.teardown()
         userSession?.tearDown()
         unauthenticatedSession?.tearDown()
