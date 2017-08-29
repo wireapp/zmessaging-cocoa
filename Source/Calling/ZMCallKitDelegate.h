@@ -24,7 +24,6 @@ NS_ASSUME_NONNULL_BEGIN
 @class ZMUserSession;
 @class ZMConversation;
 @class ZMCallFlowRequestStrategy;
-@class ZMOnDemandFlowManager;
 @class AVSMediaManager;
 @class CXProviderConfiguration;
 @protocol CXProviderDelegate;
@@ -32,6 +31,8 @@ NS_ASSUME_NONNULL_BEGIN
 @class CXTransaction;
 @class CXHandle;
 @class CXCallObserver;
+
+@protocol FlowManagerType;
 
 /// Needed to unbound @c ZMCallKitDelegate from OS CallKit implementation (for testing).
 @protocol CallKitProviderType <NSObject>
@@ -75,7 +76,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ZMCallKitDelegate : NSObject
 - (instancetype)initWithCallKitProvider:(id<CallKitProviderType>)callKitProvider
                          callController:(id<CallKitCallController>)callController
-                    onDemandFlowManager:(nullable ZMOnDemandFlowManager *)onDemandFlowManager
+                            flowManager:(nullable id<FlowManagerType>)flowManager
                             userSession:(ZMUserSession *)userSession
                            mediaManager:(nullable AVSMediaManager *)mediaManager;
 

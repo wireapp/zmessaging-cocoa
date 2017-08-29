@@ -23,7 +23,11 @@ import WireTesting
 
 
 class SessionManagerTestDelegate: SessionManagerDelegate {
-
+    
+    func sessionManagerWillSuspendSession() {
+        // no-op
+    }
+    
     func sessionManagerDidLogout() {
         // no op
     }
@@ -80,6 +84,7 @@ class SessionManagerTests: IntegrationTest {
             apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
+            flowManager: FlowManagerMock(),
             transportSession: transportSession,
             environment: environment,
             reachability: reachability

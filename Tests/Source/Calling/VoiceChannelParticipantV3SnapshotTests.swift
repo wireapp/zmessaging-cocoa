@@ -23,13 +23,16 @@ import Foundation
 class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
 
     var mockWireCallCenterV3 : WireCallCenterV3Mock!
+    var mockFlowManager : FlowManagerMock!
 
     override func setUp() {
         super.setUp()
-        mockWireCallCenterV3 = WireCallCenterV3Mock(userId: UUID(), clientId: "foo", uiMOC: uiMOC)
+        mockFlowManager = FlowManagerMock()
+        mockWireCallCenterV3 = WireCallCenterV3Mock(userId: UUID(), clientId: "foo", uiMOC: uiMOC, flowManager: mockFlowManager)
     }
     
     override func tearDown() {
+        mockFlowManager = nil
         mockWireCallCenterV3 = nil
         super.tearDown()
     }

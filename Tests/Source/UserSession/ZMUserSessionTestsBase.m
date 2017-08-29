@@ -85,6 +85,7 @@
     }]];
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
     self.mediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
+    self.flowManagerMock = [[FlowManagerMock alloc] init];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     
     self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:self.cookieStorage registrationStatusDelegate:nil];
@@ -113,6 +114,7 @@
     
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                                   mediaManager:self.mediaManager
+                                                   flowManager:self.flowManagerMock
                                                apnsEnvironment:self.apnsEnvironment
                                                  operationLoop:self.operationLoop
                                                    application:self.application
@@ -169,6 +171,8 @@
     
     [self.mediaManager stopMocking];
     self.mediaManager = nil;
+    
+    self.flowManagerMock = nil;
     
     [(id)self.syncStrategy stopMocking];
     self.syncStrategy = nil;

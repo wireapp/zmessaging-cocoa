@@ -36,17 +36,19 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     fileprivate var callCenter              : WireCallCenterV3?
     fileprivate let managedObjectContext    : NSManagedObjectContext
     fileprivate let genericMessageStrategy  : GenericMessageRequestStrategy
+    fileprivate let flowManager             : FlowManagerType
     
-    public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate) {
+    public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType) {
         self.managedObjectContext = managedObjectContext
         self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
+        self.flowManager = flowManager
         
         super.init()
         
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         
         if let userId = selfUser.remoteIdentifier, let clientId = selfUser.selfClient()?.remoteIdentifier {
-            callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, analytics: managedObjectContext.analytics)
+            callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics)
             callCenter?.transport = self
         }
     }
@@ -80,7 +82,7 @@ extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTracke
         
         for object in objects {
             if let  userClient = object as? UserClient, userClient.isSelfClient(), let clientId = userClient.remoteIdentifier, let userId = userClient.user?.remoteIdentifier {
-                callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, analytics: managedObjectContext.analytics)
+                callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics)
                 callCenter?.transport = self
                 break
             }

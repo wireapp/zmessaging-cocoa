@@ -30,6 +30,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession)
     func sessionManagerCreated(userSession : ZMUserSession)
     func sessionManagerDidLogout()
+    func sessionManagerWillSuspendSession()
     func sessionManagerWillStartMigratingLocalStore()
     func sessionManagerDidBlacklistCurrentVersion()
 }
@@ -104,17 +105,17 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public let appVersion: String
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
+    public let accountManager: AccountManager
+    public fileprivate(set) var userSession: ZMUserSession?
+    public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
 
     let application: ZMApplication
-    var userSession: ZMUserSession?
-    var unauthenticatedSession: UnauthenticatedSession?
     var authenticationToken: ZMAuthenticationObserverToken?
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & ReachabilityTearDown
 
     fileprivate let authenticatedSessionFactory: AuthenticatedSessionFactory
     fileprivate let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
-    fileprivate let accountManager: AccountManager
     fileprivate let sharedContainerURL: URL
     fileprivate let dispatchGroup: ZMSDispatchGroup?
     fileprivate var teamObserver: NSObjectProtocol?
@@ -133,6 +134,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         ZMBackendEnvironment.setupEnvironments()
         let environment = ZMBackendEnvironment(userDefaults: .standard)
         let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
+        let flowManager = FlowManager(mediaManager: mediaManager)
 
         let serverNames = [environment.backendURL, environment.backendWSURL].flatMap{ $0.host }
         let reachability = ZMReachability(serverNames: serverNames, observer: nil, queue: .main, group: group)
@@ -142,6 +144,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             apnsEnvironment: nil,
             application: application,
             mediaManager: mediaManager,
+            flowManager: flowManager,
             environment: environment,
             reachability: reachability,
             analytics: analytics
@@ -233,9 +236,19 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             (launchOptions[.url] as? URL).apply(session.didLaunch)
         }
     }
-
-    public func logoutCurrentSession() {
-        userSession?.resetStateAndExit()
+    
+    public func select(_ account: Account) {
+        delegate?.sessionManagerWillSuspendSession()
+        userSession?.closeAndDeleteCookie(false)
+        userSession = nil
+        
+        select(account: account) { [weak self] (_) in
+            self?.accountManager.select(account)
+        }
+    }
+    
+    public func logoutCurrentSession(deleteCookie: Bool = true) {
+        userSession?.closeAndDeleteCookie(deleteCookie)
         userSession = nil
         delegate?.sessionManagerDidLogout()
 

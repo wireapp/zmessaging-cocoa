@@ -28,7 +28,6 @@
 @class ZMTransportRequest;
 @class ZMPushChannelConnection;
 @class ZMAuthenticationStatus;
-@class ZMOnDemandFlowManager;
 @class ZMTransportSession;
 @class LocalNotificationDispatcher;
 @class UserProfileUpdateStatus;
@@ -38,12 +37,12 @@
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
 @class ZMApplicationStatusDirectory;
-@class AVSMediaManager;
 
 @protocol ZMTransportData;
 @protocol ZMSyncStateDelegate;
 @protocol ZMBackgroundable;
 @protocol ApplicationStateOwner;
+@protocol FlowManagerType;
 
 
 @interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory>
@@ -51,7 +50,7 @@
 - (instancetype)initWithStoreProvider:(id<LocalStoreProviderProtocol>)storeProvider
                         cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
                          mediaManager:(AVSMediaManager *)mediaManager
-                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                          flowManager:(id<FlowManagerType>)flowManager
                     syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
          localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
              taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
