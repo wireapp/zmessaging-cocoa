@@ -356,6 +356,9 @@ extension SessionManager {
             if let userName = userName {
                 account.userName = userName
             }
+            if let userProfileImage = selfUser.imageSmallProfileData {
+                account.imageData = userProfileImage
+            }
             accountManager.add(account)
         }
     }
@@ -373,7 +376,7 @@ extension SessionManager: TeamObserver {
 extension SessionManager: ZMUserObserver {
     public func userDidChange(_ changeInfo: UserChangeInfo) {
         guard let session = userSession else { return }
-        if changeInfo.teamsChanged || changeInfo.nameChanged {
+        if changeInfo.teamsChanged || changeInfo.nameChanged || changeInfo.imageSmallProfileDataChanged {
             let selfUser = ZMUser.selfUser(in: session.syncManagedObjectContext)
             updateCurrentAccount(with: selfUser.membership?.team, userName: selfUser.name)
         }

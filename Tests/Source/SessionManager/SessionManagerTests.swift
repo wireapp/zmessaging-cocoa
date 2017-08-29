@@ -198,7 +198,7 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssertEqual(account.teamName, newTeamName)
     }
     
-    func testThatItUpdatesAccountWithUserNameAfterLogin() {
+    func testThatItUpdatesAccountWithUserDetailsAfterLogin() {
         // when
         XCTAssert(login())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -210,6 +210,9 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
         XCTAssertNil(account.teamName)
         XCTAssertEqual(account.userName, self.selfUser.name)
+        let image = MockAsset(in: mockTransportSession.managedObjectContext, forID: selfUser.previewProfileAssetIdentifier!)
+
+        XCTAssertEqual(account.imageData, image?.data)
     }
     
     func testThatItUpdatesAccountAfterUserNameChange() {
