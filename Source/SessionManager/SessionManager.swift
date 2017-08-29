@@ -121,7 +121,41 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     fileprivate var teamObserver: NSObjectProtocol?
     fileprivate var selfObserver: NSObjectProtocol?
 
-    public convenience init(
+    private static var token: Any?
+    
+    /// The entry point for SessionManager; call this instead of the initializers.
+    ///
+    public static func create(
+        appVersion: String,
+        mediaManager: AVSMediaManager,
+        analytics: AnalyticsType?,
+        delegate: SessionManagerDelegate?,
+        application: ZMApplication,
+        launchOptions: LaunchOptions,
+        blacklistDownloadInterval : TimeInterval,
+        completion: @escaping (SessionManager) -> Void
+        ) {
+        
+        token = FileManager.default.executeWhenFileSystemIsAccessible {
+            completion(SessionManager(
+                appVersion: appVersion,
+                mediaManager: mediaManager,
+                analytics: analytics,
+                delegate: delegate,
+                application: application,
+                launchOptions: launchOptions,
+                blacklistDownloadInterval: blacklistDownloadInterval
+            ))
+            
+            token = nil
+        }
+    }
+    
+    public override init() {
+        fatal("init() not implemented")
+    }
+    
+    private convenience init(
         appVersion: String,
         mediaManager: AVSMediaManager,
         analytics: AnalyticsType?,
@@ -175,7 +209,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         
     }
 
-    public init(
+    init(
         appVersion: String,
         authenticatedSessionFactory: AuthenticatedSessionFactory,
         unauthenticatedSessionFactory: UnauthenticatedSessionFactory,
@@ -261,13 +295,16 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     fileprivate func select(account: Account?, completion: @escaping (ZMUserSession) -> Void) {
         guard let account = account else { return createUnauthenticatedSession() }
 
-        if nil != account.cookieStorage().authenticationCookieData {
+        if account.isAuthenticated {
             LocalStoreProvider.createStack(
                 applicationContainer: sharedContainerURL,
                 userIdentifier: account.userIdentifier,
                 dispatchGroup: dispatchGroup,
                 migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
-                completion: { [weak self] provider in self?.createSession(for: account, with: provider, completion: completion) }
+                completion: { [weak self] provider in self?.createSession(for: account, with: provider) { session in
+                    session.registerForRemoteNotifications()
+                    completion(session)
+                }}
             )
         } else {
             createUnauthenticatedSession()
@@ -404,6 +441,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         dispatchGroup?.enter()
         LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
             self?.createSession(for: account, with: provider) { userSession in
+                userSession.registerForRemoteNotifications()
                 if let profileImageData = session.authenticationStatus.profileImageData {
                     self?.updateProfileImage(imageData: profileImageData)
                 }

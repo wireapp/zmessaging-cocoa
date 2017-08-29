@@ -71,8 +71,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic, readonly) NSURL *sharedContainerURL;
 
 - (void)notifyThirdPartyServices;
-- (void)start;
-- (void)refreshTokensIfNeeded;
 
 @end
 

@@ -278,6 +278,8 @@ ZM_EMPTY_ASSERTING_INIT()
                 [self.clientRegistrationStatus prepareForClientRegistration];
             }
         }];
+        
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
     return self;
 }
@@ -433,13 +435,7 @@ ZM_EMPTY_ASSERTING_INIT()
     NOT_USED(delegate);
 }
 
-- (void)start;
-{
-    [self refreshTokensIfNeeded];
-    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-}
-
-- (void)refreshTokensIfNeeded
+- (void)registerForRemoteNotifications
 {
     [self.managedObjectContext performGroupedBlock:^{
         // Refresh the Voip token if needed
@@ -450,7 +446,7 @@ ZM_EMPTY_ASSERTING_INIT()
         }
         
         // Request the current token, the rest is taken care of
-        [self.application registerForRemoteNotifications];
+        [self setupPushNotificationsForApplication:self.application];
     }];
 }
 
