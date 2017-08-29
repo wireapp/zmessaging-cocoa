@@ -327,7 +327,7 @@ internal func sendCallMessageHandler(token: UnsafeMutableRawPointer?,
                                      transient : Int32,
                                      contextRef: UnsafeMutableRawPointer?) -> Int32
 {
-    guard let token = token, let contextRef = contextRef, let conversationId = UUID(cString: conversationId), let userId = UUID(cString: destinationUserId), let clientId = String(cString: destinationClientId), let data = data else {
+    guard let token = token, let contextRef = contextRef, let conversationId = UUID(cString: conversationId), let userId = UUID(cString: senderUserId), let clientId = String(cString: senderClientId), let data = data else {
         return EINVAL // invalid argument
     }
     
