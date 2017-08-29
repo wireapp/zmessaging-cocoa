@@ -232,6 +232,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
         select(account: account) { [weak self] session in
             guard let `self` = self else { return }
+            self.updateCurrentAccount()
             session.application(self.application, didFinishLaunchingWithOptions: launchOptions)
             (launchOptions[.url] as? URL).apply(session.didLaunch)
         }
@@ -346,14 +347,14 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 // MARK: - TeamObserver
 
 extension SessionManager {
-    func updateCurrentAccount(with team: TeamType? = nil, userName: String? = nil) {
+    func updateCurrentAccount(with team: TeamType? = nil) {
         guard let session = userSession else { return }
         let selfUser = ZMUser.selfUser(in: session.syncManagedObjectContext)
         if let account = accountManager.accounts.first(where: { $0.userIdentifier == selfUser.remoteIdentifier }) {
             if let name = team?.name {
                 account.teamName = name
             }
-            if let userName = userName {
+            if let userName = selfUser.name {
                 account.userName = userName
             }
             if let userProfileImage = selfUser.imageSmallProfileData {
@@ -378,7 +379,7 @@ extension SessionManager: ZMUserObserver {
         guard let session = userSession else { return }
         if changeInfo.teamsChanged || changeInfo.nameChanged || changeInfo.imageSmallProfileDataChanged {
             let selfUser = ZMUser.selfUser(in: session.syncManagedObjectContext)
-            updateCurrentAccount(with: selfUser.membership?.team, userName: selfUser.name)
+            updateCurrentAccount(with: selfUser.membership?.team)
         }
     }
 }

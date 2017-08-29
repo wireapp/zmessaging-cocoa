@@ -233,7 +233,4 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssertNil(account.teamName)
         XCTAssertEqual(account.userName, selfUser.name)
     }
-
-
-
 }
