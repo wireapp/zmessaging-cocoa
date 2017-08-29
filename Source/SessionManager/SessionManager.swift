@@ -256,7 +256,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     fileprivate func select(account: Account?, completion: @escaping (ZMUserSession) -> Void) {
         guard let account = account else { return createUnauthenticatedSession() }
 
-        if nil != account.cookieStorage().authenticationCookieData {
+        if account.isAuthenticated {
             LocalStoreProvider.createStack(
                 applicationContainer: sharedContainerURL,
                 userIdentifier: account.userIdentifier,
