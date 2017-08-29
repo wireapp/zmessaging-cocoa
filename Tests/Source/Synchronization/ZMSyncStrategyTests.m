@@ -618,9 +618,7 @@
             [[self.mockUpstreamSync2 expect] addTrackedObjects:[NSSet setWithObject:conversation]];
             [self verifyMockLater:syncObject];
         }
-        if ([syncObject conformsToProtocol:@protocol(RequestStrategy)]) {
-            [[syncObject stub] nextRequest];
-        }
+        [[syncObject stub] nextRequest];
     }
     
     // when
