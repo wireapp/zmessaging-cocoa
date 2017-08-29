@@ -166,6 +166,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         ZMBackendEnvironment.setupEnvironments()
         let environment = ZMBackendEnvironment(userDefaults: .standard)
         let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
+        let flowManager = FlowManager(mediaManager: mediaManager)
 
         let serverNames = [environment.backendURL, environment.backendWSURL].flatMap{ $0.host }
         let reachability = ZMReachability(serverNames: serverNames, observer: nil, queue: .main, group: group)
@@ -175,6 +176,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             apnsEnvironment: nil,
             application: application,
             mediaManager: mediaManager,
+            flowManager: flowManager,
             environment: environment,
             reachability: reachability,
             analytics: analytics
@@ -272,8 +274,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         userSession?.closeAndDeleteCookie(false)
         userSession = nil
         
-        select(account: account) { (userSession) in
-            
+        select(account: account) { [weak self] (_) in
+            self?.accountManager.select(account)
         }
     }
     
@@ -294,7 +296,10 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
                 userIdentifier: account.userIdentifier,
                 dispatchGroup: dispatchGroup,
                 migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
-                completion: { [weak self] provider in self?.createSession(for: account, with: provider, completion: completion) }
+                completion: { [weak self] provider in self?.createSession(for: account, with: provider) { session in
+                    session.registerForRemoteNotifications()
+                    completion(session)
+                }}
             )
         } else {
             createUnauthenticatedSession()
@@ -379,6 +384,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         dispatchGroup?.enter()
         LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
             self?.createSession(for: account, with: provider) { userSession in
+                userSession.registerForRemoteNotifications()
                 if let profileImageData = session.authenticationStatus.profileImageData {
                     self?.updateProfileImage(imageData: profileImageData)
                 }

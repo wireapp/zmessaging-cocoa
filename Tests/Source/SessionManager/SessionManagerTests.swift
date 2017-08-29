@@ -84,6 +84,7 @@ class SessionManagerTests: IntegrationTest {
             apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
+            flowManager: FlowManagerMock(),
             transportSession: transportSession,
             environment: environment,
             reachability: reachability

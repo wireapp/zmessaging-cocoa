@@ -428,6 +428,7 @@ public struct CallEvent {
     var avsWrapper : AVSWrapperType!
     let uiMOC : NSManagedObjectContext
     let analytics: AnalyticsType?
+    let flowManager : FlowManagerType
     
     public var useAudioConstantBitRate: Bool = false {
         didSet {
@@ -439,10 +440,12 @@ public struct CallEvent {
         avsWrapper.close()
     }
     
-    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, analytics: AnalyticsType? = nil) {
+    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil) {
         self.selfUserId = userId
         self.uiMOC = uiMOC
+        self.flowManager = flowManager
         self.analytics = analytics
+        
         super.init()
         
         if WireCallCenterV3.activeInstance != nil {
@@ -584,6 +587,10 @@ public struct CallEvent {
     @objc(isVideoCallForConversationID:)
     public func isVideoCall(conversationId: UUID) -> Bool {
         return callSnapshots[conversationId]?.isVideo ?? false
+    }
+    
+    public func setVideoCaptureDevice(_ captureDevice: CaptureDevice, for conversationId: UUID) {
+        flowManager.setVideoCaptureDevice(captureDevice, for: conversationId)
     }
     
     /// nonIdleCalls maps all non idle conversations to their corresponding call state

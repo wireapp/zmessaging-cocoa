@@ -24,27 +24,18 @@
 
 @class ZMConversation;
 @class ZMUser;
-@class ZMOnDemandFlowManager;
+
+@protocol FlowManagerType;
 @protocol ZMApplication;
-
-typedef NS_ENUM(int16_t, ZMFlowManagerCategory) {
-    ZMFlowManagerCategoryIdle = 0,
-    ZMFlowManagerCategoryCallInProgress,
-};
-
-extern id ZMCallFlowRequestStrategyInternalFlowManagerOverride;
-extern id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
 
 @interface ZMCallFlowRequestStrategy : ZMAbstractRequestStrategy
 
 - (instancetype)initWithMediaManager:(id)mediaManager
-                 onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                         flowManager:(id<FlowManagerType>)flowManager
                 managedObjectContext:(NSManagedObjectContext *)managedObjectContext
                    applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                          application:(id<ZMApplication>)application;
 
-
-- (void)setSessionIdentifier:(NSString *)sessionID forConversationIdentifier:(NSUUID *)conversationID;
 - (void)appendLogForConversationID:(NSUUID *)conversationID message:(NSString *)message;
 - (void)tearDown;
 

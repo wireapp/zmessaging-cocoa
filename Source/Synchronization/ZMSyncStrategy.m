@@ -39,7 +39,6 @@
 #import "ZMCallFlowRequestStrategy.h"
 #import "WireSyncEngineLogs.h"
 #import "ZMClientRegistrationStatus.h"
-#import "ZMOnDemandFlowManager.h"
 #import "ZMHotFix.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
@@ -118,7 +117,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (instancetype)initWithStoreProvider:(id<LocalStoreProviderProtocol>)storeProvider
                         cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
                          mediaManager:(AVSMediaManager *)mediaManager
-                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                          flowManager:(id<FlowManagerType>)flowManager
                     syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
          localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
              taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
@@ -143,7 +142,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                                  application:application
                                                                                            syncStateDelegate:self];
         
-        [self createTranscodersWithLocalNotificationsDispatcher:localNotificationsDispatcher mediaManager:mediaManager onDemandFlowManager:onDemandFlowManager];
+        [self createTranscodersWithLocalNotificationsDispatcher:localNotificationsDispatcher mediaManager:mediaManager flowManager:flowManager];
         
         self.eventsBuffer = [[ZMUpdateEventsBuffer alloc] initWithUpdateEventConsumer:self];
         self.userClientRequestStrategy = [[UserClientRequestStrategy alloc] initWithClientRegistrationStatus:self.applicationStatusDirectory.clientRegistrationStatus
@@ -208,8 +207,8 @@ ZM_EMPTY_ASSERTING_INIT()
 }
 
 - (void)createTranscodersWithLocalNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-                                         mediaManager:(AVSMediaManager *)mediaManager
-                                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                                             mediaManager:(AVSMediaManager *)mediaManager
+                                              flowManager:(id<FlowManagerType>)flowManager
 {
     self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventMOC syncMOC:self.syncMOC];
     self.connectionTranscoder = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory syncStatus:self.applicationStatusDirectory.syncStatus];
@@ -220,8 +219,8 @@ ZM_EMPTY_ASSERTING_INIT()
     self.clientMessageTranscoder = [[ClientMessageTranscoder alloc] initIn:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher applicationStatus:self.applicationStatusDirectory];
     self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self previouslyReceivedEventIDsCollection:self.eventDecoder application:self.application backgroundAPNSPingbackStatus:self.applicationStatusDirectory.pingBackStatus syncStatus:self.applicationStatusDirectory.syncStatus];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory syncStatus:self.applicationStatusDirectory.syncStatus objectDirectory:self];
-    self.callFlowRequestStrategy = [[ZMCallFlowRequestStrategy alloc] initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager managedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory application:self.application];
-    self.callingRequestStrategy = [[CallingRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.applicationStatusDirectory.clientRegistrationStatus];
+    self.callFlowRequestStrategy = [[ZMCallFlowRequestStrategy alloc] initWithMediaManager:mediaManager flowManager:flowManager managedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory application:self.application];
+    self.callingRequestStrategy = [[CallingRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.applicationStatusDirectory.clientRegistrationStatus flowManager:flowManager];
     self.conversationStatusSync = [[ConversationStatusStrategy alloc] initWithManagedObjectContext:self.syncMOC];
     self.linkPreviewAssetDownloadRequestStrategy = [[LinkPreviewAssetDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory];
     self.linkPreviewAssetUploadRequestStrategy = [[LinkPreviewAssetUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory linkPreviewPreprocessor:nil previewImagePreprocessor:nil];
