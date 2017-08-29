@@ -75,6 +75,39 @@ class SearchTaskTests : MessagingTest {
         
     }
     
+    func testThatItReturnsNothingWhenSearchingForSelfUserByHandle() {
+        
+        // given
+        var selfUserID: UUID!
+        
+        // create self user remotely
+        mockTransportSession.performRemoteChanges { (remoteChanges) in
+            let selfUser = remoteChanges.insertSelfUser(withName: "albert")
+            selfUser.handle = "einstein"
+            selfUserID = UUID(uuidString: selfUser.identifier)!
+        }
+        
+        // update self user locally
+        mockUserSession.syncManagedObjectContext.performGroupedBlockAndWait {
+            ZMUser.selfUser(in: self.mockUserSession.managedObjectContext).remoteIdentifier = selfUserID
+            self.mockUserSession.syncManagedObjectContext.saveOrRollback()
+        }
+        
+        let remoteResultArrived = expectation(description: "received remote result")
+        let request = SearchRequest(query: "einstein", searchOptions: [.directory])
+        let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
+        
+        // expect
+        task.onResult { (result, _) in
+            remoteResultArrived.fulfill()
+            XCTAssertEqual(result.directory.count, 0)
+        }
+        
+        // when
+        task.performRemoteSearchForTeamUser()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
     // MARK: Contacts Search
 
     func testThatItFindsASingleUser() {
