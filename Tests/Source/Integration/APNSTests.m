@@ -128,7 +128,7 @@
 {
     XCTAssertTrue([self login]);
     [self.mockTransportSession resetReceivedRequests];
-
+    
     // given
     NSData *token = [NSData dataWithBytes:@"abc" length:3];
     NSData *newToken = [NSData dataWithBytes:@"def" length:6];
@@ -173,7 +173,7 @@
     
     // then
     XCTAssertTrue([self lastRequestsContainedTokenRequests], @"Did receive: %@", self.mockTransportSession.receivedRequests);
-    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 3u);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
 }
 
 - (void)testThatItReregistersPushTokensOnDemand
