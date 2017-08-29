@@ -114,9 +114,10 @@ extension IntegrationTest {
         sharedSearchDirectory?.tearDown()
         sharedSearchDirectory = nil
         userSession = nil
+        userSession?.tearDown()
         unauthenticatedSession?.tearDown()
         unauthenticatedSession = nil
-        mockTransportSession?.tearDown()
+        mockTransportSession?.cleanUp()
         mockTransportSession = nil
         sessionManager = nil
         selfUser = nil
@@ -145,7 +146,9 @@ extension IntegrationTest {
     
     @objc
     func destroySessionManager() {
+        userSession?.tearDown()
         userSession = nil
+        unauthenticatedSession?.tearDown()
         unauthenticatedSession = nil
         sessionManager = nil
         
@@ -460,7 +463,7 @@ extension IntegrationTest {
         
         return user!
     }
-    
+        
 }
 
 extension IntegrationTest {
