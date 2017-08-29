@@ -488,10 +488,6 @@ extension IntegrationTest : SessionManagerDelegate {
         
         userSession.syncManagedObjectContext.performGroupedBlock {
             userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
-
-            userSession.managedObjectContext.performGroupedBlock {
-                userSession.start()
-            }
         }
     }
     

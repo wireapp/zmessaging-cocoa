@@ -128,7 +128,7 @@
 {
     XCTAssertTrue([self login]);
     [self.mockTransportSession resetReceivedRequests];
-
+    
     // given
     NSData *token = [NSData dataWithBytes:@"abc" length:3];
     NSData *newToken = [NSData dataWithBytes:@"def" length:6];

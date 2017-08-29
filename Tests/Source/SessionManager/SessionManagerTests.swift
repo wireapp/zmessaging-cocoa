@@ -143,4 +143,94 @@ class SessionManagerTests: IntegrationTest {
         XCTAssertNotNil(delegate.userSession)
         XCTAssertNil(delegate.unauthenticatedSession)
     }
+    
+}
+
+class SessionManagerTests_Teams: IntegrationTest {
+    
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+    }
+    
+    func testThatItUpdatesAccountAfterLoginWithTeamName() {
+        // given
+        let teamName = "Wire"
+        self.mockTransportSession.performRemoteChanges { session in
+            _ = session.insertTeam(withName: teamName, isBound: true, users: [self.selfUser])
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        XCTAssert(login())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let manager = AccountManager(sharedDirectory: sharedContainer)
+        guard let account = manager.accounts.first, manager.accounts.count == 1 else { XCTFail("Should have one account"); return }
+        XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
+        XCTAssertEqual(account.teamName, teamName)
+    }
+    
+    func testThatItUpdatesAccountAfterTeamNameChanges() {
+        // given
+        var team: MockTeam!
+        self.mockTransportSession.performRemoteChanges { session in
+            team = session.insertTeam(withName: "Wire", isBound: true, users: [self.selfUser])
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        XCTAssert(login())
+        
+        let newTeamName = "Not Wire"
+        self.mockTransportSession.performRemoteChanges { session in
+            team.name = newTeamName
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let manager = AccountManager(sharedDirectory: sharedContainer)
+        guard let account = manager.accounts.first, manager.accounts.count == 1 else { XCTFail("Should have one account"); return }
+        XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
+        XCTAssertEqual(account.teamName, newTeamName)
+    }
+    
+    func testThatItUpdatesAccountWithUserDetailsAfterLogin() {
+        // when
+        XCTAssert(login())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let manager = AccountManager(sharedDirectory: sharedContainer)
+        guard let account = manager.accounts.first, manager.accounts.count == 1 else { XCTFail("Should have one account"); return }
+        XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
+        XCTAssertNil(account.teamName)
+        XCTAssertEqual(account.userName, self.selfUser.name)
+        let image = MockAsset(in: mockTransportSession.managedObjectContext, forID: selfUser.previewProfileAssetIdentifier!)
+
+        XCTAssertEqual(account.imageData, image?.data)
+    }
+    
+    func testThatItUpdatesAccountAfterUserNameChange() {
+        // when
+        XCTAssert(login())
+        
+        let newName = "BOB"
+        self.mockTransportSession.performRemoteChanges { session in
+            self.selfUser.name = newName
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let manager = AccountManager(sharedDirectory: sharedContainer)
+        guard let account = manager.accounts.first, manager.accounts.count == 1 else { XCTFail("Should have one account"); return }
+        XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
+        XCTAssertNil(account.teamName)
+        XCTAssertEqual(account.userName, selfUser.name)
+    }
 }

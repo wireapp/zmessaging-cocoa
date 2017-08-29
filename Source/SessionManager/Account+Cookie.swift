@@ -22,5 +22,10 @@ extension Account {
         let backendURL = ZMBackendEnvironment(userDefaults: .standard).backendURL.host!
         return ZMPersistentCookieStorage(forServerName: backendURL, userIdentifier: userIdentifier)
     }
+    
+    
+    public var isAuthenticated : Bool {
+        return cookieStorage().authenticationCookieData != nil
+    }
 
 }
