@@ -266,7 +266,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
         select(account: account) { [weak self] session in
             guard let `self` = self else { return }
-            self.updateCurrentAccount(in: session.syncManagedObjectContext)
+            self.updateCurrentAccount(in: session.managedObjectContext)
             session.application(self.application, didFinishLaunchingWithOptions: launchOptions)
             (launchOptions[.url] as? URL).apply(session.didLaunch)
         }
