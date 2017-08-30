@@ -90,6 +90,7 @@
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects1;
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects2;
 @property (nonatomic) id mockDispatcher;
+@property (nonatomic) FlowManagerMock *mockflowManager;
 @property (nonatomic) id syncStatusMock;
 @property (nonatomic) id operationStatusMock;
 @property (nonatomic) id applicationStatusDirectoryMock;
@@ -119,6 +120,7 @@
     self.userProfileImageUpdateStatus = [OCMockObject mockForClass:UserProfileImageUpdateStatus.class];
     (void)[(UserProfileImageUpdateStatus *)[[self.userProfileImageUpdateStatus stub] andReturn:nil] fetchRequestForTrackedObjects];
     [(UserProfileImageUpdateStatus *)[self.userProfileImageUpdateStatus stub] objectsDidChange:OCMOCK_ANY];
+    self.mockflowManager = [[FlowManagerMock alloc] init];
     
     self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
     [[[[self.applicationStatusDirectoryMock expect] andReturn: self.applicationStatusDirectoryMock] classMethod] alloc];
@@ -175,7 +177,7 @@
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
                                                cookieStorage:nil
                                                 mediaManager:nil
-                                         onDemandFlowManager:nil
+                                                 flowManager:self.mockflowManager
                                            syncStateDelegate:self.syncStateDelegate
                                 localNotificationsDispatcher:self.mockDispatcher
                                     taskCancellationProvider:nil
@@ -235,6 +237,7 @@
     self.connectionTranscoder = nil;
     
     [self.operationStatusMock tearDown];
+    self.mockflowManager = nil;
     [self.operationStatusMock stopMocking];
     self.operationStatusMock = nil;
     [self.syncStatusMock tearDown];

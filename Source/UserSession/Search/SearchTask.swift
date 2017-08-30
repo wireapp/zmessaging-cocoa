@@ -234,7 +234,7 @@ extension SearchTask {
                     return
                 }
                 
-                if let user = result.directory.first {
+                if let user = result.directory.first, !user.isSelfUser {
                     if let prevResult = self?.result {
                         // prepend result to prevResult only if it doesn't contain it
                         if !prevResult.directory.contains(user) {

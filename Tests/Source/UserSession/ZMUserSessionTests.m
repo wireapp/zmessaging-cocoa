@@ -85,7 +85,9 @@
     [[[userAgent expect] classMethod] setWireAppVersion:version];
 
     // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:self.mediaManager
+
+    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
+                                                             flowManager:self.flowManagerMock
                                                                analytics:nil
                                                         transportSession:transportSession
                                                          apnsEnvironment:nil
@@ -231,6 +233,7 @@
     // when
     ZMUserSession *userSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
                                                                     mediaManager:self.mediaManager
+                                                                     flowManager:self.flowManagerMock
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
@@ -472,6 +475,7 @@
     // when
     ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
                                                                     mediaManager:self.mediaManager
+                                                                     flowManager:self.flowManagerMock
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
@@ -1394,6 +1398,12 @@
 - (void)testThatLogCallbackIsNotTriggeredAfterUnsubscribe
 {
     // given
+    __block ZMConversation *conversation;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        [self.syncMOC saveOrRollback];
+    }];
+    
     NSString *testMessage = @"Sample AVS Log";
     id logObserver = [OCMockObject mockForProtocol:@protocol(ZMAVSLogObserver)];
     [[logObserver reject] logMessage:nil];
@@ -1402,7 +1412,7 @@
     [ZMUserSession removeAVSLogObserver:token];
     
     // when
-    [ZMCallFlowRequestStrategy logMessage:testMessage];
+    [ZMUserSession appendAVSLogMessageForConversation:conversation withMessage:testMessage];
     
     // then
     [logObserver verify];

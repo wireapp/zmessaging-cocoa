@@ -1790,7 +1790,7 @@
         window = nil;
     }
     conversation = nil;
-    self.receivedConversationWindowChangeNotifications = nil;
+    self.receivedConversationWindowChangeNotifications = [NSMutableArray array];
     [self recreateSessionManagerAndDeleteLocalData];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -1860,7 +1860,7 @@
     XCTAssertEqual(window.messages.count, 1u); // new message
     
     token = nil;
-    
+    window = nil;
     [self recreateSessionManagerAndDeleteLocalData];
     WaitForAllGroupsToBeEmpty(0.5);
     

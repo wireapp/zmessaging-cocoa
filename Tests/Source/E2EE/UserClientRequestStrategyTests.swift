@@ -86,7 +86,7 @@ extension UserClientRequestStrategyTests {
     
     func testThatItReturnsRequestForInsertedObject() {
         // given
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
         clientRegistrationStatus.mockPhase = .unregistered
         
@@ -107,7 +107,7 @@ extension UserClientRequestStrategyTests {
 
     func testThatItDoesNotReturnRequestIfThereIsNoInsertedObject() {
         // given
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
         
         // when
@@ -124,8 +124,8 @@ extension UserClientRequestStrategyTests {
     func testThatItStoresTheRemoteIdentifierWhenUpdatingAnInsertedObject() {
         
         // given
-        let client = createSelfClient(sut.managedObjectContext)
-        self.sut.managedObjectContext.saveOrRollback()
+        let client = createSelfClient(sut.managedObjectContext!)
+        self.sut.managedObjectContext!.saveOrRollback()
         
         let remoteIdentifier = "superRandomIdentifer"
         let payload = ["id" : remoteIdentifier]
@@ -149,7 +149,7 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .unregistered
 
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         let maxID_before = UInt16(client.preKeysRangeMax)
         XCTAssertEqual(maxID_before, 0)
         
@@ -174,7 +174,7 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .unregistered
         
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         XCTAssertNil(client.apsDecryptionKey)
         XCTAssertNil(client.apsVerificationKey)
         
@@ -196,7 +196,7 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .unregistered
 
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
         
         guard let request = self.sut.nextRequest() else { return XCTFail() }
@@ -220,7 +220,7 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .unregistered
 
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
         
         guard let request = self.sut.nextRequest() else { return XCTFail() }
@@ -247,10 +247,10 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .unregistered
 
-        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext!)
         selfUser.setValue("hello@example.com", forKey: #keyPath(ZMUser.emailAddress))
         
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
         
         guard let request = self.sut.nextRequest() else { return XCTFail() }
@@ -279,9 +279,9 @@ extension UserClientRequestStrategyTests {
         cookieStorage.authenticationCookieData = Data()
         clientRegistrationStatus.mockPhase = .unregistered
 
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
-        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext!)
         selfUser.remoteIdentifier = UUID.create()
         
 
@@ -315,9 +315,9 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .registered
 
-        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext)
+        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext!)
         client.remoteIdentifier = UUID.create().transportString()
-        self.sut.managedObjectContext.saveOrRollback()
+        self.sut.managedObjectContext!.saveOrRollback()
         
         client.numberOfKeysRemaining = Int32(self.sut.minNumberOfRemainingKeys - 1)
         client.setLocallyModifiedKeys(Set(arrayLiteral: ZMUserClientNumberOfKeysRemainingKey))
@@ -343,11 +343,11 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .registered
         
-        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext)
+        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext!)
 
         // when
         client.remoteIdentifier = nil
-        self.sut.managedObjectContext.saveOrRollback()
+        self.sut.managedObjectContext!.saveOrRollback()
         
         client.numberOfKeysRemaining = Int32(self.sut.minNumberOfRemainingKeys - 1)
         client.setLocallyModifiedKeys(Set(arrayLiteral: ZMUserClientNumberOfKeysRemainingKey))
@@ -359,9 +359,9 @@ extension UserClientRequestStrategyTests {
     
     func testThatItDoesNotReturnRequestIfNumberOfRemainingKeysIsAboveMinimum() {
         // given
-        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext)
+        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext!)
         client.remoteIdentifier = UUID.create().transportString()
-        self.sut.managedObjectContext.saveOrRollback()
+        self.sut.managedObjectContext!.saveOrRollback()
         
         client.numberOfKeysRemaining = Int32(self.sut.minNumberOfRemainingKeys)
         
@@ -377,9 +377,9 @@ extension UserClientRequestStrategyTests {
     
     func testThatItResetsNumberOfRemainingKeysAfterNewKeysUploaded() {
         // given
-        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext)
+        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext!)
         client.remoteIdentifier = UUID.create().transportString()
-        self.sut.managedObjectContext.saveOrRollback()
+        self.sut.managedObjectContext!.saveOrRollback()
         
         client.numberOfKeysRemaining = Int32(self.sut.minNumberOfRemainingKeys - 1)
         let expectedNumberOfKeys = client.numberOfKeysRemaining + Int32(sut.requestsFactory.keyCount)

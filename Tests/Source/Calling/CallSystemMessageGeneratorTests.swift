@@ -45,7 +45,7 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         clientID = "foo"
         
         sut = WireSyncEngine.CallSystemMessageGenerator()
-        mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUserID, clientId: clientID, uiMOC: uiMOC)
+        mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUserID, clientId: clientID, uiMOC: uiMOC, flowManager: FlowManagerMock())
     }
     
     override func tearDown() {
