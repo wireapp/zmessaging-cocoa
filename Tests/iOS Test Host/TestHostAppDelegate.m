@@ -18,7 +18,6 @@
 
 
 #import "TestHostAppDelegate.h"
-#import "WireSyncEngine_Test_Host-Swift.h"
 
 @implementation TestHostAppDelegate
 
@@ -29,7 +28,16 @@
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor redColor];
     [self.window makeKeyAndVisible];
-    UIViewController *vc = [[MemoryVC alloc] init];
+    UIViewController *vc = [[UIViewController alloc] init];
+    
+    UITextView *textView = [[UITextView alloc] init];
+    textView.text = @"This is the test host application for WireSyncEngine tests.";
+    [vc.view addSubview:textView];
+    textView.backgroundColor = [UIColor greenColor];
+    textView.textContainerInset = UIEdgeInsetsMake(22, 22, 22, 22);
+    textView.editable = NO;
+    textView.frame = CGRectInset(vc.view.frame, 22, 44);
+    
     self.window.rootViewController = vc;
     return YES;
 }
