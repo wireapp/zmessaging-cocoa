@@ -43,6 +43,7 @@ class SearchUserImageStrategyTests : MessagingTest {
     override func tearDown() {
         imagesCache.removeAllObjects()
         assetIDCache.removeAllObjects()
+        userIDsTable.clear()
         userIDsTable = nil
         sut = nil
         assetIDCache = nil

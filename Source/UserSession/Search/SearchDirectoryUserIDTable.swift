@@ -146,7 +146,7 @@ final public class SearchUserAndAsset: NSObject {
     }
 
     @objc public func clear() {
-        isolation.barrierAsync { [weak self] in
+        isolation.sync { [weak self] in
             self?.entries.removeAll()
         }
     }
