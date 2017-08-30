@@ -54,14 +54,6 @@
 {
     [self.sut tearDown];
     self.sut = nil;
-    [self.internalFlowManager stopMocking];
-    self.internalFlowManager = nil;
-    self.onDemandFlowManager = nil;
-    
-    [self.deploymentEnvironment stopMocking];
-    self.deploymentEnvironment = nil;
-    ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride = nil;
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
     self.flowManagerMock = nil;
     
     [super tearDown];

@@ -32,7 +32,8 @@ import avs
     public func boom(_ sender: Any?) {
         if self.session == nil {
             button.setTitle("Boon", for: .normal)
-            self.session = SessionManager(
+
+            SessionManager.create(
                 appVersion: "0.0.0",
                 mediaManager: AVSMediaManager.default(),
                 analytics: nil,
@@ -40,7 +41,9 @@ import avs
                 application: UIApplication.shared,
                 launchOptions: [:],
                 blacklistDownloadInterval : 40000
-            )
+            ) { session in
+                self.session = session
+            }
         } else {
             self.session = nil
             button.setTitle("Start", for: .normal)

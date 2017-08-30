@@ -63,8 +63,6 @@
 {
     [super setUp];
     
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = [[MockFlowManager alloc] init];
-    
     WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3Mock.self;
     
     self.thirdPartyServices = [[ThirdPartyServices alloc] init];
@@ -135,7 +133,6 @@
 
 - (void)tearDown
 {
-    ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil;
     [self.clientRegistrationStatus tearDown];
     self.clientRegistrationStatus = nil;
     self.proxiedRequestStatus = nil;

@@ -21,10 +21,6 @@ import XCTest
 
 
 final class TestUnauthenticatedTransportSession: UnauthenticatedTransportSessionProtocol {
-    func tearDown() {
-        
-    }
-
 
     public var cookieStorage = ZMPersistentCookieStorage()
     var nextEnqueueResult: EnqueueResult = .nilRequest
