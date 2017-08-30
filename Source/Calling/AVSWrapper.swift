@@ -139,7 +139,11 @@ public class AVSWrapper : AVSWrapperType {
     }
     
     public func update(callConfig: String?, httpStatusCode: Int) {
-        wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig)
+        if let callConfig = callConfig {
+            wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig)
+        } else {
+            wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, nil)
+        }
     }
     
     public func toggleVideo(conversationID: UUID, active: Bool) {

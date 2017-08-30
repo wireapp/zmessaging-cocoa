@@ -25,14 +25,10 @@
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMUserSessionAuthenticationNotification.h"
 
-static NSString * const DefaultMediaType = @"application/json";
-id ZMCallFlowRequestStrategyInternalDeploymentEnvironmentOverride;
-
 static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 @interface ZMCallFlowRequestStrategy ()
 
-@property (nonatomic, readonly) NSMutableArray *requestStack; ///< inverted FIFO
 @property (nonatomic) id<FlowManagerType> flowManager;
 @property (nonatomic, readonly) id mediaManager;
 @property (nonatomic) NSNotificationQueue *voiceGainNotificationQueue;
@@ -58,7 +54,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     if(self != nil) {
         _uiManagedObjectContext = managedObjectContext.zm_userInterfaceContext;
         _mediaManager = mediaManager;
-        _requestStack = [NSMutableArray array];
         _application = application;
 
         self.voiceGainNotificationQueue = [[NSNotificationQueue alloc] initWithNotificationCenter:[NSNotificationCenter defaultCenter]];
@@ -86,36 +81,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     [self.application unregisterObserverForStateChange:self];
 }
 
-- (ZMTransportRequest *)nextRequestIfAllowed
-{
-    if (!self.pushChannelIsOpen && ![ZMUserSession useCallKit] && ![self nextRequestIsCallsConfig]) {
-        return nil;
-    }
-    
-    id firstRequest = [self.requestStack lastObject];
-    [firstRequest setDebugInformationTranscoder:self];
-    [firstRequest forceToVoipSession];
-    [self.requestStack removeLastObject];
-    
-    return firstRequest;
-}
-
-- (BOOL)nextRequestIsCallsConfig
-{
-    ZMTransportRequest *request = self.requestStack.lastObject;
-    return [request.path isEqualToString:@"/calls/config"];
-}
-
-- (void)requestCompletedWithResponse:(ZMTransportResponse *)response forContext:(void const*)context
-{
-    NSData *contentData = nil;
-    if (response.payload != nil) {
-        contentData = [NSJSONSerialization dataWithJSONObject:response.payload options:0 error:nil];
-    }
-    
-    [self.flowManager reportCallConfig:contentData httpStatus:response.HTTPStatus context:context];
-}
-
 - (void)appendLogForConversationID:(NSUUID *)conversationID message:(NSString *)message;
 {
     dispatch_async(self.avsLogQueue, ^{
@@ -125,38 +90,17 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 - (void)pushChannelDidChange:(NSNotification *)note
 {
-    const BOOL oldValue = self.pushChannelIsOpen;
     BOOL newValue = [note.userInfo[ZMPushChannelIsOpenKey] boolValue];
     self.pushChannelIsOpen = newValue;
     
-    if(self.pushChannelIsOpen) {
+    if (self.pushChannelIsOpen) {
         [self.flowManager reportNetworkChanged];
-    }
-    
-    if (!oldValue && newValue && self.requestStack.count > 0) {
-        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
 }
 
 @end
 
 @implementation ZMCallFlowRequestStrategy (FlowManagerDelegate)
-
-- (void)flowManagerDidRequestCallConfigWithContext:(const void *)context
-{
-    [self.managedObjectContext performGroupedBlock:^{
-        ZMTransportRequest *request = [[ZMTransportRequest alloc] initWithPath:@"/calls/config" method:ZMMethodGET binaryData:NULL type:@"application/json" contentDisposition:nil shouldCompress:YES];
-        ZM_WEAK(self);
-        
-        [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.managedObjectContext block:^(ZMTransportResponse *response) {
-            ZM_STRONG(self);
-            [self requestCompletedWithResponse:response forContext:context];
-        }]];
-        
-        [self.requestStack insertObject:request atIndex:0];
-        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-    }];
-}
 
 - (void)flowManagerDidUpdateVolume:(double)volume for:(NSString *)participantId in:(NSUUID *)conversationId
 {

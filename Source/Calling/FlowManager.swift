@@ -22,7 +22,6 @@ import avs
 @objc
 public protocol FlowManagerDelegate : class {
     
-    func flowManagerDidRequestCallConfig(context: UnsafeRawPointer)
     func flowManagerDidUpdateVolume(_ volume: Double, for participantId: String, in conversationId : UUID)
     
 }
@@ -32,8 +31,6 @@ public protocol FlowManagerType {
     
     var delegate : FlowManagerDelegate? { get set }
     
-    @objc(reportCallConfig:httpStatus:context:)
-    func report(callConfig: Data?, httpStatus: Int, context : UnsafeRawPointer)
     func setVideoCaptureDevice(_ device : CaptureDevice, for conversationId: UUID)
     func reportNetworkChanged()
     func appendLog(for conversationId : UUID, message : String)
@@ -57,12 +54,7 @@ public class FlowManager : NSObject, FlowManagerType {
         
         self.mediaManager = mediaManager
     }
-    
-    @objc(reportCallConfig:httpStatus:context:)
-    public func report(callConfig: Data?, httpStatus: Int, context : UnsafeRawPointer) {
-        avsFlowManager?.processResponse(withStatus: Int32(httpStatus), reason: "", mediaType: "application/json", content: callConfig, context: context)
-    }
-    
+        
     public func reportNetworkChanged() {
         avsFlowManager?.networkChanged()
     }
@@ -85,12 +77,7 @@ extension FlowManager : AVSFlowManagerDelegate {
     }
     
     public func request(withPath path: String!, method: String!, mediaType mtype: String!, content: Data!, context ctx: UnsafeRawPointer!) -> Bool {
-        if let delegate = delegate {
-            delegate.flowManagerDidRequestCallConfig(context: ctx)
-            return true
-        } else {
-            return false
-        }
+        return false
     }
     
     public func didEstablishMedia(inConversation convid: String!) {

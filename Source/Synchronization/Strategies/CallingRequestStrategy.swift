@@ -168,8 +168,8 @@ extension CallingRequestStrategy : WireCallCenterTransport {
             self.callConfigRequest?.add(ZMCompletionHandler(on: self.managedObjectContext.zm_userInterface, block: { (response) in
                 
                 var payloadAsString : String? = nil
-                if let transportData = response.rawData {
-                    payloadAsString = String(data: transportData, encoding: .utf8)
+                if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
+                    payloadAsString = String(data: data, encoding: .utf8)
                 }
                 
                 completionHandler(payloadAsString, response.httpStatus)
