@@ -393,7 +393,7 @@ extension SessionManager {
             if let userName = selfUser.name {
                 account.userName = userName
             }
-            if let userProfileImage = selfUser.imageSmallProfileData {
+            if let userProfileImage = selfUser.imageSmallProfileData, team == nil {
                 account.imageData = userProfileImage
             }
             accountManager.add(account)

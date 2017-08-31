@@ -165,12 +165,15 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssert(login())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
+        let _ = MockAsset(in: mockTransportSession.managedObjectContext, forID: selfUser.previewProfileAssetIdentifier!)
+        
         // then
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
         let manager = AccountManager(sharedDirectory: sharedContainer)
         guard let account = manager.accounts.first, manager.accounts.count == 1 else { XCTFail("Should have one account"); return }
         XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
         XCTAssertEqual(account.teamName, teamName)
+        XCTAssertNil(account.imageData)
     }
     
     func testThatItUpdatesAccountAfterTeamNameChanges() {
