@@ -56,8 +56,6 @@ NSString * const ZMFlowManagerDidBecomeAvailableNotification = @"ZMFlowManagerDi
 
 static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-client/id930944768?ls=1&mt=8";
 
-static NSString *ZMLogTag = @"Push";
-
 
 @interface ZMUserSession ()
 @property (nonatomic) ZMOperationLoop *operationLoop;
@@ -439,11 +437,6 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)registerForRemoteNotifications
 {
-#if TARGET_OS_SIMULATOR
-    ZMLogInfo(@"Skipping remote notification registration for simulator.");
-    return;
-    
-#else
     [self.managedObjectContext performGroupedBlock:^{
         // Refresh the Voip token if needed
         NSData *actualToken = self.pushRegistrant.pushToken;
@@ -455,7 +448,6 @@ ZM_EMPTY_ASSERTING_INIT()
         // Request the current token, the rest is taken care of
         [self setupPushNotificationsForApplication:self.application];
     }];
-#endif
 }
 
 - (void)resetPushTokens
