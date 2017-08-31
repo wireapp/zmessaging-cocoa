@@ -294,7 +294,9 @@ ZM_EMPTY_ASSERTING_INIT()
     self.systemMessageEventConsumer = nil;
     self.allChangeTrackers = nil;
     self.eventDecoder = nil;
-    [self.eventMOC tearDownEventMOC];
+    [self.eventMOC performGroupedBlockAndWait:^{
+        [self.eventMOC tearDownEventMOC];
+    }];
     self.eventMOC = nil;
     [self.application unregisterObserverForStateChange:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
