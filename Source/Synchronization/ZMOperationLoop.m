@@ -159,7 +159,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     RequireString([NSOperationQueue mainQueue] == [NSOperationQueue currentQueue],
                   "Must call be called on the main queue.");
     __block BOOL didStop = NO;
-    [self.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_main_queue() block:^{
+    [self.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0) block:^{
         didStop = YES;
     }];
     while (!didStop) {

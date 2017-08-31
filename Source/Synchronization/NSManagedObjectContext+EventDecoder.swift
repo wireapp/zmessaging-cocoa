@@ -54,7 +54,6 @@ extension NSManagedObjectContext {
     }
 
     public func tearDownEventMOC() {
-        precondition(isEventMOC, "Invalid operation: tearDownEventMOC called on context not marked as event MOC")
         if let store = persistentStoreCoordinator?.persistentStores.first {
             try! persistentStoreCoordinator?.remove(store)
         }
