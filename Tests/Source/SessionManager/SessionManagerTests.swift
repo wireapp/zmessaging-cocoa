@@ -233,4 +233,23 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssertNil(account.teamName)
         XCTAssertEqual(account.userName, selfUser.name)
     }
+    
+    func testThatItDeletesTheAccountFolder() throws {
+        // given
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        
+        let manager = AccountManager(sharedDirectory: sharedContainer)
+        let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
+        manager.add(account)
+        
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        
+        try FileManager.default.createDirectory(at: accountFolder, withIntermediateDirectories: true, attributes: nil)
+        
+        // when
+        self.sessionManager!.delete(account: account)
+        
+        // then
+        XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
+    }
 }
