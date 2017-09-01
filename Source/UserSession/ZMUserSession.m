@@ -518,7 +518,8 @@ ZM_EMPTY_ASSERTING_INIT()
 
     
     [self.managedObjectContext performGroupedBlock:^{
-        [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials userInfo:nil]];
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+        [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionAccessTokenExpired userInfo:selfUser.credentialsUserInfo]];
     }];
 }
 

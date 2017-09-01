@@ -94,7 +94,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
 
     // MARK: - Team Delete 
 
-    func testThatItDeletesAnExistingTeamWhenReceivingATeamDeleteUpdateEvent() {
+    func testThatRequestAccountDeletionWhenReceivingATeamDeleteUpdateEvent() {
         // given
         let teamId = UUID.create()
 
@@ -112,15 +112,25 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             "time": Date().transportString(),
             "data": NSNull()
         ]
+        
+        // expect
+        let accountDeletedExpectation = expectation(description: "Account was deleted")
+        var token : ZMAuthenticationObserverToken? = ZMUserSessionAuthenticationNotification.addObserver(on: uiMOC) { (note) in
+            if let error = note.error as NSError?, error.userSessionErrorCode == ZMUserSessionErrorCode.accountDeleted {
+                accountDeletedExpectation.fulfill()
+            }
+        }
+        XCTAssertNotNil(token)
 
         // when
         processEvent(fromPayload: payload)
 
         // then
-        XCTAssertNil(Team.fetch(withRemoteIdentifier: teamId, in: uiMOC))
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        token = nil
     }
 
-    func testThatItDeltesATeamsConversationsWhenReceivingATeamDeleteUpdateEvent() {
+    func testThatItRequestAccountDeletionWhenReceivingATeamDeleteUpdateEvent() {
         // given
         let conversationId = UUID.create()
         let teamId = UUID.create()
@@ -142,13 +152,22 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             "time": Date().transportString(),
             "data": NSNull()
         ]
-
+        
+        let accountDeletedExpectation = expectation(description: "Account was deleted")
+        var token : ZMAuthenticationObserverToken? = ZMUserSessionAuthenticationNotification.addObserver(on: uiMOC) { (note) in
+            if let error = note.error as NSError?, error.userSessionErrorCode == ZMUserSessionErrorCode.accountDeleted {
+                accountDeletedExpectation.fulfill()
+            }
+        }
+        XCTAssertNotNil(token)
+        
+    
         // when
         processEvent(fromPayload: payload)
 
         // then
-        XCTAssertNil(Team.fetch(withRemoteIdentifier: teamId, in: uiMOC))
-        XCTAssertNil(ZMConversation.fetch(withRemoteIdentifier: conversationId, in: uiMOC))
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        token = nil
     }
 
     // MARK: - Team Update
@@ -434,7 +453,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         }
     }
 
-    func testThatItDeletesTheSelfMemberWhenReceivingATeamMemberLeaveUpdateEventForSelfUser() {
+    func testThatItRequestAccountDeletionWhenReceivingATeamMemberLeaveUpdateEventForSelfUser() {
         let teamId = UUID.create()
         var userId: UUID!
 
@@ -448,6 +467,15 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             XCTAssertNotNil(member)
             XCTAssertEqual(user.membership, member)
         }
+        
+        // expect
+        let accountDeletedExpectation = expectation(description: "Account was deleted")
+        var token : ZMAuthenticationObserverToken? = ZMUserSessionAuthenticationNotification.addObserver(on: uiMOC) { (note) in
+            if let error = note.error as NSError?, error.userSessionErrorCode == ZMUserSessionErrorCode.accountDeleted {
+                accountDeletedExpectation.fulfill()
+            }
+        }
+        XCTAssertNotNil(token)
 
         // when
         let payload: [String: Any] = [
@@ -459,10 +487,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         processEvent(fromPayload: payload)
 
         // then
-        syncMOC.performGroupedBlockAndWait {
-            XCTAssertNotNil(ZMUser.fetch(withRemoteIdentifier: userId, in: self.syncMOC))
-            XCTAssertNil(Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC))
-        }
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        token = nil
     }
 
     func testThatItRemovesAMemberFromAllTeamConversationsSheWasPartOfWhenReceivingAMemberLeaveForThatMember() {

@@ -78,11 +78,13 @@ static NSString *const UserSessionAuthenticationNotificationName =  @"ZMUserSess
     [[NSNotificationCenter defaultCenter] postNotification:note];
 }
 
-+ (id<ZMAuthenticationObserverToken>)addObserverWithBlock:(void (^)(ZMUserSessionAuthenticationNotification *))block
++ (id<ZMAuthenticationObserverToken>)addObserverOnGroupQueue:(id<ZMSGroupQueue>)groupQueue block:(void (^)(ZMUserSessionAuthenticationNotification *))block
 {
     NSCParameterAssert(block);
-    return (id<ZMAuthenticationObserverToken>)[[NSNotificationCenter defaultCenter] addObserverForName:UserSessionAuthenticationNotificationName object:nil queue:[NSOperationQueue currentQueue] usingBlock:^(NSNotification *note) {
-        block((ZMUserSessionAuthenticationNotification *)note);
+    return (id<ZMAuthenticationObserverToken>)[[NSNotificationCenter defaultCenter] addObserverForName:UserSessionAuthenticationNotificationName object:nil queue:nil usingBlock:^(NSNotification *note) {
+        [groupQueue performGroupedBlock:^{
+            block((ZMUserSessionAuthenticationNotification *)note);
+        }];
     }];
 }
 

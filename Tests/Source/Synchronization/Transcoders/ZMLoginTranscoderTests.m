@@ -146,7 +146,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 {
     //expect
     __block BOOL notified = NO;
-    id<ZMAuthenticationObserverToken> token = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note) {
+    id<ZMAuthenticationObserverToken> token = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
         XCTAssertNotNil(note.error);
         XCTAssertEqual((ZMUserSessionErrorCode)note.error.code, code);
         notified = YES;
@@ -154,6 +154,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     block();
+    WaitForAllGroupsToBeEmpty(0.5);
     
     //then
     XCTAssert(notified);

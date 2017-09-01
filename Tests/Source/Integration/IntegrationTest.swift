@@ -504,8 +504,21 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
 
-    public func sessionManagerDidLogout() {
-        // no-op
+    public func sessionManagerDidLogout(error: Error?) {
+        guard let error = error as NSError? else { return }
+        
+        guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)) else {
+            return
+        }
+        
+        switch userSessionErrorCode {
+        case .accountDeleted,
+             .clientDeletedRemotely,
+             .accessTokenExpired:
+            self.userSession = nil
+        default:
+            break
+        }
     }
 
     public func sessionManagerDidBlacklistCurrentVersion() {
