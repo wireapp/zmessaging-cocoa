@@ -62,6 +62,8 @@ final class TestAuthenticationObserver: NSObject, ZMAuthenticationObserver {
 final class MockUnauthenticatedSessionDelegate: NSObject, UnauthenticatedSessionDelegate {
 
     var createdAccounts = [Account]()
+    var didUpdateCredentials : Bool = false
+    var willAcceptUpdatedCredentials = false
 
     func session(session: UnauthenticatedSession, createdAccount account: Account) {
         createdAccounts.append(account)
@@ -71,8 +73,9 @@ final class MockUnauthenticatedSessionDelegate: NSObject, UnauthenticatedSession
         // no-op
     }
 
-    func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) {
-        // no-op
+    func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) -> Bool {
+        didUpdateCredentials = true
+        return willAcceptUpdatedCredentials
     }
 
 }
@@ -100,6 +103,18 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         mockDelegate = nil
         reachability = nil
         super.tearDown()
+    }
+    
+    func testThatTriesToUpdateCredentials() {
+        // given
+        let emailCredentials = ZMEmailCredentials(email: "hello@email.com", password: "123456")
+        mockDelegate.willAcceptUpdatedCredentials = true
+        
+        // when
+        sut.login(with: emailCredentials)
+        
+        // then
+        XCTAssertTrue(mockDelegate.didUpdateCredentials)
     }
     
     func testThatDuringLoginItThrowsErrorWhenNoCredentials() {

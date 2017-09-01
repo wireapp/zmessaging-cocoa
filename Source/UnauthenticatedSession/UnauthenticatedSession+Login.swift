@@ -29,17 +29,15 @@ extension ZMCredentials {
 }
 
 extension UnauthenticatedSession {
-    
-    var isLoggedIn: Bool {
-        return authenticationStatus.currentPhase == .authenticated
-    }
-    
+        
     /// Attempt to log in with the given credentials
     @objc(loginWithCredentials:)
     public func login(with credentials: ZMCredentials) {
-        if self.isLoggedIn {
-            delegate?.session(session: self, updatedCredentials: credentials)
-        } else if credentials.isInvalid {
+        let updatedCredentialsInUserSession = delegate?.session(session: self, updatedCredentials: credentials) ?? false
+        
+        guard !updatedCredentialsInUserSession else { return }
+        
+        if credentials.isInvalid {
             ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
         } else if !self.reachability.mayBeReachable {
             ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.networkError, userInfo:nil))
