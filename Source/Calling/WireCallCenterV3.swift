@@ -307,7 +307,7 @@ internal func requestCallConfigHandler(handle : UnsafeMutableRawPointer?, contex
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
-    callCenter.uiMOC.performGroupedBlock {
+    callCenter.uiMOC?.performGroupedBlock {
         callCenter.requestCallConfig()
     }
     

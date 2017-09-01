@@ -82,6 +82,11 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     [self.application unregisterObserverForStateChange:self];
 }
 
+- (ZMTransportRequest *)nextRequestIfAllowed
+{
+    return nil;
+}
+
 - (void)appendLogForConversationID:(NSUUID *)conversationID message:(NSString *)message;
 {
     dispatch_async(self.avsLogQueue, ^{

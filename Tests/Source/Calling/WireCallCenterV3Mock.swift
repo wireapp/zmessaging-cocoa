@@ -29,6 +29,7 @@ public class MockAVSWrapper : AVSWrapperType {
     public var didCallClose = false
     public var answerCallShouldFail : Bool = false
     public var startCallShouldFail : Bool = false
+    public var didUpdateCallConfig = false
 
     public var hasOngoingCall: Bool = false
     public var mockMembers : [CallMember] = []
@@ -48,16 +49,16 @@ public class MockAVSWrapper : AVSWrapperType {
         return !startCallShouldFail
     }
     
-    public func answerCall(conversationId: UUID, isGroup: Bool) -> Bool {
+    public func answerCall(conversationId: UUID) -> Bool {
         didCallAnswerCall = true
         return !answerCallShouldFail
     }
     
-    public func endCall(conversationId: UUID, isGroup: Bool) {
+    public func endCall(conversationId: UUID) {
         didCallEndCall = true
     }
     
-    public func rejectCall(conversationId: UUID, isGroup: Bool) {
+    public func rejectCall(conversationId: UUID) {
         didCallRejectCall = true
     }
     
@@ -83,6 +84,10 @@ public class MockAVSWrapper : AVSWrapperType {
     
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
         // do nothing
+    }
+    
+    public func update(callConfig: String?, httpStatusCode: Int) {
+        didUpdateCallConfig = true
     }
 }
 

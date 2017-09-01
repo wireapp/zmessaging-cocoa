@@ -44,4 +44,56 @@ class CallingRequestStrategyTests : MessagingTest {
         XCTAssertTrue(trackers.first is CallingRequestStrategy)
         XCTAssertTrue(trackers.last is GenericMessageRequestStrategy)
     }
+    
+    func testThatItGenerateCallConfigRequestAndCallsTheCompletionHandler() {
+        
+        // given
+        let expectedCallConfig = "{\"config\":true}"
+        let receivedCallConfigExpectation = expectation(description: "Received CallConfig")
+        
+        sut.requestCallConfig { (callConfig, httpStatusCode) in
+            if callConfig == expectedCallConfig, httpStatusCode == 200 {
+                receivedCallConfigExpectation.fulfill()
+            }
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        let request = sut.nextRequest()
+        XCTAssertEqual(request?.path, "/calls/config")
+        
+        // when
+        let payload = [ "config" : true ]
+        request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
+        
+        // then
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
+    func testThatItGeneratesOnlyOneCallConfigRequest() {
+        
+        // given
+        sut.requestCallConfig { (_, _) in}
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        let request = sut.nextRequest()
+        XCTAssertNotNil(request)
+        
+        // then
+        let secondRequest = sut.nextRequest()
+        XCTAssertNil(secondRequest)
+    }
+    
+    func testThatItGeneratesCompressedCallConfigRequest() {
+        
+        // given
+        sut.requestCallConfig { (_, _) in}
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        guard let request = sut.nextRequest() else { return XCTFail() }
+        
+        // then
+        XCTAssertTrue(request.shouldCompress)
+    }
 }
