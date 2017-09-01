@@ -30,10 +30,10 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 @interface ZMCallFlowRequestStrategy ()
 
 @property (nonatomic) id<FlowManagerType> flowManager;
-@property (nonatomic, readonly) id mediaManager;
+@property (nonatomic, readonly, weak) id mediaManager;
 @property (nonatomic) NSNotificationQueue *voiceGainNotificationQueue;
 @property (nonatomic) BOOL pushChannelIsOpen;
-@property (nonatomic, readonly) NSManagedObjectContext *uiManagedObjectContext;
+@property (nonatomic, readonly, weak) NSManagedObjectContext *uiManagedObjectContext;
 @property (nonatomic, strong) dispatch_queue_t avsLogQueue;
 @property (nonatomic, readonly, weak) id<ZMApplication> application;
 
@@ -77,6 +77,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
 - (void)tearDown;
 {
+    self.flowManager = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.application unregisterObserverForStateChange:self];
 }

@@ -45,6 +45,14 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
         }
     }
     
+    override func tearDown() {
+        sut.tearDown()
+        sut = nil
+        sender = nil
+        conversation = nil
+        super.tearDown()
+    }
+    
     func testThatMissedCallCreatesCallingNotification() {
         // when
         sut.processMissedCall(in: conversation, sender: sender)

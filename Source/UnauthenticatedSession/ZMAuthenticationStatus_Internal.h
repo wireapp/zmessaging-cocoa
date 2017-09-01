@@ -37,7 +37,7 @@
 @property (nonatomic) BOOL isWaitingForLogin;
 @property (nonatomic) BOOL canClearCredentials;
 
-@property (nonatomic) id<ZMSGroupQueue> groupQueue;
+@property (nonatomic, weak) id<ZMSGroupQueue> groupQueue;
 @property (nonatomic) ZMTimer *loginTimer;
 
 - (void)resetLoginAndRegistrationStatus;

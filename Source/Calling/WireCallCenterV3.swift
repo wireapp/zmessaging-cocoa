@@ -217,7 +217,7 @@ internal func incomingCallHandler(conversationId: UnsafePointer<Int8>?, messageT
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
-    callCenter.uiMOC.performGroupedBlock {
+    callCenter.uiMOC?.performGroupedBlock {
         callCenter.handleCallState(callState: .incoming(video: isVideoCall != 0, shouldRing: shouldRing != 0), conversationId: convID, userId: userID, messageTime: Date(timeIntervalSince1970: TimeInterval(messageTime)))
     }
 }
@@ -229,7 +229,7 @@ internal func missedCallHandler(conversationId: UnsafePointer<Int8>?, messageTim
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
-    callCenter.uiMOC.performGroupedBlock {
+    callCenter.uiMOC?.performGroupedBlock {
         callCenter.missed(conversationId: convID,
                           userId: userID,
                           timestamp: Date(timeIntervalSince1970: TimeInterval(messageTime)),
@@ -243,7 +243,7 @@ internal func answeredCallHandler(conversationId: UnsafePointer<Int8>?, contextR
     guard let contextRef = contextRef, let convID = UUID(cString: conversationId) else { return }
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
-    callCenter.uiMOC.performGroupedBlock {
+    callCenter.uiMOC?.performGroupedBlock {
         callCenter.handleCallState(callState: .answered, conversationId: convID, userId: nil)
     }
 }
@@ -255,7 +255,7 @@ internal func dataChannelEstablishedHandler(conversationId: UnsafePointer<Int8>?
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
-    callCenter.uiMOC.performGroupedBlock {
+    callCenter.uiMOC?.performGroupedBlock {
         callCenter.handleCallState(callState: .establishedDataChannel, conversationId: convID, userId: userID)
     }
 }
@@ -268,7 +268,7 @@ internal func establishedCallHandler(conversationId: UnsafePointer<Int8>?, userI
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
-    callCenter.uiMOC.performGroupedBlock {
+    callCenter.uiMOC?.performGroupedBlock {
         callCenter.handleCallState(callState: .established, conversationId: convID, userId: userID)
     }
 }
@@ -283,7 +283,7 @@ internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8
     let userID = UUID(cString: userId)
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-    callCenter.uiMOC.performGroupedBlock {
+    callCenter.uiMOC?.performGroupedBlock {
         let time = (messageTime == 0) ? nil : Date(timeIntervalSince1970: TimeInterval(messageTime))
         callCenter.handleCallState(callState: .terminating(reason: CallClosedReason(reason: reason)), conversationId: convID, userId: userID, messageTime: time)
     }
@@ -335,7 +335,7 @@ internal func sendCallMessageHandler(token: UnsafeMutableRawPointer?,
     let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
     let transformedData = Data(buffer: bytes)
 
-    callCenter.uiMOC.performGroupedBlock {
+    callCenter.uiMOC?.performGroupedBlock {
         callCenter.send(token: token,
                         conversationId: conversationId,
                         userId: userId,
@@ -356,7 +356,7 @@ internal func readyHandler(version: Int32, contextRef: UnsafeMutableRawPointer?)
     if let callingProtocol = CallingProtocol(rawValue: Int(version)) {
         let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
         
-        callCenter.uiMOC.performGroupedBlock {
+        callCenter.uiMOC?.performGroupedBlock {
             callCenter.callingProtocol = callingProtocol
             callCenter.isReady = true
         }
@@ -373,7 +373,7 @@ internal func groupMemberHandler(conversationIdRef: UnsafePointer<Int8>?, contex
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     let members = callCenter.avsWrapper.members(in: convID)
-    callCenter.uiMOC.performGroupedBlock {
+    callCenter.uiMOC?.performGroupedBlock {
         callCenter.callParticipantsChanged(conversationId: convID, participants: members)
     }
 }
@@ -449,7 +449,7 @@ public struct CallEvent {
     }
     
     var avsWrapper : AVSWrapperType!
-    let uiMOC : NSManagedObjectContext
+    weak var uiMOC : NSManagedObjectContext?
     let analytics: AnalyticsType?
     let flowManager : FlowManagerType
     

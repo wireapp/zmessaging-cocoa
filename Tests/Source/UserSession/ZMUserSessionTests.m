@@ -47,8 +47,8 @@
 
 - (void)tearDown
 {
-    [super tearDown];
     self.lastReceivedNotification = nil;
+    [super tearDown];
 }
 
 - (void)didReceiveNotification:(NSNotification *)notification
@@ -85,12 +85,13 @@
     [[[userAgent expect] classMethod] setWireAppVersion:version];
 
     // when
+
     ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
                                                              flowManager:self.flowManagerMock
                                                                analytics:nil
                                                         transportSession:transportSession
                                                          apnsEnvironment:nil
-                                                             application:UIApplication.sharedApplication
+                                                             application:self.application
                                                               appVersion:version
                                                            storeProvider:self.storeProvider];
     XCTAssertNotNil(session);

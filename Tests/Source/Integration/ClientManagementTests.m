@@ -88,6 +88,7 @@
 {
     [self.userSession removeClientUpdateObserver:self.token];
     self.observer = nil;
+    self.token = nil;
     [super tearDown];
 }
 

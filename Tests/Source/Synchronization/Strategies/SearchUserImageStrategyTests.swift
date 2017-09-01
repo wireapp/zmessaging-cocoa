@@ -26,12 +26,14 @@ class SearchUserImageStrategyTests : MessagingTest {
     
     var sut: SearchUserImageStrategy!
     var userIDsTable: SearchDirectoryUserIDTable!
-    var imagesCache = NSCache<NSUUID, NSData>()
-    var assetIDCache = NSCache<NSUUID, SearchUserAssetObjC>()
+    var imagesCache: NSCache<NSUUID, NSData>!
+    var assetIDCache: NSCache<NSUUID, SearchUserAssetObjC>!
     var mockApplicationStatus : MockApplicationStatus!
     
     override func setUp() {
         super.setUp()
+        imagesCache = NSCache<NSUUID, NSData>()
+        assetIDCache = NSCache<NSUUID, SearchUserAssetObjC>()
         userIDsTable = SearchDirectoryUserIDTable()
         mockApplicationStatus = MockApplicationStatus()
         mockApplicationStatus.mockSynchronizationState = .eventProcessing
@@ -41,7 +43,11 @@ class SearchUserImageStrategyTests : MessagingTest {
     override func tearDown() {
         imagesCache.removeAllObjects()
         assetIDCache.removeAllObjects()
+        userIDsTable.clear()
         userIDsTable = nil
+        sut = nil
+        assetIDCache = nil
+        mockApplicationStatus = nil
         super.tearDown()
     }
     

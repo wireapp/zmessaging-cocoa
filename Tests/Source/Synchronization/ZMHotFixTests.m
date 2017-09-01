@@ -176,6 +176,7 @@
 
 - (void)tearDown {
     self.fakeHotFixDirectory = nil;
+    self.sut = nil;
     [super tearDown];
 }
 

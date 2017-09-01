@@ -29,13 +29,14 @@ class UnauthenticatedOperationLoop: NSObject {
 
     let transportSession: UnauthenticatedTransportSessionProtocol
     let requestStrategies: [RequestStrategy]
-    let operationQueue : ZMSGroupQueue
+    weak var operationQueue : ZMSGroupQueue?
     private var tornDown = false
     fileprivate var shouldEnqueue = true
 
     func tearDown() {
         shouldEnqueue = false
         requestStrategies.forEach { ($0 as? TearDownCapable)?.tearDown() }
+        transportSession.tearDown()
         tornDown = true
     }
 
@@ -72,10 +73,9 @@ extension UnauthenticatedOperationLoop: RequestAvailableObserver {
         return { [weak self] in
             guard let `self` = self else { return nil }
             let request = (self.requestStrategies as NSArray).nextRequest()
-            request?.add(ZMCompletionHandler(on: self.operationQueue) { _ in
-                self.operationQueue.performGroupedBlock { [weak self] in
-                    self?.newRequestsAvailable()
-                }
+            guard let queue = self.operationQueue else { return nil }
+            request?.add(ZMCompletionHandler(on: queue) { [weak self] _ in
+                self?.newRequestsAvailable()
             })
             return request
         }

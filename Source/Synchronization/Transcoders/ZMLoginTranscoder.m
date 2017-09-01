@@ -42,7 +42,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
 @property (nonatomic, weak) id<UserInfoParser> userInfoParser;
 @property (nonatomic, readonly) ZMSingleRequestSync *verificationResendRequest;
 @property (nonatomic) id<ZMRequestVerificationEmailObserverToken> emailResendObserverToken;
-@property (nonatomic) id<ZMSGroupQueue> groupQueue;
+@property (nonatomic, weak) id<ZMSGroupQueue> groupQueue;
 
 @end
 

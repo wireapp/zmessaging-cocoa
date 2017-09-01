@@ -165,12 +165,15 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssert(login())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
+        let _ = MockAsset(in: mockTransportSession.managedObjectContext, forID: selfUser.previewProfileAssetIdentifier!)
+        
         // then
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
         let manager = AccountManager(sharedDirectory: sharedContainer)
         guard let account = manager.accounts.first, manager.accounts.count == 1 else { XCTFail("Should have one account"); return }
         XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
         XCTAssertEqual(account.teamName, teamName)
+        XCTAssertNil(account.imageData)
     }
     
     func testThatItUpdatesAccountAfterTeamNameChanges() {
@@ -232,5 +235,24 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
         XCTAssertNil(account.teamName)
         XCTAssertEqual(account.userName, selfUser.name)
+    }
+    
+    func testThatItDeletesTheAccountFolder() throws {
+        // given
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        
+        let manager = AccountManager(sharedDirectory: sharedContainer)
+        let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
+        manager.add(account)
+        
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        
+        try FileManager.default.createDirectory(at: accountFolder, withIntermediateDirectories: true, attributes: nil)
+        
+        // when
+        self.sessionManager!.delete(account: account)
+        
+        // then
+        XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
     }
 }

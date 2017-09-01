@@ -174,6 +174,7 @@
     // then
     XCTAssertTrue([self lastRequestsContainedTokenRequests], @"Did receive: %@", self.mockTransportSession.receivedRequests);
     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
+    [mockPushRegistrant stopMocking];
 }
 
 - (void)testThatItReregistersPushTokensOnDemand

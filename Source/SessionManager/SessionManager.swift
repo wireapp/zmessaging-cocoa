@@ -266,7 +266,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
         select(account: account) { [weak self] session in
             guard let `self` = self else { return }
-            self.updateCurrentAccount()
+            self.updateCurrentAccount(in: session.managedObjectContext)
             session.application(self.application, didFinishLaunchingWithOptions: launchOptions)
             (launchOptions[.url] as? URL).apply(session.didLaunch)
         }
@@ -311,6 +311,18 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
 
+    public func delete(account: Account) {
+        let accountID = account.userIdentifier
+        self.accountManager.remove(account)
+        
+        do {
+            try FileManager.default.removeItem(at: StorageStack.accountFolder(accountIdentifier: accountID, applicationContainer: sharedContainerURL))
+        }
+        catch let error {
+            log.error("Impossible to delete the acccount \(account): \(error)")
+        }
+    }
+    
     fileprivate func createSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession) -> Void) {
         guard let session = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
@@ -384,9 +396,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 // MARK: - TeamObserver
 
 extension SessionManager {
-    func updateCurrentAccount(with team: TeamType? = nil) {
-        guard let session = userSession else { return }
-        let selfUser = ZMUser.selfUser(in: session.syncManagedObjectContext)
+    func updateCurrentAccount(with team: TeamType? = nil, in managedObjectContext: NSManagedObjectContext) {
+        let selfUser = ZMUser.selfUser(in: managedObjectContext)
         if let account = accountManager.accounts.first(where: { $0.userIdentifier == selfUser.remoteIdentifier }) {
             if let name = team?.name {
                 account.teamName = name
@@ -394,7 +405,7 @@ extension SessionManager {
             if let userName = selfUser.name {
                 account.userName = userName
             }
-            if let userProfileImage = selfUser.imageSmallProfileData {
+            if let userProfileImage = selfUser.imageSmallProfileData, team == nil {
                 account.imageData = userProfileImage
             }
             accountManager.add(account)
@@ -405,7 +416,10 @@ extension SessionManager {
 extension SessionManager: TeamObserver {
     public func teamDidChange(_ changeInfo: TeamChangeInfo) {
         let team = changeInfo.team
-        updateCurrentAccount(with: team)
+        guard let managedObjectContext = (team as? Team)?.managedObjectContext else {
+            return
+        }
+        updateCurrentAccount(with: team, in: managedObjectContext)
     }
 }
 
@@ -413,10 +427,13 @@ extension SessionManager: TeamObserver {
 
 extension SessionManager: ZMUserObserver {
     public func userDidChange(_ changeInfo: UserChangeInfo) {
-        guard let session = userSession else { return }
         if changeInfo.teamsChanged || changeInfo.nameChanged || changeInfo.imageSmallProfileDataChanged {
-            let selfUser = ZMUser.selfUser(in: session.syncManagedObjectContext)
-            updateCurrentAccount(with: selfUser.membership?.team)
+            guard let user = changeInfo.user as? ZMUser,
+                let managedObjectContext = user.managedObjectContext else {
+                return
+            }
+            let selfUser = ZMUser.selfUser(in: managedObjectContext)
+            updateCurrentAccount(with: selfUser.membership?.team, in: managedObjectContext)
         }
     }
 }
@@ -438,14 +455,15 @@ extension SessionManager: UnauthenticatedSessionDelegate {
     public func session(session: UnauthenticatedSession, createdAccount account: Account) {
         accountManager.addAndSelect(account)
 
-        dispatchGroup?.enter()
+        let group = self.dispatchGroup
+        group?.enter()
         LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
             self?.createSession(for: account, with: provider) { userSession in
                 userSession.registerForRemoteNotifications()
                 if let profileImageData = session.authenticationStatus.profileImageData {
                     self?.updateProfileImage(imageData: profileImageData)
                 }
-                self?.dispatchGroup?.leave()
+                group?.leave()
             }
         }
     }

@@ -80,7 +80,6 @@ static NSString *const HasHistoryKey = @"hasHistory";
     [refUIMoc performGroupedBlockAndWait:^{}];
     [refSyncMOC performGroupedBlockAndWait:^{}];
 
-    [self.transportSession tearDown];
     [self tearDown];
 
     [refUIMoc performGroupedBlockAndWait:^{}];

@@ -291,6 +291,8 @@ ZM_EMPTY_ASSERTING_INIT()
     self.callStateObserver = nil;
     [self.operationLoop tearDown];
     self.operationLoop = nil;
+    [self.transportSession tearDown];
+    self.transportSession = nil;
     
     [self.localNotificationDispatcher tearDown];
     self.localNotificationDispatcher = nil;

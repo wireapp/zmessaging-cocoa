@@ -23,7 +23,10 @@ import WireDataModel
 @testable import WireSyncEngine
 
 public final class HotFixDuplicatesTests: MessagingTest {
-
+    
+    var conversation: ZMConversation!
+    var user: ZMUser!
+    
     override public func setUp() {
         super.setUp()
         conversation = ZMConversation.insertNewObject(in: self.uiMOC)
@@ -36,9 +39,9 @@ public final class HotFixDuplicatesTests: MessagingTest {
     }
     
     override public func tearDown() {
-        super.tearDown()
         self.user = nil
         self.conversation = nil
+        super.tearDown()
     }
 
     func client() -> UserClient {
@@ -48,8 +51,6 @@ public final class HotFixDuplicatesTests: MessagingTest {
         return client
     }
     
-    var conversation: ZMConversation!
-    var user: ZMUser!
     
     func appendSystemMessage(type: ZMSystemMessageType,
                                       sender: ZMUser,
@@ -154,9 +155,8 @@ public final class HotFixDuplicatesTests_DiskDatabase: DiskDatabaseTest {
     }
     
     override public func tearDown() {
-        super.tearDown()
-        
         user = nil
+        super.tearDown()
     }
     
     func client() -> UserClient {

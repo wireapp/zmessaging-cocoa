@@ -20,11 +20,15 @@
 import Foundation
 import XCTest
 import WireTesting
+import WireDataModel
 
 public class DiskDatabaseTest: ZMTBaseTest {
     var sharedContainerURL : URL!
     var accountId : UUID!
-    var moc: NSManagedObjectContext!
+    var moc: NSManagedObjectContext {
+        return contextDirectory.uiContext
+    }
+    var contextDirectory: ManagedObjectContextDirectory!
     
     var storeURL : URL {
         return StorageStack.accountFolder(
@@ -49,7 +53,7 @@ public class DiskDatabaseTest: ZMTBaseTest {
     
     public override func tearDown() {
         cleanUp()
-        moc = nil
+        contextDirectory = nil
         sharedContainerURL = nil
         accountId = nil
         super.tearDown()
@@ -59,15 +63,16 @@ public class DiskDatabaseTest: ZMTBaseTest {
         StorageStack.reset()
         StorageStack.shared.createStorageAsInMemory = false
 
-        StorageStack.shared.createManagedObjectContextDirectory(accountIdentifier: accountId, applicationContainer: storeURL) {
-            self.moc = $0.uiContext
-            self.moc.performGroupedBlock {
-                let selfUser = ZMUser.selfUser(in: self.moc)
-                selfUser.remoteIdentifier = self.accountId
-            }
+        let expectation = self.expectation(description: "Created context")
+        StorageStack.shared.createManagedObjectContextDirectory(accountIdentifier: accountId, applicationContainer: storeURL, dispatchGroup: self.dispatchGroup) {
+            self.contextDirectory = $0
+            expectation.fulfill()
         }
-
-        XCTAssert(wait(withTimeout: 0.5) { self.moc != nil })
+        XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
+        self.moc.performGroupedBlockAndWait {
+            let selfUser = ZMUser.selfUser(in: self.moc)
+            selfUser.remoteIdentifier = self.accountId
+        }
     }
     
     private func cleanUp() {

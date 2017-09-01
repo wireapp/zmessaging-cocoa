@@ -167,11 +167,13 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     var sut: BackgroundAPNSPingBackStatus!
     var observer: OperationLoopNewRequestObserver!
     var authenticationProvider: MockAuthenticationProvider!
+    var groupQueue: ZMSGroupQueue!
     
     override func setUp() {
         super.setUp()
         
-        BackgroundActivityFactory.sharedInstance().mainGroupQueue = FakeGroupQueue()
+        groupQueue = FakeGroupQueue()
+        BackgroundActivityFactory.sharedInstance().mainGroupQueue = groupQueue
         BackgroundActivityFactory.sharedInstance().application = UIApplication.shared
         authenticationProvider = MockAuthenticationProvider()
 
@@ -183,6 +185,7 @@ class BackgroundAPNSPingBackStatusTests: MessagingTest {
     }
     
     override func tearDown() {
+        groupQueue = nil
         observer = nil
         sut = nil
         BackgroundActivityFactory.sharedInstance().mainGroupQueue = nil
