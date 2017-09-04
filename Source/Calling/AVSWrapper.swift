@@ -64,19 +64,6 @@ public class AVSWrapper : AVSWrapperType {
                               requestCallConfigHandler,
                               observer)
         
-//        let resultValue = wcall_init(
-//            userId.transportString(),
-//            clientId,
-//            readyHandler,
-//            sendCallMessageHandler,
-//            incomingCallHandler,
-//            missedCallHandler,
-//            answeredCallHandler,
-//            establishedCallHandler,
-//            closedCallHandler,
-//            callMetricsHandler,
-//            observer)
-        
         wcall_set_video_state_handler(handle, { (state, _) in
             guard let state = ReceivedVideoState(rawValue: UInt(state)) else { return }
             
