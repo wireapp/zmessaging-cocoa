@@ -37,8 +37,9 @@ import Foundation
 }
 
 extension ZMUserSessionAuthenticationNotification {
-    @objc(addObserver:) public static func addObserver(_ observer: ZMAuthenticationObserver) -> ZMAuthenticationObserverToken {
-        return addObserver { [weak observer] in
+    @objc(addObserver:queue:)
+    public static func addObserver(_ observer: ZMAuthenticationObserver, queue: ZMSGroupQueue) -> ZMAuthenticationObserverToken {
+        return addObserver(on: queue, block: { [weak observer] in
             let error = $0.error
             switch $0.type {
             case .authenticationNotificationLoginCodeRequestDidFail:
@@ -54,6 +55,30 @@ extension ZMUserSessionAuthenticationNotification {
             case .authenticationNotificationDidDetectSelfClientDeletion:
                 observer?.didDetectSelfClientDeletion?()
             }
-        }
+        })
     }
+    
+    public static func addObserver(_ observer: ZMAuthenticationObserver) -> ZMAuthenticationObserverToken {
+        return addObserver(observer, queue: DispatchGroupQueue(queue: DispatchQueue.main))
+    }
+}
+
+extension ZMUser {
+    
+    @objc
+    public var credentialsUserInfo : Dictionary<String, String> {
+        
+        var userInfo : [String : String] = [:]
+                
+        if let emailAddress = emailAddress, !emailAddress.isEmpty {
+            userInfo[ZMEmailCredentialKey] = emailAddress
+        }
+        
+        if let phoneNumber = phoneNumber, !phoneNumber.isEmpty {
+            userInfo[ZMPhoneCredentialKey] = phoneNumber
+        }
+        
+        return userInfo
+    }
+    
 }

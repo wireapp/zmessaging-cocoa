@@ -29,7 +29,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 @objc public protocol SessionManagerDelegate : class {
     func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession)
     func sessionManagerCreated(userSession : ZMUserSession)
-    func sessionManagerDidLogout()
+    func sessionManagerDidLogout(error : Error?)
     func sessionManagerWillSuspendSession()
     func sessionManagerWillStartMigratingLocalStore()
     func sessionManagerDidBlacklistCurrentVersion()
@@ -284,11 +284,15 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     }
     
     public func logoutCurrentSession(deleteCookie: Bool = true) {
+        logoutCurrentSession(deleteCookie: deleteCookie, error: nil)
+    }
+    
+    fileprivate func logoutCurrentSession(deleteCookie: Bool = true, error : Error?) {
         tearDownObservers()
         userSession?.closeAndDeleteCookie(deleteCookie)
         userSession = nil
-        delegate?.sessionManagerDidLogout()
-
+        delegate?.sessionManagerDidLogout(error: error)
+        
         createUnauthenticatedSession()
     }
 
@@ -375,11 +379,6 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         unauthenticatedSession?.tearDown()
         reachability.tearDown()
     }
-
-    @objc public var currentUser: ZMUser? {
-        guard let moc = userSession?.managedObjectContext  else { return nil }
-        return ZMUser.selfUser(in: moc)
-    }
     
     @objc public var isUserSessionActive: Bool {
         return userSession != nil
@@ -442,10 +441,12 @@ extension SessionManager: ZMUserObserver {
 
 extension SessionManager: UnauthenticatedSessionDelegate {
 
-    public func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) {
-        if let userSession = userSession, let emailCredentials = credentials as? ZMEmailCredentials {
-            userSession.setEmailCredentials(emailCredentials)
-        }
+    public func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) -> Bool {
+        guard let userSession = userSession, let emailCredentials = credentials as? ZMEmailCredentials else { return false }
+        
+        userSession.setEmailCredentials(emailCredentials)
+        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        return true
     }
     
     public func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data) {
@@ -483,6 +484,31 @@ extension SessionManager: ZMAuthenticationObserver {
     @objc public func authenticationDidSucceed() {
         if nil != userSession {
             return RequestAvailableNotification.notifyNewRequestsAvailable(self)
+        }
+    }
+    
+    public func authenticationDidFail(_ error: Error) {
+        let error = error as NSError
+        
+        guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)) else {
+            return
+        }
+        
+        switch userSessionErrorCode {
+        case .accountDeleted:
+            logoutCurrentSession(deleteCookie: true, error: error)
+            if let deletedAccount = accountManager.selectedAccount {
+                delete(account: deletedAccount)
+            }
+        case .clientDeletedRemotely,
+             .accessTokenExpired:
+            logoutCurrentSession(deleteCookie: true, error: error)
+        default:
+            delegate?.sessionManagerDidLogout(error: error)
+            
+            if unauthenticatedSession == nil {
+                createUnauthenticatedSession()
+            }
         }
     }
 

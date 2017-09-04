@@ -17,6 +17,7 @@
 //
 
 import XCTest
+import WireTesting
 @testable import WireSyncEngine
 
 
@@ -61,6 +62,8 @@ final class TestAuthenticationObserver: NSObject, ZMAuthenticationObserver {
 final class MockUnauthenticatedSessionDelegate: NSObject, UnauthenticatedSessionDelegate {
 
     var createdAccounts = [Account]()
+    var didUpdateCredentials : Bool = false
+    var willAcceptUpdatedCredentials = false
 
     func session(session: UnauthenticatedSession, createdAccount account: Account) {
         createdAccounts.append(account)
@@ -70,14 +73,15 @@ final class MockUnauthenticatedSessionDelegate: NSObject, UnauthenticatedSession
         // no-op
     }
 
-    func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) {
-        // no-op
+    func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) -> Bool {
+        didUpdateCredentials = true
+        return willAcceptUpdatedCredentials
     }
 
 }
 
 
-public final class UnauthenticatedSessionTests: XCTestCase {
+public final class UnauthenticatedSessionTests: ZMTBaseTest {
     var transportSession: TestUnauthenticatedTransportSession!
     var sut: UnauthenticatedSession!
     var mockDelegate: MockUnauthenticatedSessionDelegate!
@@ -89,6 +93,7 @@ public final class UnauthenticatedSessionTests: XCTestCase {
         mockDelegate = MockUnauthenticatedSessionDelegate()
         reachability = TestReachability()
         sut = UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: mockDelegate)
+        sut.groupQueue.add(dispatchGroup)
     }
     
     public override func tearDown() {
@@ -100,12 +105,26 @@ public final class UnauthenticatedSessionTests: XCTestCase {
         super.tearDown()
     }
     
+    func testThatTriesToUpdateCredentials() {
+        // given
+        let emailCredentials = ZMEmailCredentials(email: "hello@email.com", password: "123456")
+        mockDelegate.willAcceptUpdatedCredentials = true
+        
+        // when
+        sut.login(with: emailCredentials)
+        
+        // then
+        XCTAssertTrue(mockDelegate.didUpdateCredentials)
+    }
+    
     func testThatDuringLoginItThrowsErrorWhenNoCredentials() {
         let observer = TestAuthenticationObserver()
         // given
         reachability.mayBeReachable = false
         // when
         sut.login(with: ZMCredentials())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
         // then
         XCTAssertEqual(observer.authenticationDidSucceedEvents, 0)
         XCTAssertEqual(observer.authenticationDidFailEvents.count, 1)
@@ -118,6 +137,7 @@ public final class UnauthenticatedSessionTests: XCTestCase {
         reachability.mayBeReachable = false
         // when
         sut.login(with: ZMEmailCredentials(email: "my@mail.com", password: "my-password"))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         // then
         XCTAssertEqual(observer.authenticationDidSucceedEvents, 0)
         XCTAssertEqual(observer.authenticationDidFailEvents.count, 1)
@@ -155,7 +175,9 @@ public final class UnauthenticatedSessionTests: XCTestCase {
         let cookie = "zuid=wjCWn1Y1pBgYrFCwuU7WK2eHpAVY8Ocu-rUAWIpSzOcvDVmYVc9Xd6Ovyy-PktFkamLushbfKgBlIWJh6ZtbAA==.1721442805.u.7eaaa023.08326f5e-3c0f-4247-a235-2b4d93f921a4; Expires=Sun, 21-Jul-2024 09:06:45 GMT; Domain=wire.com; HttpOnly; Secure"
 
         // then
-        XCTAssertNil(parseAccount(cookie: cookie, userIdKey: "identifier"))
+        performIgnoringZMLogError() {
+            XCTAssertNil(self.parseAccount(cookie: cookie, userIdKey: "identifier"))
+        }
     }
 
     func testThatItDoesNotParseAnAccountWithInvalidCookie() {
@@ -163,7 +185,9 @@ public final class UnauthenticatedSessionTests: XCTestCase {
         let cookie = "Expires=Sun, 21-Jul-2024 09:06:45 GMT; Domain=wire.com; HttpOnly; Secure"
 
         // then
-        XCTAssertNil(parseAccount(cookie: cookie, userIdKey: "user"))
+        performIgnoringZMLogError() {
+            XCTAssertNil(self.parseAccount(cookie: cookie, userIdKey: "user"))
+        }
     }
 
     private func parseAccount(cookie: String, userId: UUID = .create(), userIdKey: String, line: UInt = #line) -> Account? {

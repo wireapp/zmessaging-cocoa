@@ -61,7 +61,7 @@
         XCTFail(@"Unexpected notification %@", note);
     }; // forces to overrite if a test fires this
     
-    self.authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note) {
+    self.authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
         self.authenticationCallback(note);
     }];
     
@@ -449,6 +449,7 @@
     // when
     [self.sut prepareForRequestingPhoneVerificationCodeForLogin:@"+4912345678"];
     [self.sut didCompleteRequestForLoginCodeSuccessfully];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
@@ -473,6 +474,7 @@
     // when
     [self.sut prepareForRequestingPhoneVerificationCodeForLogin:@"+4912345678"];
     [self.sut didFailRequestForLoginCode:error];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
@@ -549,6 +551,7 @@
         [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:email password:password]];
     }];
     [self.sut didFailLoginWithEmail:YES];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
@@ -579,6 +582,7 @@
         [self.sut prepareForLoginWithCredentials:credentials];
     }];
     [self.sut didFailLoginWithEmailBecausePendingValidation];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseWaitingForEmailVerification);
@@ -608,6 +612,7 @@
         [self.sut prepareForLoginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code]];
     }];
     [self.sut didFailLoginWithPhone:YES];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
@@ -638,6 +643,7 @@
         [self.sut prepareForLoginWithCredentials:credentials];
     }];
     [self.sut didTimeoutLoginForCredentials:credentials];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);

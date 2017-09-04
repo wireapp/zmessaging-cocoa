@@ -97,7 +97,7 @@ extension TeamTests {
 // MARK : Member removal
 extension TeamTests {
     
-    func testThatOtherUserCanBeRemovedRemotely(){
+    func testThatOtherUserCanBeRemovedRemotely() {
         // given
         let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
@@ -118,7 +118,7 @@ extension TeamTests {
         XCTAssertFalse(user.hasTeam)
     }
     
-    func testThatSelfUserCanBeRemovedRemotely(){
+    func testThatAccountIsDeletedWhenSelfUserIsRemovedFromTeam() {
         // given
         let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
@@ -133,28 +133,8 @@ extension TeamTests {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertFalse(ZMUser.selfUser(in: userSession!.managedObjectContext).hasTeam)
-    }
-    
-    func testThatItNotifiesAboutSelfUserRemovedRemotely(){
-        // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
-
-        XCTAssert(login())
-        let selfUserObserver = UserChangeObserver(user: ZMUser.selfUser(in: userSession!.managedObjectContext))!
-
-        // when
-        mockTransportSession.performRemoteChanges { (session) in
-            session.removeMember(with: self.selfUser, from: mockTeam)
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertGreaterThanOrEqual(selfUserObserver.notifications.count, 1)
-        guard let userChange = selfUserObserver.notifications.firstObject as? UserChangeInfo else {
-            return XCTFail("no notification received")
-        }
-        XCTAssertTrue(userChange.teamsChanged)
+        XCTAssertNil(userSession) // user should be logged from the account
+        XCTAssertTrue(sessionManager!.accountManager.accounts.isEmpty) // account should be deleted
     }
     
     func testThatItNotifiesAboutOtherUserRemovedRemotely(){
@@ -178,38 +158,6 @@ extension TeamTests {
         XCTAssertTrue(change.membersChanged)
     }
     
-    func testThatItDeletesAllTeamConversationsWhenTheSelfMemberIsRemoved() {
-        // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
-
-        XCTAssert(login())
-        let list = ZMConversationList.conversations(inUserSession: self.userSession!)
-        XCTAssertEqual(list.count, 3)
-
-        mockTransportSession.performRemoteChanges { (session) in
-            session.insertTeamConversation(to: mockTeam, with: [self.selfUser, self.user1], creator: self.user1)
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        let listObserver = ConversationListChangeObserver(conversationList: list)!
-        XCTAssertEqual(list.count, 4)
-        
-        // when
-        mockTransportSession.performRemoteChanges { (session) in
-            session.removeMember(with: self.selfUser, from: mockTeam)
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(list.count, 3)
-        
-        XCTAssertEqual(listObserver.notifications.count, 1)
-        guard let note = listObserver.notifications.lastObject as? ConversationListChangeInfo else {
-            return XCTFail("no notification received")
-        }
-        XCTAssertEqual(note.deletedIndexes, [0])
-    }
-
 }
 
 
@@ -263,7 +211,7 @@ extension TeamTests {
 extension TeamTests {
 
     // See TeamSyncRequestStrategy.skipTeamSync
-    func testThatItDeletesARemotelyDeletedTeamAfterPerfomingSlowSyncCausedByMissedEvents() {
+    func testThatItDeletesAccountIfItsDiscoveredThatTeamHasBeenDeletedDuringSlowSync() {
         XCTAssert(login())
         
         // Given
@@ -287,9 +235,8 @@ extension TeamTests {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // Then
-        // Assert that the local team got deleted after trying to refetch it AFTER the slow sync was performed.
-        let team = Team.fetch(withRemoteIdentifier: localOnlyTeamId, in: userSession!.managedObjectContext)
-        XCTAssert(team == nil || team!.isDeleted)
+        XCTAssertNil(userSession) // user should be logged from the account
+        XCTAssertTrue(sessionManager!.accountManager.accounts.isEmpty) // account should be deleted
     }
 
 }
