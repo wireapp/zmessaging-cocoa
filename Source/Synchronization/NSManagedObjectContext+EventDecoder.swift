@@ -29,21 +29,48 @@ extension NSManagedObjectContext {
     
     /// Creates and returns the `ManagedObjectContext` used for storing update events, ee `ZMEventModel`, `StorUpdateEvent` and `EventDecoder`.
     /// - parameter appGroupIdentifier: Optional identifier for a shared container group to be used to store the database,
-    /// if `nil` is passed a default of `group. + bundleIdentifier` will be used (e.g. when testing)
-    public static func createEventContext(withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID?) -> NSManagedObjectContext {
-        let previousStoreURL = storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: nil) // Passing no user identifier resolves to the old location before multiple accounts
-        let newStoreURL = storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
-        FileManager.default.createAndProtectDirectory(at: newStoreURL.deletingLastPathComponent())
-        relocateStoreIfNeeded(previousStoreURL: previousStoreURL, newStoreURL: newStoreURL)
+    /// if `nil` is passed a default of `group. + bundleIdentifier` will be used (e.g. when testing) TODO
+    public static func createEventContext(withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID) -> NSManagedObjectContext {
+        createOrRelocateStoreIfNeeded(sharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
+        
+        return createEventContext(at: storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier))
+    }
+    
+    internal static func createEventContext(at location : URL) -> NSManagedObjectContext {        
         eventPersistentStoreCoordinator = createPersistentStoreCoordinator()
+        
         let managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         managedObjectContext.persistentStoreCoordinator = eventPersistentStoreCoordinator
         managedObjectContext.createDispatchGroups()
         managedObjectContext.performGroupedBlock {
             managedObjectContext.isEventMOC = true
         }
-        addPersistentStore(eventPersistentStoreCoordinator!, withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
+        
+        addPersistentStore(eventPersistentStoreCoordinator!, at: location)
+        
         return managedObjectContext
+    }
+    
+    fileprivate static func createOrRelocateStoreIfNeeded(sharedContainerURL: URL, userIdentifier: UUID) {
+        let newStoreURL = storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
+        let fileManager = FileManager.default
+        
+        guard !fileManager.fileExists(atPath: newStoreURL.path) else { return }
+        
+        FileManager.default.createAndProtectDirectory(at: newStoreURL.deletingLastPathComponent())
+        
+        var oldStoreURL : URL?
+        let previousLocations = previousEventStoreLocations(userIdentifier: userIdentifier, sharedContainerURL: sharedContainerURL)
+        for previousLocation in previousLocations {
+            if fileManager.fileExists(atPath: previousLocation.path) {
+                oldStoreURL = previousLocation
+                break
+            }
+        }
+        
+        if let oldStoreURL = oldStoreURL {
+            PersistentStoreRelocator.moveStore(from: oldStoreURL, to: newStoreURL)
+        }
     }
     
     fileprivate static func relocateStoreIfNeeded(previousStoreURL: URL, newStoreURL: URL) {
@@ -76,7 +103,24 @@ extension NSManagedObjectContext {
         return NSPersistentStoreCoordinator(managedObjectModel: mom)
     }
     
-    fileprivate static func addPersistentStore(_ psc: NSPersistentStoreCoordinator, withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID?, isSecondTry: Bool = false) {
+    fileprivate static func addPersistentStore(_ psc: NSPersistentStoreCoordinator, at location: URL, isSecondTry: Bool = false) {
+        do {
+            let storeType = StorageStack.shared.createStorageAsInMemory ? NSInMemoryStoreType : NSSQLiteStoreType
+            try psc.addPersistentStore(ofType: storeType, configurationName: nil, at: location, options: nil)
+        } catch {
+            if isSecondTry {
+                fatal("Error adding persistent store \(error)")
+            } else {
+                let stores = psc.persistentStores
+                stores.forEach { try! psc.remove($0) }
+                addPersistentStore(eventPersistentStoreCoordinator!, at: location, isSecondTry: true)
+                
+            }
+        }
+    }
+    
+    
+    fileprivate static func addPersistentStore(_ psc: NSPersistentStoreCoordinator, withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID, isSecondTry: Bool = false) {
         let storeURL = self.storeURL(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
         do {
             let storeType = StorageStack.shared.createStorageAsInMemory ? NSInMemoryStoreType : NSSQLiteStoreType
@@ -93,13 +137,14 @@ extension NSManagedObjectContext {
         }
     }
     
-    fileprivate static func storeURL(withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID?) -> URL {
-        let storeURL: URL
-        if let userIdentifier = userIdentifier {
-            storeURL = sharedContainerURL.appendingPathComponent(userIdentifier.uuidString, isDirectory:true)
-        } else {
-            storeURL = sharedContainerURL
-        }
+    fileprivate static func previousEventStoreLocations(userIdentifier : UUID, sharedContainerURL: URL) -> [URL] {
+        return [sharedContainerURL, sharedContainerURL.appendingPathComponent(userIdentifier.uuidString)].map({ $0.appendingPathComponent("ZMEventModel.sqlite") })
+    }
+    
+    fileprivate static func storeURL(withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID) -> URL {
+        let storeURL = sharedContainerURL.appendingPathComponent("AccountData", isDirectory: true)
+                       .appendingPathComponent(userIdentifier.uuidString, isDirectory:true)
+                       .appendingPathComponent("events", isDirectory:true)
         
         let storeFileName = "ZMEventModel.sqlite"
         return storeURL.appendingPathComponent(storeFileName, isDirectory: false)

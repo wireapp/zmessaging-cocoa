@@ -26,7 +26,9 @@ public extension Bundle {
 @objc public protocol LocalStoreProviderProtocol: class {
     var userIdentifier: UUID { get }
     var applicationContainer: URL { get }
+    var accountContainer: URL { get }
     var contextDirectory: ManagedObjectContextDirectory { get }
+    
 }
 
 
@@ -36,6 +38,10 @@ public extension Bundle {
     public let userIdentifier: UUID
     public let applicationContainer: URL
     public let contextDirectory: ManagedObjectContextDirectory
+    
+    public var accountContainer: URL {
+        return StorageStack.accountFolder(accountIdentifier: userIdentifier, applicationContainer: applicationContainer)
+    }
 
     private init(applicationContainer: URL, userIdentifier: UUID, contextDirectory: ManagedObjectContextDirectory) {
         self.userIdentifier = userIdentifier

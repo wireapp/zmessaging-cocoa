@@ -58,6 +58,7 @@
 
 @property (nonatomic, copy) NSUUID *userIdentifier;
 @property (nonatomic, copy) NSURL *applicationContainer;
+@property (nonatomic, copy) NSURL *accountContainer;
 @property (nonatomic, strong) ManagedObjectContextDirectory *contextDirectory;
 
 - (instancetype)initWithSharedContainerDirectory:(NSURL *)sharedContainerDirectory userIdentifier:(NSUUID *)userIdentifier contextDirectory:(ManagedObjectContextDirectory *)contextDirectory;
