@@ -47,8 +47,8 @@
 
 - (void)tearDown
 {
-    [super tearDown];
     self.lastReceivedNotification = nil;
+    [super tearDown];
 }
 
 - (void)didReceiveNotification:(NSNotification *)notification
@@ -83,18 +83,17 @@
     // expect
     id userAgent = [OCMockObject mockForClass:ZMUserAgent.class];
     [[[userAgent expect] classMethod] setWireAppVersion:version];
-    
-    id<LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] init];
-    
+
     // when
+
     ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
+                                                             flowManager:self.flowManagerMock
                                                                analytics:nil
                                                         transportSession:transportSession
                                                          apnsEnvironment:nil
-                                                             application:[UIApplication sharedApplication]
-                                                                  userId:nil
+                                                             application:self.application
                                                               appVersion:version
-                                                           storeProvider:storeProvider];
+                                                           storeProvider:self.storeProvider];
     XCTAssertNotNil(session);
     
     // then
@@ -225,7 +224,6 @@
     id pushChannel = [OCMockObject niceMockForProtocol:@protocol(ZMPushChannel)];
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     id cookieStorage = [OCMockObject niceMockForClass:ZMPersistentCookieStorage.class];
-    id<LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] init];
     
     // expect
     [[pushChannel expect] setClientID:userClient.remoteIdentifier];
@@ -234,14 +232,13 @@
     
     // when
     ZMUserSession *userSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                            userInterfaceContext:self.uiMOC
-                                                        syncManagedObjectContext:self.syncMOC
                                                                     mediaManager:self.mediaManager
+                                                                     flowManager:self.flowManagerMock
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:storeProvider];
+                                                                   storeProvider:self.storeProvider];
     [userSession didRegisterUserClient:userClient];
     
     // then
@@ -449,14 +446,14 @@
 - (void)testThatItSetsItselfAsADelegateOfTheTransportSessionAndForwardsUserClientID
 {
     // given
-    id<LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] init];
     id transportSession = [OCMockObject mockForClass:ZMTransportSession.class];
     id pushChannel = [OCMockObject mockForProtocol:@protocol(ZMPushChannel)];
     
     [[[transportSession stub] andReturn:pushChannel] pushChannel];
 
     [[transportSession stub] configurePushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
-    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com"];
+    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com" userIdentifier:NSUUID.createUUID];
+
     [[[transportSession stub] andReturn:self.cookieStorage] cookieStorage];
     [[transportSession stub] setAccessTokenRenewalFailureHandler:[OCMArg checkWithBlock:^BOOL(ZMCompletionHandlerBlock obj) {
         self.authFailHandler = obj;
@@ -477,14 +474,13 @@
 
     // when
     ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                            userInterfaceContext:self.uiMOC
-                                                        syncManagedObjectContext:self.syncMOC
                                                                     mediaManager:self.mediaManager
+                                                                     flowManager:self.flowManagerMock
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:storeProvider];
+                                                                   storeProvider:self.storeProvider];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -1402,6 +1398,12 @@
 - (void)testThatLogCallbackIsNotTriggeredAfterUnsubscribe
 {
     // given
+    __block ZMConversation *conversation;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        [self.syncMOC saveOrRollback];
+    }];
+    
     NSString *testMessage = @"Sample AVS Log";
     id logObserver = [OCMockObject mockForProtocol:@protocol(ZMAVSLogObserver)];
     [[logObserver reject] logMessage:nil];
@@ -1410,7 +1412,7 @@
     [ZMUserSession removeAVSLogObserver:token];
     
     // when
-    [ZMCallFlowRequestStrategy logMessage:testMessage];
+    [ZMUserSession appendAVSLogMessageForConversation:conversation withMessage:testMessage];
     
     // then
     [logObserver verify];

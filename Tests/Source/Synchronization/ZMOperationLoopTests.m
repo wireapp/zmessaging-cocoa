@@ -76,16 +76,18 @@
 - (void)tearDown;
 {
     WaitForAllGroupsToBeEmpty(0.5);
-    
+    [self.pingBackStatus stopMocking];
+    self.pingBackStatus = nil;
+    [self.mockPushChannel stopMocking];
     self.mockPushChannel = nil;
+    [self.transportSession stopMocking];
     self.transportSession = nil;
+    [self.syncStrategy stopMocking];
     self.syncStrategy = nil;
     [self.sut tearDown];
     self.sut = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [super tearDown];
-    [self.pingBackStatus stopMocking];
-    self.pingBackStatus = nil;
 }
 
 - (void)pushChannelDidChange:(NSNotification *)note

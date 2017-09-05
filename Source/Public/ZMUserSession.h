@@ -43,6 +43,9 @@
 @protocol UserProfileImageUpdateProtocol;
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
+@protocol FlowManagerType;
+
+@class ManagedObjectContextDirectory;
 @class TopConversationsDirectory;
 
 @protocol ZMAVSLogObserver <NSObject>
@@ -58,6 +61,7 @@ extern NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName;
 extern NSString * const ZMPhoneVerificationCodeKey;
 extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 extern NSString * const ZMTransportRequestLoopNotificationName;
+extern NSString * const ZMFlowManagerDidBecomeAvailableNotification;
 
 /// The main entry point for the WireSyncEngine API.
 ///
@@ -72,27 +76,18 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
  @param storeProvider: An object conforming to the @c LocalStoreProviderProtocol that provides information about local store locations etc.
 */
 - (instancetype)initWithMediaManager:(AVSMediaManager *)mediaManager
+                         flowManager:(id<FlowManagerType>)flowManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
                      apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                          application:(id<ZMApplication>)application
-                              userId:(NSUUID *)uuid
                           appVersion:(NSString *)appVersion
-                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
+                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;;
 
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
 @property (atomic, readonly) ZMNetworkState networkState;
 @property (atomic) BOOL isNotificationContentHidden;
-
-/**
- Starts session and checks if client version is not in black list.
- Version should be a build number. blackListedBlock is retained and called only if passed version is black listed. The block is 
- called only once, even if the file is downloaded multiple times.
- */
-- (void)startAndCheckClientVersionWithCheckInterval:(NSTimeInterval)interval blackListedBlock:(void (^)())blackListed;
-
-- (void)start;
 
 /// Performs a save in the context
 - (void)saveOrRollbackChanges;
@@ -119,13 +114,14 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 @property (nonatomic, readonly) ZMCallKitDelegate *callKitDelegate;
 
 /// The URL of the shared container that has been determinned using the passed in application group identifier
-@property (nonatomic, readonly) NSURL *sharedContainerURL;
-
-@property (nonatomic, readonly) NSURL *storeURL;
+//@property (nonatomic, readonly) NSURL *sharedContainerURL;
 
 /// The sync has been completed as least once
 @property (nonatomic, readonly) BOOL hasCompletedInitialSync;
-           
+
+// Request the push token from iOS and send it to the backend.
+- (void)registerForRemoteNotifications;
+
 @end
 
 

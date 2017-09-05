@@ -29,6 +29,11 @@ class SearchDirectoryUserIDTableTests: MessagingTest {
         super.setUp()
         sut = SearchDirectoryUserIDTable()
     }
+    
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
 
     func createSearchDirectory() -> NSObject {
         return UUID.create() as NSObject // We use a unique id in tests

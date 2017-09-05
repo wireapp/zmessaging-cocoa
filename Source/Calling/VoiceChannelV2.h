@@ -34,6 +34,7 @@ typedef NS_ENUM(uint8_t, VoiceChannelV2State) {
     VoiceChannelV2StateIncomingCallInactive, /// Group call is in progress but it's not ringing for us.
     VoiceChannelV2StateSelfIsJoiningActiveChannel, /// We are connecting to the voice channel
     VoiceChannelV2StateSelfIsJoiningActiveChannelDegraded, /// We are connecting to the voice channel, but can't proceed since the conversation security is degraded
+    VoiceChannelV2StateEstablishedDataChannel, /// Self connects to voice channel AND the data channel is established
     VoiceChannelV2StateSelfConnectedToActiveChannel, /// Self connects to voice channel AND there is someone already connected on the channel
     VoiceChannelV2StateDeviceTransferReady, /// This device is ready to have the call transfered to it
 };

@@ -22,6 +22,22 @@
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 @import WireSyncEngine;
 
+
+@implementation MockLocalStoreProvider
+
+- (instancetype)initWithSharedContainerDirectory:(NSURL *)sharedContainerDirectory userIdentifier:(NSUUID *)userIdentifier contextDirectory:(ManagedObjectContextDirectory *)contextDirectory
+{
+    self = [super init];
+    if (self) {
+        self.userIdentifier = userIdentifier;
+        self.applicationContainer = sharedContainerDirectory;
+        self.contextDirectory = contextDirectory;
+    }
+    return self;
+}
+
+@end
+
 @implementation ThirdPartyServices
 
 - (void)userSessionIsReadyToUploadServicesData:(ZMUserSession *)userSession;
@@ -53,7 +69,8 @@
     self.dataChangeNotificationsCount = 0;
     self.baseURL = [NSURL URLWithString:@"http://bar.example.com"];
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
-    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com"];
+    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com" userIdentifier:NSUUID.createUUID];
+
     [[[self.transportSession stub] andReturn:self.cookieStorage] cookieStorage];
     ZM_WEAK(self);
     [[self.transportSession stub] setAccessTokenRenewalFailureHandler:[OCMArg checkWithBlock:^BOOL(ZMCompletionHandlerBlock obj) {
@@ -68,6 +85,7 @@
     }]];
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
     self.mediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
+    self.flowManagerMock = [[FlowManagerMock alloc] init];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     
     self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:self.cookieStorage registrationStatusDelegate:nil];
@@ -92,17 +110,17 @@
     [[[self.apnsEnvironment stub] andReturn:@"APNS"] transportTypeForTokenType:ZMAPNSTypeNormal];
     [[[self.apnsEnvironment stub] andReturn:@"APNS_VOIP"] transportTypeForTokenType:ZMAPNSTypeVoIP];
     
-    id<LocalStoreProviderProtocol> storeProvider = [[LocalStoreProvider alloc] init];
+    self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
     
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
-                                          userInterfaceContext:self.uiMOC
-                                      syncManagedObjectContext:self.syncMOC
                                                   mediaManager:self.mediaManager
+                                                   flowManager:self.flowManagerMock
                                                apnsEnvironment:self.apnsEnvironment
                                                  operationLoop:self.operationLoop
                                                    application:self.application
                                                     appVersion:@"00000"
-                                                 storeProvider:storeProvider];
+                                                 storeProvider:self.storeProvider];
+        
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -127,6 +145,14 @@
     [self.uiMOC.userInfo removeAllObjects];
     
     [super cleanUpAndVerify];
+    NSURL *cachesURL = [[NSFileManager defaultManager] cachesURLForAccountWith:self.userIdentifier in:self.sut.sharedContainerURL];
+    NSArray *items = [[NSFileManager defaultManager] contentsOfDirectoryAtURL:cachesURL includingPropertiesForKeys:nil options:0 error:nil];
+    for (NSURL *item in items) {
+        [[NSFileManager defaultManager] removeItemAtURL:item error:nil];
+    }
+    
+    self.storeProvider = nil;
+    
     self.authFailHandler = nil;
     self.tokenSuccessHandler = nil;
     self.baseURL = nil;
@@ -147,6 +173,8 @@
     
     [self.mediaManager stopMocking];
     self.mediaManager = nil;
+    
+    self.flowManagerMock = nil;
     
     [(id)self.syncStrategy stopMocking];
     self.syncStrategy = nil;

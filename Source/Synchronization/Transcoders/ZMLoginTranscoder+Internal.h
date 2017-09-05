@@ -31,6 +31,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 
 - (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue
               authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
+                    userInfoParser:(id<UserInfoParser>)userInfoParser
                timedDownstreamSync:(ZMTimedSingleRequestSync *)timedDownstreamSync
          verificationResendRequest:(ZMSingleRequestSync *)verificationResendRequest NS_DESIGNATED_INITIALIZER;
 

@@ -194,8 +194,9 @@ public final class Session : NSObject, NSCoding, NSCopying {
     }
     
     public func tearDown(){
-        sessions = []
-        managedObjectContext.saveOrRollback()
+        managedObjectContext.performGroupedBlockAndWait { [weak self] in
+            self?.sessions = []
+        }
     }
     
     public func clearSessions(_ conversation: ZMConversation){

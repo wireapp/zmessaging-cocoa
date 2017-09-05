@@ -41,7 +41,7 @@ private let log = ZMSLog(tag: "Teams")
 
 
 extension TeamDownloadRequestStrategy: ZMEventConsumer {
-
+    
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
         events.forEach(process)
     }
@@ -70,9 +70,7 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
     }
 
     private func deleteTeam(with event: ZMUpdateEvent) {
-        guard let identifier = event.teamId else { return }
-        guard let team = Team.fetchOrCreate(with: identifier, create: false, in: managedObjectContext, created: nil) else { return }
-        deleteTeamAndConversations(team)
+        deleteAccount()
     }
 
     private func updateTeam(with event: ZMUpdateEvent) {
@@ -102,8 +100,7 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
         if let member = user.membership {
             managedObjectContext.delete(member)
             if user.isSelfUser {
-                // We delete the local team in case the members user was the self user
-                deleteTeamAndConversations(team)
+                deleteAccount()
             } else {
                 // Remove member from all team conversations he was a participant of
                 team.conversations.filter {
@@ -150,6 +147,10 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
     private func deleteTeamAndConversations(_ team: Team) {
         team.conversations.forEach(managedObjectContext.delete)
         managedObjectContext.delete(team)
+    }
+    
+    private func deleteAccount() {
+        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.accountDeleted, userInfo: nil))
     }
 
 }

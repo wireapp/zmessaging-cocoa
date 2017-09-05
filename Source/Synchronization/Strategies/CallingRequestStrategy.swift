@@ -22,7 +22,7 @@ import WireDataModel
 
 extension ZMConversation {
     @objc (appendCallingMessageWithContent:)
-    public func appendCallingMessage(content: String) -> ZMClientMessage {
+    public func appendCallingMessage(content: String) -> ZMClientMessage? {
         let genericMessage = ZMGenericMessage(callingContent: content, nonce: NSUUID().transportString())
         return self.append(genericMessage, expires: false, hidden: true)
     }
@@ -36,22 +36,30 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     fileprivate var callCenter              : WireCallCenterV3?
     fileprivate let managedObjectContext    : NSManagedObjectContext
     fileprivate let genericMessageStrategy  : GenericMessageRequestStrategy
+    fileprivate let flowManager             : FlowManagerType
+    fileprivate var callConfigRequest       : ZMTransportRequest?
     
-    public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate) {
+    public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType) {
         self.managedObjectContext = managedObjectContext
         self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
+        self.flowManager = flowManager
         
         super.init()
         
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         
         if let userId = selfUser.remoteIdentifier, let clientId = selfUser.selfClient()?.remoteIdentifier {
-            callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, analytics: managedObjectContext.analytics)
+            callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics)
             callCenter?.transport = self
         }
     }
     
     public func nextRequest() -> ZMTransportRequest? {
+        if let request = callConfigRequest  {
+            callConfigRequest = nil
+            return request
+        }
+        
         return genericMessageStrategy.nextRequest()
     }
     
@@ -80,7 +88,7 @@ extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTracke
         
         for object in objects {
             if let  userClient = object as? UserClient, userClient.isSelfClient(), let clientId = userClient.remoteIdentifier, let userId = userClient.user?.remoteIdentifier {
-                callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, analytics: managedObjectContext.analytics)
+                callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics)
                 callCenter?.transport = self
                 break
             }
@@ -151,6 +159,22 @@ extension CallingRequestStrategy : WireCallCenterTransport {
                 completionHandler(response.httpStatus)
                 
             }
+        }
+    }
+    
+    public func requestCallConfig(completionHandler: @escaping (String?, Int) -> Void) {
+        managedObjectContext.performGroupedBlock {
+            self.callConfigRequest = ZMTransportRequest(path: "/calls/config", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
+            self.callConfigRequest?.add(ZMCompletionHandler(on: self.managedObjectContext.zm_userInterface, block: { (response) in
+                
+                var payloadAsString : String? = nil
+                if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
+                    payloadAsString = String(data: data, encoding: .utf8)
+                }
+                
+                completionHandler(payloadAsString, response.httpStatus)
+            }))
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
     }
     

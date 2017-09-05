@@ -116,6 +116,8 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 - (void)tearDown
 {
     [self.timedDownstreamSync invalidate];
+    self.clientStatus = nil;
+    self.syncStatus = nil;
 }
 
 - (SyncPhase)expectedSyncPhase

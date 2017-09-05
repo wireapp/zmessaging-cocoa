@@ -125,7 +125,7 @@
 
 - (NSArray *)commonRequestsOnLogin {
     return @[
-             [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:ZMMethodPOST payload:@{@"email":[self.selfUser.email copy], @"password":[self.selfUser.password copy], @"label": self.mockTransportSession.cookieStorage.cookieLabel} authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken],
+             [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:ZMMethodPOST payload:@{@"email":[self.selfUser.email copy], @"password":[self.selfUser.password copy], @"label": CookieLabel.current.value} authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken],
              [ZMTransportRequest requestGetFromPath:@"/self"],
              [ZMTransportRequest requestGetFromPath:@"/self"], // second request during slow sync
              [ZMTransportRequest requestGetFromPath:@"/clients"],
@@ -476,7 +476,7 @@
 
 }
 
-- (void)testThatTeamIsRemovedDuringSlowSync
+- (void)testThatAccountDeletedIfTeamIsDiscoveredToBeDeletedDuringSlowSync
 {
     // given
     __block MockTeam *mockTeam;
@@ -490,7 +490,6 @@
     
     // when
     // block requests to /notifications to enforce slowSync
-    __block BOOL hasNotificationsRequest = NO;
     __block BOOL hasTeamRequest = NO;
 
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
@@ -498,7 +497,6 @@
             if (!hasTeamRequest){
                 return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
             }
-            hasNotificationsRequest = YES;
         }
         if ([request.path hasPrefix:@"/teams"]) {
             hasTeamRequest = YES;
@@ -515,9 +513,9 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertNil([ZMUser selfUserInUserSession:self.userSession].team);
-    XCTAssertTrue(hasNotificationsRequest);
     XCTAssertTrue(hasTeamRequest);
+    XCTAssertNil(self.userSession); // user session has been closed
+    XCTAssertEqual(self.sessionManager.accountManager.accounts.count, 0ul); // account has been deleted
 }
 
 

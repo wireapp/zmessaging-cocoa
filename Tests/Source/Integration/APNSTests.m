@@ -128,7 +128,7 @@
 {
     XCTAssertTrue([self login]);
     [self.mockTransportSession resetReceivedRequests];
-
+    
     // given
     NSData *token = [NSData dataWithBytes:@"abc" length:3];
     NSData *newToken = [NSData dataWithBytes:@"def" length:6];
@@ -147,12 +147,23 @@
         }];
     };
     
+    // expect
+    id mockPushRegistrant = [OCMockObject niceMockForClass:ZMPushRegistrant.class];
+    [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
+
+    [[[mockPushRegistrant stub] andReturn:mockPushRegistrant] alloc];
+    (void)[[[mockPushRegistrant stub] andReturn:mockPushRegistrant] initWithDidUpdateCredentials:OCMOCK_ANY
+                                                                               didReceivePayload:OCMOCK_ANY
+                                                                              didInvalidateToken:OCMOCK_ANY];
+
     // when
     [self recreateSessionManager];
-    
-    id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
-    [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-    
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    if (nil == self.userSession) {
+        return XCTFail(@"No user session available");
+    }
+
     WaitForAllGroupsToBeEmpty(0.5);
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -163,6 +174,7 @@
     // then
     XCTAssertTrue([self lastRequestsContainedTokenRequests], @"Did receive: %@", self.mockTransportSession.receivedRequests);
     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
+    [mockPushRegistrant stopMocking];
 }
 
 - (void)testThatItReregistersPushTokensOnDemand

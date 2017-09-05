@@ -287,7 +287,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     
     [self fetchExistingSelfClientsAfterClientRegistered:client];
     
-    [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
+    [ZMUserSessionAuthenticationNotification notifyDidRegisterClient];
     [self.registrationStatusDelegate didRegisterUserClient:client];
     self.emailCredentials = nil;
     self.needsToCheckCredentials = NO;
@@ -315,6 +315,11 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         error.code != ZMUserSessionCanNotRegisterMoreClients)
     {
         self.emailCredentials = nil;
+    }
+    
+    if (error.code == ZMUserSessionNeedsPasswordToRegisterClient) {
+        // help the user by providing the email associated with this account
+        error = [NSError errorWithDomain:error.domain code:error.code userInfo:[ZMUser selfUserInContext:self.managedObjectContext].credentialsUserInfo];
     }
     
     if (error.code == ZMUserSessionNeedsPasswordToRegisterClient ||
@@ -366,9 +371,14 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)failedFetchingClients:(NSError *)error
 {
     if (error.code == ClientUpdateErrorSelfClientIsInvalid) {
-        // the selfClient was removed by an other user
-        [self invalidateSelfClient];
-        [self invalidateCookieAndNotify];
+
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+        UserClient *selfClient = selfUser.selfClient;
+
+        if (selfClient != nil) {
+            // the selfClient was removed by an other user
+            [self didDetectCurrentClientDeletion];
+        }
         self.needsToVerifySelfClient = NO;
     }
     if (error.code == ClientUpdateErrorDeviceIsOffline) {
@@ -379,7 +389,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)didDetectCurrentClientDeletion
 {
     [self invalidateSelfClient];
-    [self invalidateCookieAndNotify];
     
     NSFetchRequest *clientFetchRequest = [UserClient sortedFetchRequest];
     NSArray <UserClient *>*clients = [self.managedObjectContext executeFetchRequestOrAssert:clientFetchRequest];
@@ -389,6 +398,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     }
     
     [self.managedObjectContext deleteAndCreateNewEncryptionContext];
+    [self invalidateCookieAndNotify];
 }
 
 - (BOOL)clientIsReadyForRequests
@@ -410,9 +420,10 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)invalidateCookieAndNotify
 {
     self.emailCredentials = nil;
-    [self.cookieStorage deleteUserKeychainItems];
-    
-    NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:nil];
+    [self.cookieStorage deleteKeychainItems];
+
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+    NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:selfUser.credentialsUserInfo];
     [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:outError];
 }
 

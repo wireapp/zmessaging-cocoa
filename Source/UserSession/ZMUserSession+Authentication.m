@@ -62,39 +62,33 @@ static NSString *const HasHistoryKey = @"hasHistory";
 
 - (void)deleteUserKeychainItems;
 {
-    [self.transportSession.cookieStorage deleteUserKeychainItems];
+    [self.transportSession.cookieStorage deleteKeychainItems];
 }
 
-- (void)resetStateAndExit;
+- (void)closeAndDeleteCookie:(BOOL)deleteCookie
 {
-    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-        
-        // Park the main thread, so we don't do any more work:
-        dispatch_async(dispatch_get_main_queue(), ^{
-            dispatch_semaphore_signal(sem);
-            while (YES) {
-                [NSThread sleepForTimeInterval:0.1];
-            }
-        });
-        
-        while (dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER) != 0) {
-            ;
-        }
-        
-        [NSManagedObjectContext setClearPersistentStoreOnStart:YES];
-        
-        [[NSUserDefaults standardUserDefaults] synchronize];
-        [[NSUserDefaults sharedUserDefaults] synchronize];
-        [NSThread sleepForTimeInterval:0.1];
-        
-        exit(0);
-    });
-}
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    [[NSUserDefaults sharedUserDefaults] synchronize];
 
-+ (void)deleteCacheOnRelaunch;
-{
-    [NSManagedObjectContext setClearPersistentStoreOnStart:YES];
+    if (deleteCookie) {
+        [self deleteUserKeychainItems];
+    }
+
+    NSManagedObjectContext *refUIMoc = self.managedObjectContext;
+    NSManagedObjectContext *refSyncMOC = self.syncManagedObjectContext;
+
+    [refUIMoc performGroupedBlockAndWait:^{}];
+    [refSyncMOC performGroupedBlockAndWait:^{}];
+
+    [self tearDown];
+
+    [refUIMoc performGroupedBlockAndWait:^{}];
+    [refSyncMOC performGroupedBlockAndWait:^{}];
+
+    refUIMoc = nil;
+    refSyncMOC = nil;
+
+    [StorageStack reset];
 }
 
 @end

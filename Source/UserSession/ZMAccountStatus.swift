@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -120,16 +120,16 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, 
         }
         
         ZMUserSession.addInitalSyncCompletionObserver(self)
-        self.authenticationToken = ZMUserSessionAuthenticationNotification.addObserver({ [weak self] (note) in
+        self.authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(on: managedObjectContext) { [weak self] (note) in
             switch note.type {
-            case .authenticationNotificationAuthenticationDidSuceeded:
+            case .authenticationNotificationAuthenticationDidSuceeded, .authenticationNotificationDidRegisterClient:
                 self?.didAuthenticate()
             case .authenticationNotificationAuthenticationDidFail:
                 self?.failedToAuthenticate()
             default:
                 return
             }
-        })
+        }
         
         self.registrationToken = ZMUserSessionRegistrationNotification.addObserver({ [weak self] (note) in
             guard note?.type == .registrationNotificationPhoneNumberVerificationDidSucceed ||

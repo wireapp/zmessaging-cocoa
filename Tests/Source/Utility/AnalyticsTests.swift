@@ -24,26 +24,42 @@ import WireTesting
 
 
 
-class AnalyticsTests: XCTestCase {
+class AnalyticsTests: ZMTBaseTest {
     
     var analytics: MockAnalytics!
-    
-    func createSyncMOC() -> NSManagedObjectContext {
-        let storeURL = PersistentStoreRelocator.storeURL(in: .documentDirectory)
-        let keyStoreURL = storeURL?.deletingLastPathComponent()
-        
-        return NSManagedObjectContext.createSyncContextWithStore(at: storeURL, keyStore: keyStoreURL)
+    var directory: ManagedObjectContextDirectory!
+    var sharedContainerURL : URL!
+    var accountID : UUID!
+
+    func createSyncContext() -> NSManagedObjectContext {
+        let expectation = self.expectation(description: "create directory")
+        StorageStack.shared.createManagedObjectContextDirectory(accountIdentifier: accountID, applicationContainer: sharedContainerURL) {
+            self.directory = $0
+            expectation.fulfill()
+        }
+        XCTAssert(self.waitForCustomExpectations(withTimeout: 0.5))
+        return self.directory.syncContext
     }
-    
+
     override func setUp() {
         super.setUp()
         analytics = MockAnalytics()
+        accountID = UUID()
+        sharedContainerURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    }
+    
+    override func tearDown() {
+        sharedContainerURL = nil
+        directory = nil
+        accountID = nil
+        analytics = nil
+        StorageStack.reset()
+        super.tearDown()
     }
     
     func testThatItSetsAnalyticsOnManagedObjectContext() {
         // given
-        let context = createSyncMOC()
-        context.markAsSyncContext()
+        let context = createSyncContext()
         
         // when
         context.analytics = analytics
@@ -75,7 +91,7 @@ extension AnalyticsTests {
     
     func testThatItDoesTrackTheIntervalBetweenTwoUploads() {
         // given
-        let tracker = WireSyncEngine.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
+        let tracker = WireSyncEngine.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncContext())
         
         
         // when
@@ -93,7 +109,7 @@ extension AnalyticsTests {
     func testThatItTracksAddresBookUploadStarted() {
         // given
         let size : UInt = 345
-        let tracker = WireSyncEngine.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
+        let tracker = WireSyncEngine.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncContext())
         
         // when
         tracker.tagAddressBookUploadStarted(size)
@@ -111,7 +127,7 @@ extension AnalyticsTests {
     
     func assertThatItTracksAddresBookUploadEnded(_ hoursSinceLastUpload: Int? = nil, shouldTrackInterval: Bool = true, line: UInt = #line) {
         // given
-        let tracker = WireSyncEngine.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncMOC())
+        let tracker = WireSyncEngine.AddressBookAnalytics(analytics: analytics, managedObjectContext: createSyncContext())
         if let hours = hoursSinceLastUpload.map(TimeInterval.init) {
             let lastDate = Date(timeIntervalSinceNow: -hours * 3600)
             tracker.managedObjectContext.lastAddressBookUploadDate = lastDate

@@ -35,6 +35,7 @@
 
 @interface IntegrationTest : ZMTBaseTest
 
+@property (nonatomic, null_unspecified) NSUUID *currentUserIdentifier;
 @property (nonatomic, nullable) SessionManager *sessionManager;
 @property (nonatomic, null_unspecified) MockTransportSession *mockTransportSession;
 @property (nonatomic, readonly, nullable) ZMTransportSession *transportSession;
@@ -43,6 +44,7 @@
 @property (nonatomic, nullable) ApplicationMock *application;
 @property (nonatomic, nullable) ZMUserSession *userSession;
 @property (nonatomic, nullable) UnauthenticatedSession *unauthenticatedSession;
+@property (nonatomic, null_unspecified) NSURL *sharedContainerDirectory;
 @property (nonatomic, readonly) BOOL useInMemoryStore;
 @property (nonatomic, readonly) BOOL useRealKeychain;
 @property (nonatomic, nullable) SearchDirectory *sharedSearchDirectory;

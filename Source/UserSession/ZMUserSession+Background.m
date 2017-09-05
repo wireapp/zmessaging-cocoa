@@ -136,6 +136,12 @@ static NSString *ZMLogTag = @"Push";
 - (void)setupPushNotificationsForApplication:(id<ZMApplication>)application
 {
     [application registerForRemoteNotifications];
+    
+#if TARGET_OS_SIMULATOR
+    ZMLogInfo(@"Skipping request for remote notification permission on simulator.");
+    return;
+    
+#else
     NSSet *categories = [NSSet setWithArray:@[
                                               self.replyCategory,
                                               self.replyCategoryIncludingLike,
@@ -147,6 +153,7 @@ static NSString *ZMLogTag = @"Push";
                                                                                                  UIUserNotificationTypeAlert |
                                                                                                  UIUserNotificationTypeBadge)
                                                                                      categories:categories]];
+#endif
 }
 
 

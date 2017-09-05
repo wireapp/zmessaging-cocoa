@@ -105,10 +105,9 @@ public class VoiceChannelV3 : NSObject, CallProperties, VoiceChannel {
     }
     
     public func setVideoCaptureDevice(device: CaptureDevice) throws {
-        guard let flowManager = ZMAVSBridge.flowManagerInstance(), flowManager.isReady() else { throw VoiceChannelV2Error.noFlowManagerError() }
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.switchToVideoNotAllowedError() }
+        guard let conversationId = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.switchToVideoNotAllowedError() }
         
-        flowManager.setVideoCaptureDevice(device.deviceIdentifier, forConversation: remoteIdentifier.transportString())
+        WireCallCenterV3.activeInstance?.setVideoCaptureDevice(device, for: conversationId)
     }
     
 }
@@ -170,7 +169,7 @@ extension VoiceChannelV3 : CallActionsInternal {
         
         switch state {
         case .incomingCall, .incomingCallInactive:
-            joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier, isGroup: isGroup) ?? false
+            joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier) ?? false
         case .incomingCallDegraded:
             joined = true // Don't answer call
         default:
@@ -194,8 +193,7 @@ extension VoiceChannelV3 : CallActionsInternal {
               let remoteID = conv.remoteIdentifier
         else { return }
         
-        let isGroup = (conv.conversationType == .group)
-        WireCallCenterV3.activeInstance?.rejectCall(conversationId: remoteID, isGroup: isGroup)
+        WireCallCenterV3.activeInstance?.rejectCall(conversationId: remoteID)
     }
     
 }
@@ -233,7 +231,7 @@ public extension CallState {
     
     var connectionState : VoiceChannelV2ConnectionState {
         switch self {
-        case .unknown, .terminating, .incoming, .none:
+        case .unknown, .terminating, .incoming, .none, .establishedDataChannel:
             return .notConnected
         case .established:
             return .connected
@@ -256,6 +254,8 @@ public extension CallState {
             return .selfIsJoiningActiveChannelDegraded
         case .answered:
             return .selfIsJoiningActiveChannel
+        case .establishedDataChannel:
+            return .establishedDataChannel
         case .established:
             return .selfConnectedToActiveChannel
         case .outgoing where securityLevel == .secureWithIgnored:

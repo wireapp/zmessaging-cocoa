@@ -19,53 +19,76 @@
 import Foundation
 import WireUtilities
 
-protocol UnauthenticatedSessionDelegate: class {
-    func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials)
+public protocol UnauthenticatedSessionDelegate: class {
+    /// Update credentials for the corresponding user session. Returns true if the credentials were accepted.
+    func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials)  -> Bool
     func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data)
+    func session(session: UnauthenticatedSession, createdAccount account: Account)
 }
 
-public protocol ReachabilityProvider {
-    var mayBeReachable: Bool { get }
+@objc public protocol UserInfoParser: class {
+    @objc(parseUserInfoFromResponse:)
+    func parseUserInfo(from response: ZMTransportResponse)
 }
 
-extension ZMReachability: ReachabilityProvider {}
+private let log = ZMSLog(tag: "UnauthenticatedSession")
 
-public protocol TransportSession {
-    var cookieStorage: ZMPersistentCookieStorage { get }
-    var reachabilityProvider: ReachabilityProvider { get }
-    @discardableResult func attemptToEnqueueSyncRequestWithGenerator(_ generator: @escaping ZMTransportRequestGenerator) -> ZMTransportEnqueueResult
-}
-
-extension ZMTransportSession: TransportSession {
-    public var reachabilityProvider: ReachabilityProvider {
-        return self.reachability
-    }
-}
 
 @objc
-public class UnauthenticatedSession : NSObject {
+public class UnauthenticatedSession: NSObject {
     
     public let groupQueue: DispatchGroupQueue
     let authenticationStatus: ZMAuthenticationStatus
-    let operationLoop: UnauthenticatedOperationLoop
+    let reachability: ReachabilityProvider
+    private(set) var operationLoop: UnauthenticatedOperationLoop!
+    private let transportSession: UnauthenticatedTransportSessionProtocol
+    private var tornDown = false
+
     weak var delegate: UnauthenticatedSessionDelegate?
-        
-    init(transportSession: TransportSession, delegate: UnauthenticatedSessionDelegate?) {
+
+    init(transportSession: UnauthenticatedTransportSessionProtocol, reachability: ReachabilityProvider, delegate: UnauthenticatedSessionDelegate?) {
         self.delegate = delegate
-        self.groupQueue = DispatchGroupQueue(queue: DispatchQueue.main)
-        self.authenticationStatus = ZMAuthenticationStatus(cookieStorage: transportSession.cookieStorage, groupQueue: groupQueue)
-        
-        let loginRequestStrategy = ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)
-        let loginCodeRequestStrategy = ZMLoginCodeRequestTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!
-        let registrationRequestStrategy = ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!
-        let phoneNumberVerificationRequestStrategy = ZMPhoneNumberVerificationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!
-        
-        self.operationLoop = UnauthenticatedOperationLoop(transportSession: transportSession, operationQueue: groupQueue, requestStrategies: [
-                loginRequestStrategy,
-                loginCodeRequestStrategy,
-                registrationRequestStrategy,
-                phoneNumberVerificationRequestStrategy
-             ])
+        self.groupQueue = DispatchGroupQueue(queue: .main)
+        self.authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue)
+        self.transportSession = transportSession
+        self.reachability = reachability
+        super.init()
+
+        self.operationLoop = UnauthenticatedOperationLoop(
+            transportSession: transportSession,
+            operationQueue: groupQueue,
+            requestStrategies: [
+                ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus, userInfoParser: self),
+                ZMLoginCodeRequestTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
+                ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus, userInfoParser: self)!,
+                ZMPhoneNumberVerificationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!
+            ]
+        )
     }
-    
+
+    deinit {
+        precondition(tornDown, "Need to call tearDown before deinit")
+    }
+
+    func tearDown() {
+        operationLoop.tearDown()
+        tornDown = true
+    }
+
+}
+
+// MARK: - UserInfoParser
+
+extension UnauthenticatedSession: UserInfoParser {
+
+    public func parseUserInfo(from response: ZMTransportResponse) {
+        guard let info = response.extractUserInfo() else { return log.warn("Failed to parse UserInfo from response: \(response)") }
+        log.debug("Parsed UserInfo from response: \(info)")
+        let account = Account(userName: "", userIdentifier: info.identifier)
+        let cookieStorage = account.cookieStorage()
+        cookieStorage.authenticationCookieData = info.cookieData
+        self.authenticationStatus.authenticationCookieData = info.cookieData
+        self.delegate?.session(session: self, createdAccount: account)
+    }
+
 }

@@ -44,9 +44,23 @@
 
 #import <WireSyncEngine/ZMAuthenticationStatus.h>
 
+@class FlowManagerMock;
+
 @interface ThirdPartyServices : NSObject <ZMThirdPartyServicesDelegate>
 
 @property (nonatomic) NSUInteger uploadCount;
+
+@end
+
+@protocol LocalStoreProviderProtocol;
+
+@interface MockLocalStoreProvider : NSObject <LocalStoreProviderProtocol>
+
+@property (nonatomic, copy) NSUUID *userIdentifier;
+@property (nonatomic, copy) NSURL *applicationContainer;
+@property (nonatomic, strong) ManagedObjectContextDirectory *contextDirectory;
+
+- (instancetype)initWithSharedContainerDirectory:(NSURL *)sharedContainerDirectory userIdentifier:(NSUUID *)userIdentifier contextDirectory:(ManagedObjectContextDirectory *)contextDirectory;
 
 @end
 
@@ -61,6 +75,7 @@
 @property (nonatomic) ZMUserSession *sut;
 @property (nonatomic) ZMSyncStrategy *syncStrategy;
 @property (nonatomic) id mediaManager;
+@property (nonatomic) FlowManagerMock *flowManagerMock;
 @property (nonatomic) NSUInteger dataChangeNotificationsCount;
 @property (nonatomic) ThirdPartyServices *thirdPartyServices;
 @property (nonatomic) id requestAvailableNotification;
@@ -68,5 +83,6 @@
 @property (nonatomic) id apnsEnvironment;
 @property (nonatomic) ZMClientRegistrationStatus * clientRegistrationStatus;
 @property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
+@property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
 
 @end

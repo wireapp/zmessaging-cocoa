@@ -19,8 +19,26 @@
 import Foundation
 @testable import WireSyncEngine
 
+class WireCallCenterTransportMock : WireCallCenterTransport {
+    
+    var mockCallConfigResponse : (String, Int)?
+    
+    
+    func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((Int) -> Void)) {
+        
+    }
+    
+    func requestCallConfig(completionHandler: @escaping (String?, Int) -> Void) {
+        if let mockCallConfigResponse = mockCallConfigResponse {
+            completionHandler(mockCallConfigResponse.0, mockCallConfigResponse.1)
+        }
+    }
+    
+}
+
 class WireCallCenterV3Tests: MessagingTest {
 
+    var flowManager : FlowManagerMock!
     var mockAVSWrapper : MockAVSWrapper!
     var sut : WireCallCenterV3!
     var selfUserID : UUID!
@@ -30,12 +48,14 @@ class WireCallCenterV3Tests: MessagingTest {
         super.setUp()
         selfUserID = UUID()
         clientID = "foo"
+        flowManager = FlowManagerMock()
         mockAVSWrapper = MockAVSWrapper(userId: selfUserID, clientId: clientID, observer: nil)
-        sut = WireCallCenterV3(userId: selfUserID, clientId: clientID, avsWrapper: mockAVSWrapper, uiMOC: uiMOC)
+        sut = WireCallCenterV3(userId: selfUserID, clientId: clientID, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager)
     }
     
     override func tearDown() {
         sut = nil
+        flowManager = nil
         super.tearDown()
     }
     
@@ -197,7 +217,7 @@ class WireCallCenterV3Tests: MessagingTest {
         }
         
         // when
-        sut.rejectCall(conversationId: conversationId, isGroup: true)
+        sut.rejectCall(conversationId: conversationId)
         WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: context)
 
         // then
@@ -226,7 +246,7 @@ class WireCallCenterV3Tests: MessagingTest {
         }
         
         // when
-        sut.rejectCall(conversationId: conversationId, isGroup: false)
+        sut.rejectCall(conversationId: conversationId)
         WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: context)
 
         // then
@@ -239,7 +259,7 @@ class WireCallCenterV3Tests: MessagingTest {
             let conversationId = UUID(cString: conversationIdRef)!
             
             // when
-            _ = sut.answerCall(conversationId: conversationId, isGroup: true)
+            _ = sut.answerCall(conversationId: conversationId)
             
             // then
             XCTAssertTrue(mockAVSWrapper.didCallAnswerCall)
@@ -309,7 +329,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
 }
 
-// MARK - Ignoring Calls
+// MARK: - Ignoring Calls
 
 extension WireCallCenterV3Tests {
     
@@ -324,7 +344,7 @@ extension WireCallCenterV3Tests {
         // when
         WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.rejectCall(conversationId: conversationId, isGroup: true)
+        sut.rejectCall(conversationId: conversationId)
         
         // then
         XCTAssertEqual(sut.callState(conversationId: conversationId), .incoming(video: false, shouldRing: false))
@@ -341,7 +361,7 @@ extension WireCallCenterV3Tests {
         // when
         WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.rejectCall(conversationId: conversationId, isGroup: false)
+        sut.rejectCall(conversationId: conversationId)
         
         // then
         XCTAssertEqual(sut.callState(conversationId: conversationId), .incoming(video: false, shouldRing: false))
@@ -384,7 +404,7 @@ extension WireCallCenterV3Tests {
 }
 
 
-// MARK - Participants
+// MARK: - Participants
 extension WireCallCenterV3Tests {
 
     func testThatItCreatesAParticipantSnapshotForAnIncomingCall(){
@@ -447,4 +467,24 @@ extension WireCallCenterV3Tests {
         let connectedState = sut.connectionState(forUserWith: userId, in: conversationId)
         XCTAssertEqual(connectedState, .connected)
     }
+}
+
+// MARK: - Call Config
+extension WireCallCenterV3Tests {
+    
+    func testThatCallConfigRequestsAreForwaredToTransportAndAVS() {
+        // given
+        let mockTransport = WireCallCenterTransportMock()
+        mockTransport.mockCallConfigResponse = ("call_config", 200)
+        sut.transport = mockTransport
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        
+        // when
+        XCTAssertEqual(WireSyncEngine.requestCallConfigHandler(handle: nil, contextRef: context), 0)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertTrue(mockAVSWrapper.didUpdateCallConfig)
+    }
+    
 }

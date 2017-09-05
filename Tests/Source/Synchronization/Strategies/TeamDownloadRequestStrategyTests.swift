@@ -298,6 +298,43 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
             XCTAssert(ZMUser.selfUser(in: self.syncMOC).isGuest(in: conversation))
         }
     }
-
-
+    
+    func testThatItRemovesAMemberThatIsNotSelfUser() {
+        
+        let teamId = UUID.create()
+        let userId = UUID.create()
+        
+        syncMOC.performGroupedBlockAndWait {
+            // given
+            let team = Team.insertNewObject(in: self.syncMOC)
+            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            team.remoteIdentifier = teamId
+            
+            let user = ZMUser.insertNewObject(in: self.syncMOC)
+            user.remoteIdentifier = userId
+            _ = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
+            self.syncMOC.saveOrRollback()
+            
+            let payload : [String: Any] = [
+                "data": ["user": userId.transportString()],
+                "time": Date().transportString(),
+                "team": teamId.transportString(),
+                "type": "team.member-leave"
+            ]
+            
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as NSDictionary, uuid: nil)!
+            
+            // when
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+            self.syncMOC.saveOrRollback()
+            
+            // then
+            let result = team.members.contains(where: { (member) -> Bool in
+                return member.user?.remoteIdentifier == userId
+            })
+            
+            XCTAssertFalse(result)
+        }
+    }
+    
 }

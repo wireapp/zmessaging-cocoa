@@ -30,7 +30,9 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionAuthenticationNotificationType) {
     ZMAuthenticationNotificationAuthenticationDidFail = 0,
     ZMAuthenticationNotificationAuthenticationDidSuceeded,
     ZMAuthenticationNotificationLoginCodeRequestDidFail,
-    ZMAuthenticationNotificationLoginCodeRequestDidSucceed
+    ZMAuthenticationNotificationLoginCodeRequestDidSucceed,
+    ZMAuthenticationNotificationDidRegisterClient,
+    ZMAuthenticationNotificationDidDetectSelfClientDeletion
 };
 
 @interface ZMUserSessionAuthenticationNotification : ZMNotification
@@ -50,7 +52,13 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionAuthenticationNotificationType) {
 /// Notifies all @c ZMAuthenticationObserver that the request for the login code succeded
 + (void)notifyLoginCodeRequestDidSucceed;
 
-+ (id<ZMAuthenticationObserverToken>)addObserverWithBlock:(void(^)(ZMUserSessionAuthenticationNotification *))block ZM_MUST_USE_RETURN;
+/// Notifies all @c ZMAuthenticationObserver that the self client has been registered succesfully
++ (void)notifyDidRegisterClient;
+
+/// Notifies all @c ZMAuthenticationObserver that the self client has been deleted remotely
++ (void)notifyDidDetectSelfClientDeletion;
+
++ (id<ZMAuthenticationObserverToken>)addObserverOnGroupQueue:(id<ZMSGroupQueue>)groupQueue block:(void(^)(ZMUserSessionAuthenticationNotification *))block ZM_MUST_USE_RETURN;
 + (void)removeObserverForToken:(id<ZMAuthenticationObserverToken>)token;
 
 @end

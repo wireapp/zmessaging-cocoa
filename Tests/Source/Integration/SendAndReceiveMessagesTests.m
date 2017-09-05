@@ -351,8 +351,6 @@
 {
     //given
     XCTAssert([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
     

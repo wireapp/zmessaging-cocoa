@@ -21,8 +21,10 @@
 @import WireRequestStrategy;
 @import WireMessageStrategy;
 
+@protocol UserInfoParser;
 @class NSManagedObjectContext;
 @class ZMAuthenticationStatus;
+
 
 NS_ASSUME_NONNULL_BEGIN;
 
@@ -30,7 +32,9 @@ NS_ASSUME_NONNULL_BEGIN;
 
 - (instancetype)init NS_UNAVAILABLE;
 
-- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus;
+- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue
+              authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
+                    userInfoParser:(nullable id<UserInfoParser>)userInfoParser;
 
 @end
 

@@ -24,12 +24,16 @@
 
 @interface ZMBlacklistVerificator : NSObject
 
+NS_ASSUME_NONNULL_BEGIN
+
 - (instancetype)initWithCheckInterval:(NSTimeInterval)checkInterval
                               version:(NSString *)version
-                         workingGroup:(ZMSDispatchGroup *)workingGroup
+                         workingGroup:(ZMSDispatchGroup * _Nullable)workingGroup
                           application:(id<ZMApplication>)application
                     blacklistCallback:(void (^)(BOOL))blacklistCallback;
 
 - (void)teardown;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -41,13 +41,15 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     
     override func setUp() {
         super.setUp()
+        self.syncMOC.performGroupedBlockAndWait {
+            self.spyKeyStore = SpyUserClientKeyStore(accountDirectory: self.accountDirectory, applicationContainer: self.sharedContainerURL)
+            self.cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer", userIdentifier: self.userIdentifier)
 
-        self.spyKeyStore = SpyUserClientKeyStore(in: UserClientKeysStore.otrDirectoryURL)
-        cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer")
-        clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: cookieStorage, registrationStatusDelegate: nil)
-        clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
-        sut = UserClientRequestStrategy(clientRegistrationStatus: clientRegistrationStatus, clientUpdateStatus:clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
-        NotificationCenter.default.addObserver(self, selector: #selector(UserClientRequestStrategyTests.didReceiveAuthenticationNotification(_:)), name: NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil)
+            self.clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: self.cookieStorage, registrationStatusDelegate: nil)
+            self.clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
+            self.sut = UserClientRequestStrategy(clientRegistrationStatus: self.clientRegistrationStatus, clientUpdateStatus:self.clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
+            NotificationCenter.default.addObserver(self, selector: #selector(UserClientRequestStrategyTests.didReceiveAuthenticationNotification(_:)), name: NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil)
+        }
     }
     
     
@@ -56,11 +58,10 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     }
     
     override func tearDown() {
-        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectoryURL)
+        try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectory)
         
         self.clientRegistrationStatus.tearDown()
         self.clientRegistrationStatus = nil
-        self.clientUpdateStatus.tearDown()
         self.clientUpdateStatus = nil
         self.spyKeyStore = nil
         self.sut.tearDown()
@@ -85,7 +86,7 @@ extension UserClientRequestStrategyTests {
     
     func testThatItReturnsRequestForInsertedObject() {
         // given
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
         clientRegistrationStatus.mockPhase = .unregistered
         
@@ -106,7 +107,7 @@ extension UserClientRequestStrategyTests {
 
     func testThatItDoesNotReturnRequestIfThereIsNoInsertedObject() {
         // given
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
         
         // when
@@ -123,8 +124,8 @@ extension UserClientRequestStrategyTests {
     func testThatItStoresTheRemoteIdentifierWhenUpdatingAnInsertedObject() {
         
         // given
-        let client = createSelfClient(sut.managedObjectContext)
-        self.sut.managedObjectContext.saveOrRollback()
+        let client = createSelfClient(sut.managedObjectContext!)
+        self.sut.managedObjectContext!.saveOrRollback()
         
         let remoteIdentifier = "superRandomIdentifer"
         let payload = ["id" : remoteIdentifier]
@@ -148,7 +149,7 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .unregistered
 
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         let maxID_before = UInt16(client.preKeysRangeMax)
         XCTAssertEqual(maxID_before, 0)
         
@@ -173,7 +174,7 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .unregistered
         
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         XCTAssertNil(client.apsDecryptionKey)
         XCTAssertNil(client.apsVerificationKey)
         
@@ -195,7 +196,7 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .unregistered
 
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
         
         guard let request = self.sut.nextRequest() else { return XCTFail() }
@@ -210,7 +211,7 @@ extension UserClientRequestStrategyTests {
         let note = receivedAuthenticationNotifications.first
         AssertOptionalNotNil(note, "Authentication should succeed. Observers should be notified") { note in
             XCTAssertNil(note.error)
-            XCTAssertEqual(note.type, ZMUserSessionAuthenticationNotificationType.authenticationNotificationAuthenticationDidSuceeded)
+            XCTAssertEqual(note.type, ZMUserSessionAuthenticationNotificationType.authenticationNotificationDidRegisterClient)
         }
     }
     
@@ -219,7 +220,7 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .unregistered
 
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
         
         guard let request = self.sut.nextRequest() else { return XCTFail() }
@@ -246,17 +247,17 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .unregistered
 
-        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext!)
         selfUser.setValue("hello@example.com", forKey: #keyPath(ZMUser.emailAddress))
         
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
         
         guard let request = self.sut.nextRequest() else { return XCTFail() }
         let responsePayload = ["code": 403, "message": "Re-authentication via password required", "label": "missing-auth"] as [String : Any]
         let response = ZMTransportResponse(payload: responsePayload as ZMTransportData, httpStatus: 403, transportSessionError: nil)
 
-        let expectedError = NSError(domain: ZMUserSessionErrorDomain, code: Int(ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue), userInfo: nil)
+        let expectedError = NSError(domain: ZMUserSessionErrorDomain, code: Int(ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue), userInfo: [ ZMEmailCredentialKey : selfUser.emailAddress ])
         
         // when
         request.complete(with: response)
@@ -278,9 +279,9 @@ extension UserClientRequestStrategyTests {
         cookieStorage.authenticationCookieData = Data()
         clientRegistrationStatus.mockPhase = .unregistered
 
-        let client = createSelfClient(sut.managedObjectContext)
+        let client = createSelfClient(sut.managedObjectContext!)
         sut.notifyChangeTrackers(client)
-        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext)
+        let selfUser = ZMUser.selfUser(in: self.sut.managedObjectContext!)
         selfUser.remoteIdentifier = UUID.create()
         
 
@@ -314,9 +315,9 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .registered
 
-        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext)
+        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext!)
         client.remoteIdentifier = UUID.create().transportString()
-        self.sut.managedObjectContext.saveOrRollback()
+        self.sut.managedObjectContext!.saveOrRollback()
         
         client.numberOfKeysRemaining = Int32(self.sut.minNumberOfRemainingKeys - 1)
         client.setLocallyModifiedKeys(Set(arrayLiteral: ZMUserClientNumberOfKeysRemainingKey))
@@ -342,11 +343,11 @@ extension UserClientRequestStrategyTests {
         // given
         clientRegistrationStatus.mockPhase = .registered
         
-        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext)
+        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext!)
 
         // when
         client.remoteIdentifier = nil
-        self.sut.managedObjectContext.saveOrRollback()
+        self.sut.managedObjectContext!.saveOrRollback()
         
         client.numberOfKeysRemaining = Int32(self.sut.minNumberOfRemainingKeys - 1)
         client.setLocallyModifiedKeys(Set(arrayLiteral: ZMUserClientNumberOfKeysRemainingKey))
@@ -358,9 +359,9 @@ extension UserClientRequestStrategyTests {
     
     func testThatItDoesNotReturnRequestIfNumberOfRemainingKeysIsAboveMinimum() {
         // given
-        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext)
+        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext!)
         client.remoteIdentifier = UUID.create().transportString()
-        self.sut.managedObjectContext.saveOrRollback()
+        self.sut.managedObjectContext!.saveOrRollback()
         
         client.numberOfKeysRemaining = Int32(self.sut.minNumberOfRemainingKeys)
         
@@ -376,9 +377,9 @@ extension UserClientRequestStrategyTests {
     
     func testThatItResetsNumberOfRemainingKeysAfterNewKeysUploaded() {
         // given
-        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext)
+        let client = UserClient.insertNewObject(in: self.sut.managedObjectContext!)
         client.remoteIdentifier = UUID.create().transportString()
-        self.sut.managedObjectContext.saveOrRollback()
+        self.sut.managedObjectContext!.saveOrRollback()
         
         client.numberOfKeysRemaining = Int32(self.sut.minNumberOfRemainingKeys - 1)
         let expectedNumberOfKeys = client.numberOfKeysRemaining + Int32(sut.requestsFactory.keyCount)
@@ -436,24 +437,30 @@ extension UserClientRequestStrategyTests {
     
     func testThatDeletesClientsThatWereNotInTheFetchResponse() {
         
-        // given
-        let selfClient = self.createSelfClient()
-        let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        let nextResponse = ZMTransportResponse(payload: payloadForClients() as ZMTransportData?, httpStatus: 200, transportSessionError: nil)
-        let newClient = UserClient.insertNewObject(in: self.syncMOC)
-        newClient.user = selfUser
-        newClient.remoteIdentifier = "deleteme"
-        self.syncMOC.saveOrRollback()
+        var selfUser: ZMUser!
+        var selfClient: UserClient!
+        var newClient: UserClient!
         
-        // when
-        _ = sut.nextRequest()
-        sut.didReceive(nextResponse, forSingleRequest: sut.fetchAllClientsSync)
+        syncMOC.performGroupedBlockAndWait {
+            // given
+            selfClient = self.createSelfClient()
+            selfUser = ZMUser.selfUser(in: self.syncMOC)
+            let nextResponse = ZMTransportResponse(payload: self.payloadForClients() as ZMTransportData?, httpStatus: 200, transportSessionError: nil)
+            newClient = UserClient.insertNewObject(in: self.syncMOC)
+            newClient.user = selfUser
+            newClient.remoteIdentifier = "deleteme"
+            self.syncMOC.saveOrRollback()
+            
+            // when
+            _ = self.sut.nextRequest()
+            self.sut.didReceive(nextResponse, forSingleRequest: self.sut.fetchAllClientsSync)
+        }
+        
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // then
         XCTAssertTrue(selfUser.clients.contains(selfClient))
         XCTAssertFalse(selfUser.clients.contains(newClient))
-        
     }
 }
 
@@ -508,6 +515,7 @@ extension UserClientRequestStrategyTests {
             
             // when
             let _ = self.sut.updateUpdatedObject(client, requestUserInfo:nil, response: response, keysToParse:Set(arrayLiteral: ZMUserClientMarkedToDeleteKey))
+            self.syncMOC.saveOrRollback()
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         

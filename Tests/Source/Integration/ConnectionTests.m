@@ -95,10 +95,7 @@
     [self searchAndConnectToUserWithName:searchUserName searchQuery:@"McUser"];
     WaitForAllGroupsToBeEmpty(0.5);
 
-    [self destroySharedSearchDirectory];
-    [self destroySessionManager];
-    [self deleteAuthenticationCookie];
-    [self createSessionManager];
+    [self recreateSessionManagerAndDeleteLocalData];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when

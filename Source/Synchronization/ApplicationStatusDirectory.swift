@@ -74,7 +74,6 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         
         apnsConfirmationStatus.tearDown()
         clientRegistrationStatus.tearDown()
-        clientUpdateStatus.tearDown()
     }
     
     public var deliveryConfirmation: DeliveryConfirmationDelegate {

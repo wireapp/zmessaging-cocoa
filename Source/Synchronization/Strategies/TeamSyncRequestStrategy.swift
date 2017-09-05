@@ -92,12 +92,12 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
         guard isSyncing, memberSync.isDone, !teamListSync.hasMoreToFetch else { return }
         syncStatus?.finishCurrentSyncPhase(phase: expectedSyncPhase)
         
-        // Delete local teams not on the remote anymore
+        // if our local team didn't exist on the BE we assume it's been deleted
+        // and must therefore delete the user account
         guard remotelyDeletedIds.count > 0 else { return }
-        let orderedIds = NSOrderedSet(set: remotelyDeletedIds)
-        let removedTeams = Team.fetchObjects(withRemoteIdentifiers: orderedIds, in: managedObjectContext)
-        removedTeams?.forEach { managedObjectContext.delete($0 as! NSManagedObject) }
         remotelyDeletedIds = Set()
+        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.accountDeleted, userInfo: nil))
+    
     }
     
     fileprivate var expectedSyncPhase : SyncPhase {

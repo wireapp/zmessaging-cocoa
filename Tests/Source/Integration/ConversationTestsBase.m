@@ -31,7 +31,6 @@
 
 - (void)tearDown
 {
-    self.receivedConversationWindowChangeNotifications = nil;
     [self.userSession.syncManagedObjectContext performGroupedBlockAndWait:^{
         [self.userSession.syncManagedObjectContext zm_teardownMessageObfuscationTimer];
     }];
@@ -39,6 +38,8 @@
     
     [self.userSession.managedObjectContext zm_teardownMessageDeletionTimer];
     XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout: 0.5]);
+    self.groupConversationWithOnlyConnected = nil;
+    self.receivedConversationWindowChangeNotifications = nil;
     
     [super tearDown];
 }

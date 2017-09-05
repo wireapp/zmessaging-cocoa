@@ -39,9 +39,9 @@
 
 - (void)setUp {
     [super setUp];
-    
+
     DispatchGroupQueue *groupQueue = [[DispatchGroupQueue alloc] initWithQueue:dispatch_get_main_queue()];
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithCookieStorage:nil groupQueue:groupQueue];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue];
     self.sut = [[ZMLoginCodeRequestTranscoder alloc] initWithGroupQueue:groupQueue authenticationStatus:self.authenticationStatus];
 }
 
@@ -93,7 +93,8 @@
  
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];
-    id token = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note) {
+    
+    id token = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
         XCTAssertEqual(note.error.code, (long) ZMUserSessionUnkownError);
         XCTAssertEqualObjects(note.error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
@@ -120,7 +121,7 @@
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];
-    id token = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note) {
+    id token = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
         XCTAssertEqual(note.error.code, (long) ZMUserSessionInvalidPhoneNumber);
         XCTAssertEqualObjects(note.error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
@@ -147,7 +148,7 @@
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];
-    id token = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note) {
+    id token = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
         XCTAssertEqual(note.error.code, (long) ZMUserSessionCodeRequestIsAlreadyPending);
         XCTAssertEqualObjects(note.error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
@@ -174,7 +175,7 @@
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];
-    id token = [ZMUserSessionAuthenticationNotification addObserverWithBlock:^(ZMUserSessionAuthenticationNotification *note) {
+    id token = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
         XCTAssertEqual(note.error.code, (long) ZMUserSessionInvalidPhoneNumber);
         XCTAssertEqualObjects(note.error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];

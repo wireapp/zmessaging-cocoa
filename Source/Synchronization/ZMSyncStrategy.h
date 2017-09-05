@@ -28,7 +28,6 @@
 @class ZMTransportRequest;
 @class ZMPushChannelConnection;
 @class ZMAuthenticationStatus;
-@class ZMOnDemandFlowManager;
 @class ZMTransportSession;
 @class LocalNotificationDispatcher;
 @class UserProfileUpdateStatus;
@@ -38,26 +37,24 @@
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
 @class ZMApplicationStatusDirectory;
-@class AVSMediaManager;
 
 @protocol ZMTransportData;
 @protocol ZMSyncStateDelegate;
 @protocol ZMBackgroundable;
 @protocol ApplicationStateOwner;
+@protocol FlowManagerType;
 
 
 @interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory>
 
-- (instancetype)initWithSyncManagedObjectContextMOC:(NSManagedObjectContext *)syncMOC
-                             uiManagedObjectContext:(NSManagedObjectContext *)uiMOC
-                                      cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-                                       mediaManager:(AVSMediaManager *)mediaManager
-                                onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
-                                  syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
-                       localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-                           taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
-                                 appGroupIdentifier:(NSString *)appGroupIdentifier
-                                        application:(id<ZMApplication>)application;
+- (instancetype)initWithStoreProvider:(id<LocalStoreProviderProtocol>)storeProvider
+                        cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
+                         mediaManager:(AVSMediaManager *)mediaManager
+                          flowManager:(id<FlowManagerType>)flowManager
+                    syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
+         localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
+             taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
+                          application:(id<ZMApplication>)application;
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;

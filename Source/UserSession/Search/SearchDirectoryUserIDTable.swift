@@ -146,7 +146,7 @@ final public class SearchUserAndAsset: NSObject {
     }
 
     @objc public func clear() {
-        isolation.barrierAsync { [weak self] in
+        isolation.barrierSync { [weak self] in
             self?.entries.removeAll()
         }
     }
@@ -159,5 +159,8 @@ extension DispatchQueue {
     func barrierAsync(execute block: @escaping () -> Void) {
         async(flags: .barrier, execute: block)
     }
-
+    
+    func barrierSync(execute block: @escaping () -> Void) {
+        sync(flags: .barrier, execute: block)
+    }
 }
