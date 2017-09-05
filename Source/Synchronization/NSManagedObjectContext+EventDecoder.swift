@@ -28,8 +28,8 @@ extension NSManagedObjectContext {
     fileprivate static var eventPersistentStoreCoordinator: NSPersistentStoreCoordinator?
     
     /// Creates and returns the `ManagedObjectContext` used for storing update events, ee `ZMEventModel`, `StorUpdateEvent` and `EventDecoder`.
-    /// - parameter appGroupIdentifier: Optional identifier for a shared container group to be used to store the database,
-    /// if `nil` is passed a default of `group. + bundleIdentifier` will be used (e.g. when testing) TODO
+    /// - parameter appGroupIdentifier: identifier for a shared container group to be used to store the database,
+    /// - parameter userIdentifier: identifier for the user account which the context should be used with.
     public static func createEventContext(withSharedContainerURL sharedContainerURL: URL, userIdentifier: UUID) -> NSManagedObjectContext {
         createOrRelocateStoreIfNeeded(sharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
         
