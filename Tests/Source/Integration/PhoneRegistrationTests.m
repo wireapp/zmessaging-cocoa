@@ -107,7 +107,7 @@
     ZMIncompleteRegistrationUser *user = [self createUserWithPhone:phone code:code];
     
     // expect
-//    [[self.authenticationObserver expect] authenticationDidSucceed];
+    [[self.authenticationObserver expect] authenticationDidSucceed]; // triggered when we get the cookie
     [[self.authenticationObserver expect] clientRegistrationDidSucceed]; // triggered when registering client
     
     // when
@@ -138,6 +138,7 @@
     ZMIncompleteRegistrationUser *user = [self createUserWithPhone:phone code:code];
     
     // expect
+    [[self.authenticationObserver expect] authenticationDidSucceed]; // triggered when we get the cookie
     [[self.authenticationObserver expect] clientRegistrationDidSucceed]; // triggered when registering client
 
     // when
