@@ -222,7 +222,11 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
         [self.userInfoParser parseUserInfoFromResponse:response];
     }
     else if (response.result == ZMTransportResponseStatusPermanentError) {
-        if (sync == self.timedDownstreamSync) {
+        
+        if ([self isResponseForSuspendedAccount:response]) {
+            [authenticationStatus didFailLoginBecauseAccountSuspended];
+        }
+        else if (sync == self.timedDownstreamSync) {
             
             if([self isResponseForPendingEmailActionvation:response]) {
                 if (self.isWaitingForEmailVerification) {
@@ -259,6 +263,12 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
 {
     NSString *label = [response.payload asDictionary][@"label"];
     return [label isEqualToString:@"pending-activation"];
+}
+
+- (BOOL)isResponseForSuspendedAccount:(ZMTransportResponse *)response
+{
+    NSString *label = [response.payload asDictionary][@"label"];
+    return response.HTTPStatus == 403 && [label isEqualToString:@"suspended"];
 }
 
 @end
