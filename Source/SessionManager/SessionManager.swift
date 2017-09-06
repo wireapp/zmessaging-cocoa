@@ -407,6 +407,9 @@ extension SessionManager {
             if let userProfileImage = selfUser.imageSmallProfileData, team == nil {
                 account.imageData = userProfileImage
             }
+            else {
+                account.imageData = nil
+            }
             accountManager.add(account)
         }
     }
