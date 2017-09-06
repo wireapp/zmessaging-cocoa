@@ -60,7 +60,7 @@ extension ZMUserSession {
                 }
             }
         } else if result.unassigned.count > 0 {
-            fatal("Caches folder contains items that have not been assigned to an account. Items should always be assigned to an account. Use `FileManager.cachesURLForAccount(with accountIdentifier:, in sharedContainerURL:)` to get the default Cache location for the current account")
+            requireInternal(false, "Caches folder contains items that have not been assigned to an account. Items should always be assigned to an account. Use `FileManager.cachesURLForAccount(with accountIdentifier:, in sharedContainerURL:)` to get the default Cache location for the current account")
         }
     }
     
