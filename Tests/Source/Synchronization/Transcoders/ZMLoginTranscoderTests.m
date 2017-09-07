@@ -425,6 +425,39 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     }];
 }
 
+- (void)testThatItCallsAuthenticationFailOnPhoneLoginWithSuspendedAccount
+{
+    // given
+    NSDictionary *content = @{@"code":@403,
+                              @"message":@"Account suspended.",
+                              @"label":@"suspended"};
+    [self.authenticationStatus prepareForLoginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:@"+4912345678" verificationCode:@"123456"]];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:content HTTPStatus:403 transportSessionError:nil];
+    
+    // when
+    [self expectAuthenticationFailedWithError:ZMUserSessionAccountSuspended after:^{
+        [[self.sut nextRequest] completeWithResponse:response];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
+}
+
+
+- (void)testThatItCallsAuthenticationFailOnEmailLoginWithSuspendedAccount
+{
+    // given
+    NSDictionary *content = @{@"code":@403,
+                              @"message":@"Account suspended.",
+                              @"label":@"suspended"};
+    [self.authenticationStatus prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:@"foo@example.com" password:@"12345678"]];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:content HTTPStatus:403 transportSessionError:nil];
+    
+    // when
+    [self expectAuthenticationFailedWithError:ZMUserSessionAccountSuspended after:^{
+        [[self.sut nextRequest] completeWithResponse:response];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
+}
+
 -(void)testThatItInvalidatesTheCredentialsOnLoginErrorWhenLoggingWithEmail
 {
     // given
