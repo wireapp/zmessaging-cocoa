@@ -30,7 +30,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession)
     func sessionManagerCreated(userSession : ZMUserSession)
     func sessionManagerDidLogout(error : Error?)
-    func sessionManagerWillSuspendSession()
+    func sessionManagerWillOpenAccount(_ account: Account)
     func sessionManagerWillStartMigratingLocalStore()
     func sessionManagerDidBlacklistCurrentVersion()
 }
@@ -273,7 +273,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     }
     
     public func select(_ account: Account) {
-        delegate?.sessionManagerWillSuspendSession()
+        delegate?.sessionManagerWillOpenAccount(account)
         tearDownObservers()
         userSession?.closeAndDeleteCookie(false)
         userSession = nil
@@ -281,6 +281,10 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         select(account: account) { [weak self] (_) in
             self?.accountManager.select(account)
         }
+    }
+    
+    public func addAccount() {
+        logoutCurrentSession(deleteCookie: false, error: NSError.userSessionErrorWith(.addAccountRequested, userInfo: nil))
     }
     
     public func logoutCurrentSession(deleteCookie: Bool = true) {
