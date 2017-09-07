@@ -72,7 +72,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                            cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-             localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
+             localNotificationDispatcher:(LocalNotificationDispatcher *)dispatcher
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
