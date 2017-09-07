@@ -264,6 +264,11 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     }
 
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
+        
+        if let account  = account {
+            delegate?.sessionManagerWillOpenAccount(account)
+        }
+        
         select(account: account) { [weak self] session in
             guard let `self` = self else { return }
             self.updateCurrentAccount(in: session.managedObjectContext)
