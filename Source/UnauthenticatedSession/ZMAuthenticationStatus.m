@@ -378,6 +378,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     NSError *error = [NSError userSessionErrorWithErrorCode:ZMUserSessionAccountSuspended userInfo:nil];
     [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:error];
+    [self resetLoginAndRegistrationStatus];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
