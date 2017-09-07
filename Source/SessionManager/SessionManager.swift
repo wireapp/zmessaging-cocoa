@@ -295,11 +295,10 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public func delete(account: Account) {
         if let secondAccount = accountManager.accounts.first(where: { $0.userIdentifier != account.userIdentifier }) {
             select(secondAccount)
-            deleteAccountData(for: account)
         } else {
             logoutCurrentSession(deleteCookie: true)
-            deleteAccountData(for: account)
         }
+        deleteAccountData(for: account)
     }
     
     public func logoutCurrentSession(deleteCookie: Bool = true) {
