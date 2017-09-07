@@ -292,6 +292,16 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         logoutCurrentSession(deleteCookie: false, error: NSError.userSessionErrorWith(.addAccountRequested, userInfo: nil))
     }
     
+    public func delete(account: Account) {
+        if let secondAccount = accountManager.accounts.first(where: { $0.userIdentifier != account.userIdentifier }) {
+            select(secondAccount)
+            deleteAccountData(for: account)
+        } else {
+            logoutCurrentSession(deleteCookie: true)
+            deleteAccountData(for: account)
+        }
+    }
+    
     public func logoutCurrentSession(deleteCookie: Bool = true) {
         logoutCurrentSession(deleteCookie: deleteCookie, error: nil)
     }
@@ -324,7 +334,9 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
 
-    public func delete(account: Account) {
+    public func deleteAccountData(for account: Account) {
+        account.cookieStorage().deleteKeychainItems()
+        
         let accountID = account.userIdentifier
         self.accountManager.remove(account)
         
