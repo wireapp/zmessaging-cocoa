@@ -39,7 +39,6 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     fileprivate let genericMessageStrategy  : GenericMessageRequestStrategy
     fileprivate let flowManager             : FlowManagerType
     fileprivate var callConfigRequestSync   : ZMSingleRequestSync! = nil
-    fileprivate var callConfigFetched       : Bool = false
     fileprivate var callConfigCompletion    : CallConfigRequestCompletion? = nil
     
     public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType) {
@@ -58,7 +57,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        if !self.callConfigFetched, let request = self.callConfigRequestSync.nextRequest() {
+        if let request = self.callConfigRequestSync.nextRequest() {
             return request
         }
         
@@ -74,17 +73,12 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
 
 extension CallingRequestStrategy : ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
-        if !self.callConfigFetched {
-            zmLog.debug("Scheduling request to '/calls/config'")
-            return ZMTransportRequest(path: "/calls/config", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
-        }
-        else {
-            return nil
-        }
+        zmLog.debug("Scheduling request to '/calls/config'")
+        return ZMTransportRequest(path: "/calls/config", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
     }
     
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
-        self.callConfigFetched = true
+        
         zmLog.debug("Received response for \(self): \(response)")
         var payloadAsString : String? = nil
         if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
@@ -194,7 +188,6 @@ extension CallingRequestStrategy : WireCallCenterTransport {
         managedObjectContext.performGroupedBlock { [unowned self] in
             self.zmLog.debug("requestCallConfig() called")
             self.callConfigCompletion = completionHandler
-            self.callConfigFetched = false
             
             self.callConfigRequestSync.readyForNextRequestIfNotBusy()
             RequestAvailableNotification.notifyNewRequestsAvailable(nil)
