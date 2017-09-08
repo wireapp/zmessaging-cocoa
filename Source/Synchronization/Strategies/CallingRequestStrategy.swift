@@ -20,7 +20,6 @@ import Foundation
 import WireMessageStrategy
 import WireDataModel
 
-public typealias CallConfigRequestCompletion = (String?, Int) -> Void
 
 extension ZMConversation {
     @objc (appendCallingMessageWithContent:)
@@ -59,7 +58,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        if let request = self.callConfigRequestSync.nextRequest()  {
+        if !self.callConfigFetched, let request = self.callConfigRequestSync.nextRequest() {
             return request
         }
         
@@ -76,6 +75,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
 extension CallingRequestStrategy : ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         if !self.callConfigFetched {
+            zmLog.debug("Scheduling request to '/calls/config'")
             return ZMTransportRequest(path: "/calls/config", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
         }
         else {
@@ -85,12 +85,12 @@ extension CallingRequestStrategy : ZMSingleRequestTranscoder {
     
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         self.callConfigFetched = true
-        
+        zmLog.debug("Received response for \(self): \(response)")
         var payloadAsString : String? = nil
         if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
             payloadAsString = String(data: data, encoding: .utf8)
         }
-        
+        zmLog.debug("Callback: \(self.callConfigCompletion)")
         self.callConfigCompletion?(payloadAsString, response.httpStatus)
         self.callConfigCompletion = nil
     }
@@ -191,7 +191,8 @@ extension CallingRequestStrategy : WireCallCenterTransport {
     }
     
     public func requestCallConfig(completionHandler: @escaping CallConfigRequestCompletion) {
-        managedObjectContext.performGroupedBlock {
+        managedObjectContext.performGroupedBlock { [unowned self] in
+            self.zmLog.debug("requestCallConfig() called")
             self.callConfigCompletion = completionHandler
             self.callConfigFetched = false
             

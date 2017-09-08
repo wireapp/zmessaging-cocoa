@@ -303,6 +303,7 @@ internal func callMetricsHandler(conversationId: UnsafePointer<Int8>?, metrics: 
 
 /// Handle requests for refreshing the calling configuration
 internal func requestCallConfigHandler(handle : UnsafeMutableRawPointer?, contextRef: UnsafeMutableRawPointer?) -> Int32 {
+    zmLog.debug("AVS: requestCallConfigHandler \(String(describing: handle)) \(String(describing: contextRef))")
     guard let contextRef = contextRef else { return EPROTO }
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
@@ -380,6 +381,7 @@ internal func groupMemberHandler(conversationIdRef: UnsafePointer<Int8>?, contex
 
 
 /// MARK - Call center transport
+public typealias CallConfigRequestCompletion = (String?, Int) -> Void
 
 @objc
 public protocol WireCallCenterTransport: class {
@@ -490,9 +492,10 @@ public struct CallEvent {
     }
     
     fileprivate func requestCallConfig() {
+        zmLog.debug("\(self): requestCallConfig()")
         transport?.requestCallConfig(completionHandler: { [weak self] (config, httpStatusCode) in
             guard let `self` = self else { return }
-            
+            zmLog.debug("\(self): self.avsWrapper.update with \(String(describing: config))")
             self.avsWrapper.update(callConfig: config, httpStatusCode: httpStatusCode)
         })
     }
