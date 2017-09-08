@@ -37,16 +37,17 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     fileprivate let managedObjectContext    : NSManagedObjectContext
     fileprivate let genericMessageStrategy  : GenericMessageRequestStrategy
     fileprivate let flowManager             : FlowManagerType
+    fileprivate var callConfigRequestSync   : ZMSingleRequestSync! = nil
     fileprivate var callConfigRequest       : ZMTransportRequest?
     
     public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType) {
         self.managedObjectContext = managedObjectContext
         self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
         self.flowManager = flowManager
-        
         super.init()
         
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
+        self.callConfigRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: self.managedObjectContext)
         
         if let userId = selfUser.remoteIdentifier, let clientId = selfUser.selfClient()?.remoteIdentifier {
             callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics)
@@ -55,8 +56,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        if let request = callConfigRequest  {
-            callConfigRequest = nil
+        if let request = self.callConfigRequestSync.nextRequest()  {
             return request
         }
         
@@ -174,6 +174,7 @@ extension CallingRequestStrategy : WireCallCenterTransport {
                 
                 completionHandler(payloadAsString, response.httpStatus)
             }))
+            self.callConfigRequestSync.readyForNextRequestIfNotBusy()
             RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
     }
