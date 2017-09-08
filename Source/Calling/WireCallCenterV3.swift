@@ -384,7 +384,7 @@ internal func groupMemberHandler(conversationIdRef: UnsafePointer<Int8>?, contex
 @objc
 public protocol WireCallCenterTransport: class {
     func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((_ status: Int) -> Void))
-    func requestCallConfig(completionHandler: @escaping (_ config: String?, _ status : Int) -> Void)
+    func requestCallConfig(completionHandler: @escaping CallConfigRequestCompletion)
 }
 
 public typealias WireCallMessageToken = UnsafeMutableRawPointer

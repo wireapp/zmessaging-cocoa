@@ -20,6 +20,8 @@ import Foundation
 import WireMessageStrategy
 import WireDataModel
 
+public typealias CallConfigRequestCompletion = (String?, Int) -> Void
+
 extension ZMConversation {
     @objc (appendCallingMessageWithContent:)
     public func appendCallingMessage(content: String) -> ZMClientMessage? {
@@ -38,7 +40,8 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     fileprivate let genericMessageStrategy  : GenericMessageRequestStrategy
     fileprivate let flowManager             : FlowManagerType
     fileprivate var callConfigRequestSync   : ZMSingleRequestSync! = nil
-    fileprivate var callConfigRequest       : ZMTransportRequest?
+    fileprivate var callConfigFetched       : Bool = false
+    fileprivate var callConfigCompletion    : CallConfigRequestCompletion? = nil
     
     public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType) {
         self.managedObjectContext = managedObjectContext
@@ -68,6 +71,31 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     }
     
 }
+
+
+extension CallingRequestStrategy : ZMSingleRequestTranscoder {
+    public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
+        if !self.callConfigFetched {
+            return ZMTransportRequest(path: "/calls/config", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
+        }
+        else {
+            return nil
+        }
+    }
+    
+    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
+        self.callConfigFetched = true
+        
+        var payloadAsString : String? = nil
+        if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
+            payloadAsString = String(data: data, encoding: .utf8)
+        }
+        
+        self.callConfigCompletion?(payloadAsString, response.httpStatus)
+        self.callConfigCompletion = nil
+    }
+}
+
 
 extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTrackerSource {
     
@@ -162,18 +190,11 @@ extension CallingRequestStrategy : WireCallCenterTransport {
         }
     }
     
-    public func requestCallConfig(completionHandler: @escaping (String?, Int) -> Void) {
+    public func requestCallConfig(completionHandler: @escaping CallConfigRequestCompletion) {
         managedObjectContext.performGroupedBlock {
-            self.callConfigRequest = ZMTransportRequest(path: "/calls/config", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
-            self.callConfigRequest?.add(ZMCompletionHandler(on: self.managedObjectContext.zm_userInterface, block: { (response) in
-                
-                var payloadAsString : String? = nil
-                if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
-                    payloadAsString = String(data: data, encoding: .utf8)
-                }
-                
-                completionHandler(payloadAsString, response.httpStatus)
-            }))
+            self.callConfigCompletion = completionHandler
+            self.callConfigFetched = false
+            
             self.callConfigRequestSync.readyForNextRequestIfNotBusy()
             RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
