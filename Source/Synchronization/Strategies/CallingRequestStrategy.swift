@@ -90,7 +90,7 @@ extension CallingRequestStrategy : ZMSingleRequestTranscoder {
         if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
             payloadAsString = String(data: data, encoding: .utf8)
         }
-        zmLog.debug("Callback: \(self.callConfigCompletion)")
+        zmLog.debug("Callback: \(String(describing: self.callConfigCompletion))")
         self.callConfigCompletion?(payloadAsString, response.httpStatus)
         self.callConfigCompletion = nil
     }
