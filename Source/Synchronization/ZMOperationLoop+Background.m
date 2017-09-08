@@ -31,6 +31,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Network";
 
 
 static NSString * const PushChannelDataKey = @"data";
+static NSString * const PushChannelUserIDKey = @"user";
 static NSString * const PushChannelIdentifierKey = @"id";
 static NSString * const PushChannelNotificationTypeKey = @"type";
 
@@ -45,7 +46,15 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 - (void)saveEventsAndSendNotificationForPayload:(NSDictionary *)payload fetchCompletionHandler:(ZMPushResultHandler)completionHandler source:(ZMPushNotficationType)source;
 {
     ZMLogDebug(@"----> Received push notification payload: %@, source: %lu", payload, (unsigned long)source);
+    
     [self.syncMOC performGroupedBlock:^{
+        if (![self notificationIsForCurrentUser:payload]) {
+            ZMLogDebug(@"Push is for the different user: skipping");
+            if (nil != completionHandler) {
+                completionHandler(ZMPushPayloadResultNoData);
+            }
+            return;
+        }
         
         EventsWithIdentifier *eventsWithID = [self eventsFromPushChannelData:payload];
         BOOL isValidNotification = (nil != eventsWithID) && (eventsWithID.isNotice || eventsWithID.events.count > 0);
@@ -132,6 +141,28 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 
     identifier = [internalData optionalUuidForKey:PushChannelIdentifierKey];
     return [[EventsWithIdentifier alloc] initWithEvents:events identifier:identifier isNotice:isNotice];
+}
+
+- (BOOL)notificationIsForCurrentUser:(NSDictionary *)userInfo {
+    NSDictionary *userInfoData = [userInfo optionalDictionaryForKey:PushChannelDataKey];
+    if (userInfoData == nil) {
+        ZMLogError(@"No data dictionary in notification userInfo payload");
+        return YES;  // Old-style push might not contain the user id
+    }
+    
+    NSString *user_id = [userInfoData optionalStringForKey:PushChannelUserIDKey];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+
+    // Old-style push might not contain the user id
+    if (user_id == nil) {
+        return YES;
+    }
+    // No reason to process the push when the user is not given
+    if (selfUser == nil) {
+        return NO;
+    }
+    
+    return [selfUser.remoteIdentifier isEqual:[NSUUID uuidWithTransportString:user_id]];
 }
 
 - (EventsWithIdentifier *)eventArrayFromEncryptedMessage:(NSDictionary *)encryptedPayload

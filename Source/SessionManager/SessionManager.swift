@@ -30,7 +30,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession)
     func sessionManagerCreated(userSession : ZMUserSession)
     func sessionManagerDidLogout(error : Error?)
-    func sessionManagerWillSuspendSession()
+    func sessionManagerWillOpenAccount(_ account: Account)
     func sessionManagerWillStartMigratingLocalStore()
     func sessionManagerDidBlacklistCurrentVersion()
 }
@@ -264,6 +264,11 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     }
 
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
+        
+        if let account  = account {
+            delegate?.sessionManagerWillOpenAccount(account)
+        }
+        
         select(account: account) { [weak self] session in
             guard let `self` = self else { return }
             self.updateCurrentAccount(in: session.managedObjectContext)
@@ -273,7 +278,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     }
     
     public func select(_ account: Account) {
-        delegate?.sessionManagerWillSuspendSession()
+        delegate?.sessionManagerWillOpenAccount(account)
         tearDownObservers()
         userSession?.closeAndDeleteCookie(false)
         userSession = nil
@@ -281,6 +286,19 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         select(account: account) { [weak self] (_) in
             self?.accountManager.select(account)
         }
+    }
+    
+    public func addAccount() {
+        logoutCurrentSession(deleteCookie: false, error: NSError.userSessionErrorWith(.addAccountRequested, userInfo: nil))
+    }
+    
+    public func delete(account: Account) {
+        if let secondAccount = accountManager.accounts.first(where: { $0.userIdentifier != account.userIdentifier }) {
+            select(secondAccount)
+        } else {
+            logoutCurrentSession(deleteCookie: true)
+        }
+        deleteAccountData(for: account)
     }
     
     public func logoutCurrentSession(deleteCookie: Bool = true) {
@@ -315,7 +333,9 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
 
-    public func delete(account: Account) {
+    public func deleteAccountData(for account: Account) {
+        account.cookieStorage().deleteKeychainItems()
+        
         let accountID = account.userIdentifier
         self.accountManager.remove(account)
         
@@ -404,8 +424,11 @@ extension SessionManager {
             if let userName = selfUser.name {
                 account.userName = userName
             }
-            if let userProfileImage = selfUser.imageSmallProfileData, team == nil {
+            if let userProfileImage = selfUser.imageSmallProfileData, !selfUser.isTeamMember {
                 account.imageData = userProfileImage
+            }
+            else {
+                account.imageData = nil
             }
             accountManager.add(account)
         }

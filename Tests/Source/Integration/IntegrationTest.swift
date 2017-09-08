@@ -525,7 +525,7 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
     
-    public func sessionManagerWillSuspendSession() {
+    public func sessionManagerWillOpenAccount(_ account: Account) {
         // no-op
     }
     

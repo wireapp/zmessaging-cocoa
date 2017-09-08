@@ -24,7 +24,7 @@ import WireTesting
 
 class SessionManagerTestDelegate: SessionManagerDelegate {
 
-    func sessionManagerWillSuspendSession() {
+    func sessionManagerWillOpenAccount(_ account: Account) {
         // no-op
     }
     

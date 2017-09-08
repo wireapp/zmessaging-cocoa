@@ -230,7 +230,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
                                                                                       cookieStorage:session.cookieStorage
-                                                                        localNotificationdispatcher:self.localNotificationDispatcher
+                                                                        localNotificationDispatcher:self.localNotificationDispatcher
                                                                                        mediaManager:mediaManager
                                                                                 flowManager:flowManager
                                                                                       storeProvider:storeProvider
