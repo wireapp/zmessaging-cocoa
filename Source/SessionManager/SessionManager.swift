@@ -490,6 +490,10 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public func didRegisteredForRemoteNotifications(with token: Data) {
         self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
     }
+    
+    public func didReceiveRemoteNotification(_ notification: [AnyHashable: Any], fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
+        self.pushDispatcher.didReceiveRemoteNotification(notification, fetchCompletionHandler: fetchCompletionHandler)
+    }
 }
 
 // MARK: - TeamObserver
@@ -619,7 +623,7 @@ extension SessionManager: ZMAuthenticationObserver {
 }
 
 extension SessionManager: PushDispatcherClient {
-    func receivedPushNotification(with payload: [String : Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler) {
+    func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler) {
         guard let userInfoData = payload[PushChannelDataKey] as? [String: Any] else {
             log.debug("No data dictionary in notification userInfo payload");
             return
@@ -641,6 +645,14 @@ extension SessionManager: PushDispatcherClient {
             self.withSession(for: account, perform: { userSession in
                 userSession.receivedPushNotification(with: payload, from: source, completion: completion)
             })
+        }
+        else {
+            log.error("Push is not specifict to account, fetching all")
+            self.accountManager.accounts.forEach { account in
+                self.withSession(for: account, perform: { userSession in
+                    userSession.receivedPushNotification(with: payload, from: source, completion: completion)
+                })
+            }
         }
     }
 }

@@ -24,12 +24,12 @@ internal enum PushToken {
 }
 
 internal protocol PushDispatcherClient: NSObjectProtocol {
-    func receivedPushNotification(with payload: [String: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler)
+    func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler)
 }
 
 internal protocol PushDispatcherOptionalClient: PushDispatcherClient {
     func updatedPushToken(to: PushToken)
-    func canHandle(payload: [String: Any]) -> Bool
+    func canHandle(payload: [AnyHashable: Any]) -> Bool
 }
 
 private let log = ZMSLog(tag: "Push")
@@ -58,7 +58,7 @@ internal final class PushDispatcher: NSObject {
     
     private let clients = WeakSet<PushDispatcherOptionalClient>()
     public weak var fallbackClient: PushDispatcherClient? = nil
-    private var remoteNotificationServer: ApplicationRemoteNotification!
+    private var remoteNotificationHandler: ApplicationRemoteNotification!
     private var pushRegistrant: PushKitRegistrant!
     private var lastKnownPushToken: PushToken?
     
@@ -71,7 +71,7 @@ internal final class PushDispatcher: NSObject {
     
     override init() {
         super.init()
-        let didReceivePayload: DidReceivePushCallback = { [weak self] (payload , source, completion) in
+        let didReceivePayload: DidReceivePushCallback = { [weak self] (payload, source, completion) in
             log.debug("push notification: \(payload), source \(source)")
             
             let possibleHandlers = self?.clients.filter { $0.canHandle(payload: payload) }
@@ -100,7 +100,7 @@ internal final class PushDispatcher: NSObject {
         let didUpdateToken: (Data) -> () = { [weak self] (data: Data) in
             self?.updatePushToken(to: PushToken.alert(tokenData: data))
         }
-        remoteNotificationServer = ApplicationRemoteNotification(didUpdateCredentials: didUpdateToken, didReceivePayload: callback, didInvalidateToken: {})
+        remoteNotificationHandler = ApplicationRemoteNotification(didUpdateCredentials: didUpdateToken, didReceivePayload: callback, didInvalidateToken: {})
     }
     
     private func enableVoIPPushNotifications(with callback: @escaping DidReceivePushCallback) {
@@ -116,9 +116,11 @@ internal final class PushDispatcher: NSObject {
     }
     
     public func didRegisteredForRemoteNotifications(with token: Data) {
-        self.clients.forEach {
-            $0.updatedPushToken(to: PushToken.alert(tokenData: token))
-        }
+        self.updatePushToken(to: PushToken.alert(tokenData: token))
+    }
+    
+    public func didReceiveRemoteNotification(_ payload: [AnyHashable: Any], fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
+        self.remoteNotificationHandler.didReceiveRemoteNotification(payload, fetchCompletionHandler: fetchCompletionHandler)
     }
 }
 

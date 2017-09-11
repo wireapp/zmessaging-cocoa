@@ -22,7 +22,7 @@ import PushKit
 import WireTransport
 
 public typealias ZMPushNotificationCompletionHandler = (ZMPushPayloadResult)->()
-public typealias DidReceivePushCallback = (_ payload: [String: Any], _ source: ZMPushNotficationType, _ completion: @escaping ZMPushNotificationCompletionHandler) -> ()
+public typealias DidReceivePushCallback = (_ payload: [AnyHashable: Any], _ source: ZMPushNotficationType, _ completion: @escaping ZMPushNotificationCompletionHandler) -> ()
 /// This is a generic protocol for receiving remote push notifications.
 ///
 /// It is implemented by PushKitRegistrant for PushKit,
@@ -100,7 +100,7 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, forType type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) did receive '\(payload.type)' payload: \(payload.dictionaryPayload)")
         if let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Process PushKit payload") {
-            didReceivePayload(payload.dictionaryPayload as! [String : Any], .voIP) {
+            didReceivePayload(payload.dictionaryPayload, .voIP) {
                 result in
                 ZMLogPushKit_swift("Registry \(self.registry.description) did finish background task")
                 activity.end()
@@ -139,8 +139,12 @@ extension ApplicationRemoteNotification {
     }
     
     public func application(_ application: ZMApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        self.didReceiveRemoteNotification(userInfo, fetchCompletionHandler: completionHandler)
+    }
+    
+    public func didReceiveRemoteNotification(_ payload: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult)->()) {
         if let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process remote notification payload") {
-            didReceivePayload(userInfo as! [String : Any], .alert) { result in
+            didReceivePayload(payload, .alert) { result in
                 completionHandler(self.fetchResult(result))
                 activity.end()
             }

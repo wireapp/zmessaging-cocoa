@@ -53,52 +53,58 @@ extension ZMUserSession: PushDispatcherOptionalClient {
     
     func updatedPushToken(to newToken: PushToken) {
         
+        guard let managedObjectContext = self.managedObjectContext else {
+            return
+        }
+        
         switch newToken {
         case .alert(let tokenData):
             if let data = tokenData {
-                self.managedObjectContext.performGroupedBlock {
-                    let oldToken = self.managedObjectContext.pushToken.deviceToken
+                managedObjectContext.performGroupedBlock {
+                    let oldToken = self.managedObjectContext.pushToken?.deviceToken
                     if oldToken == nil || oldToken != data {
-                        self.managedObjectContext.pushToken = nil
+                        managedObjectContext.pushToken = nil
                         self.setPushToken(data)
-                        self.managedObjectContext.forceSaveOrRollback()
+                        managedObjectContext.forceSaveOrRollback()
                     }
                 }
             }
         case .voip(let tokenData):
             if let data = tokenData {
-                self.managedObjectContext.performGroupedBlock {
-                    self.managedObjectContext.pushKitToken = nil
+                managedObjectContext.performGroupedBlock {
+                    managedObjectContext.pushKitToken = nil
                     self.setPushKitToken(data)
-                    self.managedObjectContext.forceSaveOrRollback()
+                    managedObjectContext.forceSaveOrRollback()
                 }
             }
             else {
-                self.managedObjectContext.performGroupedBlock {
+                managedObjectContext.performGroupedBlock {
                     self.deletePushKitToken()
-                    self.managedObjectContext.forceSaveOrRollback()
+                    managedObjectContext.forceSaveOrRollback()
                 }
             }
         }
     }
 
-    func canHandle(payload: [String: Any]) -> Bool {
-        return payload.isPayload(for: ZMUser.selfUser(inUserSession: self))
+    func canHandle(payload: [AnyHashable: Any]) -> Bool {
+        return payload.isPayload(for: ZMUser.selfUser(in: self.managedObjectContext))
     }
     
-    func receivedPushNotification(with payload: [String: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler) {
-        let isNotInBackground = self.isNotInBackground()
-        let notAuthenticated = self.isAuthenticated()
-        
-        if notAuthenticated || isNotInBackground {
-            if (isNotInBackground) {
-                log.debug("Not displaying notification because app is not authenticated")
+    func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler) {
+        self.syncManagedObjectContext.performGroupedBlock {
+            let isNotInBackground = self.isNotInBackground()
+            let notAuthenticated = self.isAuthenticated()
+            
+            if notAuthenticated || isNotInBackground {
+                if (isNotInBackground) {
+                    log.debug("Not displaying notification because app is not authenticated")
+                }
+                completion(.success)
+                return
             }
-            completion(.success)
-            return
+            
+            self.operationLoop.saveEventsAndSendNotification(forPayload: payload, fetchCompletionHandler: completion, source: source)
         }
-        
-        self.operationLoop.saveEventsAndSendNotification(forPayload: payload, fetchCompletionHandler: completion, source: source)
     }
 }
 
