@@ -249,6 +249,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         self.unauthenticatedSessionFactory = unauthenticatedSessionFactory
         self.reachability = reachability
         super.init()
+        self.pushDispatcher.fallbackClient = self
         authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(self)
 
         if let account = accountManager.selectedAccount {
@@ -623,7 +624,22 @@ extension SessionManager: ZMAuthenticationObserver {
 }
 
 extension SessionManager: PushDispatcherClient {
+    func wakeAllAccounts(for payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler) {
+        log.error("Push is not specifict to account, fetching all")
+        self.accountManager.accounts.forEach { account in
+            self.withSession(for: account, perform: { userSession in
+                userSession.receivedPushNotification(with: payload, from: source, completion: completion)
+            })
+        }
+    }
+    
     func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler) {
+        
+        guard !payload.isPayloadMissingUserInformation() else {
+            self.wakeAllAccounts(for: payload, from: source, completion: completion)
+            return
+        }
+        
         guard let userInfoData = payload[PushChannelDataKey] as? [String: Any] else {
             log.debug("No data dictionary in notification userInfo payload");
             return
@@ -634,7 +650,7 @@ extension SessionManager: PushDispatcherClient {
         }
         
         let userId = UUID(uuidString: userIdString)
-        
+    
         let matchingAccounts = self.accountManager.accounts.filter { (account) -> Bool in
             account.userIdentifier == userId
         }
@@ -647,12 +663,7 @@ extension SessionManager: PushDispatcherClient {
             })
         }
         else {
-            log.error("Push is not specifict to account, fetching all")
-            self.accountManager.accounts.forEach { account in
-                self.withSession(for: account, perform: { userSession in
-                    userSession.receivedPushNotification(with: payload, from: source, completion: completion)
-                })
-            }
+            self.wakeAllAccounts(for: payload, from: source, completion: completion)
         }
     }
 }

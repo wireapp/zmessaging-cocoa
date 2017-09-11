@@ -617,11 +617,6 @@ ZM_EMPTY_ASSERTING_INIT()
     return self.authenticationStatus.isAuthenticated;
 }
 
-- (BOOL)isNotInBackground
-{
-    return self.application.applicationState != UIApplicationStateBackground;
-}
-
 @end
 
 

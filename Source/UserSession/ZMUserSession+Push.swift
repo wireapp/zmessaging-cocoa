@@ -27,17 +27,28 @@ private let log = ZMSLog(tag: "Push")
 
 extension Dictionary where Key: Hashable, Value: Any {
     internal func isPayload(for user: ZMUser) -> Bool {
+        if self.isPayloadMissingUserInformation() {
+            return true
+        }
+        
+        let userInfoData = self[PushChannelDataKey as! Key] as! [String: Any]
+        let userId = userInfoData[PushChannelUserIDKey] as! String
+        
+        return user.remoteIdentifier == UUID(uuidString: userId)
+    }
+    
+    internal func isPayloadMissingUserInformation() -> Bool {
         guard let userInfoData = self[PushChannelDataKey as! Key] as? [String: Any] else {
             log.debug("No data dictionary in notification userInfo payload");
             return true // Old-style push might not contain the user id
         }
         
-        guard let user_id = userInfoData[PushChannelUserIDKey] as? String else {
+        guard let _ = userInfoData[PushChannelUserIDKey] as? String else {
             // Old-style push might not contain the user id
             return true
         }
         
-        return user.remoteIdentifier == UUID(uuidString: user_id)
+        return false
     }
 }
 
@@ -92,13 +103,10 @@ extension ZMUserSession: PushDispatcherOptionalClient {
     
     func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler) {
         self.syncManagedObjectContext.performGroupedBlock {
-            let isNotInBackground = self.isNotInBackground()
             let notAuthenticated = self.isAuthenticated()
             
-            if notAuthenticated || isNotInBackground {
-                if (isNotInBackground) {
-                    log.debug("Not displaying notification because app is not authenticated")
-                }
+            if notAuthenticated {
+                log.debug("Not displaying notification because app is not authenticated")
                 completion(.success)
                 return
             }

@@ -65,6 +65,5 @@
 - (void)deletePushKitToken;
 
 - (BOOL)isAuthenticated;
-- (BOOL)isNotInBackground;
 
 @end

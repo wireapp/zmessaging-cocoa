@@ -74,13 +74,22 @@ internal final class PushDispatcher: NSObject {
         let didReceivePayload: DidReceivePushCallback = { [weak self] (payload, source, completion) in
             log.debug("push notification: \(payload), source \(source)")
             
-            let possibleHandlers = self?.clients.filter { $0.canHandle(payload: payload) }
+            guard let `self` = self else {
+                return
+            }
             
-            if let handler = possibleHandlers?.last {
-                handler.receivedPushNotification(with: payload, from: source, completion: completion)
+            if payload.isPayloadMissingUserInformation() {
+                self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
             }
             else {
-                self?.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
+                let possibleHandlers = self.clients.filter { $0.canHandle(payload: payload) }
+                
+                if let handler = possibleHandlers.last {
+                    handler.receivedPushNotification(with: payload, from: source, completion: completion)
+                }
+                else {
+                    self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
+                }
             }
         }
         
