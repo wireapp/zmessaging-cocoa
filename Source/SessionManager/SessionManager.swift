@@ -106,21 +106,25 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
-    public fileprivate(set) var userSession: ZMUserSession?
+    public fileprivate(set) var activeUserSession: ZMUserSession?
+    public fileprivate(set) var backgroundUserSessions: [Account: ZMUserSession] = [:]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
 
     let application: ZMApplication
     var authenticationToken: ZMAuthenticationObserverToken?
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & ReachabilityTearDown
-
+    var localStoreProvider: LocalStoreProviderProtocol?
+    let pushDispatcher = PushDispatcher()
+    
     fileprivate let authenticatedSessionFactory: AuthenticatedSessionFactory
     fileprivate let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
     fileprivate let sharedContainerURL: URL
     fileprivate let dispatchGroup: ZMSDispatchGroup?
     fileprivate var teamObserver: NSObjectProtocol?
     fileprivate var selfObserver: NSObjectProtocol?
-
+    fileprivate var memoryWarningObserver: NSObjectProtocol?
+    
     private static var token: Any?
     
     /// The entry point for SessionManager; call this instead of the initializers.
@@ -206,7 +210,16 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
                     self.delegate?.sessionManagerDidBlacklistCurrentVersion()
                 }
         })
-        
+     
+        self.memoryWarningObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.UIApplicationDidReceiveMemoryWarning,
+                                                                            object: nil,
+                                                                            queue: nil,
+                                                                            using: {[weak self] _ in
+            guard let `self` = self else {
+                return
+            }
+            self.deactivateAllBackgroundSessions()
+        })
     }
 
     init(
@@ -276,8 +289,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public func select(_ account: Account) {
         delegate?.sessionManagerWillOpenAccount(account)
         tearDownObservers()
-        userSession?.closeAndDeleteCookie(false)
-        userSession = nil
+        activeUserSession?.closeAndDeleteCookie(false)
+        activeUserSession = nil
         
         select(account: account) { [weak self] (_) in
             self?.accountManager.select(account)
@@ -303,8 +316,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     
     fileprivate func logoutCurrentSession(deleteCookie: Bool = true, error : Error?) {
         tearDownObservers()
-        userSession?.closeAndDeleteCookie(deleteCookie)
-        userSession = nil
+        activeUserSession?.closeAndDeleteCookie(deleteCookie)
+        activeUserSession = nil
         delegate?.sessionManagerDidLogout(error: error)
         
         createUnauthenticatedSession()
@@ -319,10 +332,12 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
                 userIdentifier: account.userIdentifier,
                 dispatchGroup: dispatchGroup,
                 migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
-                completion: { [weak self] provider in self?.createSession(for: account, with: provider) { session in
-                    session.registerForRemoteNotifications()
-                    completion(session)
-                }}
+                completion: { [weak self] provider in
+                    self?.localStoreProvider = provider
+                    self?.createSession(for: account, with: provider) { session in
+                        session.registerForRemoteNotifications()
+                        completion(session)
+                    }}
             )
         } else {
             createUnauthenticatedSession()
@@ -344,14 +359,25 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     }
     
     fileprivate func createSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession) -> Void) {
-        guard let session = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
-            preconditionFailure("Unable to create session for \(account)")
+        let session: ZMUserSession
+        if let backgroundSession = self.backgroundUserSessions[account] {
+            session = backgroundSession
         }
+        else {
+            guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
+                preconditionFailure("Unable to create session for \(account)")
+            }
+            session = newSession
+            self.backgroundUserSessions[account] = newSession
+        }
+        
+        pushDispatcher.add(client: session)
+        
         let selfUser = ZMUser.selfUser(inUserSession: session)
         teamObserver = TeamChangeInfo.add(observer: self, for: nil)
         selfObserver = UserChangeInfo.add(observer: self, forBareUser: selfUser!)
 
-        self.userSession = session
+        self.activeUserSession = session
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
         let authenticationStatus = unauthenticatedSession?.authenticationStatus
 
@@ -376,6 +402,61 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
     }
     
+    public func withSession(for account: Account, perform action: @escaping (ZMUserSession)->()) {
+        if let session = backgroundUserSessions[account] {
+            action(session)
+        }
+        else {
+            if let provider = self.localStoreProvider {
+                activateBackgroungSession(for: account, with: provider, completion: action)
+            }
+            else {
+                log.error("Cannot instantiate the session without the LocalStoreProvider for \(account)")
+            }
+        }
+    }
+    
+    fileprivate func activateBackgroungSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession)->()) {
+        guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
+            preconditionFailure("Unable to create session for \(account)")
+        }
+        self.backgroundUserSessions[account] = newSession
+        
+        pushDispatcher.add(client: newSession)
+
+        log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
+        let authenticationStatus = unauthenticatedSession?.authenticationStatus
+        
+        newSession.syncManagedObjectContext.performGroupedBlock {
+            newSession.setEmailCredentials(authenticationStatus?.emailCredentials())
+            if let registered = authenticationStatus?.completedRegistration {
+                newSession.syncManagedObjectContext.registeredOnThisDevice = registered
+            }
+            
+            newSession.managedObjectContext.performGroupedBlock { [weak self] in
+                completion(newSession)
+                self?.delegate?.sessionManagerCreated(userSession: newSession)
+            }
+        }
+    }
+    
+    fileprivate func deactivateBackgroundSession(for account: Account) {
+        guard let userSession = self.backgroundUserSessions[account] else {
+            log.error("No session to tear down for \(account), known sessions: \(self.backgroundUserSessions)")
+            return
+        }
+        userSession.closeAndDeleteCookie(false)
+        self.backgroundUserSessions[account] = nil
+    }
+    
+    fileprivate func deactivateAllBackgroundSessions() {
+        self.backgroundUserSessions.forEach { (account, session) in
+            if self.activeUserSession != session {
+                self.deactivateBackgroundSession(for: account)
+            }
+        }
+    }
+    
     fileprivate func tearDownObservers() {
         if let teamObserver = teamObserver {
             TeamChangeInfo.remove(observer: teamObserver, for: nil)
@@ -391,21 +472,24 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
         tearDownObservers()
         blacklistVerificator?.teardown()
-        userSession?.tearDown()
+        activeUserSession?.tearDown()
         unauthenticatedSession?.tearDown()
         reachability.tearDown()
     }
     
     @objc public var isUserSessionActive: Bool {
-        return userSession != nil
+        return activeUserSession != nil
     }
 
     func updateProfileImage(imageData: Data) {
-        userSession?.enqueueChanges {
-            self.userSession?.profileUpdate.updateImage(imageData: imageData)
+        activeUserSession?.enqueueChanges {
+            self.activeUserSession?.profileUpdate.updateImage(imageData: imageData)
         }
     }
 
+    public func didRegisteredForRemoteNotifications(with token: Data) {
+        self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
+    }
 }
 
 // MARK: - TeamObserver
@@ -461,7 +545,7 @@ extension SessionManager: ZMUserObserver {
 extension SessionManager: UnauthenticatedSessionDelegate {
 
     public func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) -> Bool {
-        guard let userSession = userSession, let emailCredentials = credentials as? ZMEmailCredentials else { return false }
+        guard let userSession = activeUserSession, let emailCredentials = credentials as? ZMEmailCredentials else { return false }
         
         userSession.setEmailCredentials(emailCredentials)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
@@ -478,6 +562,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         let group = self.dispatchGroup
         group?.enter()
         LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
+            self?.localStoreProvider = provider
             self?.createSession(for: account, with: provider) { userSession in
                 userSession.registerForRemoteNotifications()
                 if let profileImageData = session.authenticationStatus.profileImageData {
@@ -501,7 +586,7 @@ extension SessionManager: ZMAuthenticationObserver {
     }
 
     @objc public func authenticationDidSucceed() {
-        if nil != userSession {
+        if nil != activeUserSession {
             return RequestAvailableNotification.notifyNewRequestsAvailable(self)
         }
     }
@@ -531,4 +616,31 @@ extension SessionManager: ZMAuthenticationObserver {
         }
     }
 
+}
+
+extension SessionManager: PushDispatcherClient {
+    func receivedPushNotification(with payload: [String : Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler) {
+        guard let userInfoData = payload[PushChannelDataKey] as? [String: Any] else {
+            log.debug("No data dictionary in notification userInfo payload");
+            return
+        }
+        
+        guard let userIdString = userInfoData[PushChannelUserIDKey] as? String else {
+            return
+        }
+        
+        let userId = UUID(uuidString: userIdString)
+        
+        let matchingAccounts = self.accountManager.accounts.filter { (account) -> Bool in
+            account.userIdentifier == userId
+        }
+        
+        assert(matchingAccounts.count <= 1)
+        
+        if let account = matchingAccounts.first {
+            self.withSession(for: account, perform: { userSession in
+                userSession.receivedPushNotification(with: payload, from: source, completion: completion)
+            })
+        }
+    }
 }

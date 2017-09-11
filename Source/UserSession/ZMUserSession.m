@@ -255,9 +255,6 @@ ZM_EMPTY_ASSERTING_INIT()
         [self registerForBackgroundNotifications];
         [self registerForRequestToOpenConversationNotification];
         
-        [self.syncManagedObjectContext performGroupedBlockAndWait:^{
-            [self enablePushNotifications];
-        }];
         [self enableBackgroundFetch];
 
         self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithAccountContainer:self.storeProvider.accountContainer];
@@ -613,6 +610,16 @@ ZM_EMPTY_ASSERTING_INIT()
             ZMLogError(@"Failed to save pushKit token marked for deletion");
         }
     }
+}
+
+- (BOOL)isAuthenticated
+{
+    return self.authenticationStatus.isAuthenticated;
+}
+
+- (BOOL)isNotInBackground
+{
+    return self.application.applicationState != UIApplicationStateBackground;
 }
 
 @end

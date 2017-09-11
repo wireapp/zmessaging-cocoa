@@ -21,7 +21,6 @@
 @import WireDataModel;
 
 #import "ZMUserSession+Internal.h"
-#import "ZMUserSession+Background+Testing.h"
 #import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMPushToken.h"
@@ -46,86 +45,6 @@ static NSString *ZMLogTag = @"Push";
 
 @implementation ZMUserSession (PushReceivers)
 
-- (void)receivedPushNotificationWithPayload:(NSDictionary *)payload completionHandler:(ZMPushNotificationCompletionHandler)handler source:(ZMPushNotficationType)source
-{
-    BOOL isNotInBackground = self.application.applicationState != UIApplicationStateBackground;
-    BOOL notAuthenticated = !self.authenticationStatus.isAuthenticated;
-    
-    if (notAuthenticated || isNotInBackground) {
-        if (handler != nil) {
-            if (isNotInBackground) {
-                ZMLogPushKit(@"Not displaying notification because app is not authenticated");
-            }
-            handler(ZMPushPayloadResultSuccess);
-        }
-        return;
-    }
-
-    [self.operationLoop saveEventsAndSendNotificationForPayload:payload fetchCompletionHandler:handler source:source];
-}
-
-- (void)enablePushNotifications
-{
-    ZM_WEAK(self);
-    void (^didReceivePayload)(NSDictionary *userInfo, ZMPushNotficationType source, void (^completionHandler)(ZMPushPayloadResult)) = ^(NSDictionary *userInfo, ZMPushNotficationType source, void (^result)(ZMPushPayloadResult))
-    {
-        ZM_STRONG(self);
-        ZMLogDebug(@"push notification: %@, source %lu", userInfo, (unsigned long)source);
-        [self.syncManagedObjectContext performGroupedBlock:^{
-            return [self receivedPushNotificationWithPayload:userInfo completionHandler:result source:source];
-        }];
-    };
-    
-    [self enableAlertPushNotificationsWithDidReceivePayload:didReceivePayload];
-    [self enableVoIPPushNotificationsWithDidReceivePayload:didReceivePayload];
-}
-
-- (void)enableAlertPushNotificationsWithDidReceivePayload:(void (^)(NSDictionary *, ZMPushNotficationType, void (^)(ZMPushPayloadResult)))didReceivePayload;
-{
-    ZM_WEAK(self);
-    void (^didInvalidateToken)(void) = ^{
-    };
-
-    void (^updateCredentials)(NSData *) = ^(NSData *deviceToken){
-        ZM_STRONG(self);
-        [self.managedObjectContext performGroupedBlock:^{
-            NSData *oldToken = self.managedObjectContext.pushToken.deviceToken;
-            if (oldToken == nil || ![oldToken isEqualToData:deviceToken]) {
-                self.managedObjectContext.pushToken = nil;
-                [self setPushToken:deviceToken];
-                [self.managedObjectContext forceSaveOrRollback];
-            }
-        }];
-    };
-    self.applicationRemoteNotification = [[ZMApplicationRemoteNotification alloc] initWithDidUpdateCredentials:updateCredentials didReceivePayload:didReceivePayload didInvalidateToken:didInvalidateToken];
-}
-
-
-- (void)enableVoIPPushNotificationsWithDidReceivePayload:(void (^)(NSDictionary *, ZMPushNotficationType, void (^)(ZMPushPayloadResult)))didReceivePayload
-{
-    
-    ZM_WEAK(self);
-    void (^didInvalidateToken)(void) = ^{
-        ZM_STRONG(self);
-        [self.managedObjectContext performGroupedBlock:^{
-            [self deletePushKitToken];
-            [self.managedObjectContext forceSaveOrRollback];
-        }];
-    };
-
-    void (^updatePushKitCredentials)(NSData *) = ^(NSData *deviceToken){
-        ZM_STRONG(self);
-        [self.managedObjectContext performGroupedBlock:^{
-            self.managedObjectContext.pushKitToken = nil;
-            [self setPushKitToken:deviceToken];
-            [self.managedObjectContext forceSaveOrRollback];
-        }];
-    };
-    
-    self.pushRegistrant = [[ZMPushRegistrant alloc] initWithDidUpdateCredentials:updatePushKitCredentials didReceivePayload:didReceivePayload didInvalidateToken:didInvalidateToken];
-    self.pushRegistrant.analytics = self.syncManagedObjectContext.analytics;
-}
-
 @end
 
 
@@ -138,9 +57,7 @@ static NSString *ZMLogTag = @"Push";
     [application registerForRemoteNotifications];
     
 #if TARGET_OS_SIMULATOR
-    ZMLogInfo(@"Skipping request for remote notification permission on simulator.");
-    return;
-    
+    ZMLogInfo(@"Skipping request for remote notification permission on simulator.");    
 #else
     NSSet *categories = [NSSet setWithArray:@[
                                               self.replyCategory,
@@ -155,13 +72,6 @@ static NSString *ZMLogTag = @"Push";
                                                                                      categories:categories]];
 #endif
 }
-
-
-- (void)application:(id<ZMApplication>)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
-{
-    [self.applicationRemoteNotification application:application didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
-}
-
 
 - (void)application:(id<ZMApplication>)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
 {

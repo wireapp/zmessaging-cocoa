@@ -31,7 +31,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Network";
 
 
 static NSString * const PushChannelDataKey = @"data";
-static NSString * const PushChannelUserIDKey = @"user";
 static NSString * const PushChannelIdentifierKey = @"id";
 static NSString * const PushChannelNotificationTypeKey = @"type";
 
@@ -144,25 +143,12 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 }
 
 - (BOOL)notificationIsForCurrentUser:(NSDictionary *)userInfo {
-    NSDictionary *userInfoData = [userInfo optionalDictionaryForKey:PushChannelDataKey];
-    if (userInfoData == nil) {
-        ZMLogError(@"No data dictionary in notification userInfo payload");
-        return YES;  // Old-style push might not contain the user id
-    }
-    
-    NSString *user_id = [userInfoData optionalStringForKey:PushChannelUserIDKey];
     ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-
-    // Old-style push might not contain the user id
-    if (user_id == nil) {
-        return YES;
-    }
     // No reason to process the push when the user is not given
     if (selfUser == nil) {
         return NO;
     }
-    
-    return [selfUser.remoteIdentifier isEqual:[NSUUID uuidWithTransportString:user_id]];
+    return [userInfo isPayloadForUser:selfUser];
 }
 
 - (EventsWithIdentifier *)eventArrayFromEncryptedMessage:(NSDictionary *)encryptedPayload
