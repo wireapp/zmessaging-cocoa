@@ -102,7 +102,7 @@ extension ZMUserSession: PushDispatcherOptionalClient {
     
     public func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: ZMPushNotificationCompletionHandler?) {
         self.syncManagedObjectContext.performGroupedBlock {
-            let notAuthenticated = self.isAuthenticated()
+            let notAuthenticated = !self.isAuthenticated()
             
             if notAuthenticated {
                 log.debug("Not displaying notification because app is not authenticated")
@@ -112,6 +112,13 @@ extension ZMUserSession: PushDispatcherOptionalClient {
             
             self.operationLoop.saveEventsAndSendNotification(forPayload: payload, fetchCompletionHandler: completion, source: source)
         }
+    }
+}
+
+// Testing
+extension ZMUserSession {
+    public func updatedPushTokenToVoipData(_ data: Data) {
+        self.updatedPushToken(to: PushToken.voip(tokenData: data))
     }
 }
 

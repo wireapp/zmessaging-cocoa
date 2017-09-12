@@ -643,7 +643,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     [[authenticationObserver expect] clientRegistrationDidSucceed]; // client creation
     
     // when login 2nd time
-    XCTAssertTrue([self login]); ;
+    XCTAssertTrue([self login]);
     
     [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }

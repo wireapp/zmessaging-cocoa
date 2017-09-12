@@ -316,9 +316,24 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     }
     
     fileprivate func logoutCurrentSession(deleteCookie: Bool = true, error : Error?) {
+        guard let currentSession = activeUserSession else {
+            return
+        }
+        
         tearDownObservers()
-        activeUserSession?.closeAndDeleteCookie(deleteCookie)
+        
+        
+        let matchingAccountSession = backgroundUserSessions.first { (account, session) in
+            session == currentSession
+        }
+        
+        if let matchingAccount = matchingAccountSession?.key {
+            backgroundUserSessions[matchingAccount] = nil
+        }
+        
+        currentSession.closeAndDeleteCookie(deleteCookie)
         activeUserSession = nil
+        
         delegate?.sessionManagerDidLogout(error: error)
         
         createUnauthenticatedSession()
