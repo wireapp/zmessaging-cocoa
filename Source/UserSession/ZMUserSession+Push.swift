@@ -61,8 +61,7 @@ extension NSDictionary {
 
 extension ZMUserSession: PushDispatcherOptionalClient {
     
-    
-    func updatedPushToken(to newToken: PushToken) {
+    public func updatedPushToken(to newToken: PushToken) {
         
         guard let managedObjectContext = self.managedObjectContext else {
             return
@@ -97,17 +96,17 @@ extension ZMUserSession: PushDispatcherOptionalClient {
         }
     }
 
-    func canHandle(payload: [AnyHashable: Any]) -> Bool {
+    public func canHandle(payload: [AnyHashable: Any]) -> Bool {
         return payload.isPayload(for: ZMUser.selfUser(in: self.managedObjectContext))
     }
     
-    func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler) {
+    public func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: ZMPushNotificationCompletionHandler?) {
         self.syncManagedObjectContext.performGroupedBlock {
             let notAuthenticated = self.isAuthenticated()
             
             if notAuthenticated {
                 log.debug("Not displaying notification because app is not authenticated")
-                completion(.success)
+                completion?(.success)
                 return
             }
             

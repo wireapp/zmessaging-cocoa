@@ -256,3 +256,176 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
     }
 }
+
+class SessionManagerPayloadCheckerTests: XCTestCase {
+    func testThatItDetectsTheUserFromPayload() {
+        //    internal func isPayload(for user: ZMUser) -> Bool {
+    }
+    
+    func testThatItDetectsPayloadWithUserAsCorrect() {
+        //    internal func isPayloadMissingUserInformation() -> Bool {
+    }
+    
+    func testThatItDetectsPayloadWithoutUserAsWrong() {
+        //        internal func isPayloadMissingUserInformation() -> Bool {
+
+    }
+}
+
+class SessionManagerTests_MultiUserSession: IntegrationTest {
+    func testThatItLoadsAndKeepsBackgroundUserSession() {
+        
+    }
+    
+    func testThatItUnloadsUserSession() {
+        
+    }
+}
+
+class SessionManagerTests_Push: IntegrationTest {
+    func testThatItStoresThePushToken() {
+        XCTFail()
+    }
+    
+    /*
+     
+     - (void)testThatItMarksPushTokenAsNotRegisteredWhenResettingEvenIfItHasSameData
+     {
+     // given
+     NSData *deviceToken = [NSData dataWithBytes:@"bla" length:3];
+     ZMPushToken *pushToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken
+     identifier:@"com.wire.ent"
+     transportType:@"APNS_VOIP"
+     fallback:@"APNS"
+     isRegistered:YES];
+     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
+     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:deviceToken] pushToken];
+     self.uiMOC.pushKitToken = pushToken;
+     
+     // when
+     [self performIgnoringZMLogError:^{
+     [self.sut resetPushTokens];
+     WaitForAllGroupsToBeEmpty(0.5);
+     }];
+     
+     // then
+     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
+     XCTAssertFalse(self.uiMOC.pushKitToken.isRegistered);
+     }
+     
+     - (void)testThatItStoresThePushKitToken
+     {
+     // given
+     NSData *deviceToken = [NSData dataWithBytes:@"bla" length:3];
+     ZMPushToken *pushToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken
+     identifier:@"com.wire.ent"
+     transportType:@"APNS_VOIP"
+     fallback:@"APNS"
+     isRegistered:NO];
+     // expect
+     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
+     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:deviceToken] pushToken];
+     [[[self.apnsEnvironment expect] andReturn:@"APNS"] fallbackForTransportType:ZMAPNSTypeVoIP];
+     
+     // when
+     [self performIgnoringZMLogError:^{
+     [self.sut resetPushTokens];
+     WaitForAllGroupsToBeEmpty(0.5);
+     }];
+     
+     // then
+     [mockPushRegistrant verify];
+     [self.apnsEnvironment verify];
+     XCTAssertEqualObjects(self.uiMOC.pushKitToken, pushToken);
+     XCTAssertFalse(self.uiMOC.pushKitToken.isRegistered);
+     }
+     
+     
+     - (void)testThatIt_DoesNot_ForwardsRemoteNotificationsWhileRunning_WhenNotLoggedIn;
+     {
+     // expect
+     NSDictionary *remoteNotification = @{@"a": @"b"};
+     [[self.operationLoop reject] saveEventsAndSendNotificationForPayload:remoteNotification fetchCompletionHandler:OCMOCK_ANY source:ZMPushNotficationTypeAlert];
+     
+     // when
+     [self.sut application:OCMOCK_ANY didReceiveRemoteNotification:remoteNotification fetchCompletionHandler:^(UIBackgroundFetchResult result) {
+     XCTAssertNotEqual(result, UIBackgroundFetchResultFailed);
+     }];
+     
+     [self.operationLoop verify];
+     }
+     
+     
+     - (void)testThatItCallsRegisterForPushNotificationsIfNoPushTokenIsSet
+     {
+     // given
+     XCTAssertNil(self.uiMOC.pushToken);
+     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
+     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:[NSData data]] pushToken];
+     
+     // when
+     [self performIgnoringZMLogError:^{
+     [self.sut resetPushTokens];
+     WaitForAllGroupsToBeEmpty(0.5);
+     }];
+     
+     // then
+     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
+     }
+     
+     - (void)testThatItCallsRegisterForPushNotificationsAgainIfNoPushTokenIsSet
+     {
+     // given
+     XCTAssertNil(self.uiMOC.pushToken);
+     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
+     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:[NSData data]] pushToken];
+     
+     // when
+     [self performIgnoringZMLogError:^{
+     [self.sut resetPushTokens];
+     [self.sut resetPushTokens];
+     WaitForAllGroupsToBeEmpty(0.5);
+     }];
+     
+     // then
+     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
+     }
+     
+     - (void)testThatItMarksTheTokenToDeleteWhenReceivingDidInvalidateToken
+     {
+     // given
+     [self.uiMOC setPushKitToken:[[ZMPushToken alloc] initWithDeviceToken:[NSData data] identifier:@"foo.bar" transportType:@"APNS" fallback:@"APNS" isRegistered:YES]];
+     XCTAssertNotNil(self.uiMOC.pushKitToken);
+     XCTAssertFalse(self.uiMOC.pushKitToken.isMarkedForDeletion);
+     id mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
+     
+     // when
+     [self.sut.pushRegistrant pushRegistry:mockPushRegistry didInvalidatePushTokenForType:PKPushTypeVoIP];
+     WaitForAllGroupsToBeEmpty(0.5);
+     
+     // then
+     XCTAssertTrue(self.uiMOC.pushKitToken.isMarkedForDeletion);
+     }
+     
+     - (void)testThatItSetsThePushTokenWhenReceivingUpdateCredentials
+     {
+     // given
+     NSData *token = [NSData data];
+     id mockCredentials =[OCMockObject niceMockForClass:[PKPushCredentials class]];
+     [(PKPushCredentials *)[[mockCredentials expect] andReturn:token] token];
+     id mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
+     
+     XCTAssertNil(self.uiMOC.pushKitToken);
+     
+     // when
+     [self.sut.pushRegistrant pushRegistry:mockPushRegistry didUpdatePushCredentials:mockCredentials forType:PKPushTypeVoIP];
+     WaitForAllGroupsToBeEmpty(0.5);
+     
+     // then
+     XCTAssertNotNil(self.uiMOC.pushKitToken);
+     XCTAssertEqualObjects(self.uiMOC.pushKitToken.deviceToken, token);
+     }
+
+ */
+}
+

@@ -22,7 +22,7 @@ import PushKit
 import WireTransport
 
 public typealias ZMPushNotificationCompletionHandler = (ZMPushPayloadResult)->()
-public typealias DidReceivePushCallback = (_ payload: [AnyHashable: Any], _ source: ZMPushNotficationType, _ completion: @escaping ZMPushNotificationCompletionHandler) -> ()
+public typealias DidReceivePushCallback = (_ payload: [AnyHashable: Any], _ source: ZMPushNotficationType, _ completion: ZMPushNotificationCompletionHandler?) -> ()
 /// This is a generic protocol for receiving remote push notifications.
 ///
 /// It is implemented by PushKitRegistrant for PushKit,

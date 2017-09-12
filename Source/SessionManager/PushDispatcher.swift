@@ -18,16 +18,16 @@
 
 import Foundation
 
-internal enum PushToken {
+public enum PushToken {
     case voip(tokenData: Data?)
     case alert(tokenData: Data?)
 }
 
-internal protocol PushDispatcherClient: NSObjectProtocol {
-    func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler)
+public protocol PushDispatcherClient: NSObjectProtocol {
+    func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: ZMPushNotificationCompletionHandler?)
 }
 
-internal protocol PushDispatcherOptionalClient: PushDispatcherClient {
+public protocol PushDispatcherOptionalClient: PushDispatcherClient {
     func updatedPushToken(to: PushToken)
     func canHandle(payload: [AnyHashable: Any]) -> Bool
 }
@@ -54,7 +54,7 @@ class WeakSet<T>: Sequence {
     }
 }
 
-internal final class PushDispatcher: NSObject {
+public final class PushDispatcher: NSObject {
     
     private let clients = WeakSet<PushDispatcherOptionalClient>()
     public weak var fallbackClient: PushDispatcherClient? = nil

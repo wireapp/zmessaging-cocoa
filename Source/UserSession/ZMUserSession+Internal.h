@@ -96,6 +96,8 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 - (void)tearDown;
 
+@property (nonatomic) ZMPushRegistrant *pushRegistrant;
+
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 
 /// When starting the app due to a push notification action, we store the notification information and wait until sync completed before processing pending local notifications.

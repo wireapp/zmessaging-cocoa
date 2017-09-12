@@ -624,7 +624,7 @@ extension SessionManager: ZMAuthenticationObserver {
 }
 
 extension SessionManager: PushDispatcherClient {
-    func wakeAllAccounts(for payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler) {
+    func wakeAllAccounts(for payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: ZMPushNotificationCompletionHandler?) {
         log.error("Push is not specifict to account, fetching all")
         self.accountManager.accounts.forEach { account in
             self.withSession(for: account, perform: { userSession in
@@ -633,7 +633,7 @@ extension SessionManager: PushDispatcherClient {
         }
     }
     
-    func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: @escaping ZMPushNotificationCompletionHandler) {
+    public func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: ZMPushNotificationCompletionHandler?) {
         
         guard !payload.isPayloadMissingUserInformation() else {
             self.wakeAllAccounts(for: payload, from: source, completion: completion)

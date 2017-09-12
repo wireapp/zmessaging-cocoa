@@ -17,10 +17,10 @@
 // 
 
 @import WireDataModel;
+@import WireSyncEngine;
 
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMUserSession+Background+Testing.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
@@ -75,7 +75,7 @@
     [self.application setBackground];
     
     // when
-    [self.userSession receivedPushNotificationWithPayload:[self APNSPayloadForNotificationPayload:payload] completionHandler:nil source:ZMPushNotficationTypeVoIP];
+    [self.userSession receivedPushNotificationWith:[self APNSPayloadForNotificationPayload:payload] from:ZMPushNotficationTypeVoIP completion:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -137,13 +137,12 @@
     [self.mockTransportSession resetReceivedRequests];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    
     // expect
     ZM_WEAK(self);
     self.application.registerForRemoteNotificationsCallback = ^{
         ZM_STRONG(self);
         [self.userSession performChanges:^{
-            [self.userSession application:self.application didRegisterForRemoteNotificationsWithDeviceToken:newToken];
+            [self.userSession updatedPushTokenToData:newToken];
         }];
     };
     
