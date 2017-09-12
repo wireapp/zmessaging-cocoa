@@ -61,6 +61,7 @@ internal final class PushDispatcher: NSObject {
     private var remoteNotificationHandler: ApplicationRemoteNotification!
     private var pushRegistrant: PushKitRegistrant!
     private var lastKnownPushToken: PushToken?
+    private let callbackQueue: DispatchQueue = DispatchQueue.main
     
     func add(client: PushDispatcherOptionalClient) {
         if let token = lastKnownPushToken {
@@ -72,6 +73,7 @@ internal final class PushDispatcher: NSObject {
     override init() {
         super.init()
         let didReceivePayload: DidReceivePushCallback = { [weak self] (payload, source, completion) in
+            
             log.debug("push notification: \(payload), source \(source)")
             
             guard let `self` = self else {
@@ -79,16 +81,22 @@ internal final class PushDispatcher: NSObject {
             }
             
             if payload.isPayloadMissingUserInformation() {
-                self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
+                self.callbackQueue.async {
+                    self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
+                }
             }
             else {
                 let possibleHandlers = self.clients.filter { $0.canHandle(payload: payload) }
                 
                 if let handler = possibleHandlers.last {
-                    handler.receivedPushNotification(with: payload, from: source, completion: completion)
+                    self.callbackQueue.async {
+                        handler.receivedPushNotification(with: payload, from: source, completion: completion)
+                    }
                 }
                 else {
-                    self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
+                    self.callbackQueue.async {
+                        self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
+                    }
                 }
             }
         }
@@ -100,8 +108,10 @@ internal final class PushDispatcher: NSObject {
     private func updatePushToken(to token: PushToken) {
         self.lastKnownPushToken = token
         
-        self.clients.forEach {
-            $0.updatedPushToken(to: token)
+        self.clients.forEach { client in
+            self.callbackQueue.async {
+                client.updatedPushToken(to: token)
+            }
         }
     }
     
