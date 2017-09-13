@@ -21,6 +21,8 @@ import CallKit
 import Intents
 import avs
 
+private let zmLog = ZMSLog(tag: "calling")
+
 @objc
 @available(iOS 10.0, *)
 public class CallKitDelegate : NSObject {
@@ -98,19 +100,14 @@ public class CallKitDelegate : NSObject {
     
     fileprivate func endAllOngoingCallKitCalls(exceptIn conversation: ZMConversation) {
         
-        for call in callController.callObserver.calls {
-            
-            if call.uuid == conversation.remoteIdentifier {
-                continue
-            }
+        for call in callController.callObserver.calls where call.uuid != conversation.remoteIdentifier {
             
             let endCallAction = CXEndCallAction(call: call.uuid)
             let transaction = CXTransaction(action: endCallAction)
             
             callController.request(transaction, completion: { (error) in
                 if let error = error {
-                    // log error
-                    print(error)
+                    zmLog.error("Coudn't end all ongoing calls: \(error)")
                 }
             })
         }
@@ -180,7 +177,8 @@ extension CallKitDelegate {
             let remoteIdentifier = conversation.remoteIdentifier,
             let handle = conversation.callKitHandle
         else {
-            return // log something
+            zmLog.warn("Ignore request to start call since remoteIdentifier or handle is nil")
+            return
         }
         
         let action = CXStartCallAction(call: remoteIdentifier, handle: handle)
@@ -188,9 +186,9 @@ extension CallKitDelegate {
         let transaction = CXTransaction(action: action)
         
         
-        callController.request(transaction) { (error) in
+        callController.request(transaction) { [weak self] (error) in
             if let error = error as? CXErrorCodeRequestTransactionError, error.code == .callUUIDAlreadyExists {
-                self.requestAnswerCall(in: conversation, video: video)
+                self?.requestAnswerCall(in: conversation, video: video)
             }
         }
         
@@ -205,9 +203,9 @@ extension CallKitDelegate {
         let action = CXAnswerCallAction(call: remoteIdentifier)
         let transaction = CXTransaction(action: action)
         
-        callController.request(transaction) { (error) in
+        callController.request(transaction) { [weak self] (error) in
             if let error = error {
-                self.log(for: conversation, format: "Cannot answer call: \(error)")
+                self?.log(for: conversation, format: "Cannot answer call: \(error)")
             }
         }
     }
@@ -218,9 +216,9 @@ extension CallKitDelegate {
         let action = CXEndCallAction(call: remoteIdentifier)
         let transaction = CXTransaction(action: action)
         
-        callController.request(transaction) { (error) in
+        callController.request(transaction) { [weak self] (error) in
             if let error = error {
-                self.log(for: conversation, format: "Cannot end call: \(error)")
+                self?.log(for: conversation, format: "Cannot end call: \(error)")
                 conversation.voiceChannel?.endCall()
             }
         }
@@ -243,12 +241,12 @@ extension CallKitDelegate {
         update.remoteHandle = handle
         update.hasVideo = video
         
-        provider.reportNewIncomingCall(with: remoteIdentifier, update: update) { (error) in
+        provider.reportNewIncomingCall(with: remoteIdentifier, update: update) { [weak self] (error) in
             if let error = error {
-                self.log(for: conversation, format: "Cannot report incoming call: \(error)")
+                self?.log(for: conversation, format: "Cannot report incoming call: \(error)")
                 conversation.voiceChannel?.leave()
             } else {
-                self.mediaManager?.setupAudioDevice()
+                self?.mediaManager?.setupAudioDevice()
             }
         }
     }
@@ -436,11 +434,7 @@ extension VoiceChannel {
         switch state {
         case .incoming(video: _, shouldRing: true, degraded: false):
             ignore()
-        case .established:
-            fallthrough
-        case .answered(degraded: false):
-            fallthrough
-        case .outgoing(degraded: false):
+        case .established, .answered(degraded: false), .outgoing(degraded: false):
             leave()
         default:
             break

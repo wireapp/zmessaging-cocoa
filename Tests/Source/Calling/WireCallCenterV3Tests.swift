@@ -53,12 +53,10 @@ class WireCallCenterV3Tests: MessagingTest {
         selfUser.remoteIdentifier = UUID.create()
         selfUserID = selfUser.remoteIdentifier!
         
-//        let selfClient = createSelfClient()
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
         conversation.remoteIdentifier = UUID.create()
         conversationID = conversation.remoteIdentifier!
         
-//        selfUserID = UUID()
         clientID = "foo"
         flowManager = FlowManagerMock()
         mockAVSWrapper = MockAVSWrapper(userId: selfUserID, clientId: clientID, observer: nil)

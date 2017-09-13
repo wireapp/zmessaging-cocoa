@@ -21,40 +21,6 @@ import Foundation
 import WireDataModel
 @testable import WireSyncEngine
 
-//struct V2CallStateChange {
-//    let conversation : ZMConversation
-//    let state : VoiceChannelV2State
-//}
-
-//class VoiceChannelStateTestObserver : VoiceChannelStateObserver {
-//
-//    var changes : [V2CallStateChange] = []
-//    var token : WireCallCenterObserverToken?
-//    
-//    func observe(conversation: ZMConversation, context: NSManagedObjectContext) {
-//        token = WireCallCenter.addVoiceChannelStateObserver(observer: self, context: context)
-//    }
-//
-//    func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol) {
-//        //
-//    }
-//    
-//    func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation) {
-//        //
-//    }
-//    
-//    func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
-//        changes.append(V2CallStateChange(conversation: conversation, state: voiceChannelState))
-//    }
-//    
-//    func checkLastNotificationHasCallState(_ callState: VoiceChannelV2State, line: UInt = #line, file : StaticString = #file) {
-//        guard let change = changes.last else {
-//            return XCTFail("Did not receive a notification", file: file, line: line)
-//        }
-//        XCTAssertEqual(change.state.rawValue, callState.rawValue, file: file, line: line)
-//    }
-//}
-
 class CallStateTestObserver : WireCallCenterCallStateObserver {
     
     var changes : [CallState] = []

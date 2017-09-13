@@ -157,9 +157,7 @@ extension ZMUserSession {
     
     func updateBackgroundTask(with message : ZMConversationMessage) {
         switch message.deliveryState {
-        case .sent:
-            fallthrough
-        case .delivered:
+        case .sent, .delivered:
             operationStatus.finishBackgroundTask(withTaskResult: .finished)
         case .failedToSend:
             operationStatus.finishBackgroundTask(withTaskResult: .failed)
