@@ -306,7 +306,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         if let secondAccount = accountManager.accounts.first(where: { $0.userIdentifier != account.userIdentifier }) {
             select(secondAccount)
         } else {
-            logoutCurrentSession(deleteCookie: true)
+            logoutCurrentSession(deleteCookie: true, error: NSError.userSessionErrorWith(.addAccountRequested, userInfo: nil))
         }
         deleteAccountData(for: account)
     }

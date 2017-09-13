@@ -421,7 +421,7 @@ public struct CallEvent {
     /// establishedDate - Date of when the call was established (Participants can talk to each other). This property is only valid when the call state is .established.
     public private(set) var establishedDate : Date?
     
-    public weak var transport : WireCallCenterTransport? = nil
+    fileprivate weak var transport : WireCallCenterTransport? = nil
     
     /// Used to collect incoming events (e.g. from fetching the notification stream) until AVS is ready to process them
     var bufferedEvents : [CallEvent]  = []
@@ -465,11 +465,12 @@ public struct CallEvent {
         avsWrapper.close()
     }
     
-    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil) {
+    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport) {
         self.selfUserId = userId
         self.uiMOC = uiMOC
         self.flowManager = flowManager
         self.analytics = analytics
+        self.transport = transport
         
         super.init()
         
@@ -492,7 +493,7 @@ public struct CallEvent {
     }
     
     fileprivate func requestCallConfig() {
-        zmLog.debug("\(self): requestCallConfig()")
+        zmLog.debug("\(self): requestCallConfig(), transport = \(String(describing: transport))")
         transport?.requestCallConfig(completionHandler: { [weak self] (config, httpStatusCode) in
             guard let `self` = self else { return }
             zmLog.debug("\(self): self.avsWrapper.update with \(String(describing: config))")

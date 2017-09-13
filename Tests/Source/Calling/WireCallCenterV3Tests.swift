@@ -43,6 +43,7 @@ class WireCallCenterV3Tests: MessagingTest {
     var sut : WireCallCenterV3!
     var selfUserID : UUID!
     var clientID: String!
+    var mockTransport = WireCallCenterTransportMock()
     
     override func setUp() {
         super.setUp()
@@ -50,7 +51,7 @@ class WireCallCenterV3Tests: MessagingTest {
         clientID = "foo"
         flowManager = FlowManagerMock()
         mockAVSWrapper = MockAVSWrapper(userId: selfUserID, clientId: clientID, observer: nil)
-        sut = WireCallCenterV3(userId: selfUserID, clientId: clientID, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager)
+        sut = WireCallCenterV3(userId: selfUserID, clientId: clientID, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: mockTransport)
     }
     
     override func tearDown() {
@@ -474,9 +475,7 @@ extension WireCallCenterV3Tests {
     
     func testThatCallConfigRequestsAreForwaredToTransportAndAVS() {
         // given
-        let mockTransport = WireCallCenterTransportMock()
         mockTransport.mockCallConfigResponse = ("call_config", 200)
-        sut.transport = mockTransport
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
         
         // when
