@@ -20,7 +20,8 @@ import Foundation
 import WireUtilities
 
 public protocol UnauthenticatedSessionDelegate: class {
-    func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials)
+    /// Update credentials for the corresponding user session. Returns true if the credentials were accepted.
+    func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials)  -> Bool
     func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data)
     func session(session: UnauthenticatedSession, createdAccount account: Account)
 }

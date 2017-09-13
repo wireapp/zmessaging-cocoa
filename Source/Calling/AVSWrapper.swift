@@ -23,9 +23,9 @@ import avs
 public protocol AVSWrapperType {
     init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?)
     func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool
-    func answerCall(conversationId: UUID, isGroup: Bool) -> Bool
-    func endCall(conversationId: UUID, isGroup: Bool)
-    func rejectCall(conversationId: UUID, isGroup: Bool)
+    func answerCall(conversationId: UUID) -> Bool
+    func endCall(conversationId: UUID)
+    func rejectCall(conversationId: UUID)
     func close()
     func received(callEvent: CallEvent)
     func toggleVideo(conversationID: UUID, active: Bool)
@@ -33,30 +33,38 @@ public protocol AVSWrapperType {
     func enableAudioCbr(shouldUseCbr: Bool)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
     func members(in conversationId: UUID) -> [CallMember]
+    func update(callConfig: String?, httpStatusCode: Int)
 }
 
 /// Wraps AVS calls for dependency injection and better testing
 public class AVSWrapper : AVSWrapperType {
     
+    private static var isInitialized = false
+    private let handle : UnsafeMutableRawPointer
+    
     required public init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?) {
-        let resultValue = wcall_init(
-            userId.transportString(),
-            clientId,
-            readyHandler,
-            sendCallMessageHandler,
-            incomingCallHandler,
-            missedCallHandler,
-            answeredCallHandler,
-            establishedCallHandler,
-            closedCallHandler,
-            callMetricsHandler,
-            observer)
         
-        if resultValue != 0 {
-            fatal("Failed to initialise AVS (error code: \(resultValue))")
+        if !AVSWrapper.isInitialized {
+            let resultValue = wcall_init()
+            if resultValue != 0 {
+                fatal("Failed to initialise AVS (error code: \(resultValue))")
+            }
         }
         
-        wcall_set_video_state_handler({ (state, _) in
+        handle = wcall_create(userId.transportString(),
+                              clientId,
+                              readyHandler,
+                              sendCallMessageHandler,
+                              incomingCallHandler,
+                              missedCallHandler,
+                              answeredCallHandler,
+                              establishedCallHandler,
+                              closedCallHandler,
+                              callMetricsHandler,
+                              requestCallConfigHandler,
+                              observer)
+        
+        wcall_set_video_state_handler(handle, { (state, _) in
             guard let state = ReceivedVideoState(rawValue: UInt(state)) else { return }
             
             DispatchQueue.main.async {
@@ -64,10 +72,10 @@ public class AVSWrapper : AVSWrapperType {
             }
         })
         
-        wcall_set_data_chan_estab_handler(dataChannelEstablishedHandler)
-        wcall_set_group_changed_handler(groupMemberHandler, observer)
+        wcall_set_data_chan_estab_handler(handle, dataChannelEstablishedHandler)
+        wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
 
-        wcall_set_audio_cbr_enabled_handler({ _ in
+        wcall_set_audio_cbr_enabled_handler(handle, { _ in
             DispatchQueue.main.async {
                 WireCallCenterCBRCallNotification().post()
             }
@@ -75,37 +83,37 @@ public class AVSWrapper : AVSWrapperType {
     }
     
     public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {
-        let didStart = wcall_start(conversationId.transportString(), video ? 1 : 0, isGroup ? 1 : 0)
+        let didStart = wcall_start(handle, conversationId.transportString(), video ? 1 : 0, isGroup ? 1 : 0)
         return didStart == 0
     }
     
-    public func answerCall(conversationId: UUID, isGroup: Bool) -> Bool {
-        let didAnswer = wcall_answer(conversationId.transportString(), isGroup ? 1 : 0)
+    public func answerCall(conversationId: UUID) -> Bool {
+        let didAnswer = wcall_answer(handle, conversationId.transportString())
         return didAnswer == 0
     }
     
-    public func endCall(conversationId: UUID, isGroup: Bool) {
-        wcall_end(conversationId.transportString(), isGroup ? 1 : 0)
+    public func endCall(conversationId: UUID) {
+        wcall_end(handle, conversationId.transportString())
     }
     
-    public func rejectCall(conversationId: UUID, isGroup: Bool) {
-        wcall_reject(conversationId.transportString(), isGroup ? 1 : 0)
+    public func rejectCall(conversationId: UUID) {
+        wcall_reject(handle, conversationId.transportString())
     }
     
-    public func close(){
-        wcall_close()
+    public func close() {
+        wcall_destroy(handle)
     }
     
     public func setVideoSendActive(userId: UUID, active: Bool) {
-        wcall_set_video_send_active(userId.transportString(), active ? 1 : 0)
+        wcall_set_video_send_active(handle, userId.transportString(), active ? 1 : 0)
     }
     
     public func enableAudioCbr(shouldUseCbr: Bool) {
-        wcall_enable_audio_cbr(shouldUseCbr ? 1 : 0)
+        wcall_enable_audio_cbr(handle, shouldUseCbr ? 1 : 0)
     }
 
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
-        wcall_resp(Int32(httpStatus), "", context)
+        wcall_resp(handle, Int32(httpStatus), "", context)
     }
     
     public func received(callEvent: CallEvent) {
@@ -113,16 +121,20 @@ public class AVSWrapper : AVSWrapperType {
             let currentTime = UInt32(callEvent.currentTimestamp.timeIntervalSince1970)
             let serverTime = UInt32(callEvent.serverTimestamp.timeIntervalSince1970)
             
-            wcall_recv_msg(bytes, callEvent.data.count, currentTime, serverTime, callEvent.conversationId.transportString(), callEvent.userId.transportString(), callEvent.clientId)
+            wcall_recv_msg(handle, bytes, callEvent.data.count, currentTime, serverTime, callEvent.conversationId.transportString(), callEvent.userId.transportString(), callEvent.clientId)
         }
     }
     
+    public func update(callConfig: String?, httpStatusCode: Int) {
+        wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig ?? "")
+    }
+    
     public func toggleVideo(conversationID: UUID, active: Bool) {
-        wcall_set_video_send_active(conversationID.transportString(), active ? 1 : 0)
+        wcall_set_video_send_active(handle, conversationID.transportString(), active ? 1 : 0)
     }
     
     public func members(in conversationId: UUID) -> [CallMember] {
-        guard let membersRef = wcall_get_members(conversationId.transportString()) else { return [] }
+        guard let membersRef = wcall_get_members(handle, conversationId.transportString()) else { return [] }
         
         let cMembers = membersRef.pointee
         var callMembers = [CallMember]()

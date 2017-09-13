@@ -19,13 +19,32 @@
 import Foundation
 @testable import WireSyncEngine
 
+class WireCallCenterTransportMock : WireCallCenterTransport {
+    
+    var mockCallConfigResponse : (String, Int)?
+    
+    
+    func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((Int) -> Void)) {
+        
+    }
+    
+    func requestCallConfig(completionHandler: @escaping CallConfigRequestCompletion) {
+        if let mockCallConfigResponse = mockCallConfigResponse {
+            completionHandler(mockCallConfigResponse.0, mockCallConfigResponse.1)
+        }
+    }
+    
+}
+
 class WireCallCenterV3Tests: MessagingTest {
 
+    var flowManager : FlowManagerMock!
     var mockAVSWrapper : MockAVSWrapper!
     var sut : WireCallCenterV3!
     var selfUserID : UUID!
     var conversationID : UUID!
     var clientID: String!
+    var mockTransport = WireCallCenterTransportMock()
     
     override func setUp() {
         super.setUp()
@@ -41,12 +60,14 @@ class WireCallCenterV3Tests: MessagingTest {
         
 //        selfUserID = UUID()
         clientID = "foo"
+        flowManager = FlowManagerMock()
         mockAVSWrapper = MockAVSWrapper(userId: selfUserID, clientId: clientID, observer: nil)
-        sut = WireCallCenterV3(userId: selfUserID, clientId: clientID, avsWrapper: mockAVSWrapper, uiMOC: uiMOC)
+        sut = WireCallCenterV3(userId: selfUserID, clientId: clientID, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: mockTransport)
     }
     
     override func tearDown() {
         sut = nil
+        flowManager = nil
         super.tearDown()
     }
     
@@ -189,7 +210,6 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatItRejectsACall_Group(){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let conversationIdRef = conversationID.transportString().cString(using: .utf8)
         let userIdRef = userId.transportString().cString(using: .utf8)
@@ -208,7 +228,7 @@ class WireCallCenterV3Tests: MessagingTest {
         }
         
         // when
-        sut.rejectCall(conversationId: conversationID, isGroup: true)
+        sut.rejectCall(conversationId: conversationID)
         WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: context)
 
         // then
@@ -218,7 +238,6 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatItRejectsACall_1on1(){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let conversationIdRef = conversationID.transportString().cString(using: .utf8)
         let userIdRef = userId.transportString().cString(using: .utf8)
@@ -237,7 +256,7 @@ class WireCallCenterV3Tests: MessagingTest {
         }
         
         // when
-        sut.rejectCall(conversationId: conversationID, isGroup: false)
+        sut.rejectCall(conversationId: conversationID)
         WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: context)
 
         // then
@@ -250,7 +269,7 @@ class WireCallCenterV3Tests: MessagingTest {
             let conversationId = UUID(cString: conversationIdRef)!
             
             // when
-            _ = sut.answerCall(conversationId: conversationId, isGroup: true)
+            _ = sut.answerCall(conversationId: conversationId)
             
             // then
             XCTAssertTrue(mockAVSWrapper.didCallAnswerCall)
@@ -271,7 +290,6 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatItSetsTheCallStartTimeBeforePostingTheNotification(){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let conversationIdRef = conversationID.transportString().cString(using: .utf8)
         let userIdRef = userId.transportString().cString(using: .utf8)
@@ -294,7 +312,6 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatItBuffersEventsUntilAVSIsReady(){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let clientId = "foo"
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
@@ -320,13 +337,12 @@ class WireCallCenterV3Tests: MessagingTest {
     
 }
 
-// MARK - Ignoring Calls
+// MARK: - Ignoring Calls
 
 extension WireCallCenterV3Tests {
     
     func testThatItWhenIgnoringACallItWillSetsTheCallStateToIncomingInactive(){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let conversationIdRef = conversationID.transportString().cString(using: .utf8)
         let userIdRef = userId.transportString().cString(using: .utf8)
@@ -335,7 +351,7 @@ extension WireCallCenterV3Tests {
         // when
         WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.rejectCall(conversationId: conversationID, isGroup: true)
+        sut.rejectCall(conversationId: conversationID)
         
         // then
         XCTAssertEqual(sut.callState(conversationId: conversationID), .incoming(video: false, shouldRing: false, degraded: false))
@@ -343,7 +359,6 @@ extension WireCallCenterV3Tests {
     
     func testThatItWhenRejectingAOneOnOneCallItWilltSetTheCallStateToIncomingInactive(){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let conversationIdRef = conversationID.transportString().cString(using: .utf8)
         let userIdRef = userId.transportString().cString(using: .utf8)
@@ -352,7 +367,7 @@ extension WireCallCenterV3Tests {
         // when
         WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.rejectCall(conversationId: conversationID, isGroup: false)
+        sut.rejectCall(conversationId: conversationID)
         
         // then
         XCTAssertEqual(sut.callState(conversationId: conversationID), .incoming(video: false, shouldRing: false, degraded: false))
@@ -360,7 +375,6 @@ extension WireCallCenterV3Tests {
     
     func testThatItWhenClosingAGroupCallItWillSetsTheCallStateToIncomingInactive(){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let conversationIdRef = conversationID.transportString().cString(using: .utf8)
         let userIdRef = userId.transportString().cString(using: .utf8)
@@ -377,7 +391,6 @@ extension WireCallCenterV3Tests {
     
     func testThatItWhenClosingAOneOnOneCallItDoesNotSetTheCallStateToIncomingInactive(){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let conversationIdRef = conversationID.transportString().cString(using: .utf8)
         let userIdRef = userId.transportString().cString(using: .utf8)
@@ -395,12 +408,11 @@ extension WireCallCenterV3Tests {
 }
 
 
-// MARK - Participants
+// MARK: - Participants
 extension WireCallCenterV3Tests {
 
     func testThatItCreatesAParticipantSnapshotForAnIncomingCall(){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let conversationIdRef = conversationID.transportString().cString(using: .utf8)
         let userIdRef = userId.transportString().cString(using: .utf8)
@@ -421,7 +433,6 @@ extension WireCallCenterV3Tests {
     
     func testThatItUpdatesTheParticipantsWhenGroupHandlerIsCalled(){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let conversationIdRef = conversationID.transportString().cString(using: .utf8)
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
@@ -436,7 +447,6 @@ extension WireCallCenterV3Tests {
     
     func testThatItUpdatesTheStateForParticipant(){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let conversationIdRef = conversationID.transportString().cString(using: .utf8)
         let userIdRef = userId.transportString().cString(using: .utf8)
@@ -458,4 +468,22 @@ extension WireCallCenterV3Tests {
         let connectedState = sut.state(forUser: userId, in: conversationID)
         XCTAssertEqual(connectedState, CallParticipantState.connected(muted: false, sendingVideo: false))
     }
+}
+
+// MARK: - Call Config
+extension WireCallCenterV3Tests {
+    
+    func testThatCallConfigRequestsAreForwaredToTransportAndAVS() {
+        // given
+        mockTransport.mockCallConfigResponse = ("call_config", 200)
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        
+        // when
+        XCTAssertEqual(WireSyncEngine.requestCallConfigHandler(handle: nil, contextRef: context), 0)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertTrue(mockAVSWrapper.didUpdateCallConfig)
+    }
+    
 }

@@ -30,6 +30,7 @@
     self = [super init];
     if (self) {
         self.userIdentifier = userIdentifier;
+        self.accountContainer = [[sharedContainerDirectory URLByAppendingPathComponent:@"AccountData"] URLByAppendingPathComponent:userIdentifier.transportString];
         self.applicationContainer = sharedContainerDirectory;
         self.contextDirectory = contextDirectory;
     }
@@ -85,6 +86,7 @@
     }]];
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
     self.mediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
+    self.flowManagerMock = [[FlowManagerMock alloc] init];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     
     self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:self.cookieStorage registrationStatusDelegate:nil];
@@ -113,6 +115,7 @@
     
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                                   mediaManager:self.mediaManager
+                                                   flowManager:self.flowManagerMock
                                                apnsEnvironment:self.apnsEnvironment
                                                  operationLoop:self.operationLoop
                                                    application:self.application
@@ -149,6 +152,8 @@
         [[NSFileManager defaultManager] removeItemAtURL:item error:nil];
     }
     
+    self.storeProvider = nil;
+    
     self.authFailHandler = nil;
     self.tokenSuccessHandler = nil;
     self.baseURL = nil;
@@ -169,6 +174,8 @@
     
     [self.mediaManager stopMocking];
     self.mediaManager = nil;
+    
+    self.flowManagerMock = nil;
     
     [(id)self.syncStrategy stopMocking];
     self.syncStrategy = nil;

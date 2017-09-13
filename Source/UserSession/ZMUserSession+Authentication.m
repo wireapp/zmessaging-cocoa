@@ -80,7 +80,6 @@ static NSString *const HasHistoryKey = @"hasHistory";
     [refUIMoc performGroupedBlockAndWait:^{}];
     [refSyncMOC performGroupedBlockAndWait:^{}];
 
-    [self.transportSession tearDown];
     [self tearDown];
 
     [refUIMoc performGroupedBlockAndWait:^{}];
@@ -90,9 +89,6 @@ static NSString *const HasHistoryKey = @"hasHistory";
     refSyncMOC = nil;
 
     [StorageStack reset];
-
-    NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionNoError userInfo:nil];
-    [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:outError];
 }
 
 @end

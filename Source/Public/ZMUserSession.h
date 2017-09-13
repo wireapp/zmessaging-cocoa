@@ -43,6 +43,7 @@
 @protocol UserProfileImageUpdateProtocol;
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
+@protocol FlowManagerType;
 
 @class ManagedObjectContextDirectory;
 @class TopConversationsDirectory;
@@ -60,6 +61,7 @@ extern NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName;
 extern NSString * const ZMPhoneVerificationCodeKey;
 extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 extern NSString * const ZMTransportRequestLoopNotificationName;
+extern NSString * const ZMFlowManagerDidBecomeAvailableNotification;
 
 /// The main entry point for the WireSyncEngine API.
 ///
@@ -74,6 +76,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
  @param storeProvider: An object conforming to the @c LocalStoreProviderProtocol that provides information about local store locations etc.
 */
 - (instancetype)initWithMediaManager:(AVSMediaManager *)mediaManager
+                         flowManager:(id<FlowManagerType>)flowManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
                      apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
@@ -85,8 +88,6 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
 @property (atomic, readonly) ZMNetworkState networkState;
 @property (atomic) BOOL isNotificationContentHidden;
-
-- (void)start;
 
 /// Performs a save in the context
 - (void)saveOrRollbackChanges;
@@ -117,7 +118,10 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 
 /// The sync has been completed as least once
 @property (nonatomic, readonly) BOOL hasCompletedInitialSync;
-           
+
+// Request the push token from iOS and send it to the backend.
+- (void)registerForRemoteNotifications;
+
 @end
 
 

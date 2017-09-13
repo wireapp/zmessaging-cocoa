@@ -28,7 +28,7 @@ public class CallKitDelegate : NSObject {
     fileprivate let provider : CXProvider
     fileprivate let callController : CXCallController
     fileprivate let userSession : ZMUserSession
-    fileprivate let onDemandFlowManager : ZMOnDemandFlowManager?
+    fileprivate let flowManager : FlowManagerType?
     fileprivate let mediaManager: AVSMediaManager?
     fileprivate var callStateObserverToken : WireCallCenterObserverToken?
     fileprivate var missedCallObserverToken : WireCallCenterObserverToken?
@@ -38,13 +38,13 @@ public class CallKitDelegate : NSObject {
     public init(provider : CXProvider,
          callController: CXCallController,
          userSession: ZMUserSession,
-         onDemandFlowManager: ZMOnDemandFlowManager?,
+         flowManager: FlowManagerType?,
          mediaManager: AVSMediaManager?) {
         
         self.provider = provider
         self.callController = callController
         self.userSession = userSession
-        self.onDemandFlowManager = onDemandFlowManager
+        self.flowManager = flowManager
         self.mediaManager = mediaManager
         self.calls = [:]
         
@@ -59,6 +59,8 @@ public class CallKitDelegate : NSObject {
     }
     
     deinit {
+        provider.invalidate()
+        
         if let token = callStateObserverToken {
             WireCallCenterV3.removeObserver(token: token)
         }
@@ -88,7 +90,10 @@ public class CallKitDelegate : NSObject {
     
     fileprivate func log (for conversation: ZMConversation?, format: String, arguments: CVarArg..., file: String = #file, line: Int = #line) {
         let messageWithLineNumber = String(format: "%s:%ld: %@", file, line, String(format: format, arguments))
-        onDemandFlowManager?.flowManager.appendLog(forConversation: conversation?.remoteIdentifier?.transportString() ?? "(N/A)", message: messageWithLineNumber)
+        
+        if let conversationId = conversation?.remoteIdentifier {
+            flowManager?.appendLog(for: conversationId, message: messageWithLineNumber)
+        }
     }
     
     fileprivate func endAllOngoingCallKitCalls(exceptIn conversation: ZMConversation) {
@@ -316,18 +321,17 @@ extension CallKitDelegate : CXProviderDelegate {
         let callObserver = CallObserver(conversation: conversation)
         calls[action.callUUID] = callObserver
         
-        // TODO jacob
-//        callObserver.onEstablished = {
-//            action.fulfill()
-//        }
+        callObserver.onEstablished = {
+            action.fulfill()
+        }
         
-        mediaManager?.setupAudioDevice()
+        callObserver.onFailedToJoin = {
+            action.fail()
+        }
         
         if conversation.voiceChannel?.join(video: false) != true {
             action.fail()
         }
-        
-        action.fulfill() // TODO jacob
     }
     
     public func provider(_ provider: CXProvider, perform action: CXEndCallAction) {

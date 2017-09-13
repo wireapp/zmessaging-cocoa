@@ -63,12 +63,21 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     /// The current usert client was deleted remotely
     ZMUserSessionClientDeletedRemotely = 18,
     /// The last user identity (email or phone number) cannot be removed.
-    ZMUserSessionLastUserIdentityCantBeDeleted = 19
+    ZMUserSessionLastUserIdentityCantBeDeleted = 19,
+    /// Access token expired and could not be renewed
+    ZMUserSessionAccessTokenExpired = 20,
+    /// The user requested to add an additional account
+    ZMUserSessionAddAccountRequested = 21,
+    /// The user account is suspended and may not be logged in
+    ZMUserSessionAccountSuspended = 22
 };
 
 FOUNDATION_EXPORT NSString * const ZMUserSessionErrorDomain;
 
 FOUNDATION_EXPORT NSString * const ZMClientsKey;
+
+FOUNDATION_EXPORT NSString * const ZMPhoneCredentialKey;
+FOUNDATION_EXPORT NSString * const ZMEmailCredentialKey;
 
 @interface NSError (ZMUserSession)
 

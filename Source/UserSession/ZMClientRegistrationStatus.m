@@ -317,6 +317,11 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         self.emailCredentials = nil;
     }
     
+    if (error.code == ZMUserSessionNeedsPasswordToRegisterClient) {
+        // help the user by providing the email associated with this account
+        error = [NSError errorWithDomain:error.domain code:error.code userInfo:[ZMUser selfUserInContext:self.managedObjectContext].credentialsUserInfo];
+    }
+    
     if (error.code == ZMUserSessionNeedsPasswordToRegisterClient ||
         error.code == ZMUserSessionInvalidCredentials)
     {
@@ -372,8 +377,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
         if (selfClient != nil) {
             // the selfClient was removed by an other user
-            [self invalidateSelfClient];
-            [self invalidateCookieAndNotify];
+            [self didDetectCurrentClientDeletion];
         }
         self.needsToVerifySelfClient = NO;
     }
@@ -385,7 +389,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)didDetectCurrentClientDeletion
 {
     [self invalidateSelfClient];
-    [self invalidateCookieAndNotify];
     
     NSFetchRequest *clientFetchRequest = [UserClient sortedFetchRequest];
     NSArray <UserClient *>*clients = [self.managedObjectContext executeFetchRequestOrAssert:clientFetchRequest];
@@ -395,6 +398,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     }
     
     [self.managedObjectContext deleteAndCreateNewEncryptionContext];
+    [self invalidateCookieAndNotify];
 }
 
 - (BOOL)clientIsReadyForRequests
@@ -417,9 +421,9 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 {
     self.emailCredentials = nil;
     [self.cookieStorage deleteKeychainItems];
-//    [ZMUserSessionAuthenticationNotification notifyDidDetectSelfClientDeletion];
 
-    NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:nil];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+    NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:selfUser.credentialsUserInfo];
     [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:outError];
 }
 

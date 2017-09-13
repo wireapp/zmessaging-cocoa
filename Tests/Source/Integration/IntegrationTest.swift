@@ -42,13 +42,14 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     let transportSession: ZMTransportSession
 
-    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider) {
+    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider) {
         self.transportSession = transportSession
         super.init(
             appVersion: "0.0.0",
             apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
+            flowManager: flowManager,
             environment: environment,
             reachability: reachability,
             analytics: nil
@@ -58,6 +59,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
     override func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
         return ZMUserSession(
             mediaManager: mediaManager,
+            flowManager: flowManager,
             analytics: analytics,
             transportSession: transportSession,
             apnsEnvironment: apnsEnvironment,
@@ -102,7 +104,6 @@ extension IntegrationTest {
         mockTransportSession = MockTransportSession(dispatchGroup: self.dispatchGroup)
         mockTransportSession.cookieStorage = ZMPersistentCookieStorage(forServerName: "ztest.example.com", userIdentifier: currentUserIdentifier)
         WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self;
-        ZMCallFlowRequestStrategyInternalFlowManagerOverride = MockFlowManager()
         mockTransportSession.cookieStorage.deleteKeychainItems()
                 
         createSessionManager()
@@ -110,12 +111,13 @@ extension IntegrationTest {
     
     @objc
     func _tearDown() {
-        ZMCallFlowRequestStrategyInternalFlowManagerOverride = nil
         sharedSearchDirectory?.tearDown()
         sharedSearchDirectory = nil
         userSession = nil
+        userSession?.tearDown()
+        unauthenticatedSession?.tearDown()
         unauthenticatedSession = nil
-        mockTransportSession?.tearDown()
+        mockTransportSession?.cleanUp()
         mockTransportSession = nil
         sessionManager = nil
         selfUser = nil
@@ -130,12 +132,12 @@ extension IntegrationTest {
         connectionSelfToUser2 = nil
         selfConversation = nil
         groupConversation = nil
-
+        application = nil
+        resetInMemoryDatabases()
         deleteSharedContainerContent()
+        sharedContainerDirectory = nil
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        resetInMemoryDatabases()
-        sharedContainerDirectory = nil
     }
     
     func resetInMemoryDatabases() {
@@ -144,7 +146,9 @@ extension IntegrationTest {
     
     @objc
     func destroySessionManager() {
+        userSession?.tearDown()
         userSession = nil
+        unauthenticatedSession?.tearDown()
         unauthenticatedSession = nil
         sessionManager = nil
         
@@ -190,6 +194,7 @@ extension IntegrationTest {
             apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
+            flowManager: FlowManagerMock(),
             transportSession: transportSession,
             environment: environment,
             reachability: reachability
@@ -459,7 +464,7 @@ extension IntegrationTest {
         
         return user!
     }
-    
+        
 }
 
 extension IntegrationTest {
@@ -487,10 +492,6 @@ extension IntegrationTest : SessionManagerDelegate {
         
         userSession.syncManagedObjectContext.performGroupedBlock {
             userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
-
-            userSession.managedObjectContext.performGroupedBlock {
-                userSession.start()
-            }
         }
     }
     
@@ -503,15 +504,28 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
 
-    public func sessionManagerDidLogout() {
-        // no-op
+    public func sessionManagerDidLogout(error: Error?) {
+        guard let error = error as NSError? else { return }
+        
+        guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)) else {
+            return
+        }
+        
+        switch userSessionErrorCode {
+        case .accountDeleted,
+             .clientDeletedRemotely,
+             .accessTokenExpired:
+            self.userSession = nil
+        default:
+            break
+        }
     }
 
     public func sessionManagerDidBlacklistCurrentVersion() {
         // no-op
     }
     
-    public func sessionManagerWillSuspendSession() {
+    public func sessionManagerWillOpenAccount(_ account: Account) {
         // no-op
     }
     

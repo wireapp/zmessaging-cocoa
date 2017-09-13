@@ -173,6 +173,15 @@ class UserProfileImageUpdateStatusTests: MessagingTest {
         self.sut.changeDelegate = changeDelegate
     }
     
+    override func tearDown() {
+        preprocessor = nil
+        sut = nil
+        tinyImage = nil
+        imageOwner = nil
+        changeDelegate = nil
+        super.tearDown()
+    }
+    
     func operationWithExpectation(description: String) -> Operation {
         let expectation = self.expectation(description: description)
         return BlockOperation {

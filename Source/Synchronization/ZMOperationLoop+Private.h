@@ -30,7 +30,7 @@
 
 @property (nonatomic) APSSignalingKeysStore *apsSignalKeyStore;
 @property (nonatomic) ZMSyncStrategy *syncStrategy;
-@property (nonatomic) NSManagedObjectContext *syncMOC;
+@property (nonatomic, weak) NSManagedObjectContext *syncMOC;
 @property (nonatomic, readonly) BackgroundAPNSPingBackStatus *backgroundAPNSPingBackStatus;
 @end
 

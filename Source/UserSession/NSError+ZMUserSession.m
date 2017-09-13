@@ -24,6 +24,8 @@
 
 NSString * const ZMUserSessionErrorDomain = @"ZMUserSession";
 NSString * const ZMClientsKey = @"clients";
+NSString * const ZMPhoneCredentialKey = @"phone";
+NSString * const ZMEmailCredentialKey = @"email";
 
 static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSessionErrorCode code)
 {

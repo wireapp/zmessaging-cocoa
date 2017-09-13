@@ -89,10 +89,9 @@ public class VoiceChannelV3 : NSObject, CallProperties, VoiceChannel {
     }
     
     public func setVideoCaptureDevice(device: CaptureDevice) throws {
-        guard let flowManager = ZMAVSBridge.flowManagerInstance(), flowManager.isReady() else { throw VoiceChannelV2Error.noFlowManagerError() }
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.switchToVideoNotAllowedError() }
+        guard let conversationId = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.switchToVideoNotAllowedError() }
         
-        flowManager.setVideoCaptureDevice(device.deviceIdentifier, forConversation: remoteIdentifier.transportString())
+        WireCallCenterV3.activeInstance?.setVideoCaptureDevice(device, for: conversationId)
     }
     
 }
@@ -155,7 +154,7 @@ extension VoiceChannelV3 : CallActionsInternal {
         switch state {
         case .incoming(video: _, shouldRing: _, degraded: let degraded):
             if !degraded {
-                joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier, isGroup: isGroup) ?? false
+                joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier) ?? false
             }
         default:
             joined = WireCallCenterV3.activeInstance?.startCall(conversationId: remoteIdentifier, video: video, isGroup: isGroup) ?? false
@@ -178,8 +177,7 @@ extension VoiceChannelV3 : CallActionsInternal {
               let remoteID = conv.remoteIdentifier
         else { return }
         
-        let isGroup = (conv.conversationType == .group)
-        WireCallCenterV3.activeInstance?.rejectCall(conversationId: remoteID, isGroup: isGroup)
+        WireCallCenterV3.activeInstance?.rejectCall(conversationId: remoteID)
     }
     
 }

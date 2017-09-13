@@ -586,8 +586,9 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         [self.unauthenticatedSession loginWithCredentials:credentials];
     };
     
+    NSDictionary *credentialsUserInfo = @{ ZMPhoneCredentialKey: phone, ZMEmailCredentialKey: IntegrationTest.SelfUserEmail };
     [[authenticationObserver expect] authenticationDidSucceed]; // authentication
-    [[[authenticationObserver expect] andDo:provideWrongCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsPasswordToRegisterClient userInfo:nil]];
+    [[[authenticationObserver expect] andDo:provideWrongCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsPasswordToRegisterClient userInfo:credentialsUserInfo]];
     [[authenticationObserver expect] authenticationDidFail:[NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionInvalidCredentials userInfo:nil]];
     
     ZM_WEAK(self);
@@ -625,49 +626,27 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     id token = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
     [[authenticationObserver expect] authenticationDidSucceed];
     [[authenticationObserver expect] clientRegistrationDidSucceed]; // client creation
+    XCTAssertTrue([self login]);
     
-    // (1) register client and recreate session
-    {
-        XCTAssertTrue([self login]);
-        
-        [self destroySessionManager];
-        [self deleteAuthenticationCookie];
-        [self createSessionManager];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }
+    // expect
+    [[authenticationObserver expect] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:@{ ZMEmailCredentialKey: IntegrationTest.SelfUserEmail }]];
     
-    // (2) delete self client
+    // when we delete self client
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         MockUserClient *selfClient = self.selfUser.clients.anyObject;
         [session deleteUserClientWithIdentifier:selfClient.identifier forUser:self.selfUser];
     }];
+    WaitForAllGroupsToBeEmpty(0.5);
     
-    // (3) login again after the client was deleted from the backend
-    {
-        // expect
-        id provideCredentials = ^(NSInvocation *invocation ZM_UNUSED) {
-            ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:IntegrationTest.SelfUserPassword];
-            [self.unauthenticatedSession loginWithCredentials:credentials];
-        };
-
-        [[authenticationObserver expect] authenticationDidSucceed]; // Login
-        [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:nil]];
-        // TODO: Fix this faulty test that never checks if we actually register a new client!
-//        [[authenticationObserver expect] clientRegistrationDidSucceed]; // Client Registration
-
-        // and when
-        XCTAssertTrue([self loginAndIgnoreAuthenticationFailures:YES]);
-        WaitForAllGroupsToBeEmpty(0.5);
+    // expect
+    [[authenticationObserver expect] authenticationDidSucceed];
+    [[authenticationObserver expect] clientRegistrationDidSucceed]; // client creation
     
-        // then
-        [authenticationObserver verify];
-        ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
-        XCTAssertEqualObjects(selfUser.name, self.selfUser.name);
-    }
+    // when login 2nd time
+    XCTAssertTrue([self login]); ;
     
     [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
-
 
 - (void)testThatItCanRegisterNewClientAfterDeletingSelfClientAndReceivingNeedsPasswordToRegisterClient
 {
@@ -708,13 +687,13 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
             }];
         };
 
+        NSDictionary *credentialsUserInfo = @{ ZMPhoneCredentialKey : phone, ZMEmailCredentialKey : IntegrationTest.SelfUserEmail };
         [[authenticationObserver expect] loginCodeRequestDidSucceed]; // authentication
         [[authenticationObserver expect] authenticationDidSucceed]; // authentication
-        [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsPasswordToRegisterClient userInfo:nil]];
+        [[[authenticationObserver expect] andDo:provideCredentials] authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsPasswordToRegisterClient userInfo:credentialsUserInfo]];
         [[authenticationObserver expect] clientRegistrationDidSucceed]; // client registration
         
         // when
-//        XCTAssertTrue([self loginAndIgnoreAuthenticationFailures:YES]);
         [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
         XCTAssertTrue([self loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code] ignoreAuthenticationFailures:YES]);
         WaitForAllGroupsToBeEmpty(0.5);

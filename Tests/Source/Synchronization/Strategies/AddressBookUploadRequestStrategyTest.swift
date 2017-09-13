@@ -45,6 +45,7 @@ class AddressBookUploadRequestStrategyTest : MessagingTest {
     override func tearDown() {
         self.mockApplicationStatus = nil
         self.sut = nil
+        self.trackerFake = nil
         self.addressBook = nil
         super.tearDown()
     }

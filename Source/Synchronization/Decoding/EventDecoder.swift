@@ -49,8 +49,8 @@ private let previouslyReceivedEventIDsKey = "zm_previouslyReceivedEventIDsKey"
     /// Set this for testing purposes only
     static var testingBatchSize : Int?
     
-    let eventMOC : NSManagedObjectContext
-    let syncMOC: NSManagedObjectContext
+    unowned let eventMOC : NSManagedObjectContext
+    unowned let syncMOC: NSManagedObjectContext
     
     fileprivate typealias EventsWithStoredEvents = (storedEvents: [StoredUpdateEvent], updateEvents: [ZMUpdateEvent])
     

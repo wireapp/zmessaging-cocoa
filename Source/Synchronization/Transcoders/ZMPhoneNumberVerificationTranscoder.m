@@ -34,7 +34,7 @@
 
 @property (nonatomic) ZMSingleRequestSync *codeRequestSync;
 @property (nonatomic) ZMSingleRequestSync *codeVerificationSync;
-@property (nonatomic) id<ZMSGroupQueue> groupQueue;
+@property (nonatomic, weak) id<ZMSGroupQueue> groupQueue;
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
 
 @end

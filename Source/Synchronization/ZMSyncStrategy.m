@@ -39,7 +39,6 @@
 #import "ZMCallFlowRequestStrategy.h"
 #import "WireSyncEngineLogs.h"
 #import "ZMClientRegistrationStatus.h"
-#import "ZMOnDemandFlowManager.h"
 #import "ZMHotFix.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
@@ -118,7 +117,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (instancetype)initWithStoreProvider:(id<LocalStoreProviderProtocol>)storeProvider
                         cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
                          mediaManager:(AVSMediaManager *)mediaManager
-                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                          flowManager:(id<FlowManagerType>)flowManager
                     syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
          localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
              taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
@@ -143,7 +142,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                                  application:application
                                                                                            syncStateDelegate:self];
         
-        [self createTranscodersWithLocalNotificationsDispatcher:localNotificationsDispatcher mediaManager:mediaManager onDemandFlowManager:onDemandFlowManager];
+        [self createTranscodersWithLocalNotificationsDispatcher:localNotificationsDispatcher mediaManager:mediaManager flowManager:flowManager];
         
         self.eventsBuffer = [[ZMUpdateEventsBuffer alloc] initWithUpdateEventConsumer:self];
         self.userClientRequestStrategy = [[UserClientRequestStrategy alloc] initWithClientRegistrationStatus:self.applicationStatusDirectory.clientRegistrationStatus
@@ -208,8 +207,8 @@ ZM_EMPTY_ASSERTING_INIT()
 }
 
 - (void)createTranscodersWithLocalNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-                                         mediaManager:(AVSMediaManager *)mediaManager
-                                  onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                                             mediaManager:(AVSMediaManager *)mediaManager
+                                              flowManager:(id<FlowManagerType>)flowManager
 {
     self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventMOC syncMOC:self.syncMOC];
     self.connectionTranscoder = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory syncStatus:self.applicationStatusDirectory.syncStatus];
@@ -220,8 +219,8 @@ ZM_EMPTY_ASSERTING_INIT()
     self.clientMessageTranscoder = [[ClientMessageTranscoder alloc] initIn:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher applicationStatus:self.applicationStatusDirectory];
     self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self previouslyReceivedEventIDsCollection:self.eventDecoder application:self.application backgroundAPNSPingbackStatus:self.applicationStatusDirectory.pingBackStatus syncStatus:self.applicationStatusDirectory.syncStatus];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory syncStatus:self.applicationStatusDirectory.syncStatus objectDirectory:self];
-    self.callFlowRequestStrategy = [[ZMCallFlowRequestStrategy alloc] initWithMediaManager:mediaManager onDemandFlowManager:onDemandFlowManager managedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory application:self.application];
-    self.callingRequestStrategy = [[CallingRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.applicationStatusDirectory.clientRegistrationStatus];
+    self.callFlowRequestStrategy = [[ZMCallFlowRequestStrategy alloc] initWithMediaManager:mediaManager flowManager:flowManager managedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory application:self.application];
+    self.callingRequestStrategy = [[CallingRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:self.applicationStatusDirectory.clientRegistrationStatus flowManager:flowManager];
     self.conversationStatusSync = [[ConversationStatusStrategy alloc] initWithManagedObjectContext:self.syncMOC];
     self.linkPreviewAssetDownloadRequestStrategy = [[LinkPreviewAssetDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory];
     self.linkPreviewAssetUploadRequestStrategy = [[LinkPreviewAssetUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory linkPreviewPreprocessor:nil previewImagePreprocessor:nil];
@@ -278,9 +277,26 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)tearDown
 {
     self.tornDown = YES;
+    self.localNotificationDispatcher = nil;
     self.applicationStatusDirectory = nil;
+    self.connectionTranscoder = nil;
+    self.missingUpdateEventsTranscoder = nil;
+    self.changeTrackerBootStrap = nil;
+    self.callingRequestStrategy = nil;
+    self.callFlowRequestStrategy = nil;
+    self.connectionTranscoder = nil;
+    self.conversationTranscoder = nil;
+    self.eventsBuffer = nil;
+    self.userTranscoder = nil;
+    self.selfStrategy = nil;
+    self.clientMessageTranscoder = nil;
+    self.lastUpdateEventIDTranscoder = nil;
+    self.systemMessageEventConsumer = nil;
+    self.allChangeTrackers = nil;
     self.eventDecoder = nil;
-    [self.eventMOC tearDown];
+    [self.eventMOC performGroupedBlockAndWait:^{
+        [self.eventMOC tearDownEventMOC];
+    }];
     self.eventMOC = nil;
     [self.application unregisterObserverForStateChange:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -293,7 +309,7 @@ ZM_EMPTY_ASSERTING_INIT()
             }
         }
     }
-    
+    self.requestStrategies = nil;
     [self.notificationDispatcher tearDown];
     [self.conversationStatusSync tearDown];
 }

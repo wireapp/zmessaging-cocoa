@@ -76,16 +76,18 @@
 - (void)tearDown;
 {
     WaitForAllGroupsToBeEmpty(0.5);
-    
+    [self.pingBackStatus stopMocking];
+    self.pingBackStatus = nil;
+    [self.mockPushChannel stopMocking];
     self.mockPushChannel = nil;
+    [self.transportSession stopMocking];
     self.transportSession = nil;
+    [self.syncStrategy stopMocking];
     self.syncStrategy = nil;
     [self.sut tearDown];
     self.sut = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [super tearDown];
-    [self.pingBackStatus stopMocking];
-    self.pingBackStatus = nil;
 }
 
 - (void)pushChannelDidChange:(NSNotification *)note
@@ -1013,6 +1015,47 @@
     
     // then
     [self.pingBackStatus verify];
+}
+
+- (void)testThatItUsesTheNotificationWithoutUserID
+{
+    // GIVEN
+    NSDictionary *pushPayload =  @{@"aps" : @{},
+                                   @"data" : @{
+                                           @"type" : @"notice"
+                                           }
+                                   };
+    // WHEN & THEN
+    XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
+}
+
+- (void)testThatItUsesTheNotificationForCurrentUser
+{
+    // GIVEN
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    selfUser.remoteIdentifier = [NSUUID UUID];
+    
+    NSDictionary *pushPayload =  @{@"aps" : @{},
+                                   @"data" : @{
+                                           @"user": selfUser.remoteIdentifier.transportString,
+                                           @"type" : @"notice"
+                                           }
+                                   };
+    // WHEN & THEN
+    XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
+}
+
+- (void)testThatItIgnoresTheNotificationForOtherUser
+{
+    // GIVEN
+    NSDictionary *pushPayload =  @{@"aps" : @{},
+                                   @"data" : @{
+                                           @"user": [NSUUID UUID].transportString,
+                                           @"type" : @"notice"
+                                           }
+                                   };
+    // WHEN & THEN
+    XCTAssertFalse([self.sut notificationIsForCurrentUser:pushPayload]);
 }
 
 - (NSArray *)messageAddPayloadWithNonces:(NSArray <NSUUID *>*)nonces

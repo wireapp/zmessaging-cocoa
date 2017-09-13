@@ -38,7 +38,7 @@ class VoiceChannelV3Tests : MessagingTest {
         conversation = ZMConversation.insertNewObject(in: self.uiMOC)
         conversation?.remoteIdentifier = UUID.create()
         
-        wireCallCenterMock = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: selfClient.remoteIdentifier!, uiMOC: uiMOC)
+        wireCallCenterMock = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: selfClient.remoteIdentifier!, uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
         
         sut = VoiceChannelV3(conversation: conversation!)
     }

@@ -24,6 +24,7 @@ open class AuthenticatedSessionFactory {
 
     let appVersion: String
     let mediaManager: AVSMediaManager
+    let flowManager : FlowManagerType
     var analytics: AnalyticsType?
     var apnsEnvironment : ZMAPNSEnvironment?
     let application : ZMApplication
@@ -35,12 +36,14 @@ open class AuthenticatedSessionFactory {
         apnsEnvironment: ZMAPNSEnvironment? = nil,
         application: ZMApplication,
         mediaManager: AVSMediaManager,
+        flowManager: FlowManagerType,
         environment: ZMBackendEnvironment,
         reachability: ReachabilityProvider,
         analytics: AnalyticsType? = nil
         ) {
         self.appVersion = appVersion
         self.mediaManager = mediaManager
+        self.flowManager = flowManager
         self.analytics = analytics
         self.apnsEnvironment = apnsEnvironment
         self.application = application
@@ -60,6 +63,7 @@ open class AuthenticatedSessionFactory {
 
         return ZMUserSession(
             mediaManager: mediaManager,
+            flowManager:flowManager,
             analytics: analytics,
             transportSession: transportSession,
             apnsEnvironment: apnsEnvironment,

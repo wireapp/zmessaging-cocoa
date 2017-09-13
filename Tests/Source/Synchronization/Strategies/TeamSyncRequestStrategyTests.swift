@@ -245,7 +245,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         XCTAssertTrue(mockSyncStatus.didCallFinishCurrentSyncPhase)
     }
     
-    func testThatItDeletedLocalOnlyTeamsAfterPerformingASlowSync() {
+    func testThatItRequestAccountDeletionAfterDiscoveringDeletedTeamOnlyAfterPerformingASlowSync() {
         // given
         mockSyncStatus.mockPhase = .fetchingTeams
         mockApplicationStatus.mockSynchronizationState = .synchronizing
@@ -256,6 +256,15 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
             remotelyDeletedTeam.remoteIdentifier = remotelyDeletedTeamId
         }
         
+        // expect
+        let accountDeletedExpectation = expectation(description: "Account was deleted")
+        var token : ZMAuthenticationObserverToken? = ZMUserSessionAuthenticationNotification.addObserver(on: uiMOC) { (note) in
+            if let error = note.error as NSError?, error.userSessionErrorCode == ZMUserSessionErrorCode.accountDeleted {
+                accountDeletedExpectation.fulfill()
+            }
+        }
+        XCTAssertNotNil(token)
+        
         // when
         guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
         let payload: [String: Any] = [
@@ -265,12 +274,10 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         request.complete(with: .init(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         
+        
         // then
-        syncMOC.performGroupedBlockAndWait {
-            let request = Team.sortedFetchRequest()
-            guard let allTeams = self.syncMOC.executeFetchRequestOrAssert(request) as? [Team] else { return XCTFail() }
-            XCTAssertEqual(allTeams.count, 0)
-        }
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        token = nil
     }
     
     // MARK: - Helper

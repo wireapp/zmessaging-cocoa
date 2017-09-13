@@ -46,7 +46,7 @@ public final class ConversationStatusStrategy : ZMObjectSyncStrategy, ZMContextC
         }
         
         if didUpdateConversation {
-            self.managedObjectContext.enqueueDelayedSave()
+            self.managedObjectContext?.enqueueDelayedSave()
         }
     }
     

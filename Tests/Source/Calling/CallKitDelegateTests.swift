@@ -25,7 +25,7 @@ import CallKit
 
 @available(iOS 10.0, *)
 class MockCallKitProvider: CXProvider {
-    
+
     public var timesSetDelegateCalled: Int = 0
     override func setDelegate(_ delegate: CXProviderDelegate?, queue: DispatchQueue?) {
         timesSetDelegateCalled += 1
@@ -57,6 +57,12 @@ class MockCallKitProvider: CXProvider {
     override func reportOutgoingCall(with UUID: UUID, startedConnectingAt dateStartedConnecting: Date?) {
         timesReportOutgoingCallStartedConnectingCalled += 1
     }
+    
+    public var isInvalidated : Bool = false
+    override func invalidate() {
+        isInvalidated = true
+    }
+
 }
 
 @available(iOS 10.0, *)
@@ -197,17 +203,17 @@ class CallKitDelegateTest: MessagingTest {
         selfUser.emailAddress = "self@user.mail"
         selfUser.remoteIdentifier = UUID()
         
+        let flowManager = FlowManagerMock()
         let configuration = CallKitDelegate.providerConfiguration
         self.callKitProvider = MockCallKitProvider(configuration: configuration)
         self.callKitController = MockCallKitCallController()
-        self.mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: "123", uiMOC: uiMOC)
+        self.mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: "123", uiMOC: uiMOC, flowManager: flowManager, transport: WireCallCenterTransportMock())
         
         self.sut = CallKitDelegate(provider: self.callKitProvider,
                                    callController: self.callKitController,
                                    userSession: self.mockUserSession,
-                                   onDemandFlowManager: nil,
+                                   flowManager: flowManager,
                                    mediaManager: nil)
-        
         
         mockUserSession.callKitDelegate = sut
         CallKitDelegateTestsMocking.mockUserSession(self.mockUserSession, callKitDelegate: self.sut)
@@ -254,6 +260,21 @@ class CallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(configuration.ringtoneSound, customSoundName + ".m4a")
+    }
+    
+    func testThatItInvalidatesTheProviderOnDeinit() {
+        // given
+        sut = CallKitDelegate(provider: self.callKitProvider,
+                              callController: self.callKitController,
+                              userSession: self.mockUserSession,
+                              flowManager: FlowManagerMock(),
+                              mediaManager: nil)
+        
+        // when
+        sut = nil
+        
+        // then
+        XCTAssertTrue(callKitProvider.isInvalidated)
     }
     
     // Public API - outgoing calls

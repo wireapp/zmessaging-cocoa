@@ -37,6 +37,9 @@ class ClientUpdateStatusTests: MessagingTest {
     
     override func tearDown() {
         ZMClientUpdateNotification.removeObserver(clientObserverToken)
+        sut = nil
+        clientObserverToken = nil
+        receivedNotifications = []
         super.tearDown()
     }
     

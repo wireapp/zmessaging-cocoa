@@ -41,6 +41,8 @@
 @class CallKitDelegate;
 @class AVSMediaManager;
 
+@protocol FlowManagerType;
+
 extern NSString * const ZMAppendAVSLogNotificationName;
 
 @interface ZMUserSession (AuthenticationStatus)
@@ -70,8 +72,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic, readonly) NSURL *sharedContainerURL;
 
 - (void)notifyThirdPartyServices;
-- (void)start;
-- (void)refreshTokensIfNeeded;
 
 @end
 
@@ -82,13 +82,13 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic, readonly) BOOL isLoggedIn;
 @property (nonatomic, readonly) NSManagedObjectContext *managedObjectContext;
 @property (nonatomic, readonly) NSManagedObjectContext *syncManagedObjectContext;
-@property (nonatomic, readonly) AVSFlowManager *flowManager;
 @property (nonatomic, readonly) LocalNotificationDispatcher *localNotificationDispatcher;
 
 + (NSString *)databaseIdentifier;
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
                             mediaManager:(AVSMediaManager *)mediaManager
+                             flowManager:(id<FlowManagerType>)flowManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application

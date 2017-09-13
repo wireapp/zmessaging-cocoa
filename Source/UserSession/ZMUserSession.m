@@ -38,8 +38,6 @@
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "NSURL+LaunchOptions.h"
 #import "WireSyncEngineLogs.h"
-#import "ZMAVSBridge.h"
-#import "ZMOnDemandFlowManager.h"
 #import "ZMCallFlowRequestStrategy.h"
 //#import "ZMCallKitDelegate.h"
 #import "ZMOperationLoop+Private.h"
@@ -54,6 +52,7 @@ static NSString * const ZMRequestToOpenSyncConversationNotificationName = @"ZMRe
 NSString * const ZMAppendAVSLogNotificationName = @"ZMAppendAVSLogNotification";
 NSString * const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
 NSString * const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLoopNotificationName";
+NSString * const ZMFlowManagerDidBecomeAvailableNotification = @"ZMFlowManagerDidBecomeAvailableNotification";
 
 static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-client/id930944768?ls=1&mt=8";
 
@@ -65,9 +64,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
-
-@property (nonatomic) ZMOnDemandFlowManager *onDemandFlowManager;
-
 @property (nonatomic) ZMPushRegistrant *pushRegistrant;
 @property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
@@ -121,6 +117,7 @@ ZM_EMPTY_ASSERTING_INIT()
 }
 
 - (instancetype)initWithMediaManager:(AVSMediaManager *)mediaManager
+                        flowManager:(id<FlowManagerType>)flowManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
                      apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
@@ -157,6 +154,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
     self = [self initWithTransportSession:transportSession
                              mediaManager:mediaManager
+                              flowManager:flowManager
                           apnsEnvironment:apnsEnvironment
                             operationLoop:nil
                               application:application
@@ -167,6 +165,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
                             mediaManager:(AVSMediaManager *)mediaManager
+                             flowManager:(id<FlowManagerType>)flowManager
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
@@ -222,8 +221,6 @@ ZM_EMPTY_ASSERTING_INIT()
             self.transportSession.pushChannel.clientID = self.selfUserClient.remoteIdentifier;
             self.transportSession.networkStateDelegate = self;
             self.mediaManager = mediaManager;
-            
-            self.onDemandFlowManager = [[ZMOnDemandFlowManager alloc] initWithMediaManager:mediaManager];
         }];
 
         _application = application;
@@ -233,9 +230,9 @@ ZM_EMPTY_ASSERTING_INIT()
     
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
                                                                                       cookieStorage:session.cookieStorage
-                                                                        localNotificationdispatcher:self.localNotificationDispatcher
+                                                                        localNotificationDispatcher:self.localNotificationDispatcher
                                                                                        mediaManager:mediaManager
-                                                                                onDemandFlowManager:self.onDemandFlowManager
+                                                                                flowManager:flowManager
                                                                                       storeProvider:storeProvider
                                                                                   syncStateDelegate:self
                                                                                         application:application];
@@ -263,7 +260,7 @@ ZM_EMPTY_ASSERTING_INIT()
         }];
         [self enableBackgroundFetch];
 
-        self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithSharedContainerURL:self.storeProvider.applicationContainer];
+        self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithAccountContainer:self.storeProvider.accountContainer];
         
         if ([self.class useCallKit]) {
             CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[CallKitDelegate providerConfiguration]];
@@ -272,7 +269,7 @@ ZM_EMPTY_ASSERTING_INIT()
             self.callKitDelegate = [[CallKitDelegate alloc] initWithProvider:provider
                                                               callController:callController
                                                                  userSession:self
-                                                         onDemandFlowManager:self.onDemandFlowManager
+                                                                 flowManager:flowManager
                                                                 mediaManager:mediaManager];
         }
         
@@ -281,6 +278,8 @@ ZM_EMPTY_ASSERTING_INIT()
                 [self.clientRegistrationStatus prepareForClientRegistration];
             }
         }];
+        
+        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
     return self;
 }
@@ -292,6 +291,8 @@ ZM_EMPTY_ASSERTING_INIT()
     self.callStateObserver = nil;
     [self.operationLoop tearDown];
     self.operationLoop = nil;
+    [self.transportSession tearDown];
+    self.transportSession = nil;
     
     [self.localNotificationDispatcher tearDown];
     self.localNotificationDispatcher = nil;
@@ -436,13 +437,7 @@ ZM_EMPTY_ASSERTING_INIT()
     NOT_USED(delegate);
 }
 
-- (void)start;
-{
-    [self refreshTokensIfNeeded];
-    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-}
-
-- (void)refreshTokensIfNeeded
+- (void)registerForRemoteNotifications
 {
     [self.managedObjectContext performGroupedBlock:^{
         // Refresh the Voip token if needed
@@ -453,7 +448,7 @@ ZM_EMPTY_ASSERTING_INIT()
         }
         
         // Request the current token, the rest is taken care of
-        [self.application registerForRemoteNotifications];
+        [self setupPushNotificationsForApplication:self.application];
     }];
 }
 
@@ -523,7 +518,8 @@ ZM_EMPTY_ASSERTING_INIT()
 
     
     [self.managedObjectContext performGroupedBlock:^{
-        [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNeedsCredentials userInfo:nil]];
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+        [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionAccessTokenExpired userInfo:selfUser.credentialsUserInfo]];
     }];
 }
 
@@ -542,11 +538,6 @@ ZM_EMPTY_ASSERTING_INIT()
         self.didNotifyThirdPartyServices = YES;
         [self.thirdPartyServicesDelegate userSessionIsReadyToUploadServicesData:self];
     }
-}
-
-- (AVSFlowManager *)flowManager
-{
-    return self.onDemandFlowManager.flowManager;
 }
 
 - (OperationStatus *)operationStatus

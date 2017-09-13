@@ -72,9 +72,9 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                            cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-             localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
+             localNotificationDispatcher:(LocalNotificationDispatcher *)dispatcher
                             mediaManager:(AVSMediaManager *)mediaManager
-                     onDemandFlowManager:(ZMOnDemandFlowManager *)onDemandFlowManager
+                             flowManager:(id<FlowManagerType>)flowManager
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
                        syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
                              application:(id<ZMApplication>)application
@@ -83,7 +83,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     ZMSyncStrategy *syncStrategy = [[ZMSyncStrategy alloc] initWithStoreProvider:storeProvider
                                                                    cookieStorage:cookieStorage
                                                                     mediaManager:mediaManager
-                                                             onDemandFlowManager:onDemandFlowManager
+                                                                     flowManager:flowManager
                                                                syncStateDelegate:syncStateDelegate
                                                     localNotificationsDispatcher:dispatcher
                                                         taskCancellationProvider:transportSession
@@ -130,9 +130,10 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
         
         [ZMRequestAvailableNotification addObserver:self];
         
+        NSManagedObjectContext *moc = self.syncMOC;
         // this is needed to avoid loading from syncMOC on the main queue
-        [self.syncMOC performGroupedBlock:^{
-            [self.transportSession configurePushChannelWithConsumer:self groupQueue:self.syncMOC];
+        [moc performGroupedBlock:^{
+            [self.transportSession configurePushChannelWithConsumer:self groupQueue:moc];
             [self.transportSession.pushChannel setKeepOpen:syncStrategy.applicationStatusDirectory.operationStatus.operationState == SyncEngineOperationStateForeground];
         }];
     }
@@ -153,11 +154,12 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     if(self.ownsSyncStrategy) {
         [strategy tearDown];
     }
+    self.transportSession = nil;
     
     RequireString([NSOperationQueue mainQueue] == [NSOperationQueue currentQueue],
                   "Must call be called on the main queue.");
     __block BOOL didStop = NO;
-    [self.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_main_queue() block:^{
+    [self.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0) block:^{
         didStop = YES;
     }];
     while (!didStop) {
