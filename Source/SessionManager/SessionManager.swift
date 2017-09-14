@@ -114,7 +114,6 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     var authenticationToken: ZMAuthenticationObserverToken?
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & ReachabilityTearDown
-    var localStoreProvider: LocalStoreProviderProtocol?
     let pushDispatcher = PushDispatcher()
     
     fileprivate let authenticatedSessionFactory: AuthenticatedSessionFactory
@@ -349,7 +348,6 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
                 dispatchGroup: dispatchGroup,
                 migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
                 completion: { [weak self] provider in
-                    self?.localStoreProvider = provider
                     self?.createSession(for: account, with: provider) { session in
                         session.registerForRemoteNotifications()
                         completion(session)
@@ -423,12 +421,15 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             action(session)
         }
         else {
-            if let provider = self.localStoreProvider {
-                activateBackgroungSession(for: account, with: provider, completion: action)
-            }
-            else {
-                log.error("Cannot instantiate the session without the LocalStoreProvider for \(account)")
-            }
+            LocalStoreProvider.createStack(
+                applicationContainer: sharedContainerURL,
+                userIdentifier: account.userIdentifier,
+                dispatchGroup: dispatchGroup,
+                migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
+                completion: { provider in
+                    self.activateBackgroungSession(for: account, with: provider, completion: action)
+                }
+            )
         }
     }
     
@@ -456,7 +457,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
     
-    fileprivate func deactivateBackgroundSession(for account: Account) {
+    internal func deactivateBackgroundSession(for account: Account) {
         guard let userSession = self.backgroundUserSessions[account] else {
             log.error("No session to tear down for \(account), known sessions: \(self.backgroundUserSessions)")
             return
@@ -465,7 +466,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         self.backgroundUserSessions[account] = nil
     }
     
-    fileprivate func deactivateAllBackgroundSessions() {
+    internal func deactivateAllBackgroundSessions() {
         self.backgroundUserSessions.forEach { (account, session) in
             if self.activeUserSession != session {
                 self.deactivateBackgroundSession(for: account)
@@ -582,7 +583,6 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         let group = self.dispatchGroup
         group?.enter()
         LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
-            self?.localStoreProvider = provider
             self?.createSession(for: account, with: provider) { userSession in
                 userSession.registerForRemoteNotifications()
                 if let profileImageData = session.authenticationStatus.profileImageData {

@@ -257,28 +257,112 @@ class SessionManagerTests_Teams: IntegrationTest {
     }
 }
 
-class SessionManagerPayloadCheckerTests: XCTestCase {
+class SessionManagerPayloadCheckerTests: MessagingTest {
     func testThatItDetectsTheUserFromPayload() {
-        //    internal func isPayload(for user: ZMUser) -> Bool {
+        // GIVEN
+        let user = ZMUser.selfUser(in: self.uiMOC)
+        user.remoteIdentifier = UUID()
+        
+        let payload: [AnyHashable: Any] = ["data": [
+                "user": user.remoteIdentifier!.transportString()
+            ]
+        ]
+        // WHEN & THEN
+        XCTAssertTrue(payload.isPayload(for: user))
+    }
+    
+    func testThatItDiscardsThePayloadFromOtherUser() {
+        // GIVEN
+        let user = ZMUser.selfUser(in: self.uiMOC)
+        user.remoteIdentifier = UUID()
+        
+        let payload: [AnyHashable: Any] = ["data": [
+            "user": UUID().transportString()
+            ]
+        ]
+        // WHEN & THEN
+        XCTAssertFalse(payload.isPayload(for: user))
     }
     
     func testThatItDetectsPayloadWithUserAsCorrect() {
-        //    internal func isPayloadMissingUserInformation() -> Bool {
+        // GIVEN
+        let payload: [AnyHashable: Any] = ["data": [
+            "user": UUID().transportString()
+            ]
+        ]
+        // WHEN
+        XCTAssertFalse(payload.isPayloadMissingUserInformation())
     }
     
     func testThatItDetectsPayloadWithoutUserAsWrong() {
-        //        internal func isPayloadMissingUserInformation() -> Bool {
-
+        // GIVEN
+        let payload: [AnyHashable: Any] = [:]
+        // WHEN
+        XCTAssertTrue(payload.isPayloadMissingUserInformation())
     }
 }
 
 class SessionManagerTests_MultiUserSession: IntegrationTest {
     func testThatItLoadsAndKeepsBackgroundUserSession() {
+        // GIVEN
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
         
+        let manager = AccountManager(sharedDirectory: sharedContainer)
+        let account1 = Account(userName: "Test Account 1", userIdentifier: currentUserIdentifier)
+        manager.add(account1)
+        
+        let account2 = Account(userName: "Test Account 2", userIdentifier: UUID())
+        manager.add(account2)
+        // WHEN
+        weak var sessionForAccount1Reference: ZMUserSession? = nil
+        let session1LoadedExpectation = self.expectation(description: "Session for account 1 loaded")
+        self.sessionManager!.withSession(for: account1, perform: { sessionForAccount1 in
+            // THEN
+            session1LoadedExpectation.fulfill()
+            XCTAssertNotNil(sessionForAccount1.managedObjectContext)
+            sessionForAccount1Reference = sessionForAccount1
+        })
+        // WHEN
+        weak var sessionForAccount2Reference: ZMUserSession? = nil
+        let session2LoadedExpectation = self.expectation(description: "Session for account 2 loaded")
+        self.sessionManager!.withSession(for: account1, perform: { sessionForAccount2 in
+            // THEN
+            session2LoadedExpectation.fulfill()
+            XCTAssertNotNil(sessionForAccount2.managedObjectContext)
+            sessionForAccount2Reference = sessionForAccount2
+        })
+        
+        // THEN
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5) { error in
+            XCTAssertNil(error)
+            XCTAssertNotNil(sessionForAccount1Reference)
+            XCTAssertNotNil(sessionForAccount2Reference)
+            
+            self.sessionManager!.deactivateAllBackgroundSessions()
+        })
     }
     
     func testThatItUnloadsUserSession() {
+        // GIVEN
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
         
+        let manager = AccountManager(sharedDirectory: sharedContainer)
+        let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
+        manager.add(account)
+        
+        // WHEN
+        self.sessionManager!.withSession(for: account, perform: { session in
+            XCTAssertNotNil(session.managedObjectContext)
+        })
+        
+        // THEN
+        XCTAssertNotNil(self.sessionManager!.backgroundUserSessions[account])
+        
+        // AND WHEN
+        self.sessionManager!.deactivateAllBackgroundSessions()
+        
+        // THEN
+        XCTAssertNil(self.sessionManager!.backgroundUserSessions[account])
     }
 }
 
