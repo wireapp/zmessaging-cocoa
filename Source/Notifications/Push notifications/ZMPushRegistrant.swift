@@ -149,6 +149,11 @@ extension ApplicationRemoteNotification {
                 activity.end()
             }
         }
+        else {
+            didReceivePayload(payload, .alert) { result in
+                completionHandler(self.fetchResult(result))
+            }
+        }
     }
     
     fileprivate func fetchResult(_ result: ZMPushPayloadResult) -> UIBackgroundFetchResult {
