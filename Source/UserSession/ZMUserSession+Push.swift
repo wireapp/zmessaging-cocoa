@@ -70,28 +70,22 @@ extension ZMUserSession: PushDispatcherOptionalClient {
         switch newToken.type {
         case .regular:
             if let data = newToken.data {
-                managedObjectContext.performGroupedBlock {
-                    let oldToken = self.managedObjectContext.pushToken?.deviceToken
-                    if oldToken == nil || oldToken != data {
-                        managedObjectContext.pushToken = nil
-                        self.setPushToken(data)
-                        managedObjectContext.forceSaveOrRollback()
-                    }
+                let oldToken = self.managedObjectContext.pushToken?.deviceToken
+                if oldToken == nil || oldToken != data {
+                    managedObjectContext.pushToken = nil
+                    self.setPushToken(data)
+                    managedObjectContext.forceSaveOrRollback()
                 }
             }
         case .voip:
             if let data = newToken.data {
-                managedObjectContext.performGroupedBlock {
-                    managedObjectContext.pushKitToken = nil
-                    self.setPushKitToken(data)
-                    managedObjectContext.forceSaveOrRollback()
-                }
+                managedObjectContext.pushKitToken = nil
+                self.setPushKitToken(data)
+                managedObjectContext.forceSaveOrRollback()
             }
             else {
-                managedObjectContext.performGroupedBlock {
-                    self.deletePushKitToken()
-                    managedObjectContext.forceSaveOrRollback()
-                }
+                self.deletePushKitToken()
+                managedObjectContext.forceSaveOrRollback()
             }
         }
     }

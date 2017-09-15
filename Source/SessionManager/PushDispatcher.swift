@@ -64,7 +64,7 @@ public final class PushDispatcher: NSObject {
     private let clients = WeakSet<PushDispatcherOptionalClient>()
     public weak var fallbackClient: PushDispatcherClient? = nil
     private var remoteNotificationHandler: ApplicationRemoteNotification!
-    private var pushRegistrant: PushKitRegistrant!
+    internal var pushRegistrant: PushKitRegistrant!
     private(set) var lastKnownPushTokens: [PushTokenType: Data] = [:]
     private let callbackQueue: DispatchQueue = DispatchQueue.main
     

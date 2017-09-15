@@ -1224,42 +1224,6 @@
     XCTAssertTrue(didCallCompletionHandler);
     XCTAssertEqual(conversation.messages.count, 1u);
 }
-//
-//- (void)testThatItMarksTheTokenToDeleteWhenReceivingDidInvalidateToken
-//{
-//    // given
-//    [self.uiMOC setPushKitToken:[[ZMPushToken alloc] initWithDeviceToken:[NSData data] identifier:@"foo.bar" transportType:@"APNS" fallback:@"APNS" isRegistered:YES]];
-//    XCTAssertNotNil(self.uiMOC.pushKitToken);
-//    XCTAssertFalse(self.uiMOC.pushKitToken.isMarkedForDeletion);
-//    id mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
-//    
-//    // when
-//    [self.sut.pushRegistrant pushRegistry:mockPushRegistry didInvalidatePushTokenForType:PKPushTypeVoIP];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//    
-//    // then
-//    XCTAssertTrue(self.uiMOC.pushKitToken.isMarkedForDeletion);
-//}
-//
-//- (void)testThatItSetsThePushTokenWhenReceivingUpdateCredentials
-//{
-//    // given
-//    NSData *token = [NSData data];
-//    id mockCredentials =[OCMockObject niceMockForClass:[PKPushCredentials class]];
-//    [(PKPushCredentials *)[[mockCredentials expect] andReturn:token] token];
-//    id mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
-//
-//    XCTAssertNil(self.uiMOC.pushKitToken);
-//
-//    // when
-//    [self.sut.pushRegistrant pushRegistry:mockPushRegistry didUpdatePushCredentials:mockCredentials forType:PKPushTypeVoIP];
-//    WaitForAllGroupsToBeEmpty(0.5);
-//    
-//    // then
-//    XCTAssertNotNil(self.uiMOC.pushKitToken);
-//    XCTAssertEqualObjects(self.uiMOC.pushKitToken.deviceToken, token);
-//}
-
 
 @end
 #endif
