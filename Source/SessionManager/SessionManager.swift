@@ -416,6 +416,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
     }
     
+    // Loads user session for @c account given and executes the @c action block.
     public func withSession(for account: Account, perform action: @escaping (ZMUserSession)->()) {
         if let session = backgroundUserSessions[account] {
             action(session)
@@ -433,6 +434,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
     
+    // Creates the user session for @c account given, calls @c completion when done.
     fileprivate func activateBackgroungSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession)->()) {
         guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
@@ -466,6 +468,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         self.backgroundUserSessions[account] = nil
     }
     
+    // Tears down and releases all background user sessions.
     internal func deactivateAllBackgroundSessions() {
         self.backgroundUserSessions.forEach { (account, session) in
             if self.activeUserSession != session {
@@ -654,15 +657,20 @@ extension SessionManager: PushDispatcherClient {
         }
     }
     
+    // Must be called when the AppDelegate receives the new push token.
     public func didRegisteredForRemoteNotifications(with token: Data) {
         self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
     }
     
-    public func didReceiveRemoteNotification(_ notification: [AnyHashable: Any], fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
+    // Must be called when the AppDelegate receives the new push notification.
+    public func didReceiveRemoteNotification(_ notification: [AnyHashable: Any],
+                                             fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
         self.pushDispatcher.didReceiveRemoteNotification(notification, fetchCompletionHandler: fetchCompletionHandler)
     }
     
-    func wakeAllAccounts(for payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: ZMPushNotificationCompletionHandler?) {
+    private func wakeAllAccounts(for payload: [AnyHashable: Any],
+                                 from source: ZMPushNotficationType,
+                                 completion: ZMPushNotificationCompletionHandler?) {
         log.error("Push is not specifict to account, fetching all")
         self.accountManager.accounts.forEach { account in
             self.withSession(for: account, perform: { userSession in
@@ -671,7 +679,11 @@ extension SessionManager: PushDispatcherClient {
         }
     }
     
-    public func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: ZMPushNotificationCompletionHandler?) {
+    // Called by PushDispatcher when the pust notification is received. Wakes up or creates the user session for the 
+    // account mentioned in the notification, or wakes all accounts when the unknown notification is received.
+    public func receivedPushNotification(with payload: [AnyHashable: Any],
+                                         from source: ZMPushNotficationType,
+                                         completion: ZMPushNotificationCompletionHandler?) {
         
         guard !payload.isPayloadMissingUserInformation() else {
             self.wakeAllAccounts(for: payload, from: source, completion: completion)

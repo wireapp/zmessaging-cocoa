@@ -90,7 +90,7 @@ extension ZMUserSession: PushDispatcherOptionalClient {
         }
     }
 
-    public func canHandle(payload: [AnyHashable: Any]) -> Bool {
+    public func mustHandle(payload: [AnyHashable: Any]) -> Bool {
         return payload.isPayload(for: ZMUser.selfUser(in: self.managedObjectContext))
     }
     
