@@ -24,8 +24,6 @@ import Intents
 @available(iOS 10.0, *)
 class MockCallKitProvider: NSObject, CallKitProviderType {
 
-
-
     required init(configuration: CXProviderConfiguration) {
         
     }
@@ -61,6 +59,12 @@ class MockCallKitProvider: NSObject, CallKitProviderType {
     func reportOutgoingCall(with UUID: UUID, startedConnectingAt dateStartedConnecting: Date?) {
         timesReportOutgoingCallStartedConnectingCalled += 1
     }
+    
+    public var isInvalidated : Bool = false
+    func invalidate() {
+        isInvalidated = true
+    }
+
 }
 
 @available(iOS 10.0, *)
@@ -249,6 +253,21 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(configuration.ringtoneSound, customSoundName + ".m4a")
+    }
+    
+    func testThatItInvalidatesTheProviderOnDealloc() {
+        // given
+        sut = ZMCallKitDelegate(callKitProvider: self.callKitProvider,
+                          callController: self.callKitController,
+                          flowManager: FlowManagerMock(),
+                          userSession: self.mockUserSession,
+                          mediaManager: nil)
+        
+        // when
+        sut = nil
+        
+        // then
+        XCTAssertTrue(callKitProvider.isInvalidated)
     }
     
     // Public API - outgoing calls
