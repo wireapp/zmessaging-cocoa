@@ -32,7 +32,7 @@ final class TestPushDispatcherClient: NSObject, PushDispatcherOptionalClient {
         pushTokens.append(token)
     }
     
-    func canHandle(payload: [AnyHashable: Any]) -> Bool {
+    func mustHandle(payload: [AnyHashable: Any]) -> Bool {
         canHandlePayloads.append(payload)
         return canHandleNext
     }
