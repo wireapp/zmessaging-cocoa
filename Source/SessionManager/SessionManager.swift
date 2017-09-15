@@ -349,7 +349,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
                 migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
                 completion: { [weak self] provider in
                     self?.createSession(for: account, with: provider) { session in
-                        session.registerForRemoteNotifications()
+                        self?.registerSessionForRemoteNotificationsIfNeeded(session)
                         completion(session)
                     }}
             )
@@ -504,13 +504,6 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
 
-    public func didRegisteredForRemoteNotifications(with token: Data) {
-        self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
-    }
-    
-    public func didReceiveRemoteNotification(_ notification: [AnyHashable: Any], fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
-        self.pushDispatcher.didReceiveRemoteNotification(notification, fetchCompletionHandler: fetchCompletionHandler)
-    }
 }
 
 // MARK: - TeamObserver
@@ -584,7 +577,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         group?.enter()
         LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
             self?.createSession(for: account, with: provider) { userSession in
-                userSession.registerForRemoteNotifications()
+                self?.registerSessionForRemoteNotificationsIfNeeded(userSession)
                 if let profileImageData = session.authenticationStatus.profileImageData {
                     self?.updateProfileImage(imageData: profileImageData)
                 }
@@ -639,6 +632,35 @@ extension SessionManager: ZMAuthenticationObserver {
 }
 
 extension SessionManager: PushDispatcherClient {
+    public func registerSessionForRemoteNotificationsIfNeeded(_ session: ZMUserSession) {
+        session.managedObjectContext.performGroupedBlock {
+            // Refresh the Voip token if needed
+            if let lastKnownToken = self.pushDispatcher.lastKnownPushToken {
+                switch lastKnownToken {
+                case .voip(let tokenData):
+                    if let actualToken = tokenData {
+                        if actualToken != session.managedObjectContext.pushKitToken.deviceToken {
+                            session.managedObjectContext.pushKitToken = nil
+                            session.setPushKitToken(actualToken)
+                        }
+                    }
+                default:
+                    break
+                }
+            }
+            
+            session.registerForRemoteNotifications()
+        }
+    }
+    
+    public func didRegisteredForRemoteNotifications(with token: Data) {
+        self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
+    }
+    
+    public func didReceiveRemoteNotification(_ notification: [AnyHashable: Any], fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
+        self.pushDispatcher.didReceiveRemoteNotification(notification, fetchCompletionHandler: fetchCompletionHandler)
+    }
+    
     func wakeAllAccounts(for payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: ZMPushNotificationCompletionHandler?) {
         log.error("Push is not specifict to account, fetching all")
         self.accountManager.accounts.forEach { account in

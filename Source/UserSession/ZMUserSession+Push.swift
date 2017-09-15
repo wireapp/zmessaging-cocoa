@@ -117,8 +117,8 @@ extension ZMUserSession: PushDispatcherOptionalClient {
 
 // Testing
 extension ZMUserSession {
-    public func updatedPushTokenToVoipData(_ data: Data) {
-        self.updatedPushToken(to: PushToken.voip(tokenData: data))
+    public func updatedPushTokenToAlertData(_ data: Data) {
+        self.updatedPushToken(to: PushToken.alert(tokenData: data))
     }
 }
 

@@ -93,6 +93,7 @@
 
 - (BOOL)registerForNotifications:(NSData*)token
 {
+    [self.sessionManager didRegisteredForRemoteNotificationsWith:token];
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
         [self.userSession setPushToken:token];
@@ -142,7 +143,7 @@
     self.application.registerForRemoteNotificationsCallback = ^{
         ZM_STRONG(self);
         [self.userSession performChanges:^{
-            [self.userSession updatedPushTokenToVoipData:newToken];
+            [self.userSession updatedPushTokenToAlertData:newToken];
         }];
     };
     
@@ -159,10 +160,7 @@
     [self recreateSessionManager];
     WaitForAllGroupsToBeEmpty(0.5);
 
-    if (nil == self.userSession) {
-        return XCTFail(@"No user session available");
-    }
-
+    XCTAssertNotNil(self.userSession, @"No user session available");
     WaitForAllGroupsToBeEmpty(0.5);
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {

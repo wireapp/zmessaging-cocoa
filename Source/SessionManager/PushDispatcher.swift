@@ -60,7 +60,7 @@ public final class PushDispatcher: NSObject {
     public weak var fallbackClient: PushDispatcherClient? = nil
     private var remoteNotificationHandler: ApplicationRemoteNotification!
     private var pushRegistrant: PushKitRegistrant!
-    private var lastKnownPushToken: PushToken?
+    private(set) var lastKnownPushToken: PushToken?
     private let callbackQueue: DispatchQueue = DispatchQueue.main
     
     func add(client: PushDispatcherOptionalClient) {
@@ -132,6 +132,9 @@ public final class PushDispatcher: NSObject {
         }
         
         pushRegistrant = PushKitRegistrant(didUpdateCredentials: didUpdateToken, didReceivePayload: callback, didInvalidateToken: didInvalidateToken)
+        if let token = pushRegistrant.pushToken {
+            self.lastKnownPushToken = PushToken.voip(tokenData: token)
+        }
     }
     
     public func didRegisteredForRemoteNotifications(with token: Data) {
