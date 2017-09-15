@@ -123,6 +123,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     fileprivate let dispatchGroup: ZMSDispatchGroup?
     fileprivate var teamObserver: NSObjectProtocol?
     fileprivate var selfObserver: NSObjectProtocol?
+    fileprivate var conversationListObserver: NSObjectProtocol?
+    fileprivate var connectionRequestObserver: NSObjectProtocol?
     fileprivate var memoryWarningObserver: NSObjectProtocol?
     
     private static var token: Any?
@@ -392,6 +394,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         let selfUser = ZMUser.selfUser(inUserSession: session)
         teamObserver = TeamChangeInfo.add(observer: self, for: nil)
         selfObserver = UserChangeInfo.add(observer: self, forBareUser: selfUser!)
+        conversationListObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.conversations(inUserSession: session))
+        connectionRequestObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.pendingConnectionConversations(inUserSession: session))
 
         self.activeUserSession = session
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
@@ -462,6 +466,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             return
         }
         userSession.closeAndDeleteCookie(false)
+        self.tearDownConversationListObservers()
         self.backgroundUserSessions[account] = nil
     }
     
@@ -481,12 +486,22 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             UserChangeInfo.remove(observer: userObserver, forBareUser: nil)
         }
     }
+    
+    fileprivate func tearDownConversationListObservers() {
+        if let conversationListObserver = conversationListObserver {
+            ConversationListChangeInfo.remove(observer: conversationListObserver, for: nil)
+        }
+        if let connectionRequestObserver = connectionRequestObserver {
+            ConversationListChangeInfo.remove(observer: connectionRequestObserver, for: nil)
+        }
+    }
 
     deinit {
         if let authenticationToken = authenticationToken {
             ZMUserSessionAuthenticationNotification.removeObserver(for: authenticationToken)
         }
         tearDownObservers()
+        tearDownConversationListObservers()
         blacklistVerificator?.teardown()
         activeUserSession?.tearDown()
         unauthenticatedSession?.tearDown()
@@ -679,6 +694,21 @@ extension SessionManager: PushDispatcherClient {
         }
         else {
             self.wakeAllAccounts(for: payload, from: source, completion: completion)
+        }
+    }
+}
+
+// MARK: - ConversationListObserver
+
+extension SessionManager: ZMConversationListObserver {
+    
+    public func conversationListDidChange(_ changeInfo: ConversationListChangeInfo) {
+        
+        // find which account/session the conversation list belongs to & update count
+        guard let moc = changeInfo.conversationList.managedObjectContext else { return }
+        
+        for (account, session) in backgroundUserSessions where session.managedObjectContext == moc {
+            account.unreadConversationCount = Int(ZMConversation.unreadConversationCount(in: moc))
         }
     }
 }
