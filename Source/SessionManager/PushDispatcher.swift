@@ -18,9 +18,14 @@
 
 import Foundation
 
-public enum PushToken {
-    case voip(tokenData: Data?)
-    case alert(tokenData: Data?)
+@objc public enum PushTokenType: Int {
+    case voip
+    case regular
+}
+
+public struct PushToken {
+    let type: PushTokenType
+    let data: Data?
 }
 
 public protocol PushDispatcherClient: NSObjectProtocol {
@@ -60,12 +65,12 @@ public final class PushDispatcher: NSObject {
     public weak var fallbackClient: PushDispatcherClient? = nil
     private var remoteNotificationHandler: ApplicationRemoteNotification!
     private var pushRegistrant: PushKitRegistrant!
-    private(set) var lastKnownPushToken: PushToken?
+    private(set) var lastKnownPushTokens: [PushTokenType: Data] = [:]
     private let callbackQueue: DispatchQueue = DispatchQueue.main
     
     func add(client: PushDispatcherOptionalClient) {
-        if let token = lastKnownPushToken {
-            client.updatedPushToken(to: token)
+        lastKnownPushTokens.forEach { type, data in
+            client.updatedPushToken(to: PushToken(type: type, data: data))
         }
         clients.add(client)
     }
@@ -106,7 +111,9 @@ public final class PushDispatcher: NSObject {
     }
     
     private func updatePushToken(to token: PushToken) {
-        self.lastKnownPushToken = token
+        if let data = token.data {
+            self.lastKnownPushTokens[token.type] = data
+        }
         
         self.clients.forEach { client in
             self.callbackQueue.async {
@@ -117,28 +124,28 @@ public final class PushDispatcher: NSObject {
     
     private func enableAlertPushNotifications(with callback: @escaping DidReceivePushCallback) {
         let didUpdateToken: (Data) -> () = { [weak self] (data: Data) in
-            self?.updatePushToken(to: PushToken.alert(tokenData: data))
+            self?.updatePushToken(to: PushToken(type: .regular, data: data))
         }
         remoteNotificationHandler = ApplicationRemoteNotification(didUpdateCredentials: didUpdateToken, didReceivePayload: callback, didInvalidateToken: {})
     }
     
     private func enableVoIPPushNotifications(with callback: @escaping DidReceivePushCallback) {
         let didUpdateToken: (Data) -> () = { [weak self] (data: Data) in
-            self?.updatePushToken(to: PushToken.voip(tokenData: data))
+            self?.updatePushToken(to: PushToken(type: .voip, data: data))
         }
         
         let didInvalidateToken: () -> () = { [weak self] in
-            self?.updatePushToken(to: PushToken.voip(tokenData: nil))
+            self?.updatePushToken(to: PushToken(type: .voip, data: nil))
         }
         
         pushRegistrant = PushKitRegistrant(didUpdateCredentials: didUpdateToken, didReceivePayload: callback, didInvalidateToken: didInvalidateToken)
         if let token = pushRegistrant.pushToken {
-            self.lastKnownPushToken = PushToken.voip(tokenData: token)
+            self.lastKnownPushTokens[.voip] = token
         }
     }
     
     public func didRegisteredForRemoteNotifications(with token: Data) {
-        self.updatePushToken(to: PushToken.alert(tokenData: token))
+        self.updatePushToken(to: PushToken(type: .regular, data: token))
     }
     
     public func didReceiveRemoteNotification(_ payload: [AnyHashable: Any], fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {

@@ -635,17 +635,18 @@ extension SessionManager: PushDispatcherClient {
     public func registerSessionForRemoteNotificationsIfNeeded(_ session: ZMUserSession) {
         session.managedObjectContext.performGroupedBlock {
             // Refresh the Voip token if needed
-            if let lastKnownToken = self.pushDispatcher.lastKnownPushToken {
-                switch lastKnownToken {
-                case .voip(let tokenData):
-                    if let actualToken = tokenData {
-                        if actualToken != session.managedObjectContext.pushKitToken.deviceToken {
-                            session.managedObjectContext.pushKitToken = nil
-                            session.setPushKitToken(actualToken)
-                        }
+            self.pushDispatcher.lastKnownPushTokens.forEach { type, actualToken in
+                switch type {
+                case .voip:
+                    if actualToken != session.managedObjectContext.pushKitToken.deviceToken {
+                        session.managedObjectContext.pushKitToken = nil
+                        session.setPushKitToken(actualToken)
                     }
-                default:
-                    break
+                case .regular:
+                    if actualToken != session.managedObjectContext.pushToken.deviceToken {
+                        session.managedObjectContext.pushToken = nil
+                        session.setPushToken(actualToken)
+                    }
                 }
             }
             

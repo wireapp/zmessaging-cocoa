@@ -143,7 +143,8 @@
     self.application.registerForRemoteNotificationsCallback = ^{
         ZM_STRONG(self);
         [self.userSession performChanges:^{
-            [self.userSession updatedPushTokenToAlertData:newToken];
+            [self.userSession updatePushKitTokenTo:newToken forType:PushTokenTypeVoip];
+            [self.userSession updatePushKitTokenTo:newToken forType:PushTokenTypeRegular];
         }];
     };
     

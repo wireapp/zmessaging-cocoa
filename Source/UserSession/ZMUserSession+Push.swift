@@ -67,9 +67,9 @@ extension ZMUserSession: PushDispatcherOptionalClient {
             return
         }
         
-        switch newToken {
-        case .alert(let tokenData):
-            if let data = tokenData {
+        switch newToken.type {
+        case .regular:
+            if let data = newToken.data {
                 managedObjectContext.performGroupedBlock {
                     let oldToken = self.managedObjectContext.pushToken?.deviceToken
                     if oldToken == nil || oldToken != data {
@@ -79,8 +79,8 @@ extension ZMUserSession: PushDispatcherOptionalClient {
                     }
                 }
             }
-        case .voip(let tokenData):
-            if let data = tokenData {
+        case .voip:
+            if let data = newToken.data {
                 managedObjectContext.performGroupedBlock {
                     managedObjectContext.pushKitToken = nil
                     self.setPushKitToken(data)
@@ -117,8 +117,9 @@ extension ZMUserSession: PushDispatcherOptionalClient {
 
 // Testing
 extension ZMUserSession {
-    public func updatedPushTokenToAlertData(_ data: Data) {
-        self.updatedPushToken(to: PushToken.alert(tokenData: data))
+    @objc(updatePushKitTokenTo:forType:)
+    public func updatedPushToken(to data: Data, for type: PushTokenType) {
+        self.updatedPushToken(to: PushToken(type: type, data: data))
     }
 }
 
