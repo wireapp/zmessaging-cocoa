@@ -114,7 +114,6 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     var authenticationToken: ZMAuthenticationObserverToken?
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & ReachabilityTearDown
-    var localStoreProvider: LocalStoreProviderProtocol?
     let pushDispatcher = PushDispatcher()
     
     fileprivate let authenticatedSessionFactory: AuthenticatedSessionFactory
@@ -351,9 +350,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
                 dispatchGroup: dispatchGroup,
                 migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
                 completion: { [weak self] provider in
-                    self?.localStoreProvider = provider
                     self?.createSession(for: account, with: provider) { session in
-                        session.registerForRemoteNotifications()
+                        self?.registerSessionForRemoteNotificationsIfNeeded(session)
                         completion(session)
                     }}
             )
@@ -427,12 +425,15 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             action(session)
         }
         else {
-            if let provider = self.localStoreProvider {
-                activateBackgroungSession(for: account, with: provider, completion: action)
-            }
-            else {
-                log.error("Cannot instantiate the session without the LocalStoreProvider for \(account)")
-            }
+            LocalStoreProvider.createStack(
+                applicationContainer: sharedContainerURL,
+                userIdentifier: account.userIdentifier,
+                dispatchGroup: dispatchGroup,
+                migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
+                completion: { provider in
+                    self.activateBackgroungSession(for: account, with: provider, completion: action)
+                }
+            )
         }
     }
     
@@ -460,7 +461,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
     
-    fileprivate func deactivateBackgroundSession(for account: Account) {
+    internal func deactivateBackgroundSession(for account: Account) {
         guard let userSession = self.backgroundUserSessions[account] else {
             log.error("No session to tear down for \(account), known sessions: \(self.backgroundUserSessions)")
             return
@@ -470,7 +471,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         self.backgroundUserSessions[account] = nil
     }
     
-    fileprivate func deactivateAllBackgroundSessions() {
+    internal func deactivateAllBackgroundSessions() {
         self.backgroundUserSessions.forEach { (account, session) in
             if self.activeUserSession != session {
                 self.deactivateBackgroundSession(for: account)
@@ -518,13 +519,6 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
 
-    public func didRegisteredForRemoteNotifications(with token: Data) {
-        self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
-    }
-    
-    public func didReceiveRemoteNotification(_ notification: [AnyHashable: Any], fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
-        self.pushDispatcher.didReceiveRemoteNotification(notification, fetchCompletionHandler: fetchCompletionHandler)
-    }
 }
 
 // MARK: - TeamObserver
@@ -597,9 +591,8 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         let group = self.dispatchGroup
         group?.enter()
         LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
-            self?.localStoreProvider = provider
             self?.createSession(for: account, with: provider) { userSession in
-                userSession.registerForRemoteNotifications()
+                self?.registerSessionForRemoteNotificationsIfNeeded(userSession)
                 if let profileImageData = session.authenticationStatus.profileImageData {
                     self?.updateProfileImage(imageData: profileImageData)
                 }
@@ -654,6 +647,36 @@ extension SessionManager: ZMAuthenticationObserver {
 }
 
 extension SessionManager: PushDispatcherClient {
+    public func registerSessionForRemoteNotificationsIfNeeded(_ session: ZMUserSession) {
+        session.managedObjectContext.performGroupedBlock {
+            // Refresh the Voip token if needed
+            self.pushDispatcher.lastKnownPushTokens.forEach { type, actualToken in
+                switch type {
+                case .voip:
+                    if actualToken != session.managedObjectContext.pushKitToken.deviceToken {
+                        session.managedObjectContext.pushKitToken = nil
+                        session.setPushKitToken(actualToken)
+                    }
+                case .regular:
+                    if actualToken != session.managedObjectContext.pushToken.deviceToken {
+                        session.managedObjectContext.pushToken = nil
+                        session.setPushToken(actualToken)
+                    }
+                }
+            }
+            
+            session.registerForRemoteNotifications()
+        }
+    }
+    
+    public func didRegisteredForRemoteNotifications(with token: Data) {
+        self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
+    }
+    
+    public func didReceiveRemoteNotification(_ notification: [AnyHashable: Any], fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
+        self.pushDispatcher.didReceiveRemoteNotification(notification, fetchCompletionHandler: fetchCompletionHandler)
+    }
+    
     func wakeAllAccounts(for payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: ZMPushNotificationCompletionHandler?) {
         log.error("Push is not specifict to account, fetching all")
         self.accountManager.accounts.forEach { account in
