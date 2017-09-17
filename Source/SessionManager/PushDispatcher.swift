@@ -90,16 +90,14 @@ public final class PushDispatcher: NSObject {
                 }
             }
             else {
-                let possibleHandlers = self.clients.filter { $0.mustHandle(payload: payload) }
-                
-                if let handler = possibleHandlers.last {
-                    self.callbackQueue.async {
-                        handler.receivedPushNotification(with: payload, from: source, completion: completion)
+                self.callbackQueue.async {
+                    let possibleHandlers = self.clients.filter { $0.mustHandle(payload: payload) }
+                    
+                    if let handler = possibleHandlers.last {
+                            handler.receivedPushNotification(with: payload, from: source, completion: completion)
                     }
-                }
-                else {
-                    self.callbackQueue.async {
-                        self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
+                    else {
+                            self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
                     }
                 }
             }
