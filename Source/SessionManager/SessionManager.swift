@@ -338,7 +338,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         createUnauthenticatedSession()
     }
 
-    fileprivate func select(account: Account?, completion: @escaping (ZMUserSession) -> Void) {
+    internal func select(account: Account?, completion: @escaping (ZMUserSession) -> Void) {
         guard let account = account else { return createUnauthenticatedSession() }
 
         if account.isAuthenticated {
@@ -632,88 +632,4 @@ extension SessionManager: ZMAuthenticationObserver {
         }
     }
 
-}
-
-extension SessionManager: PushDispatcherClient {
-    public func registerSessionForRemoteNotificationsIfNeeded(_ session: ZMUserSession) {
-        session.managedObjectContext.performGroupedBlock {
-            // Refresh the Voip token if needed
-            self.pushDispatcher.lastKnownPushTokens.forEach { type, actualToken in
-                switch type {
-                case .voip:
-                    if actualToken != session.managedObjectContext.pushKitToken.deviceToken {
-                        session.managedObjectContext.pushKitToken = nil
-                        session.setPushKitToken(actualToken)
-                    }
-                case .regular:
-                    if actualToken != session.managedObjectContext.pushToken.deviceToken {
-                        session.managedObjectContext.pushToken = nil
-                        session.setPushToken(actualToken)
-                    }
-                }
-            }
-            
-            session.registerForRemoteNotifications()
-        }
-    }
-    
-    // Must be called when the AppDelegate receives the new push token.
-    public func didRegisteredForRemoteNotifications(with token: Data) {
-        self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
-    }
-    
-    // Must be called when the AppDelegate receives the new push notification.
-    public func didReceiveRemoteNotification(_ notification: [AnyHashable: Any],
-                                             fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
-        self.pushDispatcher.didReceiveRemoteNotification(notification, fetchCompletionHandler: fetchCompletionHandler)
-    }
-    
-    private func wakeAllAccounts(for payload: [AnyHashable: Any],
-                                 from source: ZMPushNotficationType,
-                                 completion: ZMPushNotificationCompletionHandler?) {
-        log.error("Push is not specifict to account, fetching all")
-        self.accountManager.accounts.forEach { account in
-            self.withSession(for: account, perform: { userSession in
-                userSession.receivedPushNotification(with: payload, from: source, completion: completion)
-            })
-        }
-    }
-    
-    // Called by PushDispatcher when the pust notification is received. Wakes up or creates the user session for the 
-    // account mentioned in the notification, or wakes all accounts when the unknown notification is received.
-    public func receivedPushNotification(with payload: [AnyHashable: Any],
-                                         from source: ZMPushNotficationType,
-                                         completion: ZMPushNotificationCompletionHandler?) {
-        
-        guard !payload.isPayloadMissingUserInformation() else {
-            self.wakeAllAccounts(for: payload, from: source, completion: completion)
-            return
-        }
-        
-        guard let userInfoData = payload[PushChannelDataKey] as? [String: Any] else {
-            log.debug("No data dictionary in notification userInfo payload");
-            return
-        }
-        
-        guard let userIdString = userInfoData[PushChannelUserIDKey] as? String else {
-            return
-        }
-        
-        let userId = UUID(uuidString: userIdString)
-    
-        let matchingAccounts = self.accountManager.accounts.filter { (account) -> Bool in
-            account.userIdentifier == userId
-        }
-        
-        assert(matchingAccounts.count <= 1)
-        
-        if let account = matchingAccounts.first {
-            self.withSession(for: account, perform: { userSession in
-                userSession.receivedPushNotification(with: payload, from: source, completion: completion)
-            })
-        }
-        else {
-            self.wakeAllAccounts(for: payload, from: source, completion: completion)
-        }
-    }
 }

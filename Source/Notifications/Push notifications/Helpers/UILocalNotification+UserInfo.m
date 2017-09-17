@@ -20,11 +20,13 @@
 @import UIKit;
 @import WireTransport;
 @import WireDataModel;
+@import WireSystem;
 
 static NSString * const ConversationIDStringKey = @"conversationIDString";
 static NSString * const MessageNonceIDStringKey = @"messageNonceString";
-static NSString * const SenderIDStringKey = @"senderIDString";
-static NSString * const EventTimeKey = @"eventTime";
+static NSString * const SenderIDStringKey       = @"senderIDString";
+static NSString * const EventTimeKey            = @"eventTime";
+static NSString * const SelfUserIDStringKey     = @"selfUserIDString";
 
 @implementation UILocalNotification (UserInfo)
 
@@ -54,6 +56,12 @@ static NSString * const EventTimeKey = @"eventTime";
     return self.userInfo[EventTimeKey];
 }
 
+- (NSUUID *)zm_selfUserUUID;
+{
+    // TODO: Mike: test it
+    return [self nsuuidForUserInfoKey:SelfUserIDStringKey];
+}
+
 - (nullable ZMConversation *)conversationInManagedObjectContext:(nonnull NSManagedObjectContext *)MOC;
 {
     if (self.zm_conversationRemoteID == nil) {
@@ -73,6 +81,18 @@ static NSString * const EventTimeKey = @"eventTime";
     return message;
 }
 
++ (void)addSelfUserInfoTo:(NSMutableDictionary /* inout */ *)userInfo using:(NSManagedObject *)object
+{
+    Require(object.managedObjectContext != nil);
+    
+    ZMUser *selfUser = [ZMUser selfUserInContext:object.managedObjectContext];
+    
+    Require(selfUser != nil);
+    Require(selfUser.remoteIdentifier != nil);
+    
+    userInfo[SelfUserIDStringKey] = selfUser.remoteIdentifier.transportString;
+}
+
 - (void)setupUserInfo:(ZMConversation *)conversation sender:(ZMUser *)sender
 {
     NSMutableDictionary *info = [NSMutableDictionary dictionary];
@@ -86,7 +106,7 @@ static NSString * const EventTimeKey = @"eventTime";
     if (senderUUIDString != nil) {
         info[SenderIDStringKey] = senderUUIDString;
     }
-    
+    [UILocalNotification addSelfUserInfoTo:info using:conversation];
     self.userInfo = [info copy];
 }
 
@@ -114,6 +134,7 @@ static NSString * const EventTimeKey = @"eventTime";
     if (eventTime != nil) {
         info[EventTimeKey] = eventTime;
     }
+    [UILocalNotification addSelfUserInfoTo:info using:conversation];
     self.userInfo = [info copy];
 }
 
@@ -137,6 +158,7 @@ static NSString * const EventTimeKey = @"eventTime";
     if (eventTime != nil) {
         info[EventTimeKey] = eventTime;
     }
+    [UILocalNotification addSelfUserInfoTo:info using:message];
     self.userInfo = [info copy];
 }
 

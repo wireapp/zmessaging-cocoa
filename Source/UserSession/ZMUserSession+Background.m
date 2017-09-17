@@ -87,7 +87,6 @@ static NSString *ZMLogTag = @"Push";
     }
 }
 
-
 - (void)application:(id<ZMApplication>)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 {
     NOT_USED(application);
@@ -95,57 +94,16 @@ static NSString *ZMLogTag = @"Push";
     NOT_USED(completionHandler);
 }
 
-
 - (void)application:(id<ZMApplication>)application didReceiveLocalNotification:(UILocalNotification *)notification;
 {
-    if (application.applicationState == UIApplicationStateInactive || application.applicationState == UIApplicationStateBackground) {
-        self.pendingLocalNotification = [[ZMStoredLocalNotification alloc] initWithNotification:notification
-                                                                           managedObjectContext:self.managedObjectContext
-                                                                               actionIdentifier:nil
-                                                                                      textInput:nil];
-    }
-    if (self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen) {
-        [self processPendingNotificationActions];
-    }
+    NOT_USED(application);
+    [self didReceiveLocalWithNotification:notification];
 }
 
 - (void)application:(id<ZMApplication>)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)())completionHandler;
 {
-    if ([identifier isEqualToString:ZMCallIgnoreAction]){
-        [self ignoreCallForNotification:notification withCompletionHandler:completionHandler];
-        return;
-    }
-    if ([identifier isEqualToString:ZMConversationMuteAction]) {
-        [self muteConversationForNotification:notification withCompletionHandler:completionHandler];
-        return;
-    }
-    if ([identifier isEqualToString:ZMMessageLikeAction]) {
-        [self likeMessageForNotification:notification withCompletionHandler:completionHandler];
-        return;
-    }
-    
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_8_4) {
-        NSString *textInput = [responseInfo optionalStringForKey:UIUserNotificationActionResponseTypedTextKey];
-        if ([identifier isEqualToString:ZMConversationDirectReplyAction]) {
-            [self replyToNotification:notification withReply:textInput completionHandler:completionHandler];
-            return;
-        }
-    }
-    
-    if (application.applicationState == UIApplicationStateInactive) {
-        self.pendingLocalNotification = [[ZMStoredLocalNotification alloc] initWithNotification:notification
-                                                                           managedObjectContext:self.managedObjectContext
-                                                                               actionIdentifier:identifier
-                                                                                      textInput:nil];
-    }
-    
-    if (self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen) {
-        [self processPendingNotificationActions];
-    }
-    
-    if (completionHandler != nil) {
-        completionHandler();
-    }
+    NOT_USED(application);
+    [self handleActionWith:identifier for:notification with:responseInfo completionHandler:completionHandler];
 }
 
 - (void)application:(id<ZMApplication>)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
