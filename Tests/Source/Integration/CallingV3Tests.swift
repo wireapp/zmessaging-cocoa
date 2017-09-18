@@ -26,12 +26,6 @@ class CallStateTestObserver : WireCallCenterCallStateObserver {
     var changes : [CallState] = []
     var token : WireCallCenterObserverToken?
     
-    deinit {
-        if let token = token {
-            WireCallCenterV3.removeObserver(token: token)
-        }
-    }
-    
     func observe(conversation: ZMConversation, context: NSManagedObjectContext) {
         token = WireCallCenterV3.addCallStateObserver(observer: self, conversation: conversation)
     }
@@ -54,13 +48,7 @@ class VoiceChannelParticipantTestObserver : VoiceChannelParticipantObserver {
     
     var changes : [VoiceChannelParticipantNotification] = []
     var token : WireCallCenterObserverToken?
-    
-    deinit {
-        if let token = token {
-            WireCallCenterV3.removeObserver(token: token)
-        }
-    }
-    
+        
     func observe(conversation: ZMConversation, context: NSManagedObjectContext) {
         token = WireCallCenterV3.addVoiceChannelParticipantObserver(observer: self, forConversation: conversation, context: context)
     }
