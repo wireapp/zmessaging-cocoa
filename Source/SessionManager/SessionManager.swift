@@ -430,14 +430,14 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
                 dispatchGroup: dispatchGroup,
                 migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
                 completion: { provider in
-                    self.activateBackgroungSession(for: account, with: provider, completion: action)
+                    self.activateBackgroundSession(for: account, with: provider, completion: action)
                 }
             )
         }
     }
     
     // Creates the user session for @c account given, calls @c completion when done.
-    fileprivate func activateBackgroungSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession)->()) {
+    fileprivate func activateBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession)->()) {
         guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
         }
@@ -446,19 +446,6 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         pushDispatcher.add(client: newSession)
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
-        let authenticationStatus = unauthenticatedSession?.authenticationStatus
-        
-        newSession.syncManagedObjectContext.performGroupedBlock {
-            newSession.setEmailCredentials(authenticationStatus?.emailCredentials())
-            if let registered = authenticationStatus?.completedRegistration {
-                newSession.syncManagedObjectContext.registeredOnThisDevice = registered
-            }
-            
-            newSession.managedObjectContext.performGroupedBlock { [weak self] in
-                completion(newSession)
-                self?.delegate?.sessionManagerCreated(userSession: newSession)
-            }
-        }
     }
     
     internal func deactivateBackgroundSession(for account: Account) {
