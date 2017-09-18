@@ -1,0 +1,78 @@
+//
+// Wire
+// Copyright (C) 2016 Wire Swiss GmbH
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
+//
+
+import WireDataModel
+
+
+@objc enum ZMClientUpdateNotificationType: Int {
+    case fetchCompleted
+    case fetchFailed
+    case deletionCompleted
+    case deletionFailed
+}
+
+@objc class ZMClientUpdateNotification: NSObject {
+    
+    private static let name = Notification.Name(rawValue: "ZMClientUpdateNotification")
+    
+    private static let clientObjectIDsKey = "clientObjectIDs"
+    private static let typeKey = "notificationType"
+    private static let errorKey = "error"
+    
+    @objc public static func addOserver(context: NSManagedObjectContext, block: @escaping (ZMClientUpdateNotificationType, [NSManagedObjectID], NSError?) -> ()) -> Any {
+        NotificationInContext.addObserver(name: self.name,
+                                          context: context.zm_userInterface)
+        { note in
+            guard let type = note.userInfo[self.typeKey] as? ZMClientUpdateNotificationType else { return }
+            let clientObjectIDs = (note.userInfo[self.clientObjectIDsKey] as? [NSManagedObjectID]) ?? []
+            let error = note.userInfo[self.errorKey] as? NSError
+            block(type, clientObjectIDsKey, error)
+        }
+    }
+    
+    static func notify(type: ZMClientUpdateNotificationType, context: NSManagedObjectContext, clients: [UserClient] = [], error: NSError? = nil) {
+        NotificationInContext(name: self.name, context: context.zm_userInterface, userInfo: [
+            errorKey: error,
+            clientObjectIDsKey: clients.objectIDs,
+            typeKey: type
+        ])
+    }
+    
+    static func notifyFetchingClientsCompleted(userClients: [UserClient], context: NSManagedObjectContext) {
+        self.notify(type: .fetchCompleted, context: context.zm_userInterface)
+    }
+    static func notifyFetchingClientsDidFail(error: NSError, context: NSManagedObjectContext) {
+        self.notify(type: .fetchFailed, context: context.zm_userInterface, error: error)
+    }
+    static func notifyDeletionCompleted(remainingClients: [UserClient], context: NSManagedObjectContext) {
+        self.notify(type: .deletionCompleted, context: context.zm_userInterface, clients: remainingClients)
+    }
+    static func notifyDeletionFailed(error: NSError, context: NSManagedObjectContext) {
+        self.notify(type: .fetchCompleted, context: context.zm_userInterface)
+    }
+}
+
+extension Array where Element: NSManagedObject {
+    
+    var objectIDs: [NSManagedObjectID] {
+        return self.flatMap { obj in
+            guard !obj.objectID.isTemporaryID else { return nil }
+            return obj.objectID
+        }
+    }
+}

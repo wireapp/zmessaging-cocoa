@@ -26,7 +26,6 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMAuthenticationStatus.h"
 #import "ZMCredentials.h"
-#import "ZMUserSessionAuthenticationNotification.h"
 #import "NSError+ZMUserSessionInternal.h"
 
 @interface ZMLoginCodeRequestTranscoder() <ZMSingleRequestTranscoder>

@@ -21,12 +21,11 @@
 @import WireUtilities;
 @import WireDataModel;
 
-#include "ZMAuthenticationStatus.h"
-#include "ZMCredentials+Internal.h"
-#include "NSError+ZMUserSession.h"
-#include "NSError+ZMUserSessionInternal.h"
-#include "ZMUserSessionRegistrationNotification.h"
-#include "ZMUserSessionAuthenticationNotification.h"
+#import "ZMAuthenticationStatus.h"
+#import "ZMCredentials+Internal.h"
+#import "NSError+ZMUserSession.h"
+#import "NSError+ZMUserSessionInternal.h"
+#import "ZMUserSessionRegistrationNotification.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMAuthenticationStatus_Internal.h"
 

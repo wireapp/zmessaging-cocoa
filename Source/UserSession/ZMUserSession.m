@@ -35,7 +35,6 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMPushToken.h"
 #import "ZMBlacklistVerificator.h"
-#import "ZMUserSessionAuthenticationNotification.h"
 #import "NSURL+LaunchOptions.h"
 #import "WireSyncEngineLogs.h"
 #import "ZMCallFlowRequestStrategy.h"

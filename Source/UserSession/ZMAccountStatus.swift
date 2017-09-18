@@ -38,12 +38,13 @@ extension ZMPersistentCookieStorage : ZMCookieProvider {
     }
 }
 
-public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, ZMAuthenticationObserver, ZMRegistrationObserver {
+public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, PostLoginAuthenticationObserver, ZMRegistrationObserver {
 
     let managedObjectContext: NSManagedObjectContext
     let cookieProvider : ZMCookieProvider
-    var authenticationToken : ZMAuthenticationObserverToken!
-    var registrationToken : ZMRegistrationObserverToken!
+    var authenticationToken : Any?
+    var registrationToken : Any?
+    var initialSyncToken: Any?
     
     var didRegister: Bool = false
     public fileprivate (set) var currentAccountState : AccountState = .newDeviceNewAccount
@@ -119,7 +120,10 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, 
             currentAccountState = .newDeviceNewAccount 
         }
         
-        ZMUserSession.addInitalSyncCompletionObserver(self)
+        ERROR // : WE WERE MESSING AROUND HERE ~ Marco & Jacob: replace old observers with new version, figure out if it's ok for this class to be only a PostAuthenticationObserver
+        // or if it also need to be a PreAuthenticationObserver
+        
+        self.initialSyncToken = ZMUserSession.addInitalSyncCompletionObserver(self)
         self.authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(on: managedObjectContext) { [weak self] (note) in
             switch note.type {
             case .authenticationNotificationAuthenticationDidSuceeded, .authenticationNotificationDidRegisterClient:
@@ -140,11 +144,4 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, 
             strongSelf.didRegister = true
         })
     }
-    
-    deinit {
-        ZMUserSession.removeInitalSyncCompletionObserver(self)
-        ZMUserSessionAuthenticationNotification.removeObserver(for: authenticationToken)
-        ZMUserSessionRegistrationNotification.removeObserver(registrationToken)
-    }
-
 }

@@ -492,7 +492,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
 
 // MARK: - ZMAuthenticationObserver
 
-extension SessionManager: ZMAuthenticationObserver {
+extension SessionManager: PostLoginAuthenticationObserver {
 
     @objc public func clientRegistrationDidSucceed() {
         log.debug("Tearing down unauthenticated session as reaction to successfull client registration")
