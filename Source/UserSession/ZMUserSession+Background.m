@@ -34,15 +34,6 @@
 
 static NSString *ZMLogTag = @"Push";
 
-@interface ZMUserSession (NotificationProcessing)
-
-- (void)ignoreCallForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
-- (void)replyToNotification:(UILocalNotification *)notification withReply:(NSString*)reply completionHandler:(void (^)())completionHandler;
-- (void)muteConversationForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
-- (void)likeMessageForNotification:(UILocalNotification *)note withCompletionHandler:(void (^)(void))completionHandler;
-
-@end
-
 @implementation ZMUserSession (PushReceivers)
 
 @end
@@ -97,16 +88,25 @@ static NSString *ZMLogTag = @"Push";
 - (void)application:(id<ZMApplication>)application didReceiveLocalNotification:(UILocalNotification *)notification;
 {
     NOT_USED(application);
-    [self didReceiveLocalWithNotification:notification];
+    [self didReceiveLocalWithNotification:notification application:application];
 }
 
-- (void)application:(id<ZMApplication>)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)())completionHandler;
+- (void)application:(id<ZMApplication>)application
+handleActionWithIdentifier:(NSString *)identifier
+forLocalNotification:(UILocalNotification *)notification
+       responseInfo:(NSDictionary *)responseInfo
+  completionHandler:(void(^)())completionHandler;
 {
     NOT_USED(application);
-    [self handleActionWith:identifier for:notification with:responseInfo completionHandler:completionHandler];
+    [self handleActionWithApplication:application
+                                 with:identifier
+                                  for:notification
+                                 with:responseInfo
+                    completionHandler:completionHandler];
 }
 
-- (void)application:(id<ZMApplication>)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
+- (void)application:(id<ZMApplication>)application
+performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 {
     NOT_USED(application);
     [self.syncManagedObjectContext performGroupedBlock:^{
@@ -230,13 +230,13 @@ static NSString *ZMLogTag = @"Push";
 {
     id<ZMRequestsToOpenViewsDelegate> strongDelegate = self.requestToOpenViewDelegate;
     if (conversation == nil) {
-        [strongDelegate showConversationList];
+        [strongDelegate showConversationListForUserSession:self];
     }
     else if (message == nil) {
-        [strongDelegate showConversation:conversation];
+        [strongDelegate userSession:self showConversation:conversation];
     }
     else {
-        [strongDelegate showMessage:message inConversation:conversation];
+        [strongDelegate userSession:self showMessage:message inConversation:conversation];
     }
 }
 
@@ -272,7 +272,7 @@ static NSString *ZMLogTag = @"Push";
     }];
 }
 
-- (void)replyToNotification:(UILocalNotification *)notification withReply:(NSString*)reply completionHandler:(void (^)())completionHandler;
+- (void)replyToNotification:(UILocalNotification *)notification withReply:(NSString *)reply completionHandler:(void (^)())completionHandler;
 {
     if (reply.length == 0) {
         if (completionHandler != nil) {
@@ -293,6 +293,7 @@ static NSString *ZMLogTag = @"Push";
                     ZMConversation *syncConversation = [notification conversationInManagedObjectContext:self.syncManagedObjectContext];
                     [self.localNotificationDispatcher didFailToSendMessageIn:syncConversation];
                 }
+                
                 [activity endActivity];
                 if (completionHandler != nil) {
                     completionHandler();
@@ -352,6 +353,42 @@ static NSString *ZMLogTag = @"Push";
                                                                                        callback:^{
                                                                                            [self updateBackgroundTaskWithMessage:reactionMessage];
                                                                                        }];
+    }];
+}
+
+- (void)acceptConnectionForNotification:(UILocalNotification *)note
+                  withCompletionHandler:(void (^)())completionHandler
+{
+    ZMUser *sender = [ZMUser fetchObjectWithRemoteIdentifier:note.zm_senderUUID inManagedObjectContext:self.managedObjectContext];
+    ZMConversation *conversation = [note conversationInManagedObjectContext:self.managedObjectContext];
+
+    if (sender == nil) {
+        ZMLogError(@"Sender is missing");
+        if (completionHandler != nil) {
+            completionHandler();
+        }
+        return;
+    }
+    
+    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"Accept connection activity"];
+    
+    ZM_WEAK(self);
+    [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
+        ZM_STRONG(self);
+
+        if (result == ZMBackgroundTaskResultFailed) {
+            ZMLogDebug(@"Failed to connect to user");
+        }
+        
+        [activity endActivity];
+        if (completionHandler != nil) {
+            completionHandler();
+        }
+    }];
+    
+    [self enqueueChanges:^{
+        [sender accept];
+        [self openConversation:conversation atMessage:nil];
     }];
 }
 

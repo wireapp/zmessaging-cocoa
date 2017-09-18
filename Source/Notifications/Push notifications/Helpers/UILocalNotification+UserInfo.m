@@ -58,7 +58,6 @@ static NSString * const SelfUserIDStringKey     = @"selfUserIDString";
 
 - (NSUUID *)zm_selfUserUUID;
 {
-    // TODO: Mike: test it
     return [self nsuuidForUserInfoKey:SelfUserIDStringKey];
 }
 

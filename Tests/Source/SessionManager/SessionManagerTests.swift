@@ -454,7 +454,7 @@ class SessionManagerTests_Push: IntegrationTest {
         
         // WHEN
         self.sessionManager!.pushDispatcher.add(client: fakePushClient)
-        self.sessionManager!.didReceiveRemoteNotification(payload, fetchCompletionHandler: {_ in })
+        self.sessionManager!.didReceiveRemote(notification: payload, fetchCompletionHandler: {_ in })
 
         XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         

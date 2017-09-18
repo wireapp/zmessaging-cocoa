@@ -109,7 +109,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public fileprivate(set) var activeUserSession: ZMUserSession?
     public fileprivate(set) var backgroundUserSessions: [Account: ZMUserSession] = [:]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
-
+    public weak var requestToOpenViewDelegate: ZMRequestsToOpenViewsDelegate?
+    
     let application: ZMApplication
     var authenticationToken: ZMAuthenticationObserverToken?
     var blacklistVerificator: ZMBlacklistVerificator?
@@ -381,6 +382,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
                 preconditionFailure("Unable to create session for \(account)")
             }
+            newSession.requestToOpenViewDelegate = self
             session = newSession
             self.backgroundUserSessions[account] = newSession
         }
@@ -440,7 +442,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             preconditionFailure("Unable to create session for \(account)")
         }
         self.backgroundUserSessions[account] = newSession
-        
+        newSession.requestToOpenViewDelegate = self
         pushDispatcher.add(client: newSession)
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")

@@ -66,3 +66,4 @@
 #import <WireSyncEngine/ZMRegistrationTranscoder.h>
 #import <WireSyncEngine/ZMPhoneNumberVerificationTranscoder.h>
 #import <WireSyncEngine/ZMHotFix.h>
+#import <WireSyncEngine/ZMStoredLocalNotification.h>

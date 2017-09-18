@@ -42,6 +42,8 @@
     self.conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     self.conversation.remoteIdentifier = NSUUID.createUUID;
     
+    [ZMUser selfUserInContext:self.uiMOC].remoteIdentifier = [NSUUID UUID];
+    
     [self.uiMOC saveOrRollback];
 }
 
