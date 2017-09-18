@@ -52,6 +52,8 @@ public class CallKitDelegate : NSObject {
         
         super.init()
         
+        provider.setDelegate(self, queue: nil)
+        
         // Should be set when CallKit is used. Then AVS will not start
         // the audio before the audio session is active
         mediaManager?.setUiStartsAudio(true)
@@ -62,14 +64,6 @@ public class CallKitDelegate : NSObject {
     
     deinit {
         provider.invalidate()
-        
-        if let token = callStateObserverToken {
-            WireCallCenterV3.removeObserver(token: token)
-        }
-        
-        if let token = missedCallObserverToken {
-            WireCallCenterV3.removeObserver(token: token)
-        }
     }
     
     public static var providerConfiguration : CXProviderConfiguration {
@@ -183,12 +177,15 @@ extension CallKitDelegate {
         
         let action = CXStartCallAction(call: remoteIdentifier, handle: handle)
         action.isVideo = video
+        action.contactIdentifier = conversation.localizedCallerName(with: ZMUser.selfUser(inUserSession: userSession))
         let transaction = CXTransaction(action: action)
         
         
         callController.request(transaction) { [weak self] (error) in
             if let error = error as? CXErrorCodeRequestTransactionError, error.code == .callUUIDAlreadyExists {
                 self?.requestAnswerCall(in: conversation, video: video)
+            } else if let error = error {
+                self?.log(for: conversation, format: "Cannot start call: \(error)")
             }
         }
         
@@ -480,10 +477,6 @@ class CallObserver : WireCallCenterCallStateObserver {
     
     public init(conversation: ZMConversation) {
         token = WireCallCenterV3.addCallStateObserver(observer: self, conversation: conversation)
-    }
-    
-    deinit {
-        token.apply(WireCallCenterV3.removeObserver)
     }
     
     public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {

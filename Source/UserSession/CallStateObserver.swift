@@ -32,15 +32,6 @@ public final class CallStateObserver : NSObject {
     fileprivate var callStateToken : WireCallCenterObserverToken? = nil
     fileprivate var missedCalltoken : WireCallCenterObserverToken? = nil
     fileprivate let systemMessageGenerator = CallSystemMessageGenerator()
-
-    deinit {
-        if let token = callStateToken {
-            WireCallCenterV3.removeObserver(token: token)
-        }
-        if let token = missedCalltoken {
-            WireCallCenterV3.removeObserver(token: token)
-        }
-    }
     
     public init(localNotificationDispatcher : LocalNotificationDispatcher, userSession: ZMUserSession) {
         self.userSession = userSession
