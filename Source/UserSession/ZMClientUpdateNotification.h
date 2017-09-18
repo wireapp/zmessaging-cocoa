@@ -17,7 +17,6 @@
 // 
 
 
-#import <WireDataModel/ZMNotifications.h>
 
 typedef NS_ENUM (NSInteger, ZMClientUpdateNotificationType) {
     ZMClientUpdateNotificationTypeFetchCompleted,
@@ -28,7 +27,7 @@ typedef NS_ENUM (NSInteger, ZMClientUpdateNotificationType) {
 
 @protocol ZMClientUpdateObserverToken;
 
-@interface ZMClientUpdateNotification : ZMNotification
+@interface ZMClientUpdateNotification : NotificationInContext
 
 @property (nonatomic) NSError *error;
 @property (nonatomic) NSArray<NSManagedObjectID *> *clientObjectIDs;

@@ -20,8 +20,6 @@
 @import Foundation;
 @import WireSystem;
 
-#import <WireDataModel/ZMNotifications+Internal.h>
-
 @protocol ZMRegistrationObserverToken
 @end
 
@@ -35,7 +33,7 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionRegistrationNotificationType) {
     ZMRegistrationNotificationRegistrationDidFail
 };
 
-@interface ZMUserSessionRegistrationNotification : ZMNotification
+@interface ZMUserSessionRegistrationNotification : NotificationInContext
 
 @property (nonatomic) NSError *error;
 @property (nonatomic) ZMUserSessionRegistrationNotificationType type;

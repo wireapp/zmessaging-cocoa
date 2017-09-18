@@ -22,7 +22,6 @@
 @import WireDataModel;
 
 #import "ZMTypingUsers.h"
-#import "ZMNotifications+UserSession.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString * const ZMTypingUsersKey = @"ZMTypingUsers";

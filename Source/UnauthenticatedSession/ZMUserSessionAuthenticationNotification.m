@@ -17,7 +17,6 @@
 // 
 
 
-#import <WireDataModel/ZMNotifications+Internal.h>
 #import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMUserSession+Registration.h"
 

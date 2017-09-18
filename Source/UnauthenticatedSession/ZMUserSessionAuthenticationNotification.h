@@ -20,7 +20,6 @@
 @import Foundation;
 
 
-#import <WireDataModel/ZMNotifications.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

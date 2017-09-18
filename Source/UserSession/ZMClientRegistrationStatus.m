@@ -21,7 +21,6 @@
 #import "ZMOperationLoop.h"
 #import "ZMAuthenticationStatus_Internal.h"
 #import "ZMUserSessionAuthenticationNotification.h"
-#import "ZMNotifications+UserSession.h"
 #import "ZMClientRegistrationStatus+Internal.h"
 #import "ZMCredentials.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>

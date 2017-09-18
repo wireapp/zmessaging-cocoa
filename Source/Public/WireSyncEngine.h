@@ -34,8 +34,6 @@
 #import <WireSyncEngine/ZMBlacklistVerificator.h>
 #import <WireSyncEngine/ZMUserSession+Private.h>
 #import <WireSyncEngine/ZMPushRegistrant.h>
-#import <WireSyncEngine/ZMNotifications+UserSession.h>
-#import <WireSyncEngine/ZMNotifications+UserSessionInternal.h>
 #import <WireSyncEngine/ZMUserSession+Background.h>
 #import <WireSyncEngine/ZMAuthenticationStatus.h>
 #import <WireSyncEngine/ZMClientRegistrationStatus.h>
