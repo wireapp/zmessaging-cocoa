@@ -19,6 +19,7 @@
 
 import XCTest
 import WireTesting
+import PushKit
 @testable import WireSyncEngine
 
 
@@ -146,12 +147,28 @@ class SessionManagerTests: IntegrationTest {
     
 }
 
+extension IntegrationTest {
+    func createAccount() -> Account {
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else {
+            XCTFail()
+            fatalError()
+        }
+        
+        let manager = AccountManager(sharedDirectory: sharedContainer)
+        let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
+        manager.add(account)
+        
+        return account
+    }
+}
+
 class SessionManagerTests_Teams: IntegrationTest {
     
     override func setUp() {
         super.setUp()
         createSelfUserAndConversation()
     }
+    
     
     func testThatItUpdatesAccountAfterLoginWithTeamName() {
         // given
@@ -239,11 +256,11 @@ class SessionManagerTests_Teams: IntegrationTest {
     
     func testThatItDeletesTheAccountFolder() throws {
         // given
-        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        
-        let manager = AccountManager(sharedDirectory: sharedContainer)
-        let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
-        manager.add(account)
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else {
+            XCTFail()
+            return
+        }
+        let account = self.createAccount()
         
         let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
         
@@ -344,11 +361,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
     
     func testThatItUnloadsUserSession() {
         // GIVEN
-        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        
-        let manager = AccountManager(sharedDirectory: sharedContainer)
-        let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
-        manager.add(account)
+        let account = self.createAccount()
         
         // WHEN
         self.sessionManager!.withSession(for: account, perform: { session in
@@ -364,152 +377,151 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         // THEN
         XCTAssertNil(self.sessionManager!.backgroundUserSessions[account])
     }
+    
+    func testThatItLoadsAccountForPush() {
+        // GIVEN
+        let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
+        self.sessionManager?.accountManager.add(account)
+
+        weak var weakSession: ZMUserSession? = nil
+        var payload: [AnyHashable: Any] = [:]
+        autoreleasepool {
+            var session: ZMUserSession! = nil
+            self.sessionManager?.withSession(for: account, perform: { createdSession in
+                session = createdSession
+                weakSession = createdSession
+            })
+            
+            XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+            
+            let selfUser = ZMUser.selfUser(inUserSession: session)!
+            selfUser.remoteIdentifier = currentUserIdentifier
+            
+            payload = ["data": [
+                "user": selfUser.remoteIdentifier?.transportString()
+                ]
+            ]
+            
+            self.sessionManager!.deactivateAllBackgroundSessions()
+            XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+            session = nil
+            XCTAssertNil(self.sessionManager!.backgroundUserSessions[account])
+        }
+        self.userSession = nil
+        XCTAssertNil(weakSession)
+        
+        // WHEN
+        let pushCompleted = self.expectation(description: "Push completed")
+        self.sessionManager?.pushDispatcher.didReceiveRemoteNotification(payload, fetchCompletionHandler: { _ in
+            DispatchQueue.main.async {
+                // THEN
+                XCTAssertNotNil(self.sessionManager!.backgroundUserSessions[account])
+                
+                // CLEANUP
+                self.sessionManager!.deactivateAllBackgroundSessions()
+                pushCompleted.fulfill()
+            }
+        })
+        
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 10))
+    }
 }
 
 class SessionManagerTests_Push: IntegrationTest {
     func testThatItStoresThePushToken() {
-        XCTFail()
+        // GIVEN
+        let token = Data(bytes: [0xba, 0xdf, 0x00, 0xd0])
+        let fakePushClient = TestPushDispatcherClient()
+        // WHEN
+        self.sessionManager!.pushDispatcher.add(client: fakePushClient)
+        self.sessionManager!.didRegisteredForRemoteNotifications(with: token)
+        
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(fakePushClient.pushTokens.count, 1)
+        XCTAssertEqual(fakePushClient.pushTokens[0].type, .regular)
+        XCTAssertEqual(fakePushClient.pushTokens[0].data, token)
     }
     
-    /*
-     
-     - (void)testThatItMarksPushTokenAsNotRegisteredWhenResettingEvenIfItHasSameData
-     {
-     // given
-     NSData *deviceToken = [NSData dataWithBytes:@"bla" length:3];
-     ZMPushToken *pushToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken
-     identifier:@"com.wire.ent"
-     transportType:@"APNS_VOIP"
-     fallback:@"APNS"
-     isRegistered:YES];
-     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
-     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:deviceToken] pushToken];
-     self.uiMOC.pushKitToken = pushToken;
-     
-     // when
-     [self performIgnoringZMLogError:^{
-     [self.sut resetPushTokens];
-     WaitForAllGroupsToBeEmpty(0.5);
-     }];
-     
-     // then
-     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
-     XCTAssertFalse(self.uiMOC.pushKitToken.isRegistered);
-     }
-     
-     - (void)testThatItStoresThePushKitToken
-     {
-     // given
-     NSData *deviceToken = [NSData dataWithBytes:@"bla" length:3];
-     ZMPushToken *pushToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken
-     identifier:@"com.wire.ent"
-     transportType:@"APNS_VOIP"
-     fallback:@"APNS"
-     isRegistered:NO];
-     // expect
-     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
-     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:deviceToken] pushToken];
-     [[[self.apnsEnvironment expect] andReturn:@"APNS"] fallbackForTransportType:ZMAPNSTypeVoIP];
-     
-     // when
-     [self performIgnoringZMLogError:^{
-     [self.sut resetPushTokens];
-     WaitForAllGroupsToBeEmpty(0.5);
-     }];
-     
-     // then
-     [mockPushRegistrant verify];
-     [self.apnsEnvironment verify];
-     XCTAssertEqualObjects(self.uiMOC.pushKitToken, pushToken);
-     XCTAssertFalse(self.uiMOC.pushKitToken.isRegistered);
-     }
-     
-     
-     - (void)testThatIt_DoesNot_ForwardsRemoteNotificationsWhileRunning_WhenNotLoggedIn;
-     {
-     // expect
-     NSDictionary *remoteNotification = @{@"a": @"b"};
-     [[self.operationLoop reject] saveEventsAndSendNotificationForPayload:remoteNotification fetchCompletionHandler:OCMOCK_ANY source:ZMPushNotficationTypeAlert];
-     
-     // when
-     [self.sut application:OCMOCK_ANY didReceiveRemoteNotification:remoteNotification fetchCompletionHandler:^(UIBackgroundFetchResult result) {
-     XCTAssertNotEqual(result, UIBackgroundFetchResultFailed);
-     }];
-     
-     [self.operationLoop verify];
-     }
-     
-     
-     - (void)testThatItCallsRegisterForPushNotificationsIfNoPushTokenIsSet
-     {
-     // given
-     XCTAssertNil(self.uiMOC.pushToken);
-     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
-     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:[NSData data]] pushToken];
-     
-     // when
-     [self performIgnoringZMLogError:^{
-     [self.sut resetPushTokens];
-     WaitForAllGroupsToBeEmpty(0.5);
-     }];
-     
-     // then
-     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
-     }
-     
-     - (void)testThatItCallsRegisterForPushNotificationsAgainIfNoPushTokenIsSet
-     {
-     // given
-     XCTAssertNil(self.uiMOC.pushToken);
-     id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
-     [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:[NSData data]] pushToken];
-     
-     // when
-     [self performIgnoringZMLogError:^{
-     [self.sut resetPushTokens];
-     [self.sut resetPushTokens];
-     WaitForAllGroupsToBeEmpty(0.5);
-     }];
-     
-     // then
-     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
-     }
-     
-     - (void)testThatItMarksTheTokenToDeleteWhenReceivingDidInvalidateToken
-     {
-     // given
-     [self.uiMOC setPushKitToken:[[ZMPushToken alloc] initWithDeviceToken:[NSData data] identifier:@"foo.bar" transportType:@"APNS" fallback:@"APNS" isRegistered:YES]];
-     XCTAssertNotNil(self.uiMOC.pushKitToken);
-     XCTAssertFalse(self.uiMOC.pushKitToken.isMarkedForDeletion);
-     id mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
-     
-     // when
-     [self.sut.pushRegistrant pushRegistry:mockPushRegistry didInvalidatePushTokenForType:PKPushTypeVoIP];
-     WaitForAllGroupsToBeEmpty(0.5);
-     
-     // then
-     XCTAssertTrue(self.uiMOC.pushKitToken.isMarkedForDeletion);
-     }
-     
-     - (void)testThatItSetsThePushTokenWhenReceivingUpdateCredentials
-     {
-     // given
-     NSData *token = [NSData data];
-     id mockCredentials =[OCMockObject niceMockForClass:[PKPushCredentials class]];
-     [(PKPushCredentials *)[[mockCredentials expect] andReturn:token] token];
-     id mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
-     
-     XCTAssertNil(self.uiMOC.pushKitToken);
-     
-     // when
-     [self.sut.pushRegistrant pushRegistry:mockPushRegistry didUpdatePushCredentials:mockCredentials forType:PKPushTypeVoIP];
-     WaitForAllGroupsToBeEmpty(0.5);
-     
-     // then
-     XCTAssertNotNil(self.uiMOC.pushKitToken);
-     XCTAssertEqualObjects(self.uiMOC.pushKitToken.deviceToken, token);
-     }
+    func testThatItForwardsThePush() {
+        // GIVEN
+        let fakePushClient = TestPushDispatcherClient()
+        let payload: [AnyHashable: Any] = ["data": [
+            "user": UUID().transportString(),
+            "type": "notice"
+            ]]
+        
+        // WHEN
+        self.sessionManager!.pushDispatcher.add(client: fakePushClient)
+        self.sessionManager!.didReceiveRemoteNotification(payload, fetchCompletionHandler: {_ in })
 
- */
+        XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(fakePushClient.canHandlePayloads.count, 1)
+        XCTAssertEqual(fakePushClient.receivedPayloads.count, 1)
+        XCTAssert(NSDictionary(dictionary: fakePushClient.receivedPayloads[0]).isEqual(to: fakePushClient.canHandlePayloads[0]))
+        XCTAssert(NSDictionary(dictionary: fakePushClient.receivedPayloads[0]).isEqual(to: payload))
+    }
+    
+    func testThatItMarksTheTokenToDeleteWhenReceivingDidInvalidateToken() {
+        // GIVEN
+        let account = self.createAccount()
+        
+        // WHEN
+        
+        var session: ZMUserSession! = nil
+        self.sessionManager?.withSession(for: account, perform: { createdSession in
+            session = createdSession
+        })
+        
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        session.managedObjectContext.pushKitToken = ZMPushToken(deviceToken: Data(), identifier: "foo.bar", transportType: "APNS", fallback: "APNS", isRegistered: true)
+        
+        // THEN
+        XCTAssertNotNil(session.managedObjectContext.pushKitToken)
+        XCTAssertFalse(session.managedObjectContext.pushKitToken.isMarkedForDeletion)
+        
+        // AND WHEN
+        self.sessionManager?.pushDispatcher.pushRegistrant.pushRegistry(PKPushRegistry.init(queue: nil), didInvalidatePushTokenForType:.voIP)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertTrue(session.managedObjectContext.pushKitToken.isMarkedForDeletion)
+        
+        // CLEANUP
+        self.sessionManager!.deactivateAllBackgroundSessions()
+    }
+    
+    class MockPushCredentials: PKPushCredentials {
+        override var token: Data {
+            return Data()
+        }
+    }
+    
+    func testThatItSetsThePushTokenWhenReceivingUpdateCredentials() {
+        // GIVEN
+        let account = self.createAccount()
+        
+        var session: ZMUserSession! = nil
+        self.sessionManager?.withSession(for: account, perform: { createdSession in
+            session = createdSession
+        })
+        
+        let credentials = MockPushCredentials()
+        // WHEN
+        self.sessionManager?.pushDispatcher.pushRegistrant.pushRegistry(PKPushRegistry.init(queue: nil), didUpdate: credentials, forType: .voIP)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertNotNil(session.managedObjectContext.pushKitToken)
+        XCTAssertEqual(session.managedObjectContext.pushKitToken.deviceToken, credentials.token)
+        XCTAssertFalse(session.managedObjectContext.pushKitToken.isMarkedForDeletion)
+        
+        // CLEANUP
+        self.sessionManager!.deactivateAllBackgroundSessions()
+    }
 }
 

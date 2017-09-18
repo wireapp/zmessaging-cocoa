@@ -21,7 +21,7 @@ import XCTest
 import WireTesting
 @testable import WireSyncEngine
 
-private final class TestPushDispatcherClient: NSObject, PushDispatcherOptionalClient {
+final class TestPushDispatcherClient: NSObject, PushDispatcherOptionalClient {
     var pushTokens: [PushToken] = []
     var canHandlePayloads: [[AnyHashable: Any]] = []
     var receivedPayloads: [[AnyHashable: Any]] = []
@@ -32,7 +32,7 @@ private final class TestPushDispatcherClient: NSObject, PushDispatcherOptionalCl
         pushTokens.append(token)
     }
     
-    func canHandle(payload: [AnyHashable: Any]) -> Bool {
+    func mustHandle(payload: [AnyHashable: Any]) -> Bool {
         canHandlePayloads.append(payload)
         return canHandleNext
     }
@@ -42,8 +42,19 @@ private final class TestPushDispatcherClient: NSObject, PushDispatcherOptionalCl
     }
 }
 
-public final class PushDispatcherTests: XCTestCase {
+public final class PushDispatcherTests: ZMTBaseTest {
     let sut = PushDispatcher()
+    
+    static let token = Data(bytes: [0xba, 0xdf, 0x00, 0xd0])
+    static let userID = UUID().transportString()
+    static let payload: [AnyHashable: Any] = ["data": [
+        "user": userID,
+        "type": "notice"
+        ]]
+    
+    static let payloadWithoutUser: [AnyHashable: Any] = ["data": [
+        "type": "notice"
+        ]]
     
     func testThatItDoesNotRetainTheObservers() {
         weak var observerWeakReference: TestPushDispatcherClient?
@@ -62,122 +73,113 @@ public final class PushDispatcherTests: XCTestCase {
     }
     
     func testThatItDoesNotRetainTheFallbackObserver() {
+        weak var observerWeakReference: TestPushDispatcherClient?
+        var observer: TestPushDispatcherClient?
+        autoreleasepool { _ in
+            // GIVEN
+            observer = TestPushDispatcherClient()
+            observerWeakReference = observer
+            // WHEN
+            sut.fallbackClient = observer
+            observer = nil
+        }
+        // THEN
         
+        XCTAssertNil(observerWeakReference)
     }
     
     func testThatItForwardTheRegistrationEvent() {
+        // GIVEN
+        let client = TestPushDispatcherClient()
+        sut.add(client: client)
+        // WHEN
+        sut.didRegisteredForRemoteNotifications(with: type(of: self).token)
         
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        // THEN
+        XCTAssertEqual(client.pushTokens.count, 1)
+        XCTAssertEqual(client.pushTokens[0].data, type(of: self).token)
+        XCTAssertEqual(client.pushTokens[0].type, .regular)
     }
     
     func testThatItForwardsThePushTokenToNewObserver() {
+        // GIVEN
+        sut.didRegisteredForRemoteNotifications(with: type(of: self).token)
+        let client = TestPushDispatcherClient()
         
+        // WHEN
+        sut.add(client: client)
+        
+        // THEN
+        XCTAssertEqual(client.pushTokens.count, 1)
+        XCTAssertEqual(client.pushTokens[0].data, type(of: self).token)
+        XCTAssertEqual(client.pushTokens[0].type, .regular)
     }
     
     func testThatItAsksObserverIfItCanHandleThePush() {
+        // GIVEN
+        let client = TestPushDispatcherClient()
+        sut.add(client: client)
+
+        // WHEN
+        sut.didReceiveRemoteNotification(type(of: self).payload, fetchCompletionHandler: { _ in })
         
+        // THEN
+        XCTAssertEqual(client.canHandlePayloads.count, 1)
+        XCTAssertTrue(NSDictionary(dictionary: client.canHandlePayloads[0]).isEqual(to: type(of: self).payload))
     }
     
     func testThatItInvokesFallbackObserverForPushWithoutUser() {
+        // GIVEN
+        let client = TestPushDispatcherClient()
+        sut.add(client: client)
+        let fallbackClient = TestPushDispatcherClient()
+        sut.fallbackClient = fallbackClient
         
-    }
-    
-    func testThatItForwardsTheNotificationToTheObserver() {
-        
-    }
-    
-    func testThatItForwardsTheNotificationToFallbackObserver() {
-        
-    }
-    /*
-     
-     - (void)testThatItReregistersPushTokensOnDemand
-     {
-     XCTAssertTrue([self login]);
-     
-     // given
-     NSData *token = [NSData dataWithBytes:@"abc" length:3];
-     NSData *newToken = [NSData dataWithBytes:@"def" length:6];
-     
-     PushDispatcher *pushDispatcher = [[PushDispatcher alloc] init];
-     pushDispatcher.
-     // when
-     XCTAssertTrue([self registerForNotifications:token]);
-     
-     // then
-     ZMTransportRequest *request = self.mockTransportSession.receivedRequests.lastObject;
-     XCTAssertEqualObjects(request.path, @"/push/tokens");
-     [self.mockTransportSession resetReceivedRequests];
-     
-     // expect
-     id mockPushRegistrant = [OCMockObject partialMockForObject:self.pushDispatcher.pushRegistrant];
-     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-     ZM_WEAK(self);
-     self.application.registerForRemoteNotificationsCallback = ^{
-     ZM_STRONG(self);
-     [self.userSession performChanges:^{
-     [self.userSession updatedPushTokenToVoipData:newToken];
-     }];
-     };
-     
-     // when
-     [self.userSession resetPushTokens];
-     WaitForAllGroupsToBeEmpty(0.5);
-     
-     // then
-     BOOL didContainSignalingKeyRequest = NO;
-     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 3u);
-     for (ZMTransportRequest *aRequest in self.mockTransportSession.receivedRequests) {
-     if ([aRequest.path containsString:@"/clients/"] && [aRequest.payload asDictionary][@"sigkeys"] != nil) {
-     didContainSignalingKeyRequest = YES;
-     }
-     }
-     XCTAssertTrue(didContainSignalingKeyRequest);
-     XCTAssertTrue([self lastRequestsContainedTokenRequests]);
-     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
-     [mockPushRegistrant verify];
-     }
-     
-     - (void)testThatItReregistersPushTokensOnDemandEvenIfItDidNotChange
-     {
-     XCTAssertTrue([self login]);
-     
-     // given
-     NSData *token = [NSData dataWithBytes:@"abc" length:3];
-     
-     [self registerForNotifications:token];
-     XCTAssertTrue([self lastRequestsContainedTokenRequests]);
-     [self.mockTransportSession resetReceivedRequests];
-     
-     // expect
-     id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
-     [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:token] pushToken];
-     ZM_WEAK(self);
-     self.application.registerForRemoteNotificationsCallback = ^{
-     ZM_STRONG(self);
-     [self.userSession performChanges:^{
-     [self.userSession updatedPushTokenToVoipData:token];
-     }];
-     };
-     
-     // when
-     [self.userSession performChanges:^{
-     [self.userSession resetPushTokens];
-     }];
-     WaitForAllGroupsToBeEmpty(1.0);
-     
-     // then
-     BOOL didContainSignalingKeyRequest = NO;
-     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 3u);
-     for (ZMTransportRequest *aRequest in self.mockTransportSession.receivedRequests) {
-     if ([aRequest.path containsString:@"/clients/"] && [aRequest.payload asDictionary][@"sigkeys"] != nil) {
-     didContainSignalingKeyRequest = YES;
-     }
-     }
-     XCTAssertTrue(didContainSignalingKeyRequest);
-     XCTAssertTrue([self lastRequestsContainedTokenRequests]);
-     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
-     [mockPushRegistrant verify];
-     }
+        // WHEN
+        sut.didReceiveRemoteNotification(type(of: self).payloadWithoutUser, fetchCompletionHandler: { _ in })
 
- */
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        XCTAssertEqual(client.canHandlePayloads.count, 0)
+        
+        XCTAssertEqual(fallbackClient.receivedPayloads.count, 1)
+        XCTAssertTrue(NSDictionary(dictionary: fallbackClient.receivedPayloads[0]).isEqual(to: type(of: self).payloadWithoutUser))
+    }
+
+    func testThatItForwardsTheNotificationToTheFallbackObserverIfCannotHandle() {
+        // GIVEN
+        let client = TestPushDispatcherClient()
+        client.canHandleNext = false
+        sut.add(client: client)
+        let fallbackClient = TestPushDispatcherClient()
+        sut.fallbackClient = fallbackClient
+        
+        // WHEN
+        sut.didReceiveRemoteNotification(type(of: self).payload, fetchCompletionHandler: { _ in })
+        
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        XCTAssertEqual(client.canHandlePayloads.count, 1)
+
+        XCTAssertEqual(fallbackClient.receivedPayloads.count, 1)
+        XCTAssertTrue(NSDictionary(dictionary: fallbackClient.receivedPayloads[0]).isEqual(to: type(of: self).payload))
+    }
+    
+    func testThatItForwardsTheNotificationToFallbackObserverWhenNoObservers() {
+        // GIVEN
+        let fallbackClient = TestPushDispatcherClient()
+        sut.fallbackClient = fallbackClient
+        
+        // WHEN
+        sut.didReceiveRemoteNotification(type(of: self).payload, fetchCompletionHandler: { _ in })
+        
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(fallbackClient.receivedPayloads.count, 1)
+        XCTAssertTrue(NSDictionary(dictionary: fallbackClient.receivedPayloads[0]).isEqual(to: type(of: self).payload))
+    }
 }

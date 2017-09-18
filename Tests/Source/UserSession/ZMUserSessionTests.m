@@ -838,6 +838,96 @@
     XCTAssertFalse(self.uiMOC.pushToken.isRegistered);
 }
 
+- (void)testThatItCallsRegisterForPushNotificationsIfNoPushTokenIsSet
+{
+    // given
+    XCTAssertNil(self.uiMOC.pushToken);
+    
+    // when
+    [self performIgnoringZMLogError:^{
+        [self.sut resetPushTokens];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
+
+    // then
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
+}
+
+- (void)testThatItCallsRegisterForPushNotificationsAgainIfNoPushTokenIsSet
+{
+    // given
+    XCTAssertNil(self.uiMOC.pushToken);
+
+    // when
+    [self performIgnoringZMLogError:^{
+        [self.sut resetPushTokens];
+        [self.sut resetPushTokens];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
+    
+    // then
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
+}
+
+- (void)testThatItMarksPushTokenAsNotRegisteredWhenResettingEvenIfItHasSameData
+{
+    // given
+    NSData *deviceToken = [NSData dataWithBytes:@"bla" length:3];
+    ZMPushToken *pushToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken
+                                                           identifier:@"com.wire.ent"
+                                                        transportType:@"APNS_VOIP"
+                                                             fallback:@"APNS"
+                                                         isRegistered:YES];
+    self.uiMOC.pushKitToken = pushToken;
+    
+    // when
+    [self performIgnoringZMLogError:^{
+        self.uiMOC.pushKitToken = nil;
+        [self.sut setPushKitToken:deviceToken];
+        [self.sut resetPushTokens];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
+    
+    // then
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
+    XCTAssertFalse(self.uiMOC.pushKitToken.isRegistered);
+}
+
+- (void)testThatItStoresThePushKitToken
+{
+    // given
+    NSData *deviceToken = [NSData dataWithBytes:@"bla" length:3];
+    ZMPushToken *pushToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken
+                                                           identifier:@"com.wire.ent"
+                                                        transportType:@"APNS_VOIP"
+                                                             fallback:@"APNS"
+                                                         isRegistered:YES];
+    self.uiMOC.pushToken = pushToken;
+    
+    // when
+    [self performIgnoringZMLogError:^{
+        [self.sut resetPushTokens];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
+    
+    // then
+    XCTAssertFalse(self.uiMOC.pushToken.isRegistered);
+}
+
+- (void)testThatIt_DoesNot_ForwardsRemoteNotificationsWhileRunning_WhenNotLoggedIn;
+{
+    // expect
+    NSDictionary *remoteNotification = @{@"a": @"b"};
+    [[self.operationLoop reject] saveEventsAndSendNotificationForPayload:remoteNotification fetchCompletionHandler:OCMOCK_ANY source:ZMPushNotficationTypeAlert];
+    
+    // when
+    [self.sut application:OCMOCK_ANY didReceiveRemoteNotification:remoteNotification fetchCompletionHandler:^(UIBackgroundFetchResult result) {
+        XCTAssertNotEqual(result, UIBackgroundFetchResultFailed);
+    }];
+    
+    [self.operationLoop verify];
+}
+
 - (void)checkThatItCallsTheDelegateForNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo actionIdentifier:(NSString *)actionIdentifier withBlock:(void (^)(id mockDelegate))block
 {
     id mockDelegate = [OCMockObject mockForProtocol:@protocol(ZMRequestsToOpenViewsDelegate)];
@@ -1134,7 +1224,6 @@
     XCTAssertTrue(didCallCompletionHandler);
     XCTAssertEqual(conversation.messages.count, 1u);
 }
-
 
 @end
 #endif

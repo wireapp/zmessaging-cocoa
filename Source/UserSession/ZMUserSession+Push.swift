@@ -70,33 +70,27 @@ extension ZMUserSession: PushDispatcherOptionalClient {
         switch newToken.type {
         case .regular:
             if let data = newToken.data {
-                managedObjectContext.performGroupedBlock {
-                    let oldToken = self.managedObjectContext.pushToken?.deviceToken
-                    if oldToken == nil || oldToken != data {
-                        managedObjectContext.pushToken = nil
-                        self.setPushToken(data)
-                        managedObjectContext.forceSaveOrRollback()
-                    }
+                let oldToken = self.managedObjectContext.pushToken?.deviceToken
+                if oldToken == nil || oldToken != data {
+                    managedObjectContext.pushToken = nil
+                    self.setPushToken(data)
+                    managedObjectContext.forceSaveOrRollback()
                 }
             }
         case .voip:
             if let data = newToken.data {
-                managedObjectContext.performGroupedBlock {
-                    managedObjectContext.pushKitToken = nil
-                    self.setPushKitToken(data)
-                    managedObjectContext.forceSaveOrRollback()
-                }
+                managedObjectContext.pushKitToken = nil
+                self.setPushKitToken(data)
+                managedObjectContext.forceSaveOrRollback()
             }
             else {
-                managedObjectContext.performGroupedBlock {
-                    self.deletePushKitToken()
-                    managedObjectContext.forceSaveOrRollback()
-                }
+                self.deletePushKitToken()
+                managedObjectContext.forceSaveOrRollback()
             }
         }
     }
 
-    public func canHandle(payload: [AnyHashable: Any]) -> Bool {
+    public func mustHandle(payload: [AnyHashable: Any]) -> Bool {
         return payload.isPayload(for: ZMUser.selfUser(in: self.managedObjectContext))
     }
     
@@ -112,6 +106,69 @@ extension ZMUserSession: PushDispatcherOptionalClient {
             
             self.operationLoop.saveEventsAndSendNotification(forPayload: payload, fetchCompletionHandler: completion, source: source)
         }
+    }
+    
+    public func didReceiveLocal(notification: UILocalNotification) {
+        /*
+         if (application.applicationState == UIApplicationStateInactive || application.applicationState == UIApplicationStateBackground) {
+         self.pendingLocalNotification = [[ZMStoredLocalNotification alloc] initWithNotification:notification
+         managedObjectContext:self.managedObjectContext
+         actionIdentifier:nil
+         textInput:nil];
+         }
+         if (self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen) {
+         [self processPendingNotificationActions];
+         }
+ */
+    }
+    
+    public func handleAction(with identifier: String,
+                             for localNotification: UILocalNotification,
+                             with completionHandler: ()->()) {
+        // TODO
+    }
+    
+    public func handleAction(with identifier: NSString,
+                             for localNotification: UILocalNotification,
+                             with responseInfo: NSDictionary,
+                             completionHandler:() -> ()) {
+        /*
+         if ([identifier isEqualToString:ZMCallIgnoreAction]){
+         [self ignoreCallForNotification:notification withCompletionHandler:completionHandler];
+         return;
+         }
+         if ([identifier isEqualToString:ZMConversationMuteAction]) {
+         [self muteConversationForNotification:notification withCompletionHandler:completionHandler];
+         return;
+         }
+         if ([identifier isEqualToString:ZMMessageLikeAction]) {
+         [self likeMessageForNotification:notification withCompletionHandler:completionHandler];
+         return;
+         }
+         
+         if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_8_4) {
+         NSString *textInput = [responseInfo optionalStringForKey:UIUserNotificationActionResponseTypedTextKey];
+         if ([identifier isEqualToString:ZMConversationDirectReplyAction]) {
+         [self replyToNotification:notification withReply:textInput completionHandler:completionHandler];
+         return;
+         }
+         }
+         
+         if (application.applicationState == UIApplicationStateInactive) {
+         self.pendingLocalNotification = [[ZMStoredLocalNotification alloc] initWithNotification:notification
+         managedObjectContext:self.managedObjectContext
+         actionIdentifier:identifier
+         textInput:nil];
+         }
+         
+         if (self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen) {
+         [self processPendingNotificationActions];
+         }
+         
+         if (completionHandler != nil) {
+         completionHandler();
+         }
+ */
     }
 }
 

@@ -340,7 +340,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         createUnauthenticatedSession()
     }
 
-    fileprivate func select(account: Account?, completion: @escaping (ZMUserSession) -> Void) {
+    internal func select(account: Account?, completion: @escaping (ZMUserSession) -> Void) {
         guard let account = account else { return createUnauthenticatedSession() }
 
         if account.isAuthenticated {
@@ -420,6 +420,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
     }
     
+    // Loads user session for @c account given and executes the @c action block.
     public func withSession(for account: Account, perform action: @escaping (ZMUserSession)->()) {
         if let session = backgroundUserSessions[account] {
             action(session)
@@ -437,6 +438,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
     
+    // Creates the user session for @c account given, calls @c completion when done.
     fileprivate func activateBackgroungSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession)->()) {
         guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
@@ -471,6 +473,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         self.backgroundUserSessions[account] = nil
     }
     
+    // Tears down and releases all background user sessions.
     internal func deactivateAllBackgroundSessions() {
         self.backgroundUserSessions.forEach { (account, session) in
             if self.activeUserSession != session {
@@ -644,81 +647,6 @@ extension SessionManager: ZMAuthenticationObserver {
         }
     }
 
-}
-
-extension SessionManager: PushDispatcherClient {
-    public func registerSessionForRemoteNotificationsIfNeeded(_ session: ZMUserSession) {
-        session.managedObjectContext.performGroupedBlock {
-            // Refresh the Voip token if needed
-            self.pushDispatcher.lastKnownPushTokens.forEach { type, actualToken in
-                switch type {
-                case .voip:
-                    if actualToken != session.managedObjectContext.pushKitToken.deviceToken {
-                        session.managedObjectContext.pushKitToken = nil
-                        session.setPushKitToken(actualToken)
-                    }
-                case .regular:
-                    if actualToken != session.managedObjectContext.pushToken.deviceToken {
-                        session.managedObjectContext.pushToken = nil
-                        session.setPushToken(actualToken)
-                    }
-                }
-            }
-            
-            session.registerForRemoteNotifications()
-        }
-    }
-    
-    public func didRegisteredForRemoteNotifications(with token: Data) {
-        self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
-    }
-    
-    public func didReceiveRemoteNotification(_ notification: [AnyHashable: Any], fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
-        self.pushDispatcher.didReceiveRemoteNotification(notification, fetchCompletionHandler: fetchCompletionHandler)
-    }
-    
-    func wakeAllAccounts(for payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: ZMPushNotificationCompletionHandler?) {
-        log.error("Push is not specifict to account, fetching all")
-        self.accountManager.accounts.forEach { account in
-            self.withSession(for: account, perform: { userSession in
-                userSession.receivedPushNotification(with: payload, from: source, completion: completion)
-            })
-        }
-    }
-    
-    public func receivedPushNotification(with payload: [AnyHashable: Any], from source: ZMPushNotficationType, completion: ZMPushNotificationCompletionHandler?) {
-        
-        guard !payload.isPayloadMissingUserInformation() else {
-            self.wakeAllAccounts(for: payload, from: source, completion: completion)
-            return
-        }
-        
-        guard let userInfoData = payload[PushChannelDataKey] as? [String: Any] else {
-            log.debug("No data dictionary in notification userInfo payload");
-            return
-        }
-        
-        guard let userIdString = userInfoData[PushChannelUserIDKey] as? String else {
-            return
-        }
-        
-        let userId = UUID(uuidString: userIdString)
-    
-        let matchingAccounts = self.accountManager.accounts.filter { (account) -> Bool in
-            account.userIdentifier == userId
-        }
-        
-        assert(matchingAccounts.count <= 1)
-        
-        if let account = matchingAccounts.first {
-            self.withSession(for: account, perform: { userSession in
-                userSession.receivedPushNotification(with: payload, from: source, completion: completion)
-            })
-        }
-        else {
-            self.wakeAllAccounts(for: payload, from: source, completion: completion)
-        }
-    }
 }
 
 // MARK: - ConversationListObserver

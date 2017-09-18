@@ -1,0 +1,146 @@
+//
+// Wire
+// Copyright (C) 2017 Wire Swiss GmbH
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
+//
+
+import Foundation
+
+private let log = ZMSLog(tag: "SessionManager")
+
+extension AccountManager {
+    func account(for id: UUID) -> Account? {
+        let matchingAccounts = self.accounts.filter { (account) -> Bool in
+            account.userIdentifier == id
+        }
+        
+        assert(matchingAccounts.count <= 1)
+        
+        return matchingAccounts.first
+    }
+}
+
+extension SessionManager {
+    public func registerSessionForRemoteNotificationsIfNeeded(_ session: ZMUserSession) {
+        session.managedObjectContext.performGroupedBlock {
+            // Refresh the tokens if needed
+            self.pushDispatcher.lastKnownPushTokens.forEach { type, actualToken in
+                switch type {
+                case .voip:
+                    if actualToken != session.managedObjectContext.pushKitToken.deviceToken {
+                        session.managedObjectContext.pushKitToken = nil
+                        session.setPushKitToken(actualToken)
+                    }
+                case .regular:
+                    if actualToken != session.managedObjectContext.pushToken.deviceToken {
+                        session.managedObjectContext.pushToken = nil
+                        session.setPushToken(actualToken)
+                    }
+                }
+            }
+            
+            session.registerForRemoteNotifications()
+        }
+    }
+    
+    // Must be called when the AppDelegate receives the new push token.
+    public func didRegisteredForRemoteNotifications(with token: Data) {
+        self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
+    }
+    
+    // Must be called when the AppDelegate receives the new push notification.
+    @objc(didReceiveRemoteNotification:fetchCompletionHandler:)
+    public func didReceiveRemote(notification: [AnyHashable: Any],
+                                fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
+        self.pushDispatcher.didReceiveRemoteNotification(notification, fetchCompletionHandler: fetchCompletionHandler)
+    }
+    
+    // Must be called when the AppDelegate receives the new local push notification.
+    @objc(didReceiveLocalNotification:)
+    public func didReceiveLocal(notification: UILocalNotification) {
+        if let selfUserId = notification.zm_selfUserUUID,
+            let account = self.accountManager.account(for: selfUserId) {
+            
+            self.select(account: account) { userSession in
+                userSession.didReceiveLocal(notification: notification)
+            }
+        }
+    }
+    
+    // Must be called when the user action with @c identifier is completed on the local notification 
+    // @c localNotification (see UIApplicationDelegate).
+    @objc(handleActionWithIdentifier:forLocalNotification:withResponseInfo:completionHandler:)
+    public func handleAction(with identifier: NSString,
+                             for localNotification: UILocalNotification,
+                             with responseInfo: NSDictionary,
+                             completionHandler: @escaping () -> ()) {
+        if let selfUserId = localNotification.zm_selfUserUUID,
+            let account = self.accountManager.account(for: selfUserId) {
+            
+            self.select(account: account) { userSession in
+                userSession.handleAction(with: identifier,
+                                         for: localNotification,
+                                         with: responseInfo,
+                                         completionHandler: completionHandler)
+            }
+        }
+    }
+    
+    fileprivate func wakeAllAccounts(for payload: [AnyHashable: Any],
+                                 from source: ZMPushNotficationType,
+                                 completion: ZMPushNotificationCompletionHandler?) {
+        log.error("Push is not specifict to account, fetching all")
+        self.accountManager.accounts.forEach { account in
+            self.withSession(for: account, perform: { userSession in
+                userSession.receivedPushNotification(with: payload, from: source, completion: completion)
+            })
+        }
+    }
+}
+
+extension SessionManager: PushDispatcherClient {
+    // Called by PushDispatcher when the pust notification is received. Wakes up or creates the user session for the
+    // account mentioned in the notification, or wakes all accounts when the unknown notification is received.
+    public func receivedPushNotification(with payload: [AnyHashable: Any],
+                                         from source: ZMPushNotficationType,
+                                         completion: ZMPushNotificationCompletionHandler?) {
+        
+        guard !payload.isPayloadMissingUserInformation() else {
+            self.wakeAllAccounts(for: payload, from: source, completion: completion)
+            return
+        }
+        
+        guard let userInfoData = payload[PushChannelDataKey] as? [String: Any] else {
+            log.debug("No data dictionary in notification userInfo payload");
+            return
+        }
+        
+        guard let userIdString = userInfoData[PushChannelUserIDKey] as? String else {
+            return
+        }
+        
+        
+        if let userId = UUID(uuidString: userIdString),
+            let account = self.accountManager.account(for: userId) {
+            
+            self.withSession(for: account, perform: { userSession in
+                userSession.receivedPushNotification(with: payload, from: source, completion: completion)
+            })
+        }
+        else {
+            self.wakeAllAccounts(for: payload, from: source, completion: completion)
+        }
+    }
+}
