@@ -82,7 +82,7 @@ extension SessionManager {
     // Must be called when the user action with @c identifier is completed on the local notification 
     // @c localNotification (see UIApplicationDelegate).
     @objc(handleActionWithIdentifier:forLocalNotification:withResponseInfo:completionHandler:application:)
-    public func handleAction(with identifier: String,
+    public func handleAction(with identifier: String?,
                              for localNotification: UILocalNotification,
                              with responseInfo: [AnyHashable: Any],
                              completionHandler: @escaping () -> (),
@@ -117,8 +117,8 @@ extension SessionManager {
             if session == backgroundSession {
                 self.select(account: account) { _ in
                     completion()
-                    foundSession = true
                 }
+                foundSession = true
                 return
             }
         }

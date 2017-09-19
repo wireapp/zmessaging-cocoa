@@ -127,7 +127,6 @@ extension ZMUserSession {
         if self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen {
             self.processPendingNotificationActions()
         }
- 
     }
     
     public func handleAction(application: ZMApplication,

@@ -425,6 +425,88 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 10))
     }
+    
+    func setupSession() -> ZMUserSession {
+        let manager = self.sessionManager!.accountManager
+        let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
+        manager.add(account)
+        account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        manager.addAndSelect(account)
+        
+        var session: ZMUserSession! = nil
+        self.sessionManager?.withSession(for: account, perform: { createdSession in
+            session = createdSession
+        })
+        
+        let selfUser = ZMUser.selfUser(in: session.managedObjectContext)
+        selfUser.remoteIdentifier = currentUserIdentifier
+        
+        session.managedObjectContext.saveOrRollback()
+        
+        session.syncManagedObjectContext.performGroupedBlock {
+            let _ = ZMConversation(remoteID: self.currentUserIdentifier, createIfNeeded: true, in: session.syncManagedObjectContext)
+            session.syncManagedObjectContext.saveOrRollback()
+        }
+        
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        return session
+    }
+    
+    func testThatItActivatesTheAccountForPushReaction() {
+        // GIVEN
+        let session = self.setupSession()
+        session.isPerformingSync = false
+        session.pushChannelIsOpen = true
+        application?.applicationState = .background
+        
+        let selfConversation = ZMConversation(remoteID: currentUserIdentifier, createIfNeeded: false, in: session.managedObjectContext)
+        
+        let localNotification = UILocalNotification()
+        localNotification.setupUserInfo(selfConversation, for: nil)
+        
+        XCTAssertEqual(localNotification.zm_selfUserUUID, currentUserIdentifier)
+        XCTAssertNil(self.sessionManager!.activeUserSession)
+        
+        // WHEN
+        self.sessionManager?.didReceiveLocal(notification: localNotification, application: self.application!)
+        
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        XCTAssertEqual(self.sessionManager!.activeUserSession, session)
+        
+        // CLEANUP
+        self.sessionManager!.deactivateAllBackgroundSessions()
+    }
+    
+    func testThatItActivatesTheAccountForPushAction() {
+        // GIVEN
+        let session = self.setupSession()
+        session.isPerformingSync = false
+        session.pushChannelIsOpen = true
+        application?.applicationState = .inactive
+        
+        let selfConversation = ZMConversation(remoteID: currentUserIdentifier, createIfNeeded: false, in: session.managedObjectContext)
+        
+        let localNotification = UILocalNotification()
+        localNotification.setupUserInfo(selfConversation, for: nil)
+        
+        XCTAssertEqual(localNotification.zm_selfUserUUID, currentUserIdentifier)
+        XCTAssertNil(self.sessionManager!.activeUserSession)
+        
+        // WHEN
+        self.sessionManager?.handleAction(with: nil, for: localNotification, with: [:], completionHandler: {_ in}, application: self.application!)
+       
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        XCTAssertEqual(self.sessionManager!.activeUserSession, session)
+        
+        // CLEANUP
+        self.sessionManager!.deactivateAllBackgroundSessions()
+    }
+    
 }
 
 class SessionManagerTests_Push: IntegrationTest {

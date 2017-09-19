@@ -95,7 +95,8 @@ static NSString * const SelfUserIDStringKey     = @"selfUserIDString";
 - (void)setupUserInfo:(ZMConversation *)conversation sender:(ZMUser *)sender
 {
     NSMutableDictionary *info = [NSMutableDictionary dictionary];
-    
+    [UILocalNotification addSelfUserInfoTo:info using:conversation];
+
     NSString *conversationIDString = conversation.remoteIdentifier.transportString;
     if (conversationIDString != nil) {
         info[ConversationIDStringKey] = conversationIDString;
@@ -105,13 +106,14 @@ static NSString * const SelfUserIDStringKey     = @"selfUserIDString";
     if (senderUUIDString != nil) {
         info[SenderIDStringKey] = senderUUIDString;
     }
-    [UILocalNotification addSelfUserInfoTo:info using:conversation];
     self.userInfo = [info copy];
 }
 
 - (void)setupUserInfo:(ZMConversation *)conversation forEvent:(ZMUpdateEvent*)event;
 {
     NSMutableDictionary *info = [NSMutableDictionary dictionary];
+    [UILocalNotification addSelfUserInfoTo:info using:conversation];
+
     NSString *conversationIDString = conversation.remoteIdentifier.transportString;
     if (conversationIDString != nil) {
         info[ConversationIDStringKey] = conversationIDString;
@@ -133,13 +135,14 @@ static NSString * const SelfUserIDStringKey     = @"selfUserIDString";
     if (eventTime != nil) {
         info[EventTimeKey] = eventTime;
     }
-    [UILocalNotification addSelfUserInfoTo:info using:conversation];
     self.userInfo = [info copy];
 }
 
 - (void)setupUserInfo:(ZMMessage *)message
 {
     NSMutableDictionary *info = [NSMutableDictionary dictionary];
+    [UILocalNotification addSelfUserInfoTo:info using:message];
+
     NSString *conversationIDString = message.conversation.remoteIdentifier.transportString;
     if (conversationIDString != nil) {
         info[ConversationIDStringKey] = conversationIDString;
@@ -157,7 +160,6 @@ static NSString * const SelfUserIDStringKey     = @"selfUserIDString";
     if (eventTime != nil) {
         info[EventTimeKey] = eventTime;
     }
-    [UILocalNotification addSelfUserInfoTo:info using:message];
     self.userInfo = [info copy];
 }
 
