@@ -80,10 +80,10 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: syncMOC, application: nil)
         
         // then
-        XCTAssertEqual(sut?.sender!.remoteIdentifier, sender.remoteIdentifier);
-        XCTAssertEqual(sut?.uiNotifications.first?.zm_senderUUID, sender.remoteIdentifier);
+        XCTAssertEqual(sut?.sender!.remoteIdentifier, sender.remoteIdentifier)
+        XCTAssertEqual(sut?.uiNotifications.first?.zm_senderUUID, sender.remoteIdentifier)
+        XCTAssertEqual(sut?.uiNotifications.first?.zm_selfUserUUID, self.selfUser.remoteIdentifier)
     }
-    
     
     func testThatItSavesTheConversationOfANotification() {
         // given
@@ -93,8 +93,8 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: syncMOC, application: nil)
         
         // then
-        XCTAssertEqual(sut?.conversationID, oneOnOneConversation.remoteIdentifier);
-        XCTAssertEqual(sut?.uiNotifications.first?.zm_conversationRemoteID, oneOnOneConversation.remoteIdentifier);
+        XCTAssertEqual(sut?.conversationID, oneOnOneConversation.remoteIdentifier)
+        XCTAssertEqual(sut?.uiNotifications.first?.zm_conversationRemoteID, oneOnOneConversation.remoteIdentifier)
     }
     
     func testThatItSavesTheMessageNonce() {
@@ -107,7 +107,7 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: syncMOC, application: nil)
         
         // then
-        XCTAssertEqual(sut?.uiNotifications.first?.zm_messageNonce, message.nonce);
+        XCTAssertEqual(sut?.uiNotifications.first?.zm_messageNonce, message.nonce)
     }
 }
 

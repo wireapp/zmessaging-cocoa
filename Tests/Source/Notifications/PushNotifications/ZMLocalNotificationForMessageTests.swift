@@ -118,6 +118,7 @@ class ZMLocalNotificationForMessageTests : ZMLocalNotificationForEventTest {
         // then
         XCTAssertEqual(notification.messageNonce, message.nonce);
         XCTAssertEqual(uiNote.zm_messageNonce, message.nonce);
+        XCTAssertEqual(uiNote.zm_selfUserUUID, self.selfUser.remoteIdentifier);
     }
     
     func testThatItDoesNotCreateANotificationWhenTheConversationIsSilenced(){
