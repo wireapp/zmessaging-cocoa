@@ -123,7 +123,9 @@ public final class PushDispatcherTests: ZMTBaseTest {
 
         // WHEN
         sut.didReceiveRemoteNotification(type(of: self).payload, fetchCompletionHandler: { _ in })
-        
+
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
         // THEN
         XCTAssertEqual(client.canHandlePayloads.count, 1)
         XCTAssertTrue(NSDictionary(dictionary: client.canHandlePayloads[0]).isEqual(to: type(of: self).payload))

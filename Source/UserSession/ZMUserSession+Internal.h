@@ -57,11 +57,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 @interface ZMUserSession ()
 
-@property (nonatomic) BOOL networkIsOnline;
-@property (nonatomic) BOOL isPerformingSync;
-@property (nonatomic) BOOL didStartInitialSync;
-@property (nonatomic) BOOL pushChannelIsOpen;
-@property (nonatomic) BOOL didNotifyThirdPartyServices;
 @property (nonatomic, readonly) id<ZMApplication> application;
 @property (nonatomic) ZMCallKitDelegate *callKitDelegate;
 @property (nonatomic) ZMCallStateObserver *callStateObserver;
@@ -95,12 +90,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 
 - (void)tearDown;
-
-@property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
-
-/// When starting the app due to a push notification action, we store the notification information and wait until sync completed before processing pending local notifications.
-/// This is important for possibly outdated calling notifications for which we need to fetch the call state before joining the call.
-- (void)processPendingNotificationActions;
 
 @end
 

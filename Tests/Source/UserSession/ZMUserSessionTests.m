@@ -938,7 +938,7 @@
     // when
     __block BOOL didCallCompletionHandler = NO;
     self.sut.requestToOpenViewDelegate = mockDelegate;
-    [self.sut application:self.application handleActionWithIdentifier:actionIdentifier forLocalNotification:notification responseInfo:responseInfo completionHandler:^{
+    [self.sut handleActionWithApplication:self.application with:actionIdentifier for:notification with:responseInfo completionHandler:^{
         didCallCompletionHandler = YES;
     }];
     
@@ -981,7 +981,7 @@
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversationList];
+        [[mockDelegate expect] showConversationListForUserSession:self.sut];
     }];
 }
 
@@ -997,7 +997,7 @@
     [self.application setInactive];
     
     [self checkThatItCallsOnLaunchTheDelegateForNotification:note withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversationList];
+        [[mockDelegate expect] showConversationListForUserSession:self.sut];
     }];
 }
 
@@ -1009,9 +1009,9 @@
     
     // expect
     [self checkThatItCallsOnLaunchTheDelegateForNotification:note withBlock:^(id mockDelegate) {
-        [[mockDelegate reject] showConversationList];
-        [[mockDelegate reject] showMessage:OCMOCK_ANY inConversation:OCMOCK_ANY];
-        [[mockDelegate reject] showConversation:OCMOCK_ANY];
+        [[mockDelegate reject] showConversationListForUserSession:self.sut];
+        [[mockDelegate reject] userSession:self.sut showMessage:OCMOCK_ANY inConversation:OCMOCK_ANY];
+        [[mockDelegate reject] userSession:self.sut showConversation:OCMOCK_ANY];
     }];
 }
 
@@ -1026,7 +1026,7 @@
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:OCMOCK_ANY];
+        [[mockDelegate expect] userSession:self.sut showConversation:OCMOCK_ANY];
     }];
 }
 
@@ -1044,7 +1044,7 @@
     [self.application setInactive];
     
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMConversationMuteAction withBlock:^(id mockDelegate) {
-        [[mockDelegate reject] showConversation:OCMOCK_ANY];
+        [[mockDelegate reject] userSession:self.sut showConversation:OCMOCK_ANY];
     }];
     
     //then
@@ -1064,7 +1064,7 @@
     [self.application setInactive];
 
     [self checkThatItCallsOnLaunchTheDelegateForNotification:note withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:OCMOCK_ANY];
+        [[mockDelegate expect] userSession:self.sut showConversation:OCMOCK_ANY];
     }];
 }
 
@@ -1086,7 +1086,7 @@
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:conversation];
+        [[mockDelegate expect] userSession:self.sut showConversation:conversation];
     }];
     
     // then
@@ -1111,9 +1111,9 @@
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMConnectAcceptAction withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:conversation];
+        [[mockDelegate expect] userSession:self.sut showConversation:conversation];
     }];
-    
+
     // then
     XCTAssertTrue(sender.isConnected);
 }
@@ -1133,14 +1133,14 @@
     
     [self.uiMOC saveOrRollback];
     
-    [self simulateIncomingCallFromUser: conversation.connectedUser conversation:conversation];
+    [self simulateIncomingCallFromUser:conversation.connectedUser conversation:conversation];
     
     
     // expect
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:conversation];
+        [[mockDelegate expect] userSession:self.sut showConversation:conversation];
     }];
     
     // then
@@ -1166,7 +1166,7 @@
     [self.application setInactive];
     
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMCallIgnoreAction withBlock:^(id mockDelegate) {
-        [[mockDelegate reject] showConversation:conversation];
+        [[mockDelegate reject] userSession:self.sut showConversation:OCMOCK_ANY];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1191,7 +1191,7 @@
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMCallAcceptAction withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:conversation];
+        [[mockDelegate expect] userSession:self.sut showConversation:conversation];
     }];
     
     // then
@@ -1212,7 +1212,7 @@
     XCTAssertEqual(conversation.messages.count, 0u);
     __block BOOL didCallCompletionHandler = NO;
     
-    [self.sut application:self.application handleActionWithIdentifier:ZMConversationDirectReplyAction forLocalNotification:note responseInfo:responseInfo completionHandler:^{
+    [self.sut handleActionWithApplication:self.application with:ZMConversationDirectReplyAction for:note with:responseInfo completionHandler:^{
         didCallCompletionHandler = YES;
     }];
     
@@ -1279,7 +1279,7 @@
     __block ZMConversation *requestedConversation;
     
     // expect
-    [[mockDelegate expect] showConversation:ZM_ARG_SAVE(requestedConversation)];
+    [[mockDelegate expect] userSession:self.sut showConversation:ZM_ARG_SAVE(requestedConversation)];
     
     // when
     [self.syncMOC performGroupedBlockAndWait:^{

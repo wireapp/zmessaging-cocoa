@@ -167,9 +167,9 @@ extern NSString * const ZMFlowManagerDidBecomeAvailableNotification;
 @protocol ZMRequestsToOpenViewsDelegate <NSObject>
 
 /// This will be called when the UI should display a conversation, message or the conversation list.
-- (void)showMessage:(ZMMessage *)message inConversation:(ZMConversation *)conversation;
-- (void)showConversation:(ZMConversation *)conversation;
-- (void)showConversationList;
+- (void)userSession:(ZMUserSession *)userSession showMessage:(ZMMessage *)message inConversation:(ZMConversation *)conversation;
+- (void)userSession:(ZMUserSession *)userSession showConversation:(ZMConversation *)conversation;
+- (void)showConversationListForUserSession:(ZMUserSession *)userSession;
 
 @end
 

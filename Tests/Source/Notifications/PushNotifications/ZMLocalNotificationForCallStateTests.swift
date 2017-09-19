@@ -40,6 +40,8 @@ class ZMLocalNotificationForCallStateTests : MessagingTest {
             conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral: sender), isAuthoritative: true)
             
             self.conversation = conversation
+            
+            ZMUser.selfUser(in: self.syncMOC).remoteIdentifier = UUID()
         }
     }
     

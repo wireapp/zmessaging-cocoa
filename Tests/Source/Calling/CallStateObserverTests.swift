@@ -52,6 +52,8 @@ class CallStateObserverTests : MessagingTest {
             
             self.conversation = conversation
             
+            ZMUser.selfUser(in: self.syncMOC).remoteIdentifier = UUID()
+
             self.syncMOC.saveOrRollback()
         }
 

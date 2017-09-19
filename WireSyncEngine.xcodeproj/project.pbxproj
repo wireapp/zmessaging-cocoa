@@ -435,7 +435,7 @@
 		F9B8308C1DEEDC2900FF6FE7 /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B8308B1DEEDC2900FF6FE7 /* SyncStatus.swift */; };
 		F9C598AD1A0947B300B1F760 /* ZMBlacklistDownloaderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = F9FD798919EE962F00D70FCD /* ZMBlacklistDownloaderTest.m */; };
 		F9C9A4F01CAD29190039E10C /* store128.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = F9C9A4ED1CAD290B0039E10C /* store128.wiredatabase */; };
-		F9CA51B71B345F39003AA83A /* ZMStoredLocalNotification.h in Headers */ = {isa = PBXBuildFile; fileRef = F9CA51B41B345F39003AA83A /* ZMStoredLocalNotification.h */; };
+		F9CA51B71B345F39003AA83A /* ZMStoredLocalNotification.h in Headers */ = {isa = PBXBuildFile; fileRef = F9CA51B41B345F39003AA83A /* ZMStoredLocalNotification.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F9CA51B91B345F39003AA83A /* ZMStoredLocalNotification.m in Sources */ = {isa = PBXBuildFile; fileRef = F9CA51B51B345F39003AA83A /* ZMStoredLocalNotification.m */; };
 		F9CA51BE1B3460B2003AA83A /* ZMStoredLocalNotificationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F9CA51BD1B3460B2003AA83A /* ZMStoredLocalNotificationTests.m */; };
 		F9D1CD141DF6C131002F6E80 /* SyncStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9D1CD131DF6C131002F6E80 /* SyncStatusTests.swift */; };

@@ -387,7 +387,7 @@ ZM_EMPTY_ASSERTING_INIT()
         NSManagedObjectID *objectID = note.object;
         id managedObject = [self.managedObjectContext objectWithID:objectID];
         if(managedObject != nil) {
-            [self.requestToOpenViewDelegate showConversation:managedObject];
+            [self.requestToOpenViewDelegate userSession:self showConversation:managedObject];
         }
     }];
 }

@@ -68,29 +68,31 @@ extension SessionManager {
     }
     
     // Must be called when the AppDelegate receives the new local push notification.
-    @objc(didReceiveLocalNotification:)
-    public func didReceiveLocal(notification: UILocalNotification) {
+    @objc(didReceiveLocalNotification:application:)
+    public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
         if let selfUserId = notification.zm_selfUserUUID,
             let account = self.accountManager.account(for: selfUserId) {
             
-            self.select(account: account) { userSession in
-                userSession.didReceiveLocal(notification: notification)
+            self.withSession(for: account) { userSession in
+                userSession.didReceiveLocal(notification: notification, application: application)
             }
         }
     }
     
     // Must be called when the user action with @c identifier is completed on the local notification 
     // @c localNotification (see UIApplicationDelegate).
-    @objc(handleActionWithIdentifier:forLocalNotification:withResponseInfo:completionHandler:)
-    public func handleAction(with identifier: NSString,
+    @objc(handleActionWithIdentifier:forLocalNotification:withResponseInfo:completionHandler:application:)
+    public func handleAction(with identifier: String,
                              for localNotification: UILocalNotification,
-                             with responseInfo: NSDictionary,
-                             completionHandler: @escaping () -> ()) {
+                             with responseInfo: [AnyHashable: Any],
+                             completionHandler: @escaping () -> (),
+                             application: ZMApplication) {
         if let selfUserId = localNotification.zm_selfUserUUID,
             let account = self.accountManager.account(for: selfUserId) {
             
-            self.select(account: account) { userSession in
-                userSession.handleAction(with: identifier,
+            self.withSession(for: account) { userSession in
+                userSession.handleAction(application: application,
+                                         with: identifier,
                                          for: localNotification,
                                          with: responseInfo,
                                          completionHandler: completionHandler)
@@ -103,9 +105,46 @@ extension SessionManager {
                                  completion: ZMPushNotificationCompletionHandler?) {
         log.error("Push is not specifict to account, fetching all")
         self.accountManager.accounts.forEach { account in
-            self.withSession(for: account, perform: { userSession in
+            self.withSession(for: account) { userSession in
                 userSession.receivedPushNotification(with: payload, from: source, completion: completion)
-            })
+            }
+        }
+    }
+    
+    fileprivate func activateAccount(for session: ZMUserSession, completion: @escaping () -> ()) {
+        var foundSession: Bool = false
+        self.backgroundUserSessions.forEach { account, backgroundSession in
+            if session == backgroundSession {
+                self.select(account: account) { _ in
+                    completion()
+                    foundSession = true
+                }
+                return
+            }
+        }
+        
+        if !foundSession {
+            fatalError("User session \(session) is not present in backgroundSessions")
+        }
+    }
+}
+
+extension SessionManager: ZMRequestsToOpenViewsDelegate {
+    public func showConversationList(for userSession: ZMUserSession!) {
+        self.activateAccount(for: userSession) { 
+            self.requestToOpenViewDelegate?.showConversationList(for: userSession)
+        }
+    }
+    
+    public func userSession(_ userSession: ZMUserSession!, show conversation: ZMConversation!) {
+        self.activateAccount(for: userSession) {
+            self.requestToOpenViewDelegate?.userSession(userSession, show: conversation)
+        }
+    }
+    
+    public func userSession(_ userSession: ZMUserSession!, show message: ZMMessage!, in conversation: ZMConversation!) {
+        self.activateAccount(for: userSession) {
+            self.requestToOpenViewDelegate?.userSession(userSession, show: message, in: conversation)
         }
     }
 }

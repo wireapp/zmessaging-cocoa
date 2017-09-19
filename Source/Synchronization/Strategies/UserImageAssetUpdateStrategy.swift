@@ -63,9 +63,8 @@ internal enum AssetTransportError: Error {
         upstreamRequestSyncs[.complete] = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
         deleteRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
         
-        // TODO multi-account
-//        NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.previewAssetFetchNotification, object: nil)
-//        NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.completeAssetFetchNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.previewAssetFetchNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.completeAssetFetchNotification, object: nil)
     }
     
     fileprivate func whitelistUserImageSync(for size: ProfileImageSize) -> ZMDownstreamObjectSyncWithWhitelist {
