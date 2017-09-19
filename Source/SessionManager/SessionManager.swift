@@ -446,6 +446,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         pushDispatcher.add(client: newSession)
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
+        completion(newSession)
     }
     
     internal func deactivateBackgroundSession(for account: Account) {
