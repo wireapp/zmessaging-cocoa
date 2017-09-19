@@ -38,23 +38,21 @@ import WireDataModel
 
 private enum PreLoginAuthenticationEvent {
     
-    case authenticationDidFail(error: NSError, credentials: [String:String]?)
-    case authenticationDidSuceeded
+    case authenticationDidFail(error: NSError)
+    case authenticationDidSucceed
     case loginCodeRequestDidFail(NSError)
     case loginCodeRequestDidSucceed
 }
 
-struct PreLoginAuthenticationNotification {
+class PreLoginAuthenticationNotification : NSObject {
     
     fileprivate static let authenticationEventNotification = Notification.Name(rawValue: "ZMAuthenticationEventNotification")
     
     private static let authenticationEventKey = "authenticationEvent"
-    private static let credentialsEventKey = "credentials"
     
-    static func notify(of event: PreLoginAuthenticationEvent, context: ZMAuthenticationStatus, user: ZMUSer? = nil) {
+    fileprivate static func notify(of event: PreLoginAuthenticationEvent, context: ZMAuthenticationStatus, user: ZMUser? = nil) {
         let userInfo: [String: Any] = [
-            self.authenticationEventKey: event,
-            self.credentialsEventKey: user.flatMap { $0.credentialsUserInfo }
+            self.authenticationEventKey: event
             ]
         NotificationInContext(name: self.authenticationEventNotification,
                               context: context,
@@ -68,18 +66,17 @@ struct PreLoginAuthenticationNotification {
             [weak observer] note in
             guard let event = note.userInfo[self.authenticationEventKey] as? PreLoginAuthenticationEvent,
                 let observer = observer else { return }
-            let userCredentials = note.userInfo[self.credentialsEventKey]
             
             queue.performAsync {
                 switch event {
                 case .loginCodeRequestDidFail(let error):
-                    observer?.loginCodeRequestDidFail?(error)
+                    observer.loginCodeRequestDidFail?(error)
                 case .loginCodeRequestDidSucceed:
-                    observer?.loginCodeRequestDidSucceed?()
+                    observer.loginCodeRequestDidSucceed?()
                 case .authenticationDidFail(let error):
-                    observer?.authenticationDidFail?(error)
-                case .authenticationDidSuceeded:
-                    observer?.authenticationDidSucceed?()
+                    observer.authenticationDidFail?(error)
+                case .authenticationDidSucceed:
+                    observer.authenticationDidSucceed?()
                 }
             }
         }
@@ -87,22 +84,22 @@ struct PreLoginAuthenticationNotification {
 }
 
 // Obj-c friendly methods
-extension ZMAuthenticationStatus {
+public extension ZMAuthenticationStatus {
     
-    @objc public func notifyAuthenticationDidFail(error: NSError) { // both
-        AuthenticationNotification.notify(of: .authenticationDidFail(error), context: self)
+    @objc public func notifyAuthenticationDidFail(_ error: NSError) {
+        PreLoginAuthenticationNotification.notify(of: .authenticationDidFail(error: error), context: self)
     }
     
-    @objc public func notifyAuthenticationDidSucceed() { // unauthenticated
-        AuthenticationNotification.notify(of: .authenticationDidSucceed, context: self)
+    @objc public func notifyAuthenticationDidSucceed() {
+        PreLoginAuthenticationNotification.notify(of: .authenticationDidSucceed, context: self)
     }
     
-    @objc public func notifyLoginCodeRequestDidFail(error: NSError) { // unauthenticated
-        AuthenticationNotification.notify(of: .loginCodeRequestDidFail(error), context: self)
+    @objc public func notifyLoginCodeRequestDidFail(_ error: NSError) {
+        PreLoginAuthenticationNotification.notify(of: .loginCodeRequestDidFail(error), context: self)
     }
     
-    @objc public func notifyLoginCodeRequestDidSucceed(error: NSError) { // unauthenticated
-        AuthenticationNotification.notify(of: .loginCodeRequestDidSuceed, context: self)
+    @objc public func notifyLoginCodeRequestDidSucceed() {
+        PreLoginAuthenticationNotification.notify(of: .loginCodeRequestDidSucceed, context: self)
     }
 }
 

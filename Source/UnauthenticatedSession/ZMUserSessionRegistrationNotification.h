@@ -62,8 +62,8 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionRegistrationNotificationType) {
 
 @interface ZMUserSessionRegistrationNotification (VerificationEmail)
 
-+ (void)resendValidationForRegistrationEmailInContext:(UnauthenticatedSession *)context;
-+ (id)addObserverForRequestForVerificationEmail:(id<ZMRequestVerificationEmailObserver>)observer context:(UnauthenticatedSession *)context ZM_MUST_USE_RETURN;
++ (void)resendValidationForRegistrationEmailInContext:(ZMAuthenticationStatus *)context;
++ (id)addObserverForRequestForVerificationEmail:(id<ZMRequestVerificationEmailObserver>)observer context:(ZMAuthenticationStatus *)context ZM_MUST_USE_RETURN;
 
 @end
 

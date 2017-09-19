@@ -102,12 +102,12 @@ static NSString * const ZMUserSessionRegistrationErrorKey = @"ZMUserSessionRegis
 
 @implementation ZMUserSessionRegistrationNotification (ResendVerificationEmail)
 
-+ (void)resendValidationForRegistrationEmailInContext:(UnauthenticatedSession *)context;
++ (void)resendValidationForRegistrationEmailInContext:(ZMAuthenticationStatus *)context;
 {
-    [[[NotificationInContext alloc] initWithName:VerificationEmailResendRequestNotificationName context:context object:nil userInfo:nil] post];
+    [[[NotificationInContext alloc] initWithName:VerificationEmailResendRequestNotificationName context:context object:nil userInfo:@{}] post];
 }
 
-+ (id)addObserverForRequestForVerificationEmail:(id<ZMRequestVerificationEmailObserver>)observer context:(UnauthenticatedSession *)context ZM_MUST_USE_RETURN;
++ (id)addObserverForRequestForVerificationEmail:(id<ZMRequestVerificationEmailObserver>)observer context:(ZMAuthenticationStatus *)context ZM_MUST_USE_RETURN;
 {
     ZM_WEAK(observer);
     return [NotificationInContext addObserverWithName:VerificationEmailResendRequestNotificationName context:context object:nil queue:nil using:^(NotificationInContext * notification __unused) {

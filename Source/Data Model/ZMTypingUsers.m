@@ -46,11 +46,11 @@ static NSString * const ZMTypingUsersKey = @"ZMTypingUsers";
     return self;
 }
 
-- (void)updateTypingUsersWithNotification:(ZMTypingChangeNotification *)note;
+- (void)updateTypingUsers:(NSSet<ZMUser *> *)typingUsers inConversation:(ZMConversation *)conversation
 {
-    NSManagedObjectID *conversationID = note.conversation.objectID;
+    NSManagedObjectID *conversationID = conversation.objectID;
     Require(! conversationID.isTemporaryID);
-    NSSet *userIDs = [note.typingUsers mapWithBlock:^id(ZMUser *user) {
+    NSSet *userIDs = [typingUsers mapWithBlock:^id(ZMUser *user) {
         NSManagedObjectID *moid = user.objectID;
         Require(! moid.isTemporaryID);
         return moid;

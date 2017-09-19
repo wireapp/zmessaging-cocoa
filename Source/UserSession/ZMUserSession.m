@@ -518,7 +518,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
     [self.managedObjectContext performGroupedBlock:^{
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-        [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionAccessTokenExpired userInfo:selfUser.credentialsUserInfo]];
+        [PostLoginAuthenticationNotification notifyAuthenticationInvalidatedWithError:[NSError userSessionErrorWithErrorCode:ZMUserSessionAccessTokenExpired userInfo:selfUser.credentialsUserInfo] context:self.managedObjectContext];
     }];
 }
 
@@ -652,7 +652,7 @@ ZM_EMPTY_ASSERTING_INIT()
     ZMNetworkState const previous = self.networkState;
     self.networkState = state;
     if(previous != self.networkState && self.application.applicationState != UIApplicationStateBackground) {
-        [[NSNotificationCenter defaultCenter] postNotification:[ZMNetworkAvailabilityChangeNotification notificationWithNetworkState:self.networkState userSession:self]];
+        [ZMNetworkAvailabilityChangeNotification notifyWithNetworkState:self.networkState userSession:self];
     }
 }
 

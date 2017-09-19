@@ -24,7 +24,7 @@
 #import "ZMTyping.h"
 #import "ZMTypingUsersTimeout.h"
 #import "ZMTypingUsers.h"
-#import "ZMNotifications+UserSessionInternal.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 
 #if DEBUG
@@ -104,9 +104,8 @@ const NSTimeInterval ZMTypingRelativeSendTimeout = 5;
             return [self.userInterfaceContext objectWithID:moid];
         }];
         
-        ZMTypingChangeNotification *note = [ZMTypingChangeNotification notificationWithConversation:conv typingUser:users];
-        [self.userInterfaceContext.typingUsers updateTypingUsersWithNotification:note];
-        [[NSNotificationCenter defaultCenter] postNotification:note];
+        [self.userInterfaceContext.typingUsers updateTypingUsers:users inConversation:conv];
+        [conv notifyTypingWithTypingUsers:users];
     }];
 }
 

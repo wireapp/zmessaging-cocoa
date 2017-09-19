@@ -183,7 +183,6 @@
 		548BBA1C195071E30041945E /* ZMUserSessionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54610D32192C9D7200FE7201 /* ZMUserSessionTests.m */; };
 		5492C6C519ACCCA8008F41E2 /* ConnectionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5492C6C319ACCCA8008F41E2 /* ConnectionTests.m */; };
 		549552541D645683004F21F6 /* AddressBookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549552511D64567C004F21F6 /* AddressBookTests.swift */; };
-		549710061F6FF3D800026EDD /* WireDataModel.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 549710011F6FF3CA00026EDD /* WireDataModel.framework */; };
 		549710081F6FF5C100026EDD /* NotificationInContext+UserSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549710071F6FF5C100026EDD /* NotificationInContext+UserSession.swift */; };
 		5497100A1F6FFE9900026EDD /* ClientUpdateNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549710091F6FFE9900026EDD /* ClientUpdateNotification.swift */; };
 		54973A361DD48CAB007F8702 /* NSManagedObject+EncryptionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54973A351DD48CAB007F8702 /* NSManagedObject+EncryptionContext.swift */; };
@@ -451,27 +450,6 @@
 			remoteGlobalIDString = 3E186087191A56F6000FE027;
 			remoteInfo = "WireSyncEngine Test Host";
 		};
-		549710001F6FF3CA00026EDD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 54970FFA1F6FF3C900026EDD /* WireDataModel.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = F9C9A4FC1CAD5DF10039E10C;
-			remoteInfo = WireDataModel;
-		};
-		549710021F6FF3CA00026EDD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 54970FFA1F6FF3C900026EDD /* WireDataModel.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = F9C9A5061CAD5DF10039E10C;
-			remoteInfo = WireDataModelTests;
-		};
-		549710041F6FF3CA00026EDD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 54970FFA1F6FF3C900026EDD /* WireDataModel.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = F9C9A7F31CAED9510039E10C;
-			remoteInfo = WireDataModelTestHost;
-		};
 		54F4DC571A4438AC00FDB6EA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 540029AB1918CA8500578793 /* Project object */;
@@ -724,7 +702,6 @@
 		5490F8EB1AEFD2B3004696F4 /* ZMUserSessionAuthenticationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMUserSessionAuthenticationTests.m; sourceTree = "<group>"; };
 		5492C6C319ACCCA8008F41E2 /* ConnectionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = ConnectionTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		549552511D64567C004F21F6 /* AddressBookTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookTests.swift; sourceTree = "<group>"; };
-		54970FFA1F6FF3C900026EDD /* WireDataModel.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = WireDataModel.xcodeproj; path = "../wire-ios-data-model/WireDataModel.xcodeproj"; sourceTree = "<group>"; };
 		549710071F6FF5C100026EDD /* NotificationInContext+UserSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NotificationInContext+UserSession.swift"; sourceTree = "<group>"; };
 		549710091F6FFE9900026EDD /* ClientUpdateNotification.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientUpdateNotification.swift; sourceTree = "<group>"; };
 		54973A351DD48CAB007F8702 /* NSManagedObject+EncryptionContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSManagedObject+EncryptionContext.swift"; sourceTree = "<group>"; };
@@ -1092,7 +1069,6 @@
 				54E03A671E93CEED0089AC69 /* WireProtos.framework in Frameworks */,
 				54E03A651E93CEED0089AC69 /* WireMessageStrategy.framework in Frameworks */,
 				54E03A691E93CEED0089AC69 /* WireSystem.framework in Frameworks */,
-				549710061F6FF3D800026EDD /* WireDataModel.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1298,7 +1274,6 @@
 		540029AA1918CA8500578793 = {
 			isa = PBXGroup;
 			children = (
-				54970FFA1F6FF3C900026EDD /* WireDataModel.xcodeproj */,
 				09284B6A1B8272C300EEE10E /* WireSyncEngine Test Host.entitlements */,
 				09CC4AB71B7CB8B700201C63 /* Cartfile */,
 				F93C4C6F1E1E8B77007E9CEE /* Cartfile.resolved */,
@@ -1484,16 +1459,6 @@
 				54AB428D1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift */,
 			);
 			name = Search;
-			sourceTree = "<group>";
-		};
-		54970FFB1F6FF3C900026EDD /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				549710011F6FF3CA00026EDD /* WireDataModel.framework */,
-				549710031F6FF3CA00026EDD /* WireDataModelTests.xctest */,
-				549710051F6FF3CA00026EDD /* WireDataModelTestHost.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		54A170621B30068B001B41A5 /* Strategies */ = {
@@ -2261,12 +2226,6 @@
 			mainGroup = 540029AA1918CA8500578793;
 			productRefGroup = 540029B51918CA8500578793 /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 54970FFB1F6FF3C900026EDD /* Products */;
-					ProjectRef = 54970FFA1F6FF3C900026EDD /* WireDataModel.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				549815921A43232400A7CE2E /* WireSyncEngine-ios */,
@@ -2275,30 +2234,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		549710011F6FF3CA00026EDD /* WireDataModel.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = WireDataModel.framework;
-			remoteRef = 549710001F6FF3CA00026EDD /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		549710031F6FF3CA00026EDD /* WireDataModelTests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = WireDataModelTests.xctest;
-			remoteRef = 549710021F6FF3CA00026EDD /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		549710051F6FF3CA00026EDD /* WireDataModelTestHost.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = WireDataModelTestHost.app;
-			remoteRef = 549710041F6FF3CA00026EDD /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		3E186086191A56F6000FE027 /* Resources */ = {
@@ -2366,7 +2301,7 @@
 				"$(SRCROOT)/Carthage/Build/iOS/WireUtilities.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/libPhoneNumberiOS.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/PINCache.framework",
-				"$(BUILT_PRODUCTS_DIR)/WireDataModel.framework",
+				"$(SRCROOT)/Carthage/Build/iOS/WireDataModel.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/Ono.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/WireLinkPreview.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/WireRequestStrategy.framework",

@@ -20,7 +20,7 @@
 import WireDataModel
 
 // MARK: - Initial sync
-@objc protocol ZMInitialSyncCompletionObserver: NSObjectProtocol
+@objc public protocol ZMInitialSyncCompletionObserver: NSObjectProtocol
 {
     func initialSyncCompleted()
 }
@@ -30,41 +30,46 @@ private let initialSyncCompletionNotificationName = Notification.Name(rawValue: 
 
 extension ZMUserSession {
     
-    func notifyInitialSyncCompleted() {
-        NotificationInContext(name: initialSyncCompletionNotificationName, context: self).post()
+    static func notifyInitialSyncCompleted(context: NSManagedObjectContext) {
+        NotificationInContext(name: initialSyncCompletionNotificationName, context: context.zm_userInterface).post()
     }
     
-    public func addInitalSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver) -> Any {
-        return NotificationInContext.addObserver(name: initialSyncCompletionNotificationName, context: self) {
+    public func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver) -> Any {
+        return ZMUserSession.addInitialSyncCompletionObserver(observer, context: managedObjectContext)
+    }
+    
+    public static func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver, context: NSManagedObjectContext) -> Any {
+        return NotificationInContext.addObserver(name: initialSyncCompletionNotificationName, context: context.zm_userInterface) {
             [weak observer] _ in
             observer?.initialSyncCompleted()
         }
     }
+    
 }
 
 // MARK: - Network Availability
-@objc class ZMNetworkAvailabilityChangeNotification {
+@objc public class ZMNetworkAvailabilityChangeNotification : NSObject {
 
     private static let name = Notification.Name(rawValue: "ZMNetworkAvailabilityChangeNotification")
     
     private static let stateKey = "networkState"
     
     public static func addNetworkAvailabilityObserver(_ observer: ZMNetworkAvailabilityObserver, userSession: ZMUserSession) -> Any {
-        return NotificationInContext.addObserver(name: type(of: self).name,
+        return NotificationInContext.addObserver(name: name,
                                                  context: userSession)
         {
             [weak observer] note in
-            observer?.didChangeAvailability(newState: note.userInfo[type(of: self).stateKey] as! ZMNetworkState)
+            observer?.didChangeAvailability(newState: note.userInfo[stateKey] as! ZMNetworkState)
         }
     }
     
     public static func notify(networkState: ZMNetworkState, userSession: ZMUserSession) {
-        NotificationInContext(name: type(of: self).name, context: userSession, userInfo: [type(of: self).stateKey: networkState]).post()
+        NotificationInContext(name: name, context: userSession, userInfo: [stateKey: networkState]).post()
     }
 
 }
 
-@objc protocol ZMNetworkAvailabilityObserver: NSObjectProtocol {
+@objc public protocol ZMNetworkAvailabilityObserver: NSObjectProtocol {
     func didChangeAvailability(newState: ZMNetworkState)
 }
 
@@ -73,7 +78,7 @@ extension ZMUserSession {
 private let typingNotificationName = Notification.Name(rawValue: "ZMTypingChangeNotification")
 private let typingNotificationUsersKey = "typingUsers"
 
-extension ZMConversation {
+public extension ZMConversation {
 
     @objc public func addTypingObserver(_ observer: ZMTypingChangeObserver) -> Any {
         return NotificationInContext.addObserver(name: typingNotificationName,
@@ -86,25 +91,25 @@ extension ZMConversation {
         }
     }
     
-    func notifyTyping(typingUsers: Set<ZMUser>) {
-        NotificationInContext(name: typingNotificationName, context: self.managedObjectContext!.zm_userInterface, userInfo: [typingNotificationName: typingUsers]).post()
+    @objc public func notifyTyping(typingUsers: Set<ZMUser>) {
+        NotificationInContext(name: typingNotificationName, context: self.managedObjectContext!.zm_userInterface, userInfo: [typingNotificationName.rawValue: typingUsers]).post()
     }
 }
 
 
-@objc protocol ZMTypingChangeObserver: NSObjectProtocol {
+@objc public protocol ZMTypingChangeObserver: NSObjectProtocol {
     
     func typingDidChange(conversation: ZMConversation, typingUsers: Set<ZMUser>)
 }
 
 // MARK: - Connection limit reached
-@objc protocol ZMConnectionLimitObserver: NSObjectProtocol {
+@objc public protocol ZMConnectionLimitObserver: NSObjectProtocol {
     
     func connectionLimitReached()
 }
 
 
-@objc class ZMConnectionLimitNotification {
+@objc public class ZMConnectionLimitNotification : NSObject {
 
     private static let name = Notification.Name(rawValue: "ZMConnectionLimitReachedNotification")
     
@@ -115,6 +120,7 @@ extension ZMConversation {
         }
     }
     
+    @objc(notifyInContext:)
     public static func notify(context: NSManagedObjectContext) {
         NotificationInContext(name: self.name, context: context.zm_userInterface).post()
     }

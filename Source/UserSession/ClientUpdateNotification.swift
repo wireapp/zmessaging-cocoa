@@ -19,14 +19,14 @@
 import WireDataModel
 
 
-@objc enum ZMClientUpdateNotificationType: Int {
+@objc public enum ZMClientUpdateNotificationType: Int {
     case fetchCompleted
     case fetchFailed
     case deletionCompleted
     case deletionFailed
 }
 
-@objc class ZMClientUpdateNotification: NSObject {
+@objc public class ZMClientUpdateNotification: NSObject {
     
     private static let name = Notification.Name(rawValue: "ZMClientUpdateNotification")
     
@@ -35,22 +35,22 @@ import WireDataModel
     private static let errorKey = "error"
     
     @objc public static func addOserver(context: NSManagedObjectContext, block: @escaping (ZMClientUpdateNotificationType, [NSManagedObjectID], NSError?) -> ()) -> Any {
-        NotificationInContext.addObserver(name: self.name,
-                                          context: context.zm_userInterface)
+        return NotificationInContext.addObserver(name: self.name,
+                                                 context: context.zm_userInterface)
         { note in
             guard let type = note.userInfo[self.typeKey] as? ZMClientUpdateNotificationType else { return }
             let clientObjectIDs = (note.userInfo[self.clientObjectIDsKey] as? [NSManagedObjectID]) ?? []
             let error = note.userInfo[self.errorKey] as? NSError
-            block(type, clientObjectIDsKey, error)
+            block(type, clientObjectIDs, error)
         }
     }
     
     static func notify(type: ZMClientUpdateNotificationType, context: NSManagedObjectContext, clients: [UserClient] = [], error: NSError? = nil) {
         NotificationInContext(name: self.name, context: context.zm_userInterface, userInfo: [
-            errorKey: error,
+            errorKey: error as Any,
             clientObjectIDsKey: clients.objectIDs,
             typeKey: type
-        ])
+        ]).post()
     }
     
     static func notifyFetchingClientsCompleted(userClients: [UserClient], context: NSManagedObjectContext) {

@@ -38,7 +38,7 @@ extension ZMPersistentCookieStorage : ZMCookieProvider {
     }
 }
 
-public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, PostLoginAuthenticationObserver, ZMRegistrationObserver {
+public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver {
 
     let managedObjectContext: NSManagedObjectContext
     let cookieProvider : ZMCookieProvider
@@ -46,7 +46,6 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, 
     var registrationToken : Any?
     var initialSyncToken: Any?
     
-    var didRegister: Bool = false
     public fileprivate (set) var currentAccountState : AccountState = .newDeviceNewAccount
     
     public lazy var hadHistoryBeforeLogin : Bool = {
@@ -60,8 +59,8 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, 
         return cookieProvider.data != nil
     }
     
-    @objc public func initialSyncCompleted(_ note: Notification){
-        self.managedObjectContext.performGroupedBlock { 
+    public func initialSyncCompleted() {
+        self.managedObjectContext.performGroupedBlock {
             if self.currentAccountState == .oldDeviceDeactivatedAccount || self.currentAccountState == .newDeviceExistingAccount {
                 self.appendMessage(self.currentAccountState)
                 self.managedObjectContext.saveOrRollback()
@@ -72,7 +71,7 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, 
     
     func didAuthenticate() {
         self.managedObjectContext.performGroupedBlock {
-            if self.currentAccountState == .newDeviceNewAccount && !self.didRegister {
+            if self.currentAccountState == .newDeviceNewAccount && !self.managedObjectContext.registeredOnThisDevice {
                 self.currentAccountState = .newDeviceExistingAccount
             }
         }
@@ -119,29 +118,20 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver, 
         case (true, false):
             currentAccountState = .newDeviceNewAccount 
         }
-        
-        ERROR // : WE WERE MESSING AROUND HERE ~ Marco & Jacob: replace old observers with new version, figure out if it's ok for this class to be only a PostAuthenticationObserver
-        // or if it also need to be a PreAuthenticationObserver
-        
-        self.initialSyncToken = ZMUserSession.addInitalSyncCompletionObserver(self)
-        self.authenticationToken = ZMUserSessionAuthenticationNotification.addObserver(on: managedObjectContext) { [weak self] (note) in
-            switch note.type {
-            case .authenticationNotificationAuthenticationDidSuceeded, .authenticationNotificationDidRegisterClient:
-                self?.didAuthenticate()
-            case .authenticationNotificationAuthenticationDidFail:
-                self?.failedToAuthenticate()
-            default:
-                return
-            }
-        }
-        
-        self.registrationToken = ZMUserSessionRegistrationNotification.addObserver({ [weak self] (note) in
-            guard note?.type == .registrationNotificationPhoneNumberVerificationDidSucceed ||
-                  note?.type == .registrationNotificationEmailVerificationDidSucceed,
-                  let strongSelf = self
-            else { return }
-            
-            strongSelf.didRegister = true
-        })
+                
+        self.initialSyncToken = ZMUserSession.addInitialSyncCompletionObserver(self, context: managedObjectContext)
+        self.authenticationToken = PostLoginAuthenticationNotification.addObserver(self, context: managedObjectContext.zm_userInterface)
     }
+}
+
+extension ZMAccountStatus : PostLoginAuthenticationObserver {
+    
+    public func authenticationInvalidated(_ error: NSError) {
+        failedToAuthenticate()
+    }
+    
+    public func clientRegistrationDidSucceed() {
+        didAuthenticate()
+    }
+    
 }

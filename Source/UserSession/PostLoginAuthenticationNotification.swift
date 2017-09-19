@@ -53,6 +53,9 @@ extension NSManagedObjectContext: GenericAsyncQueue {
     
     /// Invoked when the client is deleted remotely
     @objc optional func didDetectSelfClientDeletion()
+    
+    /// Account was successfully deleted
+    @objc optional func accountDeleted()
 }
 
 /// Authentication events that could happen after login
@@ -69,6 +72,9 @@ private enum PostLoginAuthenticationEvent {
     
     /// Client is deleted remotely
     case didDetectSelfClientDeletion
+    
+    /// Account was successfully deleted on the backend
+    case accountDeleted
 }
 
 @objc public class PostLoginAuthenticationNotification : NSObject {
@@ -96,27 +102,37 @@ private enum PostLoginAuthenticationEvent {
                 observer.didDetectSelfClientDeletion?()
             case .clientRegistrationDidSucceed:
                 observer.clientRegistrationDidSucceed?()
+            case .accountDeleted:
+                observer.accountDeleted?()
             }
+            
         }
     }
     
 }
 
-extension PostLoginAuthenticationNotification {
+public extension PostLoginAuthenticationNotification {
     
     static func notifyAuthenticationInvalidated(error: NSError, context: NSManagedObjectContext) {
-        self.notify(event: .authenticationInvalidated(error), context: context)
+        self.notify(event: .authenticationInvalidated(error: error), context: context)
     }
     
+    @objc(notifyClientRegistrationDidSucceedInContext:)
     static func notifyClientRegistrationDidSucceed(context: NSManagedObjectContext) {
         self.notify(event: .clientRegistrationDidSucceed, context: context)
     }
     
+    @objc(notifyDidDetectSelfClientDeletionInContext:)
     static func notifyDidDetectSelfClientDeletion(context: NSManagedObjectContext) {
         self.notify(event: .didDetectSelfClientDeletion, context: context)
     }
 
     static func notifyClientRegistrationDidFail(error: NSError, context: NSManagedObjectContext) {
-        self.notify(event: .clientRegistrationDidFail(error), context: context)
+        self.notify(event: .clientRegistrationDidFail(error: error), context: context)
+    }
+    
+    @objc(notifyAccountDeletedInContext:)
+    static func notifyAccountDeleted(context: NSManagedObjectContext) {
+        self.notify(event: .accountDeleted, context: context)
     }
 }

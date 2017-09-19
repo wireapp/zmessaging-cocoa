@@ -154,8 +154,8 @@ extension SyncStatus {
             
             zmLog.debug("sync complete")
             syncStateDelegate.didFinishSync()
-            managedObjectContext.zm_userInterface.perform{
-                ZMUserSession.notifyInitialSyncCompleted()
+            managedObjectContext.zm_userInterface.perform {
+                ZMUserSession.notifyInitialSyncCompleted(context: self.managedObjectContext)
             }
         }
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
