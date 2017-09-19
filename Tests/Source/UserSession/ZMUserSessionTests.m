@@ -817,6 +817,37 @@
     return note;
 }
 
+- (UILocalNotification *)notificationMessageConversationForCategory:(NSString *)category
+{
+    __block ZMConversation *conversation;
+    __block ZMMessage *message;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMConversationTypeOneOnOne;
+        conversation.remoteIdentifier = [NSUUID UUID];
+        
+        ZMUser *sender = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        sender.remoteIdentifier = [NSUUID UUID];
+        
+        ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+        connection.conversation = conversation;
+        connection.to = sender;
+        connection.status = ZMConnectionStatusAccepted;
+        
+        message = (ZMMessage *)[conversation appendMessageWithText:@"Test message"];
+        [message markAsSent];
+        
+        [self.syncMOC saveOrRollback];
+    }];
+    
+    UILocalNotification *note = [[UILocalNotification alloc] init];
+    note.category = category;
+    note.userInfo = @{@"conversationIDString": conversation.remoteIdentifier.transportString,
+                      @"messageNonceString": message.nonce.transportString};
+    
+    return note;
+}
+
 - (void)testThatItMarksThePushTokenAsNotRegisteredAfterResetting
 {
     // given
@@ -1049,6 +1080,32 @@
     
     //then
     XCTAssertTrue(conversation.isSilenced);
+}
+
+- (void)testThatItAddsLike_ForZMConversationCategory_ZMMessageLikeAction
+{
+    //given
+    [self simulateLoggedInUser];
+    
+    [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
+    UILocalNotification *note = [self notificationMessageConversationForCategory:ZMConversationCategory];
+    NSString *conversationIDString = note.userInfo[@"conversationIDString"];
+    ZMConversation *conversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:conversationIDString]
+                                                             createIfNeeded:NO
+                                                                  inContext:self.uiMOC];
+    
+    // expect
+    [self.sut handleActionWithApplication:self.application
+                                     with:ZMMessageLikeAction
+                                      for:note
+                                     with:[NSDictionary dictionary]
+                        completionHandler:^{}];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
+    //then
+    ZMMessage *lastMessage = conversation.messages.lastObject;
+    XCTAssertNotNil(lastMessage.reactions);
+    XCTAssertEqual((int)lastMessage.reactions.count, 1);
 }
 
 - (void)testThat_OnLaunch_ItCalls_DelegateShowConversation_ForZMConversationCategory
