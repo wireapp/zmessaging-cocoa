@@ -84,30 +84,9 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 - (void)pushChannelDidChange:(NSNotification *)note;
 @end
 
-
-NSURL *__nullable CBCreateTemporaryDirectoryAndReturnURL(void);
-
-
-NSURL *__nullable CBCreateTemporaryDirectoryAndReturnURL()
-{
-    NSError *error = nil;
-    NSURL *directoryURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]] isDirectory:YES];
-    [[NSFileManager defaultManager] createDirectoryAtURL:directoryURL withIntermediateDirectories:YES attributes:nil error:&error];
-    if (error) {
-        return nil;
-    }
-    
-    return directoryURL;
-}
-
 @implementation ZMUserSession
 
 ZM_EMPTY_ASSERTING_INIT()
-
-+ (BOOL)shouldSendOnlyEncrypted
-{
-    return [[NSProcessInfo processInfo] environment][@"ZMEncryptionOnly"] != nil;
-}
 
 - (void)dealloc
 {
@@ -525,25 +504,6 @@ ZM_EMPTY_ASSERTING_INIT()
 }
 
 @end
-
-
-
-@implementation ZMUserSession (Test)
-
-- (NSArray *)allManagedObjectContexts
-{
-    NSMutableArray *mocs = [NSMutableArray array];
-    if (self.managedObjectContext != nil) {
-        [mocs addObject:self.managedObjectContext];
-    }
-    if (self.syncManagedObjectContext != nil) {
-        [mocs addObject:self.syncManagedObjectContext];
-    }
-    return mocs;
-}
-
-@end
-
 
 
 @implementation ZMUserSession (PushToken)

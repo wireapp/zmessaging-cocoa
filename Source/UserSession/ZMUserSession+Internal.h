@@ -102,13 +102,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @end
 
 
-@interface ZMUserSession (Test)
-
-@property (nonatomic, readonly) NSArray *allManagedObjectContexts;
-
-@end
-
-
 @interface NSManagedObjectContext (NetworkState)
 
 @property BOOL isOffline;
