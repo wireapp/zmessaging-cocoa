@@ -23,7 +23,6 @@
 
 #import "ZMCallFlowRequestStrategy.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
-#import "ZMUserSessionAuthenticationNotification.h"
 
 static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 

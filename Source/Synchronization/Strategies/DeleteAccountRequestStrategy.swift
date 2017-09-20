@@ -61,7 +61,8 @@ import WireTransport
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         if response.result == .success || response.result == .permanentError {
             self.managedObjectContext.setPersistentStoreMetadata(NSNumber(value: false), key: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
-            ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.accountDeleted, userInfo: .none))
+            
+            PostLoginAuthenticationNotification.notifyAccountDeleted(context: managedObjectContext)
         }
     }
 }
