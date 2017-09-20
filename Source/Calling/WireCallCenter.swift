@@ -191,7 +191,7 @@ public class WireCallCenter : NSObject {
     /// Add observer of particpants in a voice channel. Returns a token which needs to be retained as long as the observer should be active.
     public class func addVoiceChannelParticipantObserver(observer: VoiceChannelParticipantObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
         let remoteID = conversation.remoteIdentifier!
-        return NotificationCenterObserverToken(name: VoiceChannelParticipantNotification.notificationName, managedObjectContext: context, object: nil, queue: .main) {
+        return ManagedObjectObserverToken(name: VoiceChannelParticipantNotification.notificationName, managedObjectContext: context, object: nil, queue: .main) {
             [weak observer] (note) in
             guard let note = note.userInfo[VoiceChannelParticipantNotification.userInfoKey] as? VoiceChannelParticipantNotification,
                 let strongObserver = observer
@@ -205,7 +205,7 @@ public class WireCallCenter : NSObject {
     
     /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
     public class func addVoiceGainObserver(observer: VoiceGainObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> WireCallCenterObserverToken {
-        return NotificationCenterObserverToken(name: VoiceGainNotification.notificationName, managedObjectContext: context, object: conversation.remoteIdentifier! as NSUUID, queue: .main) { [weak observer] (note) in
+        return ManagedObjectObserverToken(name: VoiceGainNotification.notificationName, managedObjectContext: context, object: conversation.remoteIdentifier! as NSUUID, queue: .main) { [weak observer] (note) in
             guard let note = note.userInfo[VoiceGainNotification.userInfoKey] as? VoiceGainNotification,
                 let observer = observer,
                 let user = ZMUser(remoteID: note.userId, createIfNeeded: false, in: context)

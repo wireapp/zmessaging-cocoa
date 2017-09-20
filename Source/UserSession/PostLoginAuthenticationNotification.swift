@@ -43,23 +43,23 @@ extension NSManagedObjectContext: GenericAsyncQueue {
 @objc public protocol PostLoginAuthenticationObserver: NSObjectProtocol {
     
     /// Invoked when the authentication has proven invalid
-    @objc optional func authenticationInvalidated(_ error: NSError)
+    @objc optional func authenticationInvalidated(_ error: NSError, accountId : UUID)
     
     /// Invoked when a client is successfully registered
-    @objc optional func clientRegistrationDidSucceed()
+    @objc optional func clientRegistrationDidSucceed(accountId : UUID)
     
     /// Invoken when there was an error registering the client
-    @objc optional func clientRegistrationDidFail(_ error: NSError)
+    @objc optional func clientRegistrationDidFail(_ error: NSError, accountId : UUID)
     
     /// Invoked when the client is deleted remotely
-    @objc optional func didDetectSelfClientDeletion()
+    @objc optional func didDetectSelfClientDeletion(accountId : UUID)
     
     /// Account was successfully deleted
-    @objc optional func accountDeleted()
+    @objc optional func accountDeleted(accountId : UUID)
 }
 
 /// Authentication events that could happen after login
-private enum PostLoginAuthenticationEvent {
+enum PostLoginAuthenticationEvent {
     
     /// The cookie is not valid anymore
     case authenticationInvalidated(error: NSError)
@@ -85,28 +85,31 @@ private enum PostLoginAuthenticationEvent {
     fileprivate static func notify(event: PostLoginAuthenticationEvent, context: NSManagedObjectContext) {
         NotificationInContext(name: self.name, context: context.zm_userInterface, userInfo: [self.eventKey: event]).post()
     }
-    
-    @objc static public func addObserver(_ observer: PostLoginAuthenticationObserver, context: NSManagedObjectContext) -> Any {
-        return NotificationInContext.addObserver(name: self.name, context: context.zm_userInterface)
-        {
-            [weak observer] note in
-            guard let event = note.userInfo[eventKey] as? PostLoginAuthenticationEvent,
-                let observer = observer else { return }
+        
+    static public func addObserver(_ observer: PostLoginAuthenticationObserver, context : NSManagedObjectContext? = nil) -> Any {
+        let token = NotificationCenter.default.addObserver(forName: name, object: context?.zm_userInterface, queue: nil) { [weak observer] (note) in
+            guard
+                let userInfo = note.userInfo as? [String : Any],
+                let event = userInfo[eventKey] as? PostLoginAuthenticationEvent,
+                let observer = observer,
+                let context = note.object as? NSManagedObjectContext,
+                let accountId = ZMUser.selfUser(in: context).remoteIdentifier else { return }
             
             switch event {
             case .authenticationInvalidated(let error):
-                observer.authenticationInvalidated?(error)
+                observer.authenticationInvalidated?(error, accountId: accountId)
             case .clientRegistrationDidFail(let error):
-                observer.clientRegistrationDidFail?(error)
+                observer.clientRegistrationDidFail?(error, accountId: accountId)
             case .didDetectSelfClientDeletion:
-                observer.didDetectSelfClientDeletion?()
+                observer.didDetectSelfClientDeletion?(accountId: accountId)
             case .clientRegistrationDidSucceed:
-                observer.clientRegistrationDidSucceed?()
+                observer.clientRegistrationDidSucceed?(accountId: accountId)
             case .accountDeleted:
-                observer.accountDeleted?()
+                observer.accountDeleted?(accountId: accountId)
             }
-            
         }
+        
+        return SelfUnregisteringNotificationCenterToken(token)
     }
     
 }

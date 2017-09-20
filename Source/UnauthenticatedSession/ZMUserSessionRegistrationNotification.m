@@ -87,9 +87,14 @@ static NSString * const ZMUserSessionRegistrationErrorKey = @"ZMUserSessionRegis
     [[[NotificationInContext alloc] initWithName:self.name context:authenticationStatus object:nil userInfo:userInfo] post];
 }
 
-+ (id)addObserverInContext:(UnauthenticatedSession *)context withBlock:(void (^)(ZMUserSessionRegistrationNotificationType, NSError *))block
++ (id)addObserverInSession:(UnauthenticatedSession *)session withBlock:(void (^)(ZMUserSessionRegistrationNotificationType, NSError *))block
 {
-    return [NotificationInContext addObserverWithName:self.name context:context.authenticationStatus object:nil queue:nil using:^(NotificationInContext * notification) {
+    return [self addObserverInContext:session.authenticationStatus withBlock:block];
+}
+
++ (id)addObserverInContext:(ZMAuthenticationStatus *)context withBlock:(void (^)(ZMUserSessionRegistrationNotificationType, NSError *))block
+{
+    return [NotificationInContext addObserverWithName:self.name context:context object:nil queue:nil using:^(NotificationInContext * notification) {
         ZMUserSessionRegistrationNotificationType event = [notification.userInfo[ZMUserSessionRegistrationEventKey] unsignedIntegerValue];
         NSError *error = notification.userInfo[ZMUserSessionRegistrationErrorKey];
         block(event, error);

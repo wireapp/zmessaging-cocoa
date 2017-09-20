@@ -110,7 +110,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
 
     let application: ZMApplication
-    var authenticationToken: ZMAuthenticationObserverToken? // TODO we need a token per user session
+    var postLoginAuthenticationToken: Any?
+    var preLoginAuthenticationToken: Any?
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & ReachabilityTearDown
 
@@ -237,6 +238,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         self.reachability = reachability
         super.init()
 
+        postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self)
+        
         if let account = accountManager.selectedAccount {
             selectInitialAccount(account, launchOptions: launchOptions)
         } else {
@@ -372,6 +375,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         self.unauthenticatedSession?.tearDown()
         let unauthenticatedSession = unauthenticatedSessionFactory.session(withDelegate: self)
         self.unauthenticatedSession = unauthenticatedSession
+        self.preLoginAuthenticationToken = unauthenticatedSession.addAuthenticationObserver(self)
         delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
     }
     
@@ -486,13 +490,13 @@ extension SessionManager: UnauthenticatedSessionDelegate {
 
 extension SessionManager: PostLoginAuthenticationObserver {
 
-    @objc public func clientRegistrationDidSucceed() {
+    @objc public func clientRegistrationDidSucceed(accountId: UUID) {
         log.debug("Tearing down unauthenticated session as reaction to successfull client registration")
         unauthenticatedSession?.tearDown()
         unauthenticatedSession = nil
     }
     
-    public func accountDeleted() {
+    public func accountDeleted(accountId: UUID) {
         logoutCurrentSession(deleteCookie: true, error: nil)
         if let deletedAccount = accountManager.selectedAccount { //  TODO delete account associcated with session
             delete(account: deletedAccount)
@@ -500,7 +504,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
     }
 
     
-    public func authenticationInvalidated(_ error: NSError) {
+    public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
         guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)) else {
             return
         }

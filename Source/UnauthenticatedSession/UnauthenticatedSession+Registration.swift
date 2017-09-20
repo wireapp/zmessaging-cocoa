@@ -114,7 +114,7 @@ extension UnauthenticatedSession {
     
     @objc
     public func addRegistrationObserver(_ observer: ZMRegistrationObserver) -> Any {
-        return ZMUserSessionRegistrationNotification.addObserver(inContext: self) { [weak observer] (eventType, error) in
+        return ZMUserSessionRegistrationNotification.addObserver(in: self) { [weak observer] (eventType, error) in
             switch eventType {
             case .registrationNotificationEmailVerificationDidFail:
                 observer?.emailVerificationDidFail?(error)

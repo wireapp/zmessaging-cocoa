@@ -59,7 +59,7 @@ class PreLoginAuthenticationNotification : NSObject {
                               userInfo: userInfo).post()
     }
     
-    public static func register(_ observer: PreLoginAuthenticationObserver, context: ZMAuthenticationStatus, queue: GenericAsyncQueue) -> Any {
+    public static func register(_ observer: PreLoginAuthenticationObserver, context: ZMAuthenticationStatus) -> Any {
         return NotificationInContext.addObserver(name: self.authenticationEventNotification,
                                                  context: context)
         {
@@ -67,17 +67,15 @@ class PreLoginAuthenticationNotification : NSObject {
             guard let event = note.userInfo[self.authenticationEventKey] as? PreLoginAuthenticationEvent,
                 let observer = observer else { return }
             
-            queue.performAsync {
-                switch event {
-                case .loginCodeRequestDidFail(let error):
-                    observer.loginCodeRequestDidFail?(error)
-                case .loginCodeRequestDidSucceed:
-                    observer.loginCodeRequestDidSucceed?()
-                case .authenticationDidFail(let error):
-                    observer.authenticationDidFail?(error)
-                case .authenticationDidSucceed:
-                    observer.authenticationDidSucceed?()
-                }
+            switch event {
+            case .loginCodeRequestDidFail(let error):
+                observer.loginCodeRequestDidFail?(error)
+            case .loginCodeRequestDidSucceed:
+                observer.loginCodeRequestDidSucceed?()
+            case .authenticationDidFail(let error):
+                observer.authenticationDidFail?(error)
+            case .authenticationDidSucceed:
+                observer.authenticationDidSucceed?()
             }
         }
     }

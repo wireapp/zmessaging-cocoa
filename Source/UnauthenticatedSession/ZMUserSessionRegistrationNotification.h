@@ -50,7 +50,8 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionRegistrationNotificationType) {
 + (void)notifyPhoneNumberVerificationDidSucceedInContext:(ZMAuthenticationStatus *)authenticationStatus;
 + (void)notifyPhoneNumberVerificationCodeRequestDidSucceedInContext:(ZMAuthenticationStatus *)authenticationStatus;
 
-+ (id)addObserverInContext:(UnauthenticatedSession *)context withBlock:(void(^)(ZMUserSessionRegistrationNotificationType event, NSError *error))block ZM_MUST_USE_RETURN;
++ (id)addObserverInSession:(UnauthenticatedSession *)session withBlock:(void(^)(ZMUserSessionRegistrationNotificationType event, NSError *error))block ZM_MUST_USE_RETURN;
++ (id)addObserverInContext:(ZMAuthenticationStatus *)context withBlock:(void(^)(ZMUserSessionRegistrationNotificationType event, NSError *error))block ZM_MUST_USE_RETURN;
 
 @end
 

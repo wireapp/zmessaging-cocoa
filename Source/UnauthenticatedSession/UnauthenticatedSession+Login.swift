@@ -62,4 +62,8 @@ extension UnauthenticatedSession {
         return true
     }
     
+    func addAuthenticationObserver(_ observer: PreLoginAuthenticationObserver) -> Any {
+        return PreLoginAuthenticationNotification.register(observer, context: authenticationStatus)
+    }
+    
 }
