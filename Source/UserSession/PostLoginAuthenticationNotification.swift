@@ -85,8 +85,12 @@ enum PostLoginAuthenticationEvent {
     fileprivate static func notify(event: PostLoginAuthenticationEvent, context: NSManagedObjectContext) {
         NotificationInContext(name: self.name, context: context.zm_userInterface, userInfo: [self.eventKey: event]).post()
     }
-        
-    static public func addObserver(_ observer: PostLoginAuthenticationObserver, context : NSManagedObjectContext? = nil) -> Any {
+    
+    static public func addObserver(_ observer: PostLoginAuthenticationObserver, context: NSManagedObjectContext? = nil) -> Any {
+        return addObserver(observer, context: context, queue: DispatchGroupQueue(queue: .main))
+    }
+    
+    static public func addObserver(_ observer: PostLoginAuthenticationObserver, context: NSManagedObjectContext? = nil, queue: ZMSGroupQueue) -> Any {
         let token = NotificationCenter.default.addObserver(forName: name, object: context?.zm_userInterface, queue: nil) { [weak observer] (note) in
             guard
                 let userInfo = note.userInfo as? [String : Any],
@@ -95,17 +99,19 @@ enum PostLoginAuthenticationEvent {
                 let context = note.object as? NSManagedObjectContext,
                 let accountId = ZMUser.selfUser(in: context).remoteIdentifier else { return }
             
-            switch event {
-            case .authenticationInvalidated(let error):
-                observer.authenticationInvalidated?(error, accountId: accountId)
-            case .clientRegistrationDidFail(let error):
-                observer.clientRegistrationDidFail?(error, accountId: accountId)
-            case .didDetectSelfClientDeletion:
-                observer.didDetectSelfClientDeletion?(accountId: accountId)
-            case .clientRegistrationDidSucceed:
-                observer.clientRegistrationDidSucceed?(accountId: accountId)
-            case .accountDeleted:
-                observer.accountDeleted?(accountId: accountId)
+            queue.performGroupedBlock {
+                switch event {
+                case .authenticationInvalidated(let error):
+                    observer.authenticationInvalidated?(error, accountId: accountId)
+                case .clientRegistrationDidFail(let error):
+                    observer.clientRegistrationDidFail?(error, accountId: accountId)
+                case .didDetectSelfClientDeletion:
+                    observer.didDetectSelfClientDeletion?(accountId: accountId)
+                case .clientRegistrationDidSucceed:
+                    observer.clientRegistrationDidSucceed?(accountId: accountId)
+                case .accountDeleted:
+                    observer.accountDeleted?(accountId: accountId)
+                }
             }
         }
         

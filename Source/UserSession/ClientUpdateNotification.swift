@@ -55,7 +55,7 @@ import WireDataModel
     
     @objc
     public static func notifyFetchingClientsCompleted(userClients: [UserClient], context: NSManagedObjectContext) {
-        self.notify(type: .fetchCompleted, context: context.zm_userInterface)
+        self.notify(type: .fetchCompleted, context: context.zm_userInterface, clients: userClients)
     }
     
     @objc
@@ -70,7 +70,7 @@ import WireDataModel
     
     @objc
     public static func notifyDeletionFailed(error: NSError, context: NSManagedObjectContext) {
-        self.notify(type: .fetchCompleted, context: context.zm_userInterface)
+        self.notify(type: .deletionFailed, context: context.zm_userInterface, error: error)
     }
 }
 
