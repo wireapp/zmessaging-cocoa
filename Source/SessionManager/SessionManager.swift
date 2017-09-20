@@ -117,8 +117,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     let reachability: ReachabilityProvider & ReachabilityTearDown
     let pushDispatcher = PushDispatcher()
     
-    fileprivate let authenticatedSessionFactory: AuthenticatedSessionFactory
-    fileprivate let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
+    internal var authenticatedSessionFactory: AuthenticatedSessionFactory
+    internal let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
     fileprivate let sharedContainerURL: URL
     fileprivate let dispatchGroup: ZMSDispatchGroup?
     fileprivate var teamObserver: NSObjectProtocol?

@@ -378,6 +378,102 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         XCTAssertNil(self.sessionManager!.backgroundUserSessions[account])
     }
     
+    func testThatItDoesNotUnloadActiveUserSessionFromMemoryWarning() {
+        // GIVEN
+        let account = self.createAccount()
+        account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        
+        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
+        
+        let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
+        
+        // WHEN
+        var realSessionManager: SessionManager! = nil
+        SessionManager.create(appVersion: "0.0.0",
+                              mediaManager: mediaManager,
+                              analytics: nil,
+                              delegate: nil,
+                              application: application,
+                              launchOptions: [:],
+                              blacklistDownloadInterval : 60) { sessionManager in
+                                
+                                let environment = ZMBackendEnvironment(type: .staging)
+                                let reachability = TestReachability()
+                                let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+                                    apnsEnvironment: self.apnsEnvironment!,
+                                    application: application,
+                                    mediaManager: mediaManager,
+                                    flowManager: FlowManagerMock(),
+                                    transportSession: self.transportSession!,
+                                    environment: environment,
+                                    reachability: reachability
+                                )
+                                
+                                sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                                
+                                sessionManager.select(account: account) { userSession in
+                                    realSessionManager = sessionManager
+                                    XCTAssertNotNil(userSession)
+                                    sessionManagerExpectation.fulfill()
+                                }
+        }
+        
+        // THEN
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        
+        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account])
+        
+        // WHEN
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidReceiveMemoryWarning, object: nil)
+        
+        // THEN
+        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account])
+        
+        // CLEANUP
+        realSessionManager.deactivateAllBackgroundSessions()
+    }
+    
+    func testThatItUnloadBackgroundUserSessionFromMemoryWarning() {
+        // GIVEN
+        let account = self.createAccount()
+        account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        
+        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
+        
+        let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
+
+        // WHEN
+        var realSessionManager: SessionManager! = nil
+        SessionManager.create(appVersion: "0.0.0",
+                       mediaManager: mediaManager,
+                       analytics: nil,
+                       delegate: nil,
+                       application: application,
+                       launchOptions: [:],
+                       blacklistDownloadInterval : 60) { sessionManager in
+            
+            sessionManager.withSession(for: account) { userSession in
+                realSessionManager = sessionManager
+                XCTAssertNotNil(userSession)
+                sessionManagerExpectation.fulfill()
+            }
+        }
+        
+        // THEN
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        
+        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account])
+        
+        // WHEN
+        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidReceiveMemoryWarning, object: nil)
+        
+        // THEN
+        XCTAssertNil(realSessionManager.backgroundUserSessions[account])
+        
+        // CLEANUP
+        realSessionManager.deactivateAllBackgroundSessions()
+    }
+    
     func testThatItLoadsAccountForPush() {
         // GIVEN
         let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
