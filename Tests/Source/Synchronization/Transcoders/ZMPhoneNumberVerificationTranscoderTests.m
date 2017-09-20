@@ -273,17 +273,17 @@
     
     __block BOOL notificationCalled = NO;
     //expect
-    id token = [ZMUserSessionRegistrationNotification addObserverWithBlock:^(ZMUserSessionRegistrationNotification *note) {
-        XCTAssertNotNil(note.error);
-        XCTAssertEqual(note.type, ZMRegistrationNotificationPhoneNumberVerificationCodeRequestDidFail);
-        notificationCalled = YES;
+     id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
+         XCTAssertNotNil(error);
+         XCTAssertEqual(event, ZMRegistrationNotificationPhoneNumberVerificationCodeRequestDidFail);
+         notificationCalled = YES;
     }];
     
     //when
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [ZMUserSessionRegistrationNotification removeObserver:token];
+    token = nil;
     XCTAssert(notificationCalled);
 }
 
@@ -296,9 +296,9 @@
     
     __block BOOL notificationCalled = NO;
     //expect
-    id token = [ZMUserSessionRegistrationNotification addObserverWithBlock:^(ZMUserSessionRegistrationNotification *note) {
-        XCTAssertNil(note.error);
-        XCTAssertEqual(note.type, ZMRegistrationNotificationPhoneNumberVerificationDidSucceed);
+    id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
+        XCTAssertNil(error);
+        XCTAssertEqual(event, ZMRegistrationNotificationPhoneNumberVerificationDidSucceed);
         notificationCalled = YES;
     }];
 
@@ -315,7 +315,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     XCTAssert(notificationCalled);
-    [ZMUserSessionRegistrationNotification removeObserver:token];
+    token = nil;
 }
 
 - (void)testThatIfPhoneActivationRequestFailsItClearsPhoneNumberAndCode
@@ -361,10 +361,10 @@
     
     __block BOOL notificationCalled = NO;
     //expect
-    id token = [ZMUserSessionRegistrationNotification addObserverWithBlock:^(ZMUserSessionRegistrationNotification *note) {
-        XCTAssertEqualObjects(note.error.domain, ZMUserSessionErrorDomain);
-        XCTAssertEqual(note.error.code, (long) ZMUserSessionUnkownError);
-        XCTAssertEqual(note.type, ZMRegistrationNotificationPhoneNumberVerificationDidFail);
+    id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
+        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
+        XCTAssertEqual(error.code, (long) ZMUserSessionUnkownError);
+        XCTAssertEqual(event, ZMRegistrationNotificationPhoneNumberVerificationDidFail);
         notificationCalled = YES;
     }];
     
@@ -376,8 +376,8 @@
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
 
-    [ZMUserSessionRegistrationNotification removeObserver:token];
     XCTAssert(notificationCalled);
+    token = nil;
 }
 
 - (void)testThatItNotifiesIfPhoneActivationRequestFailsWithInvalidCode
@@ -394,10 +394,10 @@
     
     __block BOOL notificationCalled = NO;
     //expect
-    id token = [ZMUserSessionRegistrationNotification addObserverWithBlock:^(ZMUserSessionRegistrationNotification *note) {
-        XCTAssertEqualObjects(note.error.domain, ZMUserSessionErrorDomain);
-        XCTAssertEqual(note.error.code, (long) ZMUserSessionInvalidPhoneNumberVerificationCode);
-        XCTAssertEqual(note.type, ZMRegistrationNotificationPhoneNumberVerificationDidFail);
+    id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
+        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
+        XCTAssertEqual(error.code, (long) ZMUserSessionInvalidPhoneNumberVerificationCode);
+        XCTAssertEqual(event, ZMRegistrationNotificationPhoneNumberVerificationDidFail);
         notificationCalled = YES;
     }];
     
@@ -409,8 +409,8 @@
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [ZMUserSessionRegistrationNotification removeObserver:token];
     XCTAssert(notificationCalled);
+    token = nil;
 }
 
 

@@ -110,7 +110,7 @@ class ZMAccountStatusTests : MessagingTest {
         XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceNewAccount)
         
         // when
-        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidSucceed()
+        PostLoginAuthenticationNotification.notifyClientRegistrationDidSucceed(context: uiMOC)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -129,7 +129,7 @@ class ZMAccountStatusTests : MessagingTest {
         XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceActiveAccount)
         
         // when
-        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidSucceed()
+        PostLoginAuthenticationNotification.notifyClientRegistrationDidSucceed(context: uiMOC)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -144,9 +144,8 @@ class ZMAccountStatusTests : MessagingTest {
         XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceNewAccount)
         
         // when
-        ZMUserSessionRegistrationNotification.notifyEmailVerificationDidSucceed()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidSucceed()
+        PostLoginAuthenticationNotification.notifyClientRegistrationDidSucceed(context: uiMOC)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -163,7 +162,7 @@ class ZMAccountStatusTests : MessagingTest {
         self.sut = ZMAccountStatus(managedObjectContext: self.uiMOC, cookieStorage: cookieStorage)
         XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceNewAccount)
 
-        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidSucceed()
+        PostLoginAuthenticationNotification.notifyClientRegistrationDidSucceed(context: uiMOC)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         let oneOnOne = ZMConversation.insertNewObject(in: self.uiMOC)
@@ -260,7 +259,7 @@ class ZMAccountStatusTests : MessagingTest {
         XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceActiveAccount)
         
         // when
-        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError(domain:"UserSession", code:0, userInfo: nil))
+//        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError(domain:"UserSession", code:0, userInfo: nil)) // TODO jacob
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then

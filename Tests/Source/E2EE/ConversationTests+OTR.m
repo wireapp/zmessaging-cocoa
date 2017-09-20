@@ -18,6 +18,7 @@
 
 #import "ConversationTestsBase.h"
 #import "NotificationObservers.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @import WireDataModel;
@@ -125,8 +126,8 @@
     ZMUser *selfUser = [ZMUser selfUserInContext:self.userSession.syncManagedObjectContext];
     UserClient *selfClient = selfUser.selfClient;
     XCTAssertEqual(selfClient.missingClients.count, 0u);
-    XCTAssertFalse([message hasLocalModificationsForKey:ZMAssetClientMessageUploadedStateKey]);
-    XCTAssertEqual(message.uploadState, ZMAssetUploadStateDone);
+    XCTAssertFalse([message hasLocalModificationsForKey:@"uploadState"]);
+    XCTAssertEqual(message.uploadState, AssetUploadStateDone);
 }
 
 - (void)testThatItAsksForMissingClientsKeysWhenDeliveringOtrMessage
@@ -318,8 +319,8 @@
     XCTAssertNotEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStatePending);
     
-    XCTAssertFalse([message hasLocalModificationsForKey:ZMAssetClientMessageUploadedStateKey]);
-    XCTAssertEqual(message.uploadState, ZMAssetUploadStateUploadingFailed);
+    XCTAssertFalse([message hasLocalModificationsForKey:@"uploadState"]);
+    XCTAssertEqual(message.uploadState, AssetUploadStateUploadingFailed);
     
 }
 
@@ -655,7 +656,7 @@
     XCTAssertFalse(note.connectionStateChanged);
     
     ZMAssetClientMessage *msg = conversation.messages[initialMessagesCount];
-    XCTAssertEqualObjects([msg.imageAssetStorage genericMessageForFormat:format], assetMessage);
+    XCTAssertEqualObjects([msg.imageAssetStorage genericMessageFor:format], assetMessage);
 }
 
 - (void)testThatItSendsANotificationWhenRecievingAOtrMediumAssetMessageThroughThePushChannel
@@ -785,7 +786,7 @@
     for(NSUInteger i = 0; i < observer.window.size; ++ i) {
         if(i == 0) {
             ZMAssetClientMessage *windowMessage = currentMessageSet[i];
-            XCTAssertEqualObjects([windowMessage.imageAssetStorage genericMessageForFormat:format], message);
+            XCTAssertEqualObjects([windowMessage.imageAssetStorage genericMessageFor:format], message);
             NSData *recievedImageData = [self.userSession.managedObjectContext.zm_imageAssetCache assetData:windowMessage.nonce format:format encrypted:NO];
             XCTAssertEqualObjects(recievedImageData, imageData);
         }
@@ -848,7 +849,7 @@
     for(NSUInteger i = 0; i < observer.window.size; ++ i) {
         if(i == 0) {
             ZMAssetClientMessage *windowMessage = currentMessageSet[i];
-            XCTAssertEqualObjects([windowMessage.imageAssetStorage genericMessageForFormat:ZMImageFormatMedium], message);
+            XCTAssertEqualObjects([windowMessage.imageAssetStorage genericMessageFor:ZMImageFormatMedium], message);
             NSData *recievedImageData = [self.userSession.managedObjectContext.zm_imageAssetCache assetData:windowMessage.nonce format:ZMImageFormatMedium encrypted:NO];
             XCTAssertEqualObjects(recievedImageData, imageData);
         }
@@ -1344,7 +1345,7 @@
     // Then
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
     XCTAssert(message.isExpired);
-    XCTAssertEqual(message.uploadState, ZMAssetUploadStateDone);
+    XCTAssertEqual(message.uploadState, AssetUploadStateDone);
     XCTAssertEqual(message.transferState, ZMFileTransferStateFailedUpload);
 }
 

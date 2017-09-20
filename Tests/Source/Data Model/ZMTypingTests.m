@@ -20,13 +20,14 @@
 
 #import "MessagingTest.h"
 #import "ZMTyping.h"
-
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 @interface ZMTypingTests : MessagingTest <ZMTypingChangeObserver>
 
 @property (nonatomic) ZMTyping *sut;
-@property (nonatomic) NSMutableArray *receivedNotifications;
+@property (nonatomic) id typingObserverToken;
+@property (nonatomic) NSMutableArray<TypingChange *> *receivedNotifications;
 @property (nonatomic) ZMConversation *conversationA;
 @property (nonatomic) ZMUser *userA;
 @property (nonatomic) ZMUser *userB;
@@ -55,7 +56,7 @@
     }];
 
     ZMConversation *uiConversation = (id) [self.uiMOC objectWithID:self.conversationA.objectID];
-    [uiConversation addTypingObserver:self];
+    self.typingObserverToken = [uiConversation addTypingObserver:self];
 
     self.userAonUI = (id) [self.uiMOC objectWithID:self.userA.objectID];
     self.userBonUI = (id) [self.uiMOC objectWithID:self.userB.objectID];
@@ -63,7 +64,7 @@
 
 - (void)tearDown
 {
-    [ZMConversation removeTypingObserver:self];
+    self.typingObserverToken = nil;
     [self.sut tearDown];
     self.sut = nil;
     self.conversationA = nil;
@@ -78,9 +79,9 @@
     self.receivedNotifications = [NSMutableArray array];
 }
 
-- (void)typingDidChange:(ZMTypingChangeNotification *)note
+- (void)typingDidChangeWithConversation:(ZMConversation *)conversation typingUsers:(NSSet<ZMUser *> *)typingUsers
 {
-    [self.receivedNotifications addObject:note];
+    [self.receivedNotifications addObject:[[TypingChange alloc] initWithConversation:conversation typingUsers:typingUsers]];
 }
 
 - (ZMConversation *)createConversationWithUser:(ZMUser *)user
@@ -113,7 +114,7 @@
     
     // then
     XCTAssertEqual(self.receivedNotifications.count, 1u);
-    ZMTypingChangeNotification *note = self.receivedNotifications.firstObject;
+    TypingChange *note = self.receivedNotifications.firstObject;
     XCTAssertEqualObjects(note.conversation.objectID, self.conversationA.objectID);
     XCTAssertEqualObjects(note.typingUsers, [NSSet setWithObject:self.userAonUI]);
 }
@@ -154,7 +155,7 @@
     
     // then
     XCTAssertEqual(self.receivedNotifications.count, 1u);
-    ZMTypingChangeNotification *note = self.receivedNotifications.firstObject;
+    TypingChange *note = self.receivedNotifications.firstObject;
     XCTAssertEqualObjects(note.conversation.objectID, self.conversationA.objectID);
     XCTAssertEqualObjects(note.typingUsers, [NSSet set]);
 }
@@ -176,7 +177,7 @@
     
     // then
     XCTAssertEqual(self.receivedNotifications.count, 1u);
-    ZMTypingChangeNotification *note = self.receivedNotifications.firstObject;
+    TypingChange *note = self.receivedNotifications.firstObject;
     XCTAssertEqualObjects(note.conversation.objectID, self.conversationA.objectID);
     XCTAssertEqualObjects(note.typingUsers, [NSSet set]);
 }
@@ -232,7 +233,7 @@
     
     // then (1)
     XCTAssertEqual(self.receivedNotifications.count, 1u);
-    ZMTypingChangeNotification *note = self.receivedNotifications.firstObject;
+    TypingChange *note = self.receivedNotifications.firstObject;
     [self.receivedNotifications removeAllObjects];
     XCTAssertEqualObjects(note.conversation.objectID, self.conversationA.objectID);
     XCTAssertEqualObjects(note.typingUsers, [NSSet setWithObject:self.userBonUI]);

@@ -107,7 +107,7 @@ ZM_EMPTY_ASSERTING_INIT()
     if(self) {
         self.conversationList = conversationList;
         self.conversationChangeInfos = [NSMutableArray array];
-        self.token = [ConversationListChangeInfo addObserver:self forList:conversationList];
+        self.token = [ConversationListChangeInfo addObserver:self forList:conversationList managedObjectContext:conversationList.managedObjectContext];
     }
     return self;
 }
@@ -137,12 +137,17 @@ ZM_EMPTY_ASSERTING_INIT()
 
 @implementation UserChangeObserver
 
-- (instancetype)initWithUser:(id<ZMBareUser>)user;
+- (instancetype)initWithUser:(ZMUser *)user
+{
+    return [self initWithUser:user managedObjectContext:user.managedObjectContext];
+}
+
+- (instancetype)initWithUser:(id<ZMBareUser>)user managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
     self = [super init];
     if(self) {
         self.user = user;
-        self.token = [UserChangeInfo addObserver:self forBareUser:user];
+        self.token = [UserChangeInfo addObserver:self forBareUser:user managedObjectContext:managedObjectContext];
     }
     return self;
 }
@@ -180,7 +185,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if(self) {
         self.message = message;
-        self.token = [MessageChangeInfo addObserver:self forMessage:message];
+        self.token = [MessageChangeInfo addObserver:self forMessage:message managedObjectContext:message.managedObjectContext];
     }
     return self;
 }

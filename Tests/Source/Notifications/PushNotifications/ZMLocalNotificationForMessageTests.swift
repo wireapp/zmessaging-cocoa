@@ -233,11 +233,11 @@ extension ZMLocalNotificationForMessageTests {
     
     func assetNotification(_ fileType: FileType, conversation: ZMConversation, sender: ZMUser, isEphemeral: Bool = false) -> ZMLocalNotificationForMessage? {
         let metadata = ZMFileMetadata(fileURL: fileType.testURL)
-        let msg = ZMAssetClientMessage(fileMetadata: metadata, nonce: UUID.create(), managedObjectContext: self.syncMOC, expiresAfter: isEphemeral ? 10 : 0)
-        msg.sender = sender
-        msg.visibleInConversation = conversation
+        let msg = ZMAssetClientMessage.assetClientMessage(with: metadata, nonce: UUID.create(), managedObjectContext: self.syncMOC, expiresAfter: isEphemeral ? 10 : 0)
+        msg?.sender = sender
+        msg?.visibleInConversation = conversation
         
-        return ZMLocalNotificationForMessage(message: msg, application: self.application)
+        return ZMLocalNotificationForMessage(message: msg!, application: self.application)
     }
     
     func alertBodyForAssetNotification(_ fileType: FileType, conversation: ZMConversation, sender: ZMUser, isEphemeral: Bool = false) -> String? {

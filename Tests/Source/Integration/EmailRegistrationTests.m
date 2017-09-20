@@ -58,12 +58,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
         [session whiteListEmail:user.emailAddress];
     }];
     
-    id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
-    
-    // expect
-    [[authenticationObserver expect] authenticationDidSucceed];
-    [[authenticationObserver expect] clientRegistrationDidSucceed]; // client registration
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:nil];
     
     // when
     XCTAssertNotNil(self.unauthenticatedSession);
@@ -72,8 +67,8 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // then
     XCTAssertTrue(self.userSession.registeredOnThisDevice);
-    [authenticationObserver verify];
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:authenticationObserverToken];
+    XCTAssertEqual(recorder.notifications.count, 1lu);
+    XCTAssertEqual(recorder.notifications.firstObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
 }
 
 - (void)testThatWhenRegisterAndRestartingTheAppItRemembersItWasRegisteredOnThisDevice
@@ -108,31 +103,33 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     user.name = @"Hans Müller";
     user.accentColorValue = ZMAccentColorStrongBlue;
     
-    id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
-    
-    id registrationObserver = [OCMockObject mockForProtocol:@protocol(ZMRegistrationObserver)];
-    id registrationObserverToken = [self.unauthenticatedSession addRegistrationObserver:registrationObserver];
-    
     // expect
     __block NSUInteger numFailedLogins = 0;
     XCTestExpectation *loginFailExpectation = [self expectationWithDescription:@"Login fail (need to validate)"];
-    [[[authenticationObserver stub] andDo:^(NSInvocation * ZM_UNUSED i) {
-        [loginFailExpectation fulfill];
-    }] authenticationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
-        ++numFailedLogins;
-        return error.code == ZMUserSessionAccountIsPendingActivation;
-    }]];
-    [[registrationObserver expect] emailVerificationDidSucceed];
+    id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        if (event == PreLoginAuthenticationEventObjcAuthenticationDidFail && error.code == ZMUserSessionAccountIsPendingActivation) {
+            [loginFailExpectation fulfill];
+            ++numFailedLogins;
+        }
+    }];
+    
+    XCTestExpectation *emailVerifiedExpectation = [self expectationWithDescription:@"Email was verified"];
+    id registrationObserverToken = [ZMUserSessionRegistrationNotification addObserverInSession:self.unauthenticatedSession withBlock:^(ZMUserSessionRegistrationNotificationType type, NSError *error) {
+        NOT_USED(error);
+        
+        if (type == ZMRegistrationNotificationEmailVerificationDidSucceed) {
+            [emailVerifiedExpectation fulfill];
+        }
+    }];
     
     // when
     [self.unauthenticatedSession registerUser:user];
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    preLoginToken = nil;
+    registrationObserverToken = nil;
     [NSThread sleepForTimeInterval:2];
     
-    // expect
-    [[authenticationObserver expect] authenticationDidSucceed];
-    [[authenticationObserver expect] clientRegistrationDidSucceed]; // client registration
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:nil];
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -143,10 +140,8 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // then
     XCTAssertTrue(self.userSession.registeredOnThisDevice);
-    [authenticationObserver verify];
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:authenticationObserverToken];
-    [self.unauthenticatedSession removeRegistrationObserver:registrationObserverToken];
-    [registrationObserver verify];
+    XCTAssertEqual(recorder.notifications.count, 1lu);
+    XCTAssertEqual(recorder.notifications.firstObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
 }
 
 - (void)testThatIfRegisteringWithADuplicateEmailWeLogInIfWeHaveTheRightPassword
@@ -164,20 +159,15 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
         previousUser.password = password;
     }];
     
-    id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
-    
-    // expect
-    [[authenticationObserver expect] authenticationDidSucceed];
-    [[authenticationObserver expect] clientRegistrationDidSucceed]; // client registration
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:nil];
     
     // when
     [self.unauthenticatedSession registerUser:user];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    [authenticationObserver verify];
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:authenticationObserverToken];
+    XCTAssertEqual(recorder.notifications.count, 1lu);
+    XCTAssertEqual(recorder.notifications.firstObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
 }
 
 - (void)testThatIfRegisteringWithADuplicateEmailWeDoNotLogInIfWeHaveTheWrongPassword
@@ -208,7 +198,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // then
     [registrationObserver verify];
-    [self.unauthenticatedSession removeRegistrationObserver:registrationObserverToken];
+    registrationObserverToken = nil;
     
 }
 
@@ -234,7 +224,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // then
     [registrationObserver verify];
-    [self.unauthenticatedSession removeRegistrationObserver:registrationObserverToken];
+    registrationObserverToken = nil;
     
     
 }
@@ -250,16 +240,13 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     user.name = @"Hans Müller";
     user.accentColorValue = ZMAccentColorStrongBlue;
     
-    id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
+    __block BOOL loginHasFailed = NO;
+    id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        if (event == PreLoginAuthenticationEventObjcAuthenticationDidFail && error.code == ZMUserSessionAccountIsPendingActivation) {
+            loginHasFailed = YES;
+        }
+    }];
     
-    // expect
-    XCTestExpectation *loginFailExpectation = [self expectationWithDescription:@"Login fail (need to validate)"];
-    [[[authenticationObserver stub] andDo:^(NSInvocation * ZM_UNUSED i) {
-        [loginFailExpectation fulfill];
-    }] authenticationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
-        return error.code == ZMUserSessionAccountIsPendingActivation;
-    }]];
     
     // when
     [self.unauthenticatedSession registerUser:user];
@@ -276,10 +263,8 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
         }
     }
     XCTAssertGreaterThan(count, 3u);
-    
-    [authenticationObserver verify];
-
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:authenticationObserverToken];
+    XCTAssertTrue(loginHasFailed);
+    preLoginToken = nil;
     [self.unauthenticatedSession cancelWaitForEmailVerification]; // this cancels the requests
     XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.1]);
 }
@@ -294,11 +279,15 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     user.name = @"Hans Müller";
     user.accentColorValue = ZMAccentColorStrongBlue;
     
-    id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
-    
     // expect
-    [[authenticationObserver stub] authenticationDidFail:OCMOCK_ANY];
+    __block BOOL loginHasFailed = NO;
+    id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        NOT_USED(error);
+        
+        if (event == PreLoginAuthenticationEventObjcAuthenticationDidFail) {
+            loginHasFailed = YES;
+        }
+    }];
     
     // when
     [self.unauthenticatedSession registerUser:user];
@@ -320,8 +309,8 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     XCTAssertLessThanOrEqual(self.mockTransportSession.receivedRequests.count, 1u);
     XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
 
-    [authenticationObserver verify];
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:authenticationObserverToken];
+    XCTAssertTrue(loginHasFailed);
+    preLoginToken = nil;
 }
 
 - (void)testThatAVerificationResendRequestIsAddedWhenCallingResendVerificationEmail
@@ -333,14 +322,13 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     user.name = @"Hans Müller";
     user.accentColorValue = ZMAccentColorStrongBlue;
     
-    id authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    id authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserver:authenticationObserver];
-    
     // expect
-    [[authenticationObserver stub] authenticationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
-        XCTAssertEqual(error.code, (NSInteger) ZMUserSessionAccountIsPendingActivation);
-        return YES;
-    }]];
+    __block BOOL loginHasFailed = NO;
+    id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        if (event == PreLoginAuthenticationEventObjcAuthenticationDidFail && error.code == ZMUserSessionAccountIsPendingActivation) {
+            loginHasFailed = YES;
+        }
+    }];
     
     // then
     [self.unauthenticatedSession registerUser:user];
@@ -364,8 +352,8 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     ZMTransportRequest *request = self.mockTransportSession.receivedRequests.firstObject;
     XCTAssertEqualObjects(request.path, expectedPath);
     
-    [authenticationObserver verify];
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:authenticationObserverToken];
+    XCTAssertTrue(loginHasFailed);
+    preLoginToken = nil;
 }
 
 @end
