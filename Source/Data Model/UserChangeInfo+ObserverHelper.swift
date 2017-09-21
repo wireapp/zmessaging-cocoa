@@ -21,12 +21,21 @@ import WireDataModel
 
 public extension UserChangeInfo {
     
+    
+    // MARK: Registering UserObservers
+    /// Adds an observer for the user if one specified or to all ZMUsers is none is specified
+    /// You must hold on to the token and use it to unregister
+    @objc(addUserObserver:forUser:userSession:)
+    public static func add(observer: ZMUserObserver, for user: ZMUser?, userSession: ZMUserSession) -> NSObjectProtocol {
+        return self.add(observer: observer, for: user, userSession: userSession)
+    }
+    
     // MARK: Registering ZMBareUser
     /// Adds an observer for the ZMUser or ZMSearchUser
     /// You must hold on to the token until you want to stop observing
     @objc(addObserver:forBareUser:userSession:)
     static func add(observer: ZMUserObserver, forBareUser user: ZMBareUser, userSession: ZMUserSession) -> NSObjectProtocol? {
-        return UserChangeInfo.add(observer: observer, forBareUser: user, managedObjectContext: userSession.managedObjectContext)
+        return self.add(observer: observer, forBareUser: user, managedObjectContext: userSession.managedObjectContext)
     }
     
     // MARK: Registering SearchUserObservers
@@ -34,6 +43,6 @@ public extension UserChangeInfo {
     /// You must hold on to the token until you want to stop observing
     @objc(addSearchUserObserver:for:userSession:)
     static func add(searchUserObserver observer: ZMUserObserver, for user: ZMSearchUser?, userSession: ZMUserSession) -> NSObjectProtocol {
-        return UserChangeInfo.add(searchUserObserver: observer, for: user, managedObjectContext: userSession.searchManagedObjectContext)
+        return self.add(searchUserObserver: observer, for: user, managedObjectContext: userSession.searchManagedObjectContext)
     }
 }

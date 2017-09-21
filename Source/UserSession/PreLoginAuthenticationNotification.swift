@@ -44,7 +44,7 @@ private enum PreLoginAuthenticationEvent {
     case loginCodeRequestDidSucceed
 }
 
-class PreLoginAuthenticationNotification : NSObject {
+@objc class PreLoginAuthenticationNotification : NSObject {
     
     fileprivate static let authenticationEventNotification = Notification.Name(rawValue: "ZMAuthenticationEventNotification")
     
@@ -78,6 +78,11 @@ class PreLoginAuthenticationNotification : NSObject {
                 observer.authenticationDidSucceed?()
             }
         }
+    }
+    
+    @objc(registerObserver:forUnauthenticatedSession:)
+    public static func register(_ observer: PreLoginAuthenticationObserver, for unauthenticatedSession: UnauthenticatedSession) -> Any {
+        return self.register(observer, context: unauthenticatedSession.authenticationStatus)
     }
 }
 
