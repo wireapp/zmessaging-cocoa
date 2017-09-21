@@ -45,6 +45,9 @@ extension ZMUserSession {
         }
     }
     
+    public static func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver, userSession: ZMUserSession) -> Any {
+        return self.addInitialSyncCompletionObserver(observer, context: userSession.managedObjectContext)
+    }
 }
 
 // MARK: - Network Availability
@@ -82,8 +85,7 @@ public extension ZMConversation {
 
     @objc public func addTypingObserver(_ observer: ZMTypingChangeObserver) -> Any {
         return NotificationInContext.addObserver(name: typingNotificationName,
-                                                 context: self.managedObjectContext!.zm_userInterface,
-                                                 object: self)
+                                                 context: self.managedObjectContext!.zm_userInterface)
         {
             [weak observer, weak self] note in
             guard let `self` = self else { return }
@@ -92,7 +94,7 @@ public extension ZMConversation {
     }
     
     @objc public func notifyTyping(typingUsers: Set<ZMUser>) {
-        NotificationInContext(name: typingNotificationName, context: self.managedObjectContext!.zm_userInterface, userInfo: [typingNotificationName.rawValue: typingUsers]).post()
+        NotificationInContext(name: typingNotificationName, context: self.managedObjectContext!.zm_userInterface, userInfo: [typingNotificationUsersKey: typingUsers]).post()
     }
 }
 

@@ -620,7 +620,7 @@
 {
     NSMutableArray *indexes = [NSMutableArray array];
     [note enumerateMovedIndexes:^(NSInteger from, NSInteger to) {
-        ZMMovedIndex *index = [ZMMovedIndex movedIndexFrom:(NSUInteger)from to:(NSUInteger)to];
+        ZMMovedIndex *index = [[ZMMovedIndex alloc] initFrom:(NSUInteger)from to:(NSUInteger)to];
         [indexes addObject:index];
     }];
     
@@ -657,7 +657,7 @@
         // then
         NSArray *expectedList2 = @[conversation1, conversation4, conversation3, conversation2];
         NSIndexSet *updatedIndexes2 = [NSIndexSet indexSetWithIndex:0];
-        NSArray *movedIndexes2 = @[[ZMMovedIndex movedIndexFrom:3 to:0]];
+        NSArray *movedIndexes2 = @[[[ZMMovedIndex alloc] initFrom:3 to:0]];
         
         XCTAssertEqualObjects(conversationList, expectedList2);
         

@@ -1065,7 +1065,8 @@
     XCTAssertEqual(pending.count, pendingCount + 1u);
     
     id listObserver = [OCMockObject niceMockForProtocol:@protocol(ZMConversationListObserver)];
-    id listToken = [ConversationListChangeInfo addObserver:listObserver forList:pending];
+    id listToken = [ConversationListChangeInfo addObserver:listObserver forList:pending managedObjectContext:pending.managedObjectContext];
+//    id listToken = [ConversationListChangeInfo addObserver:listObserver forList:pending];
     
     ZMUser *realUser1 = [self userForMockUser:mockUser];
     

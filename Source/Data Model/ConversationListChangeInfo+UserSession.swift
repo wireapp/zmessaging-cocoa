@@ -16,15 +16,15 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import Foundation
+import WireDataModel
 
-@objc
-public class NetworkStateRecorder : NSObject, ZMNetworkAvailabilityObserver {
-    
-    var stateChanges : [NSNumber] = []
-    
-    public func didChangeAvailability(newState: ZMNetworkState) {
-        stateChanges.append(NSNumber(value: newState.rawValue))
+extension ConversationListChangeInfo {
+    @objc(addObserver:forList:userSession:)
+    public static func add(observer: ZMConversationListObserver,
+                           for list: ZMConversationList,
+                           userSession: ZMUserSession
+        ) -> NSObjectProtocol {
+        return self.add(observer: observer, for: list, managedObjectContext: userSession.managedObjectContext)
     }
-    
 }
+

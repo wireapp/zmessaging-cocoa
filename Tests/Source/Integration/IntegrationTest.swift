@@ -21,20 +21,36 @@ import WireTesting
 
 @testable import WireSyncEngine
 
-class AuthenticationObserver : NSObject, ZMAuthenticationObserver {
+class AuthenticationObserver : NSObject, PreLoginAuthenticationObserver, PostLoginAuthenticationObserver {
     
     var onFailure : (() -> Void)?
     var onSuccess : (() -> Void)?
     
-    func authenticationDidFail(_ error: Error) {
-        onFailure?()
+    var preLoginToken : Any?
+    var postLoginToken : Any?
+    
+    init(unauthenticatedSession : UnauthenticatedSession) {
+        super.init()
+        
+        preLoginToken = unauthenticatedSession.addAuthenticationObserver(self)
+        postLoginToken = PostLoginAuthenticationNotification.addObserver(self)
+    }
+    
+    func clientRegistrationDidSucceed(accountId: UUID) {
+        onSuccess?()
     }
     
     func authenticationDidSucceed() {
         onSuccess?()
     }
-
-
+    
+    func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
+        onFailure?()
+    }
+    
+    func authenticationDidFail(_ error: NSError) {
+        onFailure?()
+    }
     
 }
 
@@ -338,23 +354,22 @@ extension IntegrationTest {
     @objc
     func login(withCredentials credentials: ZMCredentials, ignoreAuthenticationFailures: Bool = false) -> Bool {
         
-        let authenticationObserver = AuthenticationObserver()
+        var authenticationObserver : AuthenticationObserver? = AuthenticationObserver(unauthenticatedSession: unauthenticatedSession!)
         var didSucceed = false
         
-        authenticationObserver.onSuccess = {
+        authenticationObserver?.onSuccess = {
             didSucceed = true
         }
         
-        authenticationObserver.onFailure = {
+        authenticationObserver?.onFailure = {
             if !ignoreAuthenticationFailures {
                 XCTFail("Failed to authenticate")
             }
         }
         
-        let token = ZMUserSessionAuthenticationNotification.addObserver(authenticationObserver)
         unauthenticatedSession?.login(with: credentials)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        ZMUserSessionAuthenticationNotification.removeObserver(for: token)
+        authenticationObserver = nil
         
         return didSucceed
     }
@@ -512,8 +527,7 @@ extension IntegrationTest : SessionManagerDelegate {
         }
         
         switch userSessionErrorCode {
-        case .accountDeleted,
-             .clientDeletedRemotely,
+        case .clientDeletedRemotely,
              .accessTokenExpired:
             self.userSession = nil
         default:

@@ -25,7 +25,6 @@
 
 #import "ObjectTranscoderTests.h"
 #import "ZMOperationLoop.h"
-#import "ZMUserSessionAuthenticationNotification.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
 

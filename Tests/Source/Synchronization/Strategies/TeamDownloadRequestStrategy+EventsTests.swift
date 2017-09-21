@@ -36,7 +36,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         
         syncMOC.performGroupedBlockAndWait{
             let user = ZMUser.selfUser(in: self.syncMOC)
-            user.remoteIdentifier = UUID()
+            user.remoteIdentifier = self.userIdentifier
+            self.syncMOC.saveOrRollback()
         }
     }
 
@@ -115,8 +116,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         
         // expect
         let accountDeletedExpectation = expectation(description: "Account was deleted")
-        var token : ZMAuthenticationObserverToken? = ZMUserSessionAuthenticationNotification.addObserver(on: uiMOC) { (note) in
-            if let error = note.error as NSError?, error.userSessionErrorCode == ZMUserSessionErrorCode.accountDeleted {
+        var token : Any? = PostLoginAuthenticationObserverToken(managedObjectContext: uiMOC) { (event, _) in
+            if case WireSyncEngine.PostLoginAuthenticationEvent.accountDeleted = event {
                 accountDeletedExpectation.fulfill()
             }
         }
@@ -154,8 +155,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         ]
         
         let accountDeletedExpectation = expectation(description: "Account was deleted")
-        var token : ZMAuthenticationObserverToken? = ZMUserSessionAuthenticationNotification.addObserver(on: uiMOC) { (note) in
-            if let error = note.error as NSError?, error.userSessionErrorCode == ZMUserSessionErrorCode.accountDeleted {
+        var token : Any? = PostLoginAuthenticationObserverToken(managedObjectContext: uiMOC) { (event, _) in
+            if case WireSyncEngine.PostLoginAuthenticationEvent.accountDeleted = event {
                 accountDeletedExpectation.fulfill()
             }
         }
@@ -470,8 +471,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         
         // expect
         let accountDeletedExpectation = expectation(description: "Account was deleted")
-        var token : ZMAuthenticationObserverToken? = ZMUserSessionAuthenticationNotification.addObserver(on: uiMOC) { (note) in
-            if let error = note.error as NSError?, error.userSessionErrorCode == ZMUserSessionErrorCode.accountDeleted {
+        var token : Any? = PostLoginAuthenticationObserverToken(managedObjectContext: uiMOC) { (event, _) in
+            if case WireSyncEngine.PostLoginAuthenticationEvent.accountDeleted = event {
                 accountDeletedExpectation.fulfill()
             }
         }

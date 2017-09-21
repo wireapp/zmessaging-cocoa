@@ -66,7 +66,7 @@
 
 @interface ClientManagementTests : IntegrationTest
 @property (nonatomic) FakeClientObserver *observer;
-@property (nonatomic) id<ZMClientUpdateObserverToken> token;
+@property (nonatomic) id token;
 @end
 
 @implementation ClientManagementTests
@@ -86,7 +86,6 @@
 
 - (void)tearDown
 {
-    [self.userSession removeClientUpdateObserver:self.token];
     self.observer = nil;
     self.token = nil;
     [super tearDown];

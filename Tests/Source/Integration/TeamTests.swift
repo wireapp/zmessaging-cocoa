@@ -29,11 +29,7 @@ class TestTeamObserver : NSObject, TeamObserver {
     
     init(team: Team? = nil) {
         super.init()
-        token = TeamChangeInfo.add(observer: self, for: team)
-    }
-    
-    deinit {
-        TeamChangeInfo.remove(observer: token, for: nil)
+        token = TeamChangeInfo.add(observer: self, for: team, managedObjectContext: team!.managedObjectContext!)
     }
     
     func teamDidChange(_ changeInfo: TeamChangeInfo) {

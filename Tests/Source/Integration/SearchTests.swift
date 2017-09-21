@@ -122,7 +122,7 @@ class SearchTests : IntegrationTest {
         guard let searchUser = searchForDirectoryUser(withName: userName, searchQuery: "Johnny") else { XCTFail(); return }
         
         // then
-        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser)
+        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser, userSession: userSession!)
         XCTAssertNotNil(token)
         XCTAssertNil(searchUser.user)
         XCTAssertEqual(userNotifications.count, 0)
@@ -158,7 +158,7 @@ class SearchTests : IntegrationTest {
         guard let searchUser = searchForDirectoryUser(withName: userName, searchQuery: "Johnny") else { XCTFail(); return }
         
         // then
-        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser)
+        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser, userSession: userSession!)
         XCTAssertNotNil(token)
         XCTAssertNotNil(searchUser.user)
         XCTAssertEqual(userNotifications.count, 0)
@@ -263,7 +263,7 @@ class SearchTests : IntegrationTest {
         
         guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
-        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser)
+        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser, userSession: userSession!)
         XCTAssertNotNil(token)
         
         // when
@@ -454,7 +454,7 @@ class SearchTests : IntegrationTest {
         
         guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
-        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser)
+        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser, userSession: userSession!)
         XCTAssertNotNil(token)
         
         // when small proile image response arrives

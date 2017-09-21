@@ -69,7 +69,7 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver {
         }
     }
     
-    func didAuthenticate() {
+    func didRegisterClient() {
         self.managedObjectContext.performGroupedBlock {
             if self.currentAccountState == .newDeviceNewAccount && !self.managedObjectContext.registeredOnThisDevice {
                 self.currentAccountState = .newDeviceExistingAccount
@@ -120,7 +120,7 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver {
         }
                 
         self.initialSyncToken = ZMUserSession.addInitialSyncCompletionObserver(self, context: managedObjectContext)
-        self.authenticationToken = PostLoginAuthenticationNotification.addObserver(self, context: managedObjectContext.zm_userInterface)
+        self.authenticationToken = PostLoginAuthenticationNotification.addObserver(self, context: managedObjectContext)
     }
 }
 
@@ -131,7 +131,7 @@ extension ZMAccountStatus : PostLoginAuthenticationObserver {
     }
     
     public func clientRegistrationDidSucceed() {
-        didAuthenticate()
+        didRegisterClient()
     }
     
 }

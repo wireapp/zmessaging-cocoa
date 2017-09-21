@@ -227,10 +227,10 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
         else if (sync == self.timedDownstreamSync) {
             
             if([self isResponseForPendingEmailActionvation:response]) {
-                if (self.isWaitingForEmailVerification) {
+//                if (self.isWaitingForEmailVerification) { // TODO jacob this must be wrong
                     [authenticationStatus didFailLoginWithEmailBecausePendingValidation];
                     shouldStartTimer = YES;
-                }
+//                }
             }
             else {
                 [authenticationStatus didFailLoginWithEmail:[self isResponseForInvalidCredentials:response]];
@@ -241,7 +241,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
         }
     }
 
-    if(shouldStartTimer) {
+    if (shouldStartTimer) {
         if(self.timedDownstreamSync.timeInterval != DefaultPendingValidationLoginAttemptInterval) {
             self.timedDownstreamSync.timeInterval = DefaultPendingValidationLoginAttemptInterval;
         }
