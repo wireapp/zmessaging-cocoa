@@ -390,11 +390,6 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         selfObserver = nil // TODO need per user session token
     }
     
-    fileprivate func tearDownConversationListObservers() {
-        conversationListObserver = nil
-        connectionRequestObserver = nil
-    }
-
     deinit {
         tearDownObservers()
         blacklistVerificator?.teardown()
