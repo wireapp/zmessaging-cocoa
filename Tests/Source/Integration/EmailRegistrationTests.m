@@ -58,7 +58,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
         [session whiteListEmail:user.emailAddress];
     }];
     
-    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:nil];
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
     
     // when
     XCTAssertNotNil(self.unauthenticatedSession);
@@ -129,7 +129,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     registrationObserverToken = nil;
     [NSThread sleepForTimeInterval:2];
     
-    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:nil];
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -159,7 +159,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
         previousUser.password = password;
     }];
     
-    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:nil];
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
     
     // when
     [self.unauthenticatedSession registerUser:user];

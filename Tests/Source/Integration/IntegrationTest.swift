@@ -29,11 +29,11 @@ class AuthenticationObserver : NSObject, PreLoginAuthenticationObserver, PostLog
     var preLoginToken : Any?
     var postLoginToken : Any?
     
-    init(unauthenticatedSession : UnauthenticatedSession) {
+    init(unauthenticatedSession : UnauthenticatedSession, groupQueue: ZMSGroupQueue) {
         super.init()
         
         preLoginToken = unauthenticatedSession.addAuthenticationObserver(self)
-        postLoginToken = PostLoginAuthenticationNotification.addObserver(self)
+        postLoginToken = PostLoginAuthenticationNotification.addObserver(self, queue: groupQueue)
     }
     
     func clientRegistrationDidSucceed(accountId: UUID) {
@@ -356,8 +356,9 @@ extension IntegrationTest {
     
     @objc
     func login(withCredentials credentials: ZMCredentials, ignoreAuthenticationFailures: Bool = false) -> Bool {
-        
-        var authenticationObserver : AuthenticationObserver? = AuthenticationObserver(unauthenticatedSession: unauthenticatedSession!)
+        let queue = DispatchGroupQueue(queue: .main)
+        queue.add(self.dispatchGroup)
+        var authenticationObserver : AuthenticationObserver? = AuthenticationObserver(unauthenticatedSession: unauthenticatedSession!, groupQueue: queue)
         var didSucceed = false
         
         authenticationObserver?.onSuccess = {

@@ -108,7 +108,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public let accountManager: AccountManager
     public fileprivate(set) var userSession: ZMUserSession?
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
-
+    public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
+    
     let application: ZMApplication
     var postLoginAuthenticationToken: Any?
     var preLoginAuthenticationToken: Any?
@@ -238,7 +239,9 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         self.reachability = reachability
         super.init()
 
-        postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self)
+        postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(
+            self,
+            queue: self.groupQueue)
         
         if let account = accountManager.selectedAccount {
             selectInitialAccount(account, launchOptions: launchOptions)
@@ -361,6 +364,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             session.setEmailCredentials(authenticationStatus?.emailCredentials())
             if let registered = authenticationStatus?.completedRegistration {
                 session.syncManagedObjectContext.registeredOnThisDevice = registered
+                session.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
             }
 
             session.managedObjectContext.performGroupedBlock { [weak self] in
