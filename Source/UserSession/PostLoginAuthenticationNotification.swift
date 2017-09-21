@@ -51,9 +51,6 @@ extension NSManagedObjectContext: GenericAsyncQueue {
     /// Invoken when there was an error registering the client
     @objc optional func clientRegistrationDidFail(_ error: NSError, accountId : UUID)
     
-    /// Invoked when the client is deleted remotely
-    @objc optional func didDetectSelfClientDeletion(accountId : UUID)
-    
     /// Account was successfully deleted
     @objc optional func accountDeleted(accountId : UUID)
 }
@@ -69,9 +66,6 @@ enum PostLoginAuthenticationEvent {
     
     /// Client registered client
     case clientRegistrationDidSucceed
-    
-    /// Client is deleted remotely
-    case didDetectSelfClientDeletion
     
     /// Account was successfully deleted on the backend
     case accountDeleted
@@ -105,8 +99,6 @@ enum PostLoginAuthenticationEvent {
                     observer.authenticationInvalidated?(error, accountId: accountId)
                 case .clientRegistrationDidFail(let error):
                     observer.clientRegistrationDidFail?(error, accountId: accountId)
-                case .didDetectSelfClientDeletion:
-                    observer.didDetectSelfClientDeletion?(accountId: accountId)
                 case .clientRegistrationDidSucceed:
                     observer.clientRegistrationDidSucceed?(accountId: accountId)
                 case .accountDeleted:
@@ -131,11 +123,6 @@ public extension PostLoginAuthenticationNotification {
         self.notify(event: .clientRegistrationDidSucceed, context: context)
     }
     
-    @objc(notifyDidDetectSelfClientDeletionInContext:)
-    static func notifyDidDetectSelfClientDeletion(context: NSManagedObjectContext) {
-        self.notify(event: .didDetectSelfClientDeletion, context: context)
-    }
-
     static func notifyClientRegistrationDidFail(error: NSError, context: NSManagedObjectContext) {
         self.notify(event: .clientRegistrationDidFail(error: error), context: context)
     }

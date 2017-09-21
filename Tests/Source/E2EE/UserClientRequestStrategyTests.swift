@@ -70,7 +70,6 @@ public enum PostLoginAuthenticationEventObjC : Int {
     case authenticationInvalidated
     case clientRegistrationDidSucceed
     case clientRegistrationDidFail
-    case didDetectSelfClientDeletion
     case accountDeleted
 }
 
@@ -93,8 +92,6 @@ public class PostLoginAuthenticationObserverObjCToken : NSObject {
                 handler(.authenticationInvalidated, accountId, error)
             case .accountDeleted:
                 handler(.accountDeleted, accountId, nil)
-            case .didDetectSelfClientDeletion:
-                handler(.didDetectSelfClientDeletion, accountId, nil)
             }
         })
     }
