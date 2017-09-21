@@ -44,7 +44,7 @@ private enum PreLoginAuthenticationEvent {
     case loginCodeRequestDidSucceed
 }
 
-@objc class PreLoginAuthenticationNotification : NSObject {
+@objc public class PreLoginAuthenticationNotification : NSObject {
     
     fileprivate static let authenticationEventNotification = Notification.Name(rawValue: "ZMAuthenticationEventNotification")
     
