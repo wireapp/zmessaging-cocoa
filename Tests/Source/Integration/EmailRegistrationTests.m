@@ -269,7 +269,6 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.1]);
 }
 
-
 - (void)testThatWhenRegisteringAndNeedToWaitForEmailValidationWeCanCancelTheWait
 {
     // given
@@ -280,36 +279,33 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     user.accentColorValue = ZMAccentColorStrongBlue;
     
     // expect
-    __block BOOL loginHasFailed = NO;
+    XCTestExpectation *waitingForEmailVerification = [self expectationWithDescription:@"waiting for email to be verified"];
     id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         NOT_USED(error);
         
         if (event == PreLoginAuthenticationEventObjcAuthenticationDidFail) {
-            loginHasFailed = YES;
+            [waitingForEmailVerification fulfill];
         }
     }];
     
     // when
     [self.unauthenticatedSession registerUser:user];
-
-    // wait for more attempts
-    XCTAssert([self waitWithTimeout:0.5 verificationBlock:^BOOL{
-        return self.mockTransportSession.receivedRequests.count > 1;
-    }]);
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    [self.mockTransportSession resetReceivedRequests];
+    
+    [self spinMainQueueWithTimeout:0.5]; // login request complete
     
     // and when
 
     [self.unauthenticatedSession cancelWaitForEmailVerification];
     [self.mockTransportSession resetReceivedRequests];
     
-    // wait for more
-    [NSThread sleepForTimeInterval:0.8];
+    
+    [self spinMainQueueWithTimeout:0.5]; // wait for more login attemps
     
     // then
     XCTAssertLessThanOrEqual(self.mockTransportSession.receivedRequests.count, 1u);
     XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
-
-    XCTAssertTrue(loginHasFailed);
     preLoginToken = nil;
 }
 
