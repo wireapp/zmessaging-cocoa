@@ -328,10 +328,18 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
         
         tearDownObservers()
-
-        userSession?.closeAndDeleteCookie(deleteCookie)
-        userSession = nil
-
+        
+        let matchingAccountSession = backgroundUserSessions.first { (account, session) in
+            session == currentSession
+        }
+        
+        if let matchingAccount = matchingAccountSession?.key {
+            backgroundUserSessions[matchingAccount] = nil
+        }
+        
+        currentSession.closeAndDeleteCookie(deleteCookie)
+        activeUserSession = nil
+        
         delegate?.sessionManagerDidLogout(error: error)
         
         createUnauthenticatedSession()
@@ -476,6 +484,11 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         selfObserver = nil // TODO need per user session token
     }
     
+    fileprivate func tearDownConversationListObservers() {
+        conversationListObserver = nil
+        connectionRequestObserver = nil
+    }
+
     deinit {
         tearDownObservers()
         tearDownConversationListObservers()
@@ -613,8 +626,16 @@ extension SessionManager: PostLoginAuthenticationObserver {
         switch userSessionErrorCode {
         case .clientDeletedRemotely,
              .accessTokenExpired:
-            
-            logoutCurrentSession(deleteCookie: true, error: error)
+
+            if let account = accountManager.account(with: accountId),
+                let session = self.backgroundUserSessions[account] {
+                if session == activeUserSession {
+                    logoutCurrentSession(deleteCookie: true, error: error)
+                }
+                else {
+                    session.closeAndDeleteCookie(true)
+                }
+            }
             
         default:
             delegate?.sessionManagerDidLogout(error: error)
