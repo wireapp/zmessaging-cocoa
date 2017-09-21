@@ -226,6 +226,9 @@ extension IntegrationTest {
             launchOptions: [:],
             dispatchGroup: self.dispatchGroup
         )
+        
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
     }
     
     @objc
