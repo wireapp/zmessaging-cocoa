@@ -16,16 +16,15 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import Foundation
+import WireDataModel
 
-@objc
-public class TypingChange : NSObject {
-    
-    let conversation : ZMConversation
-    let typingUsers : Set<ZMUser>
-    
-    init (conversation : ZMConversation, typingUsers : Set<ZMUser>) {
-        self.conversation = conversation
-        self.typingUsers = typingUsers
+extension ConversationListChangeInfo {
+    @objc(addObserver:forList:userSession:)
+    public static func add(observer: ZMConversationListObserver,
+                           for list: ZMConversationList,
+                           userSession: ZMUserSession
+        ) -> NSObjectProtocol {
+        return self.add(observer: observer, for: list, managedObjectContext: userSession.managedObjectContext)
     }
 }
+

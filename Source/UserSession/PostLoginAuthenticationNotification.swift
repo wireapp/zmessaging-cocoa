@@ -118,6 +118,9 @@ enum PostLoginAuthenticationEvent {
         return SelfUnregisteringNotificationCenterToken(token)
     }
     
+    static public func addObserver(_ observer: PostLoginAuthenticationObserver, userSession: ZMUserSession) -> Any {
+        return self.addObserver(observer, context: userSession.managedObjectContext)
+    }
 }
 
 public extension PostLoginAuthenticationNotification {

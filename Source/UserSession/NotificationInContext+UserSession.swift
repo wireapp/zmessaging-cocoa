@@ -45,6 +45,9 @@ extension ZMUserSession {
         }
     }
     
+    public static func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver, userSession: ZMUserSession) -> Any {
+        return self.addInitialSyncCompletionObserver(observer, context: userSession.managedObjectContext)
+    }
 }
 
 // MARK: - Network Availability
