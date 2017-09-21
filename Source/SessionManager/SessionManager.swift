@@ -497,12 +497,11 @@ extension SessionManager: PostLoginAuthenticationObserver {
     }
     
     public func accountDeleted(accountId: UUID) {
-        logoutCurrentSession(deleteCookie: true, error: nil)
+        logoutCurrentSession(deleteCookie: true, error: NSError(domain: ZMUserSessionErrorDomain, code: Int(ZMUserSessionErrorCode.accountDeleted.rawValue), userInfo: nil))
         if let deletedAccount = accountManager.selectedAccount { //  TODO delete account associcated with session
             delete(account: deletedAccount)
         }
     }
-
     
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
         guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)) else {

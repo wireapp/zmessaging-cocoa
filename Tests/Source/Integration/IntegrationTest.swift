@@ -531,7 +531,8 @@ extension IntegrationTest : SessionManagerDelegate {
         
         switch userSessionErrorCode {
         case .clientDeletedRemotely,
-             .accessTokenExpired:
+             .accessTokenExpired,
+             .accountDeleted:
             self.userSession = nil
         default:
             break

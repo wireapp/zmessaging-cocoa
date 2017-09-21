@@ -270,7 +270,6 @@
     
     // when
     [self recreateSessionManager];
-    XCTAssertTrue([self login]);
     
     // then
     BOOL hasNotificationsRequest = NO;
