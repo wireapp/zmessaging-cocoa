@@ -80,11 +80,19 @@ enum PostLoginAuthenticationEvent {
         NotificationInContext(name: self.name, context: context.zm_userInterface, userInfo: [self.eventKey: event]).post()
     }
     
-    static public func addObserver(_ observer: PostLoginAuthenticationObserver, context: NSManagedObjectContext? = nil) -> Any {
-        return addObserver(observer, context: context, queue: DispatchGroupQueue(queue: .main))
+    static public func addObserver(_ observer: PostLoginAuthenticationObserver,
+                                   context: NSManagedObjectContext) -> Any {
+         return self.addObserver(observer, context: context, queue: context)
     }
     
-    static public func addObserver(_ observer: PostLoginAuthenticationObserver, context: NSManagedObjectContext? = nil, queue: ZMSGroupQueue) -> Any {
+    static public func addObserver(_ observer: PostLoginAuthenticationObserver,
+                                   queue: ZMSGroupQueue) -> Any {
+        return self.addObserver(observer, context: nil, queue: queue)
+    }
+
+    
+    static private func addObserver(_ observer: PostLoginAuthenticationObserver, context: NSManagedObjectContext? = nil, queue: ZMSGroupQueue) -> Any {
+        
         let token = NotificationCenter.default.addObserver(forName: name, object: context?.zm_userInterface, queue: nil) { [weak observer] (note) in
             guard
                 let userInfo = note.userInfo as? [String : Any],

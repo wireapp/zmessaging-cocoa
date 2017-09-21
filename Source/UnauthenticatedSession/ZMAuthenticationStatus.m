@@ -32,7 +32,6 @@
 
 static NSString *const TimerInfoOriginalCredentialsKey = @"credentials";
 static NSString * const AuthenticationCenterDataChangeNotificationName = @"ZMAuthenticationStatusDataChangeNotificationName";
-NSString * const RegisteredOnThisDeviceKey = @"ZMRegisteredOnThisDevice";
 NSTimeInterval DebugLoginFailureTimerOverride = 0;
 
 static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
@@ -438,29 +437,3 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 @end
 
-static NSString * const CookieLabelKey = @"ZMCookieLabel";
-
-@implementation NSManagedObjectContext (Registration)
-
-- (void)setRegisteredOnThisDevice:(BOOL)registeredOnThisDevice
-{
-    assert(self.zm_isSyncContext);
-    [self setPersistentStoreMetadata:@(registeredOnThisDevice) forKey:RegisteredOnThisDeviceKey];
-    NSManagedObjectContext *uiContext = self.zm_userInterfaceContext;
-    [uiContext performGroupedBlock:^{
-        [uiContext setPersistentStoreMetadata:@(registeredOnThisDevice) forKey:RegisteredOnThisDeviceKey];
-    }];
-}
-
-- (BOOL)registeredOnThisDevice
-{
-    return ((NSNumber *)[self persistentStoreMetadataForKey:RegisteredOnThisDeviceKey]).boolValue;
-}
-
-- (NSString *)legacyCookieLabel
-{
-    NSString *label = [self persistentStoreMetadataForKey:CookieLabelKey];
-    return label;
-}
-
-@end

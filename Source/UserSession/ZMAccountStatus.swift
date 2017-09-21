@@ -71,9 +71,10 @@ public final class ZMAccountStatus : NSObject, ZMInitialSyncCompletionObserver {
     
     func didRegisterClient() {
         self.managedObjectContext.performGroupedBlock {
-            if self.currentAccountState == .newDeviceNewAccount && !self.managedObjectContext.registeredOnThisDevice {
+            if self.currentAccountState == .newDeviceNewAccount && !self.managedObjectContext.registeredOnThisDeviceBeforeConversationInitialization {
                 self.currentAccountState = .newDeviceExistingAccount
             }
+            self.managedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = false
         }
     }
     
@@ -130,8 +131,7 @@ extension ZMAccountStatus : PostLoginAuthenticationObserver {
         failedToAuthenticate()
     }
     
-    public func clientRegistrationDidSucceed() {
+    public func clientRegistrationDidSucceed(accountId: UUID) {
         didRegisterClient()
     }
-    
 }

@@ -62,7 +62,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     }];
     
     XCTestExpectation *clientRegisteredExpectation = [self expectationWithDescription:@"client was registered"];
-    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithManagedObjectContext:nil handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
+    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
         NOT_USED(error);
         NOT_USED(accountId);
         
@@ -357,7 +357,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         self.selfUser.phone = phone;
     }];
     
-    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:nil];
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
 
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
@@ -486,7 +486,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     
     XCTestExpectation *clientRegistrationDidSucceed = [self expectationWithDescription:@"client was registered"];
-    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithManagedObjectContext:nil handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
+    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
         NOT_USED(accountId);
         
         if (event == PostLoginAuthenticationEventObjCClientRegistrationDidFail && error.code == (long)ZMUserSessionNeedsToRegisterEmailToRegisterClient) {
@@ -553,7 +553,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     // expect
     XCTestExpectation *clientRegistrationDidSucceed = [self expectationWithDescription:@"client was registered"];
-    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithManagedObjectContext:nil handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
+    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
         NOT_USED(accountId);
         
         if (event == PostLoginAuthenticationEventObjCClientRegistrationDidFail && error.code == (long)ZMUserSessionNeedsPasswordToRegisterClient) {
@@ -606,7 +606,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertTrue([self login]);
     
     
-    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:nil];
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
     
     // when we delete self client
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -652,7 +652,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // (2) login again after losing our client (BE will ask for password on 2nd client)
     {
         XCTestExpectation *clientRegistrationDidSucceed = [self expectationWithDescription:@"client was registered"];
-        id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithManagedObjectContext:nil handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
+        id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
             NOT_USED(accountId);
             
             if (event == PostLoginAuthenticationEventObjCClientRegistrationDidFail && error.code == (long)ZMUserSessionNeedsPasswordToRegisterClient) {
@@ -691,7 +691,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     // expect
     XCTestExpectation *clientRegistrationDidSucceed = [self expectationWithDescription:@"client was registered"];
-    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithManagedObjectContext:nil handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
+    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
         NOT_USED(accountId);
         
         if (event == PostLoginAuthenticationEventObjCClientRegistrationDidFail && error.code == (long)ZMUserSessionCanNotRegisterMoreClients) {

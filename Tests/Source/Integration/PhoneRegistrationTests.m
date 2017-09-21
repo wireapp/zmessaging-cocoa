@@ -65,7 +65,7 @@
     NSString *expectedPhone = @"+49123456789";
     NSString *code = self.mockTransportSession.phoneVerificationCodeForRegistration;
     
-    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:nil];
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
 
     // expect
     XCTestExpectation *phoneVerificationCodeRequestExpectation = [self expectationWithDescription:@"phoneVerificationCodeRequest succeed"];
@@ -119,7 +119,7 @@
     [[self.registrationObserver stub] phoneVerificationDidSucceed];
     [[self.registrationObserver stub] phoneVerificationCodeRequestDidSucceed];
     
-    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:nil];
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
     
     [self.unauthenticatedSession requestPhoneVerificationCodeForRegistration:phone];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -227,7 +227,7 @@
     // given
     [self createSelfUserAndConversation];
     
-    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:nil];
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
     
     NSString *phone = @"+4912345678900";
     NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
