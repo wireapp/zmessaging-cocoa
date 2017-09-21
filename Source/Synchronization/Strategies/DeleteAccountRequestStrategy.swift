@@ -57,12 +57,12 @@ import WireTransport
         let request = ZMTransportRequest(path: type(of: self).path, method: .methodDELETE, payload: ([:] as ZMTransportData), shouldCompress: true)
         return request
     }
-    
+
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         if response.result == .success || response.result == .permanentError {
             self.managedObjectContext.setPersistentStoreMetadata(NSNumber(value: false), key: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
             
-            PostLoginAuthenticationNotification.notifyAccountDeleted(context: managedObjectContext)
+            PostLoginAuthenticationNotification.notifyAccountDeleted(context: managedObjectContext.zm_userInterface)
         }
     }
 }

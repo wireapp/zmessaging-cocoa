@@ -21,11 +21,13 @@ import Foundation
 import WireSyncEngine
 import WireTransport
 
-class DeleteAccountRequestStrategyTests: MessagingTest {
+class DeleteAccountRequestStrategyTests: MessagingTest, PostLoginAuthenticationObserver {
     
     fileprivate var sut : DeleteAccountRequestStrategy!
     fileprivate var mockApplicationStatus : MockApplicationStatus!
     fileprivate let cookieStorage = ZMPersistentCookieStorage()
+    private var accountDeleted: Bool = false
+    var observers: [Any] = []
     
     override func setUp() {
         super.setUp()
@@ -35,6 +37,7 @@ class DeleteAccountRequestStrategyTests: MessagingTest {
     
     override func tearDown() {
         self.sut = nil
+        self.observers = []
         super.tearDown()
     }
     
@@ -77,18 +80,22 @@ class DeleteAccountRequestStrategyTests: MessagingTest {
     
     func testThatItSignsUserOutWhenSuccessful() {
         // given
+        ZMUser.selfUser(in: self.uiMOC).remoteIdentifier = UUID()
         self.uiMOC.setPersistentStoreMetadata(NSNumber(value: true), key: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
-        let notificationExpectation = self.expectation(description: "Notification fired")
         
-        let _ = NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil, queue: .main) { _ in
-            notificationExpectation.fulfill()
-        }
-        
+        observers.append(PostLoginAuthenticationNotification.addObserver(self,
+                                                        context: self.uiMOC))
+
         // when
         let request1 : ZMTransportRequest! = self.sut.nextRequest()
-        request1.complete(with: ZMTransportResponse(payload: [] as ZMTransportData, httpStatus: 201, transportSessionError: nil))
+        request1.complete(with: ZMTransportResponse(payload: NSDictionary(), httpStatus: 201, transportSessionError: nil))
         
         // then
-        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertTrue(accountDeleted)
+    }
+    
+    func accountDeleted(accountId : UUID) {
+        self.accountDeleted = true
     }
 }

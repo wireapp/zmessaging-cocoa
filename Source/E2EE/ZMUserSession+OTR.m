@@ -69,40 +69,43 @@
     
     return [ZMClientUpdateNotification addOserverWithContext:self.managedObjectContext block:^(enum ZMClientUpdateNotificationType type, NSArray<NSManagedObjectID *> *clientObjectIDs, NSError *error) {
         ZM_STRONG(observer);
-        switch (type) {
-            case ZMClientUpdateNotificationTypeFetchCompleted:
-                if ([observer respondsToSelector:@selector(finishedFetchingClients:)]) {
-                    NSArray *uiClients = @[];
-                    if (clientObjectIDs.count > 0) {
-                        uiClients = [clientObjectIDs mapWithBlock:^id(NSManagedObjectID *objID) {
-                            return [self.managedObjectContext objectWithID:objID];
-                        }];
+        [self.managedObjectContext performGroupedBlock:^{
+            switch (type) {
+                case ZMClientUpdateNotificationTypeFetchCompleted:
+                    if ([observer respondsToSelector:@selector(finishedFetchingClients:)]) {
+                        NSArray *uiClients = @[];
+                        if (clientObjectIDs.count > 0) {
+                            uiClients = [clientObjectIDs mapWithBlock:^id(NSManagedObjectID *objID) {
+                                return [self.managedObjectContext objectWithID:objID];
+                            }];
+                        }
+                        [observer finishedFetchingClients:uiClients];
                     }
-                    [observer finishedFetchingClients:uiClients];
-                }
-                break;
-            case ZMClientUpdateNotificationTypeFetchFailed:
-                if ([observer respondsToSelector:@selector(failedToFetchClientsWithError:)]) {
-                    [observer failedToFetchClientsWithError:error];
-                }
-                break;
-            case ZMClientUpdateNotificationTypeDeletionCompleted:
-                if ([observer respondsToSelector:@selector(finishedDeletingClients:)]) {
-                    NSArray *uiClients = @[];
-                    if (clientObjectIDs.count > 0) {
-                        uiClients = [clientObjectIDs mapWithBlock:^id(NSManagedObjectID *objID) {
-                            return [self.managedObjectContext objectWithID:objID];
-                        }];
+                    break;
+                case ZMClientUpdateNotificationTypeFetchFailed:
+                    if ([observer respondsToSelector:@selector(failedToFetchClientsWithError:)]) {
+                        [observer failedToFetchClientsWithError:error];
                     }
-                    [observer finishedDeletingClients:uiClients];
-                }
-                break;
-            case ZMClientUpdateNotificationTypeDeletionFailed:
-                if ([observer respondsToSelector:@selector(failedToDeleteClientsWithError:)]) {
-                    [observer failedToDeleteClientsWithError:error];
-                }
-                break;
-        }
+                    break;
+                case ZMClientUpdateNotificationTypeDeletionCompleted:
+                    if ([observer respondsToSelector:@selector(finishedDeletingClients:)]) {
+                        NSArray *uiClients = @[];
+                        if (clientObjectIDs.count > 0) {
+                            uiClients = [clientObjectIDs mapWithBlock:^id(NSManagedObjectID *objID) {
+                                return [self.managedObjectContext objectWithID:objID];
+                            }];
+                        }
+                        [observer finishedDeletingClients:uiClients];
+                    }
+                    break;
+                case ZMClientUpdateNotificationTypeDeletionFailed:
+                    if ([observer respondsToSelector:@selector(failedToDeleteClientsWithError:)]) {
+                        [observer failedToDeleteClientsWithError:error];
+                    }
+                    break;
+            }
+        }];
+
     }];
 }
 

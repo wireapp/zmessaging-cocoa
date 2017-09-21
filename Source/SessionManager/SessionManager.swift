@@ -328,19 +328,10 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
         
         tearDownObservers()
-        
-        
-        let matchingAccountSession = backgroundUserSessions.first { (account, session) in
-            session == currentSession
-        }
-        
-        if let matchingAccount = matchingAccountSession?.key {
-            backgroundUserSessions[matchingAccount] = nil
-        }
-        
-        currentSession.closeAndDeleteCookie(deleteCookie)
-        activeUserSession = nil
-        
+
+        userSession?.closeAndDeleteCookie(deleteCookie)
+        userSession = nil
+
         delegate?.sessionManagerDidLogout(error: error)
         
         createUnauthenticatedSession()
@@ -485,15 +476,6 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         selfObserver = nil // TODO need per user session token
     }
     
-    fileprivate func tearDownConversationListObservers() {
-//        if let conversationListObserver = conversationListObserver {
-//            ConversationListChangeInfo.remove(observer: conversationListObserver, for: nil)
-//        }
-//        if let connectionRequestObserver = connectionRequestObserver {
-//            ConversationListChangeInfo.remove(observer: connectionRequestObserver, for: nil)
-//        }
-    }
-
     deinit {
         tearDownObservers()
         tearDownConversationListObservers()
@@ -609,8 +591,17 @@ extension SessionManager: PostLoginAuthenticationObserver {
 
     public func accountDeleted(accountId: UUID) {
         logoutCurrentSession(deleteCookie: true, error: NSError(domain: ZMUserSessionErrorDomain, code: Int(ZMUserSessionErrorCode.accountDeleted.rawValue), userInfo: nil))
-        if let deletedAccount = accountManager.selectedAccount { //  TODO delete account associcated with session
-            delete(account: deletedAccount)
+        
+        if let account = accountManager.account(with: accountId) {
+            delete(account: account)
+        }
+    }
+    
+    public func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
+        delegate?.sessionManagerDidLogout(error: error)
+        
+        if unauthenticatedSession == nil {
+            createUnauthenticatedSession()
         }
     }
     
@@ -622,7 +613,9 @@ extension SessionManager: PostLoginAuthenticationObserver {
         switch userSessionErrorCode {
         case .clientDeletedRemotely,
              .accessTokenExpired:
-            logoutCurrentSession(deleteCookie: true, error: error) //  TODO pick the right session
+            
+            logoutCurrentSession(deleteCookie: true, error: error)
+            
         default:
             delegate?.sessionManagerDidLogout(error: error)
             
