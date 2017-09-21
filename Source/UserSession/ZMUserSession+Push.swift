@@ -117,6 +117,13 @@ extension ZMUserSession: PushDispatcherOptionalClient {
 
 extension ZMUserSession {
 
+    func didReceiveLocalMessage(notification: UILocalNotification, application: ZMApplication) {
+        if application.applicationState == .active {
+            sessionManager?.localMessageNotificationResponder?.processLocalMessage(notification, forSession: self)
+            return
+        }
+    }
+    
     public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
         if application.applicationState == .inactive || application.applicationState == .background {
             self.pendingLocalNotification = ZMStoredLocalNotification(notification: notification,

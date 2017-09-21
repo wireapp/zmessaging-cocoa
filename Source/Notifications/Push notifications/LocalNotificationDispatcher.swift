@@ -23,6 +23,8 @@ public class LocalNotificationDispatcher: NSObject {
     
     public static let ZMShouldHideNotificationContentKey = "ZMShouldHideNotificationContentKey"
     
+    public weak var userSession: ZMUserSession?
+    
     let eventNotifications: ZMLocalNotificationSet
     let messageNotifications: ZMLocalNotificationSet
     let callingNotifications: ZMLocalNotificationSet

@@ -34,6 +34,7 @@
 @class CallingRequestStrategy;
 @class AVSMediaManager;
 @class ZMAPNSEnvironment;
+@class SessionManager;
 
 @protocol UserProfile;
 @protocol AnalyticsType;
@@ -82,8 +83,9 @@ extern NSString * const ZMFlowManagerDidBecomeAvailableNotification;
                      apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                          application:(id<ZMApplication>)application
                           appVersion:(NSString *)appVersion
-                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;;
+                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 
+@property (nonatomic, weak) SessionManager *sessionManager;
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
 @property (atomic, readonly) ZMNetworkState networkState;

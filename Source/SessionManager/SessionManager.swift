@@ -35,6 +35,9 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     func sessionManagerDidBlacklistCurrentVersion()
 }
 
+public protocol LocalMessageNotificationResponder : class {
+    func processLocalMessage(_ notification: UILocalNotification, forSession session: ZMUserSession)
+}
 
 
 /// The `SessionManager` class handles the creation of `ZMUserSession` and `UnauthenticatedSession`
@@ -105,6 +108,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public let appVersion: String
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
+    public weak var localMessageNotificationResponder: LocalMessageNotificationResponder?
     public let accountManager: AccountManager
     public fileprivate(set) var activeUserSession: ZMUserSession?
     public fileprivate(set) var backgroundUserSessions: [Account: ZMUserSession] = [:]
@@ -397,6 +401,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         conversationListObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.conversations(inUserSession: session))
         connectionRequestObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.pendingConnectionConversations(inUserSession: session))
 
+        session.sessionManager = self
         self.activeUserSession = session
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
         let authenticationStatus = unauthenticatedSession?.authenticationStatus

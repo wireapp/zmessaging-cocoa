@@ -20,17 +20,29 @@ import Foundation
 import WireMessageStrategy
 
 extension LocalNotificationDispatcher: PushMessageHandler {
+    
+    /// Dispatches the given message notification depending on the current application
+    /// state. If the app is active, then the notification is directed to the user
+    /// session, otherwise it is directed to the system via UIApplication.
+    ///
+    fileprivate func scheduleLocalNotification(_ note: UILocalNotification) {
+        if application.applicationState == .active {
+            userSession?.didReceiveLocalMessage(notification: note, application: application)
+        } else {
+            application.scheduleLocalNotification(note)
+        }
+    }
 
     // Processes ZMOTRMessages and ZMSystemMessages
     @objc(processMessage:) public func process(_ message: ZMMessage) {
         if let message = message as? ZMOTRMessage {
             if let note = localNotificationForMessage(message), let uiNote = note.uiNotifications.last {
-                self.application.scheduleLocalNotification(uiNote)
+                scheduleLocalNotification(uiNote)
             }
         }
         if let message = message as? ZMSystemMessage {
             if let note = localNotificationForSystemMessage(message), let uiNote = note.uiNotifications.last {
-                self.application.scheduleLocalNotification(uiNote)
+                scheduleLocalNotification(uiNote)
             }
         }
     }
