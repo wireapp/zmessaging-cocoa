@@ -110,6 +110,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public fileprivate(set) var backgroundUserSessions: [Account: ZMUserSession] = [:]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
     public weak var requestToOpenViewDelegate: ZMRequestsToOpenViewsDelegate?
+    public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
     
     let application: ZMApplication
     var postLoginAuthenticationToken: Any?
@@ -254,7 +255,9 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         super.init()
         self.pushDispatcher.fallbackClient = self
 
-        postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self)
+        postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(
+            self,
+            queue: self.groupQueue)
         
         if let account = accountManager.selectedAccount {
             selectInitialAccount(account, launchOptions: launchOptions)
@@ -408,6 +411,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             session.setEmailCredentials(authenticationStatus?.emailCredentials())
             if let registered = authenticationStatus?.completedRegistration {
                 session.syncManagedObjectContext.registeredOnThisDevice = registered
+                session.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
             }
 
             session.managedObjectContext.performGroupedBlock { [weak self] in
@@ -604,12 +608,11 @@ extension SessionManager: PostLoginAuthenticationObserver {
     }
 
     public func accountDeleted(accountId: UUID) {
-        logoutCurrentSession(deleteCookie: true, error: nil)
+        logoutCurrentSession(deleteCookie: true, error: NSError(domain: ZMUserSessionErrorDomain, code: Int(ZMUserSessionErrorCode.accountDeleted.rawValue), userInfo: nil))
         if let deletedAccount = accountManager.selectedAccount { //  TODO delete account associcated with session
             delete(account: deletedAccount)
         }
     }
-
     
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
         guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)) else {

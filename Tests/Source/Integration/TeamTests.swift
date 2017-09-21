@@ -27,9 +27,9 @@ class TestTeamObserver : NSObject, TeamObserver {
     var observedTeam : Team?
     var notifications: [TeamChangeInfo] = []
     
-    init(team: Team? = nil) {
+    init(team: Team? = nil, userSession: ZMUserSession) {
         super.init()
-        token = TeamChangeInfo.add(observer: self, for: team, managedObjectContext: team!.managedObjectContext!)
+        token = TeamChangeInfo.add(observer: self, for: team, managedObjectContext: userSession.managedObjectContext)
     }
     
     func teamDidChange(_ changeInfo: TeamChangeInfo) {
@@ -72,7 +72,7 @@ extension TeamTests {
         guard let localSelfUser = user(for: selfUser) else { return XCTFail() }
         XCTAssertTrue(localSelfUser.hasTeam)
         
-        let teamObserver = TestTeamObserver()
+        let teamObserver = TestTeamObserver(team: nil, userSession: userSession!)
         
         // when
         mockTransportSession.performRemoteChanges { (session) in
@@ -138,7 +138,7 @@ extension TeamTests {
         let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
 
         XCTAssert(login())
-        let teamObserver = TestTeamObserver()
+        let teamObserver = TestTeamObserver(team: nil, userSession: userSession!)
         
         // when
         mockTransportSession.performRemoteChanges { (session) in
@@ -184,7 +184,7 @@ extension TeamTests {
         let mockTeam = remotelyInsertTeam(members: [self.selfUser])
 
         XCTAssert(login())
-        let teamObserver = TestTeamObserver()
+        let teamObserver = TestTeamObserver(team: nil, userSession: userSession!)
         
         // when
         mockTransportSession.performRemoteChanges { (session) in

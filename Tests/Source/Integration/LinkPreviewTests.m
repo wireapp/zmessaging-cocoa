@@ -248,7 +248,7 @@
 - (void)testThatItUpdateMessageWhenReceivingLinkPreviewFollowUp_WithoutImage_onlyArticle;
 {
     // given
-        XCTAssert([self login]);
+    XCTAssert([self login]);
     
     MockConversation *mockConversation = self.selfToUser1Conversation;
     [self prefetchRemoteClientByInsertingMessageInConversation:mockConversation];

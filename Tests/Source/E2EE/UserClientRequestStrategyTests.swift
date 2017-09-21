@@ -28,7 +28,7 @@ typealias PostLoginAuthenticationHandler = (_ event : WireSyncEngine.PostLoginAu
 
 extension PostLoginAuthenticationObserver {
     
-    func addObserver(context : NSManagedObjectContext?, handler: @escaping PostLoginAuthenticationHandler) -> Any {
+    func addObserver(context : NSManagedObjectContext, handler: @escaping PostLoginAuthenticationHandler) -> Any {
         return PostLoginAuthenticationObserverToken(managedObjectContext: context, handler: handler)
     }
     
@@ -39,12 +39,19 @@ class PostLoginAuthenticationObserverToken : NSObject, PostLoginAuthenticationOb
     var token : Any?
     var handler : PostLoginAuthenticationHandler
     
-    init(managedObjectContext: NSManagedObjectContext?, handler: @escaping PostLoginAuthenticationHandler) {
+    convenience init(managedObjectContext: NSManagedObjectContext, handler: @escaping PostLoginAuthenticationHandler) {
+        self.init(managedObjectContext: managedObjectContext, groupQueue: managedObjectContext, handler: handler)
+    }
+    
+    init(managedObjectContext: NSManagedObjectContext?, groupQueue: ZMSGroupQueue, handler: @escaping PostLoginAuthenticationHandler) {
         self.handler = handler
-        
         super.init()
+        if let managedObjectContext = managedObjectContext {
+            self.token = PostLoginAuthenticationNotification.addObserver(self, context: managedObjectContext)
+        } else {
+            self.token = PostLoginAuthenticationNotification.addObserver(self, queue: groupQueue)
+        }
         
-        self.token = PostLoginAuthenticationNotification.addObserver(self, context: managedObjectContext)
     }
     
     func authenticationInvalidated(_ error: NSError, accountId: UUID) {
@@ -70,7 +77,6 @@ public enum PostLoginAuthenticationEventObjC : Int {
     case authenticationInvalidated
     case clientRegistrationDidSucceed
     case clientRegistrationDidFail
-    case didDetectSelfClientDeletion
     case accountDeleted
 }
 
@@ -81,9 +87,21 @@ public class PostLoginAuthenticationObserverObjCToken : NSObject {
     
     var token : Any?
     
-    init(managedObjectContext: NSManagedObjectContext?, handler: @escaping PostLoginAuthenticationObjCHandler) {
-        
-        self.token = PostLoginAuthenticationObserverToken(managedObjectContext: managedObjectContext, handler: { (event, accountId) in
+    convenience init(managedObjectContext: NSManagedObjectContext, handler: @escaping PostLoginAuthenticationObjCHandler) {
+        self.init(managedObjectContext: managedObjectContext, groupQueue: managedObjectContext, handler: handler)
+    }
+    
+    public convenience init(dispatchGroup: ZMSDispatchGroup, handler: @escaping PostLoginAuthenticationObjCHandler) {
+        let queue = DispatchGroupQueue(queue: .main)
+        queue.add(dispatchGroup)
+        self.init(managedObjectContext: nil, groupQueue: queue, handler: handler)
+    }
+    
+    init(managedObjectContext: NSManagedObjectContext?, groupQueue: ZMSGroupQueue, handler: @escaping PostLoginAuthenticationObjCHandler) {
+        self.token = PostLoginAuthenticationObserverToken(
+            managedObjectContext: managedObjectContext,
+            groupQueue: groupQueue,
+            handler: { (event, accountId) in
             switch event {
             case .clientRegistrationDidSucceed:
                 handler(.clientRegistrationDidSucceed, accountId, nil)
@@ -93,12 +111,9 @@ public class PostLoginAuthenticationObserverObjCToken : NSObject {
                 handler(.authenticationInvalidated, accountId, error)
             case .accountDeleted:
                 handler(.accountDeleted, accountId, nil)
-            case .didDetectSelfClientDeletion:
-                handler(.didDetectSelfClientDeletion, accountId, nil)
             }
         })
     }
-    
 }
 
 @objc
@@ -122,10 +137,19 @@ public class PostLoginAuthenticationNotificationRecorder : NSObject {
     private var token : Any?
     public var notifications : [PostLoginAuthenticationNotificationEvent] = []
     
-    init(managedObjectContext: NSManagedObjectContext?) {
+    init(managedObjectContext: NSManagedObjectContext) {
         super.init()
         
         token = PostLoginAuthenticationObserverObjCToken(managedObjectContext: managedObjectContext) { [weak self] (event, accountId, error) in
+            self?.notifications.append(PostLoginAuthenticationNotificationEvent(event: event, accountId: accountId, error: error))
+        }
+    }
+    
+    public init(dispatchGroup: ZMSDispatchGroup) {
+        super.init()
+        let queue = DispatchGroupQueue(queue: .main)
+        queue.add(dispatchGroup)
+        token = PostLoginAuthenticationObserverObjCToken(managedObjectContext: nil, groupQueue: queue) { [weak self] (event, accountId, error) in
             self?.notifications.append(PostLoginAuthenticationNotificationEvent(event: event, accountId: accountId, error: error))
         }
     }

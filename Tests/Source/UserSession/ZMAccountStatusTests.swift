@@ -37,6 +37,13 @@ class ZMAccountStatusTests : MessagingTest {
 
     var sut : ZMAccountStatus!
     
+    override func setUp() {
+        super.setUp()
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.remoteIdentifier = self.userIdentifier
+        self.uiMOC.saveOrRollback()
+    }
+    
     override func tearDown() {
         sut = nil
         super.tearDown()
@@ -103,6 +110,7 @@ class ZMAccountStatusTests : MessagingTest {
     }
     
     func testThatWhenLoginSucceedsWithoutRegistrationItSwitchesToNewDeviceExistingAccount() {
+        
         // given
         let cookieStorage = MockCookieStorage()
         cookieStorage.shouldReturnCookie = false
@@ -144,7 +152,7 @@ class ZMAccountStatusTests : MessagingTest {
         XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceNewAccount)
         
         // when
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        self.uiMOC.registeredOnThisDeviceBeforeConversationInitialization = true
         PostLoginAuthenticationNotification.notifyClientRegistrationDidSucceed(context: uiMOC)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -177,7 +185,7 @@ class ZMAccountStatusTests : MessagingTest {
         XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceExistingAccount)
 
         // when
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "ZMInitialSyncCompletedNotification"), object: nil)
+        ZMUserSession.notifyInitialSyncCompleted(context: self.uiMOC)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
@@ -214,7 +222,7 @@ class ZMAccountStatusTests : MessagingTest {
         XCTAssertEqual(self.sut.currentAccountState, AccountState.oldDeviceDeactivatedAccount)
         
         // when
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "ZMInitialSyncCompletedNotification"), object: nil)
+        ZMUserSession.notifyInitialSyncCompleted(context: self.uiMOC)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -239,7 +247,7 @@ class ZMAccountStatusTests : MessagingTest {
         XCTAssertEqual(self.sut.currentAccountState, AccountState.newDeviceNewAccount)
         
         // when
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "ZMInitialSyncCompletedNotification"), object: nil)
+        ZMUserSession.notifyInitialSyncCompleted(context: self.uiMOC)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then

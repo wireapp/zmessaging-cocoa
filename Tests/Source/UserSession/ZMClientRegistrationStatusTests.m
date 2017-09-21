@@ -178,7 +178,7 @@
 {
     // given
     __block BOOL notificationReceived = NO;
-    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithManagedObjectContext:nil handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
+    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
         NOT_USED(error);
         NOT_USED(accountId);
         

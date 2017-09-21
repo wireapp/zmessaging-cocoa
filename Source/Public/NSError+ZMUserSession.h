@@ -67,7 +67,9 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     /// The user requested to add an additional account
     ZMUserSessionAddAccountRequested,
     /// The user account is suspended and may not be logged in
-    ZMUserSessionAccountSuspended
+    ZMUserSessionAccountSuspended,
+    /// The user account was deleted
+    ZMUserSessionAccountDeleted
 };
 
 FOUNDATION_EXPORT NSString * const ZMUserSessionErrorDomain;

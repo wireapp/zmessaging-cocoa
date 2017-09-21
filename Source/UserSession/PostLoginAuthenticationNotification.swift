@@ -51,9 +51,6 @@ extension NSManagedObjectContext: GenericAsyncQueue {
     /// Invoken when there was an error registering the client
     @objc optional func clientRegistrationDidFail(_ error: NSError, accountId : UUID)
     
-    /// Invoked when the client is deleted remotely
-    @objc optional func didDetectSelfClientDeletion(accountId : UUID)
-    
     /// Account was successfully deleted
     @objc optional func accountDeleted(accountId : UUID)
 }
@@ -70,9 +67,6 @@ enum PostLoginAuthenticationEvent {
     /// Client registered client
     case clientRegistrationDidSucceed
     
-    /// Client is deleted remotely
-    case didDetectSelfClientDeletion
-    
     /// Account was successfully deleted on the backend
     case accountDeleted
 }
@@ -86,11 +80,19 @@ enum PostLoginAuthenticationEvent {
         NotificationInContext(name: self.name, context: context.zm_userInterface, userInfo: [self.eventKey: event]).post()
     }
     
-    static public func addObserver(_ observer: PostLoginAuthenticationObserver, context: NSManagedObjectContext? = nil) -> Any {
-        return addObserver(observer, context: context, queue: DispatchGroupQueue(queue: .main))
+    static public func addObserver(_ observer: PostLoginAuthenticationObserver,
+                                   context: NSManagedObjectContext) -> Any {
+         return self.addObserver(observer, context: context, queue: context)
     }
     
-    static public func addObserver(_ observer: PostLoginAuthenticationObserver, context: NSManagedObjectContext? = nil, queue: ZMSGroupQueue) -> Any {
+    static public func addObserver(_ observer: PostLoginAuthenticationObserver,
+                                   queue: ZMSGroupQueue) -> Any {
+        return self.addObserver(observer, context: nil, queue: queue)
+    }
+
+    
+    static private func addObserver(_ observer: PostLoginAuthenticationObserver, context: NSManagedObjectContext? = nil, queue: ZMSGroupQueue) -> Any {
+        
         let token = NotificationCenter.default.addObserver(forName: name, object: context?.zm_userInterface, queue: nil) { [weak observer] (note) in
             guard
                 let userInfo = note.userInfo as? [String : Any],
@@ -105,8 +107,6 @@ enum PostLoginAuthenticationEvent {
                     observer.authenticationInvalidated?(error, accountId: accountId)
                 case .clientRegistrationDidFail(let error):
                     observer.clientRegistrationDidFail?(error, accountId: accountId)
-                case .didDetectSelfClientDeletion:
-                    observer.didDetectSelfClientDeletion?(accountId: accountId)
                 case .clientRegistrationDidSucceed:
                     observer.clientRegistrationDidSucceed?(accountId: accountId)
                 case .accountDeleted:
@@ -134,11 +134,6 @@ public extension PostLoginAuthenticationNotification {
         self.notify(event: .clientRegistrationDidSucceed, context: context)
     }
     
-    @objc(notifyDidDetectSelfClientDeletionInContext:)
-    static func notifyDidDetectSelfClientDeletion(context: NSManagedObjectContext) {
-        self.notify(event: .didDetectSelfClientDeletion, context: context)
-    }
-
     static func notifyClientRegistrationDidFail(error: NSError, context: NSManagedObjectContext) {
         self.notify(event: .clientRegistrationDidFail(error: error), context: context)
     }
