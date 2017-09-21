@@ -25,9 +25,9 @@ public extension UserChangeInfo {
     // MARK: Registering UserObservers
     /// Adds an observer for the user if one specified or to all ZMUsers is none is specified
     /// You must hold on to the token and use it to unregister
-    @objc(addUserObserver:forUser:userSession:)
+    @objc(addObserver:forUser:userSession:)
     public static func add(observer: ZMUserObserver, for user: ZMUser?, userSession: ZMUserSession) -> NSObjectProtocol {
-        return self.add(observer: observer, for: user, userSession: userSession)
+        return self.add(observer: observer, for: user, managedObjectContext: userSession.managedObjectContext)
     }
     
     // MARK: Registering ZMBareUser
@@ -41,7 +41,7 @@ public extension UserChangeInfo {
     // MARK: Registering SearchUserObservers
     /// Adds an observer for the searchUser if one specified or to all ZMSearchUser is none is specified
     /// You must hold on to the token until you want to stop observing
-    @objc(addSearchUserObserver:for:userSession:)
+    @objc(addObserver:forSearchUser:userSession:)
     static func add(searchUserObserver observer: ZMUserObserver, for user: ZMSearchUser?, userSession: ZMUserSession) -> NSObjectProtocol {
         return self.add(searchUserObserver: observer, for: user, managedObjectContext: userSession.searchManagedObjectContext)
     }
