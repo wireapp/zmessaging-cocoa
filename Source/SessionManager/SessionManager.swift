@@ -292,7 +292,6 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public func select(_ account: Account) {
         delegate?.sessionManagerWillOpenAccount(account)
         tearDownObservers()
-        activeUserSession?.closeAndDeleteCookie(false)
         activeUserSession = nil
         
         select(account: account) { [weak self] (_) in
