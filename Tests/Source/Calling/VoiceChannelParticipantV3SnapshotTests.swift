@@ -44,7 +44,8 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
         let callMember2 = CallMember(userId: userId, audioEstablished: false)
 
         // when
-        let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(conversationId: UUID(),
+        let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(callCenter: mockWireCallCenterV3,
+                                                                   conversationId: UUID(),
                                                                    selfUserID: UUID(),
                                                                    members: [callMember1, callMember2])
         
@@ -61,7 +62,8 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
         let userId = UUID()
         let callMember1 = CallMember(userId: userId, audioEstablished: true)
         let callMember2 = CallMember(userId: userId, audioEstablished: false)
-        let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(conversationId: UUID(),
+        let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(callCenter: mockWireCallCenterV3,
+                                                                   conversationId: UUID(),
                                                                    selfUserID: UUID(),
                                                                    members: [])
 
@@ -81,7 +83,8 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
         let userId = UUID()
         let callMember1 = CallMember(userId: userId, audioEstablished: false)
         let callMember2 = CallMember(userId: userId, audioEstablished: true)
-        let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(conversationId: UUID(),
+        let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(callCenter: mockWireCallCenterV3,
+                                                                   conversationId: UUID(),
                                                                    selfUserID: UUID(),
                                                                    members: [])
         

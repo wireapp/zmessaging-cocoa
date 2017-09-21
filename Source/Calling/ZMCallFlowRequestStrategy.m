@@ -136,10 +136,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         VoiceGainNotification *voiceGainNotification = [[VoiceGainNotification alloc] initWithVolume:(float)volume conversationId:conversationID userId:userID];
         
         [self.uiManagedObjectContext performGroupedBlock:^{
-            [self.voiceGainNotificationQueue enqueueNotification:voiceGainNotification.notification
-                                                    postingStyle:NSPostWhenIdle
-                                                    coalesceMask:NSNotificationCoalescingOnSender | NSNotificationCoalescingOnName
-                                                        forModes:nil];
+            [voiceGainNotification postIn:self.uiManagedObjectContext queue:self.voiceGainNotificationQueue];
         }];
     }];
 }
