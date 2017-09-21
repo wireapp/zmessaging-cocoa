@@ -90,7 +90,10 @@ enum PostLoginAuthenticationEvent {
         return self.addObserver(observer, context: nil, queue: queue)
     }
 
-    
+    static public func addObserver(_ observer: PostLoginAuthenticationObserver) -> Any {
+        return self.addObserver(observer, context: nil, queue: DispatchGroupQueue(queue: DispatchQueue.main))
+    }
+
     static private func addObserver(_ observer: PostLoginAuthenticationObserver, context: NSManagedObjectContext? = nil, queue: ZMSGroupQueue) -> Any {
         
         let token = NotificationCenter.default.addObserver(forName: name, object: context?.zm_userInterface, queue: nil) { [weak observer] (note) in
@@ -98,19 +101,24 @@ enum PostLoginAuthenticationEvent {
                 let userInfo = note.userInfo as? [String : Any],
                 let event = userInfo[eventKey] as? PostLoginAuthenticationEvent,
                 let observer = observer,
-                let context = note.object as? NSManagedObjectContext,
-                let accountId = ZMUser.selfUser(in: context).remoteIdentifier else { return }
+                let context = note.object as? NSManagedObjectContext else { return }
             
-            queue.performGroupedBlock {
-                switch event {
-                case .authenticationInvalidated(let error):
-                    observer.authenticationInvalidated?(error, accountId: accountId)
-                case .clientRegistrationDidFail(let error):
-                    observer.clientRegistrationDidFail?(error, accountId: accountId)
-                case .clientRegistrationDidSucceed:
-                    observer.clientRegistrationDidSucceed?(accountId: accountId)
-                case .accountDeleted:
-                    observer.accountDeleted?(accountId: accountId)
+            context.performGroupedBlock {
+                guard let accountId = ZMUser.selfUser(in: context).remoteIdentifier else {
+                    return
+                }
+                
+                queue.performGroupedBlock {
+                    switch event {
+                    case .authenticationInvalidated(let error):
+                        observer.authenticationInvalidated?(error, accountId: accountId)
+                    case .clientRegistrationDidFail(let error):
+                        observer.clientRegistrationDidFail?(error, accountId: accountId)
+                    case .clientRegistrationDidSucceed:
+                        observer.clientRegistrationDidSucceed?(accountId: accountId)
+                    case .accountDeleted:
+                        observer.accountDeleted?(accountId: accountId)
+                    }
                 }
             }
         }
