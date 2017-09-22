@@ -181,20 +181,14 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase, PostLoginAuthenti
             self.clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: self.cookieStorage, registrationStatusDelegate: nil)
             self.clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
             self.sut = UserClientRequestStrategy(clientRegistrationStatus: self.clientRegistrationStatus, clientUpdateStatus:self.clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
-//            NotificationCenter.default.addObserver(self, selector: #selector(UserClientRequestStrategyTests.didReceiveAuthenticationNotification(_:)), name: NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil)
-//            self.authenticationTestObserver = PostLoginAuthenticationTestObserver(managedObjectContext: self.uiMOC)
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.remoteIdentifier = self.userIdentifier
             self.postLoginAuthenticationObserverToken = PostLoginAuthenticationObserverToken(managedObjectContext: self.uiMOC, handler: { [weak self] (event, _) in
                 self?.receivedAuthenticationEvents.append(event)
             })
+            self.syncMOC.saveOrRollback()
         }
     }
-    
-    
-//    func didReceiveAuthenticationNotification(_ note: ZMUserSessionAuthenticationNotification) {
-//        receivedAuthenticationNotifications.append(note)
-//    }
-    
-    
     
     override func tearDown() {
         try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectory)
@@ -205,6 +199,7 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase, PostLoginAuthenti
         self.spyKeyStore = nil
         self.sut.tearDown()
         self.sut = nil
+        self.receivedAuthenticationEvents = []
         self.postLoginAuthenticationObserverToken = nil
         NotificationCenter.default.removeObserver(self)
         super.tearDown()
