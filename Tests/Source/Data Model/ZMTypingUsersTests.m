@@ -151,11 +151,15 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
 
     // then
-    [self expectationForNotification:@"ZMTypingNotification" object:nil handler:^BOOL(NSNotification * notification) {
-        XCTAssertEqual(notification.object, conversation);
-        XCTAssertEqual(notification.userInfo[@"isTyping"], @(YES));
-        return  YES;
-    }];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Notification"];
+    id token = [NotificationInContext addObserverWithName:ZMConversation.typingNotificationName
+                                                  context:self.uiMOC
+                                                   object:nil
+                                                    queue:nil using:^(NotificationInContext * notification) {
+                                                        XCTAssertEqual(notification.object, conversation);
+                                                        XCTAssertEqual(notification.userInfo[@"isTyping"], @(YES));
+                                                        [expectation fulfill];
+                                                    }];
     
     // when
     [conversation setIsTyping:YES];
@@ -163,7 +167,7 @@
     
     // teardown
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    token = nil;
 }
 
 @end

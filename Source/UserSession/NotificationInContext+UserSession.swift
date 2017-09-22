@@ -84,7 +84,7 @@ private let typingNotificationUsersKey = "typingUsers"
 public extension ZMConversation {
 
     @objc public func addTypingObserver(_ observer: ZMTypingChangeObserver) -> Any {
-        return NotificationInContext.addObserver(name: typingNotificationName,
+        return NotificationInContext.addObserver(name: ZMConversation.typingNotificationName,
                                                  context: self.managedObjectContext!.zm_userInterface)
         {
             [weak observer, weak self] note in
@@ -94,7 +94,7 @@ public extension ZMConversation {
     }
     
     @objc public func notifyTyping(typingUsers: Set<ZMUser>) {
-        NotificationInContext(name: typingNotificationName, context: self.managedObjectContext!.zm_userInterface, userInfo: [typingNotificationUsersKey: typingUsers]).post()
+        NotificationInContext(name: ZMConversation.typingNotificationName, context: self.managedObjectContext!.zm_userInterface, userInfo: [typingNotificationUsersKey: typingUsers]).post()
     }
 }
 

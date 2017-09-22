@@ -2149,7 +2149,7 @@
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"It should call the observer"];
     
-    id token = [NotificationInContext addObserverWithName:ZMConversationFailedToDecryptMessageNotificationName
+    id token = [NotificationInContext addObserverWithName:ZMConversation.failedToDecryptMessageNotificationName
                                        context:self.userSession.managedObjectContext
                                         object:nil
                                          queue:nil
