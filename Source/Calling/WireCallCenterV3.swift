@@ -404,7 +404,7 @@ public struct CallEvent {
 /// MARK - WireCallCenterV3
 
 /**
- * WireCallCenter is used for making wire calls and observing their state. There can only be one instance of the WireCallCenter. You should instantiate WireCallCenter once a keep a strong reference to it, other consumers can access this instance via the `activeInstance` property.
+ * WireCallCenter is used for making wire calls and observing their state. There can only be one instance of the WireCallCenter. 
  * Thread safety: WireCallCenter instance methods should only be called from the main thread, class method can be called from any thread.
  */
 @objc public class WireCallCenterV3 : NSObject {
@@ -414,10 +414,6 @@ public struct CallEvent {
 
     @objc public static let cbrNotificationName = WireCallCenterCBRCallNotification.notificationName
 
-    
-    /// activeInstance - Currenly active instance of the WireCallCenter.
-    public private(set) static weak var activeInstance : WireCallCenterV3?
-    
     /// establishedDate - Date of when the call was established (Participants can talk to each other). This property is only valid when the call state is .established.
     public private(set) var establishedDate : Date?
     
@@ -474,14 +470,8 @@ public struct CallEvent {
         
         super.init()
         
-        if WireCallCenterV3.activeInstance != nil {
-            fatal("Only one WireCallCenter can be instantiated")
-        }
-        
         let observer = Unmanaged.passUnretained(self).toOpaque()
         self.avsWrapper = avsWrapper ?? AVSWrapper(userId: userId, clientId: clientId, observer: observer)
-    
-        WireCallCenterV3.activeInstance = self
     }
     
     fileprivate func send(token: WireCallMessageToken, conversationId: UUID, userId: UUID, clientId: String, data: Data, dataLength: Int) {

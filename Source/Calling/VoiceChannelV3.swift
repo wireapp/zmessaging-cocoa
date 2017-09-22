@@ -24,8 +24,13 @@ public class VoiceChannelV3 : NSObject, CallProperties, VoiceChannel {
         return .version3
     }
     
+    public var callCenter: WireCallCenterV3? {
+        return self.conversation?.managedObjectContext?.zm_callCenter
+    }
+    
     public var selfUserConnectionState: VoiceChannelV2ConnectionState {
-        if let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = WireCallCenterV3.activeInstance {
+        if let remoteIdentifier = conversation?.remoteIdentifier,
+            let callCenter = self.callCenter {
             return callCenter.callState(conversationId:remoteIdentifier).connectionState
         } else {
             return .invalid
@@ -34,14 +39,14 @@ public class VoiceChannelV3 : NSObject, CallProperties, VoiceChannel {
 
     /// The date and time of current call start
     public var callStartDate: Date? {
-        return WireCallCenterV3.activeInstance?.establishedDate
+        return self.callCenter?.establishedDate
     }
     
     weak public var conversation: ZMConversation?
     
     /// Voice channel participants. May be a subset of conversation participants.
     public var participants: NSOrderedSet {
-        guard let callCenter = WireCallCenterV3.activeInstance,
+        guard let callCenter = self.callCenter,
               let conversationId = conversation?.remoteIdentifier,
               let context = conversation?.managedObjectContext
         else { return NSOrderedSet() }
@@ -60,7 +65,7 @@ public class VoiceChannelV3 : NSObject, CallProperties, VoiceChannel {
         guard let conv = self.conversation,
             let convID = conv.remoteIdentifier,
             let userID = participant.remoteIdentifier,
-            let callCenter = WireCallCenterV3.activeInstance
+            let callCenter = self.callCenter
         else { return VoiceChannelV2ParticipantState() }
         
         let state = VoiceChannelV2ParticipantState()
@@ -74,7 +79,10 @@ public class VoiceChannelV3 : NSObject, CallProperties, VoiceChannel {
     }
     
     public var state: VoiceChannelV2State {
-        if let conversation = conversation, let remoteIdentifier = conversation.remoteIdentifier, let callCenter = WireCallCenterV3.activeInstance {
+        if let conversation = conversation,
+            let remoteIdentifier = conversation.remoteIdentifier,
+            let callCenter = self.callCenter
+        {
             let callState = callCenter.callState(conversationId:remoteIdentifier)
             return callState.voiceChannelState(securityLevel: conversation.securityLevel)
         } else {
@@ -85,13 +93,13 @@ public class VoiceChannelV3 : NSObject, CallProperties, VoiceChannel {
     public var isVideoCall: Bool {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
         
-        return WireCallCenterV3.activeInstance?.isVideoCall(conversationId: remoteIdentifier) ?? false
+        return self.callCenter?.isVideoCall(conversationId: remoteIdentifier) ?? false
     }
     
     public var initiator : ZMUser? {
         guard let context = conversation?.managedObjectContext,
               let convId = conversation?.remoteIdentifier,
-              let userId = WireCallCenterV3.activeInstance?.initiatorForCall(conversationId: convId)
+              let userId = self.callCenter?.initiatorForCall(conversationId: convId)
         else {
             return nil
         }
@@ -101,13 +109,13 @@ public class VoiceChannelV3 : NSObject, CallProperties, VoiceChannel {
     public func toggleVideo(active: Bool) throws {
         guard let remoteIdentifier = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.videoNotActiveError() }
         
-        WireCallCenterV3.activeInstance?.toogleVideo(conversationID: remoteIdentifier, active: active)
+        self.callCenter?.toogleVideo(conversationID: remoteIdentifier, active: active)
     }
     
     public func setVideoCaptureDevice(device: CaptureDevice) throws {
         guard let conversationId = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.switchToVideoNotAllowedError() }
         
-        WireCallCenterV3.activeInstance?.setVideoCaptureDevice(device, for: conversationId)
+        self.callCenter?.setVideoCaptureDevice(device, for: conversationId)
     }
     
 }
@@ -169,11 +177,11 @@ extension VoiceChannelV3 : CallActionsInternal {
         
         switch state {
         case .incomingCall, .incomingCallInactive:
-            joined = WireCallCenterV3.activeInstance?.answerCall(conversationId: remoteIdentifier) ?? false
+            joined = self.callCenter?.answerCall(conversationId: remoteIdentifier) ?? false
         case .incomingCallDegraded:
             joined = true // Don't answer call
         default:
-            joined = WireCallCenterV3.activeInstance?.startCall(conversationId: remoteIdentifier, video: video, isGroup: isGroup) ?? false
+            joined = self.callCenter?.startCall(conversationId: remoteIdentifier, video: video, isGroup: isGroup) ?? false
         }
         
         return joined
@@ -185,7 +193,7 @@ extension VoiceChannelV3 : CallActionsInternal {
         else { return }
         
         let isGroup = (conv.conversationType == .group)
-        WireCallCenterV3.activeInstance?.closeCall(conversationId: remoteID, isGroup: isGroup)
+        self.callCenter?.closeCall(conversationId: remoteID, isGroup: isGroup)
     }
     
     public func ignore() {
@@ -193,7 +201,7 @@ extension VoiceChannelV3 : CallActionsInternal {
               let remoteID = conv.remoteIdentifier
         else { return }
         
-        WireCallCenterV3.activeInstance?.rejectCall(conversationId: remoteID)
+        self.callCenter?.rejectCall(conversationId: remoteID)
     }
     
 }

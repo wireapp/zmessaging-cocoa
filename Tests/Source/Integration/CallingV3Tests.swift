@@ -141,7 +141,7 @@ class CallingV3Tests : IntegrationTest {
     }
     
     private var wireCallCenterRef : UnsafeMutableRawPointer? {
-        return Unmanaged<WireCallCenterV3>.passUnretained(WireCallCenterV3.activeInstance!).toOpaque()
+        return Unmanaged<WireCallCenterV3>.passUnretained(userSession!.managedObjectContext.zm_callCenter!).toOpaque()
     }
     
     private var conversationIdRef : [CChar]? {
@@ -156,7 +156,7 @@ class CallingV3Tests : IntegrationTest {
     
     func participantsChanged(members: [(user: ZMUser, establishedFlow: Bool)]) {
         let mappedMembers = members.map{CallMember(userId: $0.user.remoteIdentifier!, audioEstablished: $0.establishedFlow)}
-        (WireCallCenterV3.activeInstance as! WireCallCenterV3IntegrationMock).mockAVSWrapper.mockMembers = mappedMembers
+        (userSession!.managedObjectContext.zm_callCenter as! WireCallCenterV3IntegrationMock).mockAVSWrapper.mockMembers = mappedMembers
 
         WireSyncEngine.groupMemberHandler(conversationIdRef: conversationIdRef, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

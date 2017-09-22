@@ -208,7 +208,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.managedObjectContext.zm_fileAssetCache = fileAssetCache;
         
         CTCallCenter *callCenter = [[CTCallCenter alloc] init];
-        self.managedObjectContext.zm_callCenter = callCenter;
+        self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
         
         [self.syncManagedObjectContext performBlockAndWait:^{
             self.syncManagedObjectContext.zm_imageAssetCache = imageAssetCache;
@@ -217,8 +217,8 @@ ZM_EMPTY_ASSERTING_INIT()
             
             self.localNotificationDispatcher = [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncManagedObjectContext
                                                                                                      application:application];
-           self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
-                                                                                         userSession:self];
+            self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
+                                                                                          userSession:self];
             
             self.transportSession = session;
             self.transportSession.pushChannel.clientID = self.selfUserClient.remoteIdentifier;
@@ -553,6 +553,11 @@ ZM_EMPTY_ASSERTING_INIT()
         }
             break;
     }
+}
+
+- (WireCallCenterV3* )callCenter
+{
+    return self.managedObjectContext.zm_callCenter;
 }
 
 @end

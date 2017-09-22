@@ -34,6 +34,7 @@
 @class CallingRequestStrategy;
 @class AVSMediaManager;
 @class ZMAPNSEnvironment;
+@class WireCallCenterV3;
 
 @protocol UserProfile;
 @protocol AnalyticsType;
@@ -128,6 +129,9 @@ extern NSString * const ZMFlowManagerDidBecomeAvailableNotification;
 
 /// Session can notify about the background calls via iOS CallKit or using the push notifications.
 @property (nonatomic) ZMCallNotificationStyle callNotificationStyle;
+
+/// Call center
+@property (nonatomic) WireCallCenterV3* callCenter;
 
 @end
 
