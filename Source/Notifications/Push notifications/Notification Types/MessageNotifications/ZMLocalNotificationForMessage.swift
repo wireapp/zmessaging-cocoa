@@ -26,7 +26,7 @@ public protocol NotificationForMessage : LocalNotification {
     var contentType : ZMLocalNotificationContentType { get }
     init?(message: MessageType, application: ZMApplication?)
     func copyByAddingMessage(_ message: MessageType) -> Self?
-    func configureAlertBody(_ message: MessageType) -> String
+    func textToDisplay(_ message: MessageType) -> String
     static func shouldCreateNotification(_ message: MessageType) -> Bool
 }
 
@@ -39,6 +39,13 @@ extension NotificationForMessage {
         default:
             return ZMCustomSound.notificationNewMessageSoundName()
         }
+    }
+    
+    public func titleToDisplay(_ message: ZMMessage) -> String? {
+        guard let moc = message.managedObjectContext else { return nil }
+        let user = ZMUser.selfUser(in: moc)
+        guard let team = user.team else { return nil }
+        return team.name
     }
     
     public func configureNotification(_ message: MessageType, isEphemeral: Bool = false) -> UILocalNotification {
@@ -57,10 +64,11 @@ extension NotificationForMessage {
                 notification.category = conversationCategory(ephemeral: isEphemeral)
             }
         } else {
-            notification.alertBody = configureAlertBody(message).escapingPercentageSymbols()
+            notification.alertBody = textToDisplay(message).escapingPercentageSymbols()
             notification.soundName = soundName
             notification.category = conversationCategory(ephemeral: isEphemeral)
         }
+        notification.alertTitle = titleToDisplay(message)
         notification.setupUserInfo(message)
         return notification
     }
@@ -122,8 +130,8 @@ final public class ZMLocalNotificationForMessage : ZMLocalNotification, Notifica
         let notification = configureNotification(message, isEphemeral: message.isEphemeral)
         notifications.append(notification)
     }
-
-    public func configureAlertBody(_ message: ZMOTRMessage) -> String {
+    
+    public func textToDisplay(_ message: ZMOTRMessage) -> String {
         let sender = message.sender
         let conversation = message.conversation
         switch contentType {

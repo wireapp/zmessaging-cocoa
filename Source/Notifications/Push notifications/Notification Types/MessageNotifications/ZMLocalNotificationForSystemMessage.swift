@@ -54,7 +54,7 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
         notifications.append(notification)
     }
     
-    public func configureAlertBody(_ message: ZMSystemMessage) -> String {
+    public func textToDisplay(_ message: ZMSystemMessage) -> String {
         switch message.systemMessageType {
         case .participantsRemoved, .participantsAdded:
             return alertBodyForParticipantEvents(message)

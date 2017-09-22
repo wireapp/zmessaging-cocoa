@@ -136,6 +136,39 @@ class ZMLocalNotificationForMessageTests : ZMLocalNotificationForEventTest {
         XCTAssertEqual(alertBodyForUnknownNotification(groupConversation, sender: sender), "Super User sent a message in Super Conversation")
         XCTAssertEqual(alertBodyForUnknownNotification(groupConversationWithoutName, sender: sender), "Super User sent a message")
     }
+    
+    func testThatItAddsATitleIfTheUserIsPartOfATeam() {
+        
+        self.syncMOC.performGroupedBlockAndWait {
+            // given
+            let team = Team.insertNewObject(in: self.syncMOC)
+            team.name = "Wire Amazing Team"
+            let user = ZMUser.selfUser(in: self.syncMOC)
+            _ = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
+            self.syncMOC.saveOrRollback()
+            XCTAssertNotNil(user.team)
+            
+            // when
+            guard let note = self.textNotification(self.oneOnOneConversation, sender: self.sender)?.uiNotifications.first else {
+                return XCTFail()
+            }
+            
+            // then
+            XCTAssertEqual(note.alertTitle, team.name)
+        }
+    }
+    
+    func testThatItDoesNotAddATitleIfTheUserIsNotPartOfATeam() {
+        
+        // when
+        guard let note = self.textNotification(oneOnOneConversation, sender: sender)?.uiNotifications.first else {
+            return XCTFail()
+        }
+        
+        // then
+        XCTAssertNil(note.alertTitle)
+
+    }
 }
 
 
