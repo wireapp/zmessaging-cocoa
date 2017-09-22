@@ -389,8 +389,8 @@ internal func videoStateChangeHandler(state: Int32, contextRef: UnsafeMutableRaw
     if let state = ReceivedVideoState(rawValue: UInt(state)),
        let context = callCenter.uiMOC {
         
-        callCenter.uiMOC?.performGroupedBlock {
-            WireCallCenterV3VideoNotification(receivedVideoState: state).post(in: context)
+        context.performGroupedBlock {
+            WireCallCenterV3VideoNotification(receivedVideoState: state).post(in: context.notificationContext)
         }
     } else {
         zmLog.error("Couldn't send video state change notification")
@@ -405,8 +405,8 @@ internal func audioCBREnabledHandler(contextRef: UnsafeMutableRawPointer?) {
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
     if let context = callCenter.uiMOC {
-        callCenter.uiMOC?.performGroupedBlock {
-            WireCallCenterCBRCallNotification().post(in: context)
+        context.performGroupedBlock {
+            WireCallCenterCBRCallNotification().post(in: context.notificationContext)
         }
     } else {
         zmLog.error("Couldn't send CBR notification")
@@ -563,7 +563,7 @@ public struct CallEvent {
         updateSnapshots(forCallSate: callState, conversationId: conversationId, userId: userId)
         
         if let context = uiMOC {
-            WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId, messageTime: messageTime).post(in: context)
+            WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId, messageTime: messageTime).post(in: context.notificationContext)
         }
     }
     
@@ -593,7 +593,7 @@ public struct CallEvent {
         zmLog.debug("missed call")
         
         if let context = uiMOC {
-            WireCallCenterMissedCallNotification(conversationId: conversationId, userId:userId, timestamp: timestamp, video: isVideoCall).post(in: context)
+            WireCallCenterMissedCallNotification(conversationId: conversationId, userId:userId, timestamp: timestamp, video: isVideoCall).post(in: context.notificationContext)
         }
     }
     
@@ -619,7 +619,7 @@ public struct CallEvent {
             }
             
             if let context = uiMOC {
-                WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.selfUserId, messageTime:nil).post(in: context)
+                WireCallCenterCallStateNotification(callState: .answered, conversationId: conversationId, userId: self.selfUserId, messageTime:nil).post(in: context.notificationContext)
             }
         }
         return answered
@@ -635,7 +635,7 @@ public struct CallEvent {
             callSnapshots[conversationId] = CallSnapshot(callState: .outgoing, isVideo: video)
             
             if let context = uiMOC {
-                WireCallCenterCallStateNotification(callState: .outgoing, conversationId: conversationId, userId: selfUserId, messageTime:nil).post(in: context)
+                WireCallCenterCallStateNotification(callState: .outgoing, conversationId: conversationId, userId: selfUserId, messageTime:nil).post(in: context.notificationContext)
             }
         }
         return started

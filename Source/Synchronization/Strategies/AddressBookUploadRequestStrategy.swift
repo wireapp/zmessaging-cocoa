@@ -57,7 +57,7 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
     internal init(managedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus, addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook.factory() }, tracker: AddressBookTracker? = nil) {
         // notify of denied access
         if addressBookGenerator() == nil {
-            NotificationInContext(name: failedToAccessAddressBookNotificationName, context: moc.zm_userInterface).post()
+            NotificationInContext(name: failedToAccessAddressBookNotificationName, context: moc.notificationContext).post()
         }
         self.addressBookGenerator = addressBookGenerator
         self.tracker = tracker ?? AddressBookAnalytics(analytics: moc.analytics, managedObjectContext: moc)

@@ -249,6 +249,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         // given
         let selfUser = ZMUser.selfUser(in: uiMOC)
         selfUser.remoteIdentifier = userIdentifier
+        uiMOC.saveOrRollback()
         mockSyncStatus.mockPhase = .fetchingTeams
         mockApplicationStatus.mockSynchronizationState = .synchronizing
         let remotelyDeletedTeamId = UUID.create()

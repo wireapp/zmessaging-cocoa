@@ -117,14 +117,9 @@ public class SyncStatus : NSObject {
         
         currentSyncPhase = hasPersistedLastEventID ? .fetchingMissedEvents : .fetchingLastUpdateEventID
         self.syncStateDelegate.didStartSync()
-        addForceForceSlowSyncObserver()
-    }
-    
-    func addForceForceSlowSyncObserver() {
-        managedObjectContext.performGroupedBlock {
-            self.forceSlowSyncToken = NotificationInContext.addObserver(name: .ForceSlowSync, context: self.managedObjectContext.zm_userInterface) { [weak self] (note) in
-                self?.forceSlowSync()
-            }
+        
+        self.forceSlowSyncToken = NotificationInContext.addObserver(name: .ForceSlowSync, context: managedObjectContext.notificationContext) { [weak self] (note) in
+            self?.forceSlowSync()
         }
     }
     

@@ -67,12 +67,12 @@ internal enum AssetTransportError: Error {
         
         observers.append(NotificationInContext.addObserver(
             name: ZMUser.completeAssetFetchNotification,
-            context: managedObjectContext.zm_userInterface,
+            context: managedObjectContext.notificationContext,
             using: { [weak self] in self?.requestAssetForNotification(note: $0) })
         )
         observers.append(NotificationInContext.addObserver(
             name: ZMUser.previewAssetFetchNotification,
-            context: managedObjectContext.zm_userInterface,
+            context: managedObjectContext.notificationContext,
             using: { [weak self] in self?.requestAssetForNotification(note: $0) })
         )
     }

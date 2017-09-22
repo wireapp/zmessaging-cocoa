@@ -130,7 +130,7 @@ extension ZMHotFixDirectory {
     }
 
     public static func restartSlowSync(_ context: NSManagedObjectContext) {
-        NotificationInContext(name: .ForceSlowSync, context: context.zm_userInterface).post()
+        NotificationInContext(name: .ForceSlowSync, context: context.notificationContext).post()
     }
     
     public static func deleteDuplicatedClients(in context: NSManagedObjectContext) {

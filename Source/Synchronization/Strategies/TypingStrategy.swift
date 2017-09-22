@@ -128,12 +128,12 @@ public class TypingStrategy : AbstractRequestStrategy {
 
         observers.append(
             NotificationInContext.addObserver(name: ZMConversation.typingNotificationName,
-                                              context: self.managedObjectContext.zm_userInterface,
+                                              context: self.managedObjectContext.notificationContext,
                                               using: { [weak self] in self?.addConversationForNextRequest(note: $0)} )
             )
         observers.append(
             NotificationInContext.addObserver(name: ZMConversation.clearTypingNotificationName,
-                                              context: self.managedObjectContext.zm_userInterface,
+                                              context: self.managedObjectContext.notificationContext,
                                               using: { [weak self] in self?.shouldClearTypingForConversation(note: $0)})
         )
     }
@@ -243,7 +243,7 @@ extension TypingStrategy {
         let userInfo = [IsTypingKey : NSNumber(value:isTyping)]
         NotificationInContext(
             name: ZMConversation.typingNotificationName,
-            context: conversation.managedObjectContext!.zm_userInterface,
+            context: conversation.managedObjectContext!.notificationContext,
             object: conversation,
             userInfo: userInfo)
         .post()
@@ -253,7 +253,7 @@ extension TypingStrategy {
         let userInfo = [ClearIsTypingKey : NSNumber(value: 1)]
         NotificationInContext(
             name: ZMConversation.typingNotificationName,
-            context: conversation.managedObjectContext!.zm_userInterface,
+            context: conversation.managedObjectContext!.notificationContext,
             object: conversation,
             userInfo: userInfo)
             .post()

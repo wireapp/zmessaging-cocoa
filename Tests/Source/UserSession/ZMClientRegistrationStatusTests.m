@@ -61,7 +61,6 @@
 @property (nonatomic) id mockCookieStorage;
 @property (nonatomic) id mockClientRegistrationDelegate;
 @property (nonatomic) id sessionToken;
-//@property (nonatomic) NSMutableArray *sessionNotifications;
 @property (nonatomic) PostLoginAuthenticationNotificationRecorder *authenticationNotificationRecorder;
 @end
 
@@ -379,6 +378,7 @@
     // given
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     selfUser.remoteIdentifier = self.userIdentifier;
+    [self.uiMOC saveOrRollback];
     
     UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
     client.remoteIdentifier = @"yay";
@@ -387,6 +387,7 @@
     [self.sut didRegisterClient:client];
     WaitForAllGroupsToBeEmpty(0.5);
     
+    [self spinMainQueueWithTimeout:2];
     
     // then
     XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 1u);
@@ -414,6 +415,7 @@
     selfUser.remoteIdentifier = [NSUUID UUID];
     selfUser.emailAddress = nil;
     selfUser.phoneNumber = nil;
+    [self.uiMOC saveOrRollback];
     
     // when
     [self.sut didFetchSelfUser];
@@ -431,6 +433,7 @@
     // given
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     selfUser.remoteIdentifier = self.userIdentifier;
+    [self.uiMOC saveOrRollback];
     
     NSError *error = [NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionNeedsPasswordToRegisterClient userInfo:nil];
     
@@ -450,6 +453,7 @@
     // given
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     selfUser.remoteIdentifier = self.userIdentifier;
+    [self.uiMOC saveOrRollback];
     
     NSError *error = [NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionInvalidCredentials userInfo:nil];
     

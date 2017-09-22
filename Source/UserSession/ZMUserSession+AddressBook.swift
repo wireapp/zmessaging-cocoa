@@ -36,7 +36,7 @@ extension ZMUserSession {
     public static func addAddressBookUploadObserver(_ observer: AddressBookUploadObserver, context: NSManagedObjectContext) -> Any {
         return NotificationInContext.addObserver(
             name: failedToAccessAddressBookNotificationName,
-            context: context,
+            context: context.notificationContext,
             using: { [weak observer] _ in observer?.failedToAccessAddressBook() })
     }
 }

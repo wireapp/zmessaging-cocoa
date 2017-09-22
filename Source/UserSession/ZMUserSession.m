@@ -186,7 +186,7 @@ ZM_EMPTY_ASSERTING_INIT()
         ZM_WEAK(self);
         [self.observersToken addObject:[NotificationInContext
                                          addObserverWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
-                                         context: self.managedObjectContext
+                                         context: self.managedObjectContext.notificationContext
                                          object:nil
                                          queue:nil
                                          using:^(NotificationInContext *note) {
@@ -353,7 +353,7 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     ZM_WEAK(self);
     [self.observersToken addObject:[NotificationInContext addObserverWithName:ZMRequestToOpenSyncConversationNotificationName
-                                        context:self.managedObjectContext.zm_userInterfaceContext
+                                        context:self.managedObjectContext.notificationContext
                                          object:nil
                                           queue:nil
                                           using:^(NotificationInContext * note) {
@@ -789,7 +789,7 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
         return;
     }
     [[[NotificationInContext alloc] initWithName:ZMRequestToOpenSyncConversationNotificationName
-                                        context:conversation.managedObjectContext.zm_userInterfaceContext
+                                        context:conversation.managedObjectContext.notificationContext
                                           object:conversation.objectID
                                         userInfo:nil] post];
 }
@@ -824,7 +824,7 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
         return;
     }
     [[[NotificationInContext alloc] initWithName:ZMAppendAVSLogNotificationName
-                                        context:conversation.managedObjectContext.zm_userInterfaceContext
+                                        context:conversation.managedObjectContext.notificationContext
                                          object:conversation
                                        userInfo:userInfo] post];
 }

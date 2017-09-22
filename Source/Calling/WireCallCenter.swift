@@ -170,7 +170,7 @@ public class WireCallCenter : NSObject {
     public class func addVoiceChannelParticipantObserver(observer: VoiceChannelParticipantObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> Any {
         let remoteID = conversation.remoteIdentifier!
         
-        return NotificationInContext.addObserver(name: VoiceChannelParticipantNotification.notificationName, context: context, queue: OperationQueue.main) { [weak observer] (note : NotificationInContext) in
+        return NotificationInContext.addObserver(name: VoiceChannelParticipantNotification.notificationName, context: context.notificationContext, queue: OperationQueue.main) { [weak observer] (note : NotificationInContext) in
             guard
                 let note = note.userInfo[VoiceChannelParticipantNotification.userInfoKey] as? VoiceChannelParticipantNotification,
                 let strongObserver = observer
@@ -185,7 +185,7 @@ public class WireCallCenter : NSObject {
     /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
     public class func addVoiceGainObserver(observer: VoiceGainObserver, forConversation conversation: ZMConversation, context: NSManagedObjectContext) -> Any {
         return NotificationInContext.addObserver(name: VoiceGainNotification.notificationName,
-                                                 context: context,
+                                                 context: context.notificationContext,
                                                  object: conversation.remoteIdentifier! as NSUUID,
                                                  queue: .main)
         { [weak observer] note in
