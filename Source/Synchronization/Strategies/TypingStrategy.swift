@@ -121,7 +121,7 @@ public class TypingStrategy : AbstractRequestStrategy {
         ]
 
         NotificationCenter.default.addObserver(self, selector: #selector(addConversationForNextRequest), name: Notification.Name(rawValue: ZMTypingNotificationName), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(shouldClearTypingForConversation), name: Notification.Name(rawValue: ZMConversationClearTypingNotificationName), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(shouldClearTypingForConversation), name: ZMConversation.clearTypingNotificationName, object: nil)
     }
     
     public func tearDown() {

@@ -47,7 +47,7 @@ public class LocalNotificationDispatcher: NSObject {
         super.init()
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(self.cancelNotificationForLastReadChanged(notification:)),
-                                               name: NSNotification.Name(rawValue: ZMConversationLastReadDidChangeNotificationName),
+                                               name: ZMConversation.lastReadDidChangeNotificationName,
                                                object: nil)
     }
  
