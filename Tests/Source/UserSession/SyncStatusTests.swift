@@ -366,7 +366,7 @@ extension SyncStatusTests {
         XCTAssertEqual(sut.currentSyncPhase, .done)
 
         // when
-        NotificationCenter.default.post(name: .ForceSlowSync, object: nil)
+        NotificationInContext(name: .ForceSlowSync, context: uiMOC).post()
 
         // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)

@@ -96,6 +96,7 @@ public class SyncStatus : NSObject {
     fileprivate var lastUpdateEventID : UUID?
     fileprivate unowned var managedObjectContext: NSManagedObjectContext
     fileprivate unowned var syncStateDelegate: ZMSyncStateDelegate
+    fileprivate var forceSlowSyncToken : Any?
     
     public internal (set) var isInBackground : Bool = false
     public internal (set) var needsToRestartQuickSync : Bool = false
@@ -116,9 +117,17 @@ public class SyncStatus : NSObject {
         
         currentSyncPhase = hasPersistedLastEventID ? .fetchingMissedEvents : .fetchingLastUpdateEventID
         self.syncStateDelegate.didStartSync()
-        NotificationCenter.default.addObserver(self, selector: #selector(forceSlowSync), name: .ForceSlowSync, object: nil)
+        addForceForceSlowSyncObserver()
     }
-
+    
+    func addForceForceSlowSyncObserver() {
+        managedObjectContext.performGroupedBlock {
+            self.forceSlowSyncToken = NotificationInContext.addObserver(name: .ForceSlowSync, context: self.managedObjectContext.zm_userInterface) { [weak self] (note) in
+                self?.forceSlowSync()
+            }
+        }
+    }
+    
     public func forceSlowSync() {
         currentSyncPhase = SyncPhase.fetchingLastUpdateEventID.nextPhase!
         syncStateDelegate.didStartSync()
