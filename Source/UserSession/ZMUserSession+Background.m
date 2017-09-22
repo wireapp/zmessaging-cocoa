@@ -87,7 +87,6 @@ static NSString *ZMLogTag = @"Push";
 
 - (void)application:(id<ZMApplication>)application didReceiveLocalNotification:(UILocalNotification *)notification;
 {
-    NOT_USED(application);
     [self didReceiveLocalWithNotification:notification application:application];
 }
 
@@ -97,7 +96,6 @@ forLocalNotification:(UILocalNotification *)notification
        responseInfo:(NSDictionary *)responseInfo
   completionHandler:(void(^)())completionHandler;
 {
-    NOT_USED(application);
     [self handleActionWithApplication:application
                                  with:identifier
                                   for:notification
