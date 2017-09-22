@@ -222,7 +222,7 @@ public class WireCallCenter : NSObject {
     
     /// Returns conversations with active calls
     public class func activeCallConversations(inUserSession userSession: ZMUserSession) -> [ZMConversation] {
-        let conversationsV3 = userSession.managedObjectContext.zm_callCenter?.nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
+        let conversationsV3 = userSession.callCenter?.nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
             if value == CallState.established {
                 return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
             } else {
@@ -237,7 +237,7 @@ public class WireCallCenter : NSObject {
     public class func nonIdleCallConversations(inUserSession userSession: ZMUserSession) -> [ZMConversation] {
         var nonIdleConversations : Set<ZMConversation> = Set()
         
-        let conversationsV3 = userSession.managedObjectContext.zm_callCenter?.nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
+        let conversationsV3 = userSession.callCenter?.nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
             return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
         })
         
