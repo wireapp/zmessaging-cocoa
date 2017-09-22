@@ -567,7 +567,8 @@ public struct CallEvent {
                                                                                      conversationId: conversationId,
                                                                                      selfUserID: selfUserId,
                                                                                      members: [CallMember(userId: userId!, audioEstablished: false)],
-                                                                                     initiator: userId)
+                                                                                     initiator: userId,
+                                                                                     callCenter: self)
         case .terminating:
             clearSnapshot(conversationId: conversationId)
             
@@ -701,7 +702,8 @@ public struct CallEvent {
             participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(callCenter: self,
                                                                                      conversationId: conversationId,
                                                                                      selfUserID: selfUserId,
-                                                                                     members: participants)
+                                                                                     members: participants,
+                                                                                     callCenter: self)
         }
     }
     

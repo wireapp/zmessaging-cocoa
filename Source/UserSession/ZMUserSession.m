@@ -519,6 +519,17 @@ ZM_EMPTY_ASSERTING_INIT()
 @end
 
 
+
+@implementation ZMUserSession (Test)
+
+- (NSArray *)allManagedObjectContexts
+{
+    return self.managedObjectContext.zm_callCenter;
+}
+
+@end
+
+
 @implementation ZMUserSession (PushToken)
 
 
