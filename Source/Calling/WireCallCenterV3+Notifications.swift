@@ -237,14 +237,11 @@ class VoiceChannelParticipantV3Snapshot {
     fileprivate let selfUserID : UUID
     let initiator : UUID
     
-    init(conversationId: UUID, selfUserID: UUID, members: [CallMember]?, initiator: UUID? = nil) {
+    init(conversationId: UUID, selfUserID: UUID, members: [CallMember]?, initiator: UUID? = nil, callCenter: WireCallCenterV3) {
         self.conversationId = conversationId
         self.selfUserID = selfUserID
         self.initiator = initiator ?? selfUserID
         
-        guard let callCenter = WireCallCenterV3.activeInstance else {
-            fatal("WireCallCenterV3 not accessible")
-        }
 
         if let unfilteredMembers = members {
             self.members = type(of: self).filteredMembers(unfilteredMembers)
