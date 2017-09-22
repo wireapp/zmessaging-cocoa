@@ -62,7 +62,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         
         ZM_WEAK(self);
         self.pushChannelObserverToken = [NotificationInContext addObserverWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
-                                           context:self.managedObjectContext
+                                           context:self.managedObjectContext.zm_userInterfaceContext
                                             object:nil
                                              queue:nil
                                              using:^(NotificationInContext * note) {

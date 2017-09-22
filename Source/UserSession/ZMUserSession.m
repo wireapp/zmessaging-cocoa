@@ -789,7 +789,7 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
         return;
     }
     [[[NotificationInContext alloc] initWithName:ZMRequestToOpenSyncConversationNotificationName
-                                        context:conversation.managedObjectContext
+                                        context:conversation.managedObjectContext.zm_userInterfaceContext
                                           object:conversation.objectID
                                         userInfo:nil] post];
 }
