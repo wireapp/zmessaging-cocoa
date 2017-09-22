@@ -397,6 +397,9 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         connectionRequestObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.pendingConnectionConversations(inUserSession: session))
 
         self.activeUserSession = session
+        session.callNotificationStyle = self.callNotificationStyle
+
+        
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
         let authenticationStatus = unauthenticatedSession?.authenticationStatus
 
@@ -511,6 +514,11 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
 
+    public var callNotificationStyle: ZMCallNotificationStyle = .callKit {
+        didSet {
+            userSession?.callNotificationStyle = callNotificationStyle
+        }
+    }
 }
 
 // MARK: - TeamObserver

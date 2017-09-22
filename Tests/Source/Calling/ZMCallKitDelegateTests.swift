@@ -188,7 +188,6 @@ class ZMCallKitDelegateTest: MessagingTest {
     
     override func setUp() {
         super.setUp()
-        ZMUserSession.useCallKit = true
         
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
         selfUser.emailAddress = "self@user.mail"
@@ -215,7 +214,6 @@ class ZMCallKitDelegateTest: MessagingTest {
     }
     
     override func tearDown() {
-        ZMUserSession.useCallKit = false
         self.sut = nil
         self.mockWireCallCenterV3 = nil
         

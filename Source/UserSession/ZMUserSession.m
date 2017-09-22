@@ -78,6 +78,9 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 
 /// map from NSUUID to ZMCommonContactsSearchCachedEntry
 @property (nonatomic) NSCache *commonContactsCache;
+
+@property (nonatomic) AVSMediaManager* mediaManager;
+@property (nonatomic) id<FlowManagerType> flowManager;
 @end
 
 @interface ZMUserSession(PushChannel)
@@ -209,7 +212,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                       cookieStorage:session.cookieStorage
                                                                         localNotificationDispatcher:self.localNotificationDispatcher
                                                                                        mediaManager:mediaManager
-                                                                                flowManager:flowManager
+                                                                                        flowManager:flowManager
                                                                                       storeProvider:storeProvider
                                                                                   syncStateDelegate:self
                                                                                         application:application];
@@ -235,17 +238,6 @@ ZM_EMPTY_ASSERTING_INIT()
         [self enableBackgroundFetch];
 
         self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithAccountContainer:self.storeProvider.accountContainer];
-        
-        if ([self.class useCallKit]) {
-            CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[ZMCallKitDelegate providerConfiguration]];
-            CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
-            
-            self.callKitDelegate = [[ZMCallKitDelegate alloc] initWithCallKitProvider:provider
-                                                                       callController:callController
-                                                                          flowManager:flowManager
-                                                                          userSession:self
-                                                                         mediaManager:(AVSMediaManager *)mediaManager];
-        }
         
         [self.syncManagedObjectContext performBlockAndWait:^{
             if (self.clientRegistrationStatus.currentPhase != ZMClientRegistrationPhaseRegistered) {
@@ -406,11 +398,6 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
 }
 
-- (void)setMediaManager:(AVSMediaManager *)delegate;
-{
-    NOT_USED(delegate);
-}
-
 - (void)registerForRemoteNotifications
 {
     [self.managedObjectContext performGroupedBlock:^{
@@ -501,6 +488,29 @@ ZM_EMPTY_ASSERTING_INIT()
 - (ZMOperationStatus *)operationStatus
 {
     return self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus;
+}
+
+- (void)setCallNotificationStyle:(ZMCallNotificationStyle)callNotificationStyle
+{
+    _callNotificationStyle = callNotificationStyle;
+    
+    switch (callNotificationStyle) {
+        case ZMCallNotificationStylePushNotifications:
+            self.callKitDelegate = nil;
+            break;
+        case ZMCallNotificationStyleCallKit:
+        {
+            CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[ZMCallKitDelegate providerConfiguration]];
+            CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
+            
+            self.callKitDelegate = [[ZMCallKitDelegate alloc] initWithCallKitProvider:provider
+                                                                       callController:callController
+                                                                          flowManager:self.flowManager
+                                                                          userSession:self
+                                                                         mediaManager:(AVSMediaManager *)self.mediaManager];
+        }
+            break;
+    }
 }
 
 @end
@@ -737,24 +747,11 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 
 @end
 
-
-static BOOL ZMUserSessionUseCallKit = NO;
-
 @implementation ZMUserSession (Calling)
 
 - (CallingRequestStrategy *)callingStrategy
 {
     return self.operationLoop.syncStrategy.callingRequestStrategy;
-}
-
-+ (BOOL)useCallKit
-{
-    return ZMUserSessionUseCallKit;
-}
-
-+ (void)setUseCallKit:(BOOL)useCallKit
-{
-    ZMUserSessionUseCallKit = useCallKit;
 }
 
 @end
