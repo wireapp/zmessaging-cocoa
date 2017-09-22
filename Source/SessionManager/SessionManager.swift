@@ -358,6 +358,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         teamObserver = TeamChangeInfo.add(observer: self, for: nil, managedObjectContext: session.managedObjectContext) // TODO need per user session token
         selfObserver = UserChangeInfo.add(observer: self, forBareUser: selfUser!, managedObjectContext: session.managedObjectContext) // TODO need per user session token
 
+        session.callNotificationStyle = self.callNotificationStyle
+
         self.userSession = session
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
         let authenticationStatus = unauthenticatedSession?.authenticationStatus
@@ -408,6 +410,11 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
 
+    public var callNotificationStyle: ZMCallNotificationStyle = .callKit {
+        didSet {
+            userSession?.callNotificationStyle = callNotificationStyle
+        }
+    }
 }
 
 // MARK: - TeamObserver
