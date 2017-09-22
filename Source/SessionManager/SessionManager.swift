@@ -220,7 +220,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             guard let `self` = self else {
                 return
             }
-            self.deactivateAllBackgroundSessions()
+            self.tearDownAllBackgroundSessions()
         })
     }
 
@@ -292,6 +292,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public func select(_ account: Account) {
         delegate?.sessionManagerWillOpenAccount(account)
         tearDownObservers()
+        activeUserSession?.callNotificationStyle = .pushNotifications
+        
         activeUserSession = nil
         
         select(account: account) { [weak self] (_) in
@@ -322,7 +324,6 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
         
         tearDownObservers()
-        
         
         let matchingAccountSession = backgroundUserSessions.first { (account, session) in
             session == currentSession
@@ -450,26 +451,27 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         self.backgroundUserSessions[account] = newSession
         newSession.requestToOpenViewDelegate = self
         pushDispatcher.add(client: newSession)
+        newSession.callNotificationStyle = .pushNotifications
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
         completion(newSession)
     }
     
-    internal func deactivateBackgroundSession(for account: Account) {
+    internal func tearDownBackgroundSession(for account: Account) {
         guard let userSession = self.backgroundUserSessions[account] else {
             log.error("No session to tear down for \(account), known sessions: \(self.backgroundUserSessions)")
             return
         }
         userSession.closeAndDeleteCookie(false)
-        self.tearDownConversationListObservers()
+
         self.backgroundUserSessions[account] = nil
     }
     
     // Tears down and releases all background user sessions.
-    internal func deactivateAllBackgroundSessions() {
+    internal func tearDownAllBackgroundSessions() {
         self.backgroundUserSessions.forEach { (account, session) in
             if self.activeUserSession != session {
-                self.deactivateBackgroundSession(for: account)
+                self.tearDownBackgroundSession(for: account)
             }
         }
     }
