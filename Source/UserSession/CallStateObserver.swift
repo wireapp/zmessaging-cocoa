@@ -49,7 +49,11 @@ public final class CallStateObserver : NSObject {
     fileprivate var callInProgress : Bool = false {
         didSet {
             if callInProgress != oldValue {
-                NotificationCenter.default.post(name: CallStateObserver.CallInProgressNotification, object: nil, userInfo: [ CallStateObserver.CallInProgressKey : callInProgress ])
+                syncManagedObjectContext.performGroupedBlock {
+                    NotificationInContext(name: CallStateObserver.CallInProgressNotification,
+                                          context: self.syncManagedObjectContext.zm_userInterface,
+                                          userInfo: [ CallStateObserver.CallInProgressKey : self.callInProgress ]).post()
+                }
             }
         }
     }
