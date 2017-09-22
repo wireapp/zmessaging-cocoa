@@ -516,7 +516,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 
     public var callNotificationStyle: ZMCallNotificationStyle = .callKit {
         didSet {
-            userSession?.callNotificationStyle = callNotificationStyle
+            activeUserSession?.callNotificationStyle = callNotificationStyle
         }
     }
 }
