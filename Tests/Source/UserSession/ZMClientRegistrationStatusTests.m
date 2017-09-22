@@ -387,8 +387,6 @@
     [self.sut didRegisterClient:client];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self spinMainQueueWithTimeout:2];
-    
     // then
     XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 1u);
     PostLoginAuthenticationNotificationEvent *note = self.authenticationNotificationRecorder.notifications.firstObject;
