@@ -57,6 +57,8 @@ class CallStateObserverTests : MessagingTest {
 
         localNotificationDispatcher = LocalNotificationDispatcher(in: syncMOC, application: application)
         sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
+        uiMOC.zm_callCenter = mockCallCenter
+
     }
     
     override func tearDown() {
@@ -179,6 +181,7 @@ class CallStateObserverTests : MessagingTest {
         // expect
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
         mockCallCenter?.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false, shouldRing: true)]
+        mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
         
         expectation(forNotification: CallStateObserver.CallInProgressNotification.rawValue, object: nil) { (note) -> Bool in
             if let open = note.userInfo?[CallStateObserver.CallInProgressKey] as? Bool, open == true {
@@ -200,6 +203,8 @@ class CallStateObserverTests : MessagingTest {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
         mockCallCenter?.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false, shouldRing: true)]
+        mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
+
         sut.callCenterDidChange(voiceChannelState: .incomingCall, conversation: conversation, callingProtocol: .version3)
         
         // expect
