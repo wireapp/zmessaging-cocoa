@@ -47,7 +47,7 @@
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
-static NSString * const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
+NSNotificationName const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
 NSString * const ZMAppendAVSLogNotificationName = @"ZMAppendAVSLogNotification";
 NSString * const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
 NSString * const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLoopNotificationName";
@@ -66,7 +66,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
-
+@property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) id <LocalStoreProviderProtocol> storeProvider;
 
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
@@ -84,7 +84,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @end
 
 @interface ZMUserSession(PushChannel)
-- (void)pushChannelDidChange:(NSNotification *)note;
+- (void)pushChannelDidChange:(NotificationInContext *)note;
 @end
 
 
@@ -176,14 +176,24 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if(self) {
         self.storeProvider = storeProvider;
-
+        self.observersToken = [[NSMutableArray alloc] init];
+        
         self.appVersion = appVersion;
         [ZMUserAgent setWireAppVersion:appVersion];
         self.didStartInitialSync = NO;
         self.pushChannelIsOpen = NO;
 
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
-
+        ZM_WEAK(self);
+        [self.observersToken addObject:[NotificationInContext
+                                         addObserverWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
+                                         context: self.managedObjectContext
+                                         object:nil
+                                         queue:nil
+                                         using:^(NotificationInContext *note) {
+                                             ZM_STRONG(self);
+                                             [self pushChannelDidChange:note];
+                                         }
+        ]];
         self.apnsEnvironment = apnsEnvironment;
         self.networkIsOnline = YES;
         self.managedObjectContext.isOffline = NO;
@@ -276,6 +286,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)tearDown
 {
+    [self.observersToken removeAllObjects];
     [self.application unregisterObserverForStateChange:self];
     self.mediaManager = nil;
     self.callStateObserver = nil;
@@ -340,7 +351,15 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)registerForRequestToOpenConversationNotification
 {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didRequestToOpenSyncConversation:) name:ZMRequestToOpenSyncConversationNotificationName object:nil];
+    ZM_WEAK(self);
+    [self.observersToken addObject:[NotificationInContext addObserverWithName:ZMRequestToOpenSyncConversationNotificationName
+                                        context:self.managedObjectContext.zm_userInterfaceContext
+                                         object:nil
+                                          queue:nil
+                                          using:^(NotificationInContext * note) {
+                                              ZM_STRONG(self);
+                                              [self didRequestToOpenSyncConversation:note];
+                                          }]];
 }
 
 - (void)registerForBackgroundNotifications;
@@ -374,7 +393,7 @@ ZM_EMPTY_ASSERTING_INIT()
     return self.storeProvider.applicationContainer;
 }
 
-- (void)didRequestToOpenSyncConversation:(NSNotification *)note
+- (void)didRequestToOpenSyncConversation:(NotificationInContext *)note
 {
     ZM_WEAK(self);
     [self.managedObjectContext performGroupedBlock:^{
@@ -720,7 +739,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 @implementation ZMUserSession(PushChannel)
 
-- (void)pushChannelDidChange:(NSNotification *)note
+- (void)pushChannelDidChange:(NotificationInContext *)note
 {
     BOOL newValue = [note.userInfo[ZMPushChannelIsOpenKey] boolValue];
     self.pushChannelIsOpen = newValue;
@@ -766,7 +785,13 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 
 + (void)requestToOpenSyncConversationOnUI:(ZMConversation *)conversation;
 {
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMRequestToOpenSyncConversationNotificationName object:conversation.objectID];
+    if (conversation.managedObjectContext == nil) {
+        return;
+    }
+    [[[NotificationInContext alloc] initWithName:ZMRequestToOpenSyncConversationNotificationName
+                                        context:conversation.managedObjectContext
+                                          object:conversation.objectID
+                                        userInfo:nil] post];
 }
 
 @end

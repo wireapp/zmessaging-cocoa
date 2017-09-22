@@ -31,7 +31,7 @@
 
 
 static NSString *const TimerInfoOriginalCredentialsKey = @"credentials";
-static NSString * const AuthenticationCenterDataChangeNotificationName = @"ZMAuthenticationStatusDataChangeNotificationName";
+static NSString *const AuthenticationCenterDataChangeNotificationName = @"ZMAuthenticationStatusDataChangeNotificationName";
 NSTimeInterval DebugLoginFailureTimerOverride = 0;
 
 static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
@@ -88,7 +88,8 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
         else {
             [ZMPersistentCookieStorage setCookiesPolicy:NSHTTPCookieAcceptPolicyAlways];
         }
-        [[NSNotificationCenter defaultCenter] postNotificationName:AuthenticationCenterDataChangeNotificationName object:self];
+        [[[NotificationInContext alloc] initWithName:AuthenticationCenterDataChangeNotificationName
+                                             context:self object:nil userInfo:nil] post];
     }
 }
 
@@ -102,19 +103,22 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     if(credentials != self.internalLoginCredentials) {
         self.internalLoginCredentials = credentials;
         [ZMPersistentCookieStorage setCookiesPolicy:NSHTTPCookieAcceptPolicyAlways];
-        [[NSNotificationCenter defaultCenter] postNotificationName:AuthenticationCenterDataChangeNotificationName object:self];
+        [[[NotificationInContext alloc] initWithName:AuthenticationCenterDataChangeNotificationName
+                                             context:self object:nil userInfo:nil] post];
     }
 }
 
-- (void)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
+- (id)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
 {
-    ZM_ALLOW_MISSING_SELECTOR
-    ([[NSNotificationCenter defaultCenter] addObserver:observer selector:@selector(didChangeAuthenticationData) name:AuthenticationCenterDataChangeNotificationName object:nil]);
-}
-
-- (void)removeAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
-{
-    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+    ZM_WEAK(observer);
+    return [NotificationInContext addObserverWithName:AuthenticationCenterDataChangeNotificationName
+                                       context:self
+                                        object:nil
+                                         queue:nil
+                                         using:^(NotificationInContext * notification __unused) {
+                                             ZM_STRONG(observer);
+                                             [observer didChangeAuthenticationData];
+     }];
 }
 
 - (ZMAuthenticationPhase)currentPhase
