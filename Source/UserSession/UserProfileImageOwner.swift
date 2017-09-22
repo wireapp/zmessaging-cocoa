@@ -33,19 +33,19 @@ public final class UserProfileImageOwner: NSObject, ZMImageOwner {
         super.init()
     }
     
-    public func setImageData(_ imageData: Data!, for format: ZMImageFormat, properties: ZMIImageProperties!) {
+    public func setImageData(_ imageData: Data, for format: ZMImageFormat, properties: ZMIImageProperties?) {
         processedImages[format] = imageData
     }
     
-    public func imageData(for format: ZMImageFormat) -> Data! {
+    public func imageData(for format: ZMImageFormat) -> Data? {
         return processedImages[format]
     }
     
-    public func requiredImageFormats() -> NSOrderedSet! {
+    public func requiredImageFormats() -> NSOrderedSet {
         return NSOrderedSet(array: UserProfileImageOwner.imageFormats.map { $0.rawValue })
     }
     
-    public func originalImageData() -> Data! {
+    public func originalImageData() -> Data? {
         return imageData
     }
     

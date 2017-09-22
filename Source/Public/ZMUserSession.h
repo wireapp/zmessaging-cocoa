@@ -34,6 +34,7 @@
 @class CallingRequestStrategy;
 @class AVSMediaManager;
 @class ZMAPNSEnvironment;
+@class WireCallCenterV3;
 
 @protocol UserProfile;
 @protocol AnalyticsType;
@@ -65,7 +66,6 @@ extern NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName;
 extern NSString * const ZMPhoneVerificationCodeKey;
 extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 extern NSString * const ZMTransportRequestLoopNotificationName;
-extern NSString * const ZMFlowManagerDidBecomeAvailableNotification;
 
 /// The main entry point for the WireSyncEngine API.
 ///
@@ -128,6 +128,9 @@ extern NSString * const ZMFlowManagerDidBecomeAvailableNotification;
 
 /// Session can notify about the background calls via iOS CallKit or using the push notifications.
 @property (nonatomic) ZMCallNotificationStyle callNotificationStyle;
+
+/// Call center
+@property (nonatomic) WireCallCenterV3* callCenter;
 
 @end
 

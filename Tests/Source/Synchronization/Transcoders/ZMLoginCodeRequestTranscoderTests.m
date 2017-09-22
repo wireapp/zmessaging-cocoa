@@ -26,7 +26,7 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMCredentials.h"
 #import "ZMAuthenticationStatus.h"
-#import "ZMUserSessionAuthenticationNotification.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface ZMLoginCodeRequestTranscoderTests : MessagingTest
 
@@ -94,9 +94,10 @@
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];
     
-    id token = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
-        XCTAssertEqual(note.error.code, (long) ZMUserSessionUnkownError);
-        XCTAssertEqualObjects(note.error.domain, ZMUserSessionErrorDomain);
+    id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        XCTAssertEqual(event, PreLoginAuthenticationEventObjcLoginCodeRequestDidFail);
+        XCTAssertEqual(error.code, (long) ZMUserSessionUnkownError);
+        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
     }];
     
@@ -108,7 +109,7 @@
     XCTAssertEqual(self.authenticationStatus.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
+    token = nil;
 }
 
 
@@ -121,9 +122,11 @@
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];
-    id token = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
-        XCTAssertEqual(note.error.code, (long) ZMUserSessionInvalidPhoneNumber);
-        XCTAssertEqualObjects(note.error.domain, ZMUserSessionErrorDomain);
+    
+    id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        XCTAssertEqual(event, PreLoginAuthenticationEventObjcLoginCodeRequestDidFail);
+        XCTAssertEqual(error.code, (long) ZMUserSessionInvalidPhoneNumber);
+        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
     }];
     
@@ -135,7 +138,7 @@
     XCTAssertEqual(self.authenticationStatus.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
+    token = nil;
 }
 
 
@@ -148,9 +151,10 @@
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];
-    id token = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
-        XCTAssertEqual(note.error.code, (long) ZMUserSessionCodeRequestIsAlreadyPending);
-        XCTAssertEqualObjects(note.error.domain, ZMUserSessionErrorDomain);
+    id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        XCTAssertEqual(event, PreLoginAuthenticationEventObjcLoginCodeRequestDidFail);
+        XCTAssertEqual(error.code, (long) ZMUserSessionCodeRequestIsAlreadyPending);
+        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
     }];
     
@@ -162,7 +166,7 @@
     XCTAssertEqual(self.authenticationStatus.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
+    token = nil;
 }
 
 
@@ -175,9 +179,10 @@
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"user session authentication notification"];
-    id token = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
-        XCTAssertEqual(note.error.code, (long) ZMUserSessionInvalidPhoneNumber);
-        XCTAssertEqualObjects(note.error.domain, ZMUserSessionErrorDomain);
+    id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        XCTAssertEqual(event, PreLoginAuthenticationEventObjcLoginCodeRequestDidFail);
+        XCTAssertEqual(error.code, (long) ZMUserSessionInvalidPhoneNumber);
+        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
     }];
     
@@ -189,7 +194,7 @@
     XCTAssertEqual(self.authenticationStatus.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
+    token = nil;
 }
 
 @end

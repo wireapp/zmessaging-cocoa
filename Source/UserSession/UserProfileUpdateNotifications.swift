@@ -87,32 +87,20 @@ enum UserProfileUpdateNotificationType {
     case didFindHandleSuggestion(handle: String)
 }
 
-struct UserProfileUpdateNotification {
+struct UserProfileUpdateNotification : SelfPostingNotification {
     
-    fileprivate static let notificationName = NSNotification.Name(rawValue: "UserProfileUpdateNotification")
-    fileprivate static let userInfoKey = notificationName
+    static let notificationName = NSNotification.Name(rawValue: "UserProfileUpdateNotification")
     
-    fileprivate let type : UserProfileUpdateNotificationType
-    
-    static func post(type: UserProfileUpdateNotificationType) {
-        
-        NotificationCenter.default.post(name: self.notificationName,
-                                        object: nil,
-                                        userInfo: [UserProfileUpdateNotification.userInfoKey : UserProfileUpdateNotification(type: type)])
-    }
+    let type : UserProfileUpdateNotificationType
 }
 
 extension UserProfileUpdateStatus {
     
-    @objc(addObserver:) public func add(observer: UserProfileUpdateObserver) -> AnyObject? {
-        return NotificationCenter.default.addObserver(forName: UserProfileUpdateNotification.notificationName,
-                                                      object: nil,
-                                                      queue: OperationQueue.main)
-        {
-            [weak observer] (anynote: Notification) in
-            guard let note = anynote.userInfo?[UserProfileUpdateNotification.userInfoKey] as? UserProfileUpdateNotification,
+    @objc(addObserver:) public func add(observer: UserProfileUpdateObserver) -> Any {
+        return NotificationInContext.addObserver(name: UserProfileUpdateNotification.notificationName, context: managedObjectContext.notificationContext) { [weak observer] (note) in
+            guard let note = note.userInfo[UserProfileUpdateNotification.userInfoKey] as? UserProfileUpdateNotification,
                   let observer = observer else {
-                return
+                    return
             }
             switch note.type {
             case .emailUpdateDidFail(let error):
@@ -147,9 +135,4 @@ extension UserProfileUpdateStatus {
         }
     }
     
-    @objc public func removeObserver(token: AnyObject) {
-        NotificationCenter.default.removeObserver(token,
-                                                  name: UserProfileUpdateNotification.notificationName,
-                                                  object: nil)
-    }
 }

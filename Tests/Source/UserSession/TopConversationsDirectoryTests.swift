@@ -24,7 +24,7 @@ class TopConversationsDirectoryTests : MessagingTest {
 
     var sut : TopConversationsDirectory!
     var topConversationsObserver: FakeTopConversationsDirectoryObserver!
-    var topConversationsObserverToken: TopConversationsDirectoryObserverToken!
+    var topConversationsObserverToken: Any?
     
     override func setUp() {
         super.setUp()
@@ -34,7 +34,7 @@ class TopConversationsDirectoryTests : MessagingTest {
     }
     
     override func tearDown() {
-        self.sut.removeObserver(with: self.topConversationsObserverToken)
+        self.topConversationsObserverToken = nil
         self.sut = nil
         super.tearDown()
     }

@@ -29,19 +29,10 @@ public final class CallStateObserver : NSObject {
     fileprivate weak var userSession: ZMUserSession?
     fileprivate let localNotificationDispatcher : LocalNotificationDispatcher
     fileprivate let syncManagedObjectContext : NSManagedObjectContext
-    fileprivate var callStateToken : WireCallCenterObserverToken? = nil
-    fileprivate var missedCalltoken : WireCallCenterObserverToken? = nil
+    fileprivate var callStateToken : Any? = nil
+    fileprivate var missedCalltoken : Any? = nil
     fileprivate let systemMessageGenerator = CallSystemMessageGenerator()
-    fileprivate var voiceChannelStatetoken : WireCallCenterObserverToken? = nil
-
-    deinit {
-        if let token = callStateToken {
-            WireCallCenterV3.removeObserver(token: token)
-        }
-        if let token = missedCalltoken {
-            WireCallCenterV3.removeObserver(token: token)
-        }
-    }
+    fileprivate var voiceChannelStatetoken : Any? = nil
     
     public init(localNotificationDispatcher : LocalNotificationDispatcher, userSession: ZMUserSession) {
         self.userSession = userSession
@@ -50,15 +41,19 @@ public final class CallStateObserver : NSObject {
         
         super.init()
         
-        self.callStateToken = WireCallCenterV3.addCallStateObserver(observer: self)
-        self.missedCalltoken = WireCallCenterV3.addMissedCallObserver(observer: self)
+        self.callStateToken = WireCallCenterV3.addCallStateObserver(observer: self, context: userSession.managedObjectContext)
+        self.missedCalltoken = WireCallCenterV3.addMissedCallObserver(observer: self, context: userSession.managedObjectContext)
         self.voiceChannelStatetoken = WireCallCenter.addVoiceChannelStateObserver(observer: self, context: userSession.managedObjectContext)
     }
     
     fileprivate var callInProgress : Bool = false {
         didSet {
             if callInProgress != oldValue {
-                NotificationCenter.default.post(name: CallStateObserver.CallInProgressNotification, object: nil, userInfo: [ CallStateObserver.CallInProgressKey : callInProgress ])
+                syncManagedObjectContext.performGroupedBlock {
+                    NotificationInContext(name: CallStateObserver.CallInProgressNotification,
+                                          context: self.syncManagedObjectContext.notificationContext,
+                                          userInfo: [ CallStateObserver.CallInProgressKey : self.callInProgress ]).post()
+                }
             }
         }
     }

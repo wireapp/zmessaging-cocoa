@@ -677,91 +677,77 @@
 - (void)testThatItNotifiesObserversWhenTheNetworkStatusBecomesOnline
 {
     // given
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMNetworkAvailabilityObserver)];
+    NetworkStateRecorder *stateRecorder = [[NetworkStateRecorder alloc] init];
     [self.sut didGoOffline];
     XCTAssertTrue([self waitForOfflineStatus]);
     XCTAssertEqual(self.sut.networkState, ZMNetworkStateOffline);
     
-    // expect
-    [[observer expect] didChangeAvailability:[OCMArg checkWithBlock:^BOOL(ZMNetworkAvailabilityChangeNotification *note) {
-        return note.networkState == ZMNetworkStateOnline;
-    }]];
-    
     // when
-    [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:observer userSession:self.sut];
+    id token = [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:stateRecorder userSession:self.sut];
     [self.sut didReceiveData];
     
     // then
-    XCTAssertTrue([self waitForOnlineStatus]);
-    [observer verify];
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertEqual(stateRecorder.stateChanges.count, 1u);
+    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges.firstObject intValue], ZMNetworkStateOnline);
     
     // after
-    [ZMNetworkAvailabilityChangeNotification removeNetworkAvailabilityObserver:observer];
+    token = nil;
 }
 
 - (void)testThatItDoesNotNotifiesObserversWhenTheNetworkStatusWasAlreadyOnline
 {
     // given
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMNetworkAvailabilityObserver)];
-    
-    // expect
-    [[observer reject] didChangeAvailability:OCMOCK_ANY];
+    NetworkStateRecorder *stateRecorder = [[NetworkStateRecorder alloc] init];
     
     // when
-    [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:observer userSession:self.sut];
+    id token = [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:stateRecorder userSession:self.sut];
     [self.sut didReceiveData];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    [observer verify];
+    XCTAssertEqual(stateRecorder.stateChanges.count, 0u);
     
     // after
-    [ZMNetworkAvailabilityChangeNotification removeNetworkAvailabilityObserver:observer];
+    token = nil;
     
 }
 
 - (void)testThatItNotifiesObserversWhenTheNetworkStatusBecomesOffline
 {
     // given
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMNetworkAvailabilityObserver)];
-    
-    // expect
-    [[observer expect] didChangeAvailability:[OCMArg checkWithBlock:^BOOL(ZMNetworkAvailabilityChangeNotification *note) {
-        return note.networkState == ZMNetworkStateOffline;
-    }]];
+    NetworkStateRecorder *stateRecorder = [[NetworkStateRecorder alloc] init];
     
     // when
-    [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:observer userSession:self.sut];
+    id token = [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:stateRecorder userSession:self.sut];
     [self.sut didGoOffline];
     
     // then
-    XCTAssertTrue([self waitForOfflineStatus]);
-    [observer verify];
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertEqual(stateRecorder.stateChanges.count, 1u);
+    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges.firstObject intValue], ZMNetworkStateOffline);
     
     // after
-    [ZMNetworkAvailabilityChangeNotification removeNetworkAvailabilityObserver:observer];
+    token = nil;
 }
 
 - (void)testThatItDoesNotNotifiesObserversWhenTheNetworkStatusWasAlreadyOffline
 {
     // given
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMNetworkAvailabilityObserver)];
+    NetworkStateRecorder *stateRecorder = [[NetworkStateRecorder alloc] init];
     [self.sut didGoOffline];
     XCTAssertTrue([self waitForOfflineStatus]);
     
-    // expect
-    [[observer reject] didChangeAvailability:OCMOCK_ANY];
-    
     // when
-    [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:observer userSession:self.sut];
+    id token = [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:stateRecorder userSession:self.sut];
     [self.sut didGoOffline];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    [observer verify];
+    XCTAssertEqual(stateRecorder.stateChanges.count, 0u);
     
     // after
-    [ZMNetworkAvailabilityChangeNotification removeNetworkAvailabilityObserver:observer];
+    token = nil;
     
 }
 

@@ -39,10 +39,10 @@ public enum ZMLocalNotificationContentType : Equatable {
             return .system(systemMessage.systemMessageType)
         }
         if let fileData = message.fileMessageData {
-            if fileData.isAudio() {
+            if fileData.isAudio {
                 return .audio
             }
-            else if fileData.isVideo() {
+            else if fileData.isVideo {
                 return .video
             }
             return .fileUpload

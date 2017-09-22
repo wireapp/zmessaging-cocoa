@@ -31,7 +31,8 @@ public class LocalNotificationDispatcher: NSObject {
     let application: ZMApplication
     let sessionTracker: SessionTracker
     let syncMOC: NSManagedObjectContext
-    var isTornDown: Bool
+    private(set) var isTornDown: Bool
+    private var observers: [Any] = []
     
     @objc(initWithManagedObjectContext:application:)
     public init(in managedObjectContext: NSManagedObjectContext,
@@ -45,16 +46,17 @@ public class LocalNotificationDispatcher: NSObject {
         self.sessionTracker = SessionTracker(managedObjectContext: managedObjectContext)
         self.isTornDown = false
         super.init()
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(self.cancelNotificationForLastReadChanged(notification:)),
-                                               name: NSNotification.Name(rawValue: ZMConversationLastReadDidChangeNotificationName),
-                                               object: nil)
+        observers.append(
+            NotificationInContext.addObserver(name: ZMConversation.lastReadDidChangeNotificationName,
+                                              context: managedObjectContext.notificationContext,
+                                              using: { [weak self] in self?.cancelNotificationForLastReadChanged(notification: $0)})
+        )
     }
  
     public func tearDown() {
         self.isTornDown = true
         self.sessionTracker.tearDown()
-        NotificationCenter.default.removeObserver(self)
+        self.observers = []
         syncMOC.performGroupedBlock { [weak self] in
             self?.cancelAllNotifications()
         }
@@ -183,7 +185,7 @@ extension LocalNotificationDispatcher {
     }
     
     /// Cancels all notification in the conversation that is speficied as object of the notification
-    func cancelNotificationForLastReadChanged(notification: NSNotification) {
+    func cancelNotificationForLastReadChanged(notification: NotificationInContext) {
         guard let conversation = notification.object as? ZMConversation else { return }
         let isUIObject = conversation.managedObjectContext?.zm_isUserInterfaceContext ?? false
         

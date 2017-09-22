@@ -210,7 +210,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         mockUserSession.callKitDelegate = sut
         ZMCallKitDelegateTestsMocking.mockUserSession(self.mockUserSession, callKitDelegate: self.sut)
         
-        
+        self.uiMOC.zm_callCenter = mockWireCallCenterV3
     }
     
     override func tearDown() {
@@ -358,7 +358,6 @@ class ZMCallKitDelegateTest: MessagingTest {
         createOneOnOneConversation(user: otherUser)
         let conversation = otherUser.oneToOneConversation!
         self.uiMOC.saveOrRollback()
-        
         
         self.callKitController.mockErrorCount = 1
         let error = NSError(domain: "foo", code: CXErrorCodeRequestTransactionError.Code.unknownCallUUID.rawValue, userInfo: nil)

@@ -160,7 +160,7 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
 
     public func update(callState : CallState, conversationId: UUID, userId: UUID? = nil) {
         mockCallState = callState
-        WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId, messageTime: nil).post()
+        WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId, messageTime: nil).post(in: uiMOC!.notificationContext)
     }
     
     public override func isVideoCall(conversationId: UUID) -> Bool {

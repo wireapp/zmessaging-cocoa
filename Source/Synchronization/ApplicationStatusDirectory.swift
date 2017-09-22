@@ -39,7 +39,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         return pingBackStatus.status
     }
     
-    fileprivate var callInProgressObserverToken : NSObjectProtocol? = nil
+    fileprivate var callInProgressObserverToken : Any? = nil
     
     public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookieStorage : ZMPersistentCookieStorage, requestCancellation: ZMRequestCancellation, application : ZMApplication, syncStateDelegate: ZMSyncStateDelegate) {
         self.requestCancellation = requestCancellation
@@ -58,9 +58,9 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)
         super.init()
         
-        callInProgressObserverToken = NotificationCenter.default.addObserver(forName: CallStateObserver.CallInProgressNotification, object: nil, queue: .main) { [weak self] (notification) in
+        callInProgressObserverToken = NotificationInContext.addObserver(name: CallStateObserver.CallInProgressNotification, context: managedObjectContext.notificationContext) { [weak self] (note) in
             managedObjectContext.performGroupedBlock {
-                if let callInProgress = notification.userInfo?[CallStateObserver.CallInProgressKey] as? Bool {
+                if let callInProgress = note.userInfo[CallStateObserver.CallInProgressKey] as? Bool {
                     self?.operationStatus.hasOngoingCall = callInProgress
                 }
             }
@@ -68,10 +68,6 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     }
     
     deinit {
-        if let token = callInProgressObserverToken {
-            NotificationCenter.default.removeObserver(token)
-        }
-        
         apnsConfirmationStatus.tearDown()
         clientRegistrationStatus.tearDown()
     }

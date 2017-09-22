@@ -79,7 +79,7 @@ extension TopConversationsDirectory {
     private func persistList() {
         let valueToSave = self.topConversations.map { $0.objectID.uriRepresentation().absoluteString }
         self.uiMOC.setPersistentStoreMetadata(array: valueToSave, key: topConversationsObjectIDKey)
-        TopConversationsDirectoryNotification.post()
+        TopConversationsDirectoryNotification().post(in: uiMOC.notificationContext)
     }
 
     /// Load list from persistent store
@@ -99,40 +99,20 @@ extension TopConversationsDirectory {
 
 }
 
-
-struct TopConversationsDirectoryNotification {
-    fileprivate static let name = NSNotification.Name(rawValue: "TopConversationsDirectoryNotification")
-
-    static func post() {
-        NotificationCenter.default.post(name: name, object: nil, userInfo: nil)
-    }
+struct TopConversationsDirectoryNotification : SelfPostingNotification {
+    
+    static let notificationName = NSNotification.Name(rawValue: "TopConversationsDirectoryNotification")
 }
-
-@objc public class TopConversationsDirectoryObserverToken: NSObject {
-    let innerToken: Any
-
-    init(_ token: Any) {
-        self.innerToken = token
-    }
-}
-
 
 extension TopConversationsDirectory {
 
-    @objc(addObserver:) public func add(observer: TopConversationsDirectoryObserver) -> TopConversationsDirectoryObserverToken {
-        let token = NotificationCenter.default.addObserver(forName: TopConversationsDirectoryNotification.name, object: nil, queue: .main) { [weak observer] _ in
+    @objc(addObserver:) public func add(observer: TopConversationsDirectoryObserver) -> Any {
+        return NotificationInContext.addObserver(name: TopConversationsDirectoryNotification.notificationName, context: uiMOC.notificationContext) { [weak observer] note in
             observer?.topConversationsDidChange()
         }
-
-        return TopConversationsDirectoryObserverToken(token)
-    }
-
-    @objc(removeObserver:) public func removeObserver(with token: TopConversationsDirectoryObserverToken) {
-        NotificationCenter.default.removeObserver(token.innerToken, name: TopConversationsDirectoryNotification.name, object: nil)
     }
 
 }
-
 
 fileprivate extension ZMConversation {
 

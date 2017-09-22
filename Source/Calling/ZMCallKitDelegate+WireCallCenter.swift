@@ -41,7 +41,7 @@ extension CallClosedReason {
 @objc(ZMCallObserver)
 public class CallObserver : NSObject, VoiceChannelStateObserver {
     
-    private var token : WireCallCenterObserverToken?
+    private var token : Any?
     
     public init(conversation: ZMConversation) {
         super.init()
@@ -115,12 +115,12 @@ extension ZMCallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMis
         }
     }
     
-    public func observeCallState() -> WireCallCenterObserverToken {
-        return WireCallCenterV3.addCallStateObserver(observer: self)
+    public func observeCallState() -> Any {
+        return WireCallCenterV3.addCallStateObserver(observer: self, context: userSession.managedObjectContext)
     }
     
-    public func observeMissedCalls() -> WireCallCenterObserverToken {
-        return WireCallCenterV3.addMissedCallObserver(observer: self)
+    public func observeMissedCalls() -> Any {
+        return WireCallCenterV3.addMissedCallObserver(observer: self, context: userSession.managedObjectContext)
     }
     
 }

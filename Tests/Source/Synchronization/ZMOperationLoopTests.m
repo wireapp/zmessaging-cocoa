@@ -40,6 +40,7 @@
 @property (nonatomic) id pingBackStatus;
 @property (nonatomic) id mockPushChannel;
 @property (nonatomic) NSMutableArray *pushChannelNotifications;
+@property (nonatomic) id pushChannelObserverToken;
 @end
 
 
@@ -70,12 +71,19 @@
                                                     syncStrategy:self.syncStrategy
                                                            uiMOC:self.uiMOC
                                                          syncMOC:self.syncMOC];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
+    self.pushChannelObserverToken = [NotificationInContext addObserverWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
+                                       context:self.uiMOC.notificationContext
+                                        object:nil
+                                         queue:nil
+                                         using:^(NotificationInContext * note) {
+                                             [self pushChannelDidChange:note];
+                                         }];
 }
 
 - (void)tearDown;
 {
     WaitForAllGroupsToBeEmpty(0.5);
+    self.pushChannelObserverToken = nil;
     [self.pingBackStatus stopMocking];
     self.pingBackStatus = nil;
     [self.mockPushChannel stopMocking];
@@ -90,7 +98,7 @@
     [super tearDown];
 }
 
-- (void)pushChannelDidChange:(NSNotification *)note
+- (void)pushChannelDidChange:(NotificationInContext *)note
 {
     [self.pushChannelNotifications addObject:note];
 }

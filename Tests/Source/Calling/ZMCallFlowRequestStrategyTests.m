@@ -25,7 +25,6 @@
 
 #import "ObjectTranscoderTests.h"
 #import "ZMOperationLoop.h"
-#import "ZMUserSessionAuthenticationNotification.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
@@ -67,14 +66,18 @@
 
 - (void)simulatePushChannelClose
 {
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMPushChannelStateChangeNotificationName object:nil
-                                                      userInfo:@{ZMPushChannelIsOpenKey: @(NO)}];
+    [[[NotificationInContext alloc] initWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
+                                         context:self.uiMOC.notificationContext
+                                          object:nil
+                                       userInfo:@{ZMPushChannelIsOpenKey: @(NO)}] post];
 }
 
 - (void)simulatePushChannelOpen
 {
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMPushChannelStateChangeNotificationName object:nil
-                                                      userInfo:@{ZMPushChannelIsOpenKey: @(YES)}];
+    [[[NotificationInContext alloc] initWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
+                                         context:self.uiMOC.notificationContext
+                                          object:nil
+                                        userInfo:@{ZMPushChannelIsOpenKey: @(YES)}] post];
 }
 
 - (void)testThatItNotifiesAVSOfNetworkChangeWhenThePushChannelIsOpened

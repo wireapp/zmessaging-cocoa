@@ -137,6 +137,39 @@ class ZMLocalNotificationForMessageTests : ZMLocalNotificationForEventTest {
         XCTAssertEqual(alertBodyForUnknownNotification(groupConversation, sender: sender), "Super User sent a message in Super Conversation")
         XCTAssertEqual(alertBodyForUnknownNotification(groupConversationWithoutName, sender: sender), "Super User sent a message")
     }
+    
+    func testThatItAddsATitleIfTheUserIsPartOfATeam() {
+        
+        self.syncMOC.performGroupedBlockAndWait {
+            // given
+            let team = Team.insertNewObject(in: self.syncMOC)
+            team.name = "Wire Amazing Team"
+            let user = ZMUser.selfUser(in: self.syncMOC)
+            _ = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
+            self.syncMOC.saveOrRollback()
+            XCTAssertNotNil(user.team)
+            
+            // when
+            guard let note = self.textNotification(self.oneOnOneConversation, sender: self.sender)?.uiNotifications.first else {
+                return XCTFail()
+            }
+            
+            // then
+            XCTAssertEqual(note.alertTitle, team.name)
+        }
+    }
+    
+    func testThatItDoesNotAddATitleIfTheUserIsNotPartOfATeam() {
+        
+        // when
+        guard let note = self.textNotification(oneOnOneConversation, sender: sender)?.uiNotifications.first else {
+            return XCTFail()
+        }
+        
+        // then
+        XCTAssertNil(note.alertTitle)
+
+    }
 }
 
 
@@ -234,11 +267,11 @@ extension ZMLocalNotificationForMessageTests {
     
     func assetNotification(_ fileType: FileType, conversation: ZMConversation, sender: ZMUser, isEphemeral: Bool = false) -> ZMLocalNotificationForMessage? {
         let metadata = ZMFileMetadata(fileURL: fileType.testURL)
-        let msg = ZMAssetClientMessage(fileMetadata: metadata, nonce: UUID.create(), managedObjectContext: self.syncMOC, expiresAfter: isEphemeral ? 10 : 0)
-        msg.sender = sender
-        msg.visibleInConversation = conversation
+        let msg = ZMAssetClientMessage.assetClientMessage(with: metadata, nonce: UUID.create(), managedObjectContext: self.syncMOC, expiresAfter: isEphemeral ? 10 : 0)
+        msg?.sender = sender
+        msg?.visibleInConversation = conversation
         
-        return ZMLocalNotificationForMessage(message: msg, application: self.application)
+        return ZMLocalNotificationForMessage(message: msg!, application: self.application)
     }
     
     func alertBodyForAssetNotification(_ fileType: FileType, conversation: ZMConversation, sender: ZMUser, isEphemeral: Bool = false) -> String? {

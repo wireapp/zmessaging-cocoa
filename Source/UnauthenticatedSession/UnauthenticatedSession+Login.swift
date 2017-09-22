@@ -38,9 +38,9 @@ extension UnauthenticatedSession {
         guard !updatedCredentialsInUserSession else { return }
         
         if credentials.isInvalid {
-            ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
+            authenticationStatus.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
         } else if !self.reachability.mayBeReachable {
-            ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.networkError, userInfo:nil))
+            authenticationStatus.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.networkError, userInfo:nil))
         } else {
             self.authenticationStatus.prepareForLogin(with: credentials)
         }
@@ -60,6 +60,10 @@ extension UnauthenticatedSession {
         authenticationStatus.prepareForRequestingPhoneVerificationCode(forLogin: phoneNumber)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         return true
+    }
+    
+    func addAuthenticationObserver(_ observer: PreLoginAuthenticationObserver) -> Any {
+        return PreLoginAuthenticationNotification.register(observer, context: authenticationStatus)
     }
     
 }

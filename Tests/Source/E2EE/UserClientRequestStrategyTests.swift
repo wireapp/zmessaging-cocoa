@@ -24,8 +24,139 @@ import WireTesting
 import WireMockTransport
 import WireDataModel
 
+typealias PostLoginAuthenticationHandler = (_ event : WireSyncEngine.PostLoginAuthenticationEvent, _ accountId: UUID) -> Void
 
-class UserClientRequestStrategyTests: RequestStrategyTestBase {
+extension PostLoginAuthenticationObserver {
+    
+    func addObserver(context : NSManagedObjectContext, handler: @escaping PostLoginAuthenticationHandler) -> Any {
+        return PostLoginAuthenticationObserverToken(managedObjectContext: context, handler: handler)
+    }
+    
+}
+
+class PostLoginAuthenticationObserverToken : NSObject, PostLoginAuthenticationObserver {
+    
+    var token : Any?
+    var handler : PostLoginAuthenticationHandler
+    
+    convenience init(managedObjectContext: NSManagedObjectContext, handler: @escaping PostLoginAuthenticationHandler) {
+        self.init(managedObjectContext: managedObjectContext, groupQueue: managedObjectContext, handler: handler)
+    }
+    
+    init(managedObjectContext: NSManagedObjectContext?, groupQueue: ZMSGroupQueue, handler: @escaping PostLoginAuthenticationHandler) {
+        self.handler = handler
+        super.init()
+        if let managedObjectContext = managedObjectContext {
+            self.token = PostLoginAuthenticationNotification.addObserver(self, context: managedObjectContext)
+        } else {
+            self.token = PostLoginAuthenticationNotification.addObserver(self, queue: groupQueue)
+        }
+        
+    }
+    
+    func authenticationInvalidated(_ error: NSError, accountId: UUID) {
+        handler(.authenticationInvalidated(error: error), accountId)
+    }
+    
+    func clientRegistrationDidSucceed(accountId: UUID) {
+        handler(.clientRegistrationDidSucceed, accountId)
+    }
+    
+    func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
+        handler(.clientRegistrationDidFail(error: error), accountId)
+    }
+    
+    func accountDeleted(accountId: UUID) {
+        handler(.accountDeleted, accountId)
+    }
+    
+}
+
+@objc
+public enum PostLoginAuthenticationEventObjC : Int {
+    case authenticationInvalidated
+    case clientRegistrationDidSucceed
+    case clientRegistrationDidFail
+    case accountDeleted
+}
+
+public typealias PostLoginAuthenticationObjCHandler = (_ event : PostLoginAuthenticationEventObjC, _ accountId: UUID, _ error: NSError?) -> Void
+
+@objc
+public class PostLoginAuthenticationObserverObjCToken : NSObject {
+    
+    var token : Any?
+    
+    convenience init(managedObjectContext: NSManagedObjectContext, handler: @escaping PostLoginAuthenticationObjCHandler) {
+        self.init(managedObjectContext: managedObjectContext, groupQueue: managedObjectContext, handler: handler)
+    }
+    
+    public convenience init(dispatchGroup: ZMSDispatchGroup, handler: @escaping PostLoginAuthenticationObjCHandler) {
+        let queue = DispatchGroupQueue(queue: .main)
+        queue.add(dispatchGroup)
+        self.init(managedObjectContext: nil, groupQueue: queue, handler: handler)
+    }
+    
+    init(managedObjectContext: NSManagedObjectContext?, groupQueue: ZMSGroupQueue, handler: @escaping PostLoginAuthenticationObjCHandler) {
+        self.token = PostLoginAuthenticationObserverToken(
+            managedObjectContext: managedObjectContext,
+            groupQueue: groupQueue,
+            handler: { (event, accountId) in
+            switch event {
+            case .clientRegistrationDidSucceed:
+                handler(.clientRegistrationDidSucceed, accountId, nil)
+            case .clientRegistrationDidFail(error: let error):
+                handler(.clientRegistrationDidFail, accountId, error)
+            case .authenticationInvalidated(error: let error):
+                handler(.authenticationInvalidated, accountId, error)
+            case .accountDeleted:
+                handler(.accountDeleted, accountId, nil)
+            }
+        })
+    }
+}
+
+@objc
+public class PostLoginAuthenticationNotificationEvent : NSObject {
+    
+    let event : PostLoginAuthenticationEventObjC
+    let accountId : UUID
+    var error : NSError?
+    
+    init(event : PostLoginAuthenticationEventObjC, accountId : UUID, error : NSError?) {
+        self.event = event
+        self.accountId = accountId
+        self.error = error
+    }
+    
+}
+
+@objc
+public class PostLoginAuthenticationNotificationRecorder : NSObject {
+    
+    private var token : Any?
+    public var notifications : [PostLoginAuthenticationNotificationEvent] = []
+    
+    init(managedObjectContext: NSManagedObjectContext) {
+        super.init()
+        
+        token = PostLoginAuthenticationObserverObjCToken(managedObjectContext: managedObjectContext) { [weak self] (event, accountId, error) in
+            self?.notifications.append(PostLoginAuthenticationNotificationEvent(event: event, accountId: accountId, error: error))
+        }
+    }
+    
+    public init(dispatchGroup: ZMSDispatchGroup) {
+        super.init()
+        let queue = DispatchGroupQueue(queue: .main)
+        queue.add(dispatchGroup)
+        token = PostLoginAuthenticationObserverObjCToken(managedObjectContext: nil, groupQueue: queue) { [weak self] (event, accountId, error) in
+            self?.notifications.append(PostLoginAuthenticationNotificationEvent(event: event, accountId: accountId, error: error))
+        }
+    }
+    
+}
+
+class UserClientRequestStrategyTests: RequestStrategyTestBase, PostLoginAuthenticationObserver {
     
     var sut: UserClientRequestStrategy!
     var clientRegistrationStatus: ZMMockClientRegistrationStatus!
@@ -37,7 +168,9 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
     
     var spyKeyStore: SpyUserClientKeyStore!
     
-    var receivedAuthenticationNotifications : [ZMUserSessionAuthenticationNotification] = []
+    var postLoginAuthenticationObserverToken : Any?
+    
+    var receivedAuthenticationEvents : [WireSyncEngine.PostLoginAuthenticationEvent] = []
     
     override func setUp() {
         super.setUp()
@@ -48,13 +181,13 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
             self.clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: self.cookieStorage, registrationStatusDelegate: nil)
             self.clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
             self.sut = UserClientRequestStrategy(clientRegistrationStatus: self.clientRegistrationStatus, clientUpdateStatus:self.clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
-            NotificationCenter.default.addObserver(self, selector: #selector(UserClientRequestStrategyTests.didReceiveAuthenticationNotification(_:)), name: NSNotification.Name(rawValue: "ZMUserSessionAuthenticationNotificationName"), object: nil)
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.remoteIdentifier = self.userIdentifier
+            self.postLoginAuthenticationObserverToken = PostLoginAuthenticationObserverToken(managedObjectContext: self.uiMOC, handler: { [weak self] (event, _) in
+                self?.receivedAuthenticationEvents.append(event)
+            })
+            self.syncMOC.saveOrRollback()
         }
-    }
-    
-    
-    func didReceiveAuthenticationNotification(_ note: ZMUserSessionAuthenticationNotification) {
-        receivedAuthenticationNotifications.append(note)
     }
     
     override func tearDown() {
@@ -66,8 +199,8 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase {
         self.spyKeyStore = nil
         self.sut.tearDown()
         self.sut = nil
-        receivedAuthenticationNotifications = []
-        NotificationCenter.default.removeObserver(self)
+        self.receivedAuthenticationEvents = []
+        self.postLoginAuthenticationObserverToken = nil
         super.tearDown()
     }
 }
@@ -207,11 +340,10 @@ extension UserClientRequestStrategyTests {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
 
         // then
-        XCTAssertEqual(receivedAuthenticationNotifications.count, 1, "should only receive one notification")
-        let note = receivedAuthenticationNotifications.first
-        AssertOptionalNotNil(note, "Authentication should succeed. Observers should be notified") { note in
-            XCTAssertNil(note.error)
-            XCTAssertEqual(note.type, ZMUserSessionAuthenticationNotificationType.authenticationNotificationDidRegisterClient)
+        XCTAssertEqual(receivedAuthenticationEvents.count, 1, "should only receive one notification")
+        guard let event = receivedAuthenticationEvents.first else { return XCTFail() }
+        guard case WireSyncEngine.PostLoginAuthenticationEvent.clientRegistrationDidSucceed = event else {
+            return XCTFail()
         }
     }
     
@@ -233,11 +365,13 @@ extension UserClientRequestStrategyTests {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // then
-        XCTAssertEqual(receivedAuthenticationNotifications.count, 1, "should only receive one notification")
-        let note = receivedAuthenticationNotifications.first
-        AssertOptionalNotNil(note, "Authentication should fail. Observers should be notified") { note in
-            XCTAssertEqual(note.error as NSError?, expectedError)
-            XCTAssertEqual(note.type, ZMUserSessionAuthenticationNotificationType.authenticationNotificationAuthenticationDidFail)
+        XCTAssertEqual(receivedAuthenticationEvents.count, 1, "should only receive one notification")
+        guard let event = receivedAuthenticationEvents.first else { return XCTFail() }
+        
+        if case WireSyncEngine.PostLoginAuthenticationEvent.clientRegistrationDidFail(error:  let error) = event {
+            XCTAssertEqual(error, expectedError)
+        } else {
+            XCTFail()
         }
     }
     
@@ -264,11 +398,13 @@ extension UserClientRequestStrategyTests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // then
-        XCTAssertEqual(receivedAuthenticationNotifications.count, 1, "should only receive one notification")
-        let note = receivedAuthenticationNotifications.first
-        AssertOptionalNotNil(note, "Authentication should fail. Observers should be notified") { note in
-            XCTAssertEqual(note.error as NSError?, expectedError)
-            XCTAssertEqual(note.type, ZMUserSessionAuthenticationNotificationType.authenticationNotificationAuthenticationDidFail)
+        XCTAssertEqual(receivedAuthenticationEvents.count, 1, "should only receive one notification")
+        guard let event = receivedAuthenticationEvents.first else { return XCTFail() }
+        
+        if case WireSyncEngine.PostLoginAuthenticationEvent.clientRegistrationDidFail(error:  let error) = event {
+            XCTAssertEqual(error, expectedError)
+        } else {
+            XCTFail()
         }
     }
     

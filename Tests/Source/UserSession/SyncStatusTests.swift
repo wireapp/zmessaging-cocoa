@@ -23,17 +23,14 @@ import XCTest
 class InitialSyncObserver : NSObject, ZMInitialSyncCompletionObserver {
     
     var didNotify : Bool = false
+    var initialSyncToken : Any?
     
-    override init() {
+    init(context: NSManagedObjectContext) {
         super.init()
-        ZMUserSession.addInitalSyncCompletionObserver(self)
+        initialSyncToken = ZMUserSession.addInitialSyncCompletionObserver(self, context: context)
     }
     
-    func tearDown() {
-        ZMUserSession.removeInitalSyncCompletionObserver(self)
-    }
-    
-    func initialSyncCompleted(_ notification: Notification!) {
+    func initialSyncCompleted() {
         didNotify = true
     }
 }
@@ -260,7 +257,7 @@ class SyncStatusTests : MessagingTest {
         uiMOC.zm_lastNotificationID = UUID.timeBasedUUID() as UUID
         sut = SyncStatus(managedObjectContext: uiMOC, syncStateDelegate: mockSyncDelegate)
         
-        let observer = InitialSyncObserver()
+        let observer = InitialSyncObserver(context: uiMOC)
         XCTAssertFalse(observer.didNotify)
 
         // when
@@ -269,8 +266,6 @@ class SyncStatusTests : MessagingTest {
         
         // then
         XCTAssertTrue(observer.didNotify)
-        
-        observer.tearDown()
     }
 
 }
@@ -369,9 +364,10 @@ extension SyncStatusTests {
         sut = SyncStatus(managedObjectContext: uiMOC, syncStateDelegate: mockSyncDelegate)
         sut.finishCurrentSyncPhase(phase: .fetchingMissedEvents)
         XCTAssertEqual(sut.currentSyncPhase, .done)
-
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
         // when
-        NotificationCenter.default.post(name: .ForceSlowSync, object: nil)
+        NotificationInContext(name: .ForceSlowSync, context: uiMOC.notificationContext).post()
 
         // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)

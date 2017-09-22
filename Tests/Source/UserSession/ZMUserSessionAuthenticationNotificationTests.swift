@@ -23,7 +23,7 @@ import WireTesting
 
 @testable import WireSyncEngine
 
-class ZMUserSessionAuthenticationNotificationTests: ZMTBaseTest {
+class ZMUserSessionAuthenticationNotificationTests: ZMTBaseTest { // TODO jacob
     
     
     func testThatRegistrationDidFailNotifiesTheAuthenticationObserver() {

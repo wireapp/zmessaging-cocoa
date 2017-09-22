@@ -150,7 +150,7 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
     }
     
     private func deleteAccount() {
-        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.accountDeleted, userInfo: nil))
+        PostLoginAuthenticationNotification.notifyAccountDeleted(context: managedObjectContext)
     }
 
 }

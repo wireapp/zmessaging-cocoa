@@ -18,11 +18,16 @@
 
 
 @import WireSystem;
+@import WireDataModel;
 
 #import "ZMUserSessionRegistrationNotification.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString * const UserSessionRegistrationNotificationName = @"ZMUserSessionRegistrationNotification";
 static NSString * const VerificationEmailResendRequestNotificationName = @"ZMVerificationEmailResendRequest";
+
+static NSString * const ZMUserSessionRegistrationEventKey = @"ZMUserSessionRegistrationEventKey";
+static NSString * const ZMUserSessionRegistrationErrorKey = @"ZMUserSessionRegistrationErrorKey";
 
 @interface ZMUserSessionRegistrationNotification()
 
@@ -30,69 +35,70 @@ static NSString * const VerificationEmailResendRequestNotificationName = @"ZMVer
 
 @implementation ZMUserSessionRegistrationNotification
 
-- (instancetype)init
-{
-    return [super initWithName:UserSessionRegistrationNotificationName object:nil];
++ (NSNotificationName)name {
+    return UserSessionRegistrationNotificationName;
 }
 
-+ (void)notifyRegistrationDidFail:(NSError *)error
++ (void)notifyRegistrationDidFail:(NSError *)error context:(ZMAuthenticationStatus *)authenticationStatus
 {
     NSCParameterAssert(error);
-    ZMUserSessionRegistrationNotification *note = [ZMUserSessionRegistrationNotification new];
-    note.error = error;
-    note.type = ZMRegistrationNotificationRegistrationDidFail;
-    [[NSNotificationCenter defaultCenter] postNotification:note];
+    NSDictionary *userInfo = @{ ZMUserSessionRegistrationEventKey : @(ZMRegistrationNotificationRegistrationDidFail),
+                                ZMUserSessionRegistrationErrorKey : error };
+    
+    [[[NotificationInContext alloc] initWithName:self.name context:authenticationStatus object:nil userInfo:userInfo] post];
 }
 
-+ (void)notifyPhoneNumberVerificationDidFail:(NSError *)error
++ (void)notifyPhoneNumberVerificationDidFail:(NSError *)error context:(ZMAuthenticationStatus *)authenticationStatus
 {
     NSCParameterAssert(error);
-    ZMUserSessionRegistrationNotification *note = [ZMUserSessionRegistrationNotification new];
-    note.error = error;
-    note.type = ZMRegistrationNotificationPhoneNumberVerificationDidFail;
-    [[NSNotificationCenter defaultCenter] postNotification:note];
+    NSDictionary *userInfo = @{ ZMUserSessionRegistrationEventKey : @(ZMRegistrationNotificationPhoneNumberVerificationDidFail),
+                                ZMUserSessionRegistrationErrorKey : error };
+    
+    [[[NotificationInContext alloc] initWithName:self.name context:authenticationStatus object:nil userInfo:userInfo] post];
 }
 
-+ (void)notifyPhoneNumberVerificationCodeRequestDidFail:(NSError *)error
++ (void)notifyPhoneNumberVerificationCodeRequestDidFail:(NSError *)error context:(ZMAuthenticationStatus *)authenticationStatus
 {
     NSCParameterAssert(error);
-    ZMUserSessionRegistrationNotification *note = [ZMUserSessionRegistrationNotification new];
-    note.error = error;
-    note.type = ZMRegistrationNotificationPhoneNumberVerificationCodeRequestDidFail;
-    [[NSNotificationCenter defaultCenter] postNotification:note];
+    NSDictionary *userInfo = @{ ZMUserSessionRegistrationEventKey : @(ZMRegistrationNotificationPhoneNumberVerificationCodeRequestDidFail),
+                                ZMUserSessionRegistrationErrorKey : error };
+    
+    [[[NotificationInContext alloc] initWithName:self.name context:authenticationStatus object:nil userInfo:userInfo] post];
 }
 
-+ (void)notifyPhoneNumberVerificationCodeRequestDidSucceed;
++ (void)notifyPhoneNumberVerificationCodeRequestDidSucceedInContext:(ZMAuthenticationStatus *)authenticationStatus;
 {
-    ZMUserSessionRegistrationNotification *note = [ZMUserSessionRegistrationNotification new];
-    note.type = ZMRegistrationNotificationPhoneNumberVerificationCodeRequestDidSucceed;
-    [[NSNotificationCenter defaultCenter] postNotification:note];
+    NSDictionary *userInfo = @{ ZMUserSessionRegistrationEventKey : @(ZMRegistrationNotificationPhoneNumberVerificationCodeRequestDidSucceed) };
+    
+    [[[NotificationInContext alloc] initWithName:self.name context:authenticationStatus object:nil userInfo:userInfo] post];
 }
 
-+ (void)notifyEmailVerificationDidSucceed
++ (void)notifyEmailVerificationDidSucceedInContext:(ZMAuthenticationStatus *)authenticationStatus
 {
-    ZMUserSessionRegistrationNotification *note = [ZMUserSessionRegistrationNotification new];
-    note.type = ZMRegistrationNotificationEmailVerificationDidSucceed;
-    [[NSNotificationCenter defaultCenter] postNotification:note];
+    NSDictionary *userInfo = @{ ZMUserSessionRegistrationEventKey : @(ZMRegistrationNotificationEmailVerificationDidSucceed) };
+    
+    [[[NotificationInContext alloc] initWithName:self.name context:authenticationStatus object:nil userInfo:userInfo] post];
 }
 
-+ (void)notifyPhoneNumberVerificationDidSucceed
++ (void)notifyPhoneNumberVerificationDidSucceedInContext:(ZMAuthenticationStatus *)authenticationStatus
 {
-    ZMUserSessionRegistrationNotification *note = [ZMUserSessionRegistrationNotification new];
-    note.type = ZMRegistrationNotificationPhoneNumberVerificationDidSucceed;
-    [[NSNotificationCenter defaultCenter] postNotification:note];
+    NSDictionary *userInfo = @{ ZMUserSessionRegistrationEventKey : @(ZMRegistrationNotificationPhoneNumberVerificationDidSucceed) };
+    
+    [[[NotificationInContext alloc] initWithName:self.name context:authenticationStatus object:nil userInfo:userInfo] post];
 }
 
-+ (id<ZMRegistrationObserverToken>)addObserverWithBlock:(void(^)(ZMUserSessionRegistrationNotification *))block
++ (id)addObserverInSession:(UnauthenticatedSession *)session withBlock:(void (^)(ZMUserSessionRegistrationNotificationType, NSError *))block
 {
-    return (id<ZMRegistrationObserverToken>)[[NSNotificationCenter defaultCenter] addObserverForName:UserSessionRegistrationNotificationName object:nil queue:[NSOperationQueue currentQueue] usingBlock:^(NSNotification *note) {
-        block((ZMUserSessionRegistrationNotification *)note);
+    return [self addObserverInContext:session.authenticationStatus withBlock:block];
+}
+
++ (id)addObserverInContext:(ZMAuthenticationStatus *)context withBlock:(void (^)(ZMUserSessionRegistrationNotificationType, NSError *))block
+{
+    return [NotificationInContext addObserverWithName:self.name context:context object:nil queue:nil using:^(NotificationInContext * notification) {
+        ZMUserSessionRegistrationNotificationType event = [notification.userInfo[ZMUserSessionRegistrationEventKey] unsignedIntegerValue];
+        NSError *error = notification.userInfo[ZMUserSessionRegistrationErrorKey];
+        block(event, error);
     }];
-}
-
-+ (void)removeObserver:(id<ZMRegistrationObserverToken>)token
-{
-    [[NSNotificationCenter defaultCenter] removeObserver:token];
 }
 
 @end
@@ -101,24 +107,18 @@ static NSString * const VerificationEmailResendRequestNotificationName = @"ZMVer
 
 @implementation ZMUserSessionRegistrationNotification (ResendVerificationEmail)
 
-+ (void)resendValidationForRegistrationEmail;
++ (void)resendValidationForRegistrationEmailInContext:(ZMAuthenticationStatus *)context;
 {
-    [[NSNotificationCenter defaultCenter] postNotificationName:VerificationEmailResendRequestNotificationName object:nil];
+    [[[NotificationInContext alloc] initWithName:VerificationEmailResendRequestNotificationName context:context object:nil userInfo:@{}] post];
 }
 
-+ (id)addObserverForRequestForVerificationEmail:(id<ZMRequestVerificationEmailObserver>)observer ZM_MUST_USE_RETURN;
++ (id)addObserverForRequestForVerificationEmail:(id<ZMRequestVerificationEmailObserver>)observer context:(ZMAuthenticationStatus *)context ZM_MUST_USE_RETURN;
 {
     ZM_WEAK(observer);
-    return [[NSNotificationCenter defaultCenter] addObserverForName:VerificationEmailResendRequestNotificationName object:nil queue:[NSOperationQueue currentQueue] usingBlock:^(NSNotification * __unused note) {
+    return [NotificationInContext addObserverWithName:VerificationEmailResendRequestNotificationName context:context object:nil queue:nil using:^(NotificationInContext * notification __unused) {
         ZM_STRONG(observer);
         [observer didReceiveRequestToResendValidationEmail];
-        
     }];
-}
-
-+ (void)removeObserverForRequestForVerificationEmail:(id)token;
-{
-    [[NSNotificationCenter defaultCenter] removeObserver:token];
 }
 
 @end

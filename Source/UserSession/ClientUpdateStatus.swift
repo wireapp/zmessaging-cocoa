@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -101,14 +101,14 @@ public enum ClientUpdateError : NSInteger {
             if needsToVerifySelfClient {
                 do {
                     excludingSelfClient = try filterSelfClientIfValid(excludingSelfClient)
-                    ZMClientUpdateNotification.notifyFetchingClientsCompleted(with: excludingSelfClient)
+                    ZMClientUpdateNotification.notifyFetchingClientsCompleted(userClients: excludingSelfClient, context: syncManagedObjectContext)
                 }
                 catch let error as NSError {
-                    ZMClientUpdateNotification.notifyFetchingClientsDidFail(error)
+                    ZMClientUpdateNotification.notifyFetchingClientsDidFail(error: error, context: syncManagedObjectContext)
                 }
             }
             else {
-                ZMClientUpdateNotification.notifyFetchingClientsCompleted(with: clients)
+                ZMClientUpdateNotification.notifyFetchingClientsCompleted(userClients: clients, context: syncManagedObjectContext)
             }
         }
     }
@@ -144,7 +144,7 @@ public enum ClientUpdateError : NSInteger {
     public func failedToFetchClients() {
         if isFetchingClients {
             let error = ClientUpdateError.errorForType(.deviceIsOffline)()
-            ZMClientUpdateNotification.notifyFetchingClientsDidFail(error)
+            ZMClientUpdateNotification.notifyFetchingClientsDidFail(error: error, context: syncManagedObjectContext)
         }
     }
     
@@ -153,7 +153,7 @@ public enum ClientUpdateError : NSInteger {
             isWaitingToDeleteClients = true
             internalCredentials = emailCredentials
         } else {
-            ZMClientUpdateNotification.notifyDeletionFailed(ClientUpdateError.errorForType(.invalidCredentials)())
+            ZMClientUpdateNotification.notifyDeletionFailed(error: ClientUpdateError.invalidCredentials.errorForType(), context: syncManagedObjectContext)
         }
     }
     
@@ -168,13 +168,13 @@ public enum ClientUpdateError : NSInteger {
                 // however if it happens and there is no other client to delete we should notify that all clients where deleted
                 if !hasClientsToDelete {
                     internalCredentials = nil
-                    ZMClientUpdateNotification.notifyDeletionCompleted(selfUserClientsExcludingSelfClient)
+                    ZMClientUpdateNotification.notifyDeletionCompleted(remainingClients: selfUserClientsExcludingSelfClient, context: syncManagedObjectContext)
                 }
             }
             else if  errorCode == .invalidCredentials {
                 isWaitingToDeleteClients = false
                 internalCredentials = nil
-                ZMClientUpdateNotification.notifyDeletionFailed(error)
+                ZMClientUpdateNotification.notifyDeletionFailed(error: error, context: syncManagedObjectContext)
             }
         }
     }
@@ -187,7 +187,7 @@ public enum ClientUpdateError : NSInteger {
         if isWaitingToDeleteClients && !hasClientsToDelete {
             isWaitingToDeleteClients = false
             internalCredentials = nil;
-            ZMClientUpdateNotification.notifyDeletionCompleted(selfUserClientsExcludingSelfClient)
+            ZMClientUpdateNotification.notifyDeletionCompleted(remainingClients: selfUserClientsExcludingSelfClient, context: syncManagedObjectContext)
         }
     }
     
