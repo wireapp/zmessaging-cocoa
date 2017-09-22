@@ -447,7 +447,7 @@ extension TypingStrategyTests {
         
         // expect
         let expectation = self.expectation(description: "Notified")
-        let token = NotificationInContext.addObserver(name: ZMConversation.typingNotificationName,
+        let token = NotificationInContext.addObserver(name: ZMConversation.clearTypingNotificationName,
                                                       context: self.uiMOC,
                                                       using: { note in
                                                         XCTAssertEqual(note.object as? ZMConversation, conversation)
