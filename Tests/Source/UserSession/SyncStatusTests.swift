@@ -364,7 +364,8 @@ extension SyncStatusTests {
         sut = SyncStatus(managedObjectContext: uiMOC, syncStateDelegate: mockSyncDelegate)
         sut.finishCurrentSyncPhase(phase: .fetchingMissedEvents)
         XCTAssertEqual(sut.currentSyncPhase, .done)
-
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
         // when
         NotificationInContext(name: .ForceSlowSync, context: uiMOC).post()
 
