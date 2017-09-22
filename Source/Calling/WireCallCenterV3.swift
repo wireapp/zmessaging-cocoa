@@ -563,8 +563,7 @@ public struct CallEvent {
         case .incoming(video: let video, shouldRing: _):
             callSnapshots[conversationId] = CallSnapshot(callState: callState, isVideo: video)
             
-            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(callCenter:self,
-                                                                                     conversationId: conversationId,
+            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
                                                                                      selfUserID: selfUserId,
                                                                                      members: [CallMember(userId: userId!, audioEstablished: false)],
                                                                                      initiator: userId,
@@ -699,8 +698,7 @@ public struct CallEvent {
         if let snapshot = participantSnapshots[conversationId] {
             snapshot.callParticipantsChanged(newParticipants: participants)
         } else if participants.count > 0 {
-            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(callCenter: self,
-                                                                                     conversationId: conversationId,
+            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
                                                                                      selfUserID: selfUserId,
                                                                                      members: participants,
                                                                                      callCenter: self)
