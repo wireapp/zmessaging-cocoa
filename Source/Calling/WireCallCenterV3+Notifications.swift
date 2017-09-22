@@ -229,7 +229,7 @@ class VoiceChannelParticipantV3Snapshot {
     fileprivate let selfUserID : UUID
     let initiator : UUID
     
-    init(callCenter: WireCallCenterV3, conversationId: UUID, selfUserID: UUID, members: [CallMember]?, initiator: UUID? = nil) {
+    init(conversationId: UUID, selfUserID: UUID, members: [CallMember]?, initiator: UUID? = nil, callCenter: WireCallCenterV3) {
         self.callCenter = callCenter
         self.conversationId = conversationId
         self.selfUserID = selfUserID

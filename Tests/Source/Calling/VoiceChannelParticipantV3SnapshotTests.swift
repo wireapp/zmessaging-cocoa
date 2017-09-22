@@ -47,7 +47,8 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
         let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(callCenter: mockWireCallCenterV3,
                                                                    conversationId: UUID(),
                                                                    selfUserID: UUID(),
-                                                                   members: [callMember1, callMember2])
+                                                                   members: [callMember1, callMember2],
+                                                                   callCenter: mockWireCallCenterV3)
         
         // then
         // it does not crash and
@@ -65,7 +66,8 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
         let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(callCenter: mockWireCallCenterV3,
                                                                    conversationId: UUID(),
                                                                    selfUserID: UUID(),
-                                                                   members: [])
+                                                                   members: [],
+                                                                   callCenter: mockWireCallCenterV3)
 
         // when
         sut.callParticipantsChanged(newParticipants: [callMember1, callMember2])
@@ -86,7 +88,8 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
         let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(callCenter: mockWireCallCenterV3,
                                                                    conversationId: UUID(),
                                                                    selfUserID: UUID(),
-                                                                   members: [])
+                                                                   members: [],
+                                                                   callCenter: mockWireCallCenterV3)
         
         // when
         sut.callParticipantsChanged(newParticipants: [callMember1, callMember2])
