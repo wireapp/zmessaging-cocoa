@@ -411,7 +411,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                                 
                                 sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
                                 
-                                sessionManager.select(account: account) { userSession in
+                                sessionManager.loadSession(for: account) { userSession in
                                     realSessionManager = sessionManager
                                     XCTAssertNotNil(userSession)
                                     sessionManagerExpectation.fulfill()

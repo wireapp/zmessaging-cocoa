@@ -286,7 +286,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
         
-        select(account: account) { [weak self] session in
+        loadSession(for: account) { [weak self] session in
             guard let `self` = self else { return }
             self.updateCurrentAccount(in: session.managedObjectContext)
             session.application(self.application, didFinishLaunchingWithOptions: launchOptions)
@@ -294,15 +294,16 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         }
     }
     
-    public func select(_ account: Account) {
+    public func select(_ account: Account, completion: ((ZMUserSession)->())? = nil) {
         delegate?.sessionManagerWillOpenAccount(account)
         tearDownObservers()
         activeUserSession?.callNotificationStyle = .pushNotifications
         
         activeUserSession = nil
         
-        select(account: account) { [weak self] (_) in
+        loadSession(for: account) { [weak self] session in
             self?.accountManager.select(account)
+            completion?(session)
         }
     }
     
@@ -346,7 +347,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         createUnauthenticatedSession()
     }
 
-    internal func select(account: Account?, completion: @escaping (ZMUserSession) -> Void) {
+    internal func loadSession(for account: Account?, completion: @escaping (ZMUserSession) -> Void) {
         guard let account = account else { return createUnauthenticatedSession() }
 
         if account.isAuthenticated {
