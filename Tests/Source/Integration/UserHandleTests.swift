@@ -25,7 +25,7 @@ class UserHandleTests : IntegrationTest {
     
     var userProfileStatusObserver : TestUserProfileUpdateObserver!
     
-    var observerToken : AnyObject!
+    var observerToken : Any?
     
     override func setUp() {
         super.setUp()
@@ -40,7 +40,6 @@ class UserHandleTests : IntegrationTest {
     }
     
     override func tearDown() {
-        self.userSession?.userProfile.removeObserver(token: self.observerToken)
         self.observerToken = nil
         self.userProfileStatusObserver = nil
         super.tearDown()
