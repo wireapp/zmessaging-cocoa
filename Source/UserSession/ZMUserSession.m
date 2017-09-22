@@ -46,11 +46,11 @@
 #import "ZMCallKitDelegate+TypeConformance.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
-NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
+NSNotificationName const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
 NSNotificationName const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
-NSString * const ZMAppendAVSLogNotificationName = @"ZMAppendAVSLogNotification";
-NSString * const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
-NSString * const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLoopNotificationName";
+NSString * const ZMAppendAVSLogNotificationName = @"AVSLogMessageNotification";
+NSNotificationName const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
+NSNotificationName const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLoopNotificationName";
 
 static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-client/id930944768?ls=1&mt=8";
 
@@ -803,7 +803,7 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 + (id<ZMAVSLogObserverToken>)addAVSLogObserver:(id<ZMAVSLogObserver>)observer;
 {
     ZM_WEAK(observer);
-    return (id<ZMAVSLogObserverToken>)[[NSNotificationCenter defaultCenter] addObserverForName:@"AVSLogMessageNotification"
+    return (id<ZMAVSLogObserverToken>)[[NSNotificationCenter defaultCenter] addObserverForName:ZMAppendAVSLogNotificationName
                                                                                         object:nil
                                                                                          queue:nil
                                                                                     usingBlock:^(NSNotification * _Nonnull note) {
@@ -820,8 +820,13 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 + (void)appendAVSLogMessageForConversation:(ZMConversation *)conversation withMessage:(NSString *)message;
 {
     NSDictionary *userInfo = @{@"message" :message};
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMAppendAVSLogNotificationName object:conversation userInfo:userInfo];
+    if (conversation.managedObjectContext == nil) {
+        return;
+    }
+    [[[NotificationInContext alloc] initWithName:ZMAppendAVSLogNotificationName
+                                        context:conversation.managedObjectContext.zm_userInterfaceContext
+                                         object:conversation
+                                       userInfo:userInfo] post];
 }
 
 @end
