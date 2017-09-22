@@ -354,41 +354,6 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     }];
 }
 
-- (void)acceptConnectionForNotification:(UILocalNotification *)note
-                  withCompletionHandler:(void (^)())completionHandler
-{
-    ZMUser *sender = [ZMUser fetchObjectWithRemoteIdentifier:note.zm_senderUUID inManagedObjectContext:self.managedObjectContext];
-    ZMConversation *conversation = [note conversationInManagedObjectContext:self.managedObjectContext];
-
-    if (sender == nil) {
-        ZMLogError(@"Sender is missing");
-        if (completionHandler != nil) {
-            completionHandler();
-        }
-        return;
-    }
-    
-    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"Accept connection activity"];
-    
-    ZM_WEAK(self);
-    [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
-        ZM_STRONG(self);
-
-        if (result == ZMBackgroundTaskResultFailed) {
-            ZMLogDebug(@"Failed to connect to user");
-        }
-        
-        [activity endActivity];
-        if (completionHandler != nil) {
-            completionHandler();
-        }
-    }];
-    
-    [self enqueueChanges:^{
-        [sender accept];
-        [self openConversation:conversation atMessage:nil];
-    }];
-}
 
 - (void)updateBackgroundTaskWithMessage:(id<ZMConversationMessage>)message
 {
