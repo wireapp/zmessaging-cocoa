@@ -43,6 +43,6 @@ public extension UserChangeInfo {
     /// You must hold on to the token until you want to stop observing
     @objc(addObserver:forSearchUser:userSession:)
     static func add(searchUserObserver observer: ZMUserObserver, for user: ZMSearchUser?, userSession: ZMUserSession) -> NSObjectProtocol {
-        return self.add(searchUserObserver: observer, for: user, managedObjectContext: userSession.searchManagedObjectContext)
+        return self.add(searchUserObserver: observer, for: user, managedObjectContext: userSession.managedObjectContext)
     }
 }

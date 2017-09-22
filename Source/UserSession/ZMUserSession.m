@@ -51,7 +51,6 @@ static NSString * const ZMRequestToOpenSyncConversationNotificationName = @"ZMRe
 NSString * const ZMAppendAVSLogNotificationName = @"ZMAppendAVSLogNotification";
 NSString * const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
 NSString * const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLoopNotificationName";
-NSString * const ZMFlowManagerDidBecomeAvailableNotification = @"ZMFlowManagerDidBecomeAvailableNotification";
 
 static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-client/id930944768?ls=1&mt=8";
 

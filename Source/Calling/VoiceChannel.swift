@@ -93,18 +93,18 @@ public protocol CallActionsInternal : NSObjectProtocol {
 public protocol CallObservers : NSObjectProtocol {
     
     /// Add observer of voice channel state. Returns a token which needs to be retained as long as the observer should be active.
-    func addStateObserver(_ observer: VoiceChannelStateObserver) -> WireCallCenterObserverToken
+    func addStateObserver(_ observer: VoiceChannelStateObserver) -> Any
     
     /// Add observer of voice channel participants. Returns a token which needs to be retained as long as the observer should be active.
-    func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> WireCallCenterObserverToken
+    func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> Any
     
     /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
-    func addVoiceGainObserver(_ observer: VoiceGainObserver) -> WireCallCenterObserverToken
+    func addVoiceGainObserver(_ observer: VoiceGainObserver) -> Any
     
     /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
-    func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> WireCallCenterObserverToken
+    func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> Any
     
     /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
-    static func addStateObserver(_ observer: VoiceChannelStateObserver, userSession: ZMUserSession) -> WireCallCenterObserverToken
+    static func addStateObserver(_ observer: VoiceChannelStateObserver, userSession: ZMUserSession) -> Any
     
 }

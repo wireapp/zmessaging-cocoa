@@ -26,18 +26,14 @@ protocol SelfPostingNotification {
 extension SelfPostingNotification {
     static var userInfoKey : String { return notificationName.rawValue }
     
-    func post() {
-        NotificationCenter.default.post(name: type(of:self).notificationName,
-                                        object: nil,
-                                        userInfo: [type(of:self).userInfoKey : self])
+    func post(in context: Any) {
+        NotificationInContext(name: type(of:self).notificationName, context: context, userInfo: [type(of:self).userInfoKey : self]).post()
     }
 }
 
 
 
 /// MARK - Video call observer
-
-public typealias WireCallCenterObserverToken = NSObjectProtocol
 
 struct WireCallCenterV3VideoNotification : SelfPostingNotification {
     static let notificationName = Notification.Name("WireCallCenterVideoNotification")
@@ -116,16 +112,21 @@ public protocol VoiceChannelParticipantObserver : class {
     static let userInfoKey = notificationName.rawValue
     public let setChangeInfo : SetChangeInfo<CallMember>
     let conversationId : UUID
+    unowned var callCenter : WireCallCenterV3
     
-    init(setChangeInfo: SetChangeInfo<CallMember>, conversationId: UUID) {
+    init(setChangeInfo: SetChangeInfo<CallMember>, conversationId: UUID, callCenter: WireCallCenterV3) {
         self.setChangeInfo = setChangeInfo
         self.conversationId = conversationId
+        self.callCenter = callCenter
     }
     
     func post() {
-        NotificationCenter.default.post(name: VoiceChannelParticipantNotification.notificationName,
-                                        object: nil,
-                                        userInfo: [VoiceChannelParticipantNotification.userInfoKey : self])
+        guard let context = callCenter.uiMOC else { return }
+        
+        NotificationInContext(name: VoiceChannelParticipantNotification.notificationName,
+                              context: context,
+                              object: nil,
+                              userInfo: [VoiceChannelParticipantNotification.userInfoKey : self]).post()
     }
     
     public var orderedSetState : OrderedSetState<ChangeInfoContent> { return setChangeInfo.orderedSetState }
@@ -165,14 +166,8 @@ public class VoiceGainNotification : NSObject  {
         super.init()
     }
     
-    public var notification : Notification {
-        return Notification(name: VoiceGainNotification.notificationName,
-                            object: conversationId as NSUUID,
-                            userInfo: [VoiceGainNotification.userInfoKey : self])
-    }
-    
-    public func post() {
-        NotificationCenter.default.post(notification)
+    public func post(in context: Any, queue: NotificationQueue) {
+        NotificationInContext(name: VoiceGainNotification.notificationName, context: context, object: conversationId as NSUUID, userInfo: [VoiceGainNotification.userInfoKey : self]).post(on: queue)
     }
 }
 
@@ -192,37 +187,33 @@ extension WireCallCenterV3 {
     // MARK - Observer
     
     /// Register observer of the call center call state. This will inform you when there's an incoming call etc.
-    /// Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
-    public class func addCallStateObserver(observer: WireCallCenterCallStateObserver) -> WireCallCenterObserverToken  {
-        return NotificationCenter.default.addObserver(forName: WireCallCenterCallStateNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
-            if let note = note.userInfo?[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification {
+    /// Returns a token which needs to be retained as long as the observer should be active.
+    public class func addCallStateObserver(observer: WireCallCenterCallStateObserver, context: NSManagedObjectContext) -> Any  {
+        return NotificationInContext.addObserver(name: WireCallCenterCallStateNotification.notificationName, context: context, queue: .main) { [weak observer] note in
+            if let note = note.userInfo[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification {
                 observer?.callCenterDidChange(callState: note.callState, conversationId: note.conversationId, userId: note.userId, timeStamp: note.messageTime)
             }
         }
     }
     
     /// Register observer of missed calls.
-    /// Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
-    public class func addMissedCallObserver(observer: WireCallCenterMissedCallObserver) -> WireCallCenterObserverToken  {
-        return NotificationCenter.default.addObserver(forName: WireCallCenterMissedCallNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
-            if let note = note.userInfo?[WireCallCenterMissedCallNotification.userInfoKey] as? WireCallCenterMissedCallNotification {
+    /// Returns a token which needs to be retained as long as the observer should be active.
+    public class func addMissedCallObserver(observer: WireCallCenterMissedCallObserver, context: NSManagedObjectContext) -> Any  {
+        return NotificationInContext.addObserver(name: WireCallCenterMissedCallNotification.notificationName, context: context, queue: .main) { [weak observer] note in
+            if let note = note.userInfo[WireCallCenterMissedCallNotification.userInfoKey] as? WireCallCenterMissedCallNotification {
                 observer?.callCenterMissedCall(conversationId: note.conversationId, userId: note.userId, timestamp: note.timestamp, video: note.video)
             }
         }
     }
     
     /// Register observer of the video state. This will inform you when the remote caller starts, stops sending video.
-    /// Returns a token which needs to unregistered with `removeObserver(token:)` to stop observing.
-    public class func addReceivedVideoObserver(observer: ReceivedVideoObserver) -> WireCallCenterObserverToken {
-        return NotificationCenter.default.addObserver(forName: WireCallCenterV3VideoNotification.notificationName, object: nil, queue: .main) { [weak observer] (note) in
-            if let note = note.userInfo?[WireCallCenterV3VideoNotification.userInfoKey] as? WireCallCenterV3VideoNotification {
+    /// Returns a token which needs to be retained as long as the observer should be active.
+    public class func addReceivedVideoObserver(observer: ReceivedVideoObserver, context: NSManagedObjectContext) -> Any {
+        return NotificationInContext.addObserver(name: WireCallCenterV3VideoNotification.notificationName, context: context, queue: .main) { [weak observer] note in
+            if let note = note.userInfo[WireCallCenterV3VideoNotification.userInfoKey] as? WireCallCenterV3VideoNotification {
                 observer?.callCenterDidChange(receivedVideoState: note.receivedVideoState)
             }
         }
-    }
-    
-    public class func removeObserver(token: WireCallCenterObserverToken) {
-        NotificationCenter.default.removeObserver(token)
     }
     
 }
@@ -233,19 +224,17 @@ class VoiceChannelParticipantV3Snapshot {
     fileprivate var state : SetSnapshot<CallMember>
     public private(set) var members : OrderedSetState<CallMember>
     
+    fileprivate unowned var callCenter : WireCallCenterV3
     fileprivate let conversationId : UUID
     fileprivate let selfUserID : UUID
     let initiator : UUID
     
-    init(conversationId: UUID, selfUserID: UUID, members: [CallMember]?, initiator: UUID? = nil) {
+    init(callCenter: WireCallCenterV3, conversationId: UUID, selfUserID: UUID, members: [CallMember]?, initiator: UUID? = nil) {
+        self.callCenter = callCenter
         self.conversationId = conversationId
         self.selfUserID = selfUserID
         self.initiator = initiator ?? selfUserID
         
-        guard let callCenter = WireCallCenterV3.activeInstance else {
-            fatal("WireCallCenterV3 not accessible")
-        }
-
         if let unfilteredMembers = members {
             self.members = type(of: self).filteredMembers(unfilteredMembers)
         } else {
@@ -298,7 +287,7 @@ class VoiceChannelParticipantV3Snapshot {
         else { return}
         
         state = newStateUpdate.newSnapshot
-        VoiceChannelParticipantNotification(setChangeInfo: newStateUpdate.changeInfo, conversationId: self.conversationId).post()
+        VoiceChannelParticipantNotification(setChangeInfo: newStateUpdate.changeInfo, conversationId: self.conversationId, callCenter: callCenter).post()
     }
     
     public func connectionState(forUserWith userId: UUID) -> VoiceChannelV2ConnectionState {

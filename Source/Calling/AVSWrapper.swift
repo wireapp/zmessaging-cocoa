@@ -64,22 +64,10 @@ public class AVSWrapper : AVSWrapperType {
                               requestCallConfigHandler,
                               observer)
         
-        wcall_set_video_state_handler(handle, { (state, _) in
-            guard let state = ReceivedVideoState(rawValue: UInt(state)) else { return }
-            
-            DispatchQueue.main.async {
-                WireCallCenterV3VideoNotification(receivedVideoState: state).post()
-            }
-        })
-        
+        wcall_set_video_state_handler(handle, videoStateChangeHandler)
         wcall_set_data_chan_estab_handler(handle, dataChannelEstablishedHandler)
         wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
-
-        wcall_set_audio_cbr_enabled_handler(handle, { _ in
-            DispatchQueue.main.async {
-                WireCallCenterCBRCallNotification().post()
-            }
-        })
+        wcall_set_audio_cbr_enabled_handler(handle, audioCBREnabledHandler)
     }
     
     public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {

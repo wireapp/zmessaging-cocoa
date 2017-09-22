@@ -197,8 +197,6 @@ NS_ASSUME_NONNULL_END
 - (void)dealloc
 {
     [self.provider invalidate];
-    [WireCallCenterV3 removeObserverWithToken:self.callStateObserverToken];
-    [WireCallCenterV3 removeObserverWithToken:self.missedCallsObserverToken];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
