@@ -35,6 +35,7 @@
 @property (nonatomic, readonly) ZMSingleRequestSync *registrationSync;
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic, weak) id<ZMSGroupQueue> groupQueue;
+@property (nonatomic) id authenticationObserverToken;
 
 @end
 
@@ -57,7 +58,7 @@
         self.userInfoParser = userInfoParser;
         _registrationSync = [ZMSingleRequestSync syncWithSingleRequestTranscoder:self groupQueue:groupQueue];
         self.authenticationStatus = authenticationStatus;
-        [authenticationStatus addAuthenticationCenterObserver:self];
+        self.authenticationObserverToken = [authenticationStatus addAuthenticationCenterObserver:self];
     }
     return self;
 }

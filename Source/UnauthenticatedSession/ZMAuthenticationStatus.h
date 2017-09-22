@@ -71,8 +71,7 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 - (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue;
 
-- (void)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
-- (void)removeAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
+- (id)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
 
 - (void)prepareForRegistrationOfUser:(ZMCompleteRegistrationUser *)user;
 - (void)prepareForLoginWithCredentials:(ZMCredentials *)credentials;

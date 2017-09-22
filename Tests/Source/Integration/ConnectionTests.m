@@ -962,36 +962,27 @@
 // TestObserver
 ///
 
-@interface ConnectionLimitObserver : NSObject
+@interface MockConnectionLimitObserver : NSObject <ZMConnectionLimitObserver>
 
-@property (nonatomic) NSMutableArray *notifications;
-- (void)clearNotifications;
+@property (nonatomic) id connectionLimitObserverToken;
+@property (nonatomic) BOOL reachedConnectionLimit;
 
 @end
 
-@implementation ConnectionLimitObserver
 
-- (instancetype)init {
+@implementation MockConnectionLimitObserver
+
+- (void)connectionLimitReached {
+    self.reachedConnectionLimit = YES;
+}
+
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc {
     self = [super init];
     if  (self) {
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(addNotfication:) name:@"ZMConnectionLimitReachedNotification" object:nil];
-        self.notifications = [NSMutableArray array];
+        self.reachedConnectionLimit = NO;
+        self.connectionLimitObserverToken = [ZMConnectionLimitNotification addConnectionLimitObserver:self context:moc];
     }
     return self;
-}
-
-- (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-}
-
-- (void)addNotfication:(NSNotification *)note
-{
-    [self.notifications addObject:note];
-}
-
-- (void)clearNotifications
-{
-    self.notifications = [NSMutableArray array];
 }
 
 @end
@@ -1034,7 +1025,7 @@
 - (void)testThatItNotifiesObserversAboutConnectionLimitWhenInsertingAnObject
 {
     // given
-    ConnectionLimitObserver *observer = [[ConnectionLimitObserver alloc] init];
+    MockConnectionLimitObserver *observer = [[MockConnectionLimitObserver alloc] init];
     
     NSString *searchUserName = @"Karl McUser";
     NSUUID *userID = [NSUUID createUUID];
@@ -1043,14 +1034,14 @@
     self.mockTransportSession.responseGeneratorBlock = self.responseBlockForConnectionLimit;
     
     XCTAssertTrue([self login]);
-    XCTAssertEqual(observer.notifications.count, 0u);
+    XCTAssertFalse(observer.reachedConnectionLimit);
     
     // when
     [self searchAndConnectToUserWithName:searchUserName searchQuery:@"McUser"];
     [self.mockTransportSession waitForAllRequestsToCompleteWithTimeout:0.5];
     
     // then
-    XCTAssertEqual(observer.notifications.count, 1u);
+    XCTAssertTrue(observer.reachedConnectionLimit);
 }
 
 - (void)testThatItResetsTheConversationWhenAConnectionStatusChangeFromPendingToAcceptedIsRejectedByTheBackend
@@ -1110,7 +1101,7 @@
 - (void)testThatItSendsOutANotificationWhenAConnectionStatusChangeFromPendingToAcceptedIsRejectedByTheBackend
 {
     // given
-    ConnectionLimitObserver *observer = [[ConnectionLimitObserver alloc] init];
+    MockConnectionLimitObserver *observer = [[MockConnectionLimitObserver alloc] init];
 
     // create pending conversation from remote user
     MockUser *mockUser = [self createPendingConnectionFromUserWithName:@"Hans" uuid:NSUUID.createUUID];
@@ -1127,8 +1118,7 @@
     [self.mockTransportSession waitForAllRequestsToCompleteWithTimeout:0.5];
     
     // then
-    XCTAssertEqual(observer.notifications.count, 1u);
-
+    XCTAssertTrue(observer.reachedConnectionLimit);
 }
 
 

@@ -28,7 +28,6 @@
 
 @class ZMPersistentCookieStorage;
 
-extern NSString * const ZMPushChannelStateChangeNotificationName;
 extern NSString * const ZMPushChannelIsOpenKey;
 extern NSString * const ZMPushChannelResponseStatusKey;
 

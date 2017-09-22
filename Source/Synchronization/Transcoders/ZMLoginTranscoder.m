@@ -93,7 +93,6 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
 
 - (void)tearDown
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.timedDownstreamSync invalidate];
 }
 
