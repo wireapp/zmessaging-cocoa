@@ -62,7 +62,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         
         ZM_WEAK(self);
         self.pushChannelObserverToken = [NotificationInContext addObserverWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
-                                           context:self.managedObjectContext.zm_userInterfaceContext
+                                           context:self.managedObjectContext.notificationContext
                                             object:nil
                                              queue:nil
                                              using:^(NotificationInContext * note) {
@@ -145,7 +145,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         VoiceGainNotification *voiceGainNotification = [[VoiceGainNotification alloc] initWithVolume:(float)volume conversationId:conversationID userId:userID];
         
         [self.uiManagedObjectContext performGroupedBlock:^{
-            [voiceGainNotification postIn:self.uiManagedObjectContext queue:self.voiceGainNotificationQueue];
+            [voiceGainNotification postIn:self.uiManagedObjectContext.notificationContext queue:self.voiceGainNotificationQueue];
         }];
     }];
 }

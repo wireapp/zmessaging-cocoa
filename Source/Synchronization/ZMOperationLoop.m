@@ -334,7 +334,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 {
     NOT_USED(response);
     [[[NotificationInContext alloc] initWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
-                                         context:self.syncMOC.zm_userInterfaceContext
+                                         context:self.syncMOC.notificationContext
                                           object:self userInfo:@{
                                                                  ZMPushChannelIsOpenKey : @(NO),
                                                                  ZMPushChannelResponseStatusKey : @(response.statusCode)
@@ -346,7 +346,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 - (void)pushChannelDidOpen:(ZMPushChannelConnection *)channel withResponse:(NSHTTPURLResponse *)response;
 {
     [[[NotificationInContext alloc] initWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
-                                         context:self.syncMOC.zm_userInterfaceContext
+                                         context:self.syncMOC.notificationContext
                                           object:self userInfo: @{
                                                                   ZMPushChannelIsOpenKey : @(YES),
                                                                   ZMPushChannelResponseStatusKey : @(response.statusCode)

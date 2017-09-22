@@ -26,7 +26,7 @@ protocol SelfPostingNotification {
 extension SelfPostingNotification {
     static var userInfoKey : String { return notificationName.rawValue }
     
-    func post(in context: Any) {
+    func post(in context: NotificationContext) {
         NotificationInContext(name: type(of:self).notificationName, context: context, userInfo: [type(of:self).userInfoKey : self]).post()
     }
 }
@@ -124,7 +124,7 @@ public protocol VoiceChannelParticipantObserver : class {
         guard let context = callCenter.uiMOC else { return }
         
         NotificationInContext(name: VoiceChannelParticipantNotification.notificationName,
-                              context: context,
+                              context: context.notificationContext,
                               object: nil,
                               userInfo: [VoiceChannelParticipantNotification.userInfoKey : self]).post()
     }
@@ -166,7 +166,7 @@ public class VoiceGainNotification : NSObject  {
         super.init()
     }
     
-    public func post(in context: Any, queue: NotificationQueue) {
+    public func post(in context: NotificationContext, queue: NotificationQueue) {
         NotificationInContext(name: VoiceGainNotification.notificationName, context: context, object: conversationId as NSUUID, userInfo: [VoiceGainNotification.userInfoKey : self]).post(on: queue)
     }
 }
@@ -189,7 +189,7 @@ extension WireCallCenterV3 {
     /// Register observer of the call center call state. This will inform you when there's an incoming call etc.
     /// Returns a token which needs to be retained as long as the observer should be active.
     public class func addCallStateObserver(observer: WireCallCenterCallStateObserver, context: NSManagedObjectContext) -> Any  {
-        return NotificationInContext.addObserver(name: WireCallCenterCallStateNotification.notificationName, context: context, queue: .main) { [weak observer] note in
+        return NotificationInContext.addObserver(name: WireCallCenterCallStateNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
             if let note = note.userInfo[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification {
                 observer?.callCenterDidChange(callState: note.callState, conversationId: note.conversationId, userId: note.userId, timeStamp: note.messageTime)
             }
@@ -199,7 +199,7 @@ extension WireCallCenterV3 {
     /// Register observer of missed calls.
     /// Returns a token which needs to be retained as long as the observer should be active.
     public class func addMissedCallObserver(observer: WireCallCenterMissedCallObserver, context: NSManagedObjectContext) -> Any  {
-        return NotificationInContext.addObserver(name: WireCallCenterMissedCallNotification.notificationName, context: context, queue: .main) { [weak observer] note in
+        return NotificationInContext.addObserver(name: WireCallCenterMissedCallNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
             if let note = note.userInfo[WireCallCenterMissedCallNotification.userInfoKey] as? WireCallCenterMissedCallNotification {
                 observer?.callCenterMissedCall(conversationId: note.conversationId, userId: note.userId, timestamp: note.timestamp, video: note.video)
             }
@@ -209,7 +209,7 @@ extension WireCallCenterV3 {
     /// Register observer of the video state. This will inform you when the remote caller starts, stops sending video.
     /// Returns a token which needs to be retained as long as the observer should be active.
     public class func addReceivedVideoObserver(observer: ReceivedVideoObserver, context: NSManagedObjectContext) -> Any {
-        return NotificationInContext.addObserver(name: WireCallCenterV3VideoNotification.notificationName, context: context, queue: .main) { [weak observer] note in
+        return NotificationInContext.addObserver(name: WireCallCenterV3VideoNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
             if let note = note.userInfo[WireCallCenterV3VideoNotification.userInfoKey] as? WireCallCenterV3VideoNotification {
                 observer?.callCenterDidChange(receivedVideoState: note.receivedVideoState)
             }

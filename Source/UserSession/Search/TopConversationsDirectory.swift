@@ -79,7 +79,7 @@ extension TopConversationsDirectory {
     private func persistList() {
         let valueToSave = self.topConversations.map { $0.objectID.uriRepresentation().absoluteString }
         self.uiMOC.setPersistentStoreMetadata(array: valueToSave, key: topConversationsObjectIDKey)
-        TopConversationsDirectoryNotification().post(in: uiMOC)
+        TopConversationsDirectoryNotification().post(in: uiMOC.notificationContext)
     }
 
     /// Load list from persistent store
@@ -107,7 +107,7 @@ struct TopConversationsDirectoryNotification : SelfPostingNotification {
 extension TopConversationsDirectory {
 
     @objc(addObserver:) public func add(observer: TopConversationsDirectoryObserver) -> Any {
-        return NotificationInContext.addObserver(name: TopConversationsDirectoryNotification.notificationName, context: uiMOC) { [weak observer] note in
+        return NotificationInContext.addObserver(name: TopConversationsDirectoryNotification.notificationName, context: uiMOC.notificationContext) { [weak observer] note in
             observer?.topConversationsDidChange()
         }
     }

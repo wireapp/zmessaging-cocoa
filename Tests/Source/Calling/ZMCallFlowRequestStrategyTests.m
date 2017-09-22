@@ -67,7 +67,7 @@
 - (void)simulatePushChannelClose
 {
     [[[NotificationInContext alloc] initWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
-                                         context:self.uiMOC
+                                         context:self.uiMOC.notificationContext
                                           object:nil
                                        userInfo:@{ZMPushChannelIsOpenKey: @(NO)}] post];
 }
@@ -75,7 +75,7 @@
 - (void)simulatePushChannelOpen
 {
     [[[NotificationInContext alloc] initWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
-                                         context:self.uiMOC
+                                         context:self.uiMOC.notificationContext
                                           object:nil
                                         userInfo:@{ZMPushChannelIsOpenKey: @(YES)}] post];
 }

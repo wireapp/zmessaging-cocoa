@@ -58,7 +58,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)
         super.init()
         
-        callInProgressObserverToken = NotificationInContext.addObserver(name: CallStateObserver.CallInProgressNotification, context: managedObjectContext.zm_userInterface) { [weak self] (note) in
+        callInProgressObserverToken = NotificationInContext.addObserver(name: CallStateObserver.CallInProgressNotification, context: managedObjectContext.notificationContext) { [weak self] (note) in
             managedObjectContext.performGroupedBlock {
                 if let callInProgress = note.userInfo[CallStateObserver.CallInProgressKey] as? Bool {
                     self?.operationStatus.hasOngoingCall = callInProgress

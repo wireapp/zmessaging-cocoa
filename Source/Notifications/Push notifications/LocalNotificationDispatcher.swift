@@ -48,7 +48,7 @@ public class LocalNotificationDispatcher: NSObject {
         super.init()
         observers.append(
             NotificationInContext.addObserver(name: ZMConversation.lastReadDidChangeNotificationName,
-                                              context: managedObjectContext.zm_userInterface,
+                                              context: managedObjectContext.notificationContext,
                                               using: { [weak self] in self?.cancelNotificationForLastReadChanged(notification: $0)})
         )
     }

@@ -56,12 +56,12 @@ public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder
         
         observers.append(NotificationInContext.addObserver(
             name: RequestUserProfileAssetNotificationName,
-            context: managedObjectContext.zm_userInterface,
+            context: managedObjectContext.notificationContext,
             using: { [weak self] in self?.requestAssetForNotification(note: $0) })
         )
         observers.append(NotificationInContext.addObserver(
             name: RequestUserProfileSmallAssetNotificationName,
-            context: managedObjectContext.zm_userInterface,
+            context: managedObjectContext.notificationContext,
             using: { [weak self] in self?.requestAssetForNotification(note: $0) })
         )
     }
@@ -196,13 +196,13 @@ extension UserImageStrategy {
     
     public static func requestAsset(for user: ZMUser) {
         NotificationInContext(name: RequestUserProfileAssetNotificationName,
-                              context: user.managedObjectContext!.zm_userInterface,
+                              context: user.managedObjectContext!.notificationContext,
                               object: user.objectID).post()
     }
     
     public static func requestSmallAsset(for user: ZMUser) {
         NotificationInContext(name: RequestUserProfileSmallAssetNotificationName,
-                              context: user.managedObjectContext!.zm_userInterface,
+                              context: user.managedObjectContext!.notificationContext,
                               object: user.objectID).post()
     }
 }

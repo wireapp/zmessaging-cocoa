@@ -153,7 +153,7 @@
     // then
     XCTestExpectation *expectation = [self expectationWithDescription:@"Notification"];
     id token = [NotificationInContext addObserverWithName:ZMConversation.typingNotificationName
-                                                  context:self.uiMOC
+                                                  context:self.uiMOC.notificationContext
                                                    object:nil
                                                     queue:nil using:^(NotificationInContext * notification) {
                                                         XCTAssertEqual(notification.object, conversation);

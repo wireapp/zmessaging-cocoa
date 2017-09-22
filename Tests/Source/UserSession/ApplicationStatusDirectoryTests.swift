@@ -41,7 +41,7 @@ class ApplicationStatusDirectoryTests : MessagingTest {
     
     func testThatOperationStatusIsUpdatedWhenCallStarts() {
         // given
-        let note = NotificationInContext(name: CallStateObserver.CallInProgressNotification, context:uiMOC, userInfo: [CallStateObserver.CallInProgressKey : true ])
+        let note = NotificationInContext(name: CallStateObserver.CallInProgressNotification, context:uiMOC.notificationContext, userInfo: [CallStateObserver.CallInProgressKey : true ])
         
         // when
         note.post()
@@ -54,7 +54,7 @@ class ApplicationStatusDirectoryTests : MessagingTest {
     func testThatOperationStatusIsUpdatedWhenCallEnds() {
         // given
         sut.operationStatus.hasOngoingCall = true
-        let note = NotificationInContext(name: CallStateObserver.CallInProgressNotification, context:uiMOC, userInfo: [CallStateObserver.CallInProgressKey : false ])
+        let note = NotificationInContext(name: CallStateObserver.CallInProgressNotification, context:uiMOC.notificationContext, userInfo: [CallStateObserver.CallInProgressKey : false ])
         
         // when
         note.post()

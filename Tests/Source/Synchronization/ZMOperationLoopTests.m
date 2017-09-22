@@ -72,7 +72,7 @@
                                                            uiMOC:self.uiMOC
                                                          syncMOC:self.syncMOC];
     self.pushChannelObserverToken = [NotificationInContext addObserverWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
-                                       context:self.uiMOC
+                                       context:self.uiMOC.notificationContext
                                         object:nil
                                          queue:nil
                                          using:^(NotificationInContext * note) {

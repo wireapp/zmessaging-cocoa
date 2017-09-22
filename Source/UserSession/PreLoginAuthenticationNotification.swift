@@ -19,6 +19,8 @@
 import Foundation
 import WireDataModel
 
+extension ZMAuthenticationStatus : NotificationContext { } // Mark ZMAuthenticationStatus as valid notification context
+
 // MARK: - Observer
 @objc public protocol PreLoginAuthenticationObserver: NSObjectProtocol {
     

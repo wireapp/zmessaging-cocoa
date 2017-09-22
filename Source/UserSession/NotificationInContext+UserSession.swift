@@ -27,11 +27,12 @@ import WireDataModel
 
 private let initialSyncCompletionNotificationName = Notification.Name(rawValue: "ZMInitialSyncCompletedNotification")
 
+extension ZMUserSession : NotificationContext { } // Mark ZMUserSession as valid notification context
 
 extension ZMUserSession {
     
     static func notifyInitialSyncCompleted(context: NSManagedObjectContext) {
-        NotificationInContext(name: initialSyncCompletionNotificationName, context: context).post()
+        NotificationInContext(name: initialSyncCompletionNotificationName, context: context.notificationContext).post()
     }
     
     public func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver) -> Any {
@@ -39,7 +40,7 @@ extension ZMUserSession {
     }
     
     public static func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver, context: NSManagedObjectContext) -> Any {
-        return NotificationInContext.addObserver(name: initialSyncCompletionNotificationName, context: context.zm_userInterface) {
+        return NotificationInContext.addObserver(name: initialSyncCompletionNotificationName, context: context.notificationContext) {
             [weak observer] _ in
             observer?.initialSyncCompleted()
         }
@@ -85,7 +86,7 @@ public extension ZMConversation {
 
     @objc public func addTypingObserver(_ observer: ZMTypingChangeObserver) -> Any {
         return NotificationInContext.addObserver(name: ZMConversation.typingNotificationName,
-                                                 context: self.managedObjectContext!.zm_userInterface)
+                                                 context: self.managedObjectContext!.notificationContext)
         {
             [weak observer, weak self] note in
             guard let `self` = self else { return }
@@ -94,7 +95,7 @@ public extension ZMConversation {
     }
     
     @objc public func notifyTyping(typingUsers: Set<ZMUser>) {
-        NotificationInContext(name: ZMConversation.typingNotificationName, context: self.managedObjectContext!.zm_userInterface, userInfo: [typingNotificationUsersKey: typingUsers]).post()
+        NotificationInContext(name: ZMConversation.typingNotificationName, context: self.managedObjectContext!.notificationContext, userInfo: [typingNotificationUsersKey: typingUsers]).post()
     }
 }
 
@@ -116,7 +117,7 @@ public extension ZMConversation {
     private static let name = Notification.Name(rawValue: "ZMConnectionLimitReachedNotification")
     
     public static func addConnectionLimitObserver(_ observer: ZMConnectionLimitObserver, context: NSManagedObjectContext) -> Any {
-        return NotificationInContext.addObserver(name: self.name, context: context.zm_userInterface) {
+        return NotificationInContext.addObserver(name: self.name, context: context.notificationContext) {
             [weak observer] _ in
             observer?.connectionLimitReached()
         }
@@ -124,7 +125,7 @@ public extension ZMConversation {
     
     @objc(notifyInContext:)
     public static func notify(context: NSManagedObjectContext) {
-        NotificationInContext(name: self.name, context: context.zm_userInterface).post()
+        NotificationInContext(name: self.name, context: context.notificationContext).post()
     }
 }
 
