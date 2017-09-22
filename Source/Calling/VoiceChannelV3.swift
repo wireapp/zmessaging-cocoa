@@ -201,27 +201,27 @@ extension VoiceChannelV3 : CallActionsInternal {
 extension VoiceChannelV3 : CallObservers {
     
     /// Add observer of voice channel state. Returns a token which needs to be retained as long as the observer should be active.
-    public func addStateObserver(_ observer: VoiceChannelStateObserver) -> WireCallCenterObserverToken {
+    public func addStateObserver(_ observer: VoiceChannelStateObserver) -> Any {
         return WireCallCenter.addVoiceChannelStateObserver(conversation: conversation!, observer: observer, context: conversation!.managedObjectContext!)
     }
     
     /// Add observer of voice channel participants. Returns a token which needs to be retained as long as the observer should be active.
-    public func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> WireCallCenterObserverToken {
+    public func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> Any {
         return WireCallCenter.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
     }
     
     /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
-    public func addVoiceGainObserver(_ observer: VoiceGainObserver) -> WireCallCenterObserverToken {
+    public func addVoiceGainObserver(_ observer: VoiceGainObserver) -> Any {
         return WireCallCenter.addVoiceGainObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
     }
     
     /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
-    public func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> WireCallCenterObserverToken {
+    public func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> Any {
         return WireCallCenter.addReceivedVideoObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
     }
     
     /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
-    public class func addStateObserver(_ observer: VoiceChannelStateObserver, userSession: ZMUserSession) -> WireCallCenterObserverToken {
+    public class func addStateObserver(_ observer: VoiceChannelStateObserver, userSession: ZMUserSession) -> Any {
         return WireCallCenter.addVoiceChannelStateObserver(observer: observer, context: userSession.managedObjectContext!)
     }
     

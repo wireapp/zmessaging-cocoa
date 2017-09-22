@@ -29,7 +29,7 @@ struct V2CallStateChange {
 class VoiceChannelStateTestObserver : VoiceChannelStateObserver {
 
     var changes : [V2CallStateChange] = []
-    var token : WireCallCenterObserverToken?
+    var token : Any?
     
     func observe(conversation: ZMConversation, context: NSManagedObjectContext) {
         token = WireCallCenter.addVoiceChannelStateObserver(observer: self, context: context)
@@ -58,7 +58,7 @@ class VoiceChannelStateTestObserver : VoiceChannelStateObserver {
 class VoiceChannelParticipantTestObserver : VoiceChannelParticipantObserver {
     
     var changes : [VoiceChannelParticipantNotification] = []
-    var token : WireCallCenterObserverToken?
+    var token : Any?
     
     func observe(conversation: ZMConversation, context: NSManagedObjectContext) {
         token = WireCallCenter.addVoiceChannelParticipantObserver(observer: self, forConversation: conversation, context: context)
