@@ -139,7 +139,6 @@ public class TypingStrategy : AbstractRequestStrategy {
     }
     
     public func tearDown() {
-        NotificationCenter.default.removeObserver(self)
         typing.tearDown()
         typing = nil
         tornDown = true

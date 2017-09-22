@@ -57,7 +57,6 @@ public class LocalNotificationDispatcher: NSObject {
         self.isTornDown = true
         self.sessionTracker.tearDown()
         self.observers = []
-        NotificationCenter.default.removeObserver(self)
         syncMOC.performGroupedBlock { [weak self] in
             self?.cancelAllNotifications()
         }

@@ -201,7 +201,6 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase, PostLoginAuthenti
         self.sut = nil
         self.receivedAuthenticationEvents = []
         self.postLoginAuthenticationObserverToken = nil
-        NotificationCenter.default.removeObserver(self)
         super.tearDown()
     }
 }

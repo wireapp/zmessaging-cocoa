@@ -23,7 +23,7 @@ import WireUtilities
 
 class UserProfileUpdateStatusTests : MessagingTest {
     
-    var observerToken : AnyObject!
+    var observerToken : Any?
     
     var sut : UserProfileUpdateStatus! = nil
     
@@ -49,7 +49,7 @@ class UserProfileUpdateStatusTests : MessagingTest {
     
     override func tearDown() {
         self.newRequestObserver = nil
-        self.sut.removeObserver(token: self.observerToken!)
+        self.observerToken = nil
         self.observer = nil
         self.mockAnalytics = nil
         self.sut = nil
