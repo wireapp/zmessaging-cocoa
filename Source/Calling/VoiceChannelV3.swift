@@ -131,7 +131,7 @@ extension VoiceChannelV3 : CallActions {
     }
     
     public func join(video: Bool, userSession: ZMUserSession) -> Bool {
-        if ZMUserSession.useCallKit {
+        if userSession.callNotificationStyle == .callKit {
             userSession.callKitDelegate.requestStartCall(in: conversation!, videoCall: video)
             return true
         } else {
@@ -140,7 +140,7 @@ extension VoiceChannelV3 : CallActions {
     }
     
     public func leave(userSession: ZMUserSession) {
-        if ZMUserSession.useCallKit {
+        if userSession.callNotificationStyle == .callKit {
             userSession.callKitDelegate.requestEndCall(in: conversation!)
         } else {
             return leave()
@@ -148,7 +148,7 @@ extension VoiceChannelV3 : CallActions {
     }
     
     public func ignore(userSession: ZMUserSession) {
-        if ZMUserSession.useCallKit {
+        if userSession.callNotificationStyle == .callKit {
             userSession.callKitDelegate.requestEndCall(in: conversation!)
         } else {
             return ignore()
