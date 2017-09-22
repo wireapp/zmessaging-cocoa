@@ -308,8 +308,10 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     
     fileprivate func logoutCurrentSession(deleteCookie: Bool = true, error : Error?) {
         tearDownObservers()
+
         userSession?.closeAndDeleteCookie(deleteCookie)
         userSession = nil
+
         delegate?.sessionManagerDidLogout(error: error)
         
         createUnauthenticatedSession()
@@ -387,7 +389,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         teamObserver = nil // TODO need per user session token
         selfObserver = nil // TODO need per user session token
     }
-
+    
     deinit {
         tearDownObservers()
         blacklistVerificator?.teardown()
@@ -502,8 +504,17 @@ extension SessionManager: PostLoginAuthenticationObserver {
     
     public func accountDeleted(accountId: UUID) {
         logoutCurrentSession(deleteCookie: true, error: NSError(domain: ZMUserSessionErrorDomain, code: Int(ZMUserSessionErrorCode.accountDeleted.rawValue), userInfo: nil))
-        if let deletedAccount = accountManager.selectedAccount { //  TODO delete account associcated with session
-            delete(account: deletedAccount)
+        
+        if let account = accountManager.account(with: accountId) {
+            delete(account: account)
+        }
+    }
+    
+    public func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
+        delegate?.sessionManagerDidLogout(error: error)
+        
+        if unauthenticatedSession == nil {
+            createUnauthenticatedSession()
         }
     }
     
@@ -515,7 +526,9 @@ extension SessionManager: PostLoginAuthenticationObserver {
         switch userSessionErrorCode {
         case .clientDeletedRemotely,
              .accessTokenExpired:
-            logoutCurrentSession(deleteCookie: true, error: error) //  TODO pick the right session
+            
+            logoutCurrentSession(deleteCookie: true, error: error)
+            
         default:
             delegate?.sessionManagerDidLogout(error: error)
             

@@ -31,7 +31,7 @@ private let initialSyncCompletionNotificationName = Notification.Name(rawValue: 
 extension ZMUserSession {
     
     static func notifyInitialSyncCompleted(context: NSManagedObjectContext) {
-        NotificationInContext(name: initialSyncCompletionNotificationName, context: context.zm_userInterface).post()
+        NotificationInContext(name: initialSyncCompletionNotificationName, context: context).post()
     }
     
     public func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver) -> Any {
