@@ -451,7 +451,21 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                        application: application,
                        launchOptions: [:],
                        blacklistDownloadInterval : 60) { sessionManager in
-            
+                        
+                        let environment = ZMBackendEnvironment(type: .staging)
+                        let reachability = TestReachability()
+                        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+                            apnsEnvironment: self.apnsEnvironment!,
+                            application: application,
+                            mediaManager: mediaManager,
+                            flowManager: FlowManagerMock(),
+                            transportSession: self.transportSession!,
+                            environment: environment,
+                            reachability: reachability
+                        )
+                        
+                        sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+
             sessionManager.withSession(for: account) { userSession in
                 realSessionManager = sessionManager
                 XCTAssertNotNil(userSession)
