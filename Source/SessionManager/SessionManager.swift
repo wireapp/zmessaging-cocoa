@@ -643,8 +643,16 @@ extension SessionManager: PostLoginAuthenticationObserver {
         switch userSessionErrorCode {
         case .clientDeletedRemotely,
              .accessTokenExpired:
-            
-            logoutCurrentSession(deleteCookie: true, error: error)
+
+            if let account = accountManager.account(with: accountId),
+                let session = self.backgroundUserSessions[account] {
+                if session == activeUserSession {
+                    logoutCurrentSession(deleteCookie: true, error: error)
+                }
+                else {
+                    session.closeAndDeleteCookie(true)
+                }
+            }
             
         default:
             delegate?.sessionManagerDidLogout(error: error)
