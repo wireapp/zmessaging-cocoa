@@ -107,7 +107,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
     public fileprivate(set) var activeUserSession: ZMUserSession?
-    public fileprivate(set) var backgroundUserSessions: [Account: ZMUserSession] = [:]
+    public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
     public weak var requestToOpenViewDelegate: ZMRequestsToOpenViewsDelegate?
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
@@ -331,7 +331,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         
         tearDownObservers()
         
-        let matchingAccountSession = backgroundUserSessions.first { (account, session) in
+        let matchingAccountSession = backgroundUserSessions.first { (_, session) in
             session == currentSession
         }
         
@@ -383,7 +383,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     
     fileprivate func createSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession) -> Void) {
         let session: ZMUserSession
-        if let backgroundSession = self.backgroundUserSessions[account] {
+        if let backgroundSession = self.backgroundUserSessions[account.userIdentifier] {
             session = backgroundSession
         }
         else {
@@ -392,7 +392,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
             }
             newSession.requestToOpenViewDelegate = self
             session = newSession
-            self.backgroundUserSessions[account] = newSession
+            self.backgroundUserSessions[account.userIdentifier] = newSession
         }
         
         pushDispatcher.add(client: session)
@@ -436,7 +436,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     
     // Loads user session for @c account given and executes the @c action block.
     public func withSession(for account: Account, perform action: @escaping (ZMUserSession)->()) {
-        if let session = backgroundUserSessions[account] {
+        if let session = backgroundUserSessions[account.userIdentifier] {
             action(session)
         }
         else {
@@ -457,7 +457,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
         }
-        self.backgroundUserSessions[account] = newSession
+        self.backgroundUserSessions[account.userIdentifier] = newSession
         newSession.requestToOpenViewDelegate = self
         pushDispatcher.add(client: newSession)
         newSession.callNotificationStyle = .pushNotifications
@@ -466,21 +466,21 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
         completion(newSession)
     }
     
-    internal func tearDownBackgroundSession(for account: Account) {
-        guard let userSession = self.backgroundUserSessions[account] else {
-            log.error("No session to tear down for \(account), known sessions: \(self.backgroundUserSessions)")
+    internal func tearDownBackgroundSession(for accountId: UUID) {
+        guard let userSession = self.backgroundUserSessions[accountId] else {
+            log.error("No session to tear down for \(accountId), known sessions: \(self.backgroundUserSessions)")
             return
         }
         userSession.closeAndDeleteCookie(false)
 
-        self.backgroundUserSessions[account] = nil
+        self.backgroundUserSessions[accountId] = nil
     }
     
     // Tears down and releases all background user sessions.
     internal func tearDownAllBackgroundSessions() {
-        self.backgroundUserSessions.forEach { (account, session) in
+        self.backgroundUserSessions.forEach { (accountId, session) in
             if self.activeUserSession != session {
-                self.tearDownBackgroundSession(for: account)
+                self.tearDownBackgroundSession(for: accountId)
             }
         }
     }
@@ -643,9 +643,8 @@ extension SessionManager: PostLoginAuthenticationObserver {
         switch userSessionErrorCode {
         case .clientDeletedRemotely,
              .accessTokenExpired:
-
-            if let account = accountManager.account(with: accountId),
-                let session = self.backgroundUserSessions[account] {
+            
+            if let session = self.backgroundUserSessions[accountId] {
                 if session == activeUserSession {
                     logoutCurrentSession(deleteCookie: true, error: error)
                 }
@@ -674,7 +673,10 @@ extension SessionManager: ZMConversationListObserver {
         // find which account/session the conversation list belongs to & update count
         guard let moc = changeInfo.conversationList.managedObjectContext else { return }
         
-        for (account, session) in backgroundUserSessions where session.managedObjectContext == moc {
+        for (accountId, session) in backgroundUserSessions where session.managedObjectContext == moc {
+            guard let account = self.accountManager.account(with: accountId) else {
+                return
+            }
             account.unreadConversationCount = Int(ZMConversation.unreadConversationCount(in: moc))
         }
     }
