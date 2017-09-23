@@ -42,7 +42,9 @@ extension ZMUserSession {
     public static func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver, context: NSManagedObjectContext) -> Any {
         return NotificationInContext.addObserver(name: initialSyncCompletionNotificationName, context: context.notificationContext) {
             [weak observer] _ in
-            observer?.initialSyncCompleted()
+            context.performGroupedBlock {
+                observer?.initialSyncCompleted()
+            }
         }
     }
     
@@ -90,7 +92,7 @@ public extension ZMConversation {
         {
             [weak observer, weak self] note in
             guard let `self` = self else { return }
-            observer?.typingDidChange(conversation: self, typingUsers: note.userInfo[typingNotificationUsersKey] as! Set<ZMUser>)
+            observer?.typingDidChange(conversation: self, typingUsers: note.userInfo[typingNotificationUsersKey] as? Set<ZMUser> ?? Set())
         }
     }
     

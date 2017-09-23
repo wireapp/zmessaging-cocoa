@@ -159,7 +159,7 @@ extension SyncStatus {
             zmLog.debug("sync complete")
             syncStateDelegate.didFinishSync()
             managedObjectContext.performGroupedBlock {
-                ZMUserSession.notifyInitialSyncCompleted(context: self.managedObjectContext.zm_userInterface)
+                ZMUserSession.notifyInitialSyncCompleted(context: self.managedObjectContext)
             }
         }
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
