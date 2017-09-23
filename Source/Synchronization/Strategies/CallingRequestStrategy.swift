@@ -111,7 +111,11 @@ extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTracke
         for object in objects {
             if let userClient = object as? UserClient, userClient.isSelfClient(), let clientId = userClient.remoteIdentifier, let userId = userClient.user?.remoteIdentifier {
                 zmLog.debug("Creating callCenter")
-                callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics, transport: self)
+                let uiContext = managedObjectContext.zm_userInterface!
+                let analytics = managedObjectContext.analytics
+                uiContext.performGroupedBlock {
+                    self.callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: uiContext.zm_userInterface, flowManager: self.flowManager, analytics: analytics, transport: self)
+                }
                 break
             }
         }

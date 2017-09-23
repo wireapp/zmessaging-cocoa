@@ -345,10 +345,10 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     }];
 
     [self enqueueChanges:^{
-        ZM_STRONG(self);
         id <ZMConversationMessage> reactionMessage = [ZMMessage addReaction:MessageReactionLike toMessage:message];
         self.likeMesssageObserver = [[ManagedObjectContextChangeObserver alloc] initWithContext:self.managedObjectContext
                                                                                        callback:^{
+                                                                                           ZM_STRONG(self);
                                                                                            [self updateBackgroundTaskWithMessage:reactionMessage];
                                                                                        }];
     }];

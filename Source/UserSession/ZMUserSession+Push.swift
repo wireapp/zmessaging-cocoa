@@ -91,6 +91,7 @@ extension ZMUserSession: PushDispatcherOptionalClient {
     }
 
     public func mustHandle(payload: [AnyHashable: Any]) -> Bool {
+        assert(Thread.isMainThread)
         return payload.isPayload(for: ZMUser.selfUser(in: self.managedObjectContext))
     }
     
