@@ -123,7 +123,7 @@ extension LocalNotificationDispatcherTests {
         
         // WHEN
         self.sut.process(message)
-        self.sut.proccessBuffer()
+        self.sut.processBuffer()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN

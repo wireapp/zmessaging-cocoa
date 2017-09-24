@@ -22,7 +22,7 @@ import WireMessageStrategy
 extension LocalNotificationDispatcher: PushMessageHandler {
     
     @objc
-    public func proccessBuffer() {
+    public func processBuffer() {
         
         guard !localNotificationBuffer.isEmpty else { return }
         

@@ -111,6 +111,7 @@
     self.mockUpstreamSync2 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     [self verifyMockLater:self.mockUpstreamSync1];
     [self verifyMockLater:self.mockUpstreamSync2];
+    [(id)[self.mockDispatcher stub] processBuffer];
     
     self.syncStateDelegate = [[MockSyncStateDelegate alloc] init];
     
@@ -182,6 +183,7 @@
                                     taskCancellationProvider:nil
                                                  application:self.application];
     
+    self.application.applicationState = UIApplicationStateBackground;
     XCTAssertEqual(self.sut.userTranscoder, self.userTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
