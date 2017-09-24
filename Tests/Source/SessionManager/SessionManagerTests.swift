@@ -125,8 +125,8 @@ class SessionManagerTests: IntegrationTest {
         let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
 
         var realSessionManager: SessionManager! = nil
-        //let observer = SessionManagerObserverMock()
-        //var observerToken: Any? = nil
+        let observer = SessionManagerObserverMock()
+        var observerToken: Any? = nil
         SessionManager.create(appVersion: "0.0.0",
                               mediaManager: mediaManager,
                               analytics: nil,
@@ -150,7 +150,7 @@ class SessionManagerTests: IntegrationTest {
                                 sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
                                 
                                 // WHEN
-                                //observerToken = sessionManager.addSessionManagerObserver(observer)
+                                observerToken = sessionManager.addSessionManagerObserver(observer)
                                 sessionManager.loadSession(for: account) { userSession in
                                     realSessionManager = sessionManager
                                     XCTAssertNotNil(userSession)
@@ -160,12 +160,12 @@ class SessionManagerTests: IntegrationTest {
         
         // THEN
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
-        //XCTAssertEqual([realSessionManager.activeUserSession!], observer.createdUserSession)
+        XCTAssertEqual([realSessionManager.activeUserSession!], observer.createdUserSession)
         
         // AFTER
-//        withExtendedLifetime(observerToken) {
-//            realSessionManager.tearDownAllBackgroundSessions()
-//        }
+        withExtendedLifetime(observerToken) {
+            realSessionManager.tearDownAllBackgroundSessions()
+        }
     }
     
 }
