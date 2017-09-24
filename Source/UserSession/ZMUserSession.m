@@ -202,6 +202,9 @@ ZM_EMPTY_ASSERTING_INIT()
             
             self.localNotificationDispatcher = [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncManagedObjectContext
                                                                                                      application:application];
+            
+            self.localNotificationDispatcher.userSession = self;
+            
             self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
                                                                                           userSession:self];
             

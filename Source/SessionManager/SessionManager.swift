@@ -399,6 +399,7 @@ public protocol LocalMessageNotificationResponder : class {
             }
             newSession.requestToOpenViewDelegate = self
             session = newSession
+            session.sessionManager = self
 
             self.backgroundUserSessions[account.userIdentifier] = newSession
         }

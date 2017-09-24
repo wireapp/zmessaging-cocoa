@@ -35,6 +35,7 @@
 @class AVSMediaManager;
 @class ZMAPNSEnvironment;
 @class WireCallCenterV3;
+@class SessionManager;
 
 @protocol UserProfile;
 @protocol AnalyticsType;
@@ -88,6 +89,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
                           appVersion:(NSString *)appVersion
                        storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;;
 
+@property (nonatomic, weak) SessionManager *sessionManager;
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
 @property (atomic, readonly) ZMNetworkState networkState;
