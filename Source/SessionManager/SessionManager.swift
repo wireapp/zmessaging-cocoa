@@ -407,7 +407,7 @@ public protocol LocalMessageNotificationResponder : class {
         
         let selfUser = ZMUser.selfUser(inUserSession: session)
 
-        teamObserver = TeamChangeInfo.add(observer: self, for: nil, managedObjectContext: session.) // TODO need per user session token
+        teamObserver = TeamChangeInfo.add(observer: self, for: nil, managedObjectContext: session.managedObjectContext) // TODO need per user session token
         selfObserver = UserChangeInfo.add(observer: self, forBareUser: selfUser!, managedObjectContext: session.managedObjectContext) // TODO need per user session token
         conversationListObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.conversations(inUserSession: session), userSession: session)
         connectionRequestObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.pendingConnectionConversations(inUserSession: session), userSession: session)
