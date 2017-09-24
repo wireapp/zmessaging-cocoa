@@ -22,50 +22,6 @@ import WireTesting
 import PushKit
 @testable import WireSyncEngine
 
-
-class SessionManagerTestDelegate: SessionManagerDelegate {
-
-    func sessionManagerWillOpenAccount(_ account: Account) {
-        // no-op
-    }
-    
-    func sessionManagerDidLogout(error: Error?) {
-        // no op
-    }
-    
-    func sessionManagerDidBlacklistCurrentVersion() {
-        // no op
-    }
-
-    var unauthenticatedSession : UnauthenticatedSession?
-    func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession) {
-        self.unauthenticatedSession = unauthenticatedSession
-    }
-    
-    var userSession : ZMUserSession?
-    func sessionManagerCreated(userSession : ZMUserSession) {
-        self.userSession = userSession
-    }
-    
-    var startedMigrationCalled = false
-    func sessionManagerWillStartMigratingLocalStore() {
-        startedMigrationCalled = true
-    }
-
-}
-
-class TestReachability: ReachabilityProvider, ReachabilityTearDown {
-    var mayBeReachable = true
-    var isMobileConnection = true
-    var oldMayBeReachable = true
-    var oldIsMobileConnection = true
-    
-    var tearDownCalled = false
-    func tearDown() {
-        tearDownCalled = true
-    }
-}
-
 class SessionManagerTests: IntegrationTest {
 
     var delegate: SessionManagerTestDelegate!
@@ -110,12 +66,20 @@ class SessionManagerTests: IntegrationTest {
     }
     
     func testThatItCreatesUnauthenticatedSessionAndNotifiesDelegateIfStoreIsNotAvailable() {
+        
+        // given
+        let observer = SessionManagerObserverMock()
+        let token = sut?.addSessionManagerObserver(observer)
+        
         // when
         sut = createManager()
         
         // then
         XCTAssertNil(delegate.userSession)
         XCTAssertNotNil(delegate.unauthenticatedSession)
+        withExtendedLifetime(token) {
+            XCTAssertEqual([], observer.createdUserSession)
+        }
     }
     
     func testThatItCreatesUserSessionAndNotifiesDelegateIfStoreIsAvailable() {
@@ -138,11 +102,70 @@ class SessionManagerTests: IntegrationTest {
 
         // when
         sut = createManager()
+        let observer = SessionManagerObserverMock()
+        let token = sut?.addSessionManagerObserver(observer)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         
         // then
         XCTAssertNotNil(delegate.userSession)
         XCTAssertNil(delegate.unauthenticatedSession)
+        withExtendedLifetime(token) {
+            XCTAssertEqual([delegate.userSession].flatMap { $0 }, observer.createdUserSession)
+        }
+    }
+    
+    func testThatItNotifiesDelegateAndObserverWhenCreatingSession() {
+        
+        // GIVEN
+        let account = self.createAccount()
+        account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        
+        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
+        
+        let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
+
+        var realSessionManager: SessionManager! = nil
+        let observer = SessionManagerObserverMock()
+        var observerToken: Any? = nil
+        SessionManager.create(appVersion: "0.0.0",
+                              mediaManager: mediaManager,
+                              analytics: nil,
+                              delegate: nil,
+                              application: application,
+                              launchOptions: [:],
+                              blacklistDownloadInterval : 60) { sessionManager in
+                                
+                                let environment = ZMBackendEnvironment(type: .staging)
+                                let reachability = TestReachability()
+                                let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+                                    apnsEnvironment: self.apnsEnvironment!,
+                                    application: application,
+                                    mediaManager: mediaManager,
+                                    flowManager: FlowManagerMock(),
+                                    transportSession: self.transportSession!,
+                                    environment: environment,
+                                    reachability: reachability
+                                )
+                                
+                                sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                                
+                                // WHEN
+                                observerToken = sessionManager.addSessionManagerObserver(observer)
+                                sessionManager.loadSession(for: account) { userSession in
+                                    realSessionManager = sessionManager
+                                    XCTAssertNotNil(userSession)
+                                    sessionManagerExpectation.fulfill()
+                                }
+        }
+        
+        // THEN
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        XCTAssertEqual([realSessionManager.activeUserSession!], observer.createdUserSession)
+        
+        // AFTER
+        withExtendedLifetime(observerToken) {
+            realSessionManager.tearDownAllBackgroundSessions()
+        }
     }
     
 }
@@ -717,3 +740,56 @@ class SessionManagerTests_Push: IntegrationTest {
     }
 }
 
+// MARK: - Mocks
+class SessionManagerTestDelegate: SessionManagerDelegate {
+    
+    func sessionManagerWillOpenAccount(_ account: Account) {
+        // no-op
+    }
+    
+    func sessionManagerDidLogout(error: Error?) {
+        // no op
+    }
+    
+    func sessionManagerDidBlacklistCurrentVersion() {
+        // no op
+    }
+    
+    var unauthenticatedSession : UnauthenticatedSession?
+    func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession) {
+        self.unauthenticatedSession = unauthenticatedSession
+    }
+    
+    var userSession : ZMUserSession?
+    func sessionManagerCreated(userSession : ZMUserSession) {
+        self.userSession = userSession
+    }
+    
+    var startedMigrationCalled = false
+    func sessionManagerWillStartMigratingLocalStore() {
+        startedMigrationCalled = true
+    }
+    
+}
+
+class SessionManagerObserverMock: SessionManagerObserver {
+    
+    var createdUserSession: [ZMUserSession] = []
+    
+    func sessionManagerCreated(userSession: ZMUserSession) {
+        createdUserSession.append(userSession)
+    }
+    
+}
+
+class TestReachability: ReachabilityProvider, ReachabilityTearDown {
+    var mayBeReachable = true
+    var isMobileConnection = true
+    var oldMayBeReachable = true
+    var oldIsMobileConnection = true
+    
+    var tearDownCalled = false
+    func tearDown() {
+        tearDownCalled = true
+    }
+}

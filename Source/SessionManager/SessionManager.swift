@@ -39,7 +39,6 @@ public protocol LocalMessageNotificationResponder : class {
     func processLocalMessage(_ notification: UILocalNotification, forSession session: ZMUserSession)
 }
 
-
 /// The `SessionManager` class handles the creation of `ZMUserSession` and `UnauthenticatedSession`
 /// objects, the handover between them as well as account switching.
 ///
@@ -429,6 +428,7 @@ public protocol LocalMessageNotificationResponder : class {
 
             session.managedObjectContext.performGroupedBlock { [weak self] in
                 completion(session)
+                self?.notifyNewUserSessionCreated(session)
                 self?.delegate?.sessionManagerCreated(userSession: session)
             }
         }
@@ -699,5 +699,27 @@ extension SessionManager : PreLoginAuthenticationObserver {
         if unauthenticatedSession == nil {
             createUnauthenticatedSession()
         }
+    }
+}
+
+// MARK: - Session manager observer
+@objc public protocol SessionManagerObserver: class {
+    func sessionManagerCreated(userSession : ZMUserSession)
+}
+
+private let sessionManagerObserverNotificationName = Notification.Name(rawValue: "ZMSessionManagerObserverNotification")
+
+extension SessionManager: NotificationContext {
+    
+    @objc public func addSessionManagerObserver(_ observer: SessionManagerObserver) -> Any {
+        return NotificationInContext.addObserver(
+            name: sessionManagerObserverNotificationName,
+            context: self) { [weak observer] note in
+                observer?.sessionManagerCreated(userSession: note.object as! ZMUserSession)
+        }
+    }
+    
+    fileprivate func notifyNewUserSessionCreated(_ userSession: ZMUserSession) {
+        NotificationInContext(name: sessionManagerObserverNotificationName, context: self, object: userSession).post()
     }
 }

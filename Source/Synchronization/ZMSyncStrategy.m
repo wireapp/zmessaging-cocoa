@@ -43,10 +43,8 @@
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMSyncStrategy ()
-{
-    dispatch_once_t _didFetchObjects;
-}
 
+@property (nonatomic) BOOL didFetchObjects;
 @property (nonatomic) NSManagedObjectContext *syncMOC;
 @property (nonatomic, weak) NSManagedObjectContext *uiMOC;
 
@@ -364,9 +362,10 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (ZMTransportRequest *)nextRequest
 {
-    dispatch_once(&_didFetchObjects, ^{
+    if (!self.didFetchObjects) {
+        self.didFetchObjects = YES;
         [self.changeTrackerBootStrap fetchObjectsForChangeTrackers];
-    });
+    }
     
     if(self.tornDown) {
         return nil;

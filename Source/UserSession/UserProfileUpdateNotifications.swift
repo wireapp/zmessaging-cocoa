@@ -97,7 +97,7 @@ struct UserProfileUpdateNotification : SelfPostingNotification {
 extension UserProfileUpdateStatus {
     
     @objc(addObserver:) public func add(observer: UserProfileUpdateObserver) -> Any {
-        return NotificationInContext.addObserver(name: UserProfileUpdateNotification.notificationName, context: managedObjectContext.notificationContext) { [weak observer] (note) in
+        return NotificationInContext.addObserver(name: UserProfileUpdateNotification.notificationName, context: managedObjectContext.notificationContext, queue: .main) { [weak observer] (note) in
             guard let note = note.userInfo[UserProfileUpdateNotification.userInfoKey] as? UserProfileUpdateNotification,
                   let observer = observer else {
                     return
