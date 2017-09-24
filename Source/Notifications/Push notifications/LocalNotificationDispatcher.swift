@@ -36,6 +36,8 @@ public class LocalNotificationDispatcher: NSObject {
     private(set) var isTornDown: Bool
     private var observers: [Any] = []
     
+    var localNotificationBuffer = [UILocalNotification]()
+    
     @objc(initWithManagedObjectContext:application:)
     public init(in managedObjectContext: NSManagedObjectContext,
                 application: ZMApplication) {
