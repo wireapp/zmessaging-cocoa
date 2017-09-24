@@ -247,6 +247,9 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
     
     func testThatItRequestAccountDeletionAfterDiscoveringDeletedTeamOnlyAfterPerformingASlowSync() {
         // given
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.remoteIdentifier = userIdentifier
+        uiMOC.saveOrRollback()
         mockSyncStatus.mockPhase = .fetchingTeams
         mockApplicationStatus.mockSynchronizationState = .synchronizing
         let remotelyDeletedTeamId = UUID.create()
@@ -258,8 +261,8 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         
         // expect
         let accountDeletedExpectation = expectation(description: "Account was deleted")
-        var token : ZMAuthenticationObserverToken? = ZMUserSessionAuthenticationNotification.addObserver(on: uiMOC) { (note) in
-            if let error = note.error as NSError?, error.userSessionErrorCode == ZMUserSessionErrorCode.accountDeleted {
+        var token : Any? = PostLoginAuthenticationObserverToken(managedObjectContext: uiMOC) { (event, _) in
+            if case WireSyncEngine.PostLoginAuthenticationEvent.accountDeleted = event {
                 accountDeletedExpectation.fulfill()
             }
         }

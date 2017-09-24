@@ -446,15 +446,21 @@ extension TypingStrategyTests {
         let conversation = insertUIConversation()
         
         // expect
-        self.expectation(forNotification: ZMConversationClearTypingNotificationName, object: nil) { (note) -> Bool in
-            return (note.object as? ZMConversation == conversation)
-        }
-        
+        let expectation = self.expectation(description: "Notified")
+        let token = NotificationInContext.addObserver(name: ZMConversation.clearTypingNotificationName,
+                                                      context: self.uiMOC.notificationContext,
+                                                      using: { note in
+                                                        XCTAssertEqual(note.object as? ZMConversation, conversation)
+                                                        expectation.fulfill()
+        })
+
         // when
         _ = conversation.appendMessage(withText: "foo")
         
         // then
-        XCTAssert(waitForCustomExpectations(withTimeout:0.1))
+        withExtendedLifetime(token) {
+            XCTAssert(waitForCustomExpectations(withTimeout:0.1))
+        }
     }
 }
 

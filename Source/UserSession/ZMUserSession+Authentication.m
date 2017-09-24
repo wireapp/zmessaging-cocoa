@@ -24,7 +24,6 @@
 #import "ZMUserSession+Internal.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
-#import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMPushToken.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 

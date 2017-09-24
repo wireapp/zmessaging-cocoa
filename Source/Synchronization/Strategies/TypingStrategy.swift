@@ -18,13 +18,18 @@
 
 import WireDataModel
 
-public let ZMTypingNotificationName = "ZMTypingNotification"
 let IsTypingKey = "isTyping"
 let ClearIsTypingKey = "clearIsTyping"
 
 let StatusKey = "status"
 let StoppedKey = "stopped"
 let StartedKey = "started"
+
+extension ZMConversation {
+    
+    public static let typingNotificationName = Notification.Name(rawValue: "ZMTypingNotification")
+    
+}
 
 public struct TypingEvent {
     
@@ -101,6 +106,7 @@ public class TypingStrategy : AbstractRequestStrategy {
     fileprivate var typing : ZMTyping!
     fileprivate let typingEventQueue = TypingEventQueue()
     fileprivate var tornDown : Bool = false
+    private var observers: [Any] = []
 
     @available (*, unavailable)
     override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
@@ -120,32 +126,40 @@ public class TypingStrategy : AbstractRequestStrategy {
             .allowsRequestsDuringNotificationStreamFetch
         ]
 
-        NotificationCenter.default.addObserver(self, selector: #selector(addConversationForNextRequest), name: Notification.Name(rawValue: ZMTypingNotificationName), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(shouldClearTypingForConversation), name: Notification.Name(rawValue: ZMConversationClearTypingNotificationName), object: nil)
+        observers.append(
+            NotificationInContext.addObserver(name: ZMConversation.typingNotificationName,
+                                              context: self.managedObjectContext.notificationContext,
+                                              using: { [weak self] in self?.addConversationForNextRequest(note: $0)} )
+            )
+        observers.append(
+            NotificationInContext.addObserver(name: ZMConversation.clearTypingNotificationName,
+                                              context: self.managedObjectContext.notificationContext,
+                                              using: { [weak self] in self?.shouldClearTypingForConversation(note: $0)})
+        )
     }
     
     public func tearDown() {
-        NotificationCenter.default.removeObserver(self)
         typing.tearDown()
         typing = nil
         tornDown = true
+        observers = []
     }
     
     deinit {
         assert(tornDown, "Need to tearDown TypingStrategy")
     }
     
-    fileprivate dynamic func addConversationForNextRequest(note : Notification) {
+    fileprivate dynamic func addConversationForNextRequest(note : NotificationInContext) {
         guard let conversation = note.object as? ZMConversation, conversation.remoteIdentifier != nil
         else { return }
         
-        let isTyping = (note.userInfo?[IsTypingKey] as? NSNumber)?.boolValue ?? false
-        let clearIsTyping = (note.userInfo?[ClearIsTypingKey] as? NSNumber)?.boolValue ?? false
+        let isTyping = (note.userInfo[IsTypingKey] as? NSNumber)?.boolValue ?? false
+        let clearIsTyping = (note.userInfo[ClearIsTypingKey] as? NSNumber)?.boolValue ?? false
         
         add(conversation:conversation, isTyping:isTyping, clearIsTyping:clearIsTyping)
     }
     
-    fileprivate dynamic func shouldClearTypingForConversation(note: Notification) {
+    fileprivate dynamic func shouldClearTypingForConversation(note: NotificationInContext) {
         guard let conversation = note.object as? ZMConversation, conversation.remoteIdentifier != nil
         else { return }
         
@@ -227,12 +241,22 @@ extension TypingStrategy {
     
     public static func notifyTranscoderThatUser(isTyping: Bool, in conversation: ZMConversation) {
         let userInfo = [IsTypingKey : NSNumber(value:isTyping)]
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue:ZMTypingNotificationName), object: conversation, userInfo: userInfo)
+        NotificationInContext(
+            name: ZMConversation.typingNotificationName,
+            context: conversation.managedObjectContext!.notificationContext,
+            object: conversation,
+            userInfo: userInfo)
+        .post()
     }
     
     public static func clearTranscoderStateForTyping(in conversation: ZMConversation) {
         let userInfo = [ClearIsTypingKey : NSNumber(value: 1)]
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue:ZMTypingNotificationName), object: conversation, userInfo: userInfo)
+        NotificationInContext(
+            name: ZMConversation.typingNotificationName,
+            context: conversation.managedObjectContext!.notificationContext,
+            object: conversation,
+            userInfo: userInfo)
+            .post()
     }
 }
 

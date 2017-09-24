@@ -25,7 +25,6 @@
 #import "ZMSyncStrategy.h"
 #import "ZMOperationLoop.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import "ZMNotifications+UserSessionInternal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *const PathConnections = @"/connections";
@@ -169,8 +168,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
             }
             
             [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
-
-                [[NSNotificationCenter defaultCenter] postNotification:[ZMConnectionLimitNotification connectionLimitNotification]];
+                [ZMConnectionLimitNotification notifyInContext:self.managedObjectContext];
             }];
         }
     }];

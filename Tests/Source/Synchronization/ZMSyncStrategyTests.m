@@ -34,7 +34,6 @@
 #import "ZMOperationLoop.h"
 #import "MessagingTest+EventFactory.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
-#import "ZMNotifications+UserSession.h"
 
 // Transcoders & strategies
 #import "ZMUserTranscoder.h"
@@ -1090,10 +1089,10 @@
     [[self.updateEventsBuffer stub] processAllEventsInBuffer];
 
     id mockObserver = [OCMockObject niceMockForProtocol:@protocol(ZMInitialSyncCompletionObserver)];
-    [ZMUserSession addInitalSyncCompletionObserver:mockObserver];
+    id token = [ZMUserSession addInitialSyncCompletionObserver:mockObserver context:self.uiMOC];
 
     // expect
-    [[mockObserver expect] initialSyncCompleted:OCMOCK_ANY];
+    [[mockObserver expect] initialSyncCompleted];
 
     // when
     [self.sut didFinishSync];
@@ -1103,7 +1102,7 @@
 
 
     // tearDown
-    [ZMUserSession removeInitalSyncCompletionObserver:mockObserver];
+    token = nil;
 
     [self performIgnoringZMLogError:^{
         WaitForAllGroupsToBeEmpty(0.5);

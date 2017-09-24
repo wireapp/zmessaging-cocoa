@@ -91,6 +91,7 @@ extension ZMUserSession: PushDispatcherOptionalClient {
     }
 
     public func mustHandle(payload: [AnyHashable: Any]) -> Bool {
+        assert(Thread.isMainThread)
         return payload.isPayload(for: ZMUser.selfUser(in: self.managedObjectContext))
     }
     
@@ -117,17 +118,6 @@ extension ZMUserSession: PushDispatcherOptionalClient {
 
 extension ZMUserSession {
 
-    func didReceiveLocalMessage(notification: UILocalNotification, application: ZMApplication) {
-        self.syncManagedObjectContext.performGroupedBlock {
-            DispatchQueue.main.async {
-                if application.applicationState == .active {
-                    self.sessionManager?.localMessageNotificationResponder?.processLocalMessage(notification, forSession: self)
-                }
-            }
-        }
-        
-    }
-    
     public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
         if application.applicationState == .inactive || application.applicationState == .background {
             self.pendingLocalNotification = ZMStoredLocalNotification(notification: notification,

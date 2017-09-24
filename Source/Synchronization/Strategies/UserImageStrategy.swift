@@ -23,14 +23,14 @@ let ImageSmallProfileDataKey = "imageSmallProfileData"
 let ImageOrigionalProfileDataKey = "originalProfileImageData"
 let MediumRemoteIdentifierDataKey = "mediumRemoteIdentifier_data"
 let SmallProfileRemoteIdentifierDataKey = "smallProfileRemoteIdentifier_data"
-let RequestUserProfileAssetNotificationName = "ZMRequestUserProfileAssetNotification"
-let RequestUserProfileSmallAssetNotificationName = "ZMRequestUserProfileSmallAssetNotificationName"
+let RequestUserProfileAssetNotificationName = Notification.Name(rawValue: "ZMRequestUserProfileAssetNotification")
+let RequestUserProfileSmallAssetNotificationName = Notification.Name(rawValue: "ZMRequestUserProfileSmallAssetNotificationName")
 
 public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder {
     
     var smallProfileDownstreamSync: ZMDownstreamObjectSyncWithWhitelist!
     var mediumDownstreamSync: ZMDownstreamObjectSyncWithWhitelist!
-    var tornDown: Bool = false
+    var observers: [Any] = []
     
     override public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
@@ -54,19 +54,18 @@ public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder
         self.mediumDownstreamSync.whiteListObject(ZMUser.selfUser(in: managedObjectContext))
         self.smallProfileDownstreamSync.whiteListObject(ZMUser.selfUser(in: managedObjectContext))
         
-        NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: Notification.Name(rawValue:RequestUserProfileAssetNotificationName), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: Notification.Name(rawValue:RequestUserProfileSmallAssetNotificationName), object: nil)
+        observers.append(NotificationInContext.addObserver(
+            name: RequestUserProfileAssetNotificationName,
+            context: managedObjectContext.notificationContext,
+            using: { [weak self] in self?.requestAssetForNotification(note: $0) })
+        )
+        observers.append(NotificationInContext.addObserver(
+            name: RequestUserProfileSmallAssetNotificationName,
+            context: managedObjectContext.notificationContext,
+            using: { [weak self] in self?.requestAssetForNotification(note: $0) })
+        )
     }
-    
-    public func tearDown() {
-        tornDown = true
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    deinit {
-        assert(tornDown)
-    }
-    
+
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         for sync in [self.smallProfileDownstreamSync, self.mediumDownstreamSync] as [ZMRequestGenerator] {
             if let request = sync.nextRequest() {
@@ -76,13 +75,13 @@ public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder
         return nil
     }
     
-    func requestAssetForNotification(note: Notification) {
+    func requestAssetForNotification(note: NotificationInContext) {
         managedObjectContext.performGroupedBlock {
             guard let objectID = note.object as? NSManagedObjectID,
                   let object = self.managedObjectContext.object(with: objectID) as? ZMManagedObject
             else { return }
             
-            switch note.name.rawValue {
+            switch note.name {
             case RequestUserProfileAssetNotificationName:
                 self.mediumDownstreamSync.whiteListObject(object)
             case RequestUserProfileSmallAssetNotificationName:
@@ -195,12 +194,16 @@ extension UserImageStrategy {
 
 extension UserImageStrategy {
     
-    public static func requestAssetForUser(with objectID:NSManagedObjectID) {
-        NotificationCenter.default.post(name: Notification.Name(rawValue:RequestUserProfileAssetNotificationName), object: objectID)
+    public static func requestAsset(for user: ZMUser) {
+        NotificationInContext(name: RequestUserProfileAssetNotificationName,
+                              context: user.managedObjectContext!.notificationContext,
+                              object: user.objectID).post()
     }
     
-    public static func requestSmallAssetForUser(with objectID:NSManagedObjectID) {
-        NotificationCenter.default.post(name: Notification.Name(rawValue:RequestUserProfileSmallAssetNotificationName), object: objectID)
+    public static func requestSmallAsset(for user: ZMUser) {
+        NotificationInContext(name: RequestUserProfileSmallAssetNotificationName,
+                              context: user.managedObjectContext!.notificationContext,
+                              object: user.objectID).post()
     }
 }
 

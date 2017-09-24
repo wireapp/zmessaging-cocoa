@@ -34,7 +34,7 @@
 @class CallingRequestStrategy;
 @class AVSMediaManager;
 @class ZMAPNSEnvironment;
-@class SessionManager;
+@class WireCallCenterV3;
 
 @protocol UserProfile;
 @protocol AnalyticsType;
@@ -57,12 +57,15 @@
 @protocol ZMAVSLogObserverToken <NSObject>
 @end
 
+typedef NS_ENUM(NSUInteger, ZMCallNotificationStyle) {
+    ZMCallNotificationStylePushNotifications,
+    ZMCallNotificationStyleCallKit
+};
 
 extern NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName;
 extern NSString * const ZMPhoneVerificationCodeKey;
 extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 extern NSString * const ZMTransportRequestLoopNotificationName;
-extern NSString * const ZMFlowManagerDidBecomeAvailableNotification;
 
 /// The main entry point for the WireSyncEngine API.
 ///
@@ -83,9 +86,8 @@ extern NSString * const ZMFlowManagerDidBecomeAvailableNotification;
                      apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                          application:(id<ZMApplication>)application
                           appVersion:(NSString *)appVersion
-                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
+                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;;
 
-@property (nonatomic, weak) SessionManager *sessionManager;
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
 @property (atomic, readonly) ZMNetworkState networkState;
@@ -121,8 +123,14 @@ extern NSString * const ZMFlowManagerDidBecomeAvailableNotification;
 /// The sync has been completed as least once
 @property (nonatomic, readonly) BOOL hasCompletedInitialSync;
 
-// Request the push token from iOS and send it to the backend.
+/// Request the push token from iOS and send it to the backend.
 - (void)registerForRemoteNotifications;
+
+/// Session can notify about the background calls via iOS CallKit or using the push notifications.
+@property (nonatomic) ZMCallNotificationStyle callNotificationStyle;
+
+/// Call center
+@property (nonatomic) WireCallCenterV3* callCenter;
 
 @end
 
@@ -160,7 +168,6 @@ extern NSString * const ZMFlowManagerDidBecomeAvailableNotification;
 
 @interface ZMUserSession (Calling)
 
-@property (class) BOOL useCallKit;
 @property (nonatomic, readonly) CallingRequestStrategy *callingStrategy;
 
 @end

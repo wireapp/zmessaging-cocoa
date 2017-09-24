@@ -40,6 +40,7 @@
 @property (nonatomic) id pingBackStatus;
 @property (nonatomic) id mockPushChannel;
 @property (nonatomic) NSMutableArray *pushChannelNotifications;
+@property (nonatomic) id pushChannelObserverToken;
 @end
 
 
@@ -70,12 +71,19 @@
                                                     syncStrategy:self.syncStrategy
                                                            uiMOC:self.uiMOC
                                                          syncMOC:self.syncMOC];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
+    self.pushChannelObserverToken = [NotificationInContext addObserverWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
+                                       context:self.uiMOC.notificationContext
+                                        object:nil
+                                         queue:nil
+                                         using:^(NotificationInContext * note) {
+                                             [self pushChannelDidChange:note];
+                                         }];
 }
 
 - (void)tearDown;
 {
     WaitForAllGroupsToBeEmpty(0.5);
+    self.pushChannelObserverToken = nil;
     [self.pingBackStatus stopMocking];
     self.pingBackStatus = nil;
     [self.mockPushChannel stopMocking];
@@ -90,7 +98,7 @@
     [super tearDown];
 }
 
-- (void)pushChannelDidChange:(NSNotification *)note
+- (void)pushChannelDidChange:(NotificationInContext *)note
 {
     [self.pushChannelNotifications addObject:note];
 }
@@ -1019,43 +1027,49 @@
 
 - (void)testThatItUsesTheNotificationWithoutUserID
 {
-    // GIVEN
-    NSDictionary *pushPayload =  @{@"aps" : @{},
-                                   @"data" : @{
-                                           @"type" : @"notice"
-                                           }
-                                   };
-    // WHEN & THEN
-    XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // GIVEN
+        NSDictionary *pushPayload =  @{@"aps" : @{},
+                                       @"data" : @{
+                                               @"type" : @"notice"
+                                               }
+                                       };
+        // WHEN & THEN
+        XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
+    }];
 }
 
 - (void)testThatItUsesTheNotificationForCurrentUser
 {
-    // GIVEN
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-    selfUser.remoteIdentifier = [NSUUID UUID];
-    
-    NSDictionary *pushPayload =  @{@"aps" : @{},
-                                   @"data" : @{
-                                           @"user": selfUser.remoteIdentifier.transportString,
-                                           @"type" : @"notice"
-                                           }
-                                   };
-    // WHEN & THEN
-    XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // GIVEN
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.remoteIdentifier = [NSUUID UUID];
+        
+        NSDictionary *pushPayload =  @{@"aps" : @{},
+                                       @"data" : @{
+                                               @"user": selfUser.remoteIdentifier.transportString,
+                                               @"type" : @"notice"
+                                               }
+                                       };
+        // WHEN & THEN
+        XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
+    }];
 }
 
 - (void)testThatItIgnoresTheNotificationForOtherUser
 {
-    // GIVEN
-    NSDictionary *pushPayload =  @{@"aps" : @{},
-                                   @"data" : @{
-                                           @"user": [NSUUID UUID].transportString,
-                                           @"type" : @"notice"
-                                           }
-                                   };
-    // WHEN & THEN
-    XCTAssertFalse([self.sut notificationIsForCurrentUser:pushPayload]);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // GIVEN
+        NSDictionary *pushPayload =  @{@"aps" : @{},
+                                       @"data" : @{
+                                               @"user": [NSUUID UUID].transportString,
+                                               @"type" : @"notice"
+                                               }
+                                       };
+        // WHEN & THEN
+        XCTAssertFalse([self.sut notificationIsForCurrentUser:pushPayload]);
+    }];
 }
 
 - (NSArray *)messageAddPayloadWithNonces:(NSArray <NSUUID *>*)nonces

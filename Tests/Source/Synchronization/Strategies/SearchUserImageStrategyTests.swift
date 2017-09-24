@@ -625,7 +625,7 @@ extension SearchUserImageStrategyTests {
         
         let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
         uiMOC.searchUserObserverCenter.addSearchUser(searchUser1) // This is called when the searchDirectory returns the searchUsers
-        let userObserver = UserChangeObserver(user: searchUser1)!
+        let userObserver = UserChangeObserver(user: searchUser1, managedObjectContext:self.uiMOC)!
         
         // when
         guard let request = sut.nextRequest() else { return XCTFail() }

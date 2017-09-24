@@ -60,7 +60,7 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
         notifications.append(notification)
     }
     
-    func configureAlertBody() -> String {
+    func textToDisplay() -> String {
         switch (callState) {
         case .incoming(video: let video, shouldRing: _):
             let baseString = video ? ZMPushStringVideoCallStarts : ZMPushStringCallStarts
@@ -110,7 +110,7 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
     public func configureNotification() -> UILocalNotification {
         let notification = UILocalNotification()
         
-        notification.alertBody = configureAlertBody().escapingPercentageSymbols()
+        notification.alertBody = textToDisplay().escapingPercentageSymbols()
         notification.soundName = soundName
         notification.category = category
         notification.setupUserInfo(conversation, sender: sender)

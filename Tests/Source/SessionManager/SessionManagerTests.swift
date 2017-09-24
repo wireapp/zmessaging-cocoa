@@ -355,7 +355,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
             XCTAssertNotNil(sessionForAccount1Reference)
             XCTAssertNotNil(sessionForAccount2Reference)
             
-            self.sessionManager!.deactivateAllBackgroundSessions()
+            self.sessionManager!.tearDownAllBackgroundSessions()
         })
     }
     
@@ -369,13 +369,13 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         })
         
         // THEN
-        XCTAssertNotNil(self.sessionManager!.backgroundUserSessions[account])
+        XCTAssertNotNil(self.sessionManager!.backgroundUserSessions[account.userIdentifier])
         
         // AND WHEN
-        self.sessionManager!.deactivateAllBackgroundSessions()
+        self.sessionManager!.tearDownAllBackgroundSessions()
         
         // THEN
-        XCTAssertNil(self.sessionManager!.backgroundUserSessions[account])
+        XCTAssertNil(self.sessionManager!.backgroundUserSessions[account.userIdentifier])
     }
     
     func testThatItDoesNotUnloadActiveUserSessionFromMemoryWarning() {
@@ -411,7 +411,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                                 
                                 sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
                                 
-                                sessionManager.select(account: account) { userSession in
+                                sessionManager.loadSession(for: account) { userSession in
                                     realSessionManager = sessionManager
                                     XCTAssertNotNil(userSession)
                                     sessionManagerExpectation.fulfill()
@@ -421,16 +421,16 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         // THEN
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
-        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account])
+        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // WHEN
         NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidReceiveMemoryWarning, object: nil)
         
         // THEN
-        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account])
+        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // CLEANUP
-        realSessionManager.deactivateAllBackgroundSessions()
+        realSessionManager.tearDownAllBackgroundSessions()
     }
     
     func testThatItUnloadBackgroundUserSessionFromMemoryWarning() {
@@ -451,7 +451,21 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                        application: application,
                        launchOptions: [:],
                        blacklistDownloadInterval : 60) { sessionManager in
-            
+                        
+                        let environment = ZMBackendEnvironment(type: .staging)
+                        let reachability = TestReachability()
+                        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+                            apnsEnvironment: self.apnsEnvironment!,
+                            application: application,
+                            mediaManager: mediaManager,
+                            flowManager: FlowManagerMock(),
+                            transportSession: self.transportSession!,
+                            environment: environment,
+                            reachability: reachability
+                        )
+                        
+                        sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+
             sessionManager.withSession(for: account) { userSession in
                 realSessionManager = sessionManager
                 XCTAssertNotNil(userSession)
@@ -462,16 +476,16 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         // THEN
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
-        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account])
+        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // WHEN
         NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidReceiveMemoryWarning, object: nil)
         
         // THEN
-        XCTAssertNil(realSessionManager.backgroundUserSessions[account])
+        XCTAssertNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // CLEANUP
-        realSessionManager.deactivateAllBackgroundSessions()
+        realSessionManager.tearDownAllBackgroundSessions()
     }
     
     func testThatItLoadsAccountForPush() {
@@ -498,10 +512,10 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                 ]
             ]
             
-            self.sessionManager!.deactivateAllBackgroundSessions()
+            self.sessionManager!.tearDownAllBackgroundSessions()
             XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             session = nil
-            XCTAssertNil(self.sessionManager!.backgroundUserSessions[account])
+            XCTAssertNil(self.sessionManager!.backgroundUserSessions[account.userIdentifier])
         }
         self.userSession = nil
         XCTAssertNil(weakSession)
@@ -511,10 +525,10 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         self.sessionManager?.pushDispatcher.didReceiveRemoteNotification(payload, fetchCompletionHandler: { _ in
             DispatchQueue.main.async {
                 // THEN
-                XCTAssertNotNil(self.sessionManager!.backgroundUserSessions[account])
+                XCTAssertNotNil(self.sessionManager!.backgroundUserSessions[account.userIdentifier])
                 
                 // CLEANUP
-                self.sessionManager!.deactivateAllBackgroundSessions()
+                self.sessionManager!.tearDownAllBackgroundSessions()
                 pushCompleted.fulfill()
             }
         })
@@ -573,7 +587,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         XCTAssertEqual(self.sessionManager!.activeUserSession, session)
         
         // CLEANUP
-        self.sessionManager!.deactivateAllBackgroundSessions()
+        self.sessionManager!.tearDownAllBackgroundSessions()
     }
     
     func testThatItActivatesTheAccountForPushAction() {
@@ -600,7 +614,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         XCTAssertEqual(self.sessionManager!.activeUserSession, session)
         
         // CLEANUP
-        self.sessionManager!.deactivateAllBackgroundSessions()
+        self.sessionManager!.tearDownAllBackgroundSessions()
     }
     
 }
@@ -670,7 +684,7 @@ class SessionManagerTests_Push: IntegrationTest {
         XCTAssertTrue(session.managedObjectContext.pushKitToken.isMarkedForDeletion)
         
         // CLEANUP
-        self.sessionManager!.deactivateAllBackgroundSessions()
+        self.sessionManager!.tearDownAllBackgroundSessions()
     }
     
     class MockPushCredentials: PKPushCredentials {
@@ -699,7 +713,7 @@ class SessionManagerTests_Push: IntegrationTest {
         XCTAssertFalse(session.managedObjectContext.pushKitToken.isMarkedForDeletion)
         
         // CLEANUP
-        self.sessionManager!.deactivateAllBackgroundSessions()
+        self.sessionManager!.tearDownAllBackgroundSessions()
     }
 }
 

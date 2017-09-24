@@ -117,8 +117,8 @@ class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus {
     var mockPhase : ZMClientRegistrationPhase?
     var mockReadiness :Bool = true
     
-    convenience override init() {
-        self.init(managedObjectContext: nil, cookieStorage: nil, registrationStatusDelegate: nil)
+    convenience init(managedObjectContext: NSManagedObjectContext) {
+        self.init(managedObjectContext: managedObjectContext, cookieStorage: nil, registrationStatusDelegate: nil)
     }
     
     override init!(managedObjectContext moc: NSManagedObjectContext!, cookieStorage: ZMPersistentCookieStorage!, registrationStatusDelegate: ZMClientRegistrationStatusDelegate!) {

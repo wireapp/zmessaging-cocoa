@@ -64,7 +64,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)replyToNotification:(UILocalNotification *)notification withReply:(NSString*)reply completionHandler:(void (^)())completionHandler;
 - (void)muteConversationForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
 - (void)likeMessageForNotification:(UILocalNotification *)note withCompletionHandler:(void (^)(void))completionHandler;
-- (void)acceptConnectionForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
 - (void)openConversation:(nullable ZMConversation *)conversation atMessage:(nullable ZMMessage *)message;
 
 @end

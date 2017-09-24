@@ -41,10 +41,10 @@ class ApplicationStatusDirectoryTests : MessagingTest {
     
     func testThatOperationStatusIsUpdatedWhenCallStarts() {
         // given
-        let note = Notification(name: CallStateObserver.CallInProgressNotification, object: nil, userInfo: [CallStateObserver.CallInProgressKey : true ])
+        let note = NotificationInContext(name: CallStateObserver.CallInProgressNotification, context:uiMOC.notificationContext, userInfo: [CallStateObserver.CallInProgressKey : true ])
         
         // when
-        NotificationCenter.default.post(note)
+        note.post()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -54,10 +54,10 @@ class ApplicationStatusDirectoryTests : MessagingTest {
     func testThatOperationStatusIsUpdatedWhenCallEnds() {
         // given
         sut.operationStatus.hasOngoingCall = true
-        let note = Notification(name: CallStateObserver.CallInProgressNotification, object: nil, userInfo: [CallStateObserver.CallInProgressKey : false ])
+        let note = NotificationInContext(name: CallStateObserver.CallInProgressNotification, context:uiMOC.notificationContext, userInfo: [CallStateObserver.CallInProgressKey : false ])
         
         // when
-        NotificationCenter.default.post(note)
+        note.post()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then

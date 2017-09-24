@@ -66,7 +66,7 @@ extension UnauthenticatedSession {
                 try ZMUser.validatePhoneNumber(&phoneNumber)
             }
         } catch {
-            ZMUserSessionRegistrationNotification.notifyRegistrationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
+            ZMUserSessionRegistrationNotification.notifyRegistrationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil), context: authenticationStatus)
             return
         }
         
@@ -89,7 +89,7 @@ extension UnauthenticatedSession {
     
     @objc
     public func resendRegistrationVerificationEmail() {
-        ZMUserSessionRegistrationNotification.resendValidationForRegistrationEmail()
+        ZMUserSessionRegistrationNotification.resendValidationForRegistrationEmail(inContext: authenticationStatus)
     }
     
     @objc
@@ -113,33 +113,25 @@ extension UnauthenticatedSession {
 extension UnauthenticatedSession {
     
     @objc
-    public func addRegistrationObserver(_ observer: ZMRegistrationObserver) -> ZMRegistrationObserverToken {
-        return ZMUserSessionRegistrationNotification.addObserver { (note) in
-            
-            guard let note = note else { return }
-            
-            switch (note.type) {
+    public func addRegistrationObserver(_ observer: ZMRegistrationObserver) -> Any {
+        return ZMUserSessionRegistrationNotification.addObserver(in: self) { [weak observer] (eventType, error) in
+            switch eventType {
             case .registrationNotificationEmailVerificationDidFail:
-                observer.emailVerificationDidFail?(note.error)
+                observer?.emailVerificationDidFail?(error)
             case .registrationNotificationEmailVerificationDidSucceed:
-                observer.emailVerificationDidSucceed?()
+                observer?.emailVerificationDidSucceed?()
             case .registrationNotificationPhoneNumberVerificationDidFail:
-                observer.phoneVerificationDidFail?(note.error)
+                observer?.phoneVerificationDidFail?(error)
             case .registrationNotificationPhoneNumberVerificationCodeRequestDidFail:
-                observer.phoneVerificationCodeRequestDidFail?(note.error)
+                observer?.phoneVerificationCodeRequestDidFail?(error)
             case .registrationNotificationPhoneNumberVerificationDidSucceed:
-                observer.phoneVerificationDidSucceed?()
+                observer?.phoneVerificationDidSucceed?()
             case .registrationNotificationRegistrationDidFail:
-                observer.registrationDidFail?(note.error)
+                observer?.registrationDidFail?(error)
             case .registrationNotificationPhoneNumberVerificationCodeRequestDidSucceed:
-                observer.phoneVerificationCodeRequestDidSucceed?()
+                observer?.phoneVerificationCodeRequestDidSucceed?()
             }
-            
         }
     }
     
-    @objc
-    public func removeRegistrationObserver(_ token: ZMRegistrationObserverToken) {
-        ZMUserSessionRegistrationNotification.removeObserver(token)
-    }
 }

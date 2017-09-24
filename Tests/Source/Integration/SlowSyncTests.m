@@ -36,8 +36,6 @@
 
 @end
 
-
-
 @implementation SlowSyncTests
 
 - (void)setUp
@@ -238,7 +236,7 @@
     
     // when
     [self recreateSessionManager];
-    XCTAssertTrue([self login]);
+//    XCTAssertTrue([self login]);
     
     // then
     BOOL hasNotificationsRequest = NO;
@@ -272,7 +270,6 @@
     
     // when
     [self recreateSessionManager];
-    XCTAssertTrue([self login]);
     
     // then
     BOOL hasNotificationsRequest = NO;
@@ -376,36 +373,23 @@
 - (void)testThatTheUIIsNotifiedWhenTheSyncIsComplete
 {
     // given
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMNetworkAvailabilityObserver)];
-    [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:observer userSession:self.userSession];
-    
-    // expect
-    NSMutableArray *receivedNotes = [NSMutableArray array];
-    [[observer stub] didChangeAvailability:[OCMArg checkWithBlock:^BOOL(ZMNetworkAvailabilityChangeNotification *note) {
-        [receivedNotes addObject:note];
-        return YES;
-    }]];
+    NetworkStateRecorder *stateRecoder = [[NetworkStateRecorder alloc] init];
+    id token = [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:stateRecoder userSession:self.userSession];
     
     // when
     XCTAssertTrue([self login]);
     
     // then
-    [observer verify];
-    [ZMNetworkAvailabilityChangeNotification removeNetworkAvailabilityObserver:observer];
-    
-    XCTAssertEqual(receivedNotes.count, 2u);
-    ZMNetworkAvailabilityChangeNotification *note1 = receivedNotes.firstObject;
-    ZMNetworkAvailabilityChangeNotification *note2 = receivedNotes.lastObject;
+    XCTAssertEqual(stateRecoder.stateChanges.count, 2u);
+    ZMNetworkState state1 = (ZMNetworkState)[stateRecoder.stateChanges.firstObject intValue];
+    ZMNetworkState state2 = (ZMNetworkState)[stateRecoder.stateChanges.lastObject intValue];
 
-    XCTAssertNotNil(note1);
-    XCTAssertEqual(note1.networkState, ZMNetworkStateOnlineSynchronizing);
-    
-    XCTAssertNotNil(note2);
-    XCTAssertEqual(note2.networkState, ZMNetworkStateOnline);
-
+    XCTAssertEqual(state1, ZMNetworkStateOnlineSynchronizing);
+    XCTAssertEqual(state2, ZMNetworkStateOnline);
     XCTAssertEqual(self.userSession.networkState, ZMNetworkStateOnline);
+    
+    token = nil;
 }
-
 
 - (void)testThatItHasTheSelfUserEmailAfterTheSlowSync
 {

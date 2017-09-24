@@ -27,8 +27,6 @@
 
 @property (nonatomic) id registrationObserver;
 @property (nonatomic) id registrationObserverToken;
-@property (nonatomic) id authenticationObserver;
-@property (nonatomic) id authenticationObserverToken;
 
 @end
 
@@ -39,20 +37,13 @@
     [super setUp];
     self.registrationObserver = [OCMockObject mockForProtocol:@protocol(ZMRegistrationObserver)];
     self.registrationObserverToken = [self.unauthenticatedSession addRegistrationObserver:self.registrationObserver];
-    self.authenticationObserver = [OCMockObject mockForProtocol:@protocol(ZMAuthenticationObserver)];
-    self.authenticationObserverToken = [ZMUserSessionAuthenticationNotification addObserver:self.authenticationObserver];
 }
 
 - (void)tearDown
 {
-    [self.authenticationObserver verify];
     [self.registrationObserver verify];
-    [self.unauthenticatedSession removeRegistrationObserver:self.registrationObserverToken];
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:self.authenticationObserverToken];
     self.registrationObserver = nil;
     self.registrationObserverToken = nil;
-    self.authenticationObserver = nil;
-    self.authenticationObserverToken = nil;
     [super tearDown];
 }
 
@@ -73,6 +64,8 @@
     NSString *phone = @"+49(1234)-567.89";
     NSString *expectedPhone = @"+49123456789";
     NSString *code = self.mockTransportSession.phoneVerificationCodeForRegistration;
+    
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
 
     // expect
     XCTestExpectation *phoneVerificationCodeRequestExpectation = [self expectationWithDescription:@"phoneVerificationCodeRequest succeed"];
@@ -105,17 +98,13 @@
     
     // and when
     ZMIncompleteRegistrationUser *user = [self createUserWithPhone:phone code:code];
-    
-    // expect
-    [[self.authenticationObserver expect] authenticationDidSucceed]; // triggered when we get the cookie
-    [[self.authenticationObserver expect] clientRegistrationDidSucceed]; // triggered when registering client
-    
-    // when
     [self.unauthenticatedSession registerUser:user.completeRegistrationUser];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertTrue(self.userSession.registeredOnThisDevice);
+    XCTAssertEqual(recorder.notifications.count, 1lu);
+    XCTAssertEqual(recorder.notifications.lastObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
     ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
     XCTAssertEqualObjects(selfUser.name, user.name);
     XCTAssertEqualObjects(selfUser.phoneNumber, expectedPhone);
@@ -130,6 +119,8 @@
     [[self.registrationObserver stub] phoneVerificationDidSucceed];
     [[self.registrationObserver stub] phoneVerificationCodeRequestDidSucceed];
     
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
+    
     [self.unauthenticatedSession requestPhoneVerificationCodeForRegistration:phone];
     WaitForAllGroupsToBeEmpty(0.5);
     [self.unauthenticatedSession verifyPhoneNumberForRegistration:phone verificationCode:code];
@@ -137,13 +128,13 @@
     
     ZMIncompleteRegistrationUser *user = [self createUserWithPhone:phone code:code];
     
-    // expect
-    [[self.authenticationObserver expect] authenticationDidSucceed]; // triggered when we get the cookie
-    [[self.authenticationObserver expect] clientRegistrationDidSucceed]; // triggered when registering client
-
     // when
     [self.unauthenticatedSession registerUser:user.completeRegistrationUser];
     WaitForAllGroupsToBeEmpty(0.5);
+    
+    //then
+    XCTAssertEqual(recorder.notifications.count, 1lu);
+    XCTAssertEqual(recorder.notifications.lastObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
 }
 
 
@@ -236,6 +227,8 @@
     // given
     [self createSelfUserAndConversation];
     
+    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
+    
     NSString *phone = @"+4912345678900";
     NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
     
@@ -244,11 +237,6 @@
         self.selfUser.phone = phone;
     }];
     
-    // expect
-    [[self.authenticationObserver expect] loginCodeRequestDidSucceed];
-    [[self.authenticationObserver expect] authenticationDidSucceed];
-    [[self.authenticationObserver expect] clientRegistrationDidSucceed]; // client was registered
-    
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForRegistration:phone];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -256,6 +244,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssertEqual(recorder.notifications.count, 1lu);
+    XCTAssertEqual(recorder.notifications.lastObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
     ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
     XCTAssertEqualObjects(selfUser.name, selfUser.name);
     XCTAssertEqualObjects(selfUser.phoneNumber, phone);
@@ -277,7 +267,6 @@
     }];
     
     // expect
-    [[self.authenticationObserver expect] loginCodeRequestDidSucceed];
     [[self.registrationObserver expect] registrationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
         XCTAssertEqual(error.code, (int) ZMUserSessionPhoneNumberIsAlreadyRegistered);
         XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);

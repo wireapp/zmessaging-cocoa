@@ -20,18 +20,6 @@ import Foundation
 
 private let log = ZMSLog(tag: "SessionManager")
 
-extension AccountManager {
-    func account(for id: UUID) -> Account? {
-        let matchingAccounts = self.accounts.filter { (account) -> Bool in
-            account.userIdentifier == id
-        }
-        
-        assert(matchingAccounts.count <= 1)
-        
-        return matchingAccounts.first
-    }
-}
-
 extension SessionManager {
     public func registerSessionForRemoteNotificationsIfNeeded(_ session: ZMUserSession) {
         session.managedObjectContext.performGroupedBlock {
@@ -71,7 +59,7 @@ extension SessionManager {
     @objc(didReceiveLocalNotification:application:)
     public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
         if let selfUserId = notification.zm_selfUserUUID,
-            let account = self.accountManager.account(for: selfUserId) {
+            let account = self.accountManager.account(with: selfUserId) {
             
             self.withSession(for: account) { userSession in
                 userSession.didReceiveLocal(notification: notification, application: application)
@@ -88,7 +76,7 @@ extension SessionManager {
                              completionHandler: @escaping () -> (),
                              application: ZMApplication) {
         if let selfUserId = localNotification.zm_selfUserUUID,
-            let account = self.accountManager.account(for: selfUserId) {
+            let account = self.accountManager.account(with: selfUserId) {
             
             self.withSession(for: account) { userSession in
                 userSession.handleAction(application: application,
@@ -113,9 +101,10 @@ extension SessionManager {
     
     fileprivate func activateAccount(for session: ZMUserSession, completion: @escaping () -> ()) {
         var foundSession: Bool = false
-        self.backgroundUserSessions.forEach { account, backgroundSession in
-            if session == backgroundSession {
-                self.select(account: account) { _ in
+        self.backgroundUserSessions.forEach { accountId, backgroundSession in
+            if session == backgroundSession,
+                let account = self.accountManager.account(with: accountId) {
+                self.select(account) { _ in
                     completion()
                 }
                 foundSession = true
@@ -172,7 +161,7 @@ extension SessionManager: PushDispatcherClient {
         
         
         if let userId = UUID(uuidString: userIdString),
-            let account = self.accountManager.account(for: userId) {
+            let account = self.accountManager.account(with: userId) {
             
             self.withSession(for: account, perform: { userSession in
                 userSession.receivedPushNotification(with: payload, from: source, completion: completion)

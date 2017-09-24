@@ -38,11 +38,11 @@
         [self.managedObjectContext enqueueDelayedSaveWithGroup:group];
         
         [group notifyOnQueue:dispatch_get_main_queue() block:^{
-            [UserImageStrategy requestAssetForUserWith:self.objectID];
+            [UserImageStrategy requestAssetFor:self];
             [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
         }];
     } else {
-        [UserImageStrategy requestAssetForUserWith:self.objectID];
+        [UserImageStrategy requestAssetFor:self];
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
 }
@@ -63,11 +63,11 @@
         [self.managedObjectContext enqueueDelayedSaveWithGroup:group];
         
         [group notifyOnQueue:dispatch_get_main_queue() block:^{
-            [UserImageStrategy requestSmallAssetForUserWith:self.objectID];
+            [UserImageStrategy requestSmallAssetFor:self];
             [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
         }];
     } else {
-        [UserImageStrategy requestSmallAssetForUserWith:self.objectID];
+        [UserImageStrategy requestSmallAssetFor:self];
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
 }

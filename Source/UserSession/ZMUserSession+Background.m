@@ -87,7 +87,6 @@ static NSString *ZMLogTag = @"Push";
 
 - (void)application:(id<ZMApplication>)application didReceiveLocalNotification:(UILocalNotification *)notification;
 {
-    NOT_USED(application);
     [self didReceiveLocalWithNotification:notification application:application];
 }
 
@@ -97,7 +96,6 @@ forLocalNotification:(UILocalNotification *)notification
        responseInfo:(NSDictionary *)responseInfo
   completionHandler:(void(^)())completionHandler;
 {
-    NOT_USED(application);
     [self handleActionWithApplication:application
                                  with:identifier
                                   for:notification
@@ -347,50 +345,15 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     }];
 
     [self enqueueChanges:^{
-        ZM_STRONG(self);
         id <ZMConversationMessage> reactionMessage = [ZMMessage addReaction:MessageReactionLike toMessage:message];
         self.likeMesssageObserver = [[ManagedObjectContextChangeObserver alloc] initWithContext:self.managedObjectContext
                                                                                        callback:^{
+                                                                                           ZM_STRONG(self);
                                                                                            [self updateBackgroundTaskWithMessage:reactionMessage];
                                                                                        }];
     }];
 }
 
-- (void)acceptConnectionForNotification:(UILocalNotification *)note
-                  withCompletionHandler:(void (^)())completionHandler
-{
-    ZMUser *sender = [ZMUser fetchObjectWithRemoteIdentifier:note.zm_senderUUID inManagedObjectContext:self.managedObjectContext];
-    ZMConversation *conversation = [note conversationInManagedObjectContext:self.managedObjectContext];
-
-    if (sender == nil) {
-        ZMLogError(@"Sender is missing");
-        if (completionHandler != nil) {
-            completionHandler();
-        }
-        return;
-    }
-    
-    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"Accept connection activity"];
-    
-    ZM_WEAK(self);
-    [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
-        ZM_STRONG(self);
-
-        if (result == ZMBackgroundTaskResultFailed) {
-            ZMLogDebug(@"Failed to connect to user");
-        }
-        
-        [activity endActivity];
-        if (completionHandler != nil) {
-            completionHandler();
-        }
-    }];
-    
-    [self enqueueChanges:^{
-        [sender accept];
-        [self openConversation:conversation atMessage:nil];
-    }];
-}
 
 - (void)updateBackgroundTaskWithMessage:(id<ZMConversationMessage>)message
 {

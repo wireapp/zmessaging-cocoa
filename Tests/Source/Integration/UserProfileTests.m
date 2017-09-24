@@ -136,7 +136,7 @@
     XCTAssertEqualObjects(selfUser.phoneNumber, @"");
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(ZMUserObserver)];
-    id userObserverToken = [UserChangeInfo addObserver:userObserver forBareUser:selfUser];
+    id userObserverToken = [UserChangeInfo addObserver:userObserver forBareUser:selfUser userSession:self.userSession];
     
     id editableUserObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
     id editableUserObserverToken = [self.userSession.userProfile addObserver:editableUserObserver];
@@ -167,8 +167,8 @@
     XCTAssertEqualObjects(selfUser.phoneNumber, phone);
     
     // after
-    [self.userSession.userProfile removeObserverWithToken:editableUserObserverToken];
-    (void)userObserverToken;
+    editableUserObserverToken = nil;
+    userObserverToken = nil;
 }
 
 - (void)testThatItIsNotifiedWhenItConfirmsWithTheWrongCode
@@ -201,7 +201,7 @@
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
     
     // after
-    [self.userSession.userProfile removeObserverWithToken:token];
+    token = nil;
 }
 
 - (void)testThatItIsNotifiedWhenItFailsToRequestAVerificationCode
@@ -239,7 +239,7 @@
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
     // after
-    [self.userSession.userProfile removeObserverWithToken:token];
+    token = nil;
 }
 
 
@@ -280,7 +280,7 @@
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
     // after
-    [self.userSession.userProfile removeObserverWithToken:token];
+    token = nil;
 }
 
 
@@ -319,7 +319,7 @@
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
 
     // after
-    [self.userSession.userProfile removeObserverWithToken:token];
+    token = nil;
 }
 
 - (void)testThatItGetsInvalidPhoneNumberErrorWhenItFailsToRequestAVerificationCodeWithInvalidPhoneResponse
@@ -357,7 +357,7 @@
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
     // after
-    [self.userSession.userProfile removeObserverWithToken:token];
+    token = nil;
 }
 
 - (BOOL)loginWithPhoneAndRemoveEmail
@@ -400,7 +400,7 @@
     [[editUserObserver expect] didSentVerificationEmail];
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(ZMUserObserver)];
-    id userObserverToken = [UserChangeInfo addObserver:userObserver forBareUser:selfUser];
+    id userObserverToken = [UserChangeInfo addObserver:userObserver forBareUser:selfUser userSession:self.userSession];
     [(id<ZMUserObserver>)[userObserver expect] userDidChange:OCMOCK_ANY]; // <- DONE: when receiving this, I know that the email was set
     
     // when
@@ -419,8 +419,8 @@
     XCTAssertEqualObjects(selfUser.emailAddress, email);
     
     // after
-    [self.userSession.userProfile removeObserverWithToken:editUserObserverToken];
-    (void)userObserverToken;
+    editUserObserverToken = nil;
+    userObserverToken = nil;
 }
 
 - (void)testThatItNotifiesWhenFailingToSetThePasswordForNetworkError
@@ -454,7 +454,7 @@
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
     // after
-    [self.userSession.userProfile removeObserverWithToken:token];
+    token = nil;
 }
 
 - (void)testThatItSilentlyIgnoreWhenFailingToSetThePasswordBecauseThePasswordWasAlreadyThere
@@ -471,7 +471,7 @@
     id editingObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
     id editingToken = [self.userSession.userProfile addObserver:editingObserver];
     id userObserver = [OCMockObject mockForProtocol:@protocol(ZMUserObserver)];
-    id userObserverToken = [UserChangeInfo addObserver:userObserver forBareUser:selfUser];
+    id userObserverToken = [UserChangeInfo addObserver:userObserver forBareUser:selfUser userSession:self.userSession];
     [(id<ZMUserObserver>)[userObserver expect] userDidChange:OCMOCK_ANY]; // when receiving this, I know that the email was set
     
     // expect
@@ -500,8 +500,8 @@
     XCTAssertEqualObjects(selfUser.emailAddress, email);
     
     // after
-    [self.userSession.userProfile removeObserverWithToken:editingToken];
-    (void)userObserverToken;
+    editingToken = nil;
+    userObserverToken = nil;
 }
 
 - (void)testThatItNotifiesWhenFailingToSetTheEmailBecauseOfGenericError
@@ -535,7 +535,7 @@
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
     
     // after
-    [self.userSession.userProfile removeObserverWithToken:token];
+    token = nil;
     
 }
 
@@ -570,7 +570,7 @@
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
     
     // after
-    [self.userSession.userProfile removeObserverWithToken:token];
+    token = nil;
     
 }
 
@@ -605,7 +605,7 @@
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
     
     // after
-    [self.userSession.userProfile removeObserverWithToken:token];
+    token = nil;
     
 }
 

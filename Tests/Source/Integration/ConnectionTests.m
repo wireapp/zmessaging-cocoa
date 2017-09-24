@@ -962,36 +962,27 @@
 // TestObserver
 ///
 
-@interface ConnectionLimitObserver : NSObject
+@interface MockConnectionLimitObserver : NSObject <ZMConnectionLimitObserver>
 
-@property (nonatomic) NSMutableArray *notifications;
-- (void)clearNotifications;
+@property (nonatomic) id connectionLimitObserverToken;
+@property (nonatomic) BOOL reachedConnectionLimit;
 
 @end
 
-@implementation ConnectionLimitObserver
 
-- (instancetype)init {
+@implementation MockConnectionLimitObserver
+
+- (void)connectionLimitReached {
+    self.reachedConnectionLimit = YES;
+}
+
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc {
     self = [super init];
     if  (self) {
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(addNotfication:) name:@"ZMConnectionLimitReachedNotification" object:nil];
-        self.notifications = [NSMutableArray array];
+        self.reachedConnectionLimit = NO;
+        self.connectionLimitObserverToken = [ZMConnectionLimitNotification addConnectionLimitObserver:self context:moc];
     }
     return self;
-}
-
-- (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-}
-
-- (void)addNotfication:(NSNotification *)note
-{
-    [self.notifications addObject:note];
-}
-
-- (void)clearNotifications
-{
-    self.notifications = [NSMutableArray array];
 }
 
 @end
@@ -1034,8 +1025,6 @@
 - (void)testThatItNotifiesObserversAboutConnectionLimitWhenInsertingAnObject
 {
     // given
-    ConnectionLimitObserver *observer = [[ConnectionLimitObserver alloc] init];
-    
     NSString *searchUserName = @"Karl McUser";
     NSUUID *userID = [NSUUID createUUID];
     [self createUserWithName:searchUserName uuid:userID];
@@ -1043,14 +1032,15 @@
     self.mockTransportSession.responseGeneratorBlock = self.responseBlockForConnectionLimit;
     
     XCTAssertTrue([self login]);
-    XCTAssertEqual(observer.notifications.count, 0u);
+    MockConnectionLimitObserver *observer = [[MockConnectionLimitObserver alloc] initWithManagedObjectContext:self.userSession.managedObjectContext];
+    XCTAssertFalse(observer.reachedConnectionLimit);
     
     // when
     [self searchAndConnectToUserWithName:searchUserName searchQuery:@"McUser"];
     [self.mockTransportSession waitForAllRequestsToCompleteWithTimeout:0.5];
     
     // then
-    XCTAssertEqual(observer.notifications.count, 1u);
+    XCTAssertTrue(observer.reachedConnectionLimit);
 }
 
 - (void)testThatItResetsTheConversationWhenAConnectionStatusChangeFromPendingToAcceptedIsRejectedByTheBackend
@@ -1065,7 +1055,8 @@
     XCTAssertEqual(pending.count, pendingCount + 1u);
     
     id listObserver = [OCMockObject niceMockForProtocol:@protocol(ZMConversationListObserver)];
-    id listToken = [ConversationListChangeInfo addObserver:listObserver forList:pending];
+    id listToken = [ConversationListChangeInfo addObserver:listObserver forList:pending managedObjectContext:pending.managedObjectContext];
+//    id listToken = [ConversationListChangeInfo addObserver:listObserver forList:pending];
     
     ZMUser *realUser1 = [self userForMockUser:mockUser];
     
@@ -1109,12 +1100,12 @@
 - (void)testThatItSendsOutANotificationWhenAConnectionStatusChangeFromPendingToAcceptedIsRejectedByTheBackend
 {
     // given
-    ConnectionLimitObserver *observer = [[ConnectionLimitObserver alloc] init];
-
+    
     // create pending conversation from remote user
     MockUser *mockUser = [self createPendingConnectionFromUserWithName:@"Hans" uuid:NSUUID.createUUID];
     
     XCTAssertTrue([self login]);
+    MockConnectionLimitObserver *observer = [[MockConnectionLimitObserver alloc] initWithManagedObjectContext:self.userSession.managedObjectContext];
     
     ZMUser *realUser1 = [self userForMockUser:mockUser];
     self.mockTransportSession.responseGeneratorBlock = self.responseBlockForConnectionLimit;
@@ -1126,8 +1117,7 @@
     [self.mockTransportSession waitForAllRequestsToCompleteWithTimeout:0.5];
     
     // then
-    XCTAssertEqual(observer.notifications.count, 1u);
-
+    XCTAssertTrue(observer.reachedConnectionLimit);
 }
 
 

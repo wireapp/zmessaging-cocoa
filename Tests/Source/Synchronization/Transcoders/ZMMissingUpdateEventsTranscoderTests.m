@@ -53,7 +53,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [super setUp];
     
     self.requestSync = [OCMockObject mockForClass:ZMSingleRequestSync.class];
-    
+    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
     self.mockOperationStatus = [[ZMOperationStatus alloc] init];
@@ -70,8 +70,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [[[(id) self.syncStrategy stub] andReturn:self.mockApplicationDirectory] applicationStatusDirectory];
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.mockPingbackStatus];
-    
-    self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     
     _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
                                     previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection

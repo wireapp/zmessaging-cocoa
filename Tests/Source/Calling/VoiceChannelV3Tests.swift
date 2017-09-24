@@ -30,15 +30,17 @@ class VoiceChannelV3Tests : MessagingTest {
     override func setUp() {
         super.setUp()
         
-        let selfUser = ZMUser.selfUser(in: syncMOC)
+        let selfUser = ZMUser.selfUser(in: uiMOC)
         selfUser.remoteIdentifier = UUID.create()
         
         let selfClient = createSelfClient()
         
-        conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+        conversation = ZMConversation.insertNewObject(in: uiMOC)
         conversation?.remoteIdentifier = UUID.create()
         
         wireCallCenterMock = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: selfClient.remoteIdentifier!, uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
+        
+        uiMOC.zm_callCenter = wireCallCenterMock
         
         sut = VoiceChannelV3(conversation: conversation!)
     }
