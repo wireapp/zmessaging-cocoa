@@ -460,16 +460,6 @@ public protocol LocalMessageNotificationResponder : class {
         }
     }
 
-
-    fileprivate func tearDownConversationListObservers() {
-        if let conversationListObserver = conversationListObserver {
-            ConversationListChangeInfo.remove(observer: conversationListObserver, for: nil)
-        }
-        if let connectionRequestObserver = connectionRequestObserver {
-            ConversationListChangeInfo.remove(observer: connectionRequestObserver, for: nil)
-        }
-    }
-
     // Creates the user session for @c account given, calls @c completion when done.
     fileprivate func activateBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession)->()) {
         guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
