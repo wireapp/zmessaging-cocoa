@@ -18,12 +18,17 @@
 
 import Foundation
 
+@objc public protocol ForegroundNotificationsDelegate: NSObjectProtocol {
+    
+    func didReceieveLocalMessage(notification: UILocalNotification, application: ZMApplication)
+}
+
 /// Creates and cancels local notifications
 public class LocalNotificationDispatcher: NSObject {
     
     public static let ZMShouldHideNotificationContentKey = "ZMShouldHideNotificationContentKey"
     
-    public weak var userSession: ZMUserSession?
+    private(set) weak var foregroundNotificationDelegate: ForegroundNotificationsDelegate?
     
     let eventNotifications: ZMLocalNotificationSet
     let messageNotifications: ZMLocalNotificationSet
@@ -38,10 +43,12 @@ public class LocalNotificationDispatcher: NSObject {
     
     var localNotificationBuffer = [UILocalNotification]()
     
-    @objc(initWithManagedObjectContext:application:)
+    @objc(initWithManagedObjectContext:foregroundNotificationDelegate:application:)
     public init(in managedObjectContext: NSManagedObjectContext,
+                foregroundNotificationDelegate: ForegroundNotificationsDelegate,
                 application: ZMApplication) {
         self.syncMOC = managedObjectContext
+        self.foregroundNotificationDelegate = foregroundNotificationDelegate
         self.eventNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherEventNotificationsKey", keyValueStore: managedObjectContext)
         self.failedMessageNotification = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherFailedNotificationsKey", keyValueStore: managedObjectContext)
         self.callingNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherCallingNotificationsKey", keyValueStore: managedObjectContext)

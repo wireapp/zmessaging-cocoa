@@ -31,7 +31,7 @@ extension LocalNotificationDispatcher: PushMessageHandler {
         syncMOC.saveOrRollback()
         
         for note in localNotificationBuffer {
-            userSession?.didReceieveLocalMessage(notification: note, application: application)
+            self.foregroundNotificationDelegate?.didReceieveLocalMessage(notification: note, application: application)
         }
         
         localNotificationBuffer.removeAll()
@@ -41,7 +41,7 @@ extension LocalNotificationDispatcher: PushMessageHandler {
     /// state. If the app is active, then the notification is directed to the user
     /// session, otherwise it is directed to the system via UIApplication.
     ///
-    fileprivate func scheduleLocalNotification(_ note: UILocalNotification) {
+    func scheduleUILocalNotification(_ note: UILocalNotification) {
         if application.applicationState == .active {
             localNotificationBuffer.append(note)
         } else {
@@ -53,12 +53,12 @@ extension LocalNotificationDispatcher: PushMessageHandler {
     @objc(processMessage:) public func process(_ message: ZMMessage) {
         if let message = message as? ZMOTRMessage {
             if let note = localNotificationForMessage(message), let uiNote = note.uiNotifications.last {
-                scheduleLocalNotification(uiNote)
+                scheduleUILocalNotification(uiNote)
             }
         }
         if let message = message as? ZMSystemMessage {
             if let note = localNotificationForSystemMessage(message), let uiNote = note.uiNotifications.last {
-                scheduleLocalNotification(uiNote)
+                scheduleUILocalNotification(uiNote)
             }
         }
     }
