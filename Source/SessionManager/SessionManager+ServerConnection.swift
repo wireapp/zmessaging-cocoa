@@ -43,7 +43,7 @@ extension SessionManager {
     
 }
 
-extension SessionManager : ServerConnection {
+extension SessionManager : ServerConnection, ZMReachabilityObserver {
     
     public var isOffline: Bool {
         return !reachability.mayBeReachable
@@ -56,12 +56,13 @@ extension SessionManager : ServerConnection {
     /// Add observer of server connection. Returns a token for de-registering the observer.
     public func addServerConnectionObserver(_ observer: ServerConnectionObserver) -> Any {
         
-        let token = NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: ZMTransportSessionReachabilityChangedNotificationName),
-                                                      object: nil,
-                                                      queue: OperationQueue.main) { [weak self, weak observer] (note) in
-                                                        guard let `self` = self else { return }
-                                                        observer?.serverConnection(didChange: self)
+        return reachability.addReachabilityObserver(on: .main) { [weak self, weak observer] _ in
+            guard let `self` = self else { return }
+            observer?.serverConnection(didChange: self)
         }
-        return SelfUnregisteringNotificationCenterToken(token)
+    }
+    
+    public func reachabilityDidChange(_ reachability: ReachabilityProvider) {
+        
     }
 }

@@ -792,4 +792,12 @@ class TestReachability: ReachabilityProvider, ReachabilityTearDown {
     func tearDown() {
         tearDownCalled = true
     }
+    
+    func add(_ observer: ZMReachabilityObserver, queue: OperationQueue?) -> Any {
+        return NSObject()
+    }
+    
+    func addReachabilityObserver(on queue: OperationQueue?, block: @escaping ReachabilityObserverBlock) -> Any {
+        return NSObject()
+    }
 }

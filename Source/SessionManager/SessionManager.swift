@@ -180,7 +180,7 @@ public protocol LocalMessageNotificationResponder : class {
         let flowManager = FlowManager(mediaManager: mediaManager)
 
         let serverNames = [environment.backendURL, environment.backendWSURL].flatMap{ $0.host }
-        let reachability = ZMReachability(serverNames: serverNames, observer: nil, queue: .main, group: group)
+        let reachability = ZMReachability(serverNames: serverNames, group: group)
         let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(environment: environment, reachability: reachability)
         let authenticatedSessionFactory = AuthenticatedSessionFactory(
             appVersion: appVersion,
