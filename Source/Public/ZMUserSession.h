@@ -87,7 +87,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
                      apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                          application:(id<ZMApplication>)application
                           appVersion:(NSString *)appVersion
-                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;;
+                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 
 @property (nonatomic, weak) SessionManager *sessionManager;
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;

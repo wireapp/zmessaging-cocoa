@@ -390,19 +390,14 @@ public protocol LocalMessageNotificationResponder : class {
             guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
                 preconditionFailure("Unable to create session for \(account)")
             }
-            newSession.requestToOpenViewDelegate = self
             session = newSession
-            session.sessionManager = self
 
-            self.backgroundUserSessions[account.userIdentifier] = newSession
+            self.configure(session: session, for: account)
         }
         
-        pushDispatcher.add(client: session)
-        
-        self.register(account: account, session: session)
+        self.registerObservers(account: account, session: session)
 
         self.activeUserSession = session
-        session.callNotificationStyle = self.callNotificationStyle
 
         
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
@@ -423,7 +418,7 @@ public protocol LocalMessageNotificationResponder : class {
         }
     }
 
-    fileprivate func register(account: Account, session: ZMUserSession) {
+    fileprivate func registerObservers(account: Account, session: ZMUserSession) {
         
         let selfUser = ZMUser.selfUser(inUserSession: session)
         let teamObserver = TeamChangeInfo.add(observer: self, for: nil, managedObjectContext: session.managedObjectContext)
@@ -441,6 +436,14 @@ public protocol LocalMessageNotificationResponder : class {
         self.unauthenticatedSession = unauthenticatedSession
         self.preLoginAuthenticationToken = unauthenticatedSession.addAuthenticationObserver(self)
         delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
+    }
+    
+    fileprivate func configure(session userSession: ZMUserSession, for account: Account) {
+        userSession.requestToOpenViewDelegate = self
+        userSession.sessionManager = self
+        self.backgroundUserSessions[account.userIdentifier] = userSession
+        pushDispatcher.add(client: userSession)
+        userSession.callNotificationStyle = self.callNotificationStyle
     }
     
     // Loads user session for @c account given and executes the @c action block.
@@ -466,15 +469,9 @@ public protocol LocalMessageNotificationResponder : class {
         guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
         }
-        self.register(account: account, session: newSession)
+        self.registerObservers(account: account, session: newSession)
         
-        if let previousSession = self.backgroundUserSessions[account.userIdentifier], previousSession != newSession {
-            tearDownBackgroundSession(for: account.userIdentifier)
-        }
-        self.backgroundUserSessions[account.userIdentifier] = newSession
-        newSession.requestToOpenViewDelegate = self
-        pushDispatcher.add(client: newSession)
-        newSession.callNotificationStyle = self.callNotificationStyle
+        self.configure(session: newSession, for: account)
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
         completion(newSession)
