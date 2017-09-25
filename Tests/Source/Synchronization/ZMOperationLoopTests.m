@@ -852,7 +852,6 @@
     
     // expect
     [(ZMSyncStrategy *)[self.syncStrategy expect] consumeUpdateEvents:events];
-    [(ZMSyncStrategy *)[self.syncStrategy expect] updateBadgeCount];
 
     [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
         handler(ZMPushPayloadResultSuccess, events);
@@ -901,7 +900,6 @@
     ZMUpdateEvent *event = [[ZMUpdateEvent eventsArrayFromPushChannelData:eventPayload] firstObject];
     
     // expect
-    [[self.syncStrategy expect] updateBadgeCount];
     [[self.syncStrategy expect] consumeUpdateEvents:OCMOCK_ANY];
     [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
         handler(ZMPushPayloadResultSuccess, @[event]);
@@ -937,7 +935,6 @@
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:pushPayload[@"data"]];
     
     // expect
-    [[self.syncStrategy expect] updateBadgeCount];
     [[self.syncStrategy expect] consumeUpdateEvents:OCMOCK_ANY];
     [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
         handler(ZMPushPayloadResultSuccess, events);
@@ -960,7 +957,6 @@
     NSDictionary *payload = [self fallbackAPNSPayloadWithIdentifier:NSUUID.createUUID];
     
     // reject
-    [[self.syncStrategy reject] updateBadgeCount];
     [[self.pingBackStatus reject] didReceiveVoIPNotification:OCMOCK_ANY handler:OCMOCK_ANY];
     
     // when
@@ -981,7 +977,6 @@
     
     // expect
     [(ZMSyncStrategy *)[self.syncStrategy reject] consumeUpdateEvents:events];
-    [(ZMSyncStrategy *)[self.syncStrategy reject] updateBadgeCount];
 
     // when
     [self.sut saveEventsAndSendNotificationForPayload:pushPayload fetchCompletionHandler:nil source:ZMPushNotficationTypeAlert];

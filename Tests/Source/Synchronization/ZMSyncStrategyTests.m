@@ -1052,24 +1052,6 @@
     [mockRequestAvailableNotification stopMocking];
 }
 
-- (void)testThatItUpdatesTheBadgeCount
-{
-    // given
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        conversation.conversationType = ZMConversationTypeGroup;
-        conversation.internalEstimatedUnreadCount = 1;
-        [self.syncMOC saveOrRollback];
-        
-        // when
-        [self.sut updateBadgeCount];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(self.application.applicationIconBadgeNumber, 1);
-}
-
 @end
 
 

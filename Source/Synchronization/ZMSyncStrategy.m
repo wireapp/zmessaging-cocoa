@@ -233,7 +233,6 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.syncMOC performGroupedBlock:^{
         self.applicationStatusDirectory.operationStatus.isInBackground = YES;
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-        [self updateBadgeCount];
         [activity endActivity];
     }];
 }
@@ -395,11 +394,6 @@ ZM_EMPTY_ASSERTING_INIT()
     [fetchRequestBatch addConversationRemoteIdentifiersToPrefetchConversations:remoteIdentifiers];
     
     return fetchRequestBatch;
-}
-
-- (void)updateBadgeCount;
-{
-    self.application.applicationIconBadgeNumber = (NSInteger)[ZMConversation unreadConversationCountInContext:self.syncMOC];
 }
 
 @end
