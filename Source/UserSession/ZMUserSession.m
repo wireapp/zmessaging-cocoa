@@ -632,7 +632,8 @@ ZM_EMPTY_ASSERTING_INIT()
     
     ZMNetworkState const previous = self.networkState;
     self.networkState = state;
-    if(previous != self.networkState && self.application.applicationState != UIApplicationStateBackground) {
+    
+    if (previous != self.networkState) {
         [ZMNetworkAvailabilityChangeNotification notifyWithNetworkState:self.networkState userSession:self];
     }
 }
