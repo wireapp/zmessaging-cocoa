@@ -80,6 +80,16 @@ static NSString * const SelfUserIDStringKey     = @"selfUserIDString";
     return message;
 }
 
+- (nullable ZMUser *)senderInManagedObjectContext:(nonnull NSManagedObjectContext *)MOC
+{
+    if (self.zm_senderUUID == nil) {
+        return nil;
+    }
+    
+    ZMUser *sender = [ZMUser userWithRemoteID:self.zm_senderUUID createIfNeeded:NO inContext:MOC];
+    return sender;
+}
+
 + (void)addSelfUserInfoTo:(NSMutableDictionary /* inout */ *)userInfo using:(NSManagedObject *)object
 {
     Require(object.managedObjectContext != nil);
