@@ -179,7 +179,7 @@ extension IntegrationTest {
         
         let manager = AccountManager(sharedDirectory: sharedContainer)
         let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
-        manager.add(account)
+        manager.addOrUpdate(account)
         
         return account
     }
@@ -349,10 +349,10 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         
         let manager = AccountManager(sharedDirectory: sharedContainer)
         let account1 = Account(userName: "Test Account 1", userIdentifier: currentUserIdentifier)
-        manager.add(account1)
+        manager.addOrUpdate(account1)
         
         let account2 = Account(userName: "Test Account 2", userIdentifier: UUID())
-        manager.add(account2)
+        manager.addOrUpdate(account2)
         // WHEN
         weak var sessionForAccount1Reference: ZMUserSession? = nil
         let session1LoadedExpectation = self.expectation(description: "Session for account 1 loaded")
@@ -514,7 +514,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
     func testThatItLoadsAccountForPush() {
         // GIVEN
         let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
-        self.sessionManager?.accountManager.add(account)
+        self.sessionManager?.accountManager.addOrUpdate(account)
 
         weak var weakSession: ZMUserSession? = nil
         var payload: [AnyHashable: Any] = [:]
@@ -562,7 +562,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
     func setupSession() -> ZMUserSession {
         let manager = self.sessionManager!.accountManager
         let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
-        manager.add(account)
+        manager.addOrUpdate(account)
         account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         manager.addAndSelect(account)
         

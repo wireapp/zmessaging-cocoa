@@ -430,8 +430,18 @@ public protocol LocalMessageNotificationResponder : class {
         let selfObserver = UserChangeInfo.add(observer: self, forBareUser: selfUser!, managedObjectContext: session.managedObjectContext)
         let conversationListObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.conversations(inUserSession: session), userSession: session)
         let connectionRequestObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.pendingConnectionConversations(inUserSession: session), userSession: session)
-        
-        accountTokens[account.userIdentifier] = [teamObserver, selfObserver!, conversationListObserver, connectionRequestObserver]
+        let unreadCountObserver = NotificationInContext.addObserver(name: .AccountUnreadCountDidChangeNotification,
+                                                                    context: account)
+        { [weak self] note in
+            guard let account = note.context as? Account else { return }
+            self?.accountManager.addOrUpdate(account)
+        }
+        accountTokens[account.userIdentifier] = [teamObserver,
+                                                 selfObserver!,
+                                                 conversationListObserver,
+                                                 connectionRequestObserver,
+                                                 unreadCountObserver
+        ]
     }
     
     fileprivate func createUnauthenticatedSession() {
@@ -545,7 +555,7 @@ extension SessionManager {
             else {
                 account.imageData = nil
             }
-            accountManager.add(account)
+            accountManager.addOrUpdate(account)
         }
     }
 }
