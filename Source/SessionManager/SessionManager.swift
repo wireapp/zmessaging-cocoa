@@ -127,10 +127,7 @@ public protocol LocalMessageNotificationResponder : class {
     internal let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
     fileprivate let sharedContainerURL: URL
     fileprivate let dispatchGroup: ZMSDispatchGroup?
-    fileprivate var teamObserver: NSObjectProtocol?
-    fileprivate var selfObserver: NSObjectProtocol?
-    fileprivate var conversationListObserver: NSObjectProtocol?
-    fileprivate var connectionRequestObserver: NSObjectProtocol?
+    fileprivate var accountTokens : [UUID : [Any]] = [:]
     fileprivate var memoryWarningObserver: NSObjectProtocol?
     
     private static var token: Any?
@@ -300,7 +297,7 @@ public protocol LocalMessageNotificationResponder : class {
     
     public func select(_ account: Account, completion: ((ZMUserSession)->())? = nil) {
         delegate?.sessionManagerWillOpenAccount(account)
-        tearDownObservers()
+        tearDownObservers(account: account.userIdentifier)
         
         activeUserSession = nil
         
@@ -332,14 +329,13 @@ public protocol LocalMessageNotificationResponder : class {
             return
         }
         
-        tearDownObservers()
-        
         let matchingAccountSession = backgroundUserSessions.first { (_, session) in
             session == currentSession
         }
         
         if let matchingAccount = matchingAccountSession?.key {
             backgroundUserSessions[matchingAccount] = nil
+            tearDownObservers(account: matchingAccount)
         }
         
         currentSession.closeAndDeleteCookie(deleteCookie)
@@ -403,12 +399,7 @@ public protocol LocalMessageNotificationResponder : class {
         
         pushDispatcher.add(client: session)
         
-        let selfUser = ZMUser.selfUser(inUserSession: session)
-
-        teamObserver = TeamChangeInfo.add(observer: self, for: nil, managedObjectContext: session.managedObjectContext) // TODO need per user session token
-        selfObserver = UserChangeInfo.add(observer: self, forBareUser: selfUser!, managedObjectContext: session.managedObjectContext) // TODO need per user session token
-        conversationListObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.conversations(inUserSession: session), userSession: session)
-        connectionRequestObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.pendingConnectionConversations(inUserSession: session), userSession: session)
+        self.register(account: account, session: session)
 
         self.activeUserSession = session
         session.callNotificationStyle = self.callNotificationStyle
@@ -432,6 +423,17 @@ public protocol LocalMessageNotificationResponder : class {
         }
     }
 
+    fileprivate func register(account: Account, session: ZMUserSession) {
+        
+        let selfUser = ZMUser.selfUser(inUserSession: session)
+        let teamObserver = TeamChangeInfo.add(observer: self, for: nil, managedObjectContext: session.managedObjectContext)
+        let selfObserver = UserChangeInfo.add(observer: self, forBareUser: selfUser!, managedObjectContext: session.managedObjectContext)
+        let conversationListObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.conversations(inUserSession: session), userSession: session)
+        let connectionRequestObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.pendingConnectionConversations(inUserSession: session), userSession: session)
+        
+        accountTokens[account.userIdentifier] = [teamObserver, selfObserver!, conversationListObserver, connectionRequestObserver]
+    }
+    
     fileprivate func createUnauthenticatedSession() {
         log.debug("Creating unauthenticated session")
         self.unauthenticatedSession?.tearDown()
@@ -464,6 +466,11 @@ public protocol LocalMessageNotificationResponder : class {
         guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
         }
+        self.register(account: account, session: newSession)
+        
+        if let previousSession = self.backgroundUserSessions[account.userIdentifier], previousSession != newSession {
+            tearDownBackgroundSession(for: account.userIdentifier)
+        }
         self.backgroundUserSessions[account.userIdentifier] = newSession
         newSession.requestToOpenViewDelegate = self
         pushDispatcher.add(client: newSession)
@@ -479,7 +486,7 @@ public protocol LocalMessageNotificationResponder : class {
             return
         }
         userSession.closeAndDeleteCookie(false)
-        self.tearDownConversationListObservers()
+        self.tearDownObservers(account: accountId)
         self.backgroundUserSessions[accountId] = nil
     }
     
@@ -492,19 +499,11 @@ public protocol LocalMessageNotificationResponder : class {
         }
     }
     
-    fileprivate func tearDownObservers() {
-        teamObserver = nil // TODO need per user session token
-        selfObserver = nil // TODO need per user session token
-    }
-    
-    fileprivate func tearDownConversationListObservers() {
-        conversationListObserver = nil
-        connectionRequestObserver = nil
+    fileprivate func tearDownObservers(account: UUID) {
+        accountTokens.removeValue(forKey: account)
     }
 
     deinit {
-        tearDownObservers()
-        tearDownConversationListObservers()
         blacklistVerificator?.teardown()
         activeUserSession?.tearDown()
         unauthenticatedSession?.tearDown()
