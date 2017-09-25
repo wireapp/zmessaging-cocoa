@@ -43,7 +43,7 @@ extension SessionManager {
     
 }
 
-extension SessionManager : ServerConnection, ZMReachabilityObserver {
+extension SessionManager : ServerConnection {
     
     public var isOffline: Bool {
         return !reachability.mayBeReachable
@@ -62,7 +62,4 @@ extension SessionManager : ServerConnection, ZMReachabilityObserver {
         }
     }
     
-    public func reachabilityDidChange(_ reachability: ReachabilityProvider) {
-        
-    }
 }
