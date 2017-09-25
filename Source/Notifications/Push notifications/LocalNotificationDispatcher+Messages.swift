@@ -30,8 +30,10 @@ extension LocalNotificationDispatcher: PushMessageHandler {
         // the UI will have the objects availble to display.
         syncMOC.saveOrRollback()
         
-        for note in localNotificationBuffer {
-            self.foregroundNotificationDelegate?.didReceieveLocalMessage(notification: note, application: application)
+        // for now we just display the latest notification in the buffer to avoid
+        // an unreadable stream of notifications (since one note replaces the other)
+        if let lastNote = localNotificationBuffer.last {
+            self.foregroundNotificationDelegate?.didReceieveLocalMessage(notification: lastNote, application: application)
         }
         
         localNotificationBuffer.removeAll()
