@@ -100,6 +100,11 @@ extension SessionManager {
     }
     
     fileprivate func activateAccount(for session: ZMUserSession, completion: @escaping () -> ()) {
+        if session == activeUserSession {
+            completion()
+            return
+        }
+        
         var foundSession: Bool = false
         self.backgroundUserSessions.forEach { accountId, backgroundSession in
             if session == backgroundSession,
