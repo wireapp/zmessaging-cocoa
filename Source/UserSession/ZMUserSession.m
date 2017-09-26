@@ -69,6 +69,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 @property (nonatomic) BOOL hasCompletedInitialSync;
+@property (nonatomic) BOOL tornDown;
 
 
 /// Build number of the Wire app
@@ -91,6 +92,8 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)dealloc
 {
+    Require(self.tornDown);
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -309,6 +312,7 @@ ZM_EMPTY_ASSERTING_INIT()
     }
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     self.blackList = nil;
+    self.tornDown = YES;
 }
 
 - (BOOL)isNotificationContentHidden;
