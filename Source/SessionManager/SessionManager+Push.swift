@@ -125,20 +125,26 @@ extension SessionManager {
 
 extension SessionManager: ZMRequestsToOpenViewsDelegate {
     public func showConversationList(for userSession: ZMUserSession!) {
-        self.activateAccount(for: userSession) { 
-            self.requestToOpenViewDelegate?.showConversationList(for: userSession)
+        self.activateAccount(for: userSession) {
+            self.whenRequestsToOpenViewsDelegateAvailable(do: { delegate in
+                delegate.showConversationList(for: userSession)
+            })
         }
     }
     
     public func userSession(_ userSession: ZMUserSession!, show conversation: ZMConversation!) {
         self.activateAccount(for: userSession) {
-            self.requestToOpenViewDelegate?.userSession(userSession, show: conversation)
+            self.whenRequestsToOpenViewsDelegateAvailable(do: { delegate in
+                delegate.userSession(userSession, show: conversation)
+            })
         }
     }
     
     public func userSession(_ userSession: ZMUserSession!, show message: ZMMessage!, in conversation: ZMConversation!) {
         self.activateAccount(for: userSession) {
-            self.requestToOpenViewDelegate?.userSession(userSession, show: message, in: conversation)
+            self.whenRequestsToOpenViewsDelegateAvailable(do: { delegate in
+                delegate.userSession(userSession, show: message, in: conversation)
+            })
         }
     }
 }
