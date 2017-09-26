@@ -88,16 +88,21 @@ public extension ZMConversation {
 
     @objc public func addTypingObserver(_ observer: ZMTypingChangeObserver) -> Any {
         return NotificationInContext.addObserver(name: ZMConversation.typingNotificationName,
-                                                 context: self.managedObjectContext!.notificationContext)
+                                                 context: self.managedObjectContext!.notificationContext,
+                                                 object: self)
         {
             [weak observer, weak self] note in
             guard let `self` = self else { return }
+            
             observer?.typingDidChange(conversation: self, typingUsers: note.userInfo[typingNotificationUsersKey] as? Set<ZMUser> ?? Set())
         }
     }
     
     @objc public func notifyTyping(typingUsers: Set<ZMUser>) {
-        NotificationInContext(name: ZMConversation.typingNotificationName, context: self.managedObjectContext!.notificationContext, userInfo: [typingNotificationUsersKey: typingUsers]).post()
+        NotificationInContext(name: ZMConversation.typingNotificationName,
+                              context: self.managedObjectContext!.notificationContext,
+                              object: self,
+                              userInfo: [typingNotificationUsersKey: typingUsers]).post()
     }
 }
 

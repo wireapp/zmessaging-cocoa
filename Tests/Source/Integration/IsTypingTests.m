@@ -80,7 +80,25 @@
     
     token = nil;
 }
-
+    
+- (void)testThatItSendsTypingNotificationsForConversation;
+{
+    XCTAssertTrue([self login]);
+    
+    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
+    ZMConversation *otherConversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+    id token = [otherConversation addTypingObserver:self];
+    
+    XCTAssertEqual(conversation.typingUsers.count, 0u);
+    
+    [self.mockTransportSession sendIsTypingEventForConversation:self.groupConversation user:self.user1 started:YES];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    XCTAssertEqual(self.notifications.count, 0u);
+    
+    token = nil;
+}
+    
 - (void)testThatItTypingStatusTimesOut;
 {
     XCTAssertTrue([self login]);
