@@ -86,8 +86,6 @@ static NSString *const HasHistoryKey = @"hasHistory";
 
     refUIMoc = nil;
     refSyncMOC = nil;
-
-    [StorageStack reset];
 }
 
 @end

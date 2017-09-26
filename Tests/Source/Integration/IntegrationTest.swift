@@ -536,6 +536,7 @@ extension IntegrationTest : SessionManagerDelegate {
              .accountDeleted:
             self.userSession = nil
         default:
+            self.userSession = nil
             break
         }
     }

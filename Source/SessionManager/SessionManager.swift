@@ -535,10 +535,10 @@ public protocol LocalMessageNotificationResponder : class {
 // MARK: - TeamObserver
 
 extension SessionManager {
-    func updateCurrentAccount(with team: TeamType? = nil, in managedObjectContext: NSManagedObjectContext) {
+    func updateCurrentAccount(in managedObjectContext: NSManagedObjectContext) {
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         if let account = accountManager.accounts.first(where: { $0.userIdentifier == selfUser.remoteIdentifier }) {
-            if let name = team?.name {
+            if let name = selfUser.team?.name {
                 account.teamName = name
             }
             if let userName = selfUser.name {
@@ -561,7 +561,7 @@ extension SessionManager: TeamObserver {
         guard let managedObjectContext = (team as? Team)?.managedObjectContext else {
             return
         }
-        updateCurrentAccount(with: team, in: managedObjectContext)
+        updateCurrentAccount(in: managedObjectContext)
     }
 }
 
@@ -574,8 +574,7 @@ extension SessionManager: ZMUserObserver {
                 let managedObjectContext = user.managedObjectContext else {
                 return
             }
-            let selfUser = ZMUser.selfUser(in: managedObjectContext)
-            updateCurrentAccount(with: selfUser.membership?.team, in: managedObjectContext)
+            updateCurrentAccount(in: managedObjectContext)
         }
     }
 }
@@ -604,9 +603,12 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
             self?.createSession(for: account, with: provider) { userSession in
                 self?.registerSessionForRemoteNotificationsIfNeeded(userSession)
+                self?.updateCurrentAccount(in: userSession.managedObjectContext)
+                
                 if let profileImageData = session.authenticationStatus.profileImageData {
                     self?.updateProfileImage(imageData: profileImageData)
                 }
+                
                 group?.leave()
             }
         }

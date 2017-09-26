@@ -258,6 +258,28 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssertEqual(account.imageData, image?.data)
     }
     
+    func testThatItUpdatesAccountWithUserDetailsAfterLoginIntoExistingAccount() {        
+        // given
+        XCTAssert(login())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        sessionManager?.logoutCurrentSession()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssert(login())
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let manager = AccountManager(sharedDirectory: sharedContainer)
+        guard let account = manager.accounts.first, manager.accounts.count == 1 else { XCTFail("Should have one account"); return }
+        XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
+        XCTAssertNil(account.teamName)
+        XCTAssertEqual(account.userName, self.selfUser.name)
+        let image = MockAsset(in: mockTransportSession.managedObjectContext, forID: selfUser.previewProfileAssetIdentifier!)
+        
+        XCTAssertEqual(account.imageData, image?.data)
+    }
+    
     func testThatItUpdatesAccountAfterUserNameChange() {
         // when
         XCTAssert(login())
