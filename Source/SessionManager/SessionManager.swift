@@ -309,6 +309,7 @@ public protocol LocalMessageNotificationResponder : class {
         tearDownObservers(account: account.userIdentifier)
         
         activeUserSession = nil
+        requestToOpenViewDelegate = nil
         
         loadSession(for: account) { [weak self] session in
             self?.accountManager.select(account)
