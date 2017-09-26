@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "Käyttäjiä poistettiin keskustelusta";
 "push.notification.member.leave.nootherusername.nousername" = "Käyttäjiä poistettiin keskustelusta %1$@";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@ lähti keskustelusta %2$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ lähti keskustelusta";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Käyttäjiä poistui keskustelusta";
-"push.notification.member.leave.sender.nootherusername.nousername" = "Käyttäjiä lähti keskustelusta %1$@";
-
-
 "push.notification.call.started.video.oneonone" = "%1$@ soittaa videopuhelun";
 "push.notification.call.started.video.oneonone.nousername" = "Joku soittaa videopuhelun";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@ loi ryhmäkeskustelun sinun kanssasi";
 "push.notification.conversation.create.nousername" = "Joku loi ryhmäkeskustelun kanssasi";
-
-"push.notification.conversation.rename" = "%1$@ nimesi keskustelun uudestaan: %2$@";
-"push.notification.conversation.rename.nousername" = "Keskustelu nimettiin uudelleen: %1$@";
 
 "push.notification.connection.request" = "%@ haluaa luoda kontaktin";
 "push.notification.connection.request.nousername" = "Joku haluaa luoda kontaktin";

@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "Osebe so bile odstranjene iz pogovora";
 "push.notification.member.leave.nootherusername.nousername" = "Osebe so bile odstranjene iz %1$@";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@ je zapustil(-a) %2$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ je zapustil(-a) pogovor";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Osebe so zapustile pogovor";
-"push.notification.member.leave.sender.nootherusername.nousername" = "Osebe so zapustile %1$@";
-
-
 "push.notification.call.started.video.oneonone" = "%1$@ kliče z videoklicem";
 "push.notification.call.started.video.oneonone.nousername" = "Nekdo kliče z videoklicem";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@ je ustvaril(-a) skupinski pogovor s teboj";
 "push.notification.conversation.create.nousername" = "Nekdo je ustvaril(-a) skupinski pogovor s teboj";
-
-"push.notification.conversation.rename" = "%1$@ je preimenoval(-a) pogovor v %2$@";
-"push.notification.conversation.rename.nousername" = "Pogovor je bil preimenovan v %1$@";
 
 "push.notification.connection.request" = "%@ si želi povezati";
 "push.notification.connection.request.nousername" = "Nekdo si želi povezati";

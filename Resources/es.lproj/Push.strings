@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "Se eliminaron contactos de un chat";
 "push.notification.member.leave.nootherusername.nousername" = "Se eliminaron contactos de %1$@";
 
-"push.notification.member.leave.sender.nootherusername" = "%2$@ se fue de %1$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ abandonó el chat";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Contactos abandonaron el chat";
-"push.notification.member.leave.sender.nootherusername.nousername" = "Contactos abandonaron %1$@";
-
-
 "push.notification.call.started.video.oneonone" = "Vídeollamada de %1$@";
 "push.notification.call.started.video.oneonone.nousername" = "Vídeollamada entrante";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@ ha creado un chat de grupo contigo";
 "push.notification.conversation.create.nousername" = "Alguien ha creado un chat de grupo contigo";
-
-"push.notification.conversation.rename" = "%1$@ renombró un chat a %2$@";
-"push.notification.conversation.rename.nousername" = "Un chat se renombró a %1$@";
 
 "push.notification.connection.request" = "%@ quiere conectarse contigo";
 "push.notification.connection.request.nousername" = "Alguien quiere conectarse contigo";

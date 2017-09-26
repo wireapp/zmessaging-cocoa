@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "İnsanlar bir konuşmadan çıkartıldı";
 "push.notification.member.leave.nootherusername.nousername" = "İnsanlar %1$@'den çıkartıldı";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@, %2$@'den ayrıldı";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ bir konuşmadan ayrıldı";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "İnsanlar bir konuşmadan ayrıldı";
-"push.notification.member.leave.sender.nootherusername.nousername" = "İnsanlar %1$@'den ayrıldı";
-
-
 "push.notification.call.started.video.oneonone" = "%1$@ görüntülü arama yapıyor";
 "push.notification.call.started.video.oneonone.nousername" = "Birisi görüntülü arama yapıyor";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@ sizinle bir grup konuşması oluşturdu";
 "push.notification.conversation.create.nousername" = "Birisi sizinle grup konuşması oluşturdu";
-
-"push.notification.conversation.rename" = "%1$@ konuşmanın adını %2$@ yaptı";
-"push.notification.conversation.rename.nousername" = "Bir konuşmanın adı %1$@ olarak değiştirildi";
 
 "push.notification.connection.request" = "%@ bağlanmak istiyor";
 "push.notification.connection.request.nousername" = "Birisi bağlanmak istiyor";

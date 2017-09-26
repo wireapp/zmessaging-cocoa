@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "Teilnehmer wurden aus einer Unterhaltung entfernt";
 "push.notification.member.leave.nootherusername.nousername" = "Teilnehmer wurden aus %1$@ entfernt";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@ hat %2$@ verlassen";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ hat eine Unterhaltung verlassen";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Jemand hat eine Unterhaltung verlassen";
-"push.notification.member.leave.sender.nootherusername.nousername" = "Teilnehmer haben %1$@ verlassen";
-
-
 "push.notification.call.started.video.oneonone" = "%1$@ ruft mit Video an";
 "push.notification.call.started.video.oneonone.nousername" = "Jemand ruft mit Video an";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@ hat eine Gruppenunterhaltung mit dir begonnen";
 "push.notification.conversation.create.nousername" = "Jemand hat eine Gruppenunterhaltung mit dir erstellt";
-
-"push.notification.conversation.rename" = "%1$@ hat die Unterhaltung in %2$@ umbenannt";
-"push.notification.conversation.rename.nousername" = "Eine Unterhaltung wurde in %1$@ umbenannt";
 
 "push.notification.connection.request" = "%@ möchte sich mit dir verbinden";
 "push.notification.connection.request.nousername" = "Jemand möchte dich als Kontakt hinzufügen";

@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "会話から参加者が削除されました";
 "push.notification.member.leave.nootherusername.nousername" = "%1$@から参加者が削除されました";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@が%2$@から退出しました";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@が会話から退出しました";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "参加者が会話から退出しました";
-"push.notification.member.leave.sender.nootherusername.nousername" = "参加者が%1$@から退出しました";
-
-
 "push.notification.call.started.video.oneonone" = "%1$@からのビデオ通話";
 "push.notification.call.started.video.oneonone.nousername" = "ビデオ通話です";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@があなたとグループ会話を作成しました";
 "push.notification.conversation.create.nousername" = "あなたとのグループ会話を作成されました";
-
-"push.notification.conversation.rename" = "%1$@が%2$@と名前の変更をしました";
-"push.notification.conversation.rename.nousername" = "会話が%1$@という名に変更されました";
 
 "push.notification.connection.request" = "%@がつながりをリクエストしています";
 "push.notification.connection.request.nousername" = "つながりをリクエストされています";

@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "Inimesi eemaldati vestlusest";
 "push.notification.member.leave.nootherusername.nousername" = "Vestlusest  %1$@ eemaldati mõned inimesed";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@ lahkus vestlusest %2$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ lahkus vestlusest";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Inimesi lahkus vestlusest";
-"push.notification.member.leave.sender.nootherusername.nousername" = "Inimesed lahkusid vestlusest %1$@";
-
-
 "push.notification.call.started.video.oneonone" = "%1$@ helistab videoga";
 "push.notification.call.started.video.oneonone.nousername" = "Keegi helistab videoga";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@ alustas sinuga grupivestlust";
 "push.notification.conversation.create.nousername" = "Keegi alustas sinuga grupivestlust";
-
-"push.notification.conversation.rename" = "%1$@ muutis vestluse nime: %2$@";
-"push.notification.conversation.rename.nousername" = "Vestlus sai uueks nimeks %1$@";
 
 "push.notification.connection.request" = "%@ soovib sind kontaktiks lisada";
 "push.notification.connection.request.nousername" = "Keegi soovib sinuga ühenduda";
