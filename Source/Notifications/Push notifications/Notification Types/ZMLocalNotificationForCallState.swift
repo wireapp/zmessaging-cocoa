@@ -110,6 +110,7 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
     public func configureNotification() -> UILocalNotification {
         let notification = UILocalNotification()
         
+        notification.alertTitle = titleToDisplay(for: conversation.managedObjectContext)
         notification.alertBody = textToDisplay().escapingPercentageSymbols()
         notification.soundName = soundName
         notification.category = category

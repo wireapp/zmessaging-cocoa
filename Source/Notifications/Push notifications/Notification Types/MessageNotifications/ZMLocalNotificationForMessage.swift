@@ -27,6 +27,7 @@ public protocol NotificationForMessage : LocalNotification {
     init?(message: MessageType, application: ZMApplication?)
     func copyByAddingMessage(_ message: MessageType) -> Self?
     func textToDisplay(_ message: MessageType) -> String
+    func titleToDisplay(for managedObjectContext: NSManagedObjectContext?) -> String?
     static func shouldCreateNotification(_ message: MessageType) -> Bool
 }
 
@@ -39,13 +40,6 @@ extension NotificationForMessage {
         default:
             return ZMCustomSound.notificationNewMessageSoundName()
         }
-    }
-    
-    public func titleToDisplay(_ message: ZMMessage) -> String? {
-        guard let moc = message.managedObjectContext else { return nil }
-        let user = ZMUser.selfUser(in: moc)
-        guard let team = user.team else { return nil }
-        return team.name
     }
     
     public func configureNotification(_ message: MessageType, isEphemeral: Bool = false) -> UILocalNotification {
@@ -68,7 +62,7 @@ extension NotificationForMessage {
             notification.soundName = soundName
             notification.category = conversationCategory(ephemeral: isEphemeral)
         }
-        notification.alertTitle = titleToDisplay(message)
+        notification.alertTitle = titleToDisplay(for: message.managedObjectContext)
         notification.setupUserInfo(message)
         return notification
     }

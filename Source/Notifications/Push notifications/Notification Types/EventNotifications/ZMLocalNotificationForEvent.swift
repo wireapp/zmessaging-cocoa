@@ -121,6 +121,7 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
             notification.soundName = soundName
             notification.category = category
         }
+        notification.alertTitle = titleToDisplay(for: conversation?.managedObjectContext)
         notification.setupUserInfo(conversation, for: lastEvent)
         return notification
     }
@@ -132,7 +133,6 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
         let idx = findIndex(events){$0.messageNonce() == event.messageNonce()}
         return idx != nil
     }
-    
     
     /// You HAVE To override textToDisplay() to configure the alert body
     func textToDisplay(_ conversation: ZMConversation?) -> String { return "" }

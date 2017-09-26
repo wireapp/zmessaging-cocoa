@@ -142,5 +142,38 @@ class ZMLocalNotificationForCallStateTests : MessagingTest {
         XCTAssertEqual(uiNote.soundName, ZMCustomSound.notificationNewMessageSoundName())
     }
     
+    func testThatItAddsATitleIfTheUserIsPartOfATeam() {
+        
+        self.syncMOC.performGroupedBlockAndWait {
+            // given
+            let team = Team.insertNewObject(in: self.syncMOC)
+            team.name = "Wire Amazing Team"
+            let user = ZMUser.selfUser(in: self.syncMOC)
+            _ = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
+            self.syncMOC.saveOrRollback()
+            
+            XCTAssertNotNil(user.team)
+            let note = ZMLocalNotificationForCallState(conversation: self.conversation, sender: self.sender)
+            
+            // when
+            note.update(forCallState: .incoming(video: false, shouldRing: true))
+            
+            // then
+            XCTAssertEqual(note.uiNotifications.first!.alertTitle, team.name)
+        }
+    }
+    
+    func testThatItDoesNotAddATitleIfTheUserIsNotPartOfATeam() {
+        
+        // given
+        let note = ZMLocalNotificationForCallState(conversation: conversation, sender: sender)
+        
+        // when
+        note.update(forCallState: .incoming(video: false, shouldRing: true))
+        
+        // then
+        XCTAssertNil(note.uiNotifications.first!.alertTitle)
+        
+    }
     
 }
