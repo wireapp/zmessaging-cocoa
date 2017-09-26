@@ -299,8 +299,6 @@ public protocol LocalMessageNotificationResponder : class {
         delegate?.sessionManagerWillOpenAccount(account)
         tearDownObservers(account: account.userIdentifier)
         
-        activeUserSession = nil
-        
         loadSession(for: account) { [weak self] session in
             self?.accountManager.select(account)
             completion?(session)
