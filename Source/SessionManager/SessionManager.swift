@@ -113,7 +113,16 @@ public protocol LocalMessageNotificationResponder : class {
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
-    public weak var requestToOpenViewDelegate: ZMRequestsToOpenViewsDelegate?
+    public weak var requestToOpenViewDelegate: ZMRequestsToOpenViewsDelegate? {
+        didSet {
+            if let delegate = requestToOpenViewDelegate, let closure = performWhenRequestsToOpenViewsDelegateAvailable {
+                closure(delegate)
+            }
+        }
+    }
+    
+    fileprivate var performWhenRequestsToOpenViewsDelegateAvailable: ((ZMRequestsToOpenViewsDelegate)->())?
+    
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
     
     let application: ZMApplication
@@ -530,6 +539,15 @@ public protocol LocalMessageNotificationResponder : class {
     public var callNotificationStyle: ZMCallNotificationStyle = .callKit {
         didSet {
             activeUserSession?.callNotificationStyle = callNotificationStyle
+        }
+    }
+    
+    internal func whenRequestsToOpenViewsDelegateAvailable(do closure: @escaping (ZMRequestsToOpenViewsDelegate)->()) {
+        if let delegate = self.requestToOpenViewDelegate {
+            closure(delegate)
+        }
+        else {
+            self.performWhenRequestsToOpenViewsDelegateAvailable = closure
         }
     }
 }
