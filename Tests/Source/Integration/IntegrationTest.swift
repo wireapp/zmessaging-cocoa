@@ -536,8 +536,9 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
     
-    public func sessionManagerWillOpenAccount(_ account: Account) {
-        // no-op
+    public func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
+        self.userSession = nil
+        userSessionCanBeTornDown()
     }
     
 }
