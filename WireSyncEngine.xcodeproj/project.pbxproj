@@ -285,6 +285,8 @@
 		8754B84C1F73C38900EC02AD /* MessageChangeInfo+UserSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8754B84B1F73C38900EC02AD /* MessageChangeInfo+UserSession.swift */; };
 		8766853C1F2A1AA00031081B /* UnauthenticatedSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8766853A1F2A1A860031081B /* UnauthenticatedSessionTests.swift */; };
 		878F63E51EF91E7C006E819B /* HotFixDuplicatesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 878F63E41EF91E7C006E819B /* HotFixDuplicatesTests.swift */; };
+		879634401F7BEA4700FC79BA /* DispatchQueue+SerialAsync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8796343F1F7BEA4700FC79BA /* DispatchQueue+SerialAsync.swift */; };
+		879634421F7BEC5100FC79BA /* DispatchQueueSerialAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 879634411F7BEC5100FC79BA /* DispatchQueueSerialAsyncTests.swift */; };
 		8798607B1C3D48A400218A3E /* DeleteAccountRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8798607A1C3D48A400218A3E /* DeleteAccountRequestStrategy.swift */; };
 		87ADCE3B1DA6539F00CC06DC /* ZMCallKitDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 87ADCE391DA6539F00CC06DC /* ZMCallKitDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		87ADCE3C1DA6539F00CC06DC /* ZMCallKitDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 87ADCE3A1DA6539F00CC06DC /* ZMCallKitDelegate.m */; };
@@ -832,6 +834,8 @@
 		8754B84B1F73C38900EC02AD /* MessageChangeInfo+UserSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MessageChangeInfo+UserSession.swift"; sourceTree = "<group>"; };
 		8766853A1F2A1A860031081B /* UnauthenticatedSessionTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnauthenticatedSessionTests.swift; sourceTree = "<group>"; };
 		878F63E41EF91E7C006E819B /* HotFixDuplicatesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HotFixDuplicatesTests.swift; sourceTree = "<group>"; };
+		8796343F1F7BEA4700FC79BA /* DispatchQueue+SerialAsync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "DispatchQueue+SerialAsync.swift"; sourceTree = "<group>"; };
+		879634411F7BEC5100FC79BA /* DispatchQueueSerialAsyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DispatchQueueSerialAsyncTests.swift; sourceTree = "<group>"; };
 		8798607A1C3D48A400218A3E /* DeleteAccountRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeleteAccountRequestStrategy.swift; sourceTree = "<group>"; };
 		87ADCE391DA6539F00CC06DC /* ZMCallKitDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMCallKitDelegate.h; sourceTree = "<group>"; };
 		87ADCE3A1DA6539F00CC06DC /* ZMCallKitDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMCallKitDelegate.m; sourceTree = "<group>"; };
@@ -1865,6 +1869,7 @@
 				874F142C1C16FD9700C15118 /* Device.swift */,
 				87508E9F1D08264000162483 /* ZMSound.swift */,
 				546392711D79D5210094EC66 /* Application.swift */,
+				8796343F1F7BEA4700FC79BA /* DispatchQueue+SerialAsync.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -1876,6 +1881,7 @@
 				BF40AC711D096A0E00287E29 /* AnalyticsTests.swift */,
 				BF325E9C1EC067D600772145 /* RequestLoopAnalyticsTrackerTests.swift */,
 				543ED0001D79E0EE00A9CDF3 /* ApplicationMock.swift */,
+				879634411F7BEC5100FC79BA /* DispatchQueueSerialAsyncTests.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -2400,6 +2406,7 @@
 				F190E0AA1E8D517A003E81F8 /* UserProfileImageV3Tests.swift in Sources */,
 				545434A719AB6ADA003892D9 /* ZMConnectionTranscoderTest.m in Sources */,
 				3E26BEE91A408F590071B4C9 /* ZMTypingUsersTests.m in Sources */,
+				879634421F7BEC5100FC79BA /* DispatchQueueSerialAsyncTests.swift in Sources */,
 				54AB428E1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift in Sources */,
 				CE99C4A01D378C5D0001D297 /* MockLinkPreviewDetector.m in Sources */,
 				F96C8E821D7ECECF004B6D87 /* ZMLocalNotificationForMessageTests.swift in Sources */,
@@ -2577,6 +2584,7 @@
 				5498162B1A432BC800A7CE2E /* ZMConversationTranscoder.m in Sources */,
 				54E2C1E01E682DC400536569 /* LocalNotificationDispatcher.swift in Sources */,
 				F98EDCED1D82B924001E65CB /* UILocalNotification+StringProcessing.m in Sources */,
+				879634401F7BEA4700FC79BA /* DispatchQueue+SerialAsync.swift in Sources */,
 				F93A75F21C1F219800252586 /* ConversationStatusStrategy.swift in Sources */,
 				1679D1C71EF81E42007B0DF5 /* VoiceChannelV2.m in Sources */,
 				544F8FF31DDCD34600D1AB04 /* UserProfileUpdateNotifications.swift in Sources */,

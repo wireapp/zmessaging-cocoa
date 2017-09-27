@@ -126,6 +126,9 @@ public protocol LocalMessageNotificationResponder : class {
     
     internal var authenticatedSessionFactory: AuthenticatedSessionFactory
     internal let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
+    
+    fileprivate let sessionLoadingQueue : DispatchQueue = DispatchQueue(label: "sessionLoadingQueue")
+    
     fileprivate let sharedContainerURL: URL
     fileprivate let dispatchGroup: ZMSDispatchGroup?
     fileprivate var accountTokens : [UUID : [Any]] = [:]
@@ -477,25 +480,31 @@ public protocol LocalMessageNotificationResponder : class {
     }
     
     // Loads user session for @c account given and executes the @c action block.
-    public func withSession(for account: Account, perform action: @escaping (ZMUserSession)->()) {
-        if let session = backgroundUserSessions[account.userIdentifier] {
-            action(session)
-        }
-        else {
-            LocalStoreProvider.createStack(
-                applicationContainer: sharedContainerURL,
-                userIdentifier: account.userIdentifier,
-                dispatchGroup: dispatchGroup,
-                migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
-                completion: { provider in
-                    self.activateBackgroundSession(for: account, with: provider, completion: action)
-                }
-            )
-        }
+    public func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->()) {
+        self.sessionLoadingQueue.serialAsync(do: { finally in
+
+            if let session = self.backgroundUserSessions[account.userIdentifier] {
+                completion(session)
+                finally()
+            }
+            else {
+                LocalStoreProvider.createStack(
+                    applicationContainer: self.sharedContainerURL,
+                    userIdentifier: account.userIdentifier,
+                    dispatchGroup: self.dispatchGroup,
+                    migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
+                    completion: { provider in
+                        let userSession = self.activateBackgroundSession(for: account, with: provider)
+                        finally()
+                        completion(userSession)
+                    }
+                )
+            }
+        })
     }
 
     // Creates the user session for @c account given, calls @c completion when done.
-    fileprivate func activateBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession)->()) {
+    private func activateBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol) -> ZMUserSession {
         guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
         }
@@ -504,7 +513,8 @@ public protocol LocalMessageNotificationResponder : class {
         self.configure(session: newSession, for: account)
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
-        completion(newSession)
+        
+        return newSession
     }
     
     internal func tearDownBackgroundSession(for accountId: UUID) {
