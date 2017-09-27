@@ -223,6 +223,7 @@ public protocol LocalMessageNotificationResponder : class {
             guard let `self` = self else {
                 return
             }
+            log.debug("Received memory warning, tearing down background user sessions.")
             self.tearDownAllBackgroundSessions()
         })
     }
@@ -250,6 +251,23 @@ public protocol LocalMessageNotificationResponder : class {
 
         self.sharedContainerURL = sharedContainerURL
         self.accountManager = AccountManager(sharedDirectory: sharedContainerURL)
+        
+        log.debug("Starting the session manager:")
+        
+        if self.accountManager.accounts.count > 0 {
+            log.debug("Known accounts:")
+            self.accountManager.accounts.forEach { account in
+                log.debug("\(account.userName) -- \(account.userIdentifier) -- \(account.teamName ?? "no team")")
+            }
+            
+            if let selectedAccount = accountManager.selectedAccount {
+                log.debug("Default account: \(selectedAccount.userIdentifier)")
+            }
+        }
+        else {
+            log.debug("No known accounts.")
+        }
+        
         self.authenticatedSessionFactory = authenticatedSessionFactory
         self.unauthenticatedSessionFactory = unauthenticatedSessionFactory
         self.reachability = reachability
@@ -310,6 +328,7 @@ public protocol LocalMessageNotificationResponder : class {
     }
     
     public func delete(account: Account) {
+        log.debug("Deleting account \(account.userIdentifier)...")
         if let secondAccount = accountManager.accounts.first(where: { $0.userIdentifier != account.userIdentifier }) {
             select(secondAccount)
         } else {
@@ -365,6 +384,8 @@ public protocol LocalMessageNotificationResponder : class {
     }
 
     public func deleteAccountData(for account: Account) {
+        log.debug("Deleting the data for \(account.userName) -- \(account.userIdentifier)")
+        
         account.cookieStorage().deleteKeychainItems()
         
         let accountID = account.userIdentifier
@@ -633,6 +654,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
     }
         
     public func accountDeleted(accountId: UUID) {
+        log.debug("\(accountId): Account was deleted")
         logoutCurrentSession(deleteCookie: true, error: NSError(domain: ZMUserSessionErrorDomain, code: Int(ZMUserSessionErrorCode.accountDeleted.rawValue), userInfo: nil))
         
         if let account = accountManager.account(with: accountId) {
@@ -652,6 +674,8 @@ extension SessionManager: PostLoginAuthenticationObserver {
         guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)) else {
             return
         }
+        
+        log.debug("Authenticatio invalidated for \(accountId): \(error.code)")
         
         switch userSessionErrorCode {
         case .clientDeletedRemotely,
