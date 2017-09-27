@@ -662,7 +662,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
                     logoutCurrentSession(deleteCookie: true, error: error)
                 }
                 else {
-                    session.closeAndDeleteCookie(true)
+                    self.tearDownBackgroundSession(for: accountId)
                 }
             }
             
