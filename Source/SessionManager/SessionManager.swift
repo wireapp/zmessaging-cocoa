@@ -29,7 +29,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 @objc public protocol SessionManagerDelegate : class {
     func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession)
     func sessionManagerCreated(userSession : ZMUserSession)
-    func sessionManagerDidLogout(error : Error?)
+    func sessionManagerDidFailToLogin(error : Error)
+    func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillOpenAccount(_ account: Account)
     func sessionManagerWillStartMigratingLocalStore()
     func sessionManagerDidBlacklistCurrentVersion()
@@ -336,12 +337,12 @@ public protocol LocalMessageNotificationResponder : class {
             tearDownObservers(account: matchingAccount)
         }
         
-        currentSession.closeAndDeleteCookie(deleteCookie)
-        activeUserSession = nil
-
-        delegate?.sessionManagerDidLogout(error: error)
+        self.createUnauthenticatedSession()
         
-        createUnauthenticatedSession()
+        delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: { [weak self] in
+            currentSession.closeAndDeleteCookie(deleteCookie)
+            self?.activeUserSession = nil
+        })
     }
 
     internal func loadSession(for account: Account?, completion: @escaping (ZMUserSession) -> Void) {
@@ -641,7 +642,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
     }
     
     public func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
-        delegate?.sessionManagerDidLogout(error: error)
+        delegate?.sessionManagerDidFailToLogin(error: error)
         
         if unauthenticatedSession == nil {
             createUnauthenticatedSession()
@@ -667,7 +668,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
             }
             
         default:
-            delegate?.sessionManagerDidLogout(error: error)
+            delegate?.sessionManagerDidFailToLogin(error: error)
             
             if unauthenticatedSession == nil {
                 createUnauthenticatedSession()
@@ -698,7 +699,7 @@ extension SessionManager: ZMConversationListObserver {
 extension SessionManager : PreLoginAuthenticationObserver {
     
     public func authenticationDidFail(_ error: NSError) {
-        delegate?.sessionManagerDidLogout(error: error)
+        delegate?.sessionManagerDidFailToLogin(error: error)
         
         if unauthenticatedSession == nil {
             createUnauthenticatedSession()

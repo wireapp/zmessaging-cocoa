@@ -506,6 +506,10 @@ extension IntegrationTest {
 
 extension IntegrationTest : SessionManagerDelegate {
     
+    public func sessionManagerDidFailToLogin(error: Error) {
+        // no-op
+    }
+    
     public func sessionManagerCreated(userSession: ZMUserSession) {
         self.userSession = userSession
         
@@ -522,22 +526,10 @@ extension IntegrationTest : SessionManagerDelegate {
     public func sessionManagerWillStartMigratingLocalStore() {
         // no-op
     }
-
-    public func sessionManagerDidLogout(error: Error?) {
-        guard let error = error as NSError? else { return }
-        
-        guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)) else {
-            return
-        }
-        
-        switch userSessionErrorCode {
-        case .clientDeletedRemotely,
-             .accessTokenExpired,
-             .accountDeleted:
-            self.userSession = nil
-        default:
-            break
-        }
+    
+    public func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: @escaping () -> Void) {
+        self.userSession = nil
+        userSessionCanBeTornDown()
     }
 
     public func sessionManagerDidBlacklistCurrentVersion() {

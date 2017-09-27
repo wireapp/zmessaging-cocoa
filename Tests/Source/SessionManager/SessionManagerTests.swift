@@ -765,12 +765,16 @@ class SessionManagerTests_Push: IntegrationTest {
 // MARK: - Mocks
 class SessionManagerTestDelegate: SessionManagerDelegate {
     
-    func sessionManagerWillOpenAccount(_ account: Account) {
-        // no-op
+    func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: @escaping () -> Void) {
+        userSessionCanBeTornDown()
     }
     
-    func sessionManagerDidLogout(error: Error?) {
+    func sessionManagerDidFailToLogin(error: Error) {
         // no op
+    }
+    
+    func sessionManagerWillOpenAccount(_ account: Account) {
+        // no-op
     }
     
     func sessionManagerDidBlacklistCurrentVersion() {
