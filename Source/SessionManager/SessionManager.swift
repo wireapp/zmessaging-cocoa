@@ -481,11 +481,11 @@ public protocol LocalMessageNotificationResponder : class {
     
     // Loads user session for @c account given and executes the @c action block.
     public func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->()) {
-        self.sessionLoadingQueue.serialAsync(do: { finally in
+        self.sessionLoadingQueue.serialAsync(do: { onWorkDone in
 
             if let session = self.backgroundUserSessions[account.userIdentifier] {
                 completion(session)
-                finally()
+                onWorkDone()
             }
             else {
                 LocalStoreProvider.createStack(
@@ -495,8 +495,8 @@ public protocol LocalMessageNotificationResponder : class {
                     migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
                     completion: { provider in
                         let userSession = self.activateBackgroundSession(for: account, with: provider)
-                        finally()
                         completion(userSession)
+                        onWorkDone()
                     }
                 )
             }

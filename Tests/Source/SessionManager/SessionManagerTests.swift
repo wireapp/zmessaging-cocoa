@@ -409,9 +409,13 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         let account = self.createAccount()
         
         // WHEN
+        let sessionLoadedExpectation = self.expectation(description: "Session loaded")
         self.sessionManager!.withSession(for: account, perform: { session in
             XCTAssertNotNil(session.managedObjectContext)
+            sessionLoadedExpectation.fulfill()
         })
+        
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
         // THEN
         XCTAssertNotNil(self.sessionManager!.backgroundUserSessions[account.userIdentifier])
@@ -627,9 +631,14 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         manager.addAndSelect(account)
         
         var session: ZMUserSession! = nil
+        
+        let sessionLoadExpectation = self.expectation(description: "Session loaded")
         self.sessionManager?.withSession(for: account, perform: { createdSession in
             session = createdSession
+            sessionLoadExpectation.fulfill()
         })
+        
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
         let selfUser = ZMUser.selfUser(in: session.managedObjectContext)
         selfUser.remoteIdentifier = currentUserIdentifier
@@ -664,6 +673,8 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         // WHEN
         self.sessionManager?.didReceiveLocal(notification: localNotification, application: self.application!)
         
+        XCTAssertTrue(self.wait(withTimeout: 0.1) { return self.sessionManager!.activeUserSession != nil })
+        
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
@@ -689,8 +700,13 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         XCTAssertNil(self.sessionManager!.activeUserSession)
         
         // WHEN
-        self.sessionManager?.handleAction(with: nil, for: localNotification, with: [:], completionHandler: {_ in}, application: self.application!)
-       
+        let completionExpectation = self.expectation(description: "Completed action")
+        self.sessionManager?.handleAction(with: nil, for: localNotification, with: [:], completionHandler: {_ in
+            completionExpectation.fulfill()
+        }, application: self.application!)
+
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
