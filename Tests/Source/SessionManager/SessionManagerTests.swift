@@ -76,7 +76,7 @@ class SessionManagerTests: IntegrationTest {
         
         // then
         XCTAssertNil(delegate.userSession)
-        XCTAssertNotNil(delegate.unauthenticatedSession)
+        XCTAssertNotNil(sut?.unauthenticatedSession)
         withExtendedLifetime(token) {
             XCTAssertEqual([], observer.createdUserSession)
         }
@@ -108,7 +108,7 @@ class SessionManagerTests: IntegrationTest {
         
         // then
         XCTAssertNotNil(delegate.userSession)
-        XCTAssertNil(delegate.unauthenticatedSession)
+        XCTAssertNil(sut?.unauthenticatedSession)
         withExtendedLifetime(token) {
             XCTAssertEqual([delegate.userSession].flatMap { $0 }, observer.createdUserSession)
         }
@@ -312,7 +312,9 @@ class SessionManagerTests_Teams: IntegrationTest {
         try FileManager.default.createDirectory(at: accountFolder, withIntermediateDirectories: true, attributes: nil)
         
         // when
-        self.sessionManager!.delete(account: account)
+        performIgnoringZMLogError {
+            self.sessionManager!.delete(account: account)
+        }
         
         // then
         XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
@@ -779,11 +781,6 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     
     func sessionManagerDidBlacklistCurrentVersion() {
         // no op
-    }
-    
-    var unauthenticatedSession : UnauthenticatedSession?
-    func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession) {
-        self.unauthenticatedSession = unauthenticatedSession
     }
     
     var userSession : ZMUserSession?

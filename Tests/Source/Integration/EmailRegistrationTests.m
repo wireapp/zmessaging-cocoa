@@ -104,12 +104,10 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     user.accentColorValue = ZMAccentColorStrongBlue;
     
     // expect
-    __block NSUInteger numFailedLogins = 0;
     XCTestExpectation *loginFailExpectation = [self expectationWithDescription:@"Login fail (need to validate)"];
     id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         if (event == PreLoginAuthenticationEventObjcAuthenticationDidFail && error.code == ZMUserSessionAccountIsPendingActivation) {
             [loginFailExpectation fulfill];
-            ++numFailedLogins;
         }
     }];
     
@@ -127,18 +125,26 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     preLoginToken = nil;
     registrationObserverToken = nil;
-    [NSThread sleepForTimeInterval:2];
     
     PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
+    
+    // expect
+    XCTestExpectation *loginSuccessful = [self expectationWithDescription:@"Login succeeded"];
+    preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        NOT_USED(error);
+        if (event == PreLoginAuthenticationEventObjcAuthenticationDidSucceed) {
+            [loginSuccessful fulfill];
+        }
+    }];
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [session whiteListEmail:user.emailAddress];
     }];
-
-    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertTrue(self.userSession.registeredOnThisDevice);
     XCTAssertEqual(recorder.notifications.count, 1lu);
     XCTAssertEqual(recorder.notifications.firstObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);

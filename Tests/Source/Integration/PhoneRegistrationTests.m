@@ -47,7 +47,6 @@
     [super tearDown];
 }
 
-
 - (ZMIncompleteRegistrationUser *)createUserWithPhone:(NSString *)phone code:(NSString *)code
 {
     ZMIncompleteRegistrationUser *user = [[ZMIncompleteRegistrationUser alloc] init];

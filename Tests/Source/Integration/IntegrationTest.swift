@@ -131,8 +131,6 @@ extension IntegrationTest {
         sharedSearchDirectory = nil
         userSession = nil
         userSession?.tearDown()
-        unauthenticatedSession?.tearDown()
-        unauthenticatedSession = nil
         mockTransportSession?.cleanUp()
         mockTransportSession = nil
         sessionManager = nil
@@ -164,8 +162,6 @@ extension IntegrationTest {
     func destroySessionManager() {
         userSession?.tearDown()
         userSession = nil
-        unauthenticatedSession?.tearDown()
-        unauthenticatedSession = nil
         sessionManager = nil
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -247,6 +243,11 @@ extension IntegrationTest {
     @objc
     func destroyPersistentStore() {
         StorageStack.reset()
+    }
+    
+    @objc
+    var unauthenticatedSession : UnauthenticatedSession? {
+        return sessionManager?.unauthenticatedSession
     }
     
     @objc
@@ -358,7 +359,7 @@ extension IntegrationTest {
     func login(withCredentials credentials: ZMCredentials, ignoreAuthenticationFailures: Bool = false) -> Bool {
         let queue = DispatchGroupQueue(queue: .main)
         queue.add(self.dispatchGroup)
-        var authenticationObserver : AuthenticationObserver? = AuthenticationObserver(unauthenticatedSession: unauthenticatedSession!, groupQueue: queue)
+        var authenticationObserver : AuthenticationObserver? = AuthenticationObserver(unauthenticatedSession: sessionManager!.unauthenticatedSession!, groupQueue: queue)
         var didSucceed = false
         
         authenticationObserver?.onSuccess = {
@@ -371,7 +372,7 @@ extension IntegrationTest {
             }
         }
         
-        unauthenticatedSession?.login(with: credentials)
+        sessionManager?.unauthenticatedSession?.login(with: credentials)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         authenticationObserver = nil
         
@@ -516,11 +517,6 @@ extension IntegrationTest : SessionManagerDelegate {
         userSession.syncManagedObjectContext.performGroupedBlock {
             userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
         }
-    }
-    
-    public func sessionManagerCreated(unauthenticatedSession: UnauthenticatedSession) {
-        self.unauthenticatedSession = unauthenticatedSession
-        unauthenticatedSession.groupQueue.add(self.dispatchGroup)
     }
     
     public func sessionManagerWillStartMigratingLocalStore() {
