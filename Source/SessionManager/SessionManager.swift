@@ -27,11 +27,10 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 
 
 @objc public protocol SessionManagerDelegate : class {
-    func sessionManagerCreated(unauthenticatedSession : UnauthenticatedSession)
     func sessionManagerCreated(userSession : ZMUserSession)
     func sessionManagerDidFailToLogin(error : Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: @escaping () -> Void)
-    func sessionManagerWillOpenAccount(_ account: Account)
+    func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillStartMigratingLocalStore()
     func sessionManagerDidBlacklistCurrentVersion()
 }
@@ -314,9 +313,13 @@ public protocol LocalMessageNotificationResponder : class {
         }
     }
     
-    public func select(_ account: Account, completion: ((ZMUserSession)->())? = nil) {
-        delegate?.sessionManagerWillOpenAccount(account)
-        tearDownObservers(account: account.userIdentifier)
+    /// Select the account to be the active account.
+    /// - completion: runs when the user session was loaded
+    /// - tearDownCompletion: runs when the UI no longer holds any references to the previous user session.
+    public func select(_ account: Account, completion: ((ZMUserSession)->())? = nil, tearDownCompletion: (() -> Void)? = nil) {
+        delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { 
+            tearDownCompletion?()
+        })
         
         loadSession(for: account) { [weak self] session in
             self?.accountManager.select(account)
@@ -330,58 +333,64 @@ public protocol LocalMessageNotificationResponder : class {
     
     public func delete(account: Account) {
         log.debug("Deleting account \(account.userIdentifier)...")
-        if let secondAccount = accountManager.accounts.first(where: { $0.userIdentifier != account.userIdentifier }) {
-            select(secondAccount)
+        if accountManager.selectedAccount != account {
+            // Deleted an account associated with a background session
+            self.tearDownBackgroundSession(for: account.userIdentifier)
+            self.deleteAccountData(for: account)
+        } else if let secondAccount = accountManager.accounts.first(where: { $0.userIdentifier != account.userIdentifier }) {
+            // Deleted the active account but we can switch to another account
+            select(secondAccount, tearDownCompletion: { [weak self] in
+                self?.tearDownBackgroundSession(for: account.userIdentifier)
+                self?.deleteAccountData(for: account)
+            })
         } else {
-            logoutCurrentSession(deleteCookie: true, error: NSError.userSessionErrorWith(.addAccountRequested, userInfo: nil))
+            // Deleted the active account and there's not other account we can switch to
+            logoutCurrentSession(deleteCookie: true, deleteAccount:true, error: NSError.userSessionErrorWith(.addAccountRequested, userInfo: nil))
         }
-        deleteAccountData(for: account)
     }
     
     public func logoutCurrentSession(deleteCookie: Bool = true) {
         logoutCurrentSession(deleteCookie: deleteCookie, error: nil)
     }
     
-    fileprivate func logoutCurrentSession(deleteCookie: Bool = true, error : Error?) {
-        guard let currentSession = activeUserSession else {
+    fileprivate func logoutCurrentSession(deleteCookie: Bool = true, deleteAccount: Bool = false, error : Error?) {
+        guard let currentSession = activeUserSession, let account = accountManager.selectedAccount else {
             return
         }
-        
-        let matchingAccountSession = backgroundUserSessions.first { (_, session) in
-            session == currentSession
-        }
-        
-        if let matchingAccount = matchingAccountSession?.key {
-            backgroundUserSessions[matchingAccount] = nil
-            tearDownObservers(account: matchingAccount)
-        }
-        
+    
+        backgroundUserSessions[account.userIdentifier] = nil
+        tearDownObservers(account: account.userIdentifier)
         self.createUnauthenticatedSession()
         
         delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: { [weak self] in
             currentSession.closeAndDeleteCookie(deleteCookie)
             self?.activeUserSession = nil
+            
+            if deleteAccount {
+                self?.deleteAccountData(for: account)
+            }
         })
     }
 
+    /// Loads a session for a given account.
     internal func loadSession(for account: Account?, completion: @escaping (ZMUserSession) -> Void) {
-        guard let account = account else { return createUnauthenticatedSession() }
-
-        if account.isAuthenticated {
-            LocalStoreProvider.createStack(
-                applicationContainer: sharedContainerURL,
-                userIdentifier: account.userIdentifier,
-                dispatchGroup: dispatchGroup,
-                migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
-                completion: { [weak self] provider in
-                    self?.createSession(for: account, with: provider) { session in
-                        self?.registerSessionForRemoteNotificationsIfNeeded(session)
-                        completion(session)
-                    }}
-            )
-        } else {
+        guard let account = account, account.isAuthenticated else {
             createUnauthenticatedSession()
+            delegate?.sessionManagerDidFailToLogin(error: NSError.userSessionErrorWith(.accessTokenExpired, userInfo: nil))
+            return
         }
+
+        LocalStoreProvider.createStack(
+            applicationContainer: sharedContainerURL,
+            userIdentifier: account.userIdentifier,
+            dispatchGroup: dispatchGroup,
+            migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
+            completion: { [weak self] provider in
+                self?.createSession(for: account, with: provider) { session in
+                    self?.registerSessionForRemoteNotificationsIfNeeded(session)
+                    completion(session)
+                }}
+        )
     }
 
     public func deleteAccountData(for account: Account) {
@@ -465,7 +474,6 @@ public protocol LocalMessageNotificationResponder : class {
         let unauthenticatedSession = unauthenticatedSessionFactory.session(withDelegate: self)
         self.unauthenticatedSession = unauthenticatedSession
         self.preLoginAuthenticationToken = unauthenticatedSession.addAuthenticationObserver(self)
-        delegate?.sessionManagerCreated(unauthenticatedSession: unauthenticatedSession)
     }
     
     fileprivate func configure(session userSession: ZMUserSession, for account: Account) {
@@ -643,7 +651,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
 extension SessionManager: PostLoginAuthenticationObserver {
 
     @objc public func clientRegistrationDidSucceed(accountId: UUID) {
-        log.debug("Tearing down unauthenticated session as reaction to successfull client registration")
+        log.debug("Tearing down unauthenticated session as reaction to successful client registration")
         unauthenticatedSession?.tearDown()
         unauthenticatedSession = nil
     }
@@ -656,7 +664,6 @@ extension SessionManager: PostLoginAuthenticationObserver {
         
     public func accountDeleted(accountId: UUID) {
         log.debug("\(accountId): Account was deleted")
-        logoutCurrentSession(deleteCookie: true, error: NSError(domain: ZMUserSessionErrorDomain, code: Int(ZMUserSessionErrorCode.accountDeleted.rawValue), userInfo: nil))
         
         if let account = accountManager.account(with: accountId) {
             delete(account: account)
@@ -664,11 +671,11 @@ extension SessionManager: PostLoginAuthenticationObserver {
     }
     
     public func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
-        delegate?.sessionManagerDidFailToLogin(error: error)
-        
         if unauthenticatedSession == nil {
             createUnauthenticatedSession()
         }
+        
+        delegate?.sessionManagerDidFailToLogin(error: error)
     }
     
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
@@ -676,7 +683,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
             return
         }
         
-        log.debug("Authenticatio invalidated for \(accountId): \(error.code)")
+        log.debug("Authentication invalidated for \(accountId): \(error.code)")
         
         switch userSessionErrorCode {
         case .clientDeletedRemotely,
@@ -692,11 +699,11 @@ extension SessionManager: PostLoginAuthenticationObserver {
             }
             
         default:
-            delegate?.sessionManagerDidFailToLogin(error: error)
-            
             if unauthenticatedSession == nil {
                 createUnauthenticatedSession()
             }
+            
+            delegate?.sessionManagerDidFailToLogin(error: error)
         }
     }
 
@@ -723,11 +730,11 @@ extension SessionManager: ZMConversationListObserver {
 extension SessionManager : PreLoginAuthenticationObserver {
     
     public func authenticationDidFail(_ error: NSError) {
-        delegate?.sessionManagerDidFailToLogin(error: error)
-        
         if unauthenticatedSession == nil {
             createUnauthenticatedSession()
         }
+        
+        delegate?.sessionManagerDidFailToLogin(error: error)
     }
 }
 
