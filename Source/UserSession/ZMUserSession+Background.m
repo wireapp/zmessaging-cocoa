@@ -139,6 +139,8 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     self.didNotifyThirdPartyServices = NO;
 
     [self mergeChangesFromStoredSaveNotificationsIfNeeded];
+    
+    [ZMConversationList refetchAllListsInUserSession:self];
 }
 
 - (void)mergeChangesFromStoredSaveNotificationsIfNeeded

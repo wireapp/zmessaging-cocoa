@@ -417,7 +417,6 @@ public protocol LocalMessageNotificationResponder : class {
 
         if let backgroundSession = self.backgroundUserSessions[account.userIdentifier] {
             session = backgroundSession
-            ZMConversationList.refetchAllLists(inUserSession: session)
         }
         else {
             guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
