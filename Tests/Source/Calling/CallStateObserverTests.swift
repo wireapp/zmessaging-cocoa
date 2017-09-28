@@ -201,7 +201,7 @@ class CallStateObserverTests : MessagingTest {
         }
         
         // given when
-        sut.callCenterDidChange(callState: .outgoing(degraded: false), conversationId: conversation.remoteIdentifier!, userId: conversation.remoteIdentifier!, timeStamp: Date())
+        sut.callCenterDidChange(callState: .outgoing(degraded: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: Date())
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // tear down
@@ -213,7 +213,8 @@ class CallStateObserverTests : MessagingTest {
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
         mockCallCenter?.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false, shouldRing: true, degraded: false)]
         mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversationId: conversation.remoteIdentifier!, userId: conversation.remoteIdentifier!, timeStamp: Date())
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: Date())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // expect
         expectation(forNotification: CallStateObserver.CallInProgressNotification.rawValue, object: nil) { (note) -> Bool in
@@ -226,7 +227,7 @@ class CallStateObserverTests : MessagingTest {
         
         // when
         mockCallCenter?.mockNonIdleCalls = [:]
-        sut.callCenterDidChange(callState: .none, conversationId: conversation.remoteIdentifier!, userId: conversation.remoteIdentifier!, timeStamp: Date())
+        sut.callCenterDidChange(callState: .none, conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: Date())
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // tear down

@@ -148,6 +148,30 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     }];
 }
 
+- (void)processPendingNotificationActions
+{
+    if (self.pendingLocalNotification == nil) {
+        return;
+    }
+    
+    [self.managedObjectContext performGroupedBlock: ^{
+        ZMStoredLocalNotification *note = self.pendingLocalNotification;
+        
+        if ([note.category isEqualToString:ZMConnectCategory]) {
+            [self handleConnectionRequestCategoryNotification:note];
+        }
+        else if ([note.category isEqualToString:ZMIncomingCallCategory] || [note.category isEqualToString:ZMMissedCallCategory]){
+            [self handleCallCategoryNotification:note];
+        }
+        else {
+            [self handleDefaultCategoryNotification:note];
+        }
+        self.pendingLocalNotification = nil;
+    }];
+    
+}
+
+
 @end
 
 

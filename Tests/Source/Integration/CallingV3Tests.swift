@@ -593,7 +593,7 @@ class CallingV3Tests : IntegrationTest {
         closeCall(user: localUser1, reason: .canceled)
         
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 4) // TODO jacob check
+        XCTAssertEqual(convObserver!.notifications.count, 3)
         if let change = convObserver!.notifications[2] as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }

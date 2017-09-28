@@ -29,9 +29,9 @@ public class CallKitDelegate : NSObject {
     
     fileprivate let provider : CXProvider
     fileprivate let callController : CXCallController
-    fileprivate let userSession : ZMUserSession
-    fileprivate let flowManager : FlowManagerType?
-    fileprivate let mediaManager: AVSMediaManager?
+    fileprivate unowned let userSession : ZMUserSession
+    fileprivate weak var flowManager : FlowManagerType?
+    fileprivate weak var mediaManager: AVSMediaManager?
     fileprivate var callStateObserverToken : Any?
     fileprivate var missedCallObserverToken : Any?
     fileprivate var connectedCallConversation : ZMConversation?

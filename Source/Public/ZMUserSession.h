@@ -195,7 +195,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 @end
 
 
-typedef NS_ENUM (NSInteger, ProxiedRequestType){
+typedef NS_ENUM (NSInteger, ProxiedRequestType) {
     ProxiedRequestTypeGiphy,
     ProxiedRequestTypeSoundcloud
 };

@@ -625,7 +625,6 @@
     XCTAssertTrue([self waitForOfflineStatus]);
 }
 
-
 - (void)testThatWeSetUserSessionToSynchronizingWhenSyncIsStarted
 {
     // when

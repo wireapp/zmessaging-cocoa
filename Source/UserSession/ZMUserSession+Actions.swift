@@ -116,8 +116,8 @@ extension ZMUserSession {
                 
         enqueueChanges {
             guard let message = conversation.appendMessage(withText: message) else { return /* failure */ }
-            self.messageReplyObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { 
-                self.updateBackgroundTask(with: message)
+            self.messageReplyObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
+                self?.updateBackgroundTask(with: message)
             })
         }
         
@@ -147,8 +147,8 @@ extension ZMUserSession {
         
         enqueueChanges {
             guard let reaction = ZMMessage.addReaction(.like, toMessage: message) else { return }
-            self.likeMesssageObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { 
-                self.updateBackgroundTask(with: reaction)
+            self.likeMesssageObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
+                self?.updateBackgroundTask(with: reaction)
             })
         }
         

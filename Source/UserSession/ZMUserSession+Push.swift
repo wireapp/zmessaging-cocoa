@@ -147,16 +147,16 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
         if let concreteIdentifier = identifier {
             switch concreteIdentifier {
             case ZMCallIgnoreAction:
-                self.ignoreCall(for: localNotification, withCompletionHandler: completionHandler)
+                self.ignoreCall(with: localNotification, completionHandler: completionHandler)
                 return
             case ZMConversationMuteAction:
-                self.muteConversation(for: localNotification, withCompletionHandler: completionHandler)
+                self.muteConversation(with: localNotification, completionHandler: completionHandler)
                 return
             case ZMMessageLikeAction:
-                self.likeMessage(for: localNotification, withCompletionHandler: completionHandler)
+                self.likeMessage(with: localNotification, completionHandler: completionHandler)
                 return
             case ZMConversationDirectReplyAction:
-                self.reply(to: localNotification, withReply: textInput, completionHandler: completionHandler)
+                self.reply(with: localNotification, message: textInput, completionHandler: completionHandler)
                 return
             default:
                 break
