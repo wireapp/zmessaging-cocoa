@@ -35,13 +35,6 @@
 @end
 
 
-@interface ZMSyncStrategy (Badge)
-
-- (void)updateBadgeCount;
-
-@end
-
-
 @interface ZMSyncStrategy (AppBackgroundForeground)
 
 - (void)appDidEnterBackground:(NSNotification *)note;

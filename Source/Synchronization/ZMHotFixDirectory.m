@@ -113,7 +113,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                     [ZMHotFixPatch
                      patchWithVersion:@"88.0.0"
                      patchCode:^(__unused NSManagedObjectContext *context) {
-                         [ZMHotFixDirectory restartSlowSync];
+                         [ZMHotFixDirectory restartSlowSync:context];
                      }],
                     
                     [ZMHotFixPatch

@@ -36,6 +36,8 @@
     [super setUp];
 
     [self.syncMOC performGroupedBlockAndWait:^{
+        [ZMUser selfUserInContext:self.syncMOC].remoteIdentifier = [NSUUID UUID];
+        
         self.userWithName = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         self.userWithName.name = @"Karl";
         

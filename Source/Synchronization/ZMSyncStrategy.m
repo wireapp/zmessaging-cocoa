@@ -43,10 +43,8 @@
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMSyncStrategy ()
-{
-    dispatch_once_t _didFetchObjects;
-}
 
+@property (nonatomic) BOOL didFetchObjects;
 @property (nonatomic) NSManagedObjectContext *syncMOC;
 @property (nonatomic, weak) NSManagedObjectContext *uiMOC;
 
@@ -235,7 +233,6 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.syncMOC performGroupedBlock:^{
         self.applicationStatusDirectory.operationStatus.isInBackground = YES;
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-        [self updateBadgeCount];
         [activity endActivity];
     }];
 }
@@ -364,9 +361,10 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (ZMTransportRequest *)nextRequest
 {
-    dispatch_once(&_didFetchObjects, ^{
+    if (!self.didFetchObjects) {
+        self.didFetchObjects = YES;
         [self.changeTrackerBootStrap fetchObjectsForChangeTrackers];
-    });
+    }
     
     if(self.tornDown) {
         return nil;
@@ -396,11 +394,6 @@ ZM_EMPTY_ASSERTING_INIT()
     [fetchRequestBatch addConversationRemoteIdentifiersToPrefetchConversations:remoteIdentifiers];
     
     return fetchRequestBatch;
-}
-
-- (void)updateBadgeCount;
-{
-    self.application.applicationIconBadgeNumber = (NSInteger)[ZMConversation unreadConversationCountInContext:self.syncMOC];
 }
 
 @end

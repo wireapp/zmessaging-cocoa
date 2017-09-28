@@ -38,7 +38,7 @@ private let log = ZMSLog(tag: "UnauthenticatedSession")
 public class UnauthenticatedSession: NSObject {
     
     public let groupQueue: DispatchGroupQueue
-    let authenticationStatus: ZMAuthenticationStatus
+    public let authenticationStatus: ZMAuthenticationStatus
     let reachability: ReachabilityProvider
     private(set) var operationLoop: UnauthenticatedOperationLoop!
     private let transportSession: UnauthenticatedTransportSessionProtocol

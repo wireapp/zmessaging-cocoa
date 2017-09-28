@@ -21,7 +21,6 @@
 @import WireDataModel;
 
 #import "ZMUserSession+Internal.h"
-#import "ZMUserSession+Background+Testing.h"
 #import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMPushToken.h"
@@ -34,96 +33,6 @@
 
 static NSString *ZMLogTag = @"Push";
 
-@interface ZMUserSession (NotificationProcessing)
-@end
-
-@implementation ZMUserSession (PushReceivers)
-
-- (void)receivedPushNotificationWithPayload:(NSDictionary *)payload completionHandler:(ZMPushNotificationCompletionHandler)handler source:(ZMPushNotficationType)source
-{
-    BOOL isNotInBackground = self.application.applicationState != UIApplicationStateBackground;
-    BOOL notAuthenticated = !self.authenticationStatus.isAuthenticated;
-    
-    if (notAuthenticated || isNotInBackground) {
-        if (handler != nil) {
-            if (isNotInBackground) {
-                ZMLogPushKit(@"Not displaying notification because app is not authenticated");
-            }
-            handler(ZMPushPayloadResultSuccess);
-        }
-        return;
-    }
-
-    [self.operationLoop saveEventsAndSendNotificationForPayload:payload fetchCompletionHandler:handler source:source];
-}
-
-- (void)enablePushNotifications
-{
-    ZM_WEAK(self);
-    void (^didReceivePayload)(NSDictionary *userInfo, ZMPushNotficationType source, void (^completionHandler)(ZMPushPayloadResult)) = ^(NSDictionary *userInfo, ZMPushNotficationType source, void (^result)(ZMPushPayloadResult))
-    {
-        ZM_STRONG(self);
-        ZMLogDebug(@"push notification: %@, source %lu", userInfo, (unsigned long)source);
-        [self.syncManagedObjectContext performGroupedBlock:^{
-            return [self receivedPushNotificationWithPayload:userInfo completionHandler:result source:source];
-        }];
-    };
-    
-    [self enableAlertPushNotificationsWithDidReceivePayload:didReceivePayload];
-    [self enableVoIPPushNotificationsWithDidReceivePayload:didReceivePayload];
-}
-
-- (void)enableAlertPushNotificationsWithDidReceivePayload:(void (^)(NSDictionary *, ZMPushNotficationType, void (^)(ZMPushPayloadResult)))didReceivePayload;
-{
-    ZM_WEAK(self);
-    void (^didInvalidateToken)(void) = ^{
-    };
-
-    void (^updateCredentials)(NSData *) = ^(NSData *deviceToken){
-        ZM_STRONG(self);
-        [self.managedObjectContext performGroupedBlock:^{
-            NSData *oldToken = self.managedObjectContext.pushToken.deviceToken;
-            if (oldToken == nil || ![oldToken isEqualToData:deviceToken]) {
-                self.managedObjectContext.pushToken = nil;
-                [self setPushToken:deviceToken];
-                [self.managedObjectContext forceSaveOrRollback];
-            }
-        }];
-    };
-    self.applicationRemoteNotification = [[ZMApplicationRemoteNotification alloc] initWithDidUpdateCredentials:updateCredentials didReceivePayload:didReceivePayload didInvalidateToken:didInvalidateToken];
-}
-
-
-- (void)enableVoIPPushNotificationsWithDidReceivePayload:(void (^)(NSDictionary *, ZMPushNotficationType, void (^)(ZMPushPayloadResult)))didReceivePayload
-{
-    
-    ZM_WEAK(self);
-    void (^didInvalidateToken)(void) = ^{
-        ZM_STRONG(self);
-        [self.managedObjectContext performGroupedBlock:^{
-            [self deletePushKitToken];
-            [self.managedObjectContext forceSaveOrRollback];
-        }];
-    };
-
-    void (^updatePushKitCredentials)(NSData *) = ^(NSData *deviceToken){
-        ZM_STRONG(self);
-        [self.managedObjectContext performGroupedBlock:^{
-            self.managedObjectContext.pushKitToken = nil;
-            [self setPushKitToken:deviceToken];
-            [self.managedObjectContext forceSaveOrRollback];
-        }];
-    };
-    
-    self.pushRegistrant = [[ZMPushRegistrant alloc] initWithDidUpdateCredentials:updatePushKitCredentials didReceivePayload:didReceivePayload didInvalidateToken:didInvalidateToken];
-    self.pushRegistrant.analytics = self.syncManagedObjectContext.analytics;
-}
-
-@end
-
-
-
-
 @implementation ZMUserSession (ZMBackground)
 
 - (void)setupPushNotificationsForApplication:(id<ZMApplication>)application
@@ -131,9 +40,7 @@ static NSString *ZMLogTag = @"Push";
     [application registerForRemoteNotifications];
     
 #if TARGET_OS_SIMULATOR
-    ZMLogInfo(@"Skipping request for remote notification permission on simulator.");
-    return;
-    
+    ZMLogInfo(@"Skipping request for remote notification permission on simulator.");    
 #else
     NSSet *categories = [NSSet setWithArray:@[
                                               self.replyCategory,
@@ -149,13 +56,6 @@ static NSString *ZMLogTag = @"Push";
 #endif
 }
 
-
-- (void)application:(id<ZMApplication>)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
-{
-    [self.applicationRemoteNotification application:application didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
-}
-
-
 - (void)application:(id<ZMApplication>)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
 {
     UILocalNotification *notification = launchOptions[UIApplicationLaunchOptionsLocalNotificationKey];
@@ -170,7 +70,6 @@ static NSString *ZMLogTag = @"Push";
     }
 }
 
-
 - (void)application:(id<ZMApplication>)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 {
     NOT_USED(application);
@@ -178,58 +77,22 @@ static NSString *ZMLogTag = @"Push";
     NOT_USED(completionHandler);
 }
 
-
 - (void)application:(id<ZMApplication>)application didReceiveLocalNotification:(UILocalNotification *)notification;
 {
-    if (application.applicationState == UIApplicationStateInactive || application.applicationState == UIApplicationStateBackground) {
-        self.pendingLocalNotification = [[ZMStoredLocalNotification alloc] initWithNotification:notification
-                                                                           managedObjectContext:self.managedObjectContext
-                                                                               actionIdentifier:nil
-                                                                                      textInput:nil];
-    }
-    if (self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen) {
-        [self processPendingNotificationActions];
-    }
+    [self didReceiveLocalWithNotification:notification application:application];
 }
 
 - (void)application:(id<ZMApplication>)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)())completionHandler;
 {
-    if ([identifier isEqualToString:ZMCallIgnoreAction]){
-        [self ignoreCallWith:notification completionHandler:completionHandler];
-        return;
-    }
-    if ([identifier isEqualToString:ZMConversationMuteAction]) {
-        [self muteConversationWith:notification completionHandler:completionHandler];
-        return;
-    }
-    if ([identifier isEqualToString:ZMMessageLikeAction]) {
-        [self likeMessageWith:notification completionHandler:completionHandler];
-        return;
-    }
-    
-    NSString *textInput = [responseInfo optionalStringForKey:UIUserNotificationActionResponseTypedTextKey];
-    if ([identifier isEqualToString:ZMConversationDirectReplyAction]) {
-        [self replyWith:notification message:textInput completionHandler:completionHandler];
-        return;
-    }
-    
-    if (application.applicationState == UIApplicationStateInactive) {
-        self.pendingLocalNotification = [[ZMStoredLocalNotification alloc] initWithNotification:notification
-                                                                           managedObjectContext:self.managedObjectContext
-                                                                               actionIdentifier:identifier
-                                                                                      textInput:nil];
-    }
-    
-    if (self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen) {
-        [self processPendingNotificationActions];
-    }
-    
-    if (completionHandler != nil) {
-        completionHandler();
-    }
+    [self handleActionWithApplication:application
+                                 with:identifier
+                                  for:notification
+                                 with:responseInfo
+                    completionHandler:completionHandler];
 }
 
-- (void)application:(id<ZMApplication>)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
+- (void)application:(id<ZMApplication>)application
+performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 {
     NOT_USED(application);
     [self.syncManagedObjectContext performGroupedBlock:^{
@@ -287,32 +150,6 @@ static NSString *ZMLogTag = @"Push";
 
 @end
 
-@implementation ZMUserSession (NotificationProcessing)
-
-- (void)processPendingNotificationActions
-{
-    if (self.pendingLocalNotification == nil) {
-        return;
-    }
-    
-    [self.managedObjectContext performGroupedBlock: ^{
-        ZMStoredLocalNotification *note = self.pendingLocalNotification;
-        
-        if ([note.category isEqualToString:ZMConnectCategory]) {
-            [self handleConnectionRequestCategoryNotification:note];
-        }
-        else if ([note.category isEqualToString:ZMIncomingCallCategory] || [note.category isEqualToString:ZMMissedCallCategory]){
-            [self handleCallCategoryNotification:note];
-        }
-        else {
-            [self handleDefaultCategoryNotification:note];
-        }
-        self.pendingLocalNotification = nil;
-    }];
-    
-}
-
-@end
 
 @implementation ZMUserSession (ZMBackgroundFetch)
 

@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "参与者被从对话中移出";
 "push.notification.member.leave.nootherusername.nousername" = "参与者被从%1$@中移出";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@ 离开 %2$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ 离开了一个对话";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "参与者离开了对话";
-"push.notification.member.leave.sender.nootherusername.nousername" = "参与者离开了 %1$@";
-
-
 "push.notification.call.started.video.oneonone" = "%1$@视频来电";
 "push.notification.call.started.video.oneonone.nousername" = "您接到一个视频来电";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@与您创建了一个群组聊天";
 "push.notification.conversation.create.nousername" = "好友与您创建了一个群组聊天";
-
-"push.notification.conversation.rename" = "%1$@将群组名称改为%2$@";
-"push.notification.conversation.rename.nousername" = "群组聊天被命名为%1$@";
 
 "push.notification.connection.request" = "%@想添加您为好友";
 "push.notification.connection.request.nousername" = "有人想加您为好友";

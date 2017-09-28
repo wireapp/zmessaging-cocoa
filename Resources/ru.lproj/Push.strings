@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "Участники были удалены из разговора";
 "push.notification.member.leave.nootherusername.nousername" = "Участники были удалены из %1$@";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@ покинули %2$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ покинул разговор";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Участники покинули разговор";
-"push.notification.member.leave.sender.nootherusername.nousername" = "Участники покинули %1$@";
-
-
 "push.notification.call.started.video.oneonone" = "%1$@ звонит с видео";
 "push.notification.call.started.video.oneonone.nousername" = "Видеозвонок";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@ создал группу с вами";
 "push.notification.conversation.create.nousername" = "Создана группа с вами";
-
-"push.notification.conversation.rename" = "%1$@ переименовал разговор в %2$@";
-"push.notification.conversation.rename.nousername" = "Разговор был переименован в %1$@";
 
 "push.notification.connection.request" = "%@ хочет подключиться";
 "push.notification.connection.request.nousername" = "Кто-то хочет подключиться";

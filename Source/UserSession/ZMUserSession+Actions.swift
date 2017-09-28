@@ -40,7 +40,7 @@ extension ZMUserSession {
               let callState = note.conversation.voiceChannel?.state
         else { return }
         
-        if case let .incoming(video: video, shouldRing: _, degraded: _) = callState, WireCallCenterV3.activeInstance?.activeCallConversations(in: self).count == 0 {
+        if case let .incoming(video: video, shouldRing: _, degraded: _) = callState, callCenter.activeCallConversations(in: self).count == 0 {
             _ = note.conversation.voiceChannel?.join(video: video, userSession: self)
         }
         
@@ -55,12 +55,12 @@ extension ZMUserSession {
         guard let strongDelegate = requestToOpenViewDelegate else { return }
             
         if conversation == nil {
-            strongDelegate.showConversationList()
+            strongDelegate.showConversationList(for: self)
         }
         else if message == nil {
-            strongDelegate.show(conversation)
+            strongDelegate.userSession(self, show: conversation)
         } else {
-            strongDelegate.show(message, in: conversation)
+            strongDelegate.userSession(self, show: message, in: conversation)
         }
     }
     

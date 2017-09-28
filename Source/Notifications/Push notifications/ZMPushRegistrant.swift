@@ -21,7 +21,8 @@ import Foundation
 import PushKit
 import WireTransport
 
-
+public typealias ZMPushNotificationCompletionHandler = (ZMPushPayloadResult)->()
+public typealias DidReceivePushCallback = (_ payload: [AnyHashable: Any], _ source: ZMPushNotficationType, _ completion: ZMPushNotificationCompletionHandler?) -> ()
 /// This is a generic protocol for receiving remote push notifications.
 ///
 /// It is implemented by PushKitRegistrant for PushKit,
@@ -36,7 +37,7 @@ protocol PushNotificationSource {
     /// - parameter didUpdateCredentials: will be called with the device token
     /// - parameter didReceivePayload: will be called with the push notification data. The block needs to be called when processing the data is complete and indicate if data was fetched
     /// - parameter didInvalidateToken: will be called when the device token becomes invalid
-    init(didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: @escaping () -> Void)
+    init(didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping DidReceivePushCallback, didInvalidateToken: @escaping () -> Void)
 }
 
 
@@ -62,17 +63,17 @@ public final class PushKitRegistrant : NSObject, PushNotificationSource {
     
     public var analytics: AnalyticsType?
     
-    public convenience required init(didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: @escaping () -> Void) {
+    public convenience required init(didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping DidReceivePushCallback, didInvalidateToken: @escaping () -> Void) {
         self.init(fakeRegistry: nil, didUpdateCredentials: didUpdateCredentials, didReceivePayload: didReceivePayload, didInvalidateToken: didInvalidateToken)
     }
     
     let queue: DispatchQueue
     let registry: PKPushRegistry
     let didUpdateCredentials: (Data) -> Void
-    let didReceivePayload: (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void
+    let didReceivePayload: DidReceivePushCallback
     let didInvalidateToken: () -> Void
     
-    public init(fakeRegistry: PKPushRegistry?, didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: @escaping () -> Void) {
+    public init(fakeRegistry: PKPushRegistry?, didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping DidReceivePushCallback, didInvalidateToken: @escaping () -> Void) {
         let q = DispatchQueue(label: "PushRegistrant", target: .global())
         self.queue = q
         self.registry = fakeRegistry ?? PKPushRegistry(queue: q)
@@ -99,7 +100,7 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, forType type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) did receive '\(payload.type)' payload: \(payload.dictionaryPayload)")
         if let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Process PushKit payload") {
-            didReceivePayload(payload.dictionaryPayload as NSDictionary, .voIP) {
+            didReceivePayload(payload.dictionaryPayload, .voIP) {
                 result in
                 ZMLogPushKit_swift("Registry \(self.registry.description) did finish background task")
                 activity.end()
@@ -120,13 +121,13 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
 public final class ApplicationRemoteNotification : NSObject, PushNotificationSource {
     
     var pushToken: Data?
-    public required init(didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void, didInvalidateToken: @escaping () -> Void) {
+    public required init(didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping DidReceivePushCallback, didInvalidateToken: @escaping () -> Void) {
         self.didUpdateCredentials = didUpdateCredentials
         self.didReceivePayload = didReceivePayload
     }
     
     let didUpdateCredentials: (Data) -> Void
-    let didReceivePayload: (NSDictionary, ZMPushNotficationType, (ZMPushPayloadResult) -> Void) -> Void
+    let didReceivePayload: DidReceivePushCallback
     
 }
 
@@ -138,10 +139,19 @@ extension ApplicationRemoteNotification {
     }
     
     public func application(_ application: ZMApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        self.didReceiveRemoteNotification(userInfo, fetchCompletionHandler: completionHandler)
+    }
+    
+    public func didReceiveRemoteNotification(_ payload: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult)->()) {
         if let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process remote notification payload") {
-            didReceivePayload(userInfo as NSDictionary, .alert) { result in
+            didReceivePayload(payload, .alert) { result in
                 completionHandler(self.fetchResult(result))
                 activity.end()
+            }
+        }
+        else {
+            didReceivePayload(payload, .alert) { result in
+                completionHandler(self.fetchResult(result))
             }
         }
     }

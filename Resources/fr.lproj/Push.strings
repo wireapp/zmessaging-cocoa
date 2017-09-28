@@ -23,7 +23,7 @@
 "push.notification.add.message.group" = "%1$@ dans %2$@ : %3$@";
 "push.notification.add.message.group.nousername" = "Nouveau message dans %1$@ : %2$@";
 "push.notification.add.message.group.nousername.noconversationname" = "Nouveau message : %1$@";
-"push.notification.add.message.group.noconversationname" = "%1$@ dans une conversation: %2$@";
+"push.notification.add.message.group.noconversationname" = "%1$@ dans une conversation : %2$@";
 
 "push.notification.add.message.oneonone" = "%1$@ : %2$@";
 "push.notification.add.message.oneonone.nousername" = "Nouveau message : %1$@";
@@ -36,29 +36,29 @@
 "push.notification.add.unknown.oneonone" = "%1$@ a envoyé un message";
 "push.notification.add.unknown.oneonone.nousername" = "Nouveau message";
 
-"push.notification.add.image.group" = "%1$@ a partagé une photo dans %2$@";
-"push.notification.add.image.group.nousername" = "Nouvelle photo dans %1$@";
-"push.notification.add.image.group.nousername.noconversationname" = "Nouvelle photo dans une conversation";
-"push.notification.add.image.group.noconversationname" = "%1$@ a partagé une photo dans une conversation";
+"push.notification.add.image.group" = "%1$@ a partagé une image dans %2$@";
+"push.notification.add.image.group.nousername" = "Nouvelle image dans %1$@";
+"push.notification.add.image.group.nousername.noconversationname" = "Nouvelle image dans une conversation";
+"push.notification.add.image.group.noconversationname" = "%1$@ a partagé une image dans une conversation";
 
-"push.notification.add.image.oneonone" = "%1$@ a partagé une photo";
-"push.notification.add.image.oneonone.nousername" = "Nouvelle photo dans une conversation";
+"push.notification.add.image.oneonone" = "%1$@ a partagé une image";
+"push.notification.add.image.oneonone.nousername" = "Nouvelle image dans une conversation";
 
 "push.notification.add.video.group" = "%1$@ a partagé une vidéo dans %2$@";
 "push.notification.add.video.group.nousername" = "Nouvelle vidéo dans %1$@";
 "push.notification.add.video.group.nousername.noconversationname" = "Nouvelle vidéo dans une conversation";
-"push.notification.add.video.group.noconversationname" = "%1$@ a partagé une video dans une conversation";
+"push.notification.add.video.group.noconversationname" = "%1$@ a partagé une vidéo dans une conversation";
 
 "push.notification.add.video.oneonone" = "%1$@ a partagé une vidéo";
 "push.notification.add.video.oneonone.nousername" = "Nouvelle vidéo dans une conversation";
 
-"push.notification.add.audio.group" = "%1$@ a partagé un message audio dans %2$@";
-"push.notification.add.audio.group.nousername" = "Nouveau message audio dans %1$@";
-"push.notification.add.audio.group.nousername.noconversationname" = "Nouveau message audio dans une conversation";
-"push.notification.add.audio.group.noconversationname" = "%1$@ a partagé un message audio dans une conversation";
+"push.notification.add.audio.group" = "%1$@ a partagé un message vocal dans %2$@";
+"push.notification.add.audio.group.nousername" = "Nouveau message vocal dans %1$@";
+"push.notification.add.audio.group.nousername.noconversationname" = "Nouveau message vocal dans une conversation";
+"push.notification.add.audio.group.noconversationname" = "%1$@ a partagé un message vocal dans une conversation";
 
-"push.notification.add.audio.oneonone" = "%1$@ a partagé un message audio";
-"push.notification.add.audio.oneonone.nousername" = "Nouveau message audio dans une conversation";
+"push.notification.add.audio.oneonone" = "%1$@ a partagé un message vocal";
+"push.notification.add.audio.oneonone.nousername" = "Nouveau message vocal dans une conversation";
 
 "push.notification.add.file.group" = "%1$@ a partagé un fichier dans %2$@";
 "push.notification.add.file.group.nousername" = "Nouveau fichier dans %1$@";
@@ -68,59 +68,53 @@
 "push.notification.add.file.oneonone" = "%1$@ a partagé un fichier";
 "push.notification.add.file.oneonone.nousername" = "Nouveau fichier dans une conversation";
 
-"push.notification.add.location.group" = "%1$@ a partagé un emplacement dans %2$@";
-"push.notification.add.location.group.nousername" = "Nouvel emplacement dans %1$@";
-"push.notification.add.location.group.nousername.noconversationname" = "Nouvel emplacement dans une conversation";
-"push.notification.add.location.group.noconversationname" = "%1$@ a partagé un emplacement dans une conversation";
+"push.notification.add.location.group" = "%1$@ a partagé une position dans %2$@";
+"push.notification.add.location.group.nousername" = "Nouvelle position dans %1$@";
+"push.notification.add.location.group.nousername.noconversationname" = "Nouvelle position dans une conversation";
+"push.notification.add.location.group.noconversationname" = "%1$@ a partagé une position dans une conversation";
 
-"push.notification.add.location.oneonone" = "%1$@ a partagé un emplacement";
-"push.notification.add.location.oneonone.nousername" = "Nouvel emplacement dans une conversation";
+"push.notification.add.location.oneonone" = "%1$@ a partagé une position";
+"push.notification.add.location.oneonone.nousername" = "Nouvelle position dans une conversation";
 
 "push.notification.member.join" = "%1$@ a ajouté %3$@ à %2$@";
 "push.notification.member.join.noconversationname" = "%1$@ a ajouté %2$@ à une conversation";
 "push.notification.member.join.nousername.noconversationname" = "%1$@ a été ajouté à une conversation";
 "push.notification.member.join.nousername" = "%2$@ a été ajouté à %1$@";
 
-"push.notification.member.join.many.nootherusername" = "%1$@ a ajouté quelqu'un dans %2$@";
-"push.notification.member.join.many.nootherusername.noconversationname" = "%1$@ a ajouté quelqu'un dans une conversation";
-"push.notification.member.join.many.nootherusername.nousername" = "Des personnes ont été ajouté à %1$@";
-"push.notification.member.join.many.nootherusername.nousername.noconversationname" = "Des personnes ont été ajouté à une conversation";
+"push.notification.member.join.many.nootherusername" = "%1$@ a ajouté plusieurs personnes dans %2$@";
+"push.notification.member.join.many.nootherusername.noconversationname" = "%1$@ a ajouté plusieurs personnes dans une conversation";
+"push.notification.member.join.many.nootherusername.nousername" = "Des personnes ont été ajoutées à %1$@";
+"push.notification.member.join.many.nootherusername.nousername.noconversationname" = "Des personnes ont été ajoutées à une conversation";
 
-"push.notification.member.join.self" = "%1$@ vous a ajouté dans %2$@";
-"push.notification.member.join.self.noconversationname" = "%1$@ vous a ajouté dans une conversation";
-"push.notification.member.join.self.nousername.noconversationname" = "Vous avez été ajouté dans une conversation";
+"push.notification.member.join.self" = "%1$@ vous a ajouté à %2$@";
+"push.notification.member.join.self.noconversationname" = "%1$@ vous a ajouté à une conversation";
+"push.notification.member.join.self.nousername.noconversationname" = "Vous avez été ajouté à une conversation";
 "push.notification.member.join.self.nousername" = "Vous ont avez été ajouté à %1$@";
 
 "push.notification.member.join.nootherusername" = "%1$@ a ajouté des personnes à %2$@";
 "push.notification.member.join.nootherusername.noconversationname" = "%1$@ a ajouté des personnes dans une conversation";
-"push.notification.member.join.nootherusername.nousername.noconversationname" = "Des personnes ont été ajouté à une conversation";
+"push.notification.member.join.nootherusername.nousername.noconversationname" = "Des personnes ont été ajoutées à une conversation";
 "push.notification.member.join.nootherusername.nousername" = "Des personnes ont été ajoutées à %1$@";
 
-"push.notification.member.leave" = "%1$@ a retiré %3$@ de %2$@";
-"push.notification.member.leave.noconversationname" = "%1$@ a retiré %2$@ d'une conversation";
-"push.notification.member.leave.nousername.noconversationname" = "%1$@ a été retiré d’une conversation";
-"push.notification.member.leave.nousername" = "%2$@ a été retiré de %1$@";
+"push.notification.member.leave" = "%1$@ a exclu %3$@ de %2$@";
+"push.notification.member.leave.noconversationname" = "%1$@ a exclu %2$@ d'une conversation";
+"push.notification.member.leave.nousername.noconversationname" = "%1$@ a été exclu d’une conversation";
+"push.notification.member.leave.nousername" = "%2$@ a été exclu de %1$@";
 
-"push.notification.member.leave.many.nootherusername" = "%1$@ a retiré des personnes de %2$@";
-"push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@ a retiré des personnes d’une conversation";
-"push.notification.member.leave.many.nootherusername.nousername" = "Des personnes ont été retirées de %1$@";
-"push.notification.member.leave.many.nootherusername.nousername.noconversationname" = "Des personnes ont été retirées d’une conversation";
+"push.notification.member.leave.many.nootherusername" = "%1$@ a exclu des personnes de %2$@";
+"push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@ a exclu des personnes d’une conversation";
+"push.notification.member.leave.many.nootherusername.nousername" = "Des personnes ont été exclues de %1$@";
+"push.notification.member.leave.many.nootherusername.nousername.noconversationname" = "Des personnes ont été exclues d’une conversation";
 
-"push.notification.member.leave.self" = "%1$@ vous a retiré de %2$@";
-"push.notification.member.leave.self.noconversationname" = "%1$@ vous a retiré d’une conversation";
-"push.notification.member.leave.self.nousername.noconversationname" = "Vous avez été retiré d’une conversation";
-"push.notification.member.leave.self.nousername" = "Vous avez été retiré de %1$@";
+"push.notification.member.leave.self" = "%1$@ vous a exclu de %2$@";
+"push.notification.member.leave.self.noconversationname" = "%1$@ vous a exclu d’une conversation";
+"push.notification.member.leave.self.nousername.noconversationname" = "Vous avez été exclu d’une conversation";
+"push.notification.member.leave.self.nousername" = "Vous avez été exclu de %1$@";
 
-"push.notification.member.leave.nootherusername" = "%1$@ a retiré des personnes de %2$@";
-"push.notification.member.leave.nootherusername.noconversationname" = "%1$@ a retiré des personnes d’une conversation";
-"push.notification.member.leave.nootherusername.nousername.noconversationname" = "Des personnes ont été retirées d’une conversation";
-"push.notification.member.leave.nootherusername.nousername" = "Des personnes ont été retirées de %1$@";
-
-"push.notification.member.leave.sender.nootherusername" = "%1$@ a quitté %2$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ a quitté une conversation";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Des personnes ont quitté une conversation";
-"push.notification.member.leave.sender.nootherusername.nousername" = "Des personnes ont quitté %1$@";
-
+"push.notification.member.leave.nootherusername" = "%1$@ a exclu des personnes de %2$@";
+"push.notification.member.leave.nootherusername.noconversationname" = "%1$@ a exclu des personnes d’une conversation";
+"push.notification.member.leave.nootherusername.nousername.noconversationname" = "Des personnes ont été exclues d’une conversation";
+"push.notification.member.leave.nootherusername.nousername" = "Des personnes ont été exclues de %1$@";
 
 "push.notification.call.started.video.oneonone" = "%1$@ appelle en vidéo";
 "push.notification.call.started.video.oneonone.nousername" = "Quelqu'un appelle en vidéo";
@@ -141,11 +135,8 @@
 "push.notification.conversation.create" = "%1$@ a créé une conversation de groupe avec vous";
 "push.notification.conversation.create.nousername" = "Quelqu'un a créé une conversation de groupe avec vous";
 
-"push.notification.conversation.rename" = "%1$@ a renommé une conversation en %2$@";
-"push.notification.conversation.rename.nousername" = "Une conversation a été renommée en %1$@";
-
 "push.notification.connection.request" = "%@ souhaite se connecter";
-"push.notification.connection.request.nousername" = "Quelqu'un souhaite vous ajouter";
+"push.notification.connection.request.nousername" = "Quelqu'un souhaite se connecter";
 
 "push.notification.connection.accepted" = "Vous et %@ êtes maintenant connectés";
 "push.notification.connection.accepted.nousername" = "Vous avez une nouvelle connexion";
@@ -169,7 +160,7 @@
 "push.notification.action.message.open" = "Ouvrir";
 "push.notification.action.message.reply" = "Répondre";
 "push.notification.action.message.reply.button.title" = "Envoyer";
-"push.notification.action.conversation.mute" = "Silence";
+"push.notification.action.conversation.mute" = "Mettre en sourdine";
 "push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Accepter";

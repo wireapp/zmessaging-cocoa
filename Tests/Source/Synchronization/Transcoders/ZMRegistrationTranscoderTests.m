@@ -408,9 +408,10 @@
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"error notification"];
-    id token = [ZMUserSessionRegistrationNotification addObserverWithBlock:^(ZMUserSessionRegistrationNotification *note) {
-        XCTAssertEqual(note.error.code, (long) ZMUserSessionUnkownError);
-        XCTAssertEqual(note.error.domain, ZMUserSessionErrorDomain);
+    id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
+        XCTAssertEqual(event, ZMRegistrationNotificationRegistrationDidFail);
+        XCTAssertEqual(error.code, (long) ZMUserSessionUnkownError);
+        XCTAssertEqual(error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
     } ];
 
@@ -423,7 +424,7 @@
     
     // then
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    [ZMUserSessionRegistrationNotification removeObserver:token];
+    token = nil;
 }
 
 - (void)testThatItNotifiesOfAnUnsuccessfullRegistrationBecauseOfInvalidEmail
@@ -439,9 +440,10 @@
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"error notification"];
-    id token = [ZMUserSessionRegistrationNotification addObserverWithBlock:^(ZMUserSessionRegistrationNotification *note) {
-        XCTAssertEqual(note.error.code, (long) ZMUserSessionInvalidEmail);
-        XCTAssertEqual(note.error.domain, ZMUserSessionErrorDomain);
+    id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
+        XCTAssertEqual(event, ZMRegistrationNotificationRegistrationDidFail);
+        XCTAssertEqual(error.code, (long) ZMUserSessionInvalidEmail);
+        XCTAssertEqual(error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
     } ];
     
@@ -454,7 +456,7 @@
     
     // then
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    [ZMUserSessionRegistrationNotification removeObserver:token];
+    token = nil;
 }
 
 - (void)testThatItNotifiesOfAnUnsuccessfullRegistrationBecauseOfInvalidPhone
@@ -468,9 +470,10 @@
     
     // expect
     XCTestExpectation *expectation = [self expectationWithDescription:@"error notification"];
-    id token = [ZMUserSessionRegistrationNotification addObserverWithBlock:^(ZMUserSessionRegistrationNotification *note) {
-        XCTAssertEqual(note.error.code, (long) ZMUserSessionInvalidPhoneNumber);
-        XCTAssertEqual(note.error.domain, ZMUserSessionErrorDomain);
+    id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
+        XCTAssertEqual(event, ZMRegistrationNotificationRegistrationDidFail);
+        XCTAssertEqual(error.code, (long) ZMUserSessionInvalidPhoneNumber);
+        XCTAssertEqual(error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
     } ];
     
@@ -483,7 +486,7 @@
     
     // then
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    [ZMUserSessionRegistrationNotification removeObserver:token];
+    token = nil;
 }
 
 - (void)testThatItDoesNotUpdateTheRegisterOnThisDeviceAfterUnSuccessfullRegistration

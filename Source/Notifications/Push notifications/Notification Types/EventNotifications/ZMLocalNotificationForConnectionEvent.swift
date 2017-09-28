@@ -25,7 +25,7 @@ class ZMLocalNotificationForConverstionCreateEvent : ZMLocalNotificationForEvent
         return .conversationCreate
     }
     
-    override func configureAlertBody(_ conversation: ZMConversation?) -> String {
+    override func textToDisplay(_ conversation: ZMConversation?) -> String {
         return ZMPushStringConversationCreate.localizedString(with: sender, count:nil)
     }
     
@@ -61,7 +61,7 @@ class ZMLocalNotificationForUserConnectionEvent : ZMLocalNotificationForEvent {
         return false
     }
     
-    override func configureAlertBody(_ conversation: ZMConversation?) -> String {
+    override func textToDisplay(_ conversation: ZMConversation?) -> String {
         let name = sender?.name ?? (lastEvent!.payload["user"] as? [String : Any])?["name"] as? String
         if connectionType == .requested {
             return ZMPushStringConnectionRequest.localizedString(withUserName: name)
@@ -80,7 +80,7 @@ class ZMLocalNotificationForNewUserEvent : ZMLocalNotificationForEvent {
         return .userContactJoin
     }
     
-    override func configureAlertBody(_ conversation: ZMConversation?) -> String {
+    override func textToDisplay(_ conversation: ZMConversation?) -> String {
         let name = (lastEvent!.payload["user"] as? [String : Any])?["name"] as? String
         return ZMPushStringNewConnection.localizedString(withUserName: name)
     }

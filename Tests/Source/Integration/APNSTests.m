@@ -17,10 +17,10 @@
 // 
 
 @import WireDataModel;
+@import WireSyncEngine;
 
 #import "ZMUserSession.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMUserSession+Background+Testing.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
@@ -75,7 +75,7 @@
     [self.application setBackground];
     
     // when
-    [self.userSession receivedPushNotificationWithPayload:[self APNSPayloadForNotificationPayload:payload] completionHandler:nil source:ZMPushNotficationTypeVoIP];
+    [self.userSession receivedPushNotificationWith:[self APNSPayloadForNotificationPayload:payload] from:ZMPushNotficationTypeVoIP completion:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -93,6 +93,7 @@
 
 - (BOOL)registerForNotifications:(NSData*)token
 {
+    [self.sessionManager didRegisteredForRemoteNotificationsWith:token];
     [self.mockTransportSession resetReceivedRequests];
     [self.userSession performChanges:^{
         [self.userSession setPushToken:token];
@@ -103,7 +104,6 @@
     
     return [self lastRequestsContainedTokenRequests];
 }
-
 
 - (BOOL)lastRequestsContainedTokenRequests
 {
@@ -137,13 +137,13 @@
     [self.mockTransportSession resetReceivedRequests];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    
     // expect
     ZM_WEAK(self);
     self.application.registerForRemoteNotificationsCallback = ^{
         ZM_STRONG(self);
         [self.userSession performChanges:^{
-            [self.userSession application:self.application didRegisterForRemoteNotificationsWithDeviceToken:newToken];
+            [self.userSession updatePushKitTokenTo:newToken forType:PushTokenTypeVoip];
+            [self.userSession updatePushKitTokenTo:newToken forType:PushTokenTypeRegular];
         }];
     };
     
@@ -160,10 +160,7 @@
     [self recreateSessionManager];
     WaitForAllGroupsToBeEmpty(0.5);
 
-    if (nil == self.userSession) {
-        return XCTFail(@"No user session available");
-    }
-
+    XCTAssertNotNil(self.userSession, @"No user session available");
     WaitForAllGroupsToBeEmpty(0.5);
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -180,11 +177,11 @@
 - (void)testThatItReregistersPushTokensOnDemand
 {
     XCTAssertTrue([self login]);
-
+    
     // given
     NSData *token = [NSData dataWithBytes:@"abc" length:3];
     NSData *newToken = [NSData dataWithBytes:@"def" length:6];
-
+    
     // when
     XCTAssertTrue([self registerForNotifications:token]);
     
@@ -194,13 +191,12 @@
     [self.mockTransportSession resetReceivedRequests];
     
     // expect
-    id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
-    [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
     ZM_WEAK(self);
     self.application.registerForRemoteNotificationsCallback = ^{
         ZM_STRONG(self);
         [self.userSession performChanges:^{
-            [self.userSession application:self.userSession.application didRegisterForRemoteNotificationsWithDeviceToken:newToken];
+            [self.userSession updatePushKitTokenTo:newToken forType:PushTokenTypeVoip];
+            [self.userSession updatePushKitTokenTo:newToken forType:PushTokenTypeRegular];
         }];
     };
     
@@ -219,13 +215,12 @@
     XCTAssertTrue(didContainSignalingKeyRequest);
     XCTAssertTrue([self lastRequestsContainedTokenRequests]);
     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
-    [mockPushRegistrant verify];
 }
 
 - (void)testThatItReregistersPushTokensOnDemandEvenIfItDidNotChange
 {
     XCTAssertTrue([self login]);
-
+    
     // given
     NSData *token = [NSData dataWithBytes:@"abc" length:3];
     
@@ -234,13 +229,12 @@
     [self.mockTransportSession resetReceivedRequests];
     
     // expect
-    id mockPushRegistrant = [OCMockObject partialMockForObject:self.userSession.pushRegistrant];
-    [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:token] pushToken];
     ZM_WEAK(self);
     self.application.registerForRemoteNotificationsCallback = ^{
         ZM_STRONG(self);
         [self.userSession performChanges:^{
-            [self.userSession application:self.userSession.application didRegisterForRemoteNotificationsWithDeviceToken:token];
+            [self.userSession updatePushKitTokenTo:token forType:PushTokenTypeVoip];
+            [self.userSession updatePushKitTokenTo:token forType:PushTokenTypeRegular];
         }];
     };
     
@@ -261,7 +255,6 @@
     XCTAssertTrue(didContainSignalingKeyRequest);
     XCTAssertTrue([self lastRequestsContainedTokenRequests]);
     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
-    [mockPushRegistrant verify];
 }
 
 - (void)testThatItPingsBackToTheBackendWhenReceivingAVoIPNotificationToCancelTheAPNSNotification
@@ -293,7 +286,7 @@
     // when
     NSDictionary *apnsPayload = [self APNSPayloadForNotificationPayload:payload identifier:identifier];
     NSUUID *lastNotificationId = self.userSession.syncManagedObjectContext.zm_lastNotificationID;
-    [self.userSession receivedPushNotificationWithPayload:apnsPayload completionHandler:nil source:ZMPushNotficationTypeVoIP];
+    [self.userSession receivedPushNotificationWith:apnsPayload from:ZMPushNotficationTypeVoIP completion:nil];
     WaitForAllGroupsToBeEmpty(0.2);
     
     // then
@@ -358,7 +351,7 @@
     // when
     [self.mockTransportSession resetReceivedRequests];
     NSDictionary *apnsPayload = [self APNSPayloadForNotificationPayload:payload identifier:identifier];
-    [self.userSession receivedPushNotificationWithPayload:apnsPayload completionHandler:nil source:ZMPushNotficationTypeVoIP];
+    [self.userSession receivedPushNotificationWith:apnsPayload from:ZMPushNotficationTypeVoIP completion:nil];
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -418,7 +411,8 @@
     
     [self.mockTransportSession resetReceivedRequests];
     NSDictionary *apnsPayload = noticePayload;
-    [self.userSession receivedPushNotificationWithPayload:apnsPayload completionHandler:nil source:ZMPushNotficationTypeVoIP];
+    [self.userSession receivedPushNotificationWith:apnsPayload from:ZMPushNotficationTypeVoIP completion:nil];
+    
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -477,7 +471,7 @@
     
     [self.mockTransportSession resetReceivedRequests];
     NSDictionary *apnsPayload = noticePayload;
-    [self.userSession receivedPushNotificationWithPayload:apnsPayload completionHandler:nil source:ZMPushNotficationTypeVoIP];
+    [self.userSession receivedPushNotificationWith:apnsPayload from:ZMPushNotficationTypeVoIP completion:nil];
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -538,7 +532,7 @@
         };
         
         // when
-        [self.userSession receivedPushNotificationWithPayload:[self APNSPayloadForNotificationPayload:payload] completionHandler:nil source:ZMPushNotficationTypeVoIP];
+        [self.userSession receivedPushNotificationWith:[self APNSPayloadForNotificationPayload:payload] from:ZMPushNotficationTypeVoIP completion:nil];
         XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
         WaitForAllGroupsToBeEmpty(0.2);
     }

@@ -32,10 +32,6 @@
 
 @end
 
-@protocol ZMClientUpdateObserverToken <NSObject>
-@end
-
-
 
 @interface ZMUserSession (OTR)
 
@@ -53,12 +49,8 @@
 
 
 /// Adds an observer that is notified when the selfUser clients were successfully fetched and deleted
-/// Returns a token that needs to be stored and used when unregistering as an observer with removeClientUpdateObserver:
-- (id<ZMClientUpdateObserverToken>)addClientUpdateObserver:(id<ZMClientUpdateObserver>)observer;
+/// Returns a token that needs to be stored as long the observer should be active.
+- (id)addClientUpdateObserver:(id<ZMClientUpdateObserver>)observer;
 
-
-/// Removes an observer that notified when the selfUser clients were successfully fetched and deleted
-/// Must pass in token that was received when registering as an observer via addClientUpdateObserver:
-- (void)removeClientUpdateObserver:(id<ZMClientUpdateObserverToken>)token;
 
 @end

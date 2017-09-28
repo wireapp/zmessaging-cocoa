@@ -35,24 +35,19 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMPushToken.h"
 #import "ZMBlacklistVerificator.h"
-#import "ZMUserSessionAuthenticationNotification.h"
 #import "NSURL+LaunchOptions.h"
 #import "WireSyncEngineLogs.h"
 #import "ZMCallFlowRequestStrategy.h"
-//#import "ZMCallKitDelegate.h"
 #import "ZMOperationLoop+Private.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
-
 #import "ZMClientRegistrationStatus.h"
-//#import "ZMCallKitDelegate+TypeConformance.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
-NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
-static NSString * const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
-NSString * const ZMAppendAVSLogNotificationName = @"ZMAppendAVSLogNotification";
-NSString * const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
-NSString * const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLoopNotificationName";
-NSString * const ZMFlowManagerDidBecomeAvailableNotification = @"ZMFlowManagerDidBecomeAvailableNotification";
+NSNotificationName const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
+NSNotificationName const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
+NSString * const ZMAppendAVSLogNotificationName = @"AVSLogMessageNotification";
+NSNotificationName const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
+NSNotificationName const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLoopNotificationName";
 
 static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-client/id930944768?ls=1&mt=8";
 
@@ -64,15 +59,14 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
-@property (nonatomic) ZMPushRegistrant *pushRegistrant;
-@property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
-
+@property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) id <LocalStoreProviderProtocol> storeProvider;
 
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 @property (nonatomic) BOOL hasCompletedInitialSync;
+@property (nonatomic) BOOL tornDown;
 
 
 /// Build number of the Wire app
@@ -80,39 +74,23 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 
 /// map from NSUUID to ZMCommonContactsSearchCachedEntry
 @property (nonatomic) NSCache *commonContactsCache;
+
+@property (nonatomic) AVSMediaManager* mediaManager;
+@property (nonatomic) id<FlowManagerType> flowManager;
 @end
 
 @interface ZMUserSession(PushChannel)
-- (void)pushChannelDidChange:(NSNotification *)note;
+- (void)pushChannelDidChange:(NotificationInContext *)note;
 @end
-
-
-NSURL *__nullable CBCreateTemporaryDirectoryAndReturnURL(void);
-
-
-NSURL *__nullable CBCreateTemporaryDirectoryAndReturnURL()
-{
-    NSError *error = nil;
-    NSURL *directoryURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]] isDirectory:YES];
-    [[NSFileManager defaultManager] createDirectoryAtURL:directoryURL withIntermediateDirectories:YES attributes:nil error:&error];
-    if (error) {
-        return nil;
-    }
-    
-    return directoryURL;
-}
 
 @implementation ZMUserSession
 
 ZM_EMPTY_ASSERTING_INIT()
 
-+ (BOOL)shouldSendOnlyEncrypted
-{
-    return [[NSProcessInfo processInfo] environment][@"ZMEncryptionOnly"] != nil;
-}
-
 - (void)dealloc
 {
+    Require(self.tornDown);
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -175,14 +153,24 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if(self) {
         self.storeProvider = storeProvider;
-
+        self.observersToken = [[NSMutableArray alloc] init];
+        
         self.appVersion = appVersion;
         [ZMUserAgent setWireAppVersion:appVersion];
         self.didStartInitialSync = NO;
         self.pushChannelIsOpen = NO;
 
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
-
+        ZM_WEAK(self);
+        [self.observersToken addObject:[NotificationInContext
+                                         addObserverWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
+                                         context: self.managedObjectContext.notificationContext
+                                         object:nil
+                                         queue:nil
+                                         using:^(NotificationInContext *note) {
+                                             ZM_STRONG(self);
+                                             [self pushChannelDidChange:note];
+                                         }
+        ]];
         self.apnsEnvironment = apnsEnvironment;
         self.networkIsOnline = YES;
         self.managedObjectContext.isOffline = NO;
@@ -205,7 +193,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.managedObjectContext.zm_fileAssetCache = fileAssetCache;
         
         CTCallCenter *callCenter = [[CTCallCenter alloc] init];
-        self.managedObjectContext.zm_callCenter = callCenter;
+        self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
         
         [self.syncManagedObjectContext performBlockAndWait:^{
             self.syncManagedObjectContext.zm_imageAssetCache = imageAssetCache;
@@ -213,9 +201,13 @@ ZM_EMPTY_ASSERTING_INIT()
             self.syncManagedObjectContext.zm_fileAssetCache = fileAssetCache;
             
             self.localNotificationDispatcher = [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncManagedObjectContext
-                                                                                                     application:application];
-           self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
-                                                                                         userSession:self];
+                                               foregroundNotificationDelegate:self
+                                                                  application:application];
+
+            
+            
+            self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
+                                                                                          userSession:self];
             
             self.transportSession = session;
             self.transportSession.pushChannel.clientID = self.selfUserClient.remoteIdentifier;
@@ -232,7 +224,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                       cookieStorage:session.cookieStorage
                                                                         localNotificationDispatcher:self.localNotificationDispatcher
                                                                                        mediaManager:mediaManager
-                                                                                flowManager:flowManager
+                                                                                        flowManager:flowManager
                                                                                       storeProvider:storeProvider
                                                                                   syncStateDelegate:self
                                                                                         application:application];
@@ -255,23 +247,9 @@ ZM_EMPTY_ASSERTING_INIT()
         [self registerForBackgroundNotifications];
         [self registerForRequestToOpenConversationNotification];
         
-        [self.syncManagedObjectContext performGroupedBlockAndWait:^{
-            [self enablePushNotifications];
-        }];
         [self enableBackgroundFetch];
 
         self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithAccountContainer:self.storeProvider.accountContainer];
-        
-        if ([self.class useCallKit]) {
-            CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[CallKitDelegate providerConfiguration]];
-            CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
-            
-            self.callKitDelegate = [[CallKitDelegate alloc] initWithProvider:provider
-                                                              callController:callController
-                                                                 userSession:self
-                                                                 flowManager:flowManager
-                                                                mediaManager:mediaManager];
-        }
         
         [self.syncManagedObjectContext performBlockAndWait:^{
             if (self.clientRegistrationStatus.currentPhase != ZMClientRegistrationPhaseRegistered) {
@@ -286,6 +264,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)tearDown
 {
+    [self.observersToken removeAllObjects];
     [self.application unregisterObserverForStateChange:self];
     self.mediaManager = nil;
     self.callStateObserver = nil;
@@ -330,6 +309,7 @@ ZM_EMPTY_ASSERTING_INIT()
     }
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     self.blackList = nil;
+    self.tornDown = YES;
 }
 
 - (BOOL)isNotificationContentHidden;
@@ -350,7 +330,15 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)registerForRequestToOpenConversationNotification
 {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didRequestToOpenSyncConversation:) name:ZMRequestToOpenSyncConversationNotificationName object:nil];
+    ZM_WEAK(self);
+    [self.observersToken addObject:[NotificationInContext addObserverWithName:ZMRequestToOpenSyncConversationNotificationName
+                                        context:self.managedObjectContext.notificationContext
+                                         object:nil
+                                          queue:nil
+                                          using:^(NotificationInContext * note) {
+                                              ZM_STRONG(self);
+                                              [self didRequestToOpenSyncConversation:note];
+                                          }]];
 }
 
 - (void)registerForBackgroundNotifications;
@@ -384,7 +372,7 @@ ZM_EMPTY_ASSERTING_INIT()
     return self.storeProvider.applicationContainer;
 }
 
-- (void)didRequestToOpenSyncConversation:(NSNotification *)note
+- (void)didRequestToOpenSyncConversation:(NotificationInContext *)note
 {
     ZM_WEAK(self);
     [self.managedObjectContext performGroupedBlock:^{
@@ -392,7 +380,7 @@ ZM_EMPTY_ASSERTING_INIT()
         NSManagedObjectID *objectID = note.object;
         id managedObject = [self.managedObjectContext objectWithID:objectID];
         if(managedObject != nil) {
-            [self.requestToOpenViewDelegate showConversation:managedObject];
+            [self.requestToOpenViewDelegate userSession:self showConversation:managedObject];
         }
     }];
 }
@@ -432,21 +420,9 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
 }
 
-- (void)setMediaManager:(AVSMediaManager *)delegate;
-{
-    NOT_USED(delegate);
-}
-
 - (void)registerForRemoteNotifications
 {
     [self.managedObjectContext performGroupedBlock:^{
-        // Refresh the Voip token if needed
-        NSData *actualToken = self.pushRegistrant.pushToken;
-        if (actualToken != nil && ![actualToken isEqual:self.managedObjectContext.pushKitToken.deviceToken]){
-            self.managedObjectContext.pushKitToken = nil;
-            [self setPushKitToken:actualToken];
-        }
-        
         // Request the current token, the rest is taken care of
         [self setupPushNotificationsForApplication:self.application];
     }];
@@ -456,15 +432,6 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     // instead of relying on the tokens we have cached locally we should always ask the OS about the latest tokens
     [self.managedObjectContext performGroupedBlock:^{
-        
-        // (1) Refresh VoIP token
-        NSData *pushKitToken = self.pushRegistrant.pushToken;
-        if (pushKitToken != nil) {
-            self.managedObjectContext.pushKitToken = nil;
-            [self setPushKitToken:pushKitToken];
-        } else {
-            ZMLogError(@"The OS did not provide a valid VoIP token, pushRegistry might be nil");
-        }
         
         // (2) Refresh "normal" remote notification token
         // we need to set the current push token to nil,
@@ -519,7 +486,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
     [self.managedObjectContext performGroupedBlock:^{
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-        [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionAccessTokenExpired userInfo:selfUser.credentialsUserInfo]];
+        [PostLoginAuthenticationNotification notifyAuthenticationInvalidatedWithError:[NSError userSessionErrorWithErrorCode:ZMUserSessionAccessTokenExpired userInfo:selfUser.credentialsUserInfo] context:self.managedObjectContext];
     }];
 }
 
@@ -545,26 +512,35 @@ ZM_EMPTY_ASSERTING_INIT()
     return self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus;
 }
 
-@end
-
-
-
-@implementation ZMUserSession (Test)
-
-- (NSArray *)allManagedObjectContexts
+- (void)setCallNotificationStyle:(ZMCallNotificationStyle)callNotificationStyle
 {
-    NSMutableArray *mocs = [NSMutableArray array];
-    if (self.managedObjectContext != nil) {
-        [mocs addObject:self.managedObjectContext];
+    _callNotificationStyle = callNotificationStyle;
+    
+    switch (callNotificationStyle) {
+        case ZMCallNotificationStylePushNotifications:
+            self.callKitDelegate = nil;
+            break;
+        case ZMCallNotificationStyleCallKit:
+        {
+            CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[CallKitDelegate providerConfiguration]];
+            CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
+            
+            self.callKitDelegate = [[CallKitDelegate alloc] initWithProvider:provider
+                                                              callController:callController
+                                                                 userSession:self
+                                                                 flowManager:self.flowManager
+                                                                mediaManager:self.mediaManager];
+        }
+            break;
     }
-    if (self.syncManagedObjectContext != nil) {
-        [mocs addObject:self.syncManagedObjectContext];
-    }
-    return mocs;
+}
+
+- (WireCallCenterV3* )callCenter
+{
+    return self.managedObjectContext.zm_callCenter;
 }
 
 @end
-
 
 
 @implementation ZMUserSession (PushToken)
@@ -615,6 +591,11 @@ ZM_EMPTY_ASSERTING_INIT()
     }
 }
 
+- (BOOL)isAuthenticated
+{
+    return self.authenticationStatus.isAuthenticated;
+}
+
 @end
 
 
@@ -652,8 +633,9 @@ ZM_EMPTY_ASSERTING_INIT()
     
     ZMNetworkState const previous = self.networkState;
     self.networkState = state;
-    if(previous != self.networkState && self.application.applicationState != UIApplicationStateBackground) {
-        [[NSNotificationCenter defaultCenter] postNotification:[ZMNetworkAvailabilityChangeNotification notificationWithNetworkState:self.networkState userSession:self]];
+    
+    if (previous != self.networkState) {
+        [ZMNetworkAvailabilityChangeNotification notifyWithNetworkState:self.networkState userSession:self];
     }
 }
 
@@ -712,7 +694,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 @implementation ZMUserSession(PushChannel)
 
-- (void)pushChannelDidChange:(NSNotification *)note
+- (void)pushChannelDidChange:(NotificationInContext *)note
 {
     BOOL newValue = [note.userInfo[ZMPushChannelIsOpenKey] boolValue];
     self.pushChannelIsOpen = newValue;
@@ -758,7 +740,13 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 
 + (void)requestToOpenSyncConversationOnUI:(ZMConversation *)conversation;
 {
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMRequestToOpenSyncConversationNotificationName object:conversation.objectID];
+    if (conversation.managedObjectContext == nil) {
+        return;
+    }
+    [[[NotificationInContext alloc] initWithName:ZMRequestToOpenSyncConversationNotificationName
+                                        context:conversation.managedObjectContext.notificationContext
+                                          object:conversation.objectID
+                                        userInfo:nil] post];
 }
 
 @end
@@ -770,7 +758,7 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 + (id<ZMAVSLogObserverToken>)addAVSLogObserver:(id<ZMAVSLogObserver>)observer;
 {
     ZM_WEAK(observer);
-    return (id<ZMAVSLogObserverToken>)[[NSNotificationCenter defaultCenter] addObserverForName:@"AVSLogMessageNotification"
+    return (id<ZMAVSLogObserverToken>)[[NSNotificationCenter defaultCenter] addObserverForName:ZMAppendAVSLogNotificationName
                                                                                         object:nil
                                                                                          queue:nil
                                                                                     usingBlock:^(NSNotification * _Nonnull note) {
@@ -787,30 +775,22 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 + (void)appendAVSLogMessageForConversation:(ZMConversation *)conversation withMessage:(NSString *)message;
 {
     NSDictionary *userInfo = @{@"message" :message};
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMAppendAVSLogNotificationName object:conversation userInfo:userInfo];
+    if (conversation.managedObjectContext == nil) {
+        return;
+    }
+    [[[NotificationInContext alloc] initWithName:ZMAppendAVSLogNotificationName
+                                        context:conversation.managedObjectContext.notificationContext
+                                         object:conversation
+                                       userInfo:userInfo] post];
 }
 
 @end
-
-
-static BOOL ZMUserSessionUseCallKit = NO;
 
 @implementation ZMUserSession (Calling)
 
 - (CallingRequestStrategy *)callingStrategy
 {
     return self.operationLoop.syncStrategy.callingRequestStrategy;
-}
-
-+ (BOOL)useCallKit
-{
-    return ZMUserSessionUseCallKit;
-}
-
-+ (void)setUseCallKit:(BOOL)useCallKit
-{
-    ZMUserSessionUseCallKit = useCallKit;
 }
 
 @end
@@ -875,3 +855,4 @@ static BOOL ZMUserSessionUseCallKit = NO;
 }
 
 @end
+

@@ -26,7 +26,7 @@
 @interface IsTypingTests : IntegrationTest <ZMTypingChangeObserver>
 
 @property (nonatomic) NSTimeInterval oldTimeout;
-@property (nonatomic) NSMutableArray *notifications;
+@property (nonatomic) NSMutableArray<TypingChange *> *notifications;
 
 @end
 
@@ -49,13 +49,12 @@
 - (void)tearDown
 {
     ZMTypingDefaultTimeout = self.oldTimeout;
-    [ZMConversation removeTypingObserver:self];
     [super tearDown];
 }
 
-- (void)typingDidChange:(ZMTypingChangeNotification *)note;
+- (void)typingDidChangeWithConversation:(ZMConversation *)conversation typingUsers:(NSSet<ZMUser *> *)typingUsers
 {
-    [self.notifications addObject:note];
+    [self.notifications addObject:[[TypingChange alloc] initWithConversation:conversation typingUsers:typingUsers]];
 }
 
 - (void)testThatItSendsTypingNotifications;
@@ -64,7 +63,7 @@
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     ZMUser *user1 = [self userForMockUser:self.user1];
-    [conversation addTypingObserver:self];
+    id token = [conversation addTypingObserver:self];
     
     XCTAssertEqual(conversation.typingUsers.count, 0u);
     
@@ -72,20 +71,40 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     XCTAssertEqual(self.notifications.count, 1u);
-    ZMTypingChangeNotification *note = self.notifications.firstObject;
+    TypingChange *note = self.notifications.firstObject;
     XCTAssertEqual(note.conversation, conversation);
     XCTAssertEqual(note.typingUsers.count, 1u);
     XCTAssertEqual(note.typingUsers.anyObject, user1);
     XCTAssertEqual(conversation.typingUsers.count, 1u);
     XCTAssertEqual(conversation.typingUsers.anyObject, user1);
+    
+    token = nil;
 }
-
+    
+- (void)testThatItSendsTypingNotificationsForConversation;
+{
+    XCTAssertTrue([self login]);
+    
+    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
+    ZMConversation *otherConversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+    id token = [otherConversation addTypingObserver:self];
+    
+    XCTAssertEqual(conversation.typingUsers.count, 0u);
+    
+    [self.mockTransportSession sendIsTypingEventForConversation:self.groupConversation user:self.user1 started:YES];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    XCTAssertEqual(self.notifications.count, 0u);
+    
+    token = nil;
+}
+    
 - (void)testThatItTypingStatusTimesOut;
 {
     XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    [conversation addTypingObserver:self];
+    id token = [conversation addTypingObserver:self];
     
     XCTAssertEqual(conversation.typingUsers.count, 0u);
     
@@ -98,10 +117,12 @@
     [self spinMainQueueWithTimeout:ZMTypingDefaultTimeout + 1];
     
     XCTAssertEqual(self.notifications.count, 1u);
-    ZMTypingChangeNotification *note = self.notifications.firstObject;
+    TypingChange *note = self.notifications.firstObject;
     XCTAssertEqual(note.conversation, conversation);
     XCTAssertEqual(note.typingUsers.count, 0u);
     XCTAssertEqual(conversation.typingUsers.count, 0u);
+    
+    token = nil;
 }
 
 - (void)testThatItResetsIsTypingWhenATypingUserSendsAMessage
@@ -110,7 +131,7 @@
     XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    [conversation addTypingObserver:self];
+    id token = [conversation addTypingObserver:self];
     
     XCTAssertEqual(conversation.typingUsers.count, 0u);
     
@@ -132,6 +153,8 @@
     
     // then
     XCTAssertEqual(conversation.typingUsers.count, 0u);
+    
+    token = nil;
 }
 
 - (void)testThatIt_DoesNot_ResetIsTypingWhenA_DifferentUser_ThanTheTypingUserSendsAMessage
@@ -140,7 +163,7 @@
     XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    [conversation addTypingObserver:self];
+    id token = [conversation addTypingObserver:self];
     
     XCTAssertEqual(conversation.typingUsers.count, 0u);
     
@@ -162,6 +185,7 @@
     
     // then
     XCTAssertEqual(conversation.typingUsers.count, 1u);
+    token = nil;
 }
 
 @end

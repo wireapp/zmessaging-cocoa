@@ -24,9 +24,9 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMCredentials.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 #import "ZMClientRegistrationStatus+Internal.h"
 #import "NSError+ZMUserSession.h"
-#import "ZMUserSessionAuthenticationNotification.h"
 
 @interface FakeCredentialProfider : NSObject <ZMCredentialProvider>
 @property (nonatomic) NSUInteger  clearCallCount;
@@ -61,7 +61,7 @@
 @property (nonatomic) id mockCookieStorage;
 @property (nonatomic) id mockClientRegistrationDelegate;
 @property (nonatomic) id sessionToken;
-@property (nonatomic) NSMutableArray *sessionNotifications;
+@property (nonatomic) PostLoginAuthenticationNotificationRecorder *authenticationNotificationRecorder;
 @end
 
 
@@ -71,7 +71,6 @@
 - (void)setUp {
     [super setUp];
     [self.uiMOC setPersistentStoreMetadata:nil forKey:ZMPersistedClientIdKey]; // make sure to call this before initializing sut
-    self.sessionNotifications = [NSMutableArray array];
     self.mockCookieStorage = [OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]];
     self.mockClientRegistrationDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMClientRegistrationStatusDelegate)];
     [[[self.mockCookieStorage stub] andReturn:[NSData data]] authenticationCookieData];
@@ -79,17 +78,17 @@
     self.sut = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC
                                                                   cookieStorage:self.mockCookieStorage
                                                      registrationStatusDelegate:self.mockClientRegistrationDelegate];
-    self.sessionToken = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
-        [self.sessionNotifications addObject:note];
-    }];
+    
+    self.authenticationNotificationRecorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:self.uiMOC];
 }
 
-- (void)tearDown {
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:self.sessionToken];
-    [self.sessionNotifications removeAllObjects];
+- (void)tearDown
+{
+    self.authenticationNotificationRecorder = nil;
     self.mockCookieStorage = nil;
     [self.sut tearDown];
     self.sut = nil;
+    
     [super tearDown];
 }
 
@@ -178,9 +177,13 @@
 {
     // given
     __block BOOL notificationReceived = NO;
-    id <ZMAuthenticationObserverToken> token = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
-        notificationReceived = YES;
-        XCTAssertEqual(note.type, ZMAuthenticationNotificationAuthenticationDidFail);
+    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
+        NOT_USED(error);
+        NOT_USED(accountId);
+        
+        if (event == PostLoginAuthenticationEventObjCAuthenticationInvalidated) {
+            notificationReceived = YES;
+        }
     }];
     
     [self performPretendingUiMocIsSyncMoc:^{
@@ -205,7 +208,7 @@
     XCTAssertTrue(notificationReceived);
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseUnregistered);
     
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
+    postLoginToken = nil;
 }
 
 - (void)testThatItResets_LocallyModifiedKeys_AfterUserSelectedClientToDelete
@@ -241,7 +244,7 @@
     
     // when
     [self.sut didFailToRegisterClient:[self tooManyClientsError]];
-    [ZMClientUpdateNotification notifyFetchingClientsCompletedWithUserClients:@[client]];
+    [ZMClientUpdateNotification notifyFetchingClientsCompletedWithUserClients:@[client] context:self.uiMOC];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -372,7 +375,11 @@
 
 - (void)testThatItNotifiesTheUIAboutSuccessfulRegistration
 {
-    // givne
+    // given
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    selfUser.remoteIdentifier = self.userIdentifier;
+    [self.uiMOC saveOrRollback];
+    
     UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
     client.remoteIdentifier = @"yay";
     
@@ -380,14 +387,13 @@
     [self.sut didRegisterClient:client];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    
     // then
-    XCTAssertEqual(self.sessionNotifications.count, 1u);
-    ZMUserSessionAuthenticationNotification *note = self.sessionNotifications.firstObject;
-    XCTAssertEqual(note.type, ZMAuthenticationNotificationDidRegisterClient);
+    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 1u);
+    PostLoginAuthenticationNotificationEvent *note = self.authenticationNotificationRecorder.notifications.firstObject;
+    XCTAssertEqual(note.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
 }
 
-- (void)testThatItNotifiesTheUIIfTheClientWasAlreadyRegisteredBeforeFetchingTheSelfUser
+- (void)testThatItNotifiesTheUIIfTheClientWasAlreadyRegisteredBeforeFetchingTheSelfUser // TODO jacob rename (we no longer send this notification)
 {
     // given
     [self.syncMOC setPersistentStoreMetadata:@"brrrrr" forKey:ZMPersistedClientIdKey];
@@ -397,9 +403,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.sessionNotifications.count, 1u);
-    ZMUserSessionAuthenticationNotification *note = self.sessionNotifications.firstObject;
-    XCTAssertEqual(note.type, ZMAuthenticationNotificationAuthenticationDidSuceeded);
+    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 0u);
 }
 
 - (void)testThatItNotifiesTheUIIfTheRegistrationFailsWithMissingEmailVerification
@@ -409,21 +413,26 @@
     selfUser.remoteIdentifier = [NSUUID UUID];
     selfUser.emailAddress = nil;
     selfUser.phoneNumber = nil;
+    [self.uiMOC saveOrRollback];
     
     // when
     [self.sut didFetchSelfUser];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.sessionNotifications.count, 1u);
-    ZMUserSessionAuthenticationNotification *note = self.sessionNotifications.firstObject;
-    XCTAssertEqual(note.type, ZMAuthenticationNotificationAuthenticationDidFail);
+    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 1u);
+    PostLoginAuthenticationNotificationEvent *note = self.authenticationNotificationRecorder.notifications.firstObject;
+    XCTAssertEqual(note.event, PostLoginAuthenticationEventObjCClientRegistrationDidFail);
     XCTAssertEqual(note.error.code, [self needToRegisterEmailError].code);
 }
 
 - (void)testThatItNotifiesTheUIIfTheRegistrationFailsWithMissingPasswordError
 {
     // given
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    selfUser.remoteIdentifier = self.userIdentifier;
+    [self.uiMOC saveOrRollback];
+    
     NSError *error = [NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionNeedsPasswordToRegisterClient userInfo:nil];
     
     // when
@@ -431,15 +440,19 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.sessionNotifications.count, 1u);
-    ZMUserSessionAuthenticationNotification *note = self.sessionNotifications.firstObject;
-    XCTAssertEqual(note.type, ZMAuthenticationNotificationAuthenticationDidFail);
+    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 1u);
+    PostLoginAuthenticationNotificationEvent *note = self.authenticationNotificationRecorder.notifications.firstObject;
+    XCTAssertEqual(note.event, PostLoginAuthenticationEventObjCClientRegistrationDidFail);
     XCTAssertEqual(note.error.code, error.code);
 }
 
 - (void)testThatItNotifiesTheUIIfTheRegistrationFailsWithWrongCredentialsError
 {
     // given
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    selfUser.remoteIdentifier = self.userIdentifier;
+    [self.uiMOC saveOrRollback];
+    
     NSError *error = [NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionInvalidCredentials userInfo:nil];
     
     // when
@@ -447,10 +460,10 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.sessionNotifications.count, 1u);
-    ZMUserSessionAuthenticationNotification *note = self.sessionNotifications.firstObject;
-    XCTAssertEqual(note.type, ZMAuthenticationNotificationAuthenticationDidFail);
-    XCTAssertEqual(note.error, error);
+    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 1u);
+    PostLoginAuthenticationNotificationEvent *note = self.authenticationNotificationRecorder.notifications.firstObject;
+    XCTAssertEqual(note.event, PostLoginAuthenticationEventObjCClientRegistrationDidFail);
+    XCTAssertEqual(note.error.code, error.code);
 }
 
 - (void)testThatItDoesNotNotifiesTheUIIfTheRegistrationFailsWithTooManyClientsError
@@ -462,7 +475,7 @@
     [self.sut didFailToRegisterClient:error];
     
     // then
-    XCTAssertEqual(self.sessionNotifications.count, 0u);
+    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 0u);
 }
 
 - (void)testThatItDeletesTheCookieIfFetchingClientsFailedWithError_SelfClientIsInvalid
@@ -485,7 +498,7 @@
     [[self.mockCookieStorage expect] deleteKeychainItems];
     
     // when
-    [ZMClientUpdateNotification notifyFetchingClientsDidFail:error];
+    [ZMClientUpdateNotification notifyFetchingClientsDidFailWithError:error context:self.uiMOC];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

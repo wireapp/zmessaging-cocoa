@@ -129,8 +129,8 @@ extension ZMHotFixDirectory {
         context.enqueueDelayedSave()
     }
 
-    public static func restartSlowSync() {
-        NotificationCenter.default.post(name: .ForceSlowSync, object: nil)
+    public static func restartSlowSync(_ context: NSManagedObjectContext) {
+        NotificationInContext(name: .ForceSlowSync, context: context.notificationContext).post()
     }
     
     public static func deleteDuplicatedClients(in context: NSManagedObjectContext) {

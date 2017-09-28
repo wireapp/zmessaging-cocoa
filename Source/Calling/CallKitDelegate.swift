@@ -32,8 +32,8 @@ public class CallKitDelegate : NSObject {
     fileprivate let userSession : ZMUserSession
     fileprivate let flowManager : FlowManagerType?
     fileprivate let mediaManager: AVSMediaManager?
-    fileprivate var callStateObserverToken : WireCallCenterObserverToken?
-    fileprivate var missedCallObserverToken : WireCallCenterObserverToken?
+    fileprivate var callStateObserverToken : Any?
+    fileprivate var missedCallObserverToken : Any?
     fileprivate var connectedCallConversation : ZMConversation?
     fileprivate var calls : [UUID : CallObserver]
     
@@ -58,8 +58,8 @@ public class CallKitDelegate : NSObject {
         // the audio before the audio session is active
         mediaManager?.setUiStartsAudio(true)
         
-        callStateObserverToken = WireCallCenterV3.addCallStateObserver(observer: self)
-        missedCallObserverToken = WireCallCenterV3.addMissedCallObserver(observer: self)
+        callStateObserverToken = WireCallCenterV3.addCallStateObserver(observer: self, context: userSession.managedObjectContext)
+        missedCallObserverToken = WireCallCenterV3.addMissedCallObserver(observer: self, context: userSession.managedObjectContext)
     }
     
     deinit {
@@ -262,7 +262,7 @@ extension CallKitDelegate : CXProviderDelegate {
         calls.removeAll()
         
         // leave all active calls
-        for conversation in WireCallCenterV3.activeInstance?.nonIdleCallConversations(in: userSession) ?? [] {
+        for conversation in userSession.callCenter?.nonIdleCallConversations(in: userSession) ?? [] {
             conversation.voiceChannel?.leave()
         }
     }
@@ -469,7 +469,7 @@ extension CallClosedReason {
 
 class CallObserver : WireCallCenterCallStateObserver {
     
-    private var token : WireCallCenterObserverToken?
+    private var token : Any?
     
     public var onAnswered : (() -> Void)?
     public var onEstablished : (() -> Void)?

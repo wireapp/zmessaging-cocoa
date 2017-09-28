@@ -26,7 +26,8 @@ public protocol NotificationForMessage : LocalNotification {
     var contentType : ZMLocalNotificationContentType { get }
     init?(message: MessageType, application: ZMApplication?)
     func copyByAddingMessage(_ message: MessageType) -> Self?
-    func configureAlertBody(_ message: MessageType) -> String
+    func textToDisplay(_ message: MessageType) -> String
+    func titleToDisplay(for managedObjectContext: NSManagedObjectContext?) -> String?
     static func shouldCreateNotification(_ message: MessageType) -> Bool
 }
 
@@ -57,10 +58,11 @@ extension NotificationForMessage {
                 notification.category = conversationCategory(ephemeral: isEphemeral)
             }
         } else {
-            notification.alertBody = configureAlertBody(message).escapingPercentageSymbols()
+            notification.alertBody = textToDisplay(message).escapingPercentageSymbols()
             notification.soundName = soundName
             notification.category = conversationCategory(ephemeral: isEphemeral)
         }
+        notification.alertTitle = titleToDisplay(for: message.managedObjectContext)
         notification.setupUserInfo(message)
         return notification
     }
@@ -122,8 +124,8 @@ final public class ZMLocalNotificationForMessage : ZMLocalNotification, Notifica
         let notification = configureNotification(message, isEphemeral: message.isEphemeral)
         notifications.append(notification)
     }
-
-    public func configureAlertBody(_ message: ZMOTRMessage) -> String {
+    
+    public func textToDisplay(_ message: ZMOTRMessage) -> String {
         let sender = message.sender
         let conversation = message.conversation
         switch contentType {

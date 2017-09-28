@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "Brugere er blevet fjernet fra en samtale";
 "push.notification.member.leave.nootherusername.nousername" = "Brugere er blevet fjernet fra %1$@";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@ forlod %2$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ forlod en samtale";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Brugere har forladt en samtale";
-"push.notification.member.leave.sender.nootherusername.nousername" = "Brugere har forladt %1$@";
-
-
 "push.notification.call.started.video.oneonone" = "%1$@ anmoder om videoopkald";
 "push.notification.call.started.video.oneonone.nousername" = "Nogen anmoder om videoopkald";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@ har oprettet en gruppechat med dig";
 "push.notification.conversation.create.nousername" = "Nogen har oprettet en gruppechat med dig";
-
-"push.notification.conversation.rename" = "%1$@ omdøbte en samtale til %2$@";
-"push.notification.conversation.rename.nousername" = "En samtale blev omdøbt til %1$@";
 
 "push.notification.connection.request" = "%@ ønsker at forbinde sig";
 "push.notification.connection.request.nousername" = "Nogen ønsker at forbinde sig";

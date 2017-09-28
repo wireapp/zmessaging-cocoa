@@ -27,7 +27,6 @@
 # import "ZMUserSession+UserNotificationCategories.h"
 # import "ZMUserSession+Authentication.h"
 # import "ZMUserSession+Registration.h"
-# import "ZMUserSessionAuthenticationNotification.h"
 # import "ZMUserSessionRegistrationNotification.h"
 
 #import "ZMOperationLoop+Background.h"

@@ -31,7 +31,6 @@
 @class ZMPersistentCookieStorage;
 @class ZMClientRegistrationStatus;
 
-FOUNDATION_EXPORT NSString * const RegisteredOnThisDeviceKey;
 FOUNDATION_EXPORT NSTimeInterval DebugLoginFailureTimerOverride;
 
 /// Invoked when the credentials are changed
@@ -72,8 +71,7 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 - (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue;
 
-- (void)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
-- (void)removeAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
+- (id)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
 
 - (void)prepareForRegistrationOfUser:(ZMCompleteRegistrationUser *)user;
 - (void)prepareForLoginWithCredentials:(ZMCredentials *)credentials;
@@ -112,11 +110,4 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 @end
 
-
-@interface NSManagedObjectContext (Registration)
-
-@property (nonatomic) BOOL registeredOnThisDevice;
-- (NSString *)legacyCookieLabel;
-
-@end
 

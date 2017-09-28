@@ -42,7 +42,7 @@ public extension LocalNotificationDispatcher {
     private func scheduleNotification(_ note: ZMLocalNotification) {
         if let uiNote = note.uiNotifications.first {
             callingNotifications.addObject(note)
-            self.application.scheduleLocalNotification(uiNote)
+            self.scheduleUILocalNotification(uiNote)
         }
     }
     

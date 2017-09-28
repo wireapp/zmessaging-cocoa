@@ -92,7 +92,7 @@ final public class ZMLocalNotificationForReaction : ZMLocalNotificationForEvent,
         return nil
     }
     
-    override func configureAlertBody(_ conversation: ZMConversation?) -> String {
+    override func textToDisplay(_ conversation: ZMConversation?) -> String {
         return ZMPushStringReaction.localizedString(with: self.sender, conversation: conversation, emoji: self.emoji!)
     }
 }

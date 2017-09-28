@@ -80,10 +80,10 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: syncMOC, application: nil)
         
         // then
-        XCTAssertEqual(sut?.sender!.remoteIdentifier, sender.remoteIdentifier);
-        XCTAssertEqual(sut?.uiNotifications.first?.zm_senderUUID, sender.remoteIdentifier);
+        XCTAssertEqual(sut?.sender!.remoteIdentifier, sender.remoteIdentifier)
+        XCTAssertEqual(sut?.uiNotifications.first?.zm_senderUUID, sender.remoteIdentifier)
+        XCTAssertEqual(sut?.uiNotifications.first?.zm_selfUserUUID, self.selfUser.remoteIdentifier)
     }
-    
     
     func testThatItSavesTheConversationOfANotification() {
         // given
@@ -93,8 +93,8 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: syncMOC, application: nil)
         
         // then
-        XCTAssertEqual(sut?.conversationID, oneOnOneConversation.remoteIdentifier);
-        XCTAssertEqual(sut?.uiNotifications.first?.zm_conversationRemoteID, oneOnOneConversation.remoteIdentifier);
+        XCTAssertEqual(sut?.conversationID, oneOnOneConversation.remoteIdentifier)
+        XCTAssertEqual(sut?.uiNotifications.first?.zm_conversationRemoteID, oneOnOneConversation.remoteIdentifier)
     }
     
     func testThatItSavesTheMessageNonce() {
@@ -107,7 +107,7 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         let sut = ZMLocalNotificationForReaction(events: [event], conversation: oneOnOneConversation, managedObjectContext: syncMOC, application: nil)
         
         // then
-        XCTAssertEqual(sut?.uiNotifications.first?.zm_messageNonce, message.nonce);
+        XCTAssertEqual(sut?.uiNotifications.first?.zm_messageNonce, message.nonce)
     }
 }
 
@@ -127,6 +127,20 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         // then
         guard let localNote = sut?.uiNotifications.first else {return nil }
         return localNote.alertBody
+    }
+    
+    func localNote(_ conversation: ZMConversation, aSender: ZMUser) -> UILocalNotification? {
+        // given
+        let message = conversation.appendMessage(withText: "text") as! ZMClientMessage
+        let reaction = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let event = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction, senderID: aSender.remoteIdentifier!)
+        
+        // when
+        let sut = ZMLocalNotificationForReaction(events: [event], conversation: conversation, managedObjectContext: syncMOC, application: nil)
+        
+        // then
+        guard let localNote = sut?.uiNotifications.first else {return nil }
+        return localNote
     }
     
     func testThatItCreatesTheCorrectAlertBody_ConvWithoutName(){
@@ -240,6 +254,39 @@ extension ZMLocalNotificationForEventsTests_Reactions {
         XCTAssertFalse(sut1!.shouldBeDiscarded)
         XCTAssertFalse(self.application.cancelledLocalNotifications.contains(note!))
         XCTAssertNil(sut2)
+    }
+    
+    func testThatItAddsATitleIfTheUserIsPartOfATeam() {
+        
+        self.syncMOC.performGroupedBlockAndWait {
+            // given
+            let team = Team.insertNewObject(in: self.syncMOC)
+            team.name = "Wire Amazing Team"
+            let user = ZMUser.selfUser(in: self.syncMOC)
+            _ = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
+            self.syncMOC.saveOrRollback()
+            XCTAssertNotNil(user.team)
+            
+            // when
+            guard let note = self.localNote(self.oneOnOneConversation, aSender: self.sender) else {
+                return XCTFail()
+            }
+            
+            // then
+            XCTAssertEqual(note.alertTitle, team.name)
+        }
+    }
+    
+    func testThatItDoesNotAddATitleIfTheUserIsNotPartOfATeam() {
+        
+        // when
+        guard let note = localNote(oneOnOneConversation, aSender: sender) else {
+            return XCTFail()
+        }
+        
+        // then
+        XCTAssertNil(note.alertTitle)
+        
     }
 }
 

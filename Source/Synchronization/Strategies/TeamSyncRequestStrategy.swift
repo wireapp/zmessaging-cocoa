@@ -96,7 +96,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
         // and must therefore delete the user account
         guard remotelyDeletedIds.count > 0 else { return }
         remotelyDeletedIds = Set()
-        ZMUserSessionAuthenticationNotification.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.accountDeleted, userInfo: nil))
+        PostLoginAuthenticationNotification.notifyAccountDeleted(context: managedObjectContext)
     
     }
     

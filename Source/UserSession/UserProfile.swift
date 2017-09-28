@@ -58,12 +58,10 @@ import Foundation
     /// and invokes a callback when it finds one that is available
     func suggestHandles()
     
-    /// Add an observer for callbacks about the user profile
-    @objc(addObserver:) func add(observer: UserProfileUpdateObserver) -> AnyObject?
+    /// Add an observer for callbacks about the user profile.
+    /// Returns a token which should retained as long as the observer should be active.
+    @objc(addObserver:) func add(observer: UserProfileUpdateObserver) -> Any
     
-    /// Removes the observer for callbacks about the user profile
-    @objc func removeObserver(token: AnyObject)
-
     /// Last handle to have been suggested
     @objc var lastSuggestedHandle : String? { get }
 

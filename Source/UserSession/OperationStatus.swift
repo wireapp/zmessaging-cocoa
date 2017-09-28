@@ -22,8 +22,6 @@ public typealias BackgroundFetchHandler = (_ fetchResult: UIBackgroundFetchResul
 
 public typealias BackgroundTaskHandler = (_ taskResult: BackgroundTaskResult) -> Void
 
-let OperationStatusChangedNotification : Notification.Name  = Notification.Name(rawValue: "OperationStatusChangedNotification")
-
 private let zmLog = ZMSLog(tag: "OperationStatus")
 
 @objc(ZMOperationStatusDelegate)
@@ -98,7 +96,6 @@ public class OperationStatus : NSObject {
     public private(set) var operationState : SyncEngineOperationState = .background {
         didSet {
             delegate?.operationStatus(didChangeState: operationState)
-            NotificationCenter.default.post(name: OperationStatusChangedNotification, object: self)
         }
     }
     

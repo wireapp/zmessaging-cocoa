@@ -677,91 +677,77 @@
 - (void)testThatItNotifiesObserversWhenTheNetworkStatusBecomesOnline
 {
     // given
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMNetworkAvailabilityObserver)];
+    NetworkStateRecorder *stateRecorder = [[NetworkStateRecorder alloc] init];
     [self.sut didGoOffline];
     XCTAssertTrue([self waitForOfflineStatus]);
     XCTAssertEqual(self.sut.networkState, ZMNetworkStateOffline);
     
-    // expect
-    [[observer expect] didChangeAvailability:[OCMArg checkWithBlock:^BOOL(ZMNetworkAvailabilityChangeNotification *note) {
-        return note.networkState == ZMNetworkStateOnline;
-    }]];
-    
     // when
-    [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:observer userSession:self.sut];
+    id token = [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:stateRecorder userSession:self.sut];
     [self.sut didReceiveData];
     
     // then
-    XCTAssertTrue([self waitForOnlineStatus]);
-    [observer verify];
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertEqual(stateRecorder.stateChanges.count, 1u);
+    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges.firstObject intValue], ZMNetworkStateOnline);
     
     // after
-    [ZMNetworkAvailabilityChangeNotification removeNetworkAvailabilityObserver:observer];
+    token = nil;
 }
 
 - (void)testThatItDoesNotNotifiesObserversWhenTheNetworkStatusWasAlreadyOnline
 {
     // given
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMNetworkAvailabilityObserver)];
-    
-    // expect
-    [[observer reject] didChangeAvailability:OCMOCK_ANY];
+    NetworkStateRecorder *stateRecorder = [[NetworkStateRecorder alloc] init];
     
     // when
-    [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:observer userSession:self.sut];
+    id token = [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:stateRecorder userSession:self.sut];
     [self.sut didReceiveData];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    [observer verify];
+    XCTAssertEqual(stateRecorder.stateChanges.count, 0u);
     
     // after
-    [ZMNetworkAvailabilityChangeNotification removeNetworkAvailabilityObserver:observer];
+    token = nil;
     
 }
 
 - (void)testThatItNotifiesObserversWhenTheNetworkStatusBecomesOffline
 {
     // given
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMNetworkAvailabilityObserver)];
-    
-    // expect
-    [[observer expect] didChangeAvailability:[OCMArg checkWithBlock:^BOOL(ZMNetworkAvailabilityChangeNotification *note) {
-        return note.networkState == ZMNetworkStateOffline;
-    }]];
+    NetworkStateRecorder *stateRecorder = [[NetworkStateRecorder alloc] init];
     
     // when
-    [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:observer userSession:self.sut];
+    id token = [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:stateRecorder userSession:self.sut];
     [self.sut didGoOffline];
     
     // then
-    XCTAssertTrue([self waitForOfflineStatus]);
-    [observer verify];
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertEqual(stateRecorder.stateChanges.count, 1u);
+    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges.firstObject intValue], ZMNetworkStateOffline);
     
     // after
-    [ZMNetworkAvailabilityChangeNotification removeNetworkAvailabilityObserver:observer];
+    token = nil;
 }
 
 - (void)testThatItDoesNotNotifiesObserversWhenTheNetworkStatusWasAlreadyOffline
 {
     // given
-    id observer = [OCMockObject mockForProtocol:@protocol(ZMNetworkAvailabilityObserver)];
+    NetworkStateRecorder *stateRecorder = [[NetworkStateRecorder alloc] init];
     [self.sut didGoOffline];
     XCTAssertTrue([self waitForOfflineStatus]);
     
-    // expect
-    [[observer reject] didChangeAvailability:OCMOCK_ANY];
-    
     // when
-    [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:observer userSession:self.sut];
+    id token = [ZMNetworkAvailabilityChangeNotification addNetworkAvailabilityObserver:stateRecorder userSession:self.sut];
     [self.sut didGoOffline];
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    [observer verify];
+    XCTAssertEqual(stateRecorder.stateChanges.count, 0u);
     
     // after
-    [ZMNetworkAvailabilityChangeNotification removeNetworkAvailabilityObserver:observer];
+    token = nil;
     
 }
 
@@ -817,27 +803,35 @@
     return note;
 }
 
-- (void)testThatItStoresThePushToken
+- (UILocalNotification *)notificationMessageConversationForCategory:(NSString *)category
 {
-    // given
-    NSData *deviceToken = [NSData dataWithBytes:@"bla" length:3];
-    ZMPushToken *pushToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken
-                                                           identifier:@"com.wire.ent"
-                                                        transportType:@"APNS"
-                                                             fallback:nil
-                                                         isRegistered:YES];
-    // expect
-    id mockRemoteRegistrant = [OCMockObject partialMockForObject:self.sut.applicationRemoteNotification];
-    [(ZMApplicationRemoteNotification *)[[mockRemoteRegistrant expect] andForwardToRealObject] application:OCMOCK_ANY didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
+    __block ZMConversation *conversation;
+    __block ZMMessage *message;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMConversationTypeOneOnOne;
+        conversation.remoteIdentifier = [NSUUID UUID];
+        
+        ZMUser *sender = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        sender.remoteIdentifier = [NSUUID UUID];
+        
+        ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+        connection.conversation = conversation;
+        connection.to = sender;
+        connection.status = ZMConnectionStatusAccepted;
+        
+        message = (ZMMessage *)[conversation appendMessageWithText:@"Test message"];
+        [message markAsSent];
+        
+        [self.syncMOC saveOrRollback];
+    }];
     
-    // when
-    [self.sut application:OCMOCK_ANY didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
+    UILocalNotification *note = [[UILocalNotification alloc] init];
+    note.category = category;
+    note.userInfo = @{@"conversationIDString": conversation.remoteIdentifier.transportString,
+                      @"messageNonceString": message.nonce.transportString};
     
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqualObjects(self.uiMOC.pushToken, pushToken);
-    [mockRemoteRegistrant verify];
+    return note;
 }
 
 - (void)testThatItMarksThePushTokenAsNotRegisteredAfterResetting
@@ -865,8 +859,6 @@
 {
     // given
     XCTAssertNil(self.uiMOC.pushToken);
-    id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
-    [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:[NSData data]] pushToken];
     
     // when
     [self performIgnoringZMLogError:^{
@@ -882,9 +874,7 @@
 {
     // given
     XCTAssertNil(self.uiMOC.pushToken);
-    id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
-    [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:[NSData data]] pushToken];
-    
+
     // when
     [self performIgnoringZMLogError:^{
         [self.sut resetPushTokens];
@@ -905,12 +895,12 @@
                                                         transportType:@"APNS_VOIP"
                                                              fallback:@"APNS"
                                                          isRegistered:YES];
-    id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
-    [(ZMPushRegistrant *)[[mockPushRegistrant stub] andReturn:deviceToken] pushToken];
     self.uiMOC.pushKitToken = pushToken;
     
     // when
     [self performIgnoringZMLogError:^{
+        self.uiMOC.pushKitToken = nil;
+        [self.sut setPushKitToken:deviceToken];
         [self.sut resetPushTokens];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
@@ -928,11 +918,8 @@
                                                            identifier:@"com.wire.ent"
                                                         transportType:@"APNS_VOIP"
                                                              fallback:@"APNS"
-                                                         isRegistered:NO];
-    // expect
-    id mockPushRegistrant = [OCMockObject partialMockForObject:self.sut.pushRegistrant];
-    [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:deviceToken] pushToken];
-    [[[self.apnsEnvironment expect] andReturn:@"APNS"] fallbackForTransportType:ZMAPNSTypeVoIP];
+                                                         isRegistered:YES];
+    self.uiMOC.pushToken = pushToken;
     
     // when
     [self performIgnoringZMLogError:^{
@@ -941,12 +928,8 @@
     }];
     
     // then
-    [mockPushRegistrant verify];
-    [self.apnsEnvironment verify];
-    XCTAssertEqualObjects(self.uiMOC.pushKitToken, pushToken);
-    XCTAssertFalse(self.uiMOC.pushKitToken.isRegistered);
+    XCTAssertFalse(self.uiMOC.pushToken.isRegistered);
 }
-
 
 - (void)testThatIt_DoesNot_ForwardsRemoteNotificationsWhileRunning_WhenNotLoggedIn;
 {
@@ -972,7 +955,7 @@
     // when
     __block BOOL didCallCompletionHandler = NO;
     self.sut.requestToOpenViewDelegate = mockDelegate;
-    [self.sut application:self.application handleActionWithIdentifier:actionIdentifier forLocalNotification:notification responseInfo:responseInfo completionHandler:^{
+    [self.sut handleActionWithApplication:self.application with:actionIdentifier for:notification with:responseInfo completionHandler:^{
         didCallCompletionHandler = YES;
     }];
     
@@ -1015,7 +998,7 @@
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversationList];
+        [[mockDelegate expect] showConversationListForUserSession:self.sut];
     }];
 }
 
@@ -1031,7 +1014,7 @@
     [self.application setInactive];
     
     [self checkThatItCallsOnLaunchTheDelegateForNotification:note withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversationList];
+        [[mockDelegate expect] showConversationListForUserSession:self.sut];
     }];
 }
 
@@ -1043,9 +1026,9 @@
     
     // expect
     [self checkThatItCallsOnLaunchTheDelegateForNotification:note withBlock:^(id mockDelegate) {
-        [[mockDelegate reject] showConversationList];
-        [[mockDelegate reject] showMessage:OCMOCK_ANY inConversation:OCMOCK_ANY];
-        [[mockDelegate reject] showConversation:OCMOCK_ANY];
+        [[mockDelegate reject] showConversationListForUserSession:self.sut];
+        [[mockDelegate reject] userSession:self.sut showMessage:OCMOCK_ANY inConversation:OCMOCK_ANY];
+        [[mockDelegate reject] userSession:self.sut showConversation:OCMOCK_ANY];
     }];
 }
 
@@ -1060,7 +1043,7 @@
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:OCMOCK_ANY];
+        [[mockDelegate expect] userSession:self.sut showConversation:OCMOCK_ANY];
     }];
 }
 
@@ -1078,11 +1061,37 @@
     [self.application setInactive];
     
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMConversationMuteAction withBlock:^(id mockDelegate) {
-        [[mockDelegate reject] showConversation:OCMOCK_ANY];
+        [[mockDelegate reject] userSession:self.sut showConversation:OCMOCK_ANY];
     }];
     
     //then
     XCTAssertTrue(conversation.isSilenced);
+}
+
+- (void)testThatItAddsLike_ForZMConversationCategory_ZMMessageLikeAction
+{
+    //given
+    [self simulateLoggedInUser];
+    
+    [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
+    UILocalNotification *note = [self notificationMessageConversationForCategory:ZMConversationCategory];
+    NSString *conversationIDString = note.userInfo[@"conversationIDString"];
+    ZMConversation *conversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:conversationIDString]
+                                                             createIfNeeded:NO
+                                                                  inContext:self.uiMOC];
+    
+    // expect
+    [self.sut handleActionWithApplication:self.application
+                                     with:ZMMessageLikeAction
+                                      for:note
+                                     with:[NSDictionary dictionary]
+                        completionHandler:^{}];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
+    //then
+    ZMMessage *lastMessage = conversation.messages.lastObject;
+    XCTAssertNotNil(lastMessage.reactions);
+    XCTAssertEqual((int)lastMessage.reactions.count, 1);
 }
 
 - (void)testThat_OnLaunch_ItCalls_DelegateShowConversation_ForZMConversationCategory
@@ -1098,7 +1107,7 @@
     [self.application setInactive];
 
     [self checkThatItCallsOnLaunchTheDelegateForNotification:note withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:OCMOCK_ANY];
+        [[mockDelegate expect] userSession:self.sut showConversation:OCMOCK_ANY];
     }];
 }
 
@@ -1120,7 +1129,7 @@
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:conversation];
+        [[mockDelegate expect] userSession:self.sut showConversation:conversation];
     }];
     
     // then
@@ -1145,9 +1154,9 @@
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMConnectAcceptAction withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:conversation];
+        [[mockDelegate expect] userSession:self.sut showConversation:conversation];
     }];
-    
+
     // then
     XCTAssertTrue(sender.isConnected);
 }
@@ -1167,14 +1176,15 @@
     
     [self.uiMOC saveOrRollback];
     
-    [self simulateIncomingCallFromUser: conversation.connectedUser conversation:conversation];
+    [self simulateIncomingCallFromUser:conversation.connectedUser conversation:conversation];
     
     
     // expect
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMCallAcceptAction withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:conversation];
+        [[mockDelegate expect] userSession:self.sut showConversation:conversation];
+
     }];
     
     // then
@@ -1200,7 +1210,7 @@
     [self.application setInactive];
     
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMCallIgnoreAction withBlock:^(id mockDelegate) {
-        [[mockDelegate reject] showConversation:conversation];
+        [[mockDelegate reject] userSession:self.sut showConversation:OCMOCK_ANY];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1225,7 +1235,7 @@
     [self.application setInactive];
 
     [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMCallAcceptAction withBlock:^(id mockDelegate) {
-        [[mockDelegate expect] showConversation:conversation];
+        [[mockDelegate expect] userSession:self.sut showConversation:conversation];
     }];
     
     // then
@@ -1246,7 +1256,7 @@
     XCTAssertEqual(conversation.messages.count, 0u);
     __block BOOL didCallCompletionHandler = NO;
     
-    [self.sut application:self.application handleActionWithIdentifier:ZMConversationDirectReplyAction forLocalNotification:note responseInfo:responseInfo completionHandler:^{
+    [self.sut handleActionWithApplication:self.application with:ZMConversationDirectReplyAction for:note with:responseInfo completionHandler:^{
         didCallCompletionHandler = YES;
     }];
     
@@ -1257,42 +1267,6 @@
     // then
     XCTAssertTrue(didCallCompletionHandler);
     XCTAssertEqual(conversation.messages.count, 1u);
-}
-
-
-- (void)testThatItMarksTheTokenToDeleteWhenReceivingDidInvalidateToken
-{
-    // given
-    [self.uiMOC setPushKitToken:[[ZMPushToken alloc] initWithDeviceToken:[NSData data] identifier:@"foo.bar" transportType:@"APNS" fallback:@"APNS" isRegistered:YES]];
-    XCTAssertNotNil(self.uiMOC.pushKitToken);
-    XCTAssertFalse(self.uiMOC.pushKitToken.isMarkedForDeletion);
-    id mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
-    
-    // when
-    [self.sut.pushRegistrant pushRegistry:mockPushRegistry didInvalidatePushTokenForType:PKPushTypeVoIP];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(self.uiMOC.pushKitToken.isMarkedForDeletion);
-}
-
-- (void)testThatItSetsThePushTokenWhenReceivingUpdateCredentials
-{
-    // given
-    NSData *token = [NSData data];
-    id mockCredentials =[OCMockObject niceMockForClass:[PKPushCredentials class]];
-    [(PKPushCredentials *)[[mockCredentials expect] andReturn:token] token];
-    id mockPushRegistry = [OCMockObject niceMockForClass:[PKPushRegistry class]];
-
-    XCTAssertNil(self.uiMOC.pushKitToken);
-
-    // when
-    [self.sut.pushRegistrant pushRegistry:mockPushRegistry didUpdatePushCredentials:mockCredentials forType:PKPushTypeVoIP];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertNotNil(self.uiMOC.pushKitToken);
-    XCTAssertEqualObjects(self.uiMOC.pushKitToken.deviceToken, token);
 }
 
 @end
@@ -1349,7 +1323,7 @@
     __block ZMConversation *requestedConversation;
     
     // expect
-    [[mockDelegate expect] showConversation:ZM_ARG_SAVE(requestedConversation)];
+    [[mockDelegate expect] userSession:self.sut showConversation:ZM_ARG_SAVE(requestedConversation)];
     
     // when
     [self.syncMOC performGroupedBlockAndWait:^{

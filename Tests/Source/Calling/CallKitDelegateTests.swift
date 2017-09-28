@@ -197,7 +197,6 @@ class CallKitDelegateTest: MessagingTest {
     
     override func setUp() {
         super.setUp()
-        ZMUserSession.useCallKit = true
         
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
         selfUser.emailAddress = "self@user.mail"
@@ -218,11 +217,10 @@ class CallKitDelegateTest: MessagingTest {
         mockUserSession.callKitDelegate = sut
         CallKitDelegateTestsMocking.mockUserSession(self.mockUserSession, callKitDelegate: self.sut)
         
-        
+        self.uiMOC.zm_callCenter = mockWireCallCenterV3
     }
     
     override func tearDown() {
-        ZMUserSession.useCallKit = false
         self.sut = nil
         self.mockWireCallCenterV3 = nil
         

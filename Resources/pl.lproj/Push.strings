@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "Osoby zostały usunięte z rozmowy";
 "push.notification.member.leave.nootherusername.nousername" = "Osoby zostały usunięte z %1$@";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@ opuścił %2$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ opuścił rozmowę";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Osób opuściło konwersację";
-"push.notification.member.leave.sender.nootherusername.nousername" = "Osoby opuściły %1$@";
-
-
 "push.notification.call.started.video.oneonone" = "%1$@ nawiązuje połączenie video";
 "push.notification.call.started.video.oneonone.nousername" = "Nowe połączenie video";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@ utworzył rozmowę grupową z Tobą";
 "push.notification.conversation.create.nousername" = "Ktoś utworzył rozmowę grupową z Tobą";
-
-"push.notification.conversation.rename" = "%1$@ zmienił nazwę rozmowy na %2$@";
-"push.notification.conversation.rename.nousername" = "Nazwa rozmowy została zmieniona na %1$@";
 
 "push.notification.connection.request" = "%@ chce się połączyć";
 "push.notification.connection.request.nousername" = "Ktoś chce się połączyć";

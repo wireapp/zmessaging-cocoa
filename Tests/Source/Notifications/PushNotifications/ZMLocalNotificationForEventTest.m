@@ -191,7 +191,7 @@
     // when
     __block ZMLocalNotificationForEvent *note;
     [self.syncMOC performGroupedBlockAndWait:^{
-        note = [ZMLocalNotificationForEvent notificationForEvent:event conversation:nil managedObjectContext:self.syncMOC application:self.application sessionTracker:self.mockSessionTracker];
+        note = [ZMLocalNotificationForEvent notificationForEvent:event conversation:self.oneOnOneConversation managedObjectContext:self.syncMOC application:self.application sessionTracker:self.mockSessionTracker];
         XCTAssertNotNil(note);
     }];
     WaitForAllGroupsToBeEmpty(0.5);

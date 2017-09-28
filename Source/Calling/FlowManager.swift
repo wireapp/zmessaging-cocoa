@@ -43,7 +43,6 @@ public class FlowManager : NSObject, FlowManagerType {
         didSet {
             guard avsFlowManager == nil else { return }
             avsFlowManager = AVSFlowManager(delegate: self, mediaManager: mediaManager)
-            NotificationCenter.default.post(name: Notification.Name.ZMFlowManagerDidBecomeAvailable, object: self)
         }
     }
     fileprivate var mediaManager : AVSMediaManager?

@@ -444,6 +444,40 @@ internal func groupMemberHandler(conversationIdRef: UnsafePointer<Int8>?, contex
     }
 }
 
+/// Handles video state changes
+/// In order to be passed to C, this function needs to be global
+internal func videoStateChangeHandler(state: Int32, contextRef: UnsafeMutableRawPointer?) {
+    guard let contextRef = contextRef else { return }
+    
+    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+    
+    if let state = ReceivedVideoState(rawValue: UInt(state)),
+       let context = callCenter.uiMOC {
+        
+        context.performGroupedBlock {
+            WireCallCenterV3VideoNotification(receivedVideoState: state).post(in: context.notificationContext)
+        }
+    } else {
+        zmLog.error("Couldn't send video state change notification")
+    }
+}
+
+/// Handles audio CBR mode enabling
+/// In order to be passed to C, this function needs to be global
+internal func audioCBREnabledHandler(contextRef: UnsafeMutableRawPointer?) {
+    guard let contextRef = contextRef else { return }
+    
+    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+    
+    if let context = callCenter.uiMOC {
+        context.performGroupedBlock {
+            WireCallCenterCBRCallNotification().post(in: context.notificationContext)
+        }
+    } else {
+        zmLog.error("Couldn't send CBR notification")
+    }
+}
+
 /// MARK - Call center transport
 public typealias CallConfigRequestCompletion = (String?, Int) -> Void
 
@@ -468,7 +502,7 @@ public struct CallEvent {
 // MARK: - WireCallCenterV3
 
 /**
- * WireCallCenter is used for making wire calls and observing their state. There can only be one instance of the WireCallCenter. You should instantiate WireCallCenter once a keep a strong reference to it, other consumers can access this instance via the `activeInstance` property.
+ * WireCallCenter is used for making wire calls and observing their state. There can only be one instance of the WireCallCenter. 
  * Thread safety: WireCallCenter instance methods should only be called from the main thread, class method can be called from any thread.
  */
 @objc public class WireCallCenterV3 : NSObject {
@@ -478,10 +512,6 @@ public struct CallEvent {
 
     @objc public static let cbrNotificationName = WireCallCenterCBRCallNotification.notificationName
 
-    
-    /// activeInstance - Currenly active instance of the WireCallCenter.
-    public private(set) static weak var activeInstance : WireCallCenterV3?
-    
     /// establishedDate - Date of when the call was established (Participants can talk to each other). This property is only valid when the call state is .established.
     public private(set) var establishedDate : Date?
     
@@ -508,13 +538,8 @@ public struct CallEvent {
     
     /// Removes the participantSnapshot and remove the conversation from the list of ignored conversations
     fileprivate func clearSnapshot(conversationId: UUID) {
-        let snapshot = callSnapshots.removeValue(forKey: conversationId)
+        callSnapshots.removeValue(forKey: conversationId)
         participantSnapshots.removeValue(forKey: conversationId)
-        
-        if let token = snapshot?.conversationObserverToken, let moc = uiMOC {
-            let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: moc)
-            ConversationChangeInfo.remove(observer: token, for: conversation)
-        }
     }
     
     fileprivate func createSnapshot(callState : CallState, video: Bool, for conversationId: UUID) {
@@ -549,14 +574,8 @@ public struct CallEvent {
         
         super.init()
         
-        if WireCallCenterV3.activeInstance != nil {
-            fatal("Only one WireCallCenter can be instantiated")
-        }
-        
         let observer = Unmanaged.passUnretained(self).toOpaque()
         self.avsWrapper = avsWrapper ?? AVSWrapper(userId: userId, clientId: clientId, observer: observer)
-        
-        WireCallCenterV3.activeInstance = self
     }
     
     fileprivate func send(token: WireCallMessageToken, conversationId: UUID, userId: UUID, clientId: String, data: Data, dataLength: Int) {
@@ -602,7 +621,10 @@ public struct CallEvent {
         }
         
         updateSnapshots(forCallSate: callState, conversationId: conversationId, userId: userId)
-        WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId, messageTime: messageTime).post()
+        
+        if let context = uiMOC {
+            WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId, messageTime: messageTime).post(in: context.notificationContext)
+        }
     }
     
     fileprivate func updateSnapshots(forCallSate callState: CallState, conversationId: UUID, userId: UUID?) {
@@ -614,7 +636,8 @@ public struct CallEvent {
             participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
                                                                                      selfUserID: selfUserId,
                                                                                      members: [CallMember(userId: userId!, audioEstablished: false)],
-                                                                                     initiator: userId)
+                                                                                     initiator: userId,
+                                                                                     callCenter: self)
         case .terminating:
             clearSnapshot(conversationId: conversationId)
             
@@ -629,7 +652,9 @@ public struct CallEvent {
     fileprivate func missed(conversationId: UUID, userId: UUID, timestamp: Date, isVideoCall: Bool) {
         zmLog.debug("missed call")
         
-        WireCallCenterMissedCallNotification(conversationId: conversationId, userId:userId, timestamp: timestamp, video: isVideoCall).post()
+        if let context = uiMOC {
+            WireCallCenterMissedCallNotification(conversationId: conversationId, userId:userId, timestamp: timestamp, video: isVideoCall).post(in: context.notificationContext)
+        }
     }
     
     public func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
@@ -654,7 +679,9 @@ public struct CallEvent {
                 callSnapshots[conversationId] = previousSnapshot.update(with: callState)
             }
             
-            WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: self.selfUserId, messageTime:nil).post()
+            if let context = uiMOC {
+                WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: self.selfUserId, messageTime:nil).post(in: context.notificationContext)
+            }
         }
         return answered
     }
@@ -668,7 +695,10 @@ public struct CallEvent {
         if started {
             let callState : CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
             createSnapshot(callState: callState, video: video, for: conversationId)
-            WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: selfUserId, messageTime:nil).post()
+            
+            if let context = uiMOC {
+                WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: selfUserId, messageTime:nil).post(in: context.notificationContext)
+            }
         }
         return started
     }
@@ -772,7 +802,8 @@ public struct CallEvent {
         } else if participants.count > 0 {
             participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
                                                                                      selfUserID: selfUserId,
-                                                                                     members: participants)
+                                                                                     members: participants,
+                                                                                     callCenter: self)
         }
     }
     
@@ -790,18 +821,20 @@ public struct CallEvent {
 extension WireCallCenterV3 : ZMConversationObserver {
     
     public func conversationDidChange(_ changeInfo: ConversationChangeInfo) {
-        guard changeInfo.securityLevelChanged,
-              let conversationId = changeInfo.conversation.remoteIdentifier,
-              let previousSnapshot = callSnapshots[conversationId]
-        else {
-            return
-        }
+        guard
+            changeInfo.securityLevelChanged,
+            let conversationId = changeInfo.conversation.remoteIdentifier,
+            let previousSnapshot = callSnapshots[conversationId]
+        else { return }
         
         let updatedCallState = previousSnapshot.callState.update(withSecurityLevel: changeInfo.conversation.securityLevel)
         
         if updatedCallState != previousSnapshot.callState {
             callSnapshots[conversationId] = previousSnapshot.update(with: updatedCallState)
-            WireCallCenterCallStateNotification(callState: updatedCallState, conversationId: conversationId, userId: selfUserId, messageTime: Date()).post()
+            
+            if let context = uiMOC {
+                WireCallCenterCallStateNotification(callState: updatedCallState, conversationId: conversationId, userId: selfUserId, messageTime: Date()).post(in: context.notificationContext)
+            }
         }
     }
     

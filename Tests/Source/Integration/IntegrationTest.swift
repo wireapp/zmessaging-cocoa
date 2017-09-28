@@ -21,20 +21,36 @@ import WireTesting
 
 @testable import WireSyncEngine
 
-class AuthenticationObserver : NSObject, ZMAuthenticationObserver {
+class AuthenticationObserver : NSObject, PreLoginAuthenticationObserver, PostLoginAuthenticationObserver {
     
     var onFailure : (() -> Void)?
     var onSuccess : (() -> Void)?
     
-    func authenticationDidFail(_ error: Error) {
-        onFailure?()
+    var preLoginToken : Any?
+    var postLoginToken : Any?
+    
+    init(unauthenticatedSession : UnauthenticatedSession, groupQueue: ZMSGroupQueue) {
+        super.init()
+        
+        preLoginToken = unauthenticatedSession.addAuthenticationObserver(self)
+        postLoginToken = PostLoginAuthenticationNotification.addObserver(self, queue: groupQueue)
+    }
+    
+    func clientRegistrationDidSucceed(accountId: UUID) {
+        onSuccess?()
     }
     
     func authenticationDidSucceed() {
         onSuccess?()
     }
-
-
+    
+    func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
+        onFailure?()
+    }
+    
+    func authenticationDidFail(_ error: NSError) {
+        onFailure?()
+    }
     
 }
 
@@ -42,7 +58,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     let transportSession: ZMTransportSession
 
-    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider) {
+    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider & ReachabilityTearDown) {
         self.transportSession = transportSession
         super.init(
             appVersion: "0.0.0",
@@ -115,8 +131,6 @@ extension IntegrationTest {
         sharedSearchDirectory = nil
         userSession = nil
         userSession?.tearDown()
-        unauthenticatedSession?.tearDown()
-        unauthenticatedSession = nil
         mockTransportSession?.cleanUp()
         mockTransportSession = nil
         sessionManager = nil
@@ -148,8 +162,6 @@ extension IntegrationTest {
     func destroySessionManager() {
         userSession?.tearDown()
         userSession = nil
-        unauthenticatedSession?.tearDown()
-        unauthenticatedSession = nil
         sessionManager = nil
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -210,6 +222,9 @@ extension IntegrationTest {
             launchOptions: [:],
             dispatchGroup: self.dispatchGroup
         )
+        
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
     }
     
     @objc
@@ -228,6 +243,11 @@ extension IntegrationTest {
     @objc
     func destroyPersistentStore() {
         StorageStack.reset()
+    }
+    
+    @objc
+    var unauthenticatedSession : UnauthenticatedSession? {
+        return sessionManager?.unauthenticatedSession
     }
     
     @objc
@@ -337,24 +357,24 @@ extension IntegrationTest {
     
     @objc
     func login(withCredentials credentials: ZMCredentials, ignoreAuthenticationFailures: Bool = false) -> Bool {
-        
-        let authenticationObserver = AuthenticationObserver()
+        let queue = DispatchGroupQueue(queue: .main)
+        queue.add(self.dispatchGroup)
+        var authenticationObserver : AuthenticationObserver? = AuthenticationObserver(unauthenticatedSession: sessionManager!.unauthenticatedSession!, groupQueue: queue)
         var didSucceed = false
         
-        authenticationObserver.onSuccess = {
+        authenticationObserver?.onSuccess = {
             didSucceed = true
         }
         
-        authenticationObserver.onFailure = {
+        authenticationObserver?.onFailure = {
             if !ignoreAuthenticationFailures {
                 XCTFail("Failed to authenticate")
             }
         }
         
-        let token = ZMUserSessionAuthenticationNotification.addObserver(authenticationObserver)
-        unauthenticatedSession?.login(with: credentials)
+        sessionManager?.unauthenticatedSession?.login(with: credentials)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        ZMUserSessionAuthenticationNotification.removeObserver(for: token)
+        authenticationObserver = nil
         
         return didSucceed
     }
@@ -487,6 +507,10 @@ extension IntegrationTest {
 
 extension IntegrationTest : SessionManagerDelegate {
     
+    public func sessionManagerDidFailToLogin(error: Error) {
+        // no-op
+    }
+    
     public func sessionManagerCreated(userSession: ZMUserSession) {
         self.userSession = userSession
         
@@ -495,38 +519,22 @@ extension IntegrationTest : SessionManagerDelegate {
         }
     }
     
-    public func sessionManagerCreated(unauthenticatedSession: UnauthenticatedSession) {
-        self.unauthenticatedSession = unauthenticatedSession
-        unauthenticatedSession.groupQueue.add(self.dispatchGroup)
-    }
-    
     public func sessionManagerWillStartMigratingLocalStore() {
         // no-op
     }
-
-    public func sessionManagerDidLogout(error: Error?) {
-        guard let error = error as NSError? else { return }
-        
-        guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)) else {
-            return
-        }
-        
-        switch userSessionErrorCode {
-        case .accountDeleted,
-             .clientDeletedRemotely,
-             .accessTokenExpired:
-            self.userSession = nil
-        default:
-            break
-        }
+    
+    public func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: @escaping () -> Void) {
+        self.userSession = nil
+        userSessionCanBeTornDown()
     }
 
     public func sessionManagerDidBlacklistCurrentVersion() {
         // no-op
     }
     
-    public func sessionManagerWillOpenAccount(_ account: Account) {
-        // no-op
+    public func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
+        self.userSession = nil
+        userSessionCanBeTornDown()
     }
     
 }

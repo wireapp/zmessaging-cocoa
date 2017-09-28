@@ -117,10 +117,11 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
             notification.alertBody = ZMPushStringDefault.localizedStringForPushNotification()
             notification.soundName = ZMCustomSound.notificationNewMessageSoundName()
         } else {
-            notification.alertBody = configureAlertBody(conversation).escapingPercentageSymbols()
+            notification.alertBody = textToDisplay(conversation).escapingPercentageSymbols()
             notification.soundName = soundName
             notification.category = category
         }
+        notification.alertTitle = titleToDisplay(for: conversation?.managedObjectContext)
         notification.setupUserInfo(conversation, for: lastEvent)
         return notification
     }
@@ -133,9 +134,8 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
         return idx != nil
     }
     
-    
-    /// You HAVE To override configureAlertBody() to configure the alert body
-    func configureAlertBody(_ conversation: ZMConversation?) -> String { return "" }
+    /// You HAVE To override textToDisplay() to configure the alert body
+    func textToDisplay(_ conversation: ZMConversation?) -> String { return "" }
     
     // MARK: Override these if needed
     

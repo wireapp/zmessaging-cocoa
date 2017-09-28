@@ -26,7 +26,6 @@
 #import "ZMCredentials.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMUserSessionRegistrationNotification.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
@@ -41,7 +40,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic, weak) id<UserInfoParser> userInfoParser;
 @property (nonatomic, readonly) ZMSingleRequestSync *verificationResendRequest;
-@property (nonatomic) id<ZMRequestVerificationEmailObserverToken> emailResendObserverToken;
+@property (nonatomic) id emailResendObserverToken;
 @property (nonatomic, weak) id<ZMSGroupQueue> groupQueue;
 
 @end
@@ -75,7 +74,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
         _timedDownstreamSync = timedDownstreamSync ?: [[ZMTimedSingleRequestSync alloc] initWithSingleRequestTranscoder:self everyTimeInterval:0 groupQueue:groupQueue];
         _verificationResendRequest = verificationResendRequest ?: [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self groupQueue:groupQueue];
         
-        self.emailResendObserverToken = [ZMUserSessionRegistrationNotification addObserverForRequestForVerificationEmail:self];
+        self.emailResendObserverToken = [ZMUserSessionRegistrationNotification addObserverForRequestForVerificationEmail:self context:authenticationStatus];
         
         _loginWithPhoneNumberSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self groupQueue:groupQueue];
     }
@@ -94,8 +93,6 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
 
 - (void)tearDown
 {
-    [ZMUserSessionRegistrationNotification removeObserverForRequestForVerificationEmail:self.emailResendObserverToken];
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.timedDownstreamSync invalidate];
 }
 
@@ -228,11 +225,9 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
         }
         else if (sync == self.timedDownstreamSync) {
             
-            if([self isResponseForPendingEmailActionvation:response]) {
-                if (self.isWaitingForEmailVerification) {
-                    [authenticationStatus didFailLoginWithEmailBecausePendingValidation];
-                    shouldStartTimer = YES;
-                }
+            if ([self isResponseForPendingEmailActionvation:response]) {
+                [authenticationStatus didFailLoginWithEmailBecausePendingValidation];
+                shouldStartTimer = YES;
             }
             else {
                 [authenticationStatus didFailLoginWithEmail:[self isResponseForInvalidCredentials:response]];
@@ -243,7 +238,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
         }
     }
 
-    if(shouldStartTimer) {
+    if (shouldStartTimer) {
         if(self.timedDownstreamSync.timeInterval != DefaultPendingValidationLoginAttemptInterval) {
             self.timedDownstreamSync.timeInterval = DefaultPendingValidationLoginAttemptInterval;
         }

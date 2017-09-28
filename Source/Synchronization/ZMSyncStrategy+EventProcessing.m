@@ -20,6 +20,7 @@
 
 #import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMSyncStrategy+Internal.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @implementation ZMSyncStrategy (EventProcessing)
 
@@ -67,8 +68,10 @@
                 [eventConsumer processEvents:decryptedEvents liveEvents:YES prefetchResult:prefetchResult];
             }
         }
-        [self.localNotificationDispatcher processEvents:decryptedEvents liveEvents:YES prefetchResult:nil];
+        LocalNotificationDispatcher *dispatcher = self.localNotificationDispatcher;
+        [dispatcher processEvents:decryptedEvents liveEvents:YES prefetchResult:nil];
         [self.syncMOC enqueueDelayedSave];
+        [dispatcher processBuffer];
     }];
 }
 

@@ -31,6 +31,7 @@ class CallStateObserverTests : MessagingTest {
     override func setUp() {
         super.setUp()
         
+        self.application.applicationState = .background
         syncMOC.performGroupedBlockAndWait {
             let sender = ZMUser.insertNewObject(in: self.syncMOC)
             sender.name = "Sender"
@@ -52,11 +53,19 @@ class CallStateObserverTests : MessagingTest {
             
             self.conversation = conversation
             
+            ZMUser.selfUser(in: self.syncMOC).remoteIdentifier = UUID()
+
             self.syncMOC.saveOrRollback()
+            
+            self.localNotificationDispatcher = LocalNotificationDispatcher(
+                in: self.syncMOC,
+                foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
+                application: self.application)
         }
 
-        localNotificationDispatcher = LocalNotificationDispatcher(in: syncMOC, application: application)
         sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
+        uiMOC.zm_callCenter = mockCallCenter
+
     }
     
     override func tearDown() {
@@ -78,7 +87,7 @@ class CallStateObserverTests : MessagingTest {
     }
     
     func testThatMissedCallMessageIsAppendedForCanceledCallByReceiver() {
-        
+
         // when
         sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
         sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversationId: conversation.remoteIdentifier!, userId: receiver.remoteIdentifier!, timeStamp: nil)
@@ -100,12 +109,14 @@ class CallStateObserverTests : MessagingTest {
         sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        // then
-        if let message =  conversation.messages.lastObject as? ZMSystemMessage {
-            XCTAssertEqual(message.systemMessageType, .missedCall)
-            XCTAssertEqual(message.sender, sender)
-        } else {
-            XCTFail()
+        self.syncMOC.performGroupedBlockAndWait {
+            // then
+            if let message = self.conversation.messages.lastObject as? ZMSystemMessage {
+                XCTAssertEqual(message.systemMessageType, .missedCall)
+                XCTAssertEqual(message.sender, self.sender)
+            } else {
+                XCTFail()
+            }
         }
     }
     
@@ -165,7 +176,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
     }
     
     func testThatWeSendNotificationWhenCallStarts() {
@@ -179,6 +190,7 @@ class CallStateObserverTests : MessagingTest {
         // expect
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
         mockCallCenter?.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false, shouldRing: true, degraded: false)]
+        mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
         
         expectation(forNotification: CallStateObserver.CallInProgressNotification.rawValue, object: nil) { (note) -> Bool in
             if let open = note.userInfo?[CallStateObserver.CallInProgressKey] as? Bool, open == true {
@@ -200,6 +212,7 @@ class CallStateObserverTests : MessagingTest {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
         mockCallCenter?.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false, shouldRing: true, degraded: false)]
+        mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
         sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversationId: conversation.remoteIdentifier!, userId: conversation.remoteIdentifier!, timeStamp: Date())
         
         // expect
