@@ -389,7 +389,7 @@ public protocol LocalMessageNotificationResponder : class {
             dispatchGroup: dispatchGroup,
             migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
             completion: { [weak self] provider in
-                self?.createSession(for: account, with: provider) { session in
+                self?.activateSession(for: account, with: provider) { session in
                     self?.registerSessionForRemoteNotificationsIfNeeded(session)
                     completion(session)
                 }}
@@ -412,7 +412,7 @@ public protocol LocalMessageNotificationResponder : class {
         }
     }
     
-    fileprivate func createSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession) -> Void) {
+    fileprivate func activateSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession) -> Void) {
         let session: ZMUserSession
 
         if let backgroundSession = self.backgroundUserSessions[account.userIdentifier] {
@@ -642,7 +642,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         let group = self.dispatchGroup
         group?.enter()
         LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
-            self?.createSession(for: account, with: provider) { userSession in
+            self?.activateSession(for: account, with: provider) { userSession in
                 self?.registerSessionForRemoteNotificationsIfNeeded(userSession)
                 self?.updateCurrentAccount(in: userSession.managedObjectContext)
                 
