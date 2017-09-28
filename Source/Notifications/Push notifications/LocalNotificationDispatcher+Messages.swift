@@ -131,9 +131,11 @@ extension LocalNotificationDispatcher {
     
     fileprivate func localNotificationForSystemMessage(_ message : ZMSystemMessage) -> ZMLocalNotificationForSystemMessage? {
         
-        // we only want participation messages concerning self user
-        guard message.isGroupParticipationMessageForSelf else { return nil }
-                
+        // we only want participation messages concerning only the self user
+        if message.isGroupParticipationMessageNotForSelf {
+            return nil
+        }
+        
         if let newNote = ZMLocalNotificationForSystemMessage(message: message, application:self.application) {
             messageNotifications.addObject(newNote)
             return newNote;
@@ -144,13 +146,13 @@ extension LocalNotificationDispatcher {
 
 private extension ZMSystemMessage {
     
-    /// Returns true if the system message notifies the self user was added or removed
-    /// from a conversation.
+    /// Returns true if the system message notifies that a user(s) that is not the self user
+    /// was added or removed from a conversation.
     ///
-    var isGroupParticipationMessageForSelf: Bool {
+    var isGroupParticipationMessageNotForSelf: Bool {
         let addOrRemove = systemMessageType == .participantsAdded || systemMessageType == .participantsRemoved
         let forSelf = users.count == 1 && users.first!.isSelfUser
-        return addOrRemove && forSelf
+        return addOrRemove && !forSelf
     }
 }
 
