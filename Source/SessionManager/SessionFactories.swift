@@ -58,7 +58,7 @@ open class AuthenticatedSessionFactory {
             cookieStorage: account.cookieStorage(),
             reachability: reachability,
             initialAccessToken: nil,
-            sharedContainerIdentifier: nil
+            applicationGroupIdentifier: nil
         )
 
         return ZMUserSession(
