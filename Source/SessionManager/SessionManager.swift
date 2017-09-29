@@ -325,12 +325,11 @@ public protocol LocalMessageNotificationResponder : class {
         delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { [weak self] in
             self?.activeUserSession = nil
             tearDownCompletion?()
+            self?.loadSession(for: account) { [weak self] session in
+                self?.accountManager.select(account)
+                completion?(session)
+            }
         })
-        
-        loadSession(for: account) { [weak self] session in
-            self?.accountManager.select(account)
-            completion?(session)
-        }
     }
     
     public func addAccount() {
